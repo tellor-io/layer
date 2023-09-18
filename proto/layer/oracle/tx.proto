@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package layer.oracle;
+
+option go_package = "layer/x/oracle/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc SubmitValue (MsgSubmitValue) returns (MsgSubmitValueResponse);
+}
+message MsgSubmitValue {
+  string creator = 1;
+  string qdata   = 2;
+  string value   = 3;
+}
+
+message MsgSubmitValueResponse {}
+

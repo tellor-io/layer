@@ -1,0 +1,11 @@
+syntax = "proto3";
+package layer.oracle;
+
+option go_package = "layer/x/oracle/types";
+
+message Report {
+  
+  string qdata = 1; 
+  string value = 2; 
+  uint64 timestamp = 3; 
+}
