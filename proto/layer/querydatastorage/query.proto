@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package layer.querydatastorage;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "layer/querydatastorage/params.proto";
+
+option go_package = "layer/x/querydatastorage/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/layer/querydatastorage/params";
+  
+  }
+  
+  // Queries a list of GetQueryData items.
+  rpc GetQueryData (QueryGetQueryDataRequest) returns (QueryGetQueryDataResponse) {
+    option (google.api.http).get = "/layer/querydatastorage/get_query_data/{queryId}";
+  
+  }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetQueryDataRequest {
+  string queryId = 1;
+}
+
+message QueryGetQueryDataResponse {
+  string queryData = 1;
+}
+

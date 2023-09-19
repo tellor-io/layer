@@ -46473,6 +46473,79 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /layer/querydatastorage/get_query_data/{queryId}:
+    get:
+      summary: Queries a list of GetQueryData items.
+      operationId: LayerQuerydatastorageGetQueryData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              queryData:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/querydatastorage/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerQuerydatastorageParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
 definitions:
   cosmos.auth.v1beta1.AddressBytesToStringResponse:
     type: object
@@ -75218,6 +75291,26 @@ definitions:
     type: object
     description: Params defines the parameters for the module.
   layer.oracle.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.querydatastorage.MsgAddQueryToStorageResponse:
+    type: object
+    properties:
+      queryId:
+        type: string
+  layer.querydatastorage.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.querydatastorage.QueryGetQueryDataResponse:
+    type: object
+    properties:
+      queryData:
+        type: string
+  layer.querydatastorage.QueryParamsResponse:
     type: object
     properties:
       params:

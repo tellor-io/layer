@@ -1,0 +1,12 @@
+syntax = "proto3";
+package layer.querydatastorage;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "layer/x/querydatastorage/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+}
