@@ -1,0 +1,9 @@
+syntax = "proto3";
+package layer.oracle;
+import "layer/oracle/micro_report.proto";
+option go_package = "layer/x/oracle/types";
+
+message Reports {
+  
+  repeated MicroReport reports = 1; 
+}

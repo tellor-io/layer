@@ -10,7 +10,7 @@ service Msg {
 }
 message MsgSubmitValue {
   string creator = 1;
-  string qdata   = 2;
+  string qid   = 2;
   string value   = 3;
 }
 

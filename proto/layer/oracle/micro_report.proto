@@ -1,0 +1,11 @@
+syntax = "proto3";
+package layer.oracle;
+
+option go_package = "layer/x/oracle/types";
+
+message MicroReport {
+  string reporter = 1;
+  string qid = 2; 
+  string value = 3; 
+  uint64 timestamp = 4; 
+}

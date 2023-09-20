@@ -46437,6 +46437,58 @@ paths:
                         }
       tags:
         - Query
+  /layer/oracle/get_reportsby_qid/{qId}:
+    get:
+      summary: Queries a list of GetReportsbyQid items.
+      operationId: LayerOracleGetReportsbyQid
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reports:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        qid:
+                          type: string
+                        value:
+                          type: string
+                        timestamp:
+                          type: string
+                          format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: qId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /layer/oracle/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -46473,10 +46525,52 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /layer/querydatastorage/get_query_data/{queryId}:
+  /layer/registry/get_data_spec/{queryType}:
+    get:
+      summary: Queries a list of GetDataSpec items.
+      operationId: LayerRegistryGetDataSpec
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              spec:
+                type: object
+                properties:
+                  documentHash:
+                    type: string
+                  valueType:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryType
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/get_query_data/{queryId}:
     get:
       summary: Queries a list of GetQueryData items.
-      operationId: LayerQuerydatastorageGetQueryData
+      operationId: LayerRegistryGetQueryData
       responses:
         '200':
           description: A successful response.
@@ -46510,10 +46604,10 @@ paths:
           type: string
       tags:
         - Query
-  /layer/querydatastorage/params:
+  /layer/registry/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: LayerQuerydatastorageParams
+      operationId: LayerRegistryParams
       responses:
         '200':
           description: A successful response.
@@ -75285,11 +75379,43 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  layer.oracle.MicroReport:
+    type: object
+    properties:
+      reporter:
+        type: string
+      qid:
+        type: string
+      value:
+        type: string
+      timestamp:
+        type: string
+        format: uint64
   layer.oracle.MsgSubmitValueResponse:
     type: object
   layer.oracle.Params:
     type: object
     description: Params defines the parameters for the module.
+  layer.oracle.QueryGetReportsbyQidResponse:
+    type: object
+    properties:
+      reports:
+        type: object
+        properties:
+          reports:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                qid:
+                  type: string
+                value:
+                  type: string
+                timestamp:
+                  type: string
+                  format: uint64
   layer.oracle.QueryParamsResponse:
     type: object
     properties:
@@ -75297,20 +75423,56 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  layer.querydatastorage.MsgAddQueryToStorageResponse:
+  layer.oracle.Reports:
+    type: object
+    properties:
+      reports:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            qid:
+              type: string
+            value:
+              type: string
+            timestamp:
+              type: string
+              format: uint64
+  layer.registry.DataSpec:
+    type: object
+    properties:
+      documentHash:
+        type: string
+      valueType:
+        type: string
+  layer.registry.MsgRegisterQueryResponse:
     type: object
     properties:
       queryId:
         type: string
-  layer.querydatastorage.Params:
+  layer.registry.MsgRegisterSpecResponse:
+    type: object
+  layer.registry.Params:
     type: object
     description: Params defines the parameters for the module.
-  layer.querydatastorage.QueryGetQueryDataResponse:
+  layer.registry.QueryGetDataSpecResponse:
+    type: object
+    properties:
+      spec:
+        type: object
+        properties:
+          documentHash:
+            type: string
+          valueType:
+            type: string
+  layer.registry.QueryGetQueryDataResponse:
     type: object
     properties:
       queryData:
         type: string
-  layer.querydatastorage.QueryParamsResponse:
+  layer.registry.QueryParamsResponse:
     type: object
     properties:
       params:

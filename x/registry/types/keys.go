@@ -2,7 +2,7 @@ package types
 
 const (
 	// ModuleName defines the module name
-	ModuleName = "oracle"
+	ModuleName = "registry"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
@@ -11,9 +11,13 @@ const (
 	RouterKey = ModuleName
 
 	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_oracle"
+	MemStoreKey = "mem_registry"
 
-	ReportsKey = "Reports-value-"
+	// RegistryKey
+	QueryRegistryKey = "query_registry_key"
+
+	// SpecRegistryKey
+	SpecRegistryKey = "spec_registry_key"
 )
 
 func KeyPrefix(p string) []byte {

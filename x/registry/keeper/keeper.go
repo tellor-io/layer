@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"layer/x/oracle/types"
+	"layer/x/registry/types"
 )
 
 type (
@@ -18,10 +18,6 @@ type (
 		storeKey   storetypes.StoreKey
 		memKey     storetypes.StoreKey
 		paramstore paramtypes.Subspace
-
-		bankKeeper     types.BankKeeper
-		stakingKeeper  types.StakingKeeper
-		registryKeeper types.RegistryKeeper
 	}
 )
 
@@ -31,9 +27,6 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	ps paramtypes.Subspace,
 
-	bankKeeper types.BankKeeper,
-	stakingKeeper types.StakingKeeper,
-	registryKeeper types.RegistryKeeper,
 ) *Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -45,10 +38,6 @@ func NewKeeper(
 		storeKey:   storeKey,
 		memKey:     memKey,
 		paramstore: ps,
-
-		bankKeeper:     bankKeeper,
-		stakingKeeper:  stakingKeeper,
-		registryKeeper: registryKeeper,
 	}
 }
 

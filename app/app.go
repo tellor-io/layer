@@ -113,9 +113,10 @@ import (
 	oraclemodule "layer/x/oracle"
 	oraclemodulekeeper "layer/x/oracle/keeper"
 	oraclemoduletypes "layer/x/oracle/types"
-	querydatastoragemodule "layer/x/querydatastorage"
-	querydatastoragemodulekeeper "layer/x/querydatastorage/keeper"
-	querydatastoragemoduletypes "layer/x/querydatastorage/types"
+	registrymodule "layer/x/registry"
+	registrymodulekeeper "layer/x/registry/keeper"
+	registrymoduletypes "layer/x/registry/types"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	appparams "layer/app/params"
@@ -177,7 +178,7 @@ var (
 		vesting.AppModuleBasic{},
 		consensus.AppModuleBasic{},
 		oraclemodule.AppModuleBasic{},
-		querydatastoragemodule.AppModuleBasic{},
+		registrymodule.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -256,7 +257,7 @@ type App struct {
 
 	OracleKeeper oraclemodulekeeper.Keeper
 
-	QuerydatastorageKeeper querydatastoragemodulekeeper.Keeper
+	RegistryKeeper registrymodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -304,7 +305,7 @@ func New(
 		feegrant.StoreKey, evidencetypes.StoreKey, ibctransfertypes.StoreKey, icahosttypes.StoreKey,
 		capabilitytypes.StoreKey, group.StoreKey, icacontrollertypes.StoreKey, consensusparamtypes.StoreKey,
 		oraclemoduletypes.StoreKey,
-		querydatastoragemoduletypes.StoreKey,
+		registrymoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -527,6 +528,14 @@ func New(
 		),
 	)
 
+	app.RegistryKeeper = *registrymodulekeeper.NewKeeper(
+		appCodec,
+		keys[registrymoduletypes.StoreKey],
+		keys[registrymoduletypes.MemStoreKey],
+		app.GetSubspace(registrymoduletypes.ModuleName),
+	)
+	registryModule := registrymodule.NewAppModule(appCodec, app.RegistryKeeper, app.AccountKeeper, app.BankKeeper)
+
 	app.OracleKeeper = *oraclemodulekeeper.NewKeeper(
 		appCodec,
 		keys[oraclemoduletypes.StoreKey],
@@ -535,16 +544,9 @@ func New(
 
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.RegistryKeeper,
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper)
-
-	app.QuerydatastorageKeeper = *querydatastoragemodulekeeper.NewKeeper(
-		appCodec,
-		keys[querydatastoragemoduletypes.StoreKey],
-		keys[querydatastoragemoduletypes.MemStoreKey],
-		app.GetSubspace(querydatastoragemoduletypes.ModuleName),
-	)
-	querydatastorageModule := querydatastoragemodule.NewAppModule(appCodec, app.QuerydatastorageKeeper, app.AccountKeeper, app.BankKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
@@ -608,7 +610,7 @@ func New(
 		transferModule,
 		icaModule,
 		oracleModule,
-		querydatastorageModule,
+		registryModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
@@ -642,7 +644,7 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		oraclemoduletypes.ModuleName,
-		querydatastoragemoduletypes.ModuleName,
+		registrymoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -669,7 +671,7 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		oraclemoduletypes.ModuleName,
-		querydatastoragemoduletypes.ModuleName,
+		registrymoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
 
@@ -701,7 +703,7 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		oraclemoduletypes.ModuleName,
-		querydatastoragemoduletypes.ModuleName,
+		registrymoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 	app.mm.SetOrderInitGenesis(genesisModuleOrder...)
@@ -927,7 +929,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(oraclemoduletypes.ModuleName)
-	paramsKeeper.Subspace(querydatastoragemoduletypes.ModuleName)
+	paramsKeeper.Subspace(registrymoduletypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper

@@ -9,10 +9,10 @@ const TypeMsgSubmitValue = "submit_value"
 
 var _ sdk.Msg = &MsgSubmitValue{}
 
-func NewMsgSubmitValue(creator string, qdata string, value string) *MsgSubmitValue {
+func NewMsgSubmitValue(creator string, qid string, value string) *MsgSubmitValue {
 	return &MsgSubmitValue{
 		Creator: creator,
-		Qdata:   qdata,
+		Qid:     qid,
 		Value:   value,
 	}
 }
