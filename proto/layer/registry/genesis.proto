@@ -1,0 +1,12 @@
+syntax = "proto3";
+package layer.registry;
+
+import "gogoproto/gogo.proto";
+import "layer/registry/params.proto";
+
+option go_package = "layer/x/registry/types";
+
+// GenesisState defines the registry module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}

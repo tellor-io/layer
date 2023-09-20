@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package layer.registry;
+
+import "gogoproto/gogo.proto";
+import "layer/registry/data_spec.proto";
+
+option go_package = "layer/x/registry/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc RegisterQuery (MsgRegisterQuery) returns (MsgRegisterQueryResponse);
+  rpc RegisterSpec  (MsgRegisterSpec ) returns (MsgRegisterSpecResponse );
+}
+message MsgRegisterQuery {
+           string creator    = 1;
+           string queryType  = 2;
+  repeated string dataTypes  = 3;
+  repeated string dataFields = 4;
+}
+
+message MsgRegisterQueryResponse {
+  string queryId = 1;
+}
+
+message MsgRegisterSpec {
+  string   creator   = 1;
+  string   queryType = 2;
+  DataSpec spec      = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgRegisterSpecResponse {}
+

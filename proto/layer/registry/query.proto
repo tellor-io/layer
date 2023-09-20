@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package layer.registry;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "layer/registry/params.proto";
+import "layer/registry/data_spec.proto";
+
+option go_package = "layer/x/registry/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/layer/registry/params";
+  
+  }
+  
+  // Queries a list of GetQueryData items.
+  rpc GetQueryData (QueryGetQueryDataRequest) returns (QueryGetQueryDataResponse) {
+    option (google.api.http).get = "/layer/registry/get_query_data/{queryId}";
+  
+  }
+  
+  // Queries a list of GetDataSpec items.
+  rpc GetDataSpec (QueryGetDataSpecRequest) returns (QueryGetDataSpecResponse) {
+    option (google.api.http).get = "/layer/registry/get_data_spec/{queryType}";
+  
+  }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetQueryDataRequest {
+  string queryId = 1;
+}
+
+message QueryGetQueryDataResponse {
+  string queryData = 1;
+}
+
+message QueryGetDataSpecRequest {
+  string queryType = 1;
+}
+
+message QueryGetDataSpecResponse {
+  DataSpec spec = 1;
+}
+

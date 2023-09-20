@@ -1,0 +1,10 @@
+syntax = "proto3";
+package layer.registry;
+
+option go_package = "layer/x/registry/types";
+
+message DataSpec {
+  
+  string documentHash = 1; 
+  string valueType = 2; 
+}
