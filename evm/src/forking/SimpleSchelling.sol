@@ -96,4 +96,16 @@ contract SimpleSchelling {
         }
         payable(msg.sender).transfer(_payoutAmount);
     }
+
+    // Getters
+
+    function getProposal(uint256 _proposalId) public view returns (address, uint256, uint256, uint256, bool) {
+        ForkProposal storage _proposal = proposals[_proposalId];
+        return(_proposal.proposedImplementation, _proposal.amountFor, _proposal.amountAgainst, _proposal.expirationTime, _proposal.executed);
+    }
+
+    function getVotes(uint256 _proposalId, address _voter) public view returns (uint256, uint256, bool, bool) {
+        ForkProposal storage _proposal = proposals[_proposalId];
+        return(_proposal.votesFor[_voter].amount, _proposal.votesAgainst[_voter].amount, _proposal.votesFor[_voter].claimed, _proposal.votesAgainst[_voter].claimed);
+    }
 }

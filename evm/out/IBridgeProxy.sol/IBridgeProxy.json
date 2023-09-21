@@ -1,0 +1,192 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_newImplementation",
+          "type": "address"
+        }
+      ],
+      "name": "updateImplementation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "updateImplementation(address)": "025b22bc"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newImplementation\",\"type\":\"address\"}],\"name\":\"updateImplementation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/interfaces/IBridgeProxy.sol\":\"IBridgeProxy\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/interfaces/IBridgeProxy.sol\":{\"keccak256\":\"0xfb896a0560af9e9904af74815d71ca6148ba2a2e0371036580fbeaa1389ab92f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d5dbefde68a3d5f83aef126dd07935c37a8fdb3c7651eb41fc167ed77b6ab16a\",\"dweb:/ipfs/QmWhgKjB7qjMQzC3hv8Hx4AqbhRUxrrKZozQg86mLARvmK\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.3+commit.8d00100c"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_newImplementation",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "updateImplementation"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":forge-std/=lib/forge-std/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/interfaces/IBridgeProxy.sol": "IBridgeProxy"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/interfaces/IBridgeProxy.sol": {
+        "keccak256": "0xfb896a0560af9e9904af74815d71ca6148ba2a2e0371036580fbeaa1389ab92f",
+        "urls": [
+          "bzz-raw://d5dbefde68a3d5f83aef126dd07935c37a8fdb3c7651eb41fc167ed77b6ab16a",
+          "dweb:/ipfs/QmWhgKjB7qjMQzC3hv8Hx4AqbhRUxrrKZozQg86mLARvmK"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/interfaces/IBridgeProxy.sol",
+    "id": 508,
+    "exportedSymbols": {
+      "IBridgeProxy": [
+        507
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "32:122:19",
+    "nodes": [
+      {
+        "id": 501,
+        "nodeType": "PragmaDirective",
+        "src": "32:22:19",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".3"
+        ]
+      },
+      {
+        "id": 507,
+        "nodeType": "ContractDefinition",
+        "src": "56:98:19",
+        "nodes": [
+          {
+            "id": 506,
+            "nodeType": "FunctionDefinition",
+            "src": "85:67:19",
+            "nodes": [],
+            "functionSelector": "025b22bc",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "updateImplementation",
+            "nameLocation": "94:20:19",
+            "parameters": {
+              "id": 504,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 503,
+                  "mutability": "mutable",
+                  "name": "_newImplementation",
+                  "nameLocation": "123:18:19",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 506,
+                  "src": "115:26:19",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 502,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "115:7:19",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "114:28:19"
+            },
+            "returnParameters": {
+              "id": 505,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "151:0:19"
+            },
+            "scope": 507,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          507
+        ],
+        "name": "IBridgeProxy",
+        "nameLocation": "66:12:19",
+        "scope": 508
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 19
+}
