@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 type msgServer struct {

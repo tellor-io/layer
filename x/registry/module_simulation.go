@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"layer/testutil/sample"
-	registrysimulation "layer/x/registry/simulation"
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/testutil/sample"
+	registrysimulation "github.com/tellor-io/layer/x/registry/simulation"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 // avoid unused import issue

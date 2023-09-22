@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	testkeeper "layer/testutil/keeper"
-	"layer/x/oracle/types"
+	testkeeper "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func TestGetParams(t *testing.T) {

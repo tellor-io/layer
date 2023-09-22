@@ -3,8 +3,8 @@ package keeper
 import (
 	"testing"
 
-	"layer/x/oracle/keeper"
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"

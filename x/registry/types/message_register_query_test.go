@@ -5,7 +5,7 @@ import (
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
-	"layer/testutil/sample"
+	"github.com/tellor-io/layer/testutil/sample"
 )
 
 func TestMsgRegisterQuery_ValidateBasic(t *testing.T) {

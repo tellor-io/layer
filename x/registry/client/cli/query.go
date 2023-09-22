@@ -10,7 +10,7 @@ import (
 	// "github.com/cosmos/cosmos-sdk/client/flags"
 	// sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 // GetQueryCmd returns the cli query commands for this module

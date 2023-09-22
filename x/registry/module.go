@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	// this line is used by starport scaffolding # 1
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -16,9 +17,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"layer/x/registry/client/cli"
-	"layer/x/registry/keeper"
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/client/cli"
+	"github.com/tellor-io/layer/x/registry/keeper"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 var (

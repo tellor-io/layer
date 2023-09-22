@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 type msgServer struct {

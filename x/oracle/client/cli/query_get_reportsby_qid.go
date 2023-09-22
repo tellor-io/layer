@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 var _ = strconv.Itoa(0)

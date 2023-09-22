@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package layer.oracle;
 
-option go_package = "layer/x/oracle/types";
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Msg defines the Msg service.
 service Msg {

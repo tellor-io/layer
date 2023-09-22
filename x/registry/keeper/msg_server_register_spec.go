@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

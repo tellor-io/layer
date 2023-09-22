@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

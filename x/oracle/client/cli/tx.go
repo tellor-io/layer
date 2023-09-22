@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 var (

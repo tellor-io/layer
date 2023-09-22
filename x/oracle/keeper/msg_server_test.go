@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
+	keepertest "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	keepertest "layer/testutil/keeper"
-	"layer/x/oracle/keeper"
-	"layer/x/oracle/types"
 )
 
 func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {
@@ -18,6 +19,7 @@ func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {
 
 func TestMsgServer(t *testing.T) {
 	ms, ctx := setupMsgServer(t)
+
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 }

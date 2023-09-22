@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 type (

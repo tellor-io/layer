@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	// "github.com/cosmos/cosmos-sdk/client/flags"
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 var (

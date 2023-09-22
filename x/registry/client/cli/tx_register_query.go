@@ -3,12 +3,13 @@ package cli
 import (
 	"strconv"
 
+	"strings"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
-	"layer/x/registry/types"
-	"strings"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 var _ = strconv.Itoa(0)

@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"layer/testutil/sample"
-	oraclesimulation "layer/x/oracle/simulation"
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/testutil/sample"
+	oraclesimulation "github.com/tellor-io/layer/x/oracle/simulation"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 // avoid unused import issue

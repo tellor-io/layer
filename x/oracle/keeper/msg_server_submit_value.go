@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"layer/x/oracle/types"
-	registryKeeper "layer/x/registry/keeper"
-	registryTypes "layer/x/registry/types"
+	"github.com/tellor-io/layer/x/oracle/types"
+	registryKeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registryTypes "github.com/tellor-io/layer/x/registry/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -118,16 +118,14 @@ func decodeValue(data []byte, dataType string) ([]interface{}, error) {
 func (k Keeper) IsSenderStaked(ctx sdk.Context, sender string) bool {
 	accAddr, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
-		fmt.Println(fmt.Sprintf("failed to convert sender address: %v", err))
 		return false
 	}
-	delegation, _ := k.stakingKeeper.GetDelegation(ctx, accAddr, nil)
-	bondedValidator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(accAddr))
-
-	if delegation.GetShares().IsZero() || !bondedValidator.IsBonded() {
-		return false
+	delegations := k.stakingKeeper.GetAllDelegatorDelegations(ctx, accAddr)
+	var totalStakedTokens sdk.Dec
+	for _, delegation := range delegations {
+		totalStakedTokens = totalStakedTokens.Add(delegation.GetShares())
 	}
-	return true
+	return totalStakedTokens.GT(sdk.ZeroDec())
 }
 
 // cleanup reports list
