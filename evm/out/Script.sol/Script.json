@@ -195,56 +195,56 @@
   },
   "ast": {
     "absolutePath": "lib/forge-std/src/Script.sol",
-    "id": 2406,
+    "id": 39,
     "exportedSymbols": {
       "Script": [
-        2405
+        38
       ],
       "ScriptBase": [
-        2366
+        216
       ],
       "StdChains": [
-        4561
+        954
       ],
       "StdCheatsSafe": [
-        6621
+        3014
       ],
       "StdStorage": [
-        8489
+        4557
       ],
       "StdStyle": [
-        11339
+        7407
       ],
       "StdUtils": [
-        12187
+        8255
       ],
       "VmSafe": [
-        13459
+        9476
       ],
       "console": [
-        21995
+        18012
       ],
       "console2": [
-        30120
+        26137
       ],
       "safeconsole": [
-        43358
+        39212
       ],
       "stdJson": [
-        8315
+        4383
       ],
       "stdMath": [
-        8457
+        4525
       ],
       "stdStorageSafe": [
-        9537
+        5605
       ]
     },
     "nodeType": "SourceUnit",
     "src": "32:800:2",
     "nodes": [
       {
-        "id": 2368,
+        "id": 1,
         "nodeType": "PragmaDirective",
         "src": "32:31:2",
         "nodes": [],
@@ -259,23 +259,23 @@
         ]
       },
       {
-        "id": 2370,
+        "id": 3,
         "nodeType": "ImportDirective",
         "src": "127:38:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/console.sol",
         "file": "./console.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 21996,
+        "scope": 39,
+        "sourceUnit": 18013,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2369,
+              "id": 2,
               "name": "console",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 21995,
+              "referencedDeclaration": 18012,
               "src": "135:7:2",
               "typeDescriptions": {}
             },
@@ -285,23 +285,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2372,
+        "id": 5,
         "nodeType": "ImportDirective",
         "src": "166:40:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/console2.sol",
         "file": "./console2.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 30121,
+        "scope": 39,
+        "sourceUnit": 26138,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2371,
+              "id": 4,
               "name": "console2",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 30120,
+              "referencedDeclaration": 26137,
               "src": "174:8:2",
               "typeDescriptions": {}
             },
@@ -311,23 +311,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2374,
+        "id": 7,
         "nodeType": "ImportDirective",
         "src": "207:46:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/safeconsole.sol",
         "file": "./safeconsole.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 43359,
+        "scope": 39,
+        "sourceUnit": 39213,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2373,
+              "id": 6,
               "name": "safeconsole",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 43358,
+              "referencedDeclaration": 39212,
               "src": "215:11:2",
               "typeDescriptions": {}
             },
@@ -337,23 +337,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2376,
+        "id": 9,
         "nodeType": "ImportDirective",
         "src": "254:42:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdChains.sol",
         "file": "./StdChains.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 4562,
+        "scope": 39,
+        "sourceUnit": 955,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2375,
+              "id": 8,
               "name": "StdChains",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 4561,
+              "referencedDeclaration": 954,
               "src": "262:9:2",
               "typeDescriptions": {}
             },
@@ -363,23 +363,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2378,
+        "id": 11,
         "nodeType": "ImportDirective",
         "src": "297:46:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdCheats.sol",
         "file": "./StdCheats.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 7415,
+        "scope": 39,
+        "sourceUnit": 3808,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2377,
+              "id": 10,
               "name": "StdCheatsSafe",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 6621,
+              "referencedDeclaration": 3014,
               "src": "305:13:2",
               "typeDescriptions": {}
             },
@@ -389,23 +389,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2380,
+        "id": 13,
         "nodeType": "ImportDirective",
         "src": "344:38:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdJson.sol",
         "file": "./StdJson.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 8316,
+        "scope": 39,
+        "sourceUnit": 4384,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2379,
+              "id": 12,
               "name": "stdJson",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8315,
+              "referencedDeclaration": 4383,
               "src": "352:7:2",
               "typeDescriptions": {}
             },
@@ -415,23 +415,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2382,
+        "id": 15,
         "nodeType": "ImportDirective",
         "src": "383:38:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdMath.sol",
         "file": "./StdMath.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 8458,
+        "scope": 39,
+        "sourceUnit": 4526,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2381,
+              "id": 14,
               "name": "stdMath",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8457,
+              "referencedDeclaration": 4525,
               "src": "391:7:2",
               "typeDescriptions": {}
             },
@@ -441,23 +441,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2385,
+        "id": 18,
         "nodeType": "ImportDirective",
         "src": "422:60:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdStorage.sol",
         "file": "./StdStorage.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 10129,
+        "scope": 39,
+        "sourceUnit": 6197,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2383,
+              "id": 16,
               "name": "StdStorage",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 8489,
+              "referencedDeclaration": 4557,
               "src": "430:10:2",
               "typeDescriptions": {}
             },
@@ -465,11 +465,11 @@
           },
           {
             "foreign": {
-              "id": 2384,
+              "id": 17,
               "name": "stdStorageSafe",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 9537,
+              "referencedDeclaration": 5605,
               "src": "442:14:2",
               "typeDescriptions": {}
             },
@@ -479,23 +479,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2387,
+        "id": 20,
         "nodeType": "ImportDirective",
         "src": "483:40:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdStyle.sol",
         "file": "./StdStyle.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 11340,
+        "scope": 39,
+        "sourceUnit": 7408,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2386,
+              "id": 19,
               "name": "StdStyle",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 11339,
+              "referencedDeclaration": 7407,
               "src": "491:8:2",
               "typeDescriptions": {}
             },
@@ -505,23 +505,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2389,
+        "id": 22,
         "nodeType": "ImportDirective",
         "src": "524:40:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/StdUtils.sol",
         "file": "./StdUtils.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 12188,
+        "scope": 39,
+        "sourceUnit": 8256,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2388,
+              "id": 21,
               "name": "StdUtils",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 12187,
+              "referencedDeclaration": 8255,
               "src": "532:8:2",
               "typeDescriptions": {}
             },
@@ -531,23 +531,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2391,
+        "id": 24,
         "nodeType": "ImportDirective",
         "src": "565:32:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/Vm.sol",
         "file": "./Vm.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 13932,
+        "scope": 39,
+        "sourceUnit": 9949,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2390,
+              "id": 23,
               "name": "VmSafe",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 13459,
+              "referencedDeclaration": 9476,
               "src": "573:6:2",
               "typeDescriptions": {}
             },
@@ -557,23 +557,23 @@
         "unitAlias": ""
       },
       {
-        "id": 2393,
+        "id": 26,
         "nodeType": "ImportDirective",
         "src": "619:38:2",
         "nodes": [],
         "absolutePath": "lib/forge-std/src/Base.sol",
         "file": "./Base.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 2406,
-        "sourceUnit": 2367,
+        "scope": 39,
+        "sourceUnit": 217,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 2392,
+              "id": 25,
               "name": "ScriptBase",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 2366,
+              "referencedDeclaration": 216,
               "src": "627:10:2",
               "typeDescriptions": {}
             },
@@ -583,12 +583,12 @@
         "unitAlias": ""
       },
       {
-        "id": 2405,
+        "id": 38,
         "nodeType": "ContractDefinition",
         "src": "676:155:2",
         "nodes": [
           {
-            "id": 2404,
+            "id": 37,
             "nodeType": "VariableDeclaration",
             "src": "800:28:2",
             "nodes": [],
@@ -597,7 +597,7 @@
             "mutability": "mutable",
             "name": "IS_SCRIPT",
             "nameLocation": "812:9:2",
-            "scope": 2405,
+            "scope": 38,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -605,7 +605,7 @@
               "typeString": "bool"
             },
             "typeName": {
-              "id": 2402,
+              "id": 35,
               "name": "bool",
               "nodeType": "ElementaryTypeName",
               "src": "800:4:2",
@@ -616,7 +616,7 @@
             },
             "value": {
               "hexValue": "74727565",
-              "id": 2403,
+              "id": 36,
               "isConstant": false,
               "isLValue": false,
               "isPure": true,
@@ -637,61 +637,61 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 2394,
+              "id": 27,
               "name": "ScriptBase",
               "nameLocations": [
                 "704:10:2"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 2366,
+              "referencedDeclaration": 216,
               "src": "704:10:2"
             },
-            "id": 2395,
+            "id": 28,
             "nodeType": "InheritanceSpecifier",
             "src": "704:10:2"
           },
           {
             "baseName": {
-              "id": 2396,
+              "id": 29,
               "name": "StdChains",
               "nameLocations": [
                 "716:9:2"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 4561,
+              "referencedDeclaration": 954,
               "src": "716:9:2"
             },
-            "id": 2397,
+            "id": 30,
             "nodeType": "InheritanceSpecifier",
             "src": "716:9:2"
           },
           {
             "baseName": {
-              "id": 2398,
+              "id": 31,
               "name": "StdCheatsSafe",
               "nameLocations": [
                 "727:13:2"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 6621,
+              "referencedDeclaration": 3014,
               "src": "727:13:2"
             },
-            "id": 2399,
+            "id": 32,
             "nodeType": "InheritanceSpecifier",
             "src": "727:13:2"
           },
           {
             "baseName": {
-              "id": 2400,
+              "id": 33,
               "name": "StdUtils",
               "nameLocations": [
                 "742:8:2"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 12187,
+              "referencedDeclaration": 8255,
               "src": "742:8:2"
             },
-            "id": 2401,
+            "id": 34,
             "nodeType": "InheritanceSpecifier",
             "src": "742:8:2"
           }
@@ -701,16 +701,16 @@
         "contractKind": "contract",
         "fullyImplemented": true,
         "linearizedBaseContracts": [
-          2405,
-          12187,
-          6621,
-          4561,
-          2366,
-          2354
+          38,
+          8255,
+          3014,
+          954,
+          216,
+          204
         ],
         "name": "Script",
         "nameLocation": "694:6:2",
-        "scope": 2406,
+        "scope": 39,
         "usedErrors": []
       }
     ],

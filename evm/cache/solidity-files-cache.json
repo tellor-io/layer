@@ -47,7 +47,7 @@
       "versionRequirement": ">=0.5.0",
       "artifacts": {
         "DSTest": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "test.sol/DSTest.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "test.sol/DSTest.json"
         }
       }
     },
@@ -90,13 +90,13 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "CommonBase": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/CommonBase.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "Base.sol/CommonBase.json"
         },
         "ScriptBase": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/ScriptBase.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "Base.sol/ScriptBase.json"
         },
         "TestBase": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/TestBase.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "Base.sol/TestBase.json"
         }
       }
     },
@@ -193,7 +193,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdAssertions": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdAssertions.sol/StdAssertions.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdAssertions.sol/StdAssertions.json"
         }
       }
     },
@@ -235,7 +235,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdChains": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdChains.sol/StdChains.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdChains.sol/StdChains.json"
         }
       }
     },
@@ -279,10 +279,10 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdCheats": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdCheats.sol/StdCheats.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdCheats.sol/StdCheats.json"
         },
         "StdCheatsSafe": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdCheats.sol/StdCheatsSafe.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdCheats.sol/StdCheatsSafe.json"
         }
       }
     },
@@ -322,7 +322,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "stdError": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdError.sol/stdError.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdError.sol/stdError.json"
         }
       }
     },
@@ -362,7 +362,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdInvariant": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdInvariant.sol/StdInvariant.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdInvariant.sol/StdInvariant.json"
         }
       }
     },
@@ -404,7 +404,7 @@
       "versionRequirement": ">=0.6.0, <0.9.0",
       "artifacts": {
         "stdJson": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdJson.sol/stdJson.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdJson.sol/stdJson.json"
         }
       }
     },
@@ -444,7 +444,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "stdMath": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdMath.sol/stdMath.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdMath.sol/stdMath.json"
         }
       }
     },
@@ -486,10 +486,10 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "stdStorage": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStorage.sol/stdStorage.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdStorage.sol/stdStorage.json"
         },
         "stdStorageSafe": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStorage.sol/stdStorageSafe.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdStorage.sol/stdStorageSafe.json"
         }
       }
     },
@@ -531,7 +531,7 @@
       "versionRequirement": ">=0.4.22, <0.9.0",
       "artifacts": {
         "StdStyle": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStyle.sol/StdStyle.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdStyle.sol/StdStyle.json"
         }
       }
     },
@@ -574,7 +574,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdUtils": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdUtils.sol/StdUtils.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdUtils.sol/StdUtils.json"
         }
       }
     },
@@ -632,7 +632,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "Test": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Test.sol/Test.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "Test.sol/Test.json"
         }
       }
     },
@@ -672,10 +672,10 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "Vm": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Vm.sol/Vm.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "Vm.sol/Vm.json"
         },
         "VmSafe": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Vm.sol/VmSafe.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "Vm.sol/VmSafe.json"
         }
       }
     },
@@ -715,7 +715,7 @@
       "versionRequirement": ">=0.4.22, <0.9.0",
       "artifacts": {
         "console": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "console.sol/console.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "console.sol/console.json"
         }
       }
     },
@@ -755,7 +755,7 @@
       "versionRequirement": ">=0.4.22, <0.9.0",
       "artifacts": {
         "console2": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "console2.sol/console2.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "console2.sol/console2.json"
         }
       }
     },
@@ -795,7 +795,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "IMulticall3": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "IMulticall3.sol/IMulticall3.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "IMulticall3.sol/IMulticall3.json"
         }
       }
     },
@@ -835,7 +835,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "safeconsole": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "safeconsole.sol/safeconsole.0.8.17.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "safeconsole.sol/safeconsole.json"
         }
       }
     },
@@ -935,8 +935,8 @@
       }
     },
     "src/forking/SimpleSchelling.sol": {
-      "lastModificationDate": 1695312775039,
-      "contentHash": "4bf3b97ca7f03a181385ce077a9a5431",
+      "lastModificationDate": 1695400758373,
+      "contentHash": "76ac2a3889d64223498f77c09f4f4c84",
       "sourceName": "src/forking/SimpleSchelling.sol",
       "solcConfig": {
         "settings": {
@@ -977,8 +977,8 @@
       }
     },
     "src/interfaces/IBridgeProxy.sol": {
-      "lastModificationDate": 1695302117738,
-      "contentHash": "ce6ac271e4ee2e8577b4f7a861a42cb4",
+      "lastModificationDate": 1695390087487,
+      "contentHash": "152e1ab0d58bcf0f8815b3f3053404fa",
       "sourceName": "src/interfaces/IBridgeProxy.sol",
       "solcConfig": {
         "settings": {
@@ -1017,8 +1017,8 @@
       }
     },
     "src/testing/BridgeProxyMock.sol": {
-      "lastModificationDate": 1695305323114,
-      "contentHash": "9e948e04876de2be7bcc5372000933be",
+      "lastModificationDate": 1695390107000,
+      "contentHash": "63181fb6ce0a2bed18efba186250c2fe",
       "sourceName": "src/testing/BridgeProxyMock.sol",
       "solcConfig": {
         "settings": {
@@ -1119,8 +1119,8 @@
       }
     },
     "test/SimpleSchellingFunction.t.sol": {
-      "lastModificationDate": 1695315618708,
-      "contentHash": "2b03551fb616d3424dd01b20ae1b2db6",
+      "lastModificationDate": 1695400939998,
+      "contentHash": "93efaa83a579b18287b4ab02a488cf0c",
       "sourceName": "test/SimpleSchellingFunction.t.sol",
       "solcConfig": {
         "settings": {
