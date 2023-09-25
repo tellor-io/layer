@@ -22,11 +22,17 @@ contract CounterTest is Test {
     function setUp() public {
         implementation1 = new BridgeProxyMock(address(0));
         bridgeProxy = new BridgeProxyMock(address(implementation1));
-        schelling = new SimpleSchelling(address(bridgeProxy), minInitAmount, extensionPeriod, submissionPeriod, requireOwnerSignature, multisig);
+        schelling = new SimpleSchelling(
+            address(bridgeProxy),
+            minInitAmount,
+            extensionPeriod,
+            submissionPeriod,
+            requireOwnerSignature,
+            multisig
+        );
     }
 
     function testPauseBridge() public {
-        BridgeProxyMock implementation2 = new BridgeProxyMock(address(0));
         vm.deal(alice, 100 ether);
         assertEq(100 ether, alice.balance);
         // should revert if not enough value
@@ -38,18 +44,66 @@ contract CounterTest is Test {
         vm.stopPrank();
         uint256 expectedSubDeadline = block.timestamp + submissionPeriod;
         uint256 expectedExpiration = expectedSubDeadline + extensionPeriod;
-        (address initiator, address pImpl, uint256 amountFor, uint256 amountAgainst, uint256 subDeadline, uint256 expirationTime, bool executed, bool ownerSigned, SimpleSchelling.ProposalOutcome outcome) = schelling.proposals(0);
+        (
+            address initiator,
+            address pImpl,
+            uint256 amountFor,
+            uint256 amountAgainst,
+            uint256 subDeadline,
+            uint256 expirationTime,
+            bool executed,
+            bool ownerSigned,
+            SimpleSchelling.ProposalOutcome outcome
+        ) = schelling.getProposal(0);
+        assertEq(initiator, alice);
         assertEq(pImpl, address(0));
-        // assertEq(amountFor, 10 ether);
-        // assertEq(amountAgainst, 0);
-        // assertEq(expirationTime, expectedExpiration);
-        // assertEq(executed, false);
-        // assertEq(90 ether, alice.balance);
-        // (uint256 aliceAmountFor, uint256 aliceAmountAgainst, bool claimedFor, bool claimedAgainst) = schelling.getVotes(0, alice);
-        // assertEq(aliceAmountFor, 10 ether);
-        // assertEq(aliceAmountAgainst, 0);
-        // assertEq(claimedFor, false);
-        // assertEq(claimedAgainst, false);
+        assertEq(amountFor, 9 ether);
+        assertEq(amountAgainst, 0);
+        assertEq(subDeadline, expectedSubDeadline);
+        assertEq(expirationTime, expectedExpiration);
+        assertEq(executed, false);
+        assertEq(ownerSigned, false);
+        assertEq(uint256(outcome), 0);
+        assertEq(90 ether, alice.balance);
+        (
+            uint256 aliceAmountFor,
+            uint256 aliceAmountAgainst
+        ) = schelling.getVotes(0, alice);
+        assertEq(aliceAmountFor, 9 ether);
+        assertEq(aliceAmountAgainst, 0);
+        assertEq(bridgeProxy.paused(), false);
+    }
+
+    function testGuardianPauseBridge() public {
+        vm.deal(alice, 100 ether);
+        vm.startPrank(alice);
+        schelling.pauseBridge{value: 10 ether}();
+        // should revert if not owner
+        vm.expectRevert(bytes("not guardian"));
+        schelling.guardianPauseBridge(0);
+        vm.stopPrank();
+        vm.startPrank(multisig);
+        schelling.guardianPauseBridge(0);
+        vm.expectRevert(bytes("bridge already paused"));
+        schelling.guardianPauseBridge(0);
+        vm.stopPrank();
+        assertEq(bridgeProxy.paused(), true);
+        (,,,,,,,bool guardianSigned,) = schelling.getProposal(0);
+        assertEq(guardianSigned, true);
+    }
+
+    function testSubmitImplementation() public {
+        address implementation2 = makeAddr("implementation2");
+        vm.deal(alice, 100 ether);
+        vm.prank(alice);
+        schelling.pauseBridge{value: 10 ether}();
+        vm.expectRevert(bytes("not initiator"));
+        vm.prank(bob);
+        schelling.submitImplementation(0, implementation2);
+        vm.prank(alice);
+        schelling.submitImplementation(0, implementation2);
+        (,address pImpl,,,,,,,) = schelling.getProposal(0);
+        assertEq(pImpl, implementation2);
     }
 
     // function testVote() public {
@@ -69,4 +123,17 @@ contract CounterTest is Test {
     //     uint256 expectedExpiration = block.timestamp + extensionPeriod;
     //     (address pImpl, uint256 amountFor, uint256 amountAgainst, uint256 expirationTime, bool executed) = schelling.getProposal(0);
     // }
+
+    function testExecuteProposal() public {
+        address implementation2 = makeAddr("implementation2");
+        vm.deal(alice, 100 ether);
+        // propose fork
+        vm.startPrank(alice);
+        schelling.pauseBridge{value: 10 ether}();
+        schelling.submitImplementation(0, implementation2);
+        vm.stopPrank();
+        vm.prank(multisig);
+        schelling.guardianPauseBridge(0);
+        vm.warp(block.timestamp + extensionPeriod + submissionPeriod);
+    }
 }

@@ -9,15 +9,15 @@ contract SimpleSchelling {
     uint256 public proposalCount;
     uint256 public submissionPeriod; // period after pausing bridge to submit implementation
     uint256 public extensionPeriod; // amount of time added to expiration time when outcome changes
-    address public owner;
-    bool public requireOwnerSignature;
+    address public guardian; // optional guardian to sign proposal to pause bridge
+    bool public requireGuardianSignature; // whether or not guardian signature is required to pause bridge
 
     mapping(uint256 => ForkProposal) public proposals;
 
     enum ProposalOutcome {
+        INVALID,
         FOR,
-        AGAINST,
-        INVALID
+        AGAINST
     }
 
     struct ForkProposal {
@@ -28,7 +28,7 @@ contract SimpleSchelling {
         uint256 submissionDeadline;
         uint256 expirationTime;
         bool executed;
-        bool ownerSigned;
+        bool guardianSigned;
         ProposalOutcome outcome;
         mapping(address => Vote) votesFor;
         mapping(address => Vote) votesAgainst;
@@ -43,15 +43,15 @@ contract SimpleSchelling {
         uint256 _minInitAmount,
         uint256 _submissionPeriod,
         uint256 _extensionPeriod,
-        bool _requireOwnerSignature,
-        address _owner
+        bool _requireGuardianSignature,
+        address _guardian
     ) {
         bridgeProxy = IBridgeProxy(_bridgeProxy);
         minInitAmount = _minInitAmount;
         submissionPeriod = _submissionPeriod;
         extensionPeriod = _extensionPeriod;
-        requireOwnerSignature = _requireOwnerSignature;
-        owner = _owner;
+        requireGuardianSignature = _requireGuardianSignature;
+        guardian = _guardian;
     }
 
     function pauseBridge() public payable {
@@ -59,6 +59,7 @@ contract SimpleSchelling {
         require(!bridgeProxy.paused(), "bridge already paused");
         ForkProposal storage _proposal = proposals[proposalCount];
         uint256 _burnAmount = minInitAmount / 10;
+        _proposal.initiator = msg.sender;
         _proposal.amountFor = msg.value - _burnAmount;
         _proposal.submissionDeadline = block.timestamp + submissionPeriod;
         _proposal.expirationTime =
@@ -68,32 +69,33 @@ contract SimpleSchelling {
         _proposal.votesFor[msg.sender].amount += msg.value - _burnAmount;
         proposalCount++;
         payable(address(0)).transfer(_burnAmount);
-        if (!requireOwnerSignature) {
+        if (!requireGuardianSignature) {
             bridgeProxy.pauseBridge();
         }
     }
 
-    function ownerPauseBridge(uint256 _proposalId) public {
-        require(msg.sender == owner, "not owner");
-        require(requireOwnerSignature, "owner signature not required");
+    function guardianPauseBridge(uint256 _proposalId) public {
+        require(msg.sender == guardian, "not guardian");
+        require(requireGuardianSignature, "guardian signature not required");
         require(!bridgeProxy.paused(), "bridge already paused");
         ForkProposal storage _proposal = proposals[_proposalId];
         require(
             _proposal.submissionDeadline > block.timestamp,
             "submission period expired"
         );
+        _proposal.guardianSigned = true;
         bridgeProxy.pauseBridge();
     }
 
-    function transferOwnership(address _newOwner) public {
-        require(msg.sender == owner, "not owner");
-        owner = _newOwner;
+    function transferGuardianship(address _newGuardian) public {
+        require(msg.sender == guardian, "not guardian");
+        guardian = _newGuardian;
     }
 
-    function throwAwayOwnership() public {
-        require(msg.sender == owner, "not owner");
-        owner = address(0);
-        requireOwnerSignature = false;
+    function throwAwayGuardianship() public {
+        require(msg.sender == guardian, "not guardian");
+        guardian = address(0);
+        requireGuardianSignature = false;
     }
 
     function submitImplementation(
@@ -138,6 +140,27 @@ contract SimpleSchelling {
         }
     }
 
+    function updateVote(uint256 _proposalId, bool _for) public {
+        ForkProposal storage _proposal = proposals[_proposalId];
+        require(msg.sender != _proposal.initiator, "initiator cannot update vote");
+        require(_proposal.expirationTime > block.timestamp, "proposal expired");
+        uint256 _amount;
+        if (_for) {
+            _amount = _proposal.votesAgainst[msg.sender].amount;
+            _proposal.amountFor += _amount;
+            _proposal.votesFor[msg.sender].amount += _amount;
+            _proposal.amountAgainst -= _amount;
+            _proposal.votesAgainst[msg.sender].amount = 0;
+        } else {
+            _amount = _proposal.votesFor[msg.sender].amount;
+            _proposal.amountAgainst += _amount;
+            _proposal.votesAgainst[msg.sender].amount += _amount;
+            _proposal.amountFor -= _amount;
+            _proposal.votesFor[msg.sender].amount = 0;
+        }
+        require(_amount > 0, "no vote");
+    }
+
     function executeProposal(uint256 _proposalId) public {
         ForkProposal storage _proposal = proposals[_proposalId];
         require(
@@ -146,8 +169,8 @@ contract SimpleSchelling {
         );
         require(!_proposal.executed, "already executed");
         if (
-            (requireOwnerSignature && _proposal.ownerSigned) ||
-            !requireOwnerSignature
+            (requireGuardianSignature && _proposal.guardianSigned) ||
+            !requireGuardianSignature
         ) {
             require(
                 _proposal.expirationTime < block.timestamp,
@@ -229,7 +252,7 @@ contract SimpleSchelling {
             _proposal.submissionDeadline,
             _proposal.expirationTime,
             _proposal.executed,
-            _proposal.ownerSigned,
+            _proposal.guardianSigned,
             _proposal.outcome
         );
     }
