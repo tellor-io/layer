@@ -134,6 +134,21 @@ contract CounterTest is Test {
         vm.stopPrank();
         vm.prank(multisig);
         schelling.guardianPauseBridge(0);
-        vm.warp(block.timestamp + extensionPeriod + submissionPeriod);
+        vm.startPrank(alice);
+        vm.expectRevert(bytes("submission period not expired"));
+        schelling.executeProposal(0);
+        skip(submissionPeriod + 1);
+        vm.expectRevert(bytes("proposal not expired"));
+        schelling.executeProposal(0);
+        skip(extensionPeriod);
+        schelling.executeProposal(0);
+        vm.expectRevert(bytes("already executed"));
+        schelling.executeProposal(0);
+        vm.stopPrank();
+        (,,,,,, bool executed,, SimpleSchelling.ProposalOutcome outcome) = schelling.getProposal(0);
+        assertEq(executed, true);
+        assertEq(uint256(outcome), 1);
+        assertEq(bridgeProxy.implementation(), implementation2);
+        assertEq(bridgeProxy.paused(), false);
     }
 }

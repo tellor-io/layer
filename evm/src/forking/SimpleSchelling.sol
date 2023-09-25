@@ -145,20 +145,41 @@ contract SimpleSchelling {
         require(msg.sender != _proposal.initiator, "initiator cannot update vote");
         require(_proposal.expirationTime > block.timestamp, "proposal expired");
         uint256 _amount;
+        // burn 10% so that griefing by flip flopping is expensive
+        uint256 _burnAmount;
+        // get current outcome before vote
+        bool _forInLead = _proposal.amountFor > _proposal.amountAgainst;
         if (_for) {
-            _amount = _proposal.votesAgainst[msg.sender].amount;
+            _burnAmount = _proposal.votesAgainst[msg.sender].amount / 10;
+            _amount = _proposal.votesAgainst[msg.sender].amount - _burnAmount;
             _proposal.amountFor += _amount;
             _proposal.votesFor[msg.sender].amount += _amount;
             _proposal.amountAgainst -= _amount;
             _proposal.votesAgainst[msg.sender].amount = 0;
         } else {
-            _amount = _proposal.votesFor[msg.sender].amount;
+            _burnAmount = _proposal.votesFor[msg.sender].amount / 10;
+            _amount = _proposal.votesFor[msg.sender].amount - _burnAmount;
             _proposal.amountAgainst += _amount;
             _proposal.votesAgainst[msg.sender].amount += _amount;
             _proposal.amountFor -= _amount;
             _proposal.votesFor[msg.sender].amount = 0;
         }
         require(_amount > 0, "no vote");
+        // if outcome changed and past submission deadline, reset expiration time
+        if (
+            _forInLead &&
+            _proposal.amountAgainst >= _proposal.amountFor &&
+            _proposal.submissionDeadline < block.timestamp
+        ) {
+            _proposal.expirationTime = block.timestamp + extensionPeriod;
+        } else if (
+            !_forInLead &&
+            _proposal.amountFor > _proposal.amountAgainst &&
+            _proposal.submissionDeadline < block.timestamp
+        ) {
+            _proposal.expirationTime = block.timestamp + extensionPeriod;
+        }
+        payable(address(0)).transfer(_burnAmount);
     }
 
     function executeProposal(uint256 _proposalId) public {
@@ -180,6 +201,7 @@ contract SimpleSchelling {
                 _proposal.amountFor > _proposal.amountAgainst &&
                 _proposal.proposedImplementation != address(0)
             ) {
+                // if more tokens in support AND implementation submitted, update implementation
                 bridgeProxy.updateImplementation(
                     _proposal.proposedImplementation
                 );
@@ -187,11 +209,12 @@ contract SimpleSchelling {
             } else {
                 _proposal.outcome = ProposalOutcome.AGAINST;
             }
+            bridgeProxy.unpauseBridge();
         } else {
+            // if guardian signature required and not signed, proposal is invalid
             _proposal.outcome = ProposalOutcome.INVALID;
         }
         _proposal.executed = true;
-        bridgeProxy.unpauseBridge();
     }
 
     function claim(uint256 _proposalId) public {
