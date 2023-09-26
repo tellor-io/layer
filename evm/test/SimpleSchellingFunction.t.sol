@@ -38,9 +38,9 @@ contract CounterTest is Test {
         // should revert if not enough value
         vm.startPrank(alice);
         vm.expectRevert(bytes("insufficient amount"));
-        schelling.pauseBridge{value: 5 ether}();
+        schelling.initiateProposal{value: 5 ether}();
         // propose with sufficient value
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         vm.stopPrank();
         uint256 expectedSubDeadline = block.timestamp + submissionPeriod;
         uint256 expectedExpiration = expectedSubDeadline + extensionPeriod;
@@ -77,7 +77,7 @@ contract CounterTest is Test {
     function testGuardianPauseBridge() public {
         vm.deal(alice, 100 ether);
         vm.startPrank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         // should revert if not owner
         vm.expectRevert(bytes("not guardian"));
         schelling.guardianPauseBridge(0);
@@ -96,7 +96,7 @@ contract CounterTest is Test {
         address implementation2 = makeAddr("implementation2");
         vm.deal(alice, 100 ether);
         vm.prank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         vm.expectRevert(bytes("not initiator"));
         vm.prank(bob);
         schelling.submitImplementation(0, implementation2);
@@ -112,7 +112,7 @@ contract CounterTest is Test {
         vm.deal(bob, 100 ether);
         // propose pause bridge
         vm.prank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         uint256 proposalTime = block.timestamp;
         // should revert if 0 value
         vm.startPrank(bob);
@@ -164,7 +164,7 @@ contract CounterTest is Test {
         vm.deal(alice, 100 ether);
         // propose pause bridge
         vm.startPrank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         // submit implementation
         schelling.submitImplementation(0, implementation2);
         vm.stopPrank();
@@ -193,7 +193,7 @@ contract CounterTest is Test {
         vm.deal(alice, 100 ether);
         // propose pause bridge
         vm.startPrank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         // submit implementation
         schelling.submitImplementation(1, implementation3);
         vm.stopPrank();
@@ -217,7 +217,7 @@ contract CounterTest is Test {
         vm.deal(alice, 100 ether);
         // propose pause bridge
         vm.startPrank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         vm.stopPrank();
         vm.prank(multisig);
         // guardian pause bridge
@@ -236,7 +236,7 @@ contract CounterTest is Test {
         vm.deal(alice, 100 ether);
         // propose pause bridge
         vm.startPrank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         schelling.submitImplementation(3, implementation4);
         skip(submissionPeriod + extensionPeriod + 1);
         schelling.executeProposal(3);
@@ -254,7 +254,7 @@ contract CounterTest is Test {
         vm.deal(bob, 100 ether);
         // propose pause bridge
         vm.startPrank(alice);
-        schelling.pauseBridge{value: 10 ether}();
+        schelling.initiateProposal{value: 10 ether}();
         uint256 proposalTime = block.timestamp;
         vm.expectRevert(bytes("initiator cannot update vote"));
         schelling.updateVote(0, false);
