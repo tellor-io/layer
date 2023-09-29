@@ -6,13 +6,22 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc SubmitValue (MsgSubmitValue) returns (MsgSubmitValueResponse);
+  rpc SubmitValue  (MsgSubmitValue ) returns (MsgSubmitValueResponse );
+  rpc CommitReport (MsgCommitReport) returns (MsgCommitReportResponse);
 }
 message MsgSubmitValue {
   string creator = 1;
-  string qid   = 2;
+  string qid     = 2;
   string value   = 3;
 }
 
 message MsgSubmitValueResponse {}
+
+message MsgCommitReport {
+  string creator     = 1;
+  string queryId     = 2;
+  string signature = 3; //signature of value in submit value
+}
+
+message MsgCommitReportResponse {}
 

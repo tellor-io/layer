@@ -27,6 +27,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgSubmitValue int = 100
 
+	opWeightMsgCommitReport = "op_weight_msg_commit_report"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCommitReport int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -66,6 +70,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		oraclesimulation.SimulateMsgSubmitValue(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgCommitReport int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCommitReport, &weightMsgCommitReport, nil,
+		func(_ *rand.Rand) {
+			weightMsgCommitReport = defaultWeightMsgCommitReport
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCommitReport,
+		oraclesimulation.SimulateMsgCommitReport(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -79,6 +94,14 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgSubmitValue,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				oraclesimulation.SimulateMsgSubmitValue(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgCommitReport,
+			defaultWeightMsgCommitReport,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				oraclesimulation.SimulateMsgCommitReport(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

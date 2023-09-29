@@ -542,6 +542,7 @@ func New(
 		keys[oraclemoduletypes.MemStoreKey],
 		app.GetSubspace(oraclemoduletypes.ModuleName),
 
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.RegistryKeeper,

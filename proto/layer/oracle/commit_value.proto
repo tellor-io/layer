@@ -1,9 +1,11 @@
 syntax = "proto3";
 package layer.oracle;
-import "layer/oracle/micro_report.proto";
+
+import "layer/oracle/tx.proto";
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
-message Reports {
+message CommitValue {
   
-  repeated MicroReport microReports = 1; 
+  MsgCommitReport report = 1; 
+  int64 block = 2; 
 }
