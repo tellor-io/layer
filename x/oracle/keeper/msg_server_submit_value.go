@@ -9,6 +9,7 @@ import (
 	registryKeeper "github.com/tellor-io/layer/x/registry/keeper"
 	registryTypes "github.com/tellor-io/layer/x/registry/types"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -18,45 +19,58 @@ import (
 
 func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if !k.IsSenderStaked(ctx, msg.Creator) {
+	// convert reporter address from bech32 to sdk.AccAddress
+	reporter, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode reporter address: %v", err))
+	}
+	// check if sender is bonded
+	if !k.IsReporterStaked(ctx, reporter) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not staked")
 	}
-	// check if query id is valid
+	// check if query id field is valid
 	if !registryKeeper.IsQueryIdValid(msg.Qid) {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query id: %s", msg.Qid))
 	}
-	// decode query id hex string to bytes
-	qIdBytes, err := hex.DecodeString(msg.Qid)
+	// get commit from store
+	commitValue, err := k.getCommit(ctx, msg.Creator, msg.Qid)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query ID string: %v", err))
+		return nil, err
 	}
+	// check if value is being revealed in the one block after commit
+	if ctx.BlockHeight()-1 != commitValue.Block {
+		return nil, status.Error(codes.InvalidArgument, "missed block height to reveal")
+	}
+	// if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
+	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
+	// }
+	// verify value signature
+	if !k.verifySignature(ctx, reporter, msg.Value, commitValue.Report.Signature) {
+		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")
+	}
+	// set value
+	k.setValue(ctx, msg)
+	return &types.MsgSubmitValueResponse{}, nil
+}
+
+func (k Keeper) setValue(ctx sdk.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	// get query data from registry by query id
 	queryData, err := k.registryKeeper.QueryData(ctx, msg.Qid)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("query data not found: %v", err))
 	}
-	// decode query data hex to get query type
-	decodedQueryType, err := decodeQueryType(queryData)
+	// decode query data hex to get query type, returns interface array
+	queryType, err := decodeQueryType(queryData)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
-	queryType := decodedQueryType[0].(string)
-	// get data spec from registry by query type to validate value
-	dataSpecBytes := k.registryKeeper.Spec(ctx, queryType)
-	if dataSpecBytes == nil {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("data spec not found for query type: %s", queryType))
-	}
-
-	var dataSpec registryTypes.DataSpec
-	k.cdc.Unmarshal(dataSpecBytes, &dataSpec)
-	decodedSpec := &dataSpec
-	valueType := decodedSpec.ValueType
-	valueBytes, err := hex.DecodeString(msg.Value)
+	valueType, err := getValueType(k.registryKeeper, k.cdc, ctx, queryType)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value string: %v", err))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
-	// decode value using value type from data spec
-	value, err := decodeValue(valueBytes, valueType)
+	// decode value using value type from data spec and check if decodes successfully
+	// value is not used, only used to check if it decodes successfully
+	value, err := decodeValue(msg.Value, valueType)
 	ctx.Logger().Info(fmt.Sprintf("value: %v", value[0]))
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
@@ -68,24 +82,69 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		Value:     msg.Value,
 		Timestamp: uint64(ctx.BlockTime().Unix()),
 	}
+	// decode query id hex string to bytes
+	qIdBytes, err := hex.DecodeString(msg.Qid)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query ID string: %v", err))
+	}
 	var reportsList types.Reports
 	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal reports: %v", err)
 	}
-	reportsList.Reports = append(reportsList.Reports, report)
+	reportsList.MicroReports = append(reportsList.MicroReports, report)
 	store.Set(qIdBytes, k.cdc.MustMarshal(&reportsList))
 	return &types.MsgSubmitValueResponse{}, nil
 }
+func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
+	// get data spec from registry by query type to validate value
+	dataSpecBytes := registry.Spec(ctx, queryType)
+	if dataSpecBytes == nil {
+		return "", status.Error(codes.NotFound, fmt.Sprintf("data spec not found for query type: %s", queryType))
+	}
+	var dataSpec registryTypes.DataSpec
+	cdc.Unmarshal(dataSpecBytes, &dataSpec)
 
-func decodeQueryType(data []byte) ([]interface{}, error) {
+	return dataSpec.ValueType, nil
+}
+
+func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.AccAddress) bool {
+	delegations := k.stakingKeeper.GetAllDelegatorDelegations(ctx, reporter)
+
+	var totalStakedTokens sdk.Dec = sdk.ZeroDec()
+	for _, delegation := range delegations {
+		totalStakedTokens = totalStakedTokens.Add(delegation.Shares)
+	}
+	return totalStakedTokens.GT(sdk.ZeroDec())
+}
+
+func (k Keeper) verifySignature(ctx sdk.Context, reporter sdk.AccAddress, value, signature string) bool {
+	reporterAccount := k.accountKeeper.GetAccount(ctx, reporter)
+	pubKey := reporterAccount.GetPubKey()
+	sigBytes, err := hex.DecodeString(signature)
+	if err != nil {
+		return false
+	}
+	// decode value from hex string
+	valBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return false
+	}
+	// verify signature
+	if !pubKey.VerifySignature(valBytes, sigBytes) {
+		return false
+	}
+	return true
+}
+
+func decodeQueryType(data []byte) (string, error) {
 	// Create an ABI arguments object based on the types
 	strArg, err := abi.NewType("string", "string", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new ABI type when decoding query type: %v", err)
+		return "", fmt.Errorf("failed to create new ABI type when decoding query type: %v", err)
 	}
 	bytesArg, err := abi.NewType("bytes", "bytes", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new ABI type when decoding query type: %v", err)
+		return "", fmt.Errorf("failed to create new ABI type when decoding query type: %v", err)
 	}
 	args := abi.Arguments{
 		abi.Argument{Type: strArg},
@@ -93,12 +152,12 @@ func decodeQueryType(data []byte) ([]interface{}, error) {
 	}
 	result, err := args.UnpackValues(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unpack query type: %v", err)
+		return "", fmt.Errorf("failed to unpack query type: %v", err)
 	}
-	return result, nil
+	return result[0].(string), nil
 }
 
-func decodeValue(data []byte, dataType string) ([]interface{}, error) {
+func decodeValue(value, dataType string) ([]interface{}, error) {
 	argType, err := abi.NewType(dataType, dataType, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new ABI type when decoding value: %v", err)
@@ -107,25 +166,16 @@ func decodeValue(data []byte, dataType string) ([]interface{}, error) {
 		Type: argType,
 	}
 	args := abi.Arguments{arg}
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value string: %v", err))
+	}
 	var result []interface{}
-	result, err = args.Unpack(data)
+	result, err = args.Unpack(valueBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unpack value: %v", err)
 	}
 	return result, nil
-}
-
-func (k Keeper) IsSenderStaked(ctx sdk.Context, sender string) bool {
-	accAddr, err := sdk.AccAddressFromBech32(sender)
-	if err != nil {
-		return false
-	}
-	delegations := k.stakingKeeper.GetAllDelegatorDelegations(ctx, accAddr)
-	var totalStakedTokens sdk.Dec
-	for _, delegation := range delegations {
-		totalStakedTokens = totalStakedTokens.Add(delegation.GetShares())
-	}
-	return totalStakedTokens.GT(sdk.ZeroDec())
 }
 
 // cleanup reports list

@@ -14,6 +14,8 @@ const (
 	MemStoreKey = "mem_oracle"
 
 	ReportsKey = "Reports-value-"
+
+	CommitReportKey = "CommitReport-value-"
 )
 
 func KeyPrefix(p string) []byte {
