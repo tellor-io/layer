@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -67,19 +66,20 @@ func (k Keeper) GetGenesisSpec(ctx sdk.Context) types.DataSpec {
 
 func (k Keeper) SetGenesisQuery(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.QueryRegistryKey))
+	ethQueryData := spotQueryData("eth", "usd")
+	store.Set(crypto.Keccak256(ethQueryData), ethQueryData)
 
-	encodedData, _ := EncodeArguments([]string{"string", "string"}, []string{"eth", "usd"})
+	btcQueryData := spotQueryData("btc", "usd")
+	store.Set(crypto.Keccak256(btcQueryData), btcQueryData)
+
+	trbQueryData := spotQueryData("trb", "usd")
+	store.Set(crypto.Keccak256(trbQueryData), trbQueryData)
+}
+
+func spotQueryData(symbolA, symbolB string) []byte {
+	encodedData, _ := EncodeArguments([]string{"string", "string"}, []string{symbolA, symbolB})
 
 	queryData, _ := EncodeArguments([]string{"string", "bytes"}, []string{"SpotPrice", string(encodedData)})
 
-	queryId := crypto.Keccak256(queryData)
-	store.Set(queryId, queryData)
-
-}
-
-func (k Keeper) GetGenesisQuery(ctx sdk.Context) string {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
-	queryId, _ := k.QueryData(ctx, "83A7F3D48786AC2667503A61E8C415438ED2922EB86A2906E4EE66D9A2CE4992")
-	queryData := store.Get(queryId)
-	return bytes.HexBytes(queryData).String()
+	return queryData
 }

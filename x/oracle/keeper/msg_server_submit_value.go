@@ -53,6 +53,50 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
+func (k Keeper) setValueByReporter(ctx sdk.Context, msg *types.MsgSubmitValue) error {
+
+	reporterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
+	// reporter-query id pair
+	reporterQueryIdKey := []byte(msg.Creator + ":" + msg.Qid)
+	// get reports list from store and unmarshal
+	var reportsList types.Reports
+	if err := k.cdc.Unmarshal(reporterStore.Get(reporterQueryIdKey), &reportsList); err != nil {
+		return fmt.Errorf("failed to unmarshal reports: %v", err)
+	}
+	report := &types.MicroReport{
+		Reporter:  msg.Creator,
+		Qid:       msg.Qid,
+		Value:     msg.Value,
+		Timestamp: uint64(ctx.BlockTime().Unix()),
+	}
+	// append report to reports list
+	reportsList.MicroReports = append(reportsList.MicroReports, report)
+	reporterStore.Set(reporterQueryIdKey, k.cdc.MustMarshal(&reportsList))
+	return nil
+}
+
+func (k Keeper) setValueByQueryId(ctx sdk.Context, msg *types.MsgSubmitValue) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
+	report := &types.MicroReport{
+		Reporter:  msg.Creator,
+		Qid:       msg.Qid,
+		Value:     msg.Value,
+		Timestamp: uint64(ctx.BlockTime().Unix()),
+	}
+	// decode query id hex string to bytes
+	qIdBytes, err := hex.DecodeString(msg.Qid)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query ID string: %v", err))
+	}
+	var reportsList types.Reports
+	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
+		return fmt.Errorf("failed to unmarshal reports: %v", err)
+	}
+	reportsList.MicroReports = append(reportsList.MicroReports, report)
+	store.Set(qIdBytes, k.cdc.MustMarshal(&reportsList))
+	return nil
+}
+
 func (k Keeper) setValue(ctx sdk.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	// get query data from registry by query id
 	queryData, err := k.registryKeeper.QueryData(ctx, msg.Qid)
@@ -75,24 +119,14 @@ func (k Keeper) setValue(ctx sdk.Context, msg *types.MsgSubmitValue) (*types.Msg
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
-	report := &types.MicroReport{
-		Reporter:  msg.Creator,
-		Qid:       msg.Qid,
-		Value:     msg.Value,
-		Timestamp: uint64(ctx.BlockTime().Unix()),
+	// set value by reporter
+	if err := k.setValueByReporter(ctx, msg); err != nil {
+		return nil, err
 	}
-	// decode query id hex string to bytes
-	qIdBytes, err := hex.DecodeString(msg.Qid)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query ID string: %v", err))
+	// set value by query id
+	if err := k.setValueByQueryId(ctx, msg); err != nil {
+		return nil, err
 	}
-	var reportsList types.Reports
-	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal reports: %v", err)
-	}
-	reportsList.MicroReports = append(reportsList.MicroReports, report)
-	store.Set(qIdBytes, k.cdc.MustMarshal(&reportsList))
 	return &types.MsgSubmitValueResponse{}, nil
 }
 func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {

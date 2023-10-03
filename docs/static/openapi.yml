@@ -46450,7 +46450,7 @@ paths:
               reports:
                 type: object
                 properties:
-                  reports:
+                  microReports:
                     type: array
                     items:
                       type: object
@@ -46484,6 +46484,109 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: qId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_reporter/{reporter}:
+    get:
+      operationId: LayerOracleGetReportsbyReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              microReports:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reporter:
+                      type: string
+                    qid:
+                      type: string
+                    value:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_reporter_qid/{reporter}/{qid}:
+    get:
+      operationId: LayerOracleGetReportsbyReporterQid
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reports:
+                type: object
+                properties:
+                  microReports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        qid:
+                          type: string
+                        value:
+                          type: string
+                        timestamp:
+                          type: string
+                          format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          in: path
+          required: true
+          type: string
+        - name: qid
           in: path
           required: true
           type: string
@@ -75391,6 +75494,8 @@ definitions:
       timestamp:
         type: string
         format: uint64
+  layer.oracle.MsgCommitReportResponse:
+    type: object
   layer.oracle.MsgSubmitValueResponse:
     type: object
   layer.oracle.Params:
@@ -75402,7 +75507,7 @@ definitions:
       reports:
         type: object
         properties:
-          reports:
+          microReports:
             type: array
             items:
               type: object
@@ -75416,6 +75521,23 @@ definitions:
                 timestamp:
                   type: string
                   format: uint64
+  layer.oracle.QueryGetReportsbyReporterResponse:
+    type: object
+    properties:
+      microReports:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            qid:
+              type: string
+            value:
+              type: string
+            timestamp:
+              type: string
+              format: uint64
   layer.oracle.QueryParamsResponse:
     type: object
     properties:
@@ -75426,7 +75548,7 @@ definitions:
   layer.oracle.Reports:
     type: object
     properties:
-      reports:
+      microReports:
         type: array
         items:
           type: object
