@@ -45,13 +45,13 @@ func (k Keeper) QueryData(ctx sdk.Context, queryId string) ([]byte, error) {
 
 // has0xPrefix validates str begins with '0x' or '0X'.
 // From: https://github.com/ethereum/go-ethereum/blob/5c6f4b9f0d4270fcc56df681bf003e6a74f11a6b/common/bytes.go#L51
-func has0xPrefix(str string) bool {
+func Has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
 }
 
 // check queryId is valid ie 32 bytes
 func IsQueryIdValid(queryId string) bool {
-	hasPrefix := has0xPrefix(queryId)
+	hasPrefix := Has0xPrefix(queryId)
 	if hasPrefix {
 		queryId = queryId[2:]
 	}

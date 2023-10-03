@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registryKeeper "github.com/tellor-io/layer/x/registry/keeper"
 	registryTypes "github.com/tellor-io/layer/x/registry/types"
@@ -28,12 +29,17 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	if !k.IsReporterStaked(ctx, reporter) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not staked")
 	}
-	// check if query id field is valid
-	if !registryKeeper.IsQueryIdValid(msg.Qid) {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query id: %s", msg.Qid))
+	// check if querydata has prefix 0x
+	if registryKeeper.Has0xPrefix(msg.QueryData) {
+		msg.QueryData = msg.QueryData[2:]
+	}
+	// decode query data hex string to bytes
+	queryData, err := hex.DecodeString(msg.QueryData)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.getCommit(ctx, msg.Creator, msg.Qid)
+	commitValue, err := k.getSignature(ctx, msg.Creator, HashQueryData(queryData))
 	if err != nil {
 		return nil, err
 	}
@@ -49,51 +55,43 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")
 	}
 	// set value
-	k.setValue(ctx, msg)
+	if err := k.setValue(ctx, msg.Creator, msg.Value, queryData); err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to set value: %v", err))
+	}
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
-func (k Keeper) setValue(ctx sdk.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
-	// get query data from registry by query id
-	queryData, err := k.registryKeeper.QueryData(ctx, msg.Qid)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("query data not found: %v", err))
-	}
-	// decode query data hex to get query type, returns interface array
+func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte) error {
+	queryId := HashQueryData(queryData)
 	queryType, err := decodeQueryType(queryData)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
 	valueType, err := getValueType(k.registryKeeper, k.cdc, ctx, queryType)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
 	// decode value using value type from data spec and check if decodes successfully
 	// value is not used, only used to check if it decodes successfully
-	value, err := decodeValue(msg.Value, valueType)
+	value, err := decodeValue(val, valueType)
 	ctx.Logger().Info(fmt.Sprintf("value: %v", value[0]))
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
 	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
 	report := &types.MicroReport{
-		Reporter:  msg.Creator,
-		Qid:       msg.Qid,
-		Value:     msg.Value,
+		Reporter:  reporter,
+		Qid:       bytes.HexBytes(queryId).String(),
+		Value:     val,
 		Timestamp: uint64(ctx.BlockTime().Unix()),
 	}
-	// decode query id hex string to bytes
-	qIdBytes, err := hex.DecodeString(msg.Qid)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query ID string: %v", err))
-	}
 	var reportsList types.Reports
-	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal reports: %v", err)
+	if err := k.cdc.Unmarshal(store.Get(queryId), &reportsList); err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to unmarshal reports: %v", err))
 	}
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
-	store.Set(qIdBytes, k.cdc.MustMarshal(&reportsList))
-	return &types.MsgSubmitValueResponse{}, nil
+	store.Set(queryId, k.cdc.MustMarshal(&reportsList))
+	return nil
 }
 func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
 	// get data spec from registry by query type to validate value
