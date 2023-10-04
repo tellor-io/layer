@@ -1,0 +1,45 @@
+syntax = "proto3";
+package layer.bridge;
+
+option go_package = "layer/bridge";
+/*
+                                       _______________________[AppHash]______________
+                                      /                                              \
+                   _________________[I19]_________________                         ____[I20*]____
+                  /                                       \	                      /              \
+         _______[I15*]______                       _______[I16]_________        [GHIJ]           [KLMN]
+        /                   \                     /                     \
+    __[I8]__              __[I9]__            __[I10*]__             __[I11]__
+   /        \            /         \         /          \           /         \
+ [I0]      [I1]       [I2]        [I3]     [I4]         [I5]      [I6*]       [I7]
+ /  \     /   \      /   \      /    \    /    \        /  \      /   \      /   \
+[0] [1]  [2]   [3]  [4]  [5]  [6]    [7] [8]   [9]     [A] [B]   [C]  [D]  [E*]  [F*]
+Right[F], Left[I6], Left[I10], Left[I15], Right[I20]
+[0] - acc (auth)     [1] - authz     [2] - bank      [3] - capability [4] - consensus [5] - crisis
+[6] - distr          [7] - evidence  [8] - feegrant  [9] - gov        [A] - group     [B] - ibc
+[C] - icacontroller  [D] - icahost   [E] - luqchain  [F] - mint       [G] - params    [H] - slashing
+[I] - staking        [J] - transfer  [K] - upgrade   [L] - vesting
+*/
+message MutiStoreTreeFields {
+    string luqchain_iavl_state_hash = 1;
+    string mint_store_merkle_hash = 2;
+    string icacontroller_to_icahost_merkle_hash = 3;
+    string feegrant_to_ibc_merkle_hash = 4;
+    string acc_to_evidence_merkle_hash = 5;
+    string params_to_vesting_merkle_hash = 6;
+}
+
+message IAVLMerklePathEvm {
+	bool IsDataOnRight = 1;
+	uint32 SubtreeHeight = 2;
+    int64 SubtreeSize = 3;
+    int64 SubtreeVersion = 4;
+    string SiblingHash = 5;
+}
+message IAVLMerklePath {
+    bool   is_data_on_right = 1;
+    uint32 subtree_height   = 2;
+    uint64 subtree_size     = 3;
+    uint64 subtree_version  = 4;
+    bytes  sibling_hash     = 5;
+  }

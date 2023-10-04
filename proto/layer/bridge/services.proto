@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package layer.bridge;
+
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "layer/bridge/block_header_merkle.proto";
+import "layer/bridge/multistore.proto";
+import "layer/bridge/tmsig.proto";
+import "layer/bridge/inclusionproof.proto";
+import "layer/bridge/blockvalidatorinfo.proto";
+option go_package = "layer/bridge";
+
+service Bridge {
+  
+    rpc BlockheaderMerkle (QueryBlockheaderMerkleRequest) returns (QueryBlockheaderMerkleResponse) {
+        option (google.api.http).get = "/layer/bridge/blockheadermerkle";
+    }
+    rpc BlockheaderMerkleEVM (QueryBlockheaderMerkleRequest) returns (QueryBlockheaderMerkleEVMResponse) {
+        option (google.api.http).get = "/layer/bridge/blockheadermerkleevm";
+    }
+    rpc MultistoreTree (QueryMultistoreRequest) returns (QueryMultistoreResponse) {
+        option (google.api.http).get = "/layer/bridge/multistore";
+    }
+    rpc TmSig (QueryTmRequest) returns (QueryTmResponse) {
+        option (google.api.http).get = "/layer/bridge/tmsig";
+    }
+    
+    rpc InclusionProof (QueryInclusionProofRequest) returns (QueryInclusionProofResponse) {
+        option (google.api.http).get = "/layer/bridge/inclusionproof";
+    }
+
+    rpc BlockValidatorInfo (QueryBlockValidatorInfoRequest) returns (QueryBlockValidatorInfoResponse) {
+        option (google.api.http).get = "/layer/bridge/blockvalidators";
+    }
+
+}
+
+// QueryBlockheaderMerkleRequest is request type for the Query/QueryBlockheaderMerkleRequest RPC method.
+message QueryBlockheaderMerkleRequest {
+    int64 height = 1;
+}
+
+message QueryBlockheaderMerkleResponse {
+    BlockHeaderMerkle blockheaderMerkle = 1 [(gogoproto.nullable) = false];
+}
+message QueryBlockheaderMerkleEVMResponse {
+    BlockHeaderMerkleEvm blockheaderMerkleEvm = 1 [(gogoproto.nullable) = false];
+}
+message QueryMultistoreRequest {
+    int64 height = 1;
+    string qid = 2;
+    uint64 timestamp = 3;
+}
+message QueryMultistoreResponse {
+    MutiStoreTreeFields MutiStoreTree = 1 [(gogoproto.nullable) = false];
+    repeated IAVLMerklePathEvm iavl = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryInclusionProofRequest {
+    int64 height = 1;
+    string qid = 2;
+    uint64 timestamp = 3;
+}
+message QueryInclusionProofResponse {
+    InclusionProofStuffFields InclusionProofStuff = 1 [(gogoproto.nullable) = false];
+    repeated IAVLMerklePathEvm MerklePath = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryBlockValidatorInfoRequest {
+    int64 height = 1;
+}
+
+message QueryBlockValidatorInfoResponse {
+    repeated ValidatorInfo Validators = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryTmRequest {
+    int64 height = 1;
+}
+message QueryTmResponse {
+    repeated TmSig tmSig = 1 [(gogoproto.nullable) = false];
+    CommonEncodedVotePart common = 2 [(gogoproto.nullable) = false];
+}
