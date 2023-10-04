@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "layer/oracle/params.proto";
 import "layer/oracle/reports.proto";
-
+import "layer/oracle/micro_report.proto";
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Query defines the gRPC querier service.
@@ -22,6 +22,16 @@ service Query {
   // Queries a list of GetReportsbyQid items.
   rpc GetReportsbyQid (QueryGetReportsbyQidRequest) returns (QueryGetReportsbyQidResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{qId}";
+  
+  }
+
+  rpc GetReportsbyReporter (QueryGetReportsbyReporterRequest) returns (QueryGetReportsbyReporterResponse) {
+    option (google.api.http).get = "/layer/oracle/get_reportsby_reporter/{reporter}";
+  
+  }
+
+  rpc GetReportsbyReporterQid (QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse) {
+    option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{qid}";
   
   }
 }
@@ -43,3 +53,15 @@ message QueryGetReportsbyQidResponse {
   Reports reports = 1 [(gogoproto.nullable) = false];
 }
 
+message QueryGetReportsbyReporterRequest {
+  string reporter = 1;
+}
+
+message QueryGetReportsbyReporterResponse {
+  repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetReportsbyReporterQidRequest {
+  string reporter = 1;
+  string qid = 2;
+}

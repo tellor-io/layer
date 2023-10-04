@@ -66,12 +66,20 @@ func (k Keeper) GetGenesisSpec(ctx sdk.Context) types.DataSpec {
 
 func (k Keeper) SetGenesisQuery(ctx sdk.Context) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.QueryRegistryKey))
+	ethQueryData := spotQueryData("eth", "usd")
+	store.Set(crypto.Keccak256(ethQueryData), ethQueryData)
 
-	encodedData, _ := EncodeArguments([]string{"string", "string"}, []string{"eth", "usd"})
+	btcQueryData := spotQueryData("btc", "usd")
+	store.Set(crypto.Keccak256(btcQueryData), btcQueryData)
+
+	trbQueryData := spotQueryData("trb", "usd")
+	store.Set(crypto.Keccak256(trbQueryData), trbQueryData)
+}
+
+func spotQueryData(symbolA, symbolB string) []byte {
+	encodedData, _ := EncodeArguments([]string{"string", "string"}, []string{symbolA, symbolB})
 
 	queryData, _ := EncodeArguments([]string{"string", "bytes"}, []string{"SpotPrice", string(encodedData)})
 
-	queryId := crypto.Keccak256(queryData)
-	store.Set(queryId, queryData)
-
+	return queryData
 }
