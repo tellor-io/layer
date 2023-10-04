@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registryKeeper "github.com/tellor-io/layer/x/registry/keeper"
 	registryTypes "github.com/tellor-io/layer/x/registry/types"
@@ -81,7 +80,7 @@ func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
 	report := &types.MicroReport{
 		Reporter:  reporter,
-		Qid:       bytes.HexBytes(queryId).String(),
+		Qid:       hex.EncodeToString(queryId),
 		Value:     val,
 		Timestamp: uint64(ctx.BlockTime().Unix()),
 	}
@@ -91,6 +90,11 @@ func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte
 	}
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
 	store.Set(queryId, k.cdc.MustMarshal(&reportsList))
+	// emit event
+	err = ctx.EventManager().EmitTypedEvent(report)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {

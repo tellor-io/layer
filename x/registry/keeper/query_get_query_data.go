@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/tellor-io/layer/x/registry/types"
 
-	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -25,7 +25,7 @@ func (k Keeper) GetQueryData(goCtx context.Context, req *types.QueryGetQueryData
 		return nil, err
 	}
 
-	return &types.QueryGetQueryDataResponse{QueryData: bytes.HexBytes(queryData).String()}, nil
+	return &types.QueryGetQueryDataResponse{QueryData: hex.EncodeToString(queryData)}, nil
 }
 
 func (k Keeper) QueryData(ctx sdk.Context, queryId string) ([]byte, error) {
