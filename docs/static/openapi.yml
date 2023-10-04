@@ -46437,6 +46437,382 @@ paths:
                         }
       tags:
         - Query
+  /layer/bridge/blockheadermerkle:
+    get:
+      operationId: LayerBridgeBlockheaderMerkle
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              blockheaderMerkle:
+                type: object
+                properties:
+                  versionChainidHash:
+                    type: string
+                    format: byte
+                  height:
+                    type: string
+                    format: uint64
+                  timeSecond:
+                    type: string
+                    format: uint64
+                  timeNanosecond:
+                    type: integer
+                    format: int64
+                  lastblockidCommitHash:
+                    type: string
+                    format: byte
+                  nextvalidatorConsensusHash:
+                    type: string
+                    format: byte
+                  lastresultsHash:
+                    type: string
+                    format: byte
+                  evidenceProposerHash:
+                    type: string
+                    format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Bridge
+  /layer/bridge/blockheadermerkleevm:
+    get:
+      operationId: LayerBridgeBlockheaderMerkleEVM
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              blockheaderMerkleEvm:
+                type: object
+                properties:
+                  versionChainidHash:
+                    type: string
+                  height:
+                    type: string
+                    format: uint64
+                  timeSecond:
+                    type: string
+                    format: uint64
+                  timeNanosecond:
+                    type: integer
+                    format: int64
+                  lastblockidCommitHash:
+                    type: string
+                  nextvalidatorConsensusHash:
+                    type: string
+                  lastresultsHash:
+                    type: string
+                  evidenceProposerHash:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Bridge
+  /layer/bridge/blockvalidators:
+    get:
+      operationId: LayerBridgeBlockValidatorInfo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              Validators:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    cosmosAddress:
+                      type: string
+                    ethAddress:
+                      type: string
+                    votingPower:
+                      type: string
+                      format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Bridge
+  /layer/bridge/inclusionproof:
+    get:
+      operationId: LayerBridgeInclusionProof
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              InclusionProofStuff:
+                type: object
+                properties:
+                  RootHash:
+                    type: string
+                  Version:
+                    type: string
+                    format: int64
+                  Key:
+                    type: string
+                  DataHash:
+                    type: string
+              MerklePath:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    IsDataOnRight:
+                      type: boolean
+                    SubtreeHeight:
+                      type: integer
+                      format: int64
+                    SubtreeSize:
+                      type: string
+                      format: int64
+                    SubtreeVersion:
+                      type: string
+                      format: int64
+                    SiblingHash:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: qid
+          in: query
+          required: false
+          type: string
+        - name: timestamp
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Bridge
+  /layer/bridge/multistore:
+    get:
+      operationId: LayerBridgeMultistoreTree
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              MutiStoreTree:
+                type: object
+                properties:
+                  luqchain_iavl_state_hash:
+                    type: string
+                  mint_store_merkle_hash:
+                    type: string
+                  icacontroller_to_icahost_merkle_hash:
+                    type: string
+                  feegrant_to_ibc_merkle_hash:
+                    type: string
+                  acc_to_evidence_merkle_hash:
+                    type: string
+                  params_to_vesting_merkle_hash:
+                    type: string
+                title: "_______________________[AppHash]______________\n/                                              \\\n_________________[I19]_________________                         ____[I20*]____\n/                                       \\\t                      /              \\\n_______[I15*]______                       _______[I16]_________        [GHIJ]           [KLMN]\n/                   \\                     /                     \\\n__[I8]__              __[I9]__            __[I10*]__             __[I11]__\n/        \\            /         \\         /          \\           /         \\\n[I0]      [I1]       [I2]        [I3]     [I4]         [I5]      [I6*]       [I7]\n/  \\     /   \\      /   \\      /    \\    /    \\        /  \\      /   \\      /   \\\n[0] [1]  [2]   [3]  [4]  [5]  [6]    [7] [8]   [9]     [A] [B]   [C]  [D]  [E*]  [F*]\nRight[F], Left[I6], Left[I10], Left[I15], Right[I20]\n[0] - acc (auth)     [1] - authz     [2] - bank      [3] - capability [4] - consensus [5] - crisis\n[6] - distr          [7] - evidence  [8] - feegrant  [9] - gov        [A] - group     [B] - ibc\n[C] - icacontroller  [D] - icahost   [E] - luqchain  [F] - mint       [G] - params    [H] - slashing\n[I] - staking        [J] - transfer  [K] - upgrade   [L] - vesting"
+              iavl:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    IsDataOnRight:
+                      type: boolean
+                    SubtreeHeight:
+                      type: integer
+                      format: int64
+                    SubtreeSize:
+                      type: string
+                      format: int64
+                    SubtreeVersion:
+                      type: string
+                      format: int64
+                    SiblingHash:
+                      type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: query
+          required: false
+          type: string
+          format: int64
+        - name: qid
+          in: query
+          required: false
+          type: string
+        - name: timestamp
+          in: query
+          required: false
+          type: string
+          format: uint64
+      tags:
+        - Bridge
+  /layer/bridge/tmsig:
+    get:
+      operationId: LayerBridgeTmSig
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tmSig:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    R:
+                      type: string
+                    S:
+                      type: string
+                    V:
+                      type: integer
+                      format: int64
+                    EncodedTimestamp:
+                      type: string
+              common:
+                type: object
+                properties:
+                  SignedDataPrefix:
+                    type: string
+                    format: byte
+                  SignedDataSuffix:
+                    type: string
+                    format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: height
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Bridge
   /layer/oracle/get_reportsby_qid/{qId}:
     get:
       summary: Queries a list of GetReportsbyQid items.
@@ -75379,6 +75755,296 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  layer.bridge.BlockHeaderMerkle:
+    type: object
+    properties:
+      versionChainidHash:
+        type: string
+        format: byte
+      height:
+        type: string
+        format: uint64
+      timeSecond:
+        type: string
+        format: uint64
+      timeNanosecond:
+        type: integer
+        format: int64
+      lastblockidCommitHash:
+        type: string
+        format: byte
+      nextvalidatorConsensusHash:
+        type: string
+        format: byte
+      lastresultsHash:
+        type: string
+        format: byte
+      evidenceProposerHash:
+        type: string
+        format: byte
+  layer.bridge.BlockHeaderMerkleEvm:
+    type: object
+    properties:
+      versionChainidHash:
+        type: string
+      height:
+        type: string
+        format: uint64
+      timeSecond:
+        type: string
+        format: uint64
+      timeNanosecond:
+        type: integer
+        format: int64
+      lastblockidCommitHash:
+        type: string
+      nextvalidatorConsensusHash:
+        type: string
+      lastresultsHash:
+        type: string
+      evidenceProposerHash:
+        type: string
+  layer.bridge.CommonEncodedVotePart:
+    type: object
+    properties:
+      SignedDataPrefix:
+        type: string
+        format: byte
+      SignedDataSuffix:
+        type: string
+        format: byte
+  layer.bridge.IAVLMerklePathEvm:
+    type: object
+    properties:
+      IsDataOnRight:
+        type: boolean
+      SubtreeHeight:
+        type: integer
+        format: int64
+      SubtreeSize:
+        type: string
+        format: int64
+      SubtreeVersion:
+        type: string
+        format: int64
+      SiblingHash:
+        type: string
+  layer.bridge.InclusionProofStuffFields:
+    type: object
+    properties:
+      RootHash:
+        type: string
+      Version:
+        type: string
+        format: int64
+      Key:
+        type: string
+      DataHash:
+        type: string
+  layer.bridge.MutiStoreTreeFields:
+    type: object
+    properties:
+      luqchain_iavl_state_hash:
+        type: string
+      mint_store_merkle_hash:
+        type: string
+      icacontroller_to_icahost_merkle_hash:
+        type: string
+      feegrant_to_ibc_merkle_hash:
+        type: string
+      acc_to_evidence_merkle_hash:
+        type: string
+      params_to_vesting_merkle_hash:
+        type: string
+    title: "_______________________[AppHash]______________\n/                                              \\\n_________________[I19]_________________                         ____[I20*]____\n/                                       \\\t                      /              \\\n_______[I15*]______                       _______[I16]_________        [GHIJ]           [KLMN]\n/                   \\                     /                     \\\n__[I8]__              __[I9]__            __[I10*]__             __[I11]__\n/        \\            /         \\         /          \\           /         \\\n[I0]      [I1]       [I2]        [I3]     [I4]         [I5]      [I6*]       [I7]\n/  \\     /   \\      /   \\      /    \\    /    \\        /  \\      /   \\      /   \\\n[0] [1]  [2]   [3]  [4]  [5]  [6]    [7] [8]   [9]     [A] [B]   [C]  [D]  [E*]  [F*]\nRight[F], Left[I6], Left[I10], Left[I15], Right[I20]\n[0] - acc (auth)     [1] - authz     [2] - bank      [3] - capability [4] - consensus [5] - crisis\n[6] - distr          [7] - evidence  [8] - feegrant  [9] - gov        [A] - group     [B] - ibc\n[C] - icacontroller  [D] - icahost   [E] - luqchain  [F] - mint       [G] - params    [H] - slashing\n[I] - staking        [J] - transfer  [K] - upgrade   [L] - vesting"
+  layer.bridge.QueryBlockValidatorInfoResponse:
+    type: object
+    properties:
+      Validators:
+        type: array
+        items:
+          type: object
+          properties:
+            cosmosAddress:
+              type: string
+            ethAddress:
+              type: string
+            votingPower:
+              type: string
+              format: int64
+  layer.bridge.QueryBlockheaderMerkleEVMResponse:
+    type: object
+    properties:
+      blockheaderMerkleEvm:
+        type: object
+        properties:
+          versionChainidHash:
+            type: string
+          height:
+            type: string
+            format: uint64
+          timeSecond:
+            type: string
+            format: uint64
+          timeNanosecond:
+            type: integer
+            format: int64
+          lastblockidCommitHash:
+            type: string
+          nextvalidatorConsensusHash:
+            type: string
+          lastresultsHash:
+            type: string
+          evidenceProposerHash:
+            type: string
+  layer.bridge.QueryBlockheaderMerkleResponse:
+    type: object
+    properties:
+      blockheaderMerkle:
+        type: object
+        properties:
+          versionChainidHash:
+            type: string
+            format: byte
+          height:
+            type: string
+            format: uint64
+          timeSecond:
+            type: string
+            format: uint64
+          timeNanosecond:
+            type: integer
+            format: int64
+          lastblockidCommitHash:
+            type: string
+            format: byte
+          nextvalidatorConsensusHash:
+            type: string
+            format: byte
+          lastresultsHash:
+            type: string
+            format: byte
+          evidenceProposerHash:
+            type: string
+            format: byte
+  layer.bridge.QueryInclusionProofResponse:
+    type: object
+    properties:
+      InclusionProofStuff:
+        type: object
+        properties:
+          RootHash:
+            type: string
+          Version:
+            type: string
+            format: int64
+          Key:
+            type: string
+          DataHash:
+            type: string
+      MerklePath:
+        type: array
+        items:
+          type: object
+          properties:
+            IsDataOnRight:
+              type: boolean
+            SubtreeHeight:
+              type: integer
+              format: int64
+            SubtreeSize:
+              type: string
+              format: int64
+            SubtreeVersion:
+              type: string
+              format: int64
+            SiblingHash:
+              type: string
+  layer.bridge.QueryMultistoreResponse:
+    type: object
+    properties:
+      MutiStoreTree:
+        type: object
+        properties:
+          luqchain_iavl_state_hash:
+            type: string
+          mint_store_merkle_hash:
+            type: string
+          icacontroller_to_icahost_merkle_hash:
+            type: string
+          feegrant_to_ibc_merkle_hash:
+            type: string
+          acc_to_evidence_merkle_hash:
+            type: string
+          params_to_vesting_merkle_hash:
+            type: string
+        title: "_______________________[AppHash]______________\n/                                              \\\n_________________[I19]_________________                         ____[I20*]____\n/                                       \\\t                      /              \\\n_______[I15*]______                       _______[I16]_________        [GHIJ]           [KLMN]\n/                   \\                     /                     \\\n__[I8]__              __[I9]__            __[I10*]__             __[I11]__\n/        \\            /         \\         /          \\           /         \\\n[I0]      [I1]       [I2]        [I3]     [I4]         [I5]      [I6*]       [I7]\n/  \\     /   \\      /   \\      /    \\    /    \\        /  \\      /   \\      /   \\\n[0] [1]  [2]   [3]  [4]  [5]  [6]    [7] [8]   [9]     [A] [B]   [C]  [D]  [E*]  [F*]\nRight[F], Left[I6], Left[I10], Left[I15], Right[I20]\n[0] - acc (auth)     [1] - authz     [2] - bank      [3] - capability [4] - consensus [5] - crisis\n[6] - distr          [7] - evidence  [8] - feegrant  [9] - gov        [A] - group     [B] - ibc\n[C] - icacontroller  [D] - icahost   [E] - luqchain  [F] - mint       [G] - params    [H] - slashing\n[I] - staking        [J] - transfer  [K] - upgrade   [L] - vesting"
+      iavl:
+        type: array
+        items:
+          type: object
+          properties:
+            IsDataOnRight:
+              type: boolean
+            SubtreeHeight:
+              type: integer
+              format: int64
+            SubtreeSize:
+              type: string
+              format: int64
+            SubtreeVersion:
+              type: string
+              format: int64
+            SiblingHash:
+              type: string
+  layer.bridge.QueryTmResponse:
+    type: object
+    properties:
+      tmSig:
+        type: array
+        items:
+          type: object
+          properties:
+            R:
+              type: string
+            S:
+              type: string
+            V:
+              type: integer
+              format: int64
+            EncodedTimestamp:
+              type: string
+      common:
+        type: object
+        properties:
+          SignedDataPrefix:
+            type: string
+            format: byte
+          SignedDataSuffix:
+            type: string
+            format: byte
+  layer.bridge.TmSig:
+    type: object
+    properties:
+      R:
+        type: string
+      S:
+        type: string
+      V:
+        type: integer
+        format: int64
+      EncodedTimestamp:
+        type: string
+  layer.bridge.ValidatorInfo:
+    type: object
+    properties:
+      cosmosAddress:
+        type: string
+      ethAddress:
+        type: string
+      votingPower:
+        type: string
+        format: int64
   layer.oracle.MicroReport:
     type: object
     properties:

@@ -10,7 +10,7 @@ import "layer/bridge/multistore.proto";
 import "layer/bridge/tmsig.proto";
 import "layer/bridge/inclusionproof.proto";
 import "layer/bridge/blockvalidatorinfo.proto";
-option go_package = "layer/bridge";
+option go_package = "github.com/tellor-io/layer/bridge";
 
 service Bridge {
   

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package layer.bridge;
 
-option go_package = "layer/bridge";
+option go_package = "github.com/tellor-io/layer/bridge";
 message ValidatorInfo {
 	string cosmosAddress = 1;
 	string ethAddress = 2;
