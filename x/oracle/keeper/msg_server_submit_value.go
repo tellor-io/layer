@@ -57,6 +57,11 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	if err := k.setValue(ctx, msg.Creator, msg.Value, queryData); err != nil {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to set value: %v", err))
 	}
+	// emit event
+	err = ctx.EventManager().EmitTypedEvent(msg)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
@@ -90,11 +95,6 @@ func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte
 	}
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
 	store.Set(queryId, k.cdc.MustMarshal(&reportsList))
-	// emit event
-	err = ctx.EventManager().EmitTypedEvent(report)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
