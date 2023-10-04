@@ -2,17 +2,16 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strconv"
 
 	"github.com/tellor-io/layer/x/registry/types"
 
-	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,14 +37,15 @@ func (k msgServer) RegisterQuery(goCtx context.Context, msg *types.MsgRegisterQu
 	}
 	// hash query data
 	queryId := crypto.Keccak256(queryData)
+	queryIdHex := hex.EncodeToString(queryId)
 	store := prefix.NewStore(storeKey, types.KeyPrefix(types.QueryRegistryKey))
 	if store.Has(queryId) {
-		return nil, fmt.Errorf("query ID %s already exists", bytes.HexBytes(queryId).String())
+		return nil, fmt.Errorf("query ID %s already exists", queryIdHex)
 	}
 	// store query data
 	store.Set(queryId, queryData)
-	ctx.Logger().Info(fmt.Sprintf("Query ID: %s", common.Bytes2Hex(queryId)))
-	return &types.MsgRegisterQueryResponse{QueryId: common.Bytes2Hex(queryId)}, nil
+	ctx.Logger().Info(fmt.Sprintf("Query ID: %s", queryIdHex))
+	return &types.MsgRegisterQueryResponse{QueryId: queryIdHex}, nil
 }
 
 // https://github.com/ethereum/go-ethereum/blob/master/accounts/abi/argument.go

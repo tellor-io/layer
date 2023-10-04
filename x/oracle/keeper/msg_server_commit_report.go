@@ -3,10 +3,12 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	registryKeeper "github.com/tellor-io/layer/x/registry/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -14,27 +16,31 @@ import (
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
-	report := types.CommitValue{
-		Report: msg,
-		Block:  ctx.BlockHeight(),
+	if registryKeeper.Has0xPrefix(msg.QueryData) {
+		msg.QueryData = msg.QueryData[2:]
 	}
-	qIdBytes, err := hex.DecodeString(msg.QueryId)
+	queryData, err := hex.DecodeString(msg.QueryData)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
-	store.Set(append([]byte(msg.Creator), qIdBytes...), k.cdc.MustMarshal(&report))
+	queryId := HashQueryData(queryData)
+	report := types.CommitValue{
+		Report: &types.Commit{
+			Creator:   msg.Creator,
+			QueryId:   queryId,
+			Signature: msg.Signature,
+		},
+		Block: ctx.BlockHeight(),
+	}
+	store.Set(append([]byte(msg.Creator), queryId...), k.cdc.MustMarshal(&report))
 
 	return &types.MsgCommitReportResponse{}, nil
 }
 
-func (k Keeper) getCommit(ctx sdk.Context, reporter, queryId string) (*types.CommitValue, error) {
+func (k Keeper) getSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
 
 	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
-	qIdBytes, err := hex.DecodeString(queryId)
-	if err != nil {
-		return nil, err
-	}
-	commit := commitStore.Get(append([]byte(reporter), qIdBytes...))
+	commit := commitStore.Get(append([]byte(reporter), queryId...))
 	if commit == nil {
 		return nil, status.Error(codes.NotFound, "no commits to reveal found")
 	}

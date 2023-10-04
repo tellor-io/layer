@@ -4,8 +4,15 @@ package layer.oracle;
 import "layer/oracle/tx.proto";
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
+
+message Commit {
+  string creator     = 1;
+  bytes queryId     = 2;
+  string signature = 3; //signature of value in submit value
+}
+
 message CommitValue {
   
-  MsgCommitReport report = 1; 
+  Commit report = 1; 
   int64 block = 2; 
 }
