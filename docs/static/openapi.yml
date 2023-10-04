@@ -46450,7 +46450,7 @@ paths:
               reports:
                 type: object
                 properties:
-                  reports:
+                  microReports:
                     type: array
                     items:
                       type: object
@@ -75391,6 +75391,8 @@ definitions:
       timestamp:
         type: string
         format: uint64
+  layer.oracle.MsgCommitReportResponse:
+    type: object
   layer.oracle.MsgSubmitValueResponse:
     type: object
   layer.oracle.Params:
@@ -75402,7 +75404,7 @@ definitions:
       reports:
         type: object
         properties:
-          reports:
+          microReports:
             type: array
             items:
               type: object
@@ -75426,7 +75428,7 @@ definitions:
   layer.oracle.Reports:
     type: object
     properties:
-      reports:
+      microReports:
         type: array
         items:
           type: object
