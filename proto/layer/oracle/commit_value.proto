@@ -1,0 +1,11 @@
+syntax = "proto3";
+package layer.oracle;
+
+import "layer/oracle/tx.proto";
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
+
+message CommitValue {
+  
+  MsgCommitReport report = 1; 
+  int64 block = 2; 
+}

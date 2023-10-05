@@ -9,12 +9,16 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSubmitValue{}, "oracle/SubmitValue", nil)
+	cdc.RegisterConcrete(&MsgCommitReport{}, "oracle/CommitReport", nil)
 	// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSubmitValue{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCommitReport{},
 	)
 	// this line is used by starport scaffolding # 3
 

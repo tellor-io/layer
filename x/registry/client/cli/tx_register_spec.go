@@ -4,11 +4,12 @@ import (
 	"strconv"
 
 	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 var _ = strconv.Itoa(0)

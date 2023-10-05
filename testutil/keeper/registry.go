@@ -13,8 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
-	"layer/x/registry/keeper"
-	"layer/x/registry/types"
+	"github.com/tellor-io/layer/x/registry/keeper"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 func RegistryKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {

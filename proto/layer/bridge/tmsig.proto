@@ -1,0 +1,15 @@
+syntax = "proto3";
+package layer.bridge;
+
+option go_package = "github.com/tellor-io/layer/bridge";
+message TmSig {
+	string R = 1;
+	string S = 2;
+	uint32 V = 3;
+	string EncodedTimestamp = 4;
+}
+
+message CommonEncodedVotePart {
+	bytes SignedDataPrefix = 1;
+	bytes SignedDataSuffix = 2;
+}

@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
+	bridgeservice "github.com/tellor-io/layer/bridge"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	dbm "github.com/cometbft/cometbft-db"
@@ -110,17 +112,17 @@ import (
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
 
-	oraclemodule "layer/x/oracle"
-	oraclemodulekeeper "layer/x/oracle/keeper"
-	oraclemoduletypes "layer/x/oracle/types"
-	registrymodule "layer/x/registry"
-	registrymodulekeeper "layer/x/registry/keeper"
-	registrymoduletypes "layer/x/registry/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle"
+	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oraclemoduletypes "github.com/tellor-io/layer/x/oracle/types"
+	registrymodule "github.com/tellor-io/layer/x/registry"
+	registrymodulekeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registrymoduletypes "github.com/tellor-io/layer/x/registry/types"
 
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
-	appparams "layer/app/params"
-	"layer/docs"
+	appparams "github.com/tellor-io/layer/app/params"
+	"github.com/tellor-io/layer/docs"
 )
 
 const (
@@ -542,6 +544,7 @@ func New(
 		keys[oraclemoduletypes.MemStoreKey],
 		app.GetSubspace(oraclemoduletypes.ModuleName),
 
+		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.RegistryKeeper,
@@ -770,6 +773,9 @@ func New(
 // Name returns the name of the App
 func (app *App) Name() string { return app.BaseApp.Name() }
 
+// GetBaseApp returns the base app of the application
+func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
+
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	return app.mm.BeginBlock(ctx, req)
@@ -890,6 +896,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	docs.RegisterOpenAPIService(Name, apiSvr.Router)
+	bridgeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
@@ -910,6 +917,7 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService implements the Application.RegisterNodeService method.
 func (app *App) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+	bridgeservice.RegisterHeaderService(clientCtx, app.GRPCQueryRouter())
 }
 
 // initParamsKeeper init params keeper and its subspaces

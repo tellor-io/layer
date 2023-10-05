@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"layer/x/registry/types"
 	"math/big"
 	"strconv"
+
+	"github.com/tellor-io/layer/x/registry/types"
 
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/store/prefix"

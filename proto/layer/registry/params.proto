@@ -3,7 +3,7 @@ package layer.registry;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "layer/x/registry/types";
+option go_package = "github.com/tellor-io/layer/x/registry/types";
 
 // Params defines the parameters for the module.
 message Params {

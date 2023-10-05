@@ -3,7 +3,7 @@ package layer.oracle;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "layer/x/oracle/types";
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Params defines the parameters for the module.
 message Params {

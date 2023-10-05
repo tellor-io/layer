@@ -2,8 +2,8 @@ package oracle
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"layer/x/oracle/keeper"
-	"layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.

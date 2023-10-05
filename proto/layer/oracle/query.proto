@@ -8,7 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "layer/oracle/params.proto";
 import "layer/oracle/reports.proto";
 
-option go_package = "layer/x/oracle/types";
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Query defines the gRPC querier service.
 service Query {

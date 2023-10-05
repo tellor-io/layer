@@ -4,10 +4,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	keepertest "layer/testutil/keeper"
-	"layer/testutil/nullify"
-	"layer/x/registry"
-	"layer/x/registry/types"
+	keepertest "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/testutil/nullify"
+	"github.com/tellor-io/layer/x/registry"
+	"github.com/tellor-io/layer/x/registry/types"
 )
 
 func TestGenesis(t *testing.T) {

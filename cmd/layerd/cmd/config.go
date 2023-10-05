@@ -3,7 +3,7 @@ package cmd
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"layer/app"
+	"github.com/tellor-io/layer/app"
 )
 
 func initSDKConfig() {

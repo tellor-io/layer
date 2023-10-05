@@ -5,8 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	testkeeper "layer/testutil/keeper"
-	"layer/x/oracle/types"
+	testkeeper "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func TestParamsQuery(t *testing.T) {

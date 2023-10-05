@@ -15,6 +15,7 @@ type StakingKeeper interface {
 	// Methods imported from staking should be defined here
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
 	Validator(ctx sdk.Context, address sdk.ValAddress) stakingtypes.ValidatorI
+	GetAllDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress) []stakingtypes.Delegation
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

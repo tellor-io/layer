@@ -6,8 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 
-	"layer/app"
-	"layer/cmd/layerd/cmd"
+	"github.com/tellor-io/layer/app"
+	"github.com/tellor-io/layer/cmd/layerd/cmd"
 )
 
 func main() {
