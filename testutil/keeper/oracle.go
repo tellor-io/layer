@@ -3,6 +3,7 @@ package keeper
 import (
 	"testing"
 
+	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 
@@ -16,15 +17,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/mocks"
+	r "github.com/tellor-io/layer/x/registry"
+	rkeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-func OracleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
+func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.AccountKeeper, sdk.Context) {
+	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
+	config.Seal()
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	rStoreKey := sdk.NewKVStoreKey(registrytypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+	stateStore.MountStoreWithDB(rStoreKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
@@ -37,21 +48,40 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 		memStoreKey,
 		"OracleParams",
 	)
+	sk := new(mocks.StakingKeeper)
+	ak := new(mocks.AccountKeeper)
+	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
+	rparamsSubspace := typesparams.NewSubspace(cdc,
+		types.Amino,
+		storeKey,
+		memStoreKey,
+		"RegistryParams",
+	)
+	rk := rkeeper.NewKeeper(
+		cdc,
+		rStoreKey,
+		rmemStoreKey,
+		rparamsSubspace,
+	)
+
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
 		memStoreKey,
 		paramsSubspace,
+		ak,
 		nil,
-		nil,
-		nil,
-		nil,
+		sk,
+		rk,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
-
+	genesisState := registrytypes.GenesisState{
+		Params: registrytypes.DefaultParams(),
+	}
+	r.InitGenesis(ctx, *rk, genesisState)
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx
+	return k, sk, ak, ctx
 }
