@@ -214,28 +214,3 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	}
 	return result, nil
 }
-
-// cleanup reports list
-// func (k Keeper) CleanupReports(ctx sdk.Context, qid string) {
-// 	qIdBytes, err := hex.DecodeString(qid)
-// 	if err != nil {
-// 		return
-// 	}
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
-// 	var reportsList types.Reports
-// 	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
-// 		return
-// 	}
-// 	var newReportsList types.Reports
-// 	// current time variable
-// 	var currentTime = ctx.BlockTime().Unix()
-// 	// if report.timestamp + 7days is less than current time, then delete the report
-// 	for _, report := range reportsList.Reports {
-// 		if report.Timestamp+604800 < uint64(currentTime) {
-// 			continue
-// 		}
-// 		newReportsList.Reports = append(newReportsList.Reports, report)
-// 	}
-
-// 	store.Set(qIdBytes, k.cdc.MustMarshal(&newReportsList))
-// }

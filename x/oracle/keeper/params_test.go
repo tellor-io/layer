@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetParams(t *testing.T) {
-	k, ctx := testkeeper.OracleKeeper(t)
+	k, _, _, ctx := testkeeper.OracleKeeper(t)
 	params := types.DefaultParams()
 
 	k.SetParams(ctx, params)
