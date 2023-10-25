@@ -16,6 +16,8 @@ const (
 	ReportsKey = "Reports-value-"
 
 	CommitReportKey = "CommitReport-value-"
+
+	ReporterStoreKey = "Reporter-value-"
 )
 
 func KeyPrefix(p string) []byte {

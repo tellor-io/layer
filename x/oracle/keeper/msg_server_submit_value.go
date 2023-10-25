@@ -28,12 +28,17 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	if !k.IsReporterStaked(ctx, reporter) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not staked")
 	}
-	// check if query id field is valid
-	if !registryKeeper.IsQueryIdValid(msg.Qid) {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query id: %s", msg.Qid))
+	// check if querydata has prefix 0x
+	if registryKeeper.Has0xPrefix(msg.QueryData) {
+		msg.QueryData = msg.QueryData[2:]
+	}
+	// decode query data hex string to bytes
+	queryData, err := hex.DecodeString(msg.QueryData)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.getCommit(ctx, msg.Creator, msg.Qid)
+	commitValue, err := k.getSignature(ctx, msg.Creator, HashQueryData(queryData))
 	if err != nil {
 		return nil, err
 	}
@@ -49,51 +54,83 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")
 	}
 	// set value
-	k.setValue(ctx, msg)
+	if err := k.setValue(ctx, msg.Creator, msg.Value, queryData); err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to set value: %v", err))
+	}
+	// emit event
+	err = ctx.EventManager().EmitTypedEvent(msg)
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
-func (k Keeper) setValue(ctx sdk.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
-	// get query data from registry by query id
-	queryData, err := k.registryKeeper.QueryData(ctx, msg.Qid)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("query data not found: %v", err))
+func (k Keeper) setValueByReporter(ctx sdk.Context, reporter, val string, queryId []byte) error {
+	queryIdHex := hex.EncodeToString(queryId)
+	reporterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
+	// reporter-query id pair
+	reporterQueryIdKey := []byte(reporter + ":" + queryIdHex)
+	// get reports list from store and unmarshal
+	var reportsList types.Reports
+	if err := k.cdc.Unmarshal(reporterStore.Get(reporterQueryIdKey), &reportsList); err != nil {
+		return fmt.Errorf("failed to unmarshal reports: %v", err)
 	}
+	report := &types.MicroReport{
+		Reporter:  reporter,
+		Qid:       queryIdHex,
+		Value:     val,
+		Timestamp: uint64(ctx.BlockTime().Unix()),
+	}
+	// append report to reports list
+	reportsList.MicroReports = append(reportsList.MicroReports, report)
+	reporterStore.Set(reporterQueryIdKey, k.cdc.MustMarshal(&reportsList))
+	return nil
+}
+
+func (k Keeper) setValueByQueryId(ctx sdk.Context, reporter, val string, queryId []byte) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
+	report := &types.MicroReport{
+		Reporter:  reporter,
+		Qid:       hex.EncodeToString(queryId),
+		Value:     val,
+		Timestamp: uint64(ctx.BlockTime().Unix()),
+	}
+	var reportsList types.Reports
+	if err := k.cdc.Unmarshal(store.Get(queryId), &reportsList); err != nil {
+		return fmt.Errorf("failed to unmarshal reports: %v", err)
+	}
+	reportsList.MicroReports = append(reportsList.MicroReports, report)
+	store.Set(queryId, k.cdc.MustMarshal(&reportsList))
+	return nil
+}
+
+func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte) error {
+	queryId := HashQueryData(queryData)
 	// decode query data hex to get query type, returns interface array
 	queryType, err := decodeQueryType(queryData)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
 	valueType, err := getValueType(k.registryKeeper, k.cdc, ctx, queryType)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
 	// decode value using value type from data spec and check if decodes successfully
 	// value is not used, only used to check if it decodes successfully
-	value, err := decodeValue(msg.Value, valueType)
+	value, err := decodeValue(val, valueType)
 	ctx.Logger().Info(fmt.Sprintf("value: %v", value[0]))
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
-	report := &types.MicroReport{
-		Reporter:  msg.Creator,
-		Qid:       msg.Qid,
-		Value:     msg.Value,
-		Timestamp: uint64(ctx.BlockTime().Unix()),
+	// set value by reporter
+	if err := k.setValueByReporter(ctx, reporter, val, queryId); err != nil {
+		return err
 	}
-	// decode query id hex string to bytes
-	qIdBytes, err := hex.DecodeString(msg.Qid)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query ID string: %v", err))
+	// set value by query id
+	if err := k.setValueByQueryId(ctx, reporter, val, queryId); err != nil {
+		return err
 	}
-	var reportsList types.Reports
-	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal reports: %v", err)
-	}
-	reportsList.MicroReports = append(reportsList.MicroReports, report)
-	store.Set(qIdBytes, k.cdc.MustMarshal(&reportsList))
-	return &types.MsgSubmitValueResponse{}, nil
+	return nil
 }
 func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
 	// get data spec from registry by query type to validate value
@@ -177,28 +214,3 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	}
 	return result, nil
 }
-
-// cleanup reports list
-// func (k Keeper) CleanupReports(ctx sdk.Context, qid string) {
-// 	qIdBytes, err := hex.DecodeString(qid)
-// 	if err != nil {
-// 		return
-// 	}
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
-// 	var reportsList types.Reports
-// 	if err := k.cdc.Unmarshal(store.Get(qIdBytes), &reportsList); err != nil {
-// 		return
-// 	}
-// 	var newReportsList types.Reports
-// 	// current time variable
-// 	var currentTime = ctx.BlockTime().Unix()
-// 	// if report.timestamp + 7days is less than current time, then delete the report
-// 	for _, report := range reportsList.Reports {
-// 		if report.Timestamp+604800 < uint64(currentTime) {
-// 			continue
-// 		}
-// 		newReportsList.Reports = append(newReportsList.Reports, report)
-// 	}
-
-// 	store.Set(qIdBytes, k.cdc.MustMarshal(&newReportsList))
-// }

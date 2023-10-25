@@ -11,7 +11,7 @@ service Msg {
 }
 message MsgSubmitValue {
   string creator = 1;
-  string qid     = 2;
+  string queryData     = 2;
   string value   = 3;
 }
 
@@ -19,7 +19,7 @@ message MsgSubmitValueResponse {}
 
 message MsgCommitReport {
   string creator     = 1;
-  string queryId     = 2;
+  string queryData     = 2;
   string signature = 3; //signature of value in submit value
 }
 

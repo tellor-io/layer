@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"strconv"
 
-	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -41,7 +40,7 @@ func CmdCommitReport() *cobra.Command {
 			msg := types.NewMsgCommitReport(
 				clientCtx.GetFromAddress().String(),
 				argQueryId,
-				bytes.HexBytes(data).String(),
+				hex.EncodeToString(data),
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
