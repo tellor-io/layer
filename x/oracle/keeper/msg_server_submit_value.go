@@ -38,7 +38,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.getSignature(ctx, msg.Creator, HashQueryData(queryData))
+	commitValue, err := k.GetSignature(ctx, msg.Creator, HashQueryData(queryData))
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
 	// }
 	// verify value signature
-	if !k.verifySignature(ctx, reporter, msg.Value, commitValue.Report.Signature) {
+	if !k.VerifySignature(ctx, reporter, msg.Value, commitValue.Report.Signature) {
 		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")
 	}
 	// set value
@@ -154,7 +154,7 @@ func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.AccAddress) bool 
 	return totalStakedTokens.GT(sdk.ZeroDec())
 }
 
-func (k Keeper) verifySignature(ctx sdk.Context, reporter sdk.AccAddress, value, signature string) bool {
+func (k Keeper) VerifySignature(ctx sdk.Context, reporter sdk.AccAddress, value, signature string) bool {
 	reporterAccount := k.accountKeeper.GetAccount(ctx, reporter)
 	pubKey := reporterAccount.GetPubKey()
 	sigBytes, err := hex.DecodeString(signature)

@@ -37,7 +37,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	return &types.MsgCommitReportResponse{}, nil
 }
 
-func (k Keeper) getSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
+func (k Keeper) GetSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
 
 	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
 	commit := commitStore.Get(append([]byte(reporter), queryId...))
