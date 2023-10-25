@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"bufio"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,16 +12,25 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/libs/cli"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
+	cmtos "github.com/cometbft/cometbft/libs/os"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/privval"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -26,6 +38,7 @@ import (
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -33,6 +46,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/go-bip39"
+	pkerr "github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -41,6 +56,17 @@ import (
 
 	"github.com/tellor-io/layer/app"
 	appparams "github.com/tellor-io/layer/app/params"
+)
+
+const (
+	// FlagOverwrite defines a flag to overwrite an existing genesis JSON file.
+	FlagOverwrite = "overwrite"
+
+	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
+	FlagRecover = "recover"
+
+	// FlagDefaultBondDenom defines the default denom to use in the genesis file.
+	FlagDefaultBondDenom = "default-denom"
 )
 
 // NewRootCmd creates a new root command for a Cosmos SDK application
@@ -100,6 +126,202 @@ func initTendermintConfig() *tmcfg.Config {
 	return cfg
 }
 
+type printInfo struct {
+	Moniker    string          `json:"moniker" yaml:"moniker"`
+	ChainID    string          `json:"chain_id" yaml:"chain_id"`
+	NodeID     string          `json:"node_id" yaml:"node_id"`
+	GenTxsDir  string          `json:"gentxs_dir" yaml:"gentxs_dir"`
+	AppMessage json.RawMessage `json:"app_message" yaml:"app_message"`
+}
+
+func newPrintInfo(moniker, chainID, nodeID, genTxsDir string, appMessage json.RawMessage) printInfo {
+	return printInfo{
+		Moniker:    moniker,
+		ChainID:    chainID,
+		NodeID:     nodeID,
+		GenTxsDir:  genTxsDir,
+		AppMessage: appMessage,
+	}
+}
+func displayInfo(info printInfo) error {
+	out, err := json.MarshalIndent(info, "", " ")
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintf(os.Stderr, "%s\n", sdk.MustSortJSON(out))
+
+	return err
+}
+
+// LoadOrGenFilePV loads a FilePV from the given filePaths
+// or else generates a new one and saves it to the filePaths.
+func LoadOrGenFilePV(keyFilePath, stateFilePath string) *privval.FilePV {
+	var pv *privval.FilePV
+	if cmtos.FileExists(keyFilePath) {
+		pv = privval.LoadFilePV(keyFilePath, stateFilePath)
+	} else {
+		pv = privval.NewFilePV(secp256k1.GenPrivKey(), keyFilePath, stateFilePath)
+		pv.Save()
+	}
+	return pv
+}
+
+// InitializeNodeValidatorFilesFromMnemonic creates private validator and p2p configuration files using the given mnemonic.
+// If no valid mnemonic is given, a random one will be used instead.
+func InitializeNodeValidatorFilesFromMnemonic(config *tmcfg.Config, mnemonic string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
+		return "", nil, fmt.Errorf("invalid mnemonic")
+	}
+	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
+	if err != nil {
+		return "", nil, err
+	}
+
+	nodeID = string(nodeKey.ID())
+	pvKeyFile := config.PrivValidatorKeyFile()
+	if err := os.MkdirAll(filepath.Dir(pvKeyFile), 0o777); err != nil {
+		return "", nil, fmt.Errorf("could not create directory %q: %w", filepath.Dir(pvKeyFile), err)
+	}
+
+	pvStateFile := config.PrivValidatorStateFile()
+	if err := os.MkdirAll(filepath.Dir(pvStateFile), 0o777); err != nil {
+		return "", nil, fmt.Errorf("could not create directory %q: %w", filepath.Dir(pvStateFile), err)
+	}
+	var filePV *privval.FilePV
+	if len(mnemonic) == 0 {
+		filePV = LoadOrGenFilePV(pvKeyFile, pvStateFile)
+	} else {
+		privKey := secp256k1.GenPrivKeySecp256k1([]byte(mnemonic))
+		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)
+		filePV.Save()
+	}
+
+	tmValPubKey, err := filePV.GetPubKey()
+	if err != nil {
+		return "", nil, err
+	}
+
+	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return nodeID, valPubKey, nil
+}
+
+// InitCmd returns a command that initializes all files needed for Tendermint
+// and the respective application.
+func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "init [moniker]",
+		Short: "Initialize private validator, p2p, genesis, and application configuration files",
+		Long:  `Initialize validators's and node's configuration files.`,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			cdc := clientCtx.Codec
+
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			config := serverCtx.Config
+			config.SetRoot(clientCtx.HomeDir)
+
+			chainID, _ := cmd.Flags().GetString(flags.FlagChainID)
+			switch {
+			case chainID != "":
+			case clientCtx.ChainID != "":
+				chainID = clientCtx.ChainID
+			default:
+				chainID = fmt.Sprintf("test-chain-%v", tmrand.Str(6))
+			}
+
+			// Get bip39 mnemonic
+			var mnemonic string
+			recover, _ := cmd.Flags().GetBool(FlagRecover)
+			if recover {
+				inBuf := bufio.NewReader(cmd.InOrStdin())
+				value, err := input.GetString("Enter your bip39 mnemonic", inBuf)
+				if err != nil {
+					return err
+				}
+
+				mnemonic = value
+				if !bip39.IsMnemonicValid(mnemonic) {
+					return errors.New("invalid mnemonic")
+				}
+			}
+
+			// Get initial height
+			initHeight, _ := cmd.Flags().GetInt64(flags.FlagInitHeight)
+			if initHeight < 1 {
+				initHeight = 1
+			}
+
+			nodeID, _, err := InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
+			if err != nil {
+				return err
+			}
+
+			config.Moniker = args[0]
+
+			genFile := config.GenesisFile()
+			overwrite, _ := cmd.Flags().GetBool(FlagOverwrite)
+			defaultDenom, _ := cmd.Flags().GetString(FlagDefaultBondDenom)
+
+			// use os.Stat to check if the file exists
+			_, err = os.Stat(genFile)
+			if !overwrite && !os.IsNotExist(err) {
+				return fmt.Errorf("genesis.json file already exists: %v", genFile)
+			}
+
+			// Overwrites the SDK default denom for side-effects
+			if defaultDenom != "" {
+				sdk.DefaultBondDenom = defaultDenom
+			}
+			appGenState := mbm.DefaultGenesis(cdc)
+
+			appState, err := json.MarshalIndent(appGenState, "", " ")
+			if err != nil {
+				return pkerr.Wrap(err, "Failed to marshal default genesis state")
+			}
+
+			genDoc := &tmtypes.GenesisDoc{}
+			if _, err := os.Stat(genFile); err != nil {
+				if !os.IsNotExist(err) {
+					return err
+				}
+			} else {
+				genDoc, err = tmtypes.GenesisDocFromFile(genFile)
+				if err != nil {
+					return pkerr.Wrap(err, "Failed to read genesis doc from file")
+				}
+			}
+
+			genDoc.ChainID = chainID
+			genDoc.Validators = nil
+			genDoc.AppState = appState
+			genDoc.InitialHeight = initHeight
+
+			if err = genutil.ExportGenesisFile(genDoc, genFile); err != nil {
+				return pkerr.Wrap(err, "Failed to export genesis file")
+			}
+
+			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
+
+			tmcfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+			return displayInfo(toPrint)
+		},
+	}
+
+	cmd.Flags().String(cli.HomeFlag, defaultNodeHome, "node's home directory")
+	cmd.Flags().BoolP(FlagOverwrite, "o", false, "overwrite the genesis.json file")
+	cmd.Flags().Bool(FlagRecover, false, "provide seed phrase to recover existing key instead of creating")
+	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
+	cmd.Flags().String(FlagDefaultBondDenom, "", "genesis file default denomination, if left blank default value is 'stake'")
+	cmd.Flags().Int64(flags.FlagInitHeight, 1, "specify the initial block height at genesis")
+
+	return cmd
+}
 func initRootCmd(
 	rootCmd *cobra.Command,
 	encodingConfig appparams.EncodingConfig,
@@ -109,7 +331,7 @@ func initRootCmd(
 
 	gentxModule := app.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
+		InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, gentxModule.GenTxValidator),
 		genutilcli.MigrateGenesisCmd(),
 		genutilcli.GenTxCmd(

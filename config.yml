@@ -19,3 +19,7 @@ faucet:
 validators:
 - name: alice
   bonded: 100000000stake
+genesis:
+  consensus_params:
+    validator:
+      pub_key_types: [secp256k1]
