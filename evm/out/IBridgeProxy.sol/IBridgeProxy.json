@@ -145,19 +145,19 @@
   },
   "ast": {
     "absolutePath": "src/interfaces/IBridgeProxy.sol",
-    "id": 5169,
+    "id": 47459,
     "exportedSymbols": {
       "IBridgeProxy": [
-        5168
+        47458
       ]
     },
     "nodeType": "SourceUnit",
-    "src": "32:245:19",
+    "src": "32:245:21",
     "nodes": [
       {
-        "id": 5151,
+        "id": 47441,
         "nodeType": "PragmaDirective",
-        "src": "32:22:19",
+        "src": "32:22:21",
         "nodes": [],
         "literals": [
           "solidity",
@@ -166,40 +166,40 @@
         ]
       },
       {
-        "id": 5168,
+        "id": 47458,
         "nodeType": "ContractDefinition",
-        "src": "56:221:19",
+        "src": "56:221:21",
         "nodes": [
           {
-            "id": 5156,
+            "id": 47446,
             "nodeType": "FunctionDefinition",
-            "src": "85:42:19",
+            "src": "85:42:21",
             "nodes": [],
             "functionSelector": "5c975abb",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "paused",
-            "nameLocation": "94:6:19",
+            "nameLocation": "94:6:21",
             "parameters": {
-              "id": 5152,
+              "id": 47442,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "100:2:19"
+              "src": "100:2:21"
             },
             "returnParameters": {
-              "id": 5155,
+              "id": 47445,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5154,
+                  "id": 47444,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5156,
-                  "src": "121:4:19",
+                  "scope": 47446,
+                  "src": "121:4:21",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -207,10 +207,10 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 5153,
+                    "id": 47443,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
-                    "src": "121:4:19",
+                    "src": "121:4:21",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bool",
                       "typeString": "bool"
@@ -219,37 +219,37 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "120:6:19"
+              "src": "120:6:21"
             },
-            "scope": 5168,
+            "scope": 47458,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 5161,
+            "id": 47451,
             "nodeType": "FunctionDefinition",
-            "src": "132:67:19",
+            "src": "132:67:21",
             "nodes": [],
             "functionSelector": "025b22bc",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "updateImplementation",
-            "nameLocation": "141:20:19",
+            "nameLocation": "141:20:21",
             "parameters": {
-              "id": 5159,
+              "id": 47449,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 5158,
+                  "id": 47448,
                   "mutability": "mutable",
                   "name": "_newImplementation",
-                  "nameLocation": "170:18:19",
+                  "nameLocation": "170:18:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 5161,
-                  "src": "162:26:19",
+                  "scope": 47451,
+                  "src": "162:26:21",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -257,10 +257,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 5157,
+                    "id": 47447,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "162:7:19",
+                    "src": "162:7:21",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -270,71 +270,71 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "161:28:19"
+              "src": "161:28:21"
             },
             "returnParameters": {
-              "id": 5160,
+              "id": 47450,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "198:0:19"
+              "src": "198:0:21"
             },
-            "scope": 5168,
+            "scope": 47458,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 5164,
+            "id": 47454,
             "nodeType": "FunctionDefinition",
-            "src": "204:32:19",
+            "src": "204:32:21",
             "nodes": [],
             "functionSelector": "7dd0480f",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "pauseBridge",
-            "nameLocation": "213:11:19",
+            "nameLocation": "213:11:21",
             "parameters": {
-              "id": 5162,
+              "id": 47452,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "224:2:19"
+              "src": "224:2:21"
             },
             "returnParameters": {
-              "id": 5163,
+              "id": 47453,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "235:0:19"
+              "src": "235:0:21"
             },
-            "scope": 5168,
+            "scope": 47458,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 5167,
+            "id": 47457,
             "nodeType": "FunctionDefinition",
-            "src": "241:34:19",
+            "src": "241:34:21",
             "nodes": [],
             "functionSelector": "a82f143c",
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "unpauseBridge",
-            "nameLocation": "250:13:19",
+            "nameLocation": "250:13:21",
             "parameters": {
-              "id": 5165,
+              "id": 47455,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "263:2:19"
+              "src": "263:2:21"
             },
             "returnParameters": {
-              "id": 5166,
+              "id": 47456,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "274:0:19"
+              "src": "274:0:21"
             },
-            "scope": 5168,
+            "scope": 47458,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
@@ -346,14 +346,14 @@
         "contractKind": "interface",
         "fullyImplemented": false,
         "linearizedBaseContracts": [
-          5168
+          47458
         ],
         "name": "IBridgeProxy",
-        "nameLocation": "66:12:19",
-        "scope": 5169
+        "nameLocation": "66:12:21",
+        "scope": 47459
       }
     ],
     "license": "MIT"
   },
-  "id": 19
+  "id": 21
 }
