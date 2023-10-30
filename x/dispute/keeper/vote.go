@@ -75,7 +75,7 @@ func (k Keeper) GetUserTips(ctx sdk.Context, voter string) math.Int {
 }
 
 func (k Keeper) IsTeamAddress(ctx sdk.Context, voter string) math.Int {
-	return sdk.ZeroInt()
+	return math.NewIntFromUint64(1)
 }
 
 // Set vote by voter
