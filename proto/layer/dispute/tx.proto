@@ -12,6 +12,7 @@ option go_package = "github.com/tellor-io/layer/x/dispute/types";
 service Msg {
   rpc ProposeDispute  (MsgProposeDispute ) returns (MsgProposeDisputeResponse );
   rpc AddFeeToDispute (MsgAddFeeToDispute) returns (MsgAddFeeToDisputeResponse);
+  rpc Vote            (MsgVote           ) returns (MsgVoteResponse           );
 }
 message MsgProposeDispute {
   string                   creator          = 1;
@@ -33,4 +34,12 @@ message MsgAddFeeToDispute {
 }
 
 message MsgAddFeeToDisputeResponse {}
+
+message MsgVote {
+  string voter = 1;
+  uint64 id    = 2;
+  bool   vote  = 3;
+}
+
+message MsgVoteResponse {}
 

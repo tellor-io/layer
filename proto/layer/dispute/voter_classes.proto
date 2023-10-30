@@ -1,12 +1,31 @@
 syntax = "proto3";
 package layer.dispute;
 
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
 message VoterClasses {
   
-  uint64 validators = 1; 
-  uint64 tokenHolders = 2; 
-  uint64 users = 3; 
-  uint64 team = 4; 
+  string validators = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
+  string tokenHolders = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
+  string users = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
+  string team = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
 }

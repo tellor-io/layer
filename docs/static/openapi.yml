@@ -75559,6 +75559,8 @@ definitions:
     type: object
   layer.dispute.MsgProposeDisputeResponse:
     type: object
+  layer.dispute.MsgVoteResponse:
+    type: object
   layer.dispute.Params:
     type: object
     description: Params defines the parameters for the module.

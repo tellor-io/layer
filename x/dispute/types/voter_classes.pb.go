@@ -5,6 +5,9 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
@@ -23,10 +26,10 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type VoterClasses struct {
-	Validators   uint64 `protobuf:"varint,1,opt,name=validators,proto3" json:"validators,omitempty"`
-	TokenHolders uint64 `protobuf:"varint,2,opt,name=tokenHolders,proto3" json:"tokenHolders,omitempty"`
-	Users        uint64 `protobuf:"varint,3,opt,name=users,proto3" json:"users,omitempty"`
-	Team         uint64 `protobuf:"varint,4,opt,name=team,proto3" json:"team,omitempty"`
+	Validators   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,1,opt,name=validators,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"validators"`
+	TokenHolders github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,2,opt,name=tokenHolders,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokenHolders"`
+	Users        github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,3,opt,name=users,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"users"`
+	Team         github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,4,opt,name=team,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"team"`
 }
 
 func (m *VoterClasses) Reset()         { *m = VoterClasses{} }
@@ -62,34 +65,6 @@ func (m *VoterClasses) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VoterClasses proto.InternalMessageInfo
 
-func (m *VoterClasses) GetValidators() uint64 {
-	if m != nil {
-		return m.Validators
-	}
-	return 0
-}
-
-func (m *VoterClasses) GetTokenHolders() uint64 {
-	if m != nil {
-		return m.TokenHolders
-	}
-	return 0
-}
-
-func (m *VoterClasses) GetUsers() uint64 {
-	if m != nil {
-		return m.Users
-	}
-	return 0
-}
-
-func (m *VoterClasses) GetTeam() uint64 {
-	if m != nil {
-		return m.Team
-	}
-	return 0
-}
-
 func init() {
 	proto.RegisterType((*VoterClasses)(nil), "layer.dispute.VoterClasses")
 }
@@ -97,21 +72,25 @@ func init() {
 func init() { proto.RegisterFile("layer/dispute/voter_classes.proto", fileDescriptor_de6bb69a4f2a19e8) }
 
 var fileDescriptor_de6bb69a4f2a19e8 = []byte{
-	// 213 bytes of a gzipped FileDescriptorProto
+	// 282 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xcc, 0x49, 0xac, 0x4c,
 	0x2d, 0xd2, 0x4f, 0xc9, 0x2c, 0x2e, 0x28, 0x2d, 0x49, 0xd5, 0x2f, 0xcb, 0x2f, 0x49, 0x2d, 0x8a,
 	0x4f, 0xce, 0x49, 0x2c, 0x2e, 0x4e, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x05,
-	0x2b, 0xd1, 0x83, 0x2a, 0x51, 0xaa, 0xe1, 0xe2, 0x09, 0x03, 0xa9, 0x72, 0x86, 0x28, 0x12, 0x92,
-	0xe3, 0xe2, 0x2a, 0x4b, 0xcc, 0xc9, 0x4c, 0x49, 0x2c, 0xc9, 0x2f, 0x2a, 0x96, 0x60, 0x54, 0x60,
-	0xd4, 0x60, 0x09, 0x42, 0x12, 0x11, 0x52, 0xe2, 0xe2, 0x29, 0xc9, 0xcf, 0x4e, 0xcd, 0xf3, 0xc8,
-	0xcf, 0x49, 0x49, 0x2d, 0x2a, 0x96, 0x60, 0x02, 0xab, 0x40, 0x11, 0x13, 0x12, 0xe1, 0x62, 0x2d,
-	0x2d, 0x06, 0x49, 0x32, 0x83, 0x25, 0x21, 0x1c, 0x21, 0x21, 0x2e, 0x96, 0x92, 0xd4, 0xc4, 0x5c,
-	0x09, 0x16, 0xb0, 0x20, 0x98, 0xed, 0xe4, 0x72, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c,
-	0x0f, 0x1e, 0xc9, 0x31, 0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72,
-	0x0c, 0x51, 0x5a, 0xe9, 0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x25, 0xa9,
-	0x39, 0x39, 0xf9, 0x45, 0xba, 0x99, 0xf9, 0xfa, 0x10, 0xef, 0x55, 0xc0, 0x3d, 0x58, 0x52, 0x59,
-	0x90, 0x5a, 0x9c, 0xc4, 0x06, 0xf6, 0x99, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x3d, 0x86, 0x52,
-	0x38, 0xfe, 0x00, 0x00, 0x00,
+	0x2b, 0xd1, 0x83, 0x2a, 0x91, 0x92, 0x4c, 0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x07, 0x4b, 0xea,
+	0x43, 0x38, 0x10, 0x95, 0x52, 0x22, 0xe9, 0xf9, 0xe9, 0xf9, 0x10, 0x71, 0x10, 0x0b, 0x22, 0xaa,
+	0xf4, 0x85, 0x89, 0x8b, 0x27, 0x0c, 0x64, 0xae, 0x33, 0xc4, 0x58, 0xa1, 0x18, 0x2e, 0xae, 0xb2,
+	0xc4, 0x9c, 0xcc, 0x94, 0xc4, 0x92, 0xfc, 0xa2, 0x62, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x4e, 0x27,
+	0x9b, 0x13, 0xf7, 0xe4, 0x19, 0x6e, 0xdd, 0x93, 0x57, 0x4b, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2,
+	0x4b, 0xce, 0xcf, 0x85, 0x9a, 0x0d, 0xa5, 0x74, 0x8b, 0x53, 0xb2, 0xf5, 0x4b, 0x2a, 0x0b, 0x52,
+	0x8b, 0xf5, 0x3c, 0xf3, 0x4a, 0x2e, 0x6d, 0xd1, 0xe5, 0x82, 0x5a, 0xed, 0x99, 0x57, 0x12, 0x84,
+	0x64, 0x9e, 0x50, 0x02, 0x17, 0x4f, 0x49, 0x7e, 0x76, 0x6a, 0x9e, 0x47, 0x7e, 0x4e, 0x4a, 0x6a,
+	0x51, 0xb1, 0x04, 0x13, 0x15, 0xcc, 0x47, 0x31, 0x51, 0x28, 0x88, 0x8b, 0xb5, 0xb4, 0x18, 0x64,
+	0x34, 0x33, 0x15, 0x8c, 0x86, 0x18, 0x25, 0x14, 0xc0, 0xc5, 0x52, 0x92, 0x9a, 0x98, 0x2b, 0xc1,
+	0x42, 0x05, 0x23, 0xc1, 0x26, 0x39, 0xb9, 0x9c, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3,
+	0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c,
+	0x43, 0x94, 0x16, 0x92, 0xa9, 0x25, 0xa9, 0x39, 0x39, 0xf9, 0x45, 0xba, 0x99, 0xf9, 0xfa, 0x90,
+	0x84, 0x50, 0x01, 0x4f, 0x0a, 0x60, 0xd3, 0x93, 0xd8, 0xc0, 0x71, 0x68, 0x0c, 0x08, 0x00, 0x00,
+	0xff, 0xff, 0xdd, 0xbb, 0x35, 0x27, 0x28, 0x02, 0x00, 0x00,
 }
 
 func (m *VoterClasses) Marshal() (dAtA []byte, err error) {
@@ -134,26 +113,46 @@ func (m *VoterClasses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Team != 0 {
-		i = encodeVarintVoterClasses(dAtA, i, uint64(m.Team))
-		i--
-		dAtA[i] = 0x20
+	{
+		size := m.Team.Size()
+		i -= size
+		if _, err := m.Team.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintVoterClasses(dAtA, i, uint64(size))
 	}
-	if m.Users != 0 {
-		i = encodeVarintVoterClasses(dAtA, i, uint64(m.Users))
-		i--
-		dAtA[i] = 0x18
+	i--
+	dAtA[i] = 0x22
+	{
+		size := m.Users.Size()
+		i -= size
+		if _, err := m.Users.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintVoterClasses(dAtA, i, uint64(size))
 	}
-	if m.TokenHolders != 0 {
-		i = encodeVarintVoterClasses(dAtA, i, uint64(m.TokenHolders))
-		i--
-		dAtA[i] = 0x10
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.TokenHolders.Size()
+		i -= size
+		if _, err := m.TokenHolders.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintVoterClasses(dAtA, i, uint64(size))
 	}
-	if m.Validators != 0 {
-		i = encodeVarintVoterClasses(dAtA, i, uint64(m.Validators))
-		i--
-		dAtA[i] = 0x8
+	i--
+	dAtA[i] = 0x12
+	{
+		size := m.Validators.Size()
+		i -= size
+		if _, err := m.Validators.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintVoterClasses(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -174,18 +173,14 @@ func (m *VoterClasses) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Validators != 0 {
-		n += 1 + sovVoterClasses(uint64(m.Validators))
-	}
-	if m.TokenHolders != 0 {
-		n += 1 + sovVoterClasses(uint64(m.TokenHolders))
-	}
-	if m.Users != 0 {
-		n += 1 + sovVoterClasses(uint64(m.Users))
-	}
-	if m.Team != 0 {
-		n += 1 + sovVoterClasses(uint64(m.Team))
-	}
+	l = m.Validators.Size()
+	n += 1 + l + sovVoterClasses(uint64(l))
+	l = m.TokenHolders.Size()
+	n += 1 + l + sovVoterClasses(uint64(l))
+	l = m.Users.Size()
+	n += 1 + l + sovVoterClasses(uint64(l))
+	l = m.Team.Size()
+	n += 1 + l + sovVoterClasses(uint64(l))
 	return n
 }
 
@@ -225,10 +220,10 @@ func (m *VoterClasses) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Validators", wireType)
 			}
-			m.Validators = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVoterClasses
@@ -238,16 +233,31 @@ func (m *VoterClasses) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Validators |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Validators.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field TokenHolders", wireType)
 			}
-			m.TokenHolders = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVoterClasses
@@ -257,16 +267,31 @@ func (m *VoterClasses) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TokenHolders |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TokenHolders.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
 			}
-			m.Users = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVoterClasses
@@ -276,16 +301,31 @@ func (m *VoterClasses) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Users |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Users.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 4:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
 			}
-			m.Team = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVoterClasses
@@ -295,11 +335,26 @@ func (m *VoterClasses) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Team |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipVoterClasses(dAtA[iNdEx:])
