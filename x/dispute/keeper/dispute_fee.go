@@ -164,3 +164,31 @@ func (k Keeper) ReturnFeesAsStaked(ctx sdk.Context, delAddr sdk.AccAddress, val 
 	}
 	return nil
 }
+
+// Pay fee from validator's bond can only be called by the validator itself
+func (k Keeper) ValidatorPayFeeFromBond(ctx sdk.Context, delAddr sdk.AccAddress, fee sdk.Coin) error {
+	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
+	if !found {
+		return stakingtypes.ErrNoValidatorFound
+	}
+
+	// Check if validator has tokens to pay the fee
+	if fee.Amount.GT(validator.GetBondedTokens()) {
+		return fmt.Errorf("not enough stake to pay the fee")
+	}
+
+	// Deduct tokens from validator
+	validator = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, fee.Amount)
+
+	// Send fee to module account
+	var poolName string
+	if validator.IsBonded() {
+		poolName = stakingtypes.BondedPoolName
+	} else {
+		poolName = stakingtypes.NotBondedPoolName
+	}
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, poolName, types.ModuleName, sdk.NewCoins(fee)); err != nil {
+		return err
+	}
+	return nil
+}

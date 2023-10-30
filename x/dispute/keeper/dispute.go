@@ -225,13 +225,9 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, valAddress string,
 	if err != nil {
 		return err
 	}
-	validator, err := sdk.ValAddressFromBech32(valAddress)
-	if err != nil {
-		return err
-	}
 	if fromBond {
 		// pay fee from given validator
-		err := k.PayFromGivenValidator(ctx, proposer, validator, fee)
+		err := k.ValidatorPayFeeFromBond(ctx, proposer, fee)
 		if err != nil {
 			return err
 		}
