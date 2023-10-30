@@ -1,0 +1,86 @@
+syntax = "proto3";
+package layer.dispute;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
+option go_package = "github.com/tellor-io/layer/x/dispute/types";
+
+message Dispute {
+  
+  bytes hashId = 1; 
+  uint64 disputeId = 2; 
+  DisputeCategory disputeCategory = 3; 
+  string disputeFee = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
+  DisputeStatus disputeStatus = 5; 
+  google.protobuf.Timestamp  disputeStartTime = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp  disputeEndTime = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
+  int64 disputeStartBlock = 8; 
+  uint64 disputeRound = 9; 
+  string slashAmount = 10 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
+  string burnAmount = 11 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
+  MicroReport reportEvidence = 12 [(gogoproto.nullable) = false];
+  repeated PayerInfo feePayers = 13 [(gogoproto.nullable) = false]; 
+  string feeTotal = 14 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ]; 
+  repeated uint64 prevDisputeIds = 15; 
+}
+
+message MicroReport {
+  string reporter = 1;
+  int64 power = 2;
+  string qid = 3; 
+  string value = 4; 
+  int64 timestamp = 5; 
+}
+
+enum DisputeCategory {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an invalid dispute category.
+  DISPUTE_CATEGORY_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  // WARNING defines a 1 percent slashing.
+  DISPUTE_CATEGORY_WARNING = 1 [(gogoproto.enumvalue_customname) = "Warning"];
+  // MINOR defines a 5 percent slashing.
+  DISPUTE_CATEGORY_MINOR = 2 [(gogoproto.enumvalue_customname) = "Minor"];
+  // MAJOR defines a 100 percent slashing.
+  DISPUTE_CATEGORY_MAJOR = 3 [(gogoproto.enumvalue_customname) = "Major"];
+}
+
+enum DisputeStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // PREVOTE defines a dispute that hasn't started voting (ie in funding).
+  DISPUTE_STATUS_PREVOTE = 0 [(gogoproto.enumvalue_customname) = "Prevote"];
+  // VOTING defines a dispute that has been funded and is in voting.
+  DISPUTE_STATUS_VOTING = 1 [(gogoproto.enumvalue_customname) = "Voting"];
+  // RESOLVED defines a dispute that has completed voting and reached quroum
+  DISPUTE_STATUS_RESOLVED = 2 [(gogoproto.enumvalue_customname) = "Resolved"];
+  // UNRESOLVED defines a dispute that has completed voting and but hasn't reached quroum
+  DISPUTE_STATUS_UNRESOLVED = 3 [(gogoproto.enumvalue_customname) = "Unresolved"];
+  // FAILED defines a dispute that failed to pay the dispute fee to start vote.
+  DISPUTE_STATUS_FAILED = 4 [(gogoproto.enumvalue_customname) = "Failed"];
+}
+
+message PayerInfo {
+  string payerAddress = 1;
+  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+  bool fromBond = 3;
+}

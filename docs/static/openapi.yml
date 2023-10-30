@@ -46437,6 +46437,42 @@ paths:
                         }
       tags:
         - Query
+  /tellor-io/layer/dispute/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerDisputeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /layer/oracle/get_reportsby_qid/{qId}:
     get:
       summary: Queries a list of GetReportsbyQid items.
@@ -46457,6 +46493,9 @@ paths:
                       properties:
                         reporter:
                           type: string
+                        power:
+                          type: string
+                          format: int64
                         qid:
                           type: string
                         value:
@@ -46505,6 +46544,9 @@ paths:
                   properties:
                     reporter:
                       type: string
+                    power:
+                      type: string
+                      format: int64
                     qid:
                       type: string
                     value:
@@ -46556,6 +46598,9 @@ paths:
                       properties:
                         reporter:
                           type: string
+                        power:
+                          type: string
+                          format: int64
                         qid:
                           type: string
                         value:
@@ -75482,11 +75527,56 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  layer.dispute.DisputeCategory:
+    type: string
+    enum:
+      - DISPUTE_CATEGORY_UNSPECIFIED
+      - DISPUTE_CATEGORY_WARNING
+      - DISPUTE_CATEGORY_MINOR
+      - DISPUTE_CATEGORY_MAJOR
+    default: DISPUTE_CATEGORY_UNSPECIFIED
+    description: |2-
+       - DISPUTE_CATEGORY_UNSPECIFIED: UNSPECIFIED defines an invalid dispute category.
+       - DISPUTE_CATEGORY_WARNING: WARNING defines a 1 percent slashing.
+       - DISPUTE_CATEGORY_MINOR: MINOR defines a 5 percent slashing.
+       - DISPUTE_CATEGORY_MAJOR: MAJOR defines a 100 percent slashing.
+  layer.dispute.MicroReport:
+    type: object
+    properties:
+      reporter:
+        type: string
+      power:
+        type: string
+        format: int64
+      qid:
+        type: string
+      value:
+        type: string
+      timestamp:
+        type: string
+        format: int64
+  layer.dispute.MsgAddFeeToDisputeResponse:
+    type: object
+  layer.dispute.MsgProposeDisputeResponse:
+    type: object
+  layer.dispute.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.dispute.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.oracle.MicroReport:
     type: object
     properties:
       reporter:
         type: string
+      power:
+        type: string
+        format: int64
       qid:
         type: string
       value:
@@ -75514,6 +75604,9 @@ definitions:
               properties:
                 reporter:
                   type: string
+                power:
+                  type: string
+                  format: int64
                 qid:
                   type: string
                 value:
@@ -75531,6 +75624,9 @@ definitions:
           properties:
             reporter:
               type: string
+            power:
+              type: string
+              format: int64
             qid:
               type: string
             value:
@@ -75555,6 +75651,9 @@ definitions:
           properties:
             reporter:
               type: string
+            power:
+              type: string
+              format: int64
             qid:
               type: string
             value:

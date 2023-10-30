@@ -15,6 +15,19 @@ import (
 
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid sender address: %v", err))
+	}
+	valAddr := sdk.ValAddress(delAddr)
+
+	// get delegation info
+	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	// check if msg sender is validator
+	if !delAddr.Equals(validator.GetOperator()) {
+		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
+	}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
 	if registryKeeper.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
@@ -35,16 +48,4 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	store.Set(append([]byte(msg.Creator), queryId...), k.cdc.MustMarshal(&report))
 
 	return &types.MsgCommitReportResponse{}, nil
-}
-
-func (k Keeper) getSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
-
-	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
-	commit := commitStore.Get(append([]byte(reporter), queryId...))
-	if commit == nil {
-		return nil, status.Error(codes.NotFound, "no commits to reveal found")
-	}
-	var commitValue types.CommitValue
-	k.cdc.Unmarshal(commit, &commitValue)
-	return &commitValue, nil
 }

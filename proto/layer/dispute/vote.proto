@@ -1,0 +1,23 @@
+syntax = "proto3";
+package layer.dispute;
+
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/tellor-io/layer/x/dispute/types";
+
+message Vote {
+  
+  uint64 id = 1; 
+  google.protobuf.Timestamp voteStart = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
+  google.protobuf.Timestamp voteEnd = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
+  string voteResult = 4; 
+}
+
+enum VoteResult {
+  NO_TALLY = 0; // default
+  PASSED = 1; // quorum reached
+  FAILED = 2; // quorum reached 
+  UNRESOLVEDPASSED = 3; // quorum not reached
+  UNRESOLVEDFAILED = 4; // quorum not reached
+}
