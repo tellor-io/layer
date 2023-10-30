@@ -244,7 +244,7 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, valAddress string,
 func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute) error {
 	// if dispute is not unresovled and dispute end time is before current block time then we can't update it
 	if dispute.DisputeStatus != types.Unresolved && dispute.DisputeEndTime.Before(ctx.BlockTime()) {
-		return fmt.Errorf("this dispute is already resolved %d", dispute.DisputeId)
+		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
 	// if burnAmount is greater or equal to slashAmount then we can't update it
 	if dispute.BurnAmount.GTE(dispute.SlashAmount) {
