@@ -1,6 +1,9 @@
 package types
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 const (
 	// ModuleName defines the module name
@@ -48,4 +51,12 @@ func OpenDisputeIdsKeyPrefix() []byte {
 
 func VotesKeyPrefix() []byte {
 	return KeyPrefix(VotesKey)
+}
+
+func VoterKeyPrefix(voter string, id uint64) []byte {
+	return KeyPrefix(fmt.Sprintf("%s:%d", voter, id))
+}
+
+func TallyKeyPrefix(id uint64) []byte {
+	return KeyPrefix(fmt.Sprintf("%s:%d", "VoteTally", id))
 }

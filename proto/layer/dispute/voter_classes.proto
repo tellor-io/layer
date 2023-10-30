@@ -1,0 +1,12 @@
+syntax = "proto3";
+package layer.dispute;
+
+option go_package = "github.com/tellor-io/layer/x/dispute/types";
+
+message VoterClasses {
+  
+  uint64 validators = 1; 
+  uint64 tokenHolders = 2; 
+  uint64 users = 3; 
+  uint64 team = 4; 
+}
