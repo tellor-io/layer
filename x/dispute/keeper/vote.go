@@ -43,12 +43,12 @@ func (k Keeper) GetTally(ctx sdk.Context, id uint64) *types.Tally {
 func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor bool, voter string) error {
 	tallies := k.GetTally(ctx, id)
 	if voteFor {
-		tallies.ForVotes.Validators.Add(k.GetValidatorTokenBalance(ctx, voter))
+		tallies.ForVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
 		tallies.ForVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
 		tallies.ForVotes.Users.Add(k.GetUserTips(ctx, voter))
 		tallies.ForVotes.Team.Add(k.IsTeamAddress(ctx, voter))
 	} else {
-		tallies.AgainstVotes.Validators.Add(k.GetValidatorTokenBalance(ctx, voter))
+		tallies.AgainstVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
 		tallies.AgainstVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
 		tallies.AgainstVotes.Users.Add(k.GetUserTips(ctx, voter))
 		tallies.AgainstVotes.Team.Add(k.IsTeamAddress(ctx, voter))
@@ -58,8 +58,17 @@ func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor bool, voter string)
 	return nil
 }
 
-func (k Keeper) GetValidatorTokenBalance(ctx sdk.Context, voter string) math.Int {
-	return sdk.ZeroInt()
+func (k Keeper) GetValidatorPower(ctx sdk.Context, voter string) math.Int {
+	addr, err := sdk.AccAddressFromBech32(voter)
+	if err != nil {
+		panic(err)
+	}
+	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
+	if !found {
+		return sdk.ZeroInt()
+	}
+	power := validator.GetConsensusPower(validator.GetBondedTokens())
+	return sdk.NewInt(power)
 }
 
 func (k Keeper) GetAccountBalance(ctx sdk.Context, voter string) math.Int {

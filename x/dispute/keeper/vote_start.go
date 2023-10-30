@@ -23,6 +23,7 @@ func (k Keeper) StartVoting(ctx sdk.Context, ids []uint64) {
 		if dispute.SlashAmount.GTE(dispute.FeeTotal) && dispute.DisputeStatus == types.Prevote {
 			// set dispute status to voting
 			k.SetDisputeStatus(ctx, disputeId, types.Voting)
+			k.AddTimeToDisputeEndTime(ctx, *dispute, 86400*2)
 			k.SetStartVote(ctx, disputeId)
 		}
 	}

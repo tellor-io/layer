@@ -11,7 +11,7 @@ message Vote {
   uint64 id = 1; 
   google.protobuf.Timestamp voteStart = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
   google.protobuf.Timestamp voteEnd = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
-  string voteResult = 4; 
+  VoteResult voteResult = 4; 
 }
 
 enum VoteResult {

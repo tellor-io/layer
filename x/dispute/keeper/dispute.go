@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/math"
 
@@ -268,4 +269,11 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute) error {
 	// If fee is not paid then doubling the burnAmount means reducing the fee total?
 	// Reducing the fee total means that feeTotal - burnAmount could be zero and the fee payers don't get anything from the feePaid or who gets what is not clear
 	return nil
+}
+
+// Add time to dispute end time
+func (k Keeper) AddTimeToDisputeEndTime(ctx sdk.Context, dispute types.Dispute, timeToAdd time.Duration) {
+	dispute.DisputeEndTime = dispute.DisputeEndTime.Add(timeToAdd)
+	k.SetDisputeById(ctx, dispute.DisputeId, dispute)
+	k.SetDisputeByReporter(ctx, dispute)
 }
