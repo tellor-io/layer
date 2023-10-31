@@ -2,58 +2,54 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func TestSubmitValue(t *testing.T) {
-	ms, k, sk, ak, goctx := setupMsgServer(t)
-	ctx := sdk.UnwrapSDKContext(goctx)
+func (s *KeeperTestSuite) TestSubmitValue() {
+	require := s.Require()
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
 	// var commitres *types.MsgCommitReportResponse
 	var submitreq types.MsgSubmitValue
 	var submitres types.MsgSubmitValueResponse
-	// generate keys
-	key, pub, addr := KeyTestPubAddr()
 	// Commit report transaction
-	commitreq.Creator = addr.String()
+	commitreq.Creator = Addr.String()
 	valueDecoded, err := hex.DecodeString(value)
-	require.Nil(t, err)
+	require.Nil(err)
 	commitreq.QueryData = queryData
-	signature, err := key.Sign(valueDecoded)
-	require.Nil(t, err)
+	signature, err := PrivKey.Sign(valueDecoded)
+	require.Nil(err)
 	commitreq.Signature = hex.EncodeToString(signature)
-	_, err = ms.CommitReport(goctx, &commitreq)
-	require.Nil(t, err)
+	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
+	require.Nil(err)
 	// forward block by 1 and reveal value
-	height := ctx.BlockHeight() + 1
-	ctx = ctx.WithBlockHeight(height)
+	height := s.ctx.BlockHeight() + 1
+	ctx := s.ctx.WithBlockHeight(height)
 	// Submit value transaction with value revealed, this checks if the value is correctly signed
-	submitreq.Creator = addr.String()
+	submitreq.Creator = Addr.String()
 	submitreq.QueryData = queryData
 	submitreq.Value = value
 	delegation := stakingtypes.Delegation{
-		DelegatorAddress: addr.String(),
+		DelegatorAddress: Addr.String(),
 		ValidatorAddress: "",
 		Shares:           sdk.NewDec(100),
 	}
-	sk.On("GetAllDelegatorDelegations", mock.Anything, mock.Anything).Return([]stakingtypes.Delegation{delegation}, nil)
-	account := authtypes.NewBaseAccount(addr, pub, 0, 0)
-	ak.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
-	res, err := ms.SubmitValue(ctx, &submitreq)
-	require.Equal(t, &submitres, res)
-	require.Nil(t, err)
-	report, err := k.GetReportsbyQid(ctx, &types.QueryGetReportsbyQidRequest{QId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
-	require.Nil(t, err)
+	s.stakingKeeper.On("GetAllDelegatorDelegations", mock.Anything, mock.Anything).Return([]stakingtypes.Delegation{delegation}, nil)
+	account := authtypes.NewBaseAccount(Addr, PubKey, 0, 0)
+	s.accountKeeper.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
+	res, err := s.msgServer.SubmitValue(ctx, &submitreq)
+	require.Equal(&submitres, res)
+	require.Nil(err)
+	report, err := s.oracleKeeper.GetReportsbyQid(ctx, &types.QueryGetReportsbyQidRequest{QId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
+	require.Nil(err)
 	microReport := types.MicroReport{
-		Reporter:  addr.String(),
+		Reporter:  Addr.String(),
 		Qid:       "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     value,
 		Timestamp: uint64(ctx.BlockTime().Unix()),
@@ -63,5 +59,5 @@ func TestSubmitValue(t *testing.T) {
 			MicroReports: []*types.MicroReport{&microReport},
 		},
 	}
-	require.Equal(t, &expectedReport, report)
+	require.Equal(&expectedReport, report)
 }
