@@ -3,6 +3,8 @@ package cli
 import (
 	"strconv"
 
+	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -23,7 +25,8 @@ func CmdVote() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argVote, err := cast.ToBoolE(args[1])
+			argVote := new(types.VoteEnum)
+			err = json.Unmarshal([]byte(args[1]), argVote)
 			if err != nil {
 				return err
 			}
@@ -36,7 +39,7 @@ func CmdVote() *cobra.Command {
 			msg := types.NewMsgVote(
 				clientCtx.GetFromAddress().String(),
 				argId,
-				argVote,
+				*argVote,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
