@@ -33,7 +33,8 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	}
 
 	k.Keeper.SetTally(ctx, msg.Id, msg.Vote, msg.Voter)
-	k.Keeper.SetVoterVote(ctx, msg.Voter, msg.Id, msg.Vote)
+	k.Keeper.SetVoterVote(ctx, *msg)
+	k.Keeper.AppendVoters(ctx, msg.Id, msg.Voter)
 
 	return &types.MsgVoteResponse{}, nil
 }

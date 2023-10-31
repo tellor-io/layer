@@ -40,19 +40,28 @@ func (k Keeper) GetTally(ctx sdk.Context, id uint64) *types.Tally {
 }
 
 // Set tally numbers
-func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor bool, voter string) error {
+func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, voter string) error {
 	tallies := k.GetTally(ctx, id)
-	if voteFor {
+	switch voteFor {
+	case types.VoteEnum_VOTE_SUPPORT:
 		tallies.ForVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
 		tallies.ForVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
 		tallies.ForVotes.Users.Add(k.GetUserTips(ctx, voter))
 		tallies.ForVotes.Team.Add(k.IsTeamAddress(ctx, voter))
-	} else {
+	case types.VoteEnum_VOTE_AGAINST:
 		tallies.AgainstVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
 		tallies.AgainstVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
 		tallies.AgainstVotes.Users.Add(k.GetUserTips(ctx, voter))
 		tallies.AgainstVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+	case types.VoteEnum_VOTE_INVALID:
+		tallies.Invalid.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.Invalid.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.Invalid.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.Invalid.Team.Add(k.IsTeamAddress(ctx, voter))
+	default:
+		panic("invalid vote type")
 	}
+
 	store := k.voteStore(ctx)
 	store.Set(types.TallyKeyPrefix(id), k.cdc.MustMarshal(tallies))
 	return nil
@@ -88,15 +97,16 @@ func (k Keeper) IsTeamAddress(ctx sdk.Context, voter string) math.Int {
 }
 
 // Set vote by voter
-func (k Keeper) SetVoterVote(ctx sdk.Context, voter string, id uint64, vote bool) {
+func (k Keeper) SetVoterVote(ctx sdk.Context, msg types.MsgVote) {
 	store := k.voteStore(ctx)
-	voterKey := types.VoterKeyPrefix(voter, id)
-	var voteBytes []byte
-	if vote {
-		voteBytes = []byte{0x01}
-	} else {
-		voteBytes = []byte{0x00}
-	}
-	// fix this
-	store.Set(voterKey, voteBytes)
+	voterKey := types.VoterKeyPrefix(msg.Voter, msg.Id)
+	store.Set(voterKey, k.cdc.MustMarshal(&msg))
+}
+
+// Append voters to vote struct
+func (k Keeper) AppendVoters(ctx sdk.Context, id uint64, voter string) {
+	store := k.voteStore(ctx)
+	vote := k.GetVote(ctx, id)
+	vote.Voters = append(vote.Voters, voter)
+	store.Set(types.DisputeIdBytes(id), k.cdc.MustMarshal(vote))
 }

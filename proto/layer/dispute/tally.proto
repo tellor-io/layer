@@ -9,4 +9,5 @@ message Tally {
   
   VoterClasses forVotes = 1; 
   VoterClasses againstVotes = 2; 
+  VoterClasses Invalid = 3;
 }

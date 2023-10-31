@@ -38,8 +38,13 @@ message MsgAddFeeToDisputeResponse {}
 message MsgVote {
   string voter = 1;
   uint64 id    = 2;
-  bool   vote  = 3;
+  VoteEnum   vote  = 3;
 }
 
 message MsgVoteResponse {}
 
+enum VoteEnum {
+  VOTE_INVALID = 0;
+  VOTE_SUPPORT       = 1;
+  VOTE_AGAINST        = 2;
+}

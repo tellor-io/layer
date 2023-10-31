@@ -9,7 +9,7 @@ const TypeMsgVote = "vote"
 
 var _ sdk.Msg = &MsgVote{}
 
-func NewMsgVote(voter string, id uint64, vote bool) *MsgVote {
+func NewMsgVote(voter string, id uint64, vote VoteEnum) *MsgVote {
 	return &MsgVote{
 		Voter: voter,
 		Id:    id,

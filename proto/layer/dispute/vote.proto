@@ -12,12 +12,15 @@ message Vote {
   google.protobuf.Timestamp voteStart = 2 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
   google.protobuf.Timestamp voteEnd = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
   VoteResult voteResult = 4; 
+  repeated string voters = 5;
 }
 
 enum VoteResult {
   NO_TALLY = 0; // default
-  PASSED = 1; // quorum reached
-  FAILED = 2; // quorum reached 
-  UNRESOLVEDPASSED = 3; // quorum not reached
-  UNRESOLVEDFAILED = 4; // quorum not reached
+  SUPPORT = 1; // quorum reached
+  AGAINST = 2; // quorum reached 
+  INVALID = 3; // quorum reached
+  NO_QUORUM_MAJORITY_SUPPORT = 4; // quorum not reached
+  NO_QUORUM_MAJORITY_AGAINST = 5; // quorum not reached
+  NO_QUORUM_MAJORITY_INVALID = 6; // quorum not reached
 }
