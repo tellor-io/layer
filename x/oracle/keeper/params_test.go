@@ -1,18 +1,14 @@
 package keeper_test
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/require"
-	testkeeper "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func TestGetParams(t *testing.T) {
-	k, _, _, ctx := testkeeper.OracleKeeper(t)
+func (s *KeeperTestSuite) TestGetParams() {
+	require := s.Require()
 	params := types.DefaultParams()
 
-	k.SetParams(ctx, params)
+	s.oracleKeeper.SetParams(s.ctx, params)
 
-	require.EqualValues(t, params, k.GetParams(ctx))
+	require.EqualValues(params, s.oracleKeeper.GetParams(s.ctx))
 }

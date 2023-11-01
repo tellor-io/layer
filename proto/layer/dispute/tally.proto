@@ -1,0 +1,13 @@
+syntax = "proto3";
+package layer.dispute;
+
+import "layer/dispute/voter_classes.proto";
+
+option go_package = "github.com/tellor-io/layer/x/dispute/types";
+
+message Tally {
+  
+  VoterClasses forVotes = 1; 
+  VoterClasses againstVotes = 2; 
+  VoterClasses Invalid = 3;
+}

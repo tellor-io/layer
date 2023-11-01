@@ -5,7 +5,8 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message MicroReport {
   string reporter = 1;
-  string qid = 2; 
-  string value = 3; 
-  uint64 timestamp = 4; 
+  int64 power = 2;
+  string qid = 3; 
+  string value = 4; 
+  uint64 timestamp = 5; 
 }

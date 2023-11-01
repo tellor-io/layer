@@ -1,0 +1,9 @@
+syntax = "proto3";
+package layer.dispute;
+
+option go_package = "github.com/tellor-io/layer/x/dispute/types";
+
+message OpenDisputes {
+  
+  repeated uint64 ids = 1; 
+}

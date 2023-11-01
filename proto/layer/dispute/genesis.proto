@@ -1,0 +1,12 @@
+syntax = "proto3";
+package layer.dispute;
+
+import "gogoproto/gogo.proto";
+import "layer/dispute/params.proto";
+
+option go_package = "github.com/tellor-io/layer/x/dispute/types";
+
+// GenesisState defines the dispute module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
