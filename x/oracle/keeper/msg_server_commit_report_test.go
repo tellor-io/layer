@@ -4,8 +4,7 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -22,12 +21,11 @@ func (s *KeeperTestSuite) TestCommitValue() {
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
 	commitreq.Signature = hex.EncodeToString(signature)
-	addy, err := sdk.AccAddressFromBech32(commitreq.Creator)
-	val, err := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
-	val.Jailed = false
-	val.Status = stakingtypes.Bonded
-	val.Tokens = sdk.NewInt(1000000000000000000)
-	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, true)
 	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
 	require.Nil(err)
+	_hexxy, _ := hex.DecodeString(queryData)
+	commitValue, err := s.oracleKeeper.GetSignature(s.ctx, Addr.String(), keeper.HashQueryData(_hexxy))
+
+	require.Equal(true, s.oracleKeeper.VerifySignature(s.ctx, Addr.String(), value, commitValue.Report.Signature))
+	require.Equal(commitValue.Report.Creator, Addr.String())
 }

@@ -112,7 +112,7 @@ func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int6
 	return votingPower, validator.IsBonded()
 }
 
-func (k Keeper) verifySignature(ctx sdk.Context, reporter string, value, signature string) bool {
+func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signature string) bool {
 	addr, err := sdk.AccAddressFromBech32(reporter)
 	if err != nil {
 		return false
@@ -176,7 +176,7 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	}
 	return result, nil
 }
-func (k Keeper) getSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
+func (k Keeper) GetSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
 
 	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
 	commit := commitStore.Get(append([]byte(reporter), queryId...))

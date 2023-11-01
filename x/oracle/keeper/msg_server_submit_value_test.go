@@ -2,9 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/mock"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -23,8 +21,6 @@ func (s *KeeperTestSuite) TestSubmitValue() {
 	submitreq.Creator = Addr.String()
 	submitreq.QueryData = queryData
 	submitreq.Value = value
-	account := authtypes.NewBaseAccount(Addr, PubKey, 0, 0)
-	s.accountKeeper.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
 	res, err := s.msgServer.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
 	require.Equal(&submitres, res)
 	require.Nil(err)

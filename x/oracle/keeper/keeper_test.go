@@ -13,7 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/mocks"
@@ -105,6 +108,14 @@ func (s *KeeperTestSuite) SetupTest() {
 	k.SetParams(s.ctx, types.DefaultParams())
 	s.msgServer = keeper.NewMsgServerImpl(*k)
 	KeyTestPubAddr()
+	addy, _ := sdk.AccAddressFromBech32(Addr.String())
+	val, _ := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
+	val.Jailed = false
+	val.Status = stakingtypes.Bonded
+	val.Tokens = sdk.NewInt(1000000000000000000)
+	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, true)
+	account := authtypes.NewBaseAccount(Addr, PubKey, 0, 0)
+	s.accountKeeper.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
 }
 
 func KeyTestPubAddr() {

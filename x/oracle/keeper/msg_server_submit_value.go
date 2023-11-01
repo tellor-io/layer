@@ -35,7 +35,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.getSignature(ctx, msg.Creator, HashQueryData(queryData))
+	commitValue, err := k.GetSignature(ctx, msg.Creator, HashQueryData(queryData))
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
 	// }
 	// verify value signature
-	if !k.verifySignature(ctx, msg.Creator, msg.Value, commitValue.Report.Signature) {
+	if !k.VerifySignature(ctx, msg.Creator, msg.Value, commitValue.Report.Signature) {
 		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")
 	}
 	// set value
