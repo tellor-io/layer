@@ -24,14 +24,14 @@ func (s *KeeperTestSuite) TestSubmitValue() {
 	res, err := s.msgServer.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
 	require.Equal(&submitres, res)
 	require.Nil(err)
-	report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
+	report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
 	require.Nil(err)
 	microReport := types.MicroReport{
 		Reporter:  Addr.String(),
 		Power:     1,
-		Qid:       "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     value,
-		Timestamp: uint64(s.ctx.BlockTime().Unix()),
+		Timestamp: s.ctx.BlockTime(),
 	}
 	expectedReport := types.QueryGetReportsbyQidResponse{
 		Reports: types.Reports{

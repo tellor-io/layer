@@ -28,7 +28,7 @@ func CmdGetReportsbyQid() *cobra.Command {
 
 			params := &types.QueryGetReportsbyQidRequest{
 
-				QId: reqQId,
+				QueryId: reqQId,
 			}
 
 			res, err := queryClient.GetReportsbyQid(cmd.Context(), params)

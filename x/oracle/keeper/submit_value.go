@@ -28,9 +28,9 @@ func (k Keeper) setValueByReporter(ctx sdk.Context, reporter, val string, queryI
 	report := &types.MicroReport{
 		Reporter:  reporter,
 		Power:     power,
-		Qid:       queryIdHex,
+		QueryId:   queryIdHex,
 		Value:     val,
-		Timestamp: uint64(ctx.BlockTime().Unix()),
+		Timestamp: ctx.BlockTime(),
 	}
 	// append report to reports list
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
@@ -43,9 +43,9 @@ func (k Keeper) setValueByQueryId(ctx sdk.Context, reporter, val string, queryId
 	report := &types.MicroReport{
 		Reporter:  reporter,
 		Power:     power,
-		Qid:       hex.EncodeToString(queryId),
+		QueryId:   hex.EncodeToString(queryId),
 		Value:     val,
-		Timestamp: uint64(ctx.BlockTime().Unix()),
+		Timestamp: ctx.BlockTime(),
 	}
 	var reportsList types.Reports
 	if err := k.cdc.Unmarshal(store.Get(queryId), &reportsList); err != nil {
