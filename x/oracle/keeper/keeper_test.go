@@ -30,7 +30,6 @@ var (
 
 type KeeperTestSuite struct {
 	suite.Suite
-
 	ctx            sdk.Context
 	oracleKeeper   keeper.Keeper
 	registryKeeper registryk.Keeper

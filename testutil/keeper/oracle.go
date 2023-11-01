@@ -27,7 +27,7 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
-	config.Seal()
+	//config.Seal()
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	rStoreKey := sdk.NewKVStoreKey(registrytypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
