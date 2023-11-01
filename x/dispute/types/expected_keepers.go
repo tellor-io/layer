@@ -10,10 +10,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type OracleKeeper interface {
-	// Methods imported from oracle should be defined here
-}
-
 type SlashingKeeper interface {
 	JailUntil(ctx sdk.Context, consAddr sdk.ConsAddress, jailTime time.Time)
 	GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress) (info slashingtypes.ValidatorSigningInfo, found bool)

@@ -22,7 +22,6 @@ type (
 
 		accountKeeper  types.AccountKeeper
 		bankKeeper     types.BankKeeper
-		oracleKeeper   types.OracleKeeper
 		slashingKeeper types.SlashingKeeper
 		stakingKeeper  types.StakingKeeper
 	}
@@ -36,7 +35,6 @@ func NewKeeper(
 
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	oracleKeeper types.OracleKeeper,
 	slashingKeeper types.SlashingKeeper,
 	stakingKeeper types.StakingKeeper,
 ) *Keeper {
@@ -53,7 +51,6 @@ func NewKeeper(
 
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		oracleKeeper:   oracleKeeper,
 		slashingKeeper: slashingKeeper,
 		stakingKeeper:  stakingKeeper,
 	}

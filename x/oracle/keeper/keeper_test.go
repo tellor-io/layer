@@ -1,31 +1,51 @@
-package keeper
+package keeper_test
 
 import (
 	"testing"
-
-	"github.com/tellor-io/layer/app"
-	"github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/types"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/mocks"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 	r "github.com/tellor-io/layer/x/registry"
-	rkeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registryk "github.com/tellor-io/layer/x/registry/keeper"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.AccountKeeper, sdk.Context) {
-	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
+var (
+	PrivKey cryptotypes.PrivKey
+	PubKey  cryptotypes.PubKey
+	Addr    sdk.AccAddress
+)
+
+type KeeperTestSuite struct {
+	suite.Suite
+
+	ctx            sdk.Context
+	oracleKeeper   keeper.Keeper
+	registryKeeper registryk.Keeper
+	stakingKeeper  *mocks.StakingKeeper
+	accountKeeper  *mocks.AccountKeeper
+	queryClient    types.QueryClient
+	msgServer      types.MsgServer
+}
+
+func (s *KeeperTestSuite) SetupTest() {
+	require := s.Require()
 	config := sdk.GetConfig()
+	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
 	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
 
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
@@ -34,10 +54,11 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
+
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(rStoreKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	require.NoError(t, stateStore.LoadLatestVersion())
+	require.NoError(stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
@@ -48,8 +69,8 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 		memStoreKey,
 		"OracleParams",
 	)
-	sk := new(mocks.StakingKeeper)
-	ak := new(mocks.AccountKeeper)
+	s.stakingKeeper = new(mocks.StakingKeeper)
+	s.accountKeeper = new(mocks.AccountKeeper)
 	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
 	rparamsSubspace := typesparams.NewSubspace(cdc,
 		types.Amino,
@@ -57,7 +78,7 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 		memStoreKey,
 		"RegistryParams",
 	)
-	rk := rkeeper.NewKeeper(
+	s.registryKeeper = *registryk.NewKeeper(
 		cdc,
 		rStoreKey,
 		rmemStoreKey,
@@ -69,19 +90,29 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 		storeKey,
 		memStoreKey,
 		paramsSubspace,
-		ak,
+		s.accountKeeper,
 		nil,
-		sk,
-		rk,
+		s.stakingKeeper,
+		s.registryKeeper,
 	)
-
-	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
+	s.oracleKeeper = *k
+	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	genesisState := registrytypes.GenesisState{
 		Params: registrytypes.DefaultParams(),
 	}
-	r.InitGenesis(ctx, *rk, genesisState)
+	r.InitGenesis(s.ctx, s.registryKeeper, genesisState)
 	// Initialize params
-	k.SetParams(ctx, types.DefaultParams())
+	k.SetParams(s.ctx, types.DefaultParams())
+	s.msgServer = keeper.NewMsgServerImpl(*k)
+	KeyTestPubAddr()
+}
 
-	return k, sk, ak, ctx
+func KeyTestPubAddr() {
+	PrivKey = secp256k1.GenPrivKey()
+	PubKey = PrivKey.PubKey()
+	Addr = sdk.AccAddress(PubKey.Address())
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
 }

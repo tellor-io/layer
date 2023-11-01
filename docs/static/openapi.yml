@@ -75571,6 +75571,13 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.dispute.VoteEnum:
+    type: string
+    enum:
+      - VOTE_INVALID
+      - VOTE_SUPPORT
+      - VOTE_AGAINST
+    default: VOTE_INVALID
   layer.oracle.MicroReport:
     type: object
     properties:

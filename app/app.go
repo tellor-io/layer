@@ -566,7 +566,6 @@ func New(
 
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.OracleKeeper,
 		app.SlashingKeeper,
 		app.StakingKeeper,
 	)

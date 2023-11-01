@@ -130,9 +130,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		FeeTotal:       msg.Fee.Amount,
 		PrevDisputeIds: make([]uint64, 0),
 	}
-	k.SetDisputeByReporter(ctx, dispute)
-	k.SetDisputeById(ctx, disputeId, dispute)
-	k.SetDisputeCount(ctx, disputeId+1)
+	k.SetDispute(ctx, dispute)
 	// Pay the dispute fee
 	if err := k.PayDisputeFee(ctx, msg.Creator, msg.ValidatorAddress, msg.Fee, msg.PayFromBond); err != nil {
 		return err
@@ -200,15 +198,16 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, reporter string, category types.D
 	}
 	stake := validator.GetBondedTokens()
 	fee := math.ZeroInt()
+	onePercent := sdk.NewInt(1)
+	fivePercent := sdk.NewInt(5)
+	hundred := sdk.NewInt(100)
 	switch category {
 	case types.Warning:
 		// calculate 1 percent of bond
-		multiplier, _ := sdk.NewIntFromString("0.01")
-		fee = stake.Mul(multiplier)
+		fee = stake.Mul(onePercent).Quo(hundred)
 	case types.Minor:
 		// calculate 5 percent of bond
-		multiplier, _ := sdk.NewIntFromString("0.05")
-		fee = stake.Mul(multiplier)
+		fee = stake.Mul(fivePercent).Quo(hundred)
 	case types.Major:
 		// calculate 100 percent of bond
 		fee = stake
@@ -261,6 +260,8 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute) error {
 	dispute.DisputeStartBlock = ctx.BlockHeight()
 	dispute.DisputeRound = dispute.DisputeRound + 1
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
+
+	k.SetDispute(ctx, dispute)
 	// How does second round of dispute fee work?
 	// If fee is not paid then doubling the burnAmount means reducing the fee total?
 	// Reducing the fee total means that feeTotal - burnAmount could be zero and the fee payers don't get anything from the feePaid or who gets what is not clear
@@ -272,4 +273,19 @@ func (k Keeper) AddTimeToDisputeEndTime(ctx sdk.Context, dispute types.Dispute, 
 	dispute.DisputeEndTime = dispute.DisputeEndTime.Add(timeToAdd)
 	k.SetDisputeById(ctx, dispute.DisputeId, dispute)
 	k.SetDisputeByReporter(ctx, dispute)
+}
+
+// Append dispute id to open dispute ids
+func (k Keeper) AppendDisputeIdToOpenDisputeIds(ctx sdk.Context, disputeId uint64) {
+	openDisputes := k.GetOpenDisputeIds(ctx)
+	openDisputes.Ids = append(openDisputes.Ids, disputeId)
+	k.SetOpenDisputeIds(ctx, openDisputes)
+}
+
+// Set DISPUTE
+func (k Keeper) SetDispute(ctx sdk.Context, dispute types.Dispute) {
+	k.AppendDisputeIdToOpenDisputeIds(ctx, dispute.DisputeId)
+	k.SetDisputeByReporter(ctx, dispute)
+	k.SetDisputeById(ctx, dispute.DisputeId, dispute)
+	k.SetDisputeCount(ctx, dispute.DisputeId+1)
 }
