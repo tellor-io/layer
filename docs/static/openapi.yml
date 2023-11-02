@@ -46738,21 +46738,6 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
-      parameters:
-        - name: height
-          in: query
-          required: false
-          type: string
-          format: int64
-        - name: qid
-          in: query
-          required: false
-          type: string
-        - name: timestamp
-          in: query
-          required: false
-          type: string
-          format: uint64
       tags:
         - Bridge
   /layer/bridge/tmsig:

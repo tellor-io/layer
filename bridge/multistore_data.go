@@ -28,24 +28,11 @@ func hashQdata(queryData string) ([]byte, error) {
 }
 
 func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRequest) (*QueryMultistoreResponse, error) {
-	var h *int64
-	if req.Height != 0 {
-		h = &req.Height
-	}
-	qid, err := hashQdata(req.Qid)
-	if err != nil {
-		return nil, err
-	}
-	// log qid
-	// convert qid to hex
-	qidHex := hex.EncodeToString(qid)
-	log.Printf("Qid: %s", qidHex)
-	// tbytes := keeper.Uint64ToBytes(req.Timestamp)
 	resp, err := s.clientCtx.Client.ABCIQueryWithOptions(
 		context.Background(),
 		"/store/oracle/key",
-		append(types.KeyPrefix(types.ReportsKey), qid...),
-		cometclient.ABCIQueryOptions{Height: *h, Prove: true},
+		bytes.HexBytes(types.KeyPrefix(types.ReportsKey)),
+		cometclient.ABCIQueryOptions{Prove: true},
 	)
 	if err != nil {
 		return nil, err
@@ -66,18 +53,6 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 
 	for _, op := range ops {
 		switch op.GetType() {
-		case storetypes.ProofOpIAVLCommitment:
-
-			proof := &ics23.CommitmentProof{}
-			err := proof.Unmarshal(op.Data)
-			if err != nil {
-				panic(err)
-			}
-			iavlCOps := storetypes.NewIavlCommitmentOp(op.Key, proof)
-			iavlProof = iavlCOps.Proof.GetExist()
-			if iavlProof == nil {
-				return nil, nil
-			}
 		case storetypes.ProofOpSimpleMerkleCommitment:
 			proof := &ics23.CommitmentProof{}
 			err := proof.Unmarshal(op.Data)
@@ -86,9 +61,6 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 			}
 			multiStoreOps := storetypes.NewSimpleMerkleCommitmentOp(op.Key, proof)
 			multistoreProof = multiStoreOps.Proof.GetExist()
-			if multistoreProof == nil {
-				return nil, nil
-			}
 			appHash, err := multistoreProof.Calculate()
 			fmt.Println("appHash", bytes.HexBytes(appHash))
 			if err != nil {
@@ -97,21 +69,10 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 
 		default:
 			fmt.Println("Defaulting to nothing found")
-			return nil, nil
 		}
 	}
 	logCtx := sdk.UnwrapSDKContext(ctx)
 	s.Logger(logCtx).Error(fmt.Sprintf("iavlProof %v", iavlProof))
-	paths := GetMerklePaths(iavlProof)
-	evmdata := make([]IAVLMerklePathEvm, len(paths))
-	s.Logger(logCtx).Error(fmt.Sprintf("paths %v", paths)) // todo: fix or rmv
-	for i, p := range paths {
-		evmdata[i].IsDataOnRight = p.IsDataOnRight
-		evmdata[i].SubtreeHeight = p.SubtreeHeight
-		evmdata[i].SubtreeSize = int64(p.SubtreeSize)
-		evmdata[i].SubtreeVersion = int64(p.SubtreeVersion)
-		evmdata[i].SiblingHash = bytes.HexBytes(p.SiblingHash).String()
-	}
 
 	return &QueryMultistoreResponse{
 		MutiStoreTree: MutiStoreTreeFields{
@@ -122,7 +83,7 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 			AccToEvidenceMerkleHash:          bytes.HexBytes(multistoreProof.Path[3].Prefix[1:]).String(),
 			ParamsToVestingMerkleHash:        bytes.HexBytes(multistoreProof.Path[4].Suffix).String(),
 		},
-		Iavl: evmdata,
+		Iavl: nil,
 	}, nil
 }
 
@@ -157,13 +118,3 @@ func GetMerklePaths(iavlEp *ics23.ExistenceProof) []IAVLMerklePath {
 	}
 	return paths
 }
-
-// func encodeToEthFormat(merklePath IAVLMerklePath) IAVLMerklePathEvm {
-// 	return IAVLMerklePathEvm{
-// 		merklePath.IsDataOnRight,
-// 		merklePath.SubtreeHeight,
-// 		int64(merklePath.SubtreeSize),
-// 		int64(merklePath.SubtreeVersion),
-// 		bytes.HexBytes(merklePath.SiblingHash).String(),
-// 	}
-// }
