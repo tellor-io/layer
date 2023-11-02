@@ -145,17 +145,17 @@
   },
   "ast": {
     "absolutePath": "src/interfaces/IBridgeProxy.sol",
-    "id": 47459,
+    "id": 8227,
     "exportedSymbols": {
       "IBridgeProxy": [
-        47458
+        8226
       ]
     },
     "nodeType": "SourceUnit",
     "src": "32:245:21",
     "nodes": [
       {
-        "id": 47441,
+        "id": 8209,
         "nodeType": "PragmaDirective",
         "src": "32:22:21",
         "nodes": [],
@@ -166,12 +166,12 @@
         ]
       },
       {
-        "id": 47458,
+        "id": 8226,
         "nodeType": "ContractDefinition",
         "src": "56:221:21",
         "nodes": [
           {
-            "id": 47446,
+            "id": 8214,
             "nodeType": "FunctionDefinition",
             "src": "85:42:21",
             "nodes": [],
@@ -182,23 +182,23 @@
             "name": "paused",
             "nameLocation": "94:6:21",
             "parameters": {
-              "id": 47442,
+              "id": 8210,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "100:2:21"
             },
             "returnParameters": {
-              "id": 47445,
+              "id": 8213,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 47444,
+                  "id": 8212,
                   "mutability": "mutable",
                   "name": "",
                   "nameLocation": "-1:-1:-1",
                   "nodeType": "VariableDeclaration",
-                  "scope": 47446,
+                  "scope": 8214,
                   "src": "121:4:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -207,7 +207,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 47443,
+                    "id": 8211,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "121:4:21",
@@ -221,13 +221,13 @@
               ],
               "src": "120:6:21"
             },
-            "scope": 47458,
+            "scope": 8226,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 47451,
+            "id": 8219,
             "nodeType": "FunctionDefinition",
             "src": "132:67:21",
             "nodes": [],
@@ -238,17 +238,17 @@
             "name": "updateImplementation",
             "nameLocation": "141:20:21",
             "parameters": {
-              "id": 47449,
+              "id": 8217,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 47448,
+                  "id": 8216,
                   "mutability": "mutable",
                   "name": "_newImplementation",
                   "nameLocation": "170:18:21",
                   "nodeType": "VariableDeclaration",
-                  "scope": 47451,
+                  "scope": 8219,
                   "src": "162:26:21",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -257,7 +257,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 47447,
+                    "id": 8215,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "162:7:21",
@@ -273,18 +273,18 @@
               "src": "161:28:21"
             },
             "returnParameters": {
-              "id": 47450,
+              "id": 8218,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "198:0:21"
             },
-            "scope": 47458,
+            "scope": 8226,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 47454,
+            "id": 8222,
             "nodeType": "FunctionDefinition",
             "src": "204:32:21",
             "nodes": [],
@@ -295,24 +295,24 @@
             "name": "pauseBridge",
             "nameLocation": "213:11:21",
             "parameters": {
-              "id": 47452,
+              "id": 8220,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "224:2:21"
             },
             "returnParameters": {
-              "id": 47453,
+              "id": 8221,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "235:0:21"
             },
-            "scope": 47458,
+            "scope": 8226,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 47457,
+            "id": 8225,
             "nodeType": "FunctionDefinition",
             "src": "241:34:21",
             "nodes": [],
@@ -323,18 +323,18 @@
             "name": "unpauseBridge",
             "nameLocation": "250:13:21",
             "parameters": {
-              "id": 47455,
+              "id": 8223,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "263:2:21"
             },
             "returnParameters": {
-              "id": 47456,
+              "id": 8224,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "274:0:21"
             },
-            "scope": 47458,
+            "scope": 8226,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
@@ -346,11 +346,11 @@
         "contractKind": "interface",
         "fullyImplemented": false,
         "linearizedBaseContracts": [
-          47458
+          8226
         ],
         "name": "IBridgeProxy",
         "nameLocation": "66:12:21",
-        "scope": 47459
+        "scope": 8227
       }
     ],
     "license": "MIT"

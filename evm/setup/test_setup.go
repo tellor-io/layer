@@ -28,9 +28,10 @@ import (
 // endpoints
 // latest block: http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest
 // validators: http://localhost:1317/layer/bridge/blockvalidators?height=555
+// header: http://localhost:1317/layer/bridge/blockheadermerkleevm?height=1763
 
 func main() {
-	// Replace with your Cosmos chain's API endpoint
+	// *** get latest block number
 	url := "http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest"
 
 	resp, err := http.Get(url)
@@ -57,7 +58,7 @@ func main() {
 
 	log.Printf("Height: %s", height)
 
-	// query block validators
+	// *** query block validators
 	url = "http://localhost:1317/layer/bridge/blockvalidators?height=" + height
 
 	resp, err = http.Get(url)
@@ -90,7 +91,7 @@ func main() {
 	}
 
 	// Replace with your desired file path
-	filePath := "setup/data/response.json"
+	filePath := "setup/data/validators.json"
 
 	file, err := os.Create(filePath)
 	if err != nil {
@@ -98,10 +99,16 @@ func main() {
 	}
 	defer file.Close()
 
+	// reorganise "file" to have two arrays: ethAddresses[] and votingPowers[]
+	// ethAddresses := make([]string, len(validators))
+	// votingPowers := make([]string, len(validators))
+
 	_, err = file.Write(body)
 	if err != nil {
 		log.Fatalf("Failed to write to file: %v", err)
 	}
 
 	log.Printf("Response data written to %s", filePath)
+
+	//
 }

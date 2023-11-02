@@ -4,12 +4,6 @@ pragma solidity 0.8.3;
 import "./ProtobufLib.sol";
 
 contract LayerLightClientBridge {
-
-    uint256 public testNumber;
-    function testSetNumber(uint256 x) public {
-        testNumber = x;
-    }
-
     bytes public encodedChainId;
     uint256 public totalValidatorPower;
     uint256 public unbondingPeriod;
@@ -85,9 +79,9 @@ contract LayerLightClientBridge {
         bytes32 siblingHash;
     }
 
-    // constructor(uint256 _unbondingPeriod) {
-    //     unbondingPeriod = _unbondingPeriod;
-    // }
+    constructor(uint256 _unbondingPeriod) {
+        unbondingPeriod = _unbondingPeriod;
+    }
 
     function init(
         address[] calldata _validators, 

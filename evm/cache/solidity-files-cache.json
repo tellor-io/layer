@@ -90,18 +90,18 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "CommonBase": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "Base.sol/CommonBase.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/CommonBase.0.8.17.json"
         },
         "ScriptBase": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "Base.sol/ScriptBase.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/ScriptBase.0.8.17.json"
         },
         "TestBase": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "Base.sol/TestBase.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/TestBase.0.8.17.json"
         }
       }
     },
     "lib/forge-std/src/Script.sol": {
-      "lastModificationDate": 1695732817247,
+      "lastModificationDate": 1696510338563,
       "contentHash": "ba325c778a7da8a21c2136aa32763c14",
       "sourceName": "lib/forge-std/src/Script.sol",
       "solcConfig": {
@@ -235,7 +235,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdChains": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdChains.sol/StdChains.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdChains.sol/StdChains.0.8.17.json"
         }
       }
     },
@@ -279,10 +279,10 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdCheats": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdCheats.sol/StdCheats.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdCheats.sol/StdCheats.0.8.17.json"
         },
         "StdCheatsSafe": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdCheats.sol/StdCheatsSafe.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdCheats.sol/StdCheatsSafe.0.8.17.json"
         }
       }
     },
@@ -404,7 +404,7 @@
       "versionRequirement": ">=0.6.0, <0.9.0",
       "artifacts": {
         "stdJson": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdJson.sol/stdJson.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdJson.sol/stdJson.0.8.17.json"
         }
       }
     },
@@ -444,7 +444,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "stdMath": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdMath.sol/stdMath.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdMath.sol/stdMath.0.8.17.json"
         }
       }
     },
@@ -486,10 +486,10 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "stdStorage": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdStorage.sol/stdStorage.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStorage.sol/stdStorage.0.8.17.json"
         },
         "stdStorageSafe": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdStorage.sol/stdStorageSafe.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStorage.sol/stdStorageSafe.0.8.17.json"
         }
       }
     },
@@ -531,7 +531,7 @@
       "versionRequirement": ">=0.4.22, <0.9.0",
       "artifacts": {
         "StdStyle": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdStyle.sol/StdStyle.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStyle.sol/StdStyle.0.8.17.json"
         }
       }
     },
@@ -574,7 +574,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "StdUtils": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdUtils.sol/StdUtils.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdUtils.sol/StdUtils.0.8.17.json"
         }
       }
     },
@@ -672,10 +672,10 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "Vm": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "Vm.sol/Vm.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Vm.sol/Vm.0.8.17.json"
         },
         "VmSafe": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "Vm.sol/VmSafe.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Vm.sol/VmSafe.0.8.17.json"
         }
       }
     },
@@ -715,7 +715,7 @@
       "versionRequirement": ">=0.4.22, <0.9.0",
       "artifacts": {
         "console": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "console.sol/console.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "console.sol/console.0.8.17.json"
         }
       }
     },
@@ -755,7 +755,7 @@
       "versionRequirement": ">=0.4.22, <0.9.0",
       "artifacts": {
         "console2": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "console2.sol/console2.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "console2.sol/console2.0.8.17.json"
         }
       }
     },
@@ -795,7 +795,7 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "IMulticall3": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "IMulticall3.sol/IMulticall3.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "IMulticall3.sol/IMulticall3.0.8.17.json"
         }
       }
     },
@@ -835,12 +835,12 @@
       "versionRequirement": ">=0.6.2, <0.9.0",
       "artifacts": {
         "safeconsole": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "safeconsole.sol/safeconsole.json"
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "safeconsole.sol/safeconsole.0.8.17.json"
         }
       }
     },
     "script/Counter.s.sol": {
-      "lastModificationDate": 1695732817529,
+      "lastModificationDate": 1696510338774,
       "contentHash": "0705c52104730a78aef4aa6694175c81",
       "sourceName": "script/Counter.s.sol",
       "solcConfig": {
@@ -895,8 +895,8 @@
       }
     },
     "src/bridge/LayerLightClientBridge.sol": {
-      "lastModificationDate": 1695299457632,
-      "contentHash": "5272749a176def6202990a083cb3119d",
+      "lastModificationDate": 1698441110048,
+      "contentHash": "f8410df1d5c77ffa804b8e20a50e46d4",
       "sourceName": "src/bridge/LayerLightClientBridge.sol",
       "solcConfig": {
         "settings": {
@@ -1101,8 +1101,8 @@
       }
     },
     "test/BridgeTest.t.sol": {
-      "lastModificationDate": 1698425313505,
-      "contentHash": "f030686f36e8bcf90371738780068294",
+      "lastModificationDate": 1698856784959,
+      "contentHash": "1bc9e463cd578ffa4a3537c984dcb7e5",
       "sourceName": "test/BridgeTest.t.sol",
       "solcConfig": {
         "settings": {
@@ -1156,8 +1156,69 @@
       ],
       "versionRequirement": "=0.8.3",
       "artifacts": {
+        "BridgeTest": {
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "BridgeTest.t.sol/BridgeTest.json"
+        }
+      }
+    },
+    "test/BridgeTestHardcode.t.sol": {
+      "lastModificationDate": 1698441474515,
+      "contentHash": "2d9fc59058637b86f09faebd12753405",
+      "sourceName": "test/BridgeTestHardcode.t.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/forge-std/lib/ds-test/src/test.sol",
+        "lib/forge-std/src/Base.sol",
+        "lib/forge-std/src/StdAssertions.sol",
+        "lib/forge-std/src/StdChains.sol",
+        "lib/forge-std/src/StdCheats.sol",
+        "lib/forge-std/src/StdError.sol",
+        "lib/forge-std/src/StdInvariant.sol",
+        "lib/forge-std/src/StdJson.sol",
+        "lib/forge-std/src/StdMath.sol",
+        "lib/forge-std/src/StdStorage.sol",
+        "lib/forge-std/src/StdStyle.sol",
+        "lib/forge-std/src/StdUtils.sol",
+        "lib/forge-std/src/Test.sol",
+        "lib/forge-std/src/Vm.sol",
+        "lib/forge-std/src/console.sol",
+        "lib/forge-std/src/console2.sol",
+        "lib/forge-std/src/interfaces/IMulticall3.sol",
+        "lib/forge-std/src/safeconsole.sol",
+        "src/bridge/LayerLightClientBridge.sol",
+        "src/bridge/ProtobufLib.sol"
+      ],
+      "versionRequirement": "=0.8.3",
+      "artifacts": {
         "CounterTest": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "BridgeTest.t.sol/CounterTest.json"
+          "0.8.3+commit.8d00100c.Darwin.appleclang": "BridgeTestHardcode.t.sol/CounterTest.json"
         }
       }
     },

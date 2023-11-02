@@ -23,3 +23,6 @@ genesis:
   consensus_params:
     validator:
       pub_key_types: [secp256k1]
+build:
+  main: cmd/layerd
+  binary: layerd

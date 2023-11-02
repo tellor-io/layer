@@ -1,16 +1,36 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.3;
 
+import "forge-std/StdJson.sol";
 import "forge-std/Test.sol";
 import "../src/bridge/LayerLightClientBridge.sol";
 
-contract CounterTest is Test {
+contract BridgeTest is Test {
+    using stdJson for string;
     LayerLightClientBridge public bridge;
 
     // address[] validatorAddr = [0x35C132b955bF9e284005b81ACDb3D2FE5096c714];
     address[] validatorAddr = [0x0E3FbA8eAcE8fE7393D20597c3bB3e9A03d68900];
     uint256[] validatorPower = [100];
+    uint256 unbondingPeriod = 3 weeks;
     string chainIdString = "luqchain";
+
+    // file reading setup
+    // string root = vm.projectRoot();
+    // string pathPrefix = string(abi.encodePacked(root, "/setup/data/"));
+    // string pathValidators = string(abi.encodePacked(pathPrefix, "validators.json"));
+    // string jsonValidators = vm.readFile(pathValidators);
+    // bytes bytesValidators = vm.parseJson(jsonValidators);
+    // // bytes bytesValidators = jsonValidators.parseJson();
+    // Validators validators = abi.decode(bytesValidators, (Validators));
+    struct ValWithPower {
+        string cosmosAddress;
+        address ethAddress;
+        uint256 power;
+    }
+    struct Validators {
+        ValWithPower[] validators;
+    }
 
     LayerLightClientBridge.MultistoreData multistore = LayerLightClientBridge.MultistoreData({
         oracleIAVLStateHash: 0xc75128a5c12b64d52a625cb6e99e6dd850e738b87bbff5f0c5aa5836b2b44a9b,
@@ -47,27 +67,30 @@ contract CounterTest is Test {
     LayerLightClientBridge.TMSignatureData[] sigDataArray;
 
     function setUp() public {
-        bridge = new LayerLightClientBridge();
-        bridge.testSetNumber(0);
-
-        bridge.init(validatorAddr, validatorPower, chainIdString);
+        bridge = new LayerLightClientBridge(unbondingPeriod);
+        // bridge.init(validatorAddr, validatorPower, chainIdString);
         sigDataArray.push(signatureData);
-    }
 
-    function testSetNumber(uint256 x) public {
-        bridge.testSetNumber(x);
-        assertEq(bridge.testNumber(), x);
+        string memory _root = vm.projectRoot();
+        string memory pathPrefix = string(abi.encodePacked(_root, "/setup/data/"));
+        string memory pathValidators = string(abi.encodePacked(pathPrefix, "validators.json"));
+        string memory jsonValidators = vm.readFile(pathValidators);
+        bytes memory bytesValidators = vm.parseJson(jsonValidators);
+        // bytes bytesValidators = jsonValidators.parseJson();
+        Validators memory validators = abi.decode(bytesValidators, (Validators));
+        address[] memory validatorsArray = new address[](validators.validators.length);
+        uint256[] memory powersArray = new uint256[](validators.validators.length);
+        for(uint256 _i=0; _i<validators.validators.length; _i++) {
+            validatorsArray[_i] = validators.validators[_i].ethAddress;
+            powersArray[_i] = validators.validators[_i].power;
+        }
+        bridge.init(validatorsArray, powersArray, chainIdString);
     }
 
     function testVerifyBlockHeader() public {
         bool result = bridge.verifyBlockHeader(multistore, merkleParts, votePart, sigDataArray);
         assertEq(result, true);
     }
-
-    // function testVerifyBlockHeader() public {
-    //     address result = bridge.verifyBlockHeader(multistore, merkleParts, votePart, sigDataArray);
-    //     assertEq(result, validatorAddr[0]);
-    // }
 
     function testGetAppHash() public {
         bytes32 _appHash = bridge.getAppHash(multistore);
@@ -78,7 +101,5 @@ contract CounterTest is Test {
         bytes32 _appHash = bridge.getAppHash(multistore);
         bytes32 _blockHeader = bridge.getBlockHeader(merkleParts, _appHash);
         assertEq(_blockHeader, 0x81a518dd8aa830de59dc35357638ebdc21c455230da624476709cf52410a36cc);
-    }
-
-   
+    }  
 }
