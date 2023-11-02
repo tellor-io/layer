@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // - get latest block height B1
@@ -31,7 +32,7 @@ import (
 // header: http://localhost:1317/layer/bridge/blockheadermerkleevm?height=1763
 
 func main() {
-	// *** get latest block number
+	// *** get latest block number ***
 	url := "http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest"
 
 	resp, err := http.Get(url)
@@ -58,7 +59,7 @@ func main() {
 
 	log.Printf("Height: %s", height)
 
-	// *** query block validators
+	// *** query block validators ***
 	url = "http://localhost:1317/layer/bridge/blockvalidators?height=" + height
 
 	resp, err = http.Get(url)
@@ -99,9 +100,88 @@ func main() {
 	}
 	defer file.Close()
 
-	// reorganise "file" to have two arrays: ethAddresses[] and votingPowers[]
-	// ethAddresses := make([]string, len(validators))
-	// votingPowers := make([]string, len(validators))
+	_, err = file.Write(body)
+	if err != nil {
+		log.Fatalf("Failed to write to file: %v", err)
+	}
+
+	log.Printf("Response data written to %s", filePath)
+
+	// *** query block header merkle parts ***
+	// api call response body:
+	// {
+	// 	"blockheaderMerkleEvm": {
+	// 	  "versionChainidHash": "0xeeeeae3f4b3ae79bfe8b9f2b447ee988dd3029cf8bd46d22f38f85cba12aad93",
+	// 	  "height": "1763",
+	// 	  "timeSecond": "1698931648",
+	// 	  "timeNanosecond": 357908000,
+	// 	  "lastblockidCommitHash": "0x775afc32c1c13b96261482ed3f0bfc6b489f6b9240f403e52565173266af97e8",
+	// 	  "nextvalidatorConsensusHash": "0x37e845d194475c603d471d3923fd0d8e7bce5c095e60293d975cd8685e9c0018",
+	// 	  "lastresultsHash": "0x9fb9c7533caf1d218da3af6d277f6b101c42e3c3b75d784242da663604dd53c2",
+	// 	  "evidenceProposerHash": "0xeb571fa2353b95b6bc64d23af6dc1e47b46208274115d3b58ca7a9bcc2ddab3a"
+	// 	}
+	//   }
+	// when saved to file, needs to conform to this solidity struct definition:
+	// struct BlockHeaderMerkleParts {
+	//     bytes32 versionAndChainIdHash; // [1A]
+	//     uint64 height; // [2]
+	//     uint64 timeSecond; // [3]
+	//     uint32 timeNanoSecondFraction; // between 0 to 10^9 [3]
+	//     bytes32 lastBlockIdAndOther; // [2B]
+	//     bytes32 nextValidatorHashAndConsensusHash; // [1E]
+	//     bytes32 lastResultsHash; // [B]
+	//     bytes32 evidenceAndProposerHash; // [2D]
+	// }
+
+	url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?height=" + height
+
+	resp, err = http.Get(url)
+	if err != nil {
+		log.Fatalf("Failed to send request to Cosmos API: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Failed to read response body: %v", err)
+	}
+
+	var result3 map[string]interface{}
+
+	err = json.Unmarshal(body, &result3)
+	if err != nil {
+		log.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	blockheaderMerkleEvm := result3["blockheaderMerkleEvm"].(map[string]interface{})
+	versionChainidHash := blockheaderMerkleEvm["versionChainidHash"].(string)
+	height2 := blockheaderMerkleEvm["height"].(string)
+	timeSecond := blockheaderMerkleEvm["timeSecond"].(string)
+	timeNanosecondFloat := blockheaderMerkleEvm["timeNanosecond"].(float64)
+	timeNanosecond := strconv.FormatFloat(timeNanosecondFloat, 'f', -1, 64)
+	lastblockidCommitHash := blockheaderMerkleEvm["lastblockidCommitHash"].(string)
+	nextvalidatorConsensusHash := blockheaderMerkleEvm["nextvalidatorConsensusHash"].(string)
+	lastresultsHash := blockheaderMerkleEvm["lastresultsHash"].(string)
+	evidenceProposerHash := blockheaderMerkleEvm["evidenceProposerHash"].(string)
+
+	log.Printf("Version Chainid Hash: %s", versionChainidHash)
+	log.Printf("Height: %s", height2)
+	log.Printf("Time Second: %s", timeSecond)
+	log.Printf("Time Nanosecond: %s", timeNanosecond)
+	log.Printf("Lastblockid Commit Hash: %s", lastblockidCommitHash)
+	log.Printf("Nextvalidator Consensus Hash: %s", nextvalidatorConsensusHash)
+	log.Printf("Lastresults Hash: %s", lastresultsHash)
+	log.Printf("Evidence Proposer Hash: %s", evidenceProposerHash)
+
+	// Replace with your desired file path
+	filePath = "setup/data/blockheadermerkleparts.json"
+
+	file, err = os.Create(filePath)
+	if err != nil {
+		log.Fatalf("Failed to create file: %v", err)
+	}
+	defer file.Close()
 
 	_, err = file.Write(body)
 	if err != nil {
@@ -110,5 +190,4 @@ func main() {
 
 	log.Printf("Response data written to %s", filePath)
 
-	//
 }

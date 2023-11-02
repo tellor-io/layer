@@ -17,11 +17,11 @@ option go_package = "github.com/tellor-io/layer/bridge";
 Right[F], Left[I6], Left[I10], Left[I15], Right[I20]
 [0] - acc (auth)     [1] - authz     [2] - bank      [3] - capability [4] - consensus [5] - crisis
 [6] - distr          [7] - evidence  [8] - feegrant  [9] - gov        [A] - group     [B] - ibc
-[C] - icacontroller  [D] - icahost   [E] - luqchain  [F] - mint       [G] - params    [H] - slashing
-[I] - staking        [J] - transfer  [K] - upgrade   [L] - vesting
+[C] - icacontroller  [D] - icahost   [E] - mint  [F] - oracle       [G] - params    [H] - registry
+[I] - slashing [J] - staking        [K] - transfer  [L] - upgrade   [M] - vesting
 */
 message MutiStoreTreeFields {
-    string luqchain_iavl_state_hash = 1;
+    string oracle_iavl_state_hash = 1;
     string mint_store_merkle_hash = 2;
     string icacontroller_to_icahost_merkle_hash = 3;
     string feegrant_to_ibc_merkle_hash = 4;

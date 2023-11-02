@@ -43,12 +43,12 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, err
 	}
 	// check if value is being revealed in the one block after commit
-	if ctx.BlockHeight()-1 != commitValue.Block {
-		return nil, status.Error(codes.InvalidArgument, "missed block height to reveal")
-	}
-	// if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
-	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
+	// if ctx.BlockHeight()-1 != commitValue.Block {
+	// 	return nil, status.Error(codes.InvalidArgument, "missed block height to reveal")
 	// }
+	if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
+		return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
+	}
 	// verify value signature
 	if !k.verifySignature(ctx, reporter, msg.Value, commitValue.Report.Signature) {
 		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")

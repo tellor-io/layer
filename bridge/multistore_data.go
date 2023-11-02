@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	fmt "fmt"
+	"log"
 
-	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"github.com/cometbft/cometbft/libs/bytes"
@@ -36,31 +36,40 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 	if err != nil {
 		return nil, err
 	}
-	tbytes := keeper.Uint64ToBytes(req.Timestamp)
+	// log qid
+	// convert qid to hex
+	qidHex := hex.EncodeToString(qid)
+	log.Printf("Qid: %s", qidHex)
+	// tbytes := keeper.Uint64ToBytes(req.Timestamp)
 	resp, err := s.clientCtx.Client.ABCIQueryWithOptions(
 		context.Background(),
-		"/store/luqchain/key",
-		append(types.KeyPrefix(types.ReportsKey), append(qid, tbytes...)...),
+		"/store/oracle/key",
+		types.KeyPrefix(types.ReportsKey),
 		cometclient.ABCIQueryOptions{Height: *h, Prove: true},
 	)
 	if err != nil {
 		return nil, err
 	}
+	log.Printf("here0")
 	proof := resp.Response.GetProofOps()
 	if proof == nil {
 		return nil, nil
 	}
+	log.Printf("here1")
 	ops := proof.GetOps()
 	if ops == nil {
 		return nil, nil
 	}
+	log.Printf("here2")
 
 	var multistoreProof *ics23.ExistenceProof
 	var iavlProof *ics23.ExistenceProof
 
 	for _, op := range ops {
 		switch op.GetType() {
+
 		case storetypes.ProofOpIAVLCommitment:
+
 			proof := &ics23.CommitmentProof{}
 			err := proof.Unmarshal(op.Data)
 			if err != nil {
@@ -108,8 +117,8 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 
 	return &QueryMultistoreResponse{
 		MutiStoreTree: MutiStoreTreeFields{
-			LuqchainIavlStateHash:            bytes.HexBytes(multistoreProof.Value).String(),
-			MintStoreMerkleHash:              bytes.HexBytes(multistoreProof.Path[0].Suffix).String(),
+			OracleIavlStateHash:              bytes.HexBytes(multistoreProof.Value).String(),
+			MintStoreMerkleHash:              bytes.HexBytes(multistoreProof.Path[0].Prefix).String(),
 			IcacontrollerToIcahostMerkleHash: bytes.HexBytes(multistoreProof.Path[1].Prefix[1:]).String(),
 			FeegrantToIbcMerkleHash:          bytes.HexBytes(multistoreProof.Path[2].Prefix[1:]).String(),
 			AccToEvidenceMerkleHash:          bytes.HexBytes(multistoreProof.Path[3].Prefix[1:]).String(),
