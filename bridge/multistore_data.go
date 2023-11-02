@@ -44,7 +44,7 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 	resp, err := s.clientCtx.Client.ABCIQueryWithOptions(
 		context.Background(),
 		"/store/oracle/key",
-		types.KeyPrefix(types.ReportsKey),
+		append(types.KeyPrefix(types.ReportsKey), qid...),
 		cometclient.ABCIQueryOptions{Height: *h, Prove: true},
 	)
 	if err != nil {
@@ -60,14 +60,12 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 	if ops == nil {
 		return nil, nil
 	}
-	log.Printf("here2")
 
 	var multistoreProof *ics23.ExistenceProof
 	var iavlProof *ics23.ExistenceProof
 
 	for _, op := range ops {
 		switch op.GetType() {
-
 		case storetypes.ProofOpIAVLCommitment:
 
 			proof := &ics23.CommitmentProof{}
