@@ -15,6 +15,30 @@ type StakingKeeper struct {
 	mock.Mock
 }
 
+// AddValidatorTokensAndShares provides a mock function with given fields: ctx, validator, tokensToAdd
+func (_m *StakingKeeper) AddValidatorTokensAndShares(ctx types.Context, validator stakingtypes.Validator, tokensToAdd math.Int) (stakingtypes.Validator, math.LegacyDec) {
+	ret := _m.Called(ctx, validator, tokensToAdd)
+
+	var r0 stakingtypes.Validator
+	var r1 math.LegacyDec
+	if rf, ok := ret.Get(0).(func(types.Context, stakingtypes.Validator, math.Int) (stakingtypes.Validator, math.LegacyDec)); ok {
+		return rf(ctx, validator, tokensToAdd)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, stakingtypes.Validator, math.Int) stakingtypes.Validator); ok {
+		r0 = rf(ctx, validator, tokensToAdd)
+	} else {
+		r0 = ret.Get(0).(stakingtypes.Validator)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, stakingtypes.Validator, math.Int) math.LegacyDec); ok {
+		r1 = rf(ctx, validator, tokensToAdd)
+	} else {
+		r1 = ret.Get(1).(math.LegacyDec)
+	}
+
+	return r0, r1
+}
+
 // Delegate provides a mock function with given fields: ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount
 func (_m *StakingKeeper) Delegate(ctx types.Context, delAddr types.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (math.LegacyDec, error) {
 	ret := _m.Called(ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
