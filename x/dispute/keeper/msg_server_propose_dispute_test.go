@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 
@@ -17,7 +18,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 		Timestamp: 1696516597,
 	}
 
-	fee := sdk.NewCoin("trb", sdk.NewInt(10000000000))
+	fee := sdk.NewCoin("trb", math.NewInt(10000000000))
 
 	msg := types.MsgProposeDispute{
 		Creator:         Addr.String(),
@@ -32,7 +33,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 	val, _ := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
 	val.Jailed = false
 	val.Status = stakingtypes.Bonded
-	val.Tokens = sdk.NewInt(1000000000)
+	val.Tokens = math.NewInt(1000000000)
 	s.stakingKeeper.On("GetValidator", mock.Anything, mock.Anything).Return(val, true)
 	msgRes, err := s.msgServer.ProposeDispute(s.goCtx, &msg)
 	require.Nil(err)

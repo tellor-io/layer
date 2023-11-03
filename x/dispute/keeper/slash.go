@@ -9,7 +9,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
-func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slashFactor sdk.Dec) math.Int {
+func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slashFactor math.Int) math.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -18,8 +18,7 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
 	amount := k.stakingKeeper.TokensFromConsensusPower(ctx, power)
-	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
-	slashAmount := slashAmountDec.TruncateInt()
+	slashAmount := amount.Mul(slashFactor)
 
 	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
 
@@ -33,7 +32,7 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", opAddr.String(),
 		)
-		return sdk.NewInt(0)
+		return math.ZeroInt()
 	}
 
 	// should not be slashing an unbonded validator

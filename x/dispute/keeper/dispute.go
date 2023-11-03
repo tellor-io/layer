@@ -172,14 +172,14 @@ func (k Keeper) SetOpenDisputeIds(ctx sdk.Context, ids types.OpenDisputes) {
 }
 
 // Get percentage of slash amount based on category
-func (k Keeper) GetSlashPercentage(category types.DisputeCategory) sdk.Dec {
+func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.Int {
 	switch category {
 	case types.Warning:
-		return math.LegacyNewDec(1).Quo(math.LegacyNewDec(100))
+		return math.NewInt(1).Quo(math.NewInt(100))
 	case types.Minor:
-		return math.LegacyNewDec(1).Quo(math.LegacyNewDec(20))
+		return math.NewInt(1).Quo(math.NewInt(20))
 	case types.Major:
-		return math.LegacyNewDec(1).Quo(math.LegacyNewDec(1))
+		return math.NewInt(1)
 	default:
 		panic("invalid dispute category")
 	}
@@ -198,9 +198,9 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, reporter string, category types.D
 	}
 	stake := validator.GetBondedTokens()
 	fee := math.ZeroInt()
-	onePercent := sdk.NewInt(1)
-	fivePercent := sdk.NewInt(5)
-	hundred := sdk.NewInt(100)
+	onePercent := math.NewInt(1)
+	fivePercent := math.NewInt(5)
+	hundred := math.NewInt(100)
 	switch category {
 	case types.Warning:
 		// calculate 1 percent of bond
@@ -269,10 +269,15 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute) error {
 }
 
 // Add time to dispute end time
-func (k Keeper) AddTimeToDisputeEndTime(ctx sdk.Context, dispute types.Dispute, timeToAdd time.Duration) {
+func (k Keeper) AddTimeToDisputeEndTime(ctx sdk.Context, id uint64, timeToAdd time.Duration) error {
+	dispute := k.GetDisputeById(ctx, id)
+	if dispute == nil {
+		return types.ErrDisputeDoesNotExist
+	}
 	dispute.DisputeEndTime = dispute.DisputeEndTime.Add(timeToAdd)
-	k.SetDisputeById(ctx, dispute.DisputeId, dispute)
-	k.SetDisputeByReporter(ctx, dispute)
+	k.SetDisputeById(ctx, dispute.DisputeId, *dispute)
+	k.SetDisputeByReporter(ctx, *dispute)
+	return nil
 }
 
 // Append dispute id to open dispute ids
@@ -288,4 +293,16 @@ func (k Keeper) SetDispute(ctx sdk.Context, dispute types.Dispute) {
 	k.SetDisputeByReporter(ctx, dispute)
 	k.SetDisputeById(ctx, dispute.DisputeId, dispute)
 	k.SetDisputeCount(ctx, dispute.DisputeId+1)
+}
+
+// Set dispute status by dispute id
+func (k Keeper) SetDisputeStatus(ctx sdk.Context, id uint64, status types.DisputeStatus) error {
+	dispute := k.GetDisputeById(ctx, id)
+	if dispute == nil {
+		return types.ErrDisputeDoesNotExist
+	}
+	dispute.DisputeStatus = status
+	k.SetDisputeById(ctx, id, *dispute)
+	k.SetDisputeByReporter(ctx, *dispute)
+	return nil
 }

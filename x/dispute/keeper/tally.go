@@ -34,16 +34,16 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 
 	// Prevent zero-division
 	if tokenHolderVoteSum.IsZero() {
-		tokenHolderVoteSum = sdk.NewInt(1)
+		tokenHolderVoteSum = math.NewInt(1)
 	}
 	if validatorVoteSum.IsZero() {
-		validatorVoteSum = sdk.NewInt(1)
+		validatorVoteSum = math.NewInt(1)
 	}
 	if userVoteSum.IsZero() {
-		userVoteSum = sdk.NewInt(1)
+		userVoteSum = math.NewInt(1)
 	}
 	if teamVoteSum.IsZero() {
-		teamVoteSum = sdk.NewInt(1)
+		teamVoteSum = math.NewInt(1)
 	}
 
 	// Convert to Dec for precision
@@ -79,7 +79,7 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 	totalVotesDec := tokenHolderVoteSumDec.Add(validatorVoteSumDec).Add(userVoteSumDec).Add(teamVoteSumDec)
 	// The maximum potential votes include total supply of tokens, total validator power, total tips, and the team's vote.
 	// The team's vote is represented as 1 since it's controlled by a single multisig address.
-	maximumVotesDec := sdk.NewDecFromInt(k.GetTotalSupply(ctx)).Add(sdk.NewDecFromInt(k.GetTotalValidatorPower(ctx))).Add(sdk.NewDecFromInt(k.GetTotalTips(ctx))).Add(sdk.NewDecFromInt(sdk.NewInt(1)))
+	maximumVotesDec := sdk.NewDecFromInt(k.GetTotalSupply(ctx)).Add(sdk.NewDecFromInt(k.GetTotalValidatorPower(ctx))).Add(sdk.NewDecFromInt(k.GetTotalTips(ctx))).Add(sdk.NewDecFromInt(math.NewInt(1)))
 
 	participationRate := totalVotesDec.Quo(maximumVotesDec)
 
@@ -121,13 +121,79 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 
 }
 
-// Set vote results
-func (k Keeper) SetVoteResult(ctx sdk.Context, id uint64, result types.VoteResult) {
-	vote := k.GetVote(ctx, id)
-	vote.VoteResult = result
-	vote.VoteEnd = ctx.BlockTime()
+func (k Keeper) GetTally(ctx sdk.Context, id uint64) *types.Tally {
 	store := k.voteStore(ctx)
-	store.Set(types.DisputeIdBytes(id), k.cdc.MustMarshal(vote))
+	tallyBytes := store.Get(types.TallyKeyPrefix(id))
+	var tallies types.Tally
+	if err := k.cdc.Unmarshal(tallyBytes, &tallies); err != nil {
+		return nil
+	}
+	// for some reason the proto files don't initialize the tallies when nullable = false
+	if tallies.ForVotes == nil {
+		tallies.ForVotes = k.initVoterClasses()
+		tallies.AgainstVotes = k.initVoterClasses()
+		tallies.Invalid = k.initVoterClasses()
+	}
+
+	return &tallies
+}
+
+// Set tally numbers
+func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, voter string) error {
+	var tallies *types.Tally
+	tallies = k.GetTally(ctx, id)
+	switch voteFor {
+	case types.VoteEnum_VOTE_SUPPORT:
+		tallies.ForVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.ForVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.ForVotes.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.ForVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+	case types.VoteEnum_VOTE_AGAINST:
+		tallies.AgainstVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.AgainstVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.AgainstVotes.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.AgainstVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+	case types.VoteEnum_VOTE_INVALID:
+		tallies.Invalid.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.Invalid.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.Invalid.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.Invalid.Team.Add(k.IsTeamAddress(ctx, voter))
+	default:
+		panic("invalid vote type")
+	}
+
+	store := k.voteStore(ctx)
+	store.Set(types.TallyKeyPrefix(id), k.cdc.MustMarshal(tallies))
+	return nil
+}
+
+func (k Keeper) GetValidatorPower(ctx sdk.Context, voter string) math.Int {
+	addr, err := sdk.AccAddressFromBech32(voter)
+	if err != nil {
+		panic(err)
+	}
+	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
+	if !found {
+		return sdk.ZeroInt()
+	}
+	power := validator.GetConsensusPower(validator.GetBondedTokens())
+	return math.NewInt(power)
+}
+
+func (k Keeper) GetAccountBalance(ctx sdk.Context, voter string) math.Int {
+	addr, err := sdk.AccAddressFromBech32(voter)
+	if err != nil {
+		panic(err)
+	}
+	return k.bankKeeper.GetBalance(ctx, addr, sdk.DefaultBondDenom).Amount
+}
+
+func (k Keeper) GetUserTips(ctx sdk.Context, voter string) math.Int {
+	return sdk.ZeroInt()
+}
+
+func (k Keeper) IsTeamAddress(ctx sdk.Context, voter string) math.Int {
+	return math.NewIntFromUint64(1)
 }
 
 // Get total trb supply

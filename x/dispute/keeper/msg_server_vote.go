@@ -17,13 +17,13 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 
 	// Get vote by disputeId
 	vote := k.Keeper.GetVote(ctx, msg.Id)
-	if vote == nil {
+	if vote.VoteStart.IsZero() {
 		return nil, types.ErrVoteDoesNotExist
 	}
 
 	// Check if voter has already voted
 	voter := k.Keeper.GetVoterVote(ctx, msg.Voter, msg.Id)
-	if voter != nil {
+	if voter.Voter != "" {
 		return nil, types.ErrVoterHasAlreadyVoted
 	}
 
@@ -33,7 +33,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	}
 
 	k.Keeper.SetTally(ctx, msg.Id, msg.Vote, msg.Voter)
-	k.Keeper.SetVoterVote(ctx, *msg)
+	k.Keeper.SetVoterVote(ctx, msg)
 	k.Keeper.AppendVoters(ctx, msg.Id, msg.Voter)
 
 	return &types.MsgVoteResponse{}, nil

@@ -20,15 +20,14 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid sender address: %v", err))
 	}
-	valAddr := sdk.ValAddress(delAddr)
 
 	// get delegation info
-	validator := k.stakingKeeper.Validator(ctx, valAddr)
+	validator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(delAddr))
 	// check if msg sender is validator
 	if !delAddr.Equals(validator.GetOperator()) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
+
 	if registryKeeper.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
 	}
@@ -45,6 +44,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		},
 		Block: ctx.BlockHeight(),
 	}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
 	store.Set(append([]byte(msg.Creator), queryId...), k.cdc.MustMarshal(&report))
 
 	return &types.MsgCommitReportResponse{}, nil
