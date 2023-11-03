@@ -15,6 +15,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func (k Keeper) GetSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
+
+	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
+	commit := commitStore.Get(append([]byte(reporter), queryId...))
+	if commit == nil {
+		return nil, status.Error(codes.NotFound, "no commits to reveal found")
+	}
+	var commitValue types.CommitValue
+	k.cdc.Unmarshal(commit, &commitValue)
+	return &commitValue, nil
+}
+
 func (k Keeper) setValueByReporter(ctx sdk.Context, reporter, val string, queryId []byte, power int64) error {
 	queryIdHex := hex.EncodeToString(queryId)
 	reporterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
@@ -28,9 +40,9 @@ func (k Keeper) setValueByReporter(ctx sdk.Context, reporter, val string, queryI
 	report := &types.MicroReport{
 		Reporter:  reporter,
 		Power:     power,
-		Qid:       queryIdHex,
+		QueryId:   queryIdHex,
 		Value:     val,
-		Timestamp: uint64(ctx.BlockTime().Unix()),
+		Timestamp: ctx.BlockTime(),
 	}
 	// append report to reports list
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
@@ -43,9 +55,9 @@ func (k Keeper) setValueByQueryId(ctx sdk.Context, reporter, val string, queryId
 	report := &types.MicroReport{
 		Reporter:  reporter,
 		Power:     power,
-		Qid:       hex.EncodeToString(queryId),
+		QueryId:   hex.EncodeToString(queryId),
 		Value:     val,
-		Timestamp: uint64(ctx.BlockTime().Unix()),
+		Timestamp: ctx.BlockTime(),
 	}
 	var reportsList types.Reports
 	if err := k.cdc.Unmarshal(store.Get(queryId), &reportsList); err != nil {
@@ -83,17 +95,6 @@ func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte
 		return err
 	}
 	return nil
-}
-func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
-	// get data spec from registry by query type to validate value
-	dataSpecBytes := registry.Spec(ctx, queryType)
-	if dataSpecBytes == nil {
-		return "", status.Error(codes.NotFound, fmt.Sprintf("data spec not found for query type: %s", queryType))
-	}
-	var dataSpec registryTypes.DataSpec
-	cdc.Unmarshal(dataSpecBytes, &dataSpec)
-
-	return dataSpec.ValueType, nil
 }
 
 func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int64, bool) {
@@ -176,14 +177,15 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	}
 	return result, nil
 }
-func (k Keeper) GetSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
 
-	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
-	commit := commitStore.Get(append([]byte(reporter), queryId...))
-	if commit == nil {
-		return nil, status.Error(codes.NotFound, "no commits to reveal found")
+func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
+	// get data spec from registry by query type to validate value
+	dataSpecBytes := registry.Spec(ctx, queryType)
+	if dataSpecBytes == nil {
+		return "", status.Error(codes.NotFound, fmt.Sprintf("data spec not found for query type: %s", queryType))
 	}
-	var commitValue types.CommitValue
-	k.cdc.Unmarshal(commit, &commitValue)
-	return &commitValue, nil
+	var dataSpec registryTypes.DataSpec
+	cdc.Unmarshal(dataSpecBytes, &dataSpec)
+
+	return dataSpec.ValueType, nil
 }

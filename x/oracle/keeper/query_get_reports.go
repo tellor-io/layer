@@ -18,7 +18,7 @@ func (k Keeper) GetReportsbyQid(goCtx context.Context, req *types.QueryGetReport
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	qIdBytes, err := hex.DecodeString(req.QId)
+	qIdBytes, err := hex.DecodeString(req.QueryId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode query ID string: %v", err)
 	}
@@ -62,7 +62,7 @@ func (k Keeper) GetReportsbyReporterQid(goCtx context.Context, req *types.QueryG
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
-	reporterKey := []byte(req.Reporter + ":" + req.Qid)
+	reporterKey := []byte(req.Reporter + ":" + req.QueryId)
 	reportsBytes := store.Get(reporterKey)
 	var reports types.Reports
 	if err := k.cdc.Unmarshal(reportsBytes, &reports); err != nil {

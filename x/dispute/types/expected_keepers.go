@@ -34,7 +34,6 @@ type StakingKeeper interface {
 	SetValidator(ctx sdk.Context, validator stakingtypes.Validator)
 	SetValidatorByPowerIndex(ctx sdk.Context, validator stakingtypes.Validator)
 	TokensFromConsensusPower(ctx sdk.Context, power int64) math.Int
-	Validator(ctx sdk.Context, address sdk.ValAddress) stakingtypes.ValidatorI
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

@@ -30,7 +30,7 @@ func CmdGetReportsbyAddressQid() *cobra.Command {
 			params := &types.QueryGetReportsbyReporterQidRequest{
 
 				Reporter: reqAddress,
-				Qid:      reqQid,
+				QueryId:  reqQid,
 			}
 
 			res, err := queryClient.GetReportsbyReporterQid(cmd.Context(), params)

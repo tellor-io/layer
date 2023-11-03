@@ -26,7 +26,7 @@ func (k Keeper) Refund(ctx sdk.Context, consAddr sdk.ConsAddress, power int64, r
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return sdk.NewInt(0)
+		return math.NewInt(0)
 	}
 
 	validator = k.ReturnValidatorTokens(ctx, validator, refundAmount)

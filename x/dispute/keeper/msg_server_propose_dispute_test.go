@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 
@@ -8,16 +9,16 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (s *KeeperTestSuite) TestMsgProposeDispute() {
+func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 	require := s.Require()
 	report := types.MicroReport{
 		Reporter:  "trb1auznue6n56c0ptmmq7vydst8a0vyluje3q6dgn",
-		Qid:       "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
 	}
 
-	fee := sdk.NewCoin("trb", sdk.NewInt(10000000000))
+	fee := sdk.NewCoin("trb", math.NewInt(10000000000))
 
 	msg := types.MsgProposeDispute{
 		Creator:         Addr.String(),
@@ -32,7 +33,7 @@ func (s *KeeperTestSuite) TestMsgProposeDispute() {
 	val, _ := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
 	val.Jailed = false
 	val.Status = stakingtypes.Bonded
-	val.Tokens = sdk.NewInt(1000000000)
+	val.Tokens = math.NewInt(1000000000)
 	s.stakingKeeper.On("GetValidator", mock.Anything, mock.Anything).Return(val, true)
 	msgRes, err := s.msgServer.ProposeDispute(s.goCtx, &msg)
 	require.Nil(err)
@@ -45,5 +46,5 @@ func (s *KeeperTestSuite) TestMsgProposeDispute() {
 	require.NotNil(disputeRes)
 	require.Equal(disputeRes.DisputeCategory, types.Warning)
 	require.Equal(disputeRes.ReportEvidence.Reporter, "trb1auznue6n56c0ptmmq7vydst8a0vyluje3q6dgn")
-	require.Equal(disputeRes.DisputeStatus, types.Voting)
+	require.Equal(disputeRes.DisputeStatus, types.Prevote)
 }

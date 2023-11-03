@@ -21,7 +21,7 @@ service Query {
   
   // Queries a list of GetReportsbyQid items.
   rpc GetReportsbyQid (QueryGetReportsbyQidRequest) returns (QueryGetReportsbyQidResponse) {
-    option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{qId}";
+    option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{queryId}";
   
   }
 
@@ -31,7 +31,7 @@ service Query {
   }
 
   rpc GetReportsbyReporterQid (QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse) {
-    option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{qid}";
+    option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{queryId}";
   
   }
 }
@@ -46,7 +46,7 @@ message QueryParamsResponse {
 }
 
 message QueryGetReportsbyQidRequest {
-  string qId = 1;
+  string queryId = 1;
 }
 
 message QueryGetReportsbyQidResponse {
@@ -63,5 +63,5 @@ message QueryGetReportsbyReporterResponse {
 
 message QueryGetReportsbyReporterQidRequest {
   string reporter = 1;
-  string qid = 2;
+  string queryId = 2;
 }

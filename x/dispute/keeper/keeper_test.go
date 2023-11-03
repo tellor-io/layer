@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
@@ -80,7 +81,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.stakingKeeper,
 	)
 
-	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
+	s.ctx = sdk.NewContext(stateStore, tmproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 	s.goCtx = sdk.WrapSDKContext(s.ctx)
 	// Initialize params
 	s.disputeKeeper.SetParams(s.ctx, types.DefaultParams())

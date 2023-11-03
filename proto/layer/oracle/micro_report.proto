@@ -1,12 +1,15 @@
 syntax = "proto3";
 package layer.oracle;
 
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message MicroReport {
   string reporter = 1;
   int64 power = 2;
-  string qid = 3; 
+  string queryId = 3; 
   string value = 4; 
-  uint64 timestamp = 5; 
+  google.protobuf.Timestamp  timestamp = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
 }

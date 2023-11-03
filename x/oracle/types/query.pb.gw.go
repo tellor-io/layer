@@ -62,15 +62,15 @@ func request_Query_GetReportsbyQid_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["qId"]
+	val, ok = pathParams["queryId"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "qId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
 	}
 
-	protoReq.QId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "qId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
 	}
 
 	msg, err := client.GetReportsbyQid(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -89,15 +89,15 @@ func local_request_Query_GetReportsbyQid_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["qId"]
+	val, ok = pathParams["queryId"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "qId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
 	}
 
-	protoReq.QId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "qId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
 	}
 
 	msg, err := server.GetReportsbyQid(ctx, &protoReq)
@@ -181,15 +181,15 @@ func request_Query_GetReportsbyReporterQid_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter", err)
 	}
 
-	val, ok = pathParams["qid"]
+	val, ok = pathParams["queryId"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "qid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
 	}
 
-	protoReq.Qid, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "qid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
 	}
 
 	msg, err := client.GetReportsbyReporterQid(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -219,15 +219,15 @@ func local_request_Query_GetReportsbyReporterQid_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter", err)
 	}
 
-	val, ok = pathParams["qid"]
+	val, ok = pathParams["queryId"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "qid")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
 	}
 
-	protoReq.Qid, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "qid", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
 	}
 
 	msg, err := server.GetReportsbyReporterQid(ctx, &protoReq)
@@ -460,11 +460,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "oracle", "params"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GetReportsbyQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_qid", "qId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetReportsbyQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_qid", "queryId"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Query_GetReportsbyReporter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_reporter", "reporter"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Query_GetReportsbyReporterQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "oracle", "get_reportsby_reporter_qid", "reporter", "qid"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetReportsbyReporterQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "oracle", "get_reportsby_reporter_qid", "reporter", "queryId"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

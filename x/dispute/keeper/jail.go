@@ -10,8 +10,8 @@ import (
 )
 
 func (k Keeper) JailValidatorUntil(ctx sdk.Context, valAddr sdk.ValAddress, jailDuration int64) error {
-	val := k.stakingKeeper.Validator(ctx, valAddr)
-	if val == nil {
+	val, found := k.stakingKeeper.GetValidator(ctx, valAddr)
+	if !found {
 		return fmt.Errorf("validator %s does not exist", valAddr)
 	}
 	consAddr, err := val.GetConsAddr()

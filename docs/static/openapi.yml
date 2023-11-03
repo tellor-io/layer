@@ -46473,7 +46473,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /layer/oracle/get_reportsby_qid/{qId}:
+  /layer/oracle/get_reportsby_qid/{queryId}:
     get:
       summary: Queries a list of GetReportsbyQid items.
       operationId: LayerOracleGetReportsbyQid
@@ -46496,13 +46496,13 @@ paths:
                         power:
                           type: string
                           format: int64
-                        qid:
+                        queryId:
                           type: string
                         value:
                           type: string
                         timestamp:
                           type: string
-                          format: uint64
+                          format: date-time
         default:
           description: An unexpected error response.
           schema:
@@ -46522,7 +46522,7 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: qId
+        - name: queryId
           in: path
           required: true
           type: string
@@ -46547,13 +46547,13 @@ paths:
                     power:
                       type: string
                       format: int64
-                    qid:
+                    queryId:
                       type: string
                     value:
                       type: string
                     timestamp:
                       type: string
-                      format: uint64
+                      format: date-time
         default:
           description: An unexpected error response.
           schema:
@@ -46579,7 +46579,7 @@ paths:
           type: string
       tags:
         - Query
-  /layer/oracle/get_reportsby_reporter_qid/{reporter}/{qid}:
+  /layer/oracle/get_reportsby_reporter_qid/{reporter}/{queryId}:
     get:
       operationId: LayerOracleGetReportsbyReporterQid
       responses:
@@ -46601,13 +46601,13 @@ paths:
                         power:
                           type: string
                           format: int64
-                        qid:
+                        queryId:
                           type: string
                         value:
                           type: string
                         timestamp:
                           type: string
-                          format: uint64
+                          format: date-time
         default:
           description: An unexpected error response.
           schema:
@@ -46631,7 +46631,7 @@ paths:
           in: path
           required: true
           type: string
-        - name: qid
+        - name: queryId
           in: path
           required: true
           type: string
@@ -75548,7 +75548,7 @@ definitions:
       power:
         type: string
         format: int64
-      qid:
+      queryId:
         type: string
       value:
         type: string
@@ -75586,13 +75586,13 @@ definitions:
       power:
         type: string
         format: int64
-      qid:
+      queryId:
         type: string
       value:
         type: string
       timestamp:
         type: string
-        format: uint64
+        format: date-time
   layer.oracle.MsgCommitReportResponse:
     type: object
   layer.oracle.MsgSubmitValueResponse:
@@ -75616,13 +75616,13 @@ definitions:
                 power:
                   type: string
                   format: int64
-                qid:
+                queryId:
                   type: string
                 value:
                   type: string
                 timestamp:
                   type: string
-                  format: uint64
+                  format: date-time
   layer.oracle.QueryGetReportsbyReporterResponse:
     type: object
     properties:
@@ -75636,13 +75636,13 @@ definitions:
             power:
               type: string
               format: int64
-            qid:
+            queryId:
               type: string
             value:
               type: string
             timestamp:
               type: string
-              format: uint64
+              format: date-time
   layer.oracle.QueryParamsResponse:
     type: object
     properties:
@@ -75663,13 +75663,13 @@ definitions:
             power:
               type: string
               format: int64
-            qid:
+            queryId:
               type: string
             value:
               type: string
             timestamp:
               type: string
-              format: uint64
+              format: date-time
   layer.registry.DataSpec:
     type: object
     properties:

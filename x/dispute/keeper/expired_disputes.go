@@ -30,6 +30,6 @@ func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) []uint64 {
 		// set dispute status to expired
 		k.SetDisputeStatus(ctx, disputeId, types.Failed)
 	}
-	// return expired list
-	return expiredDisputes
+	// return active list
+	return activeDisputes
 }
