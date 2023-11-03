@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -13,7 +11,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	s.TestSubmitValue()
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	report, err := s.oracleKeeper.GetReportsbyQid(sdk.WrapSDKContext(s.ctx), &types.QueryGetReportsbyQidRequest{QueryId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
-	fmt.Println(report)
+
 	require.Nil(err)
 	MicroReport := &types.MicroReport{
 		Reporter:  Addr.String(),
