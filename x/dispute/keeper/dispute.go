@@ -136,7 +136,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	}
 	k.SetDispute(ctx, dispute)
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, msg.Creator, msg.ValidatorAddress, msg.Fee, msg.PayFromBond); err != nil {
+	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
 		return err
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
@@ -220,10 +220,7 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, reporter string, category types.D
 }
 
 // Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, valAddress string, fee sdk.Coin, fromBond bool) error {
-	if fromBond && valAddress == "" {
-		return fmt.Errorf("validator address is required to pay from bond")
-	}
+func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool) error {
 	proposer, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
 		return err

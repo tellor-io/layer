@@ -57,8 +57,6 @@ func CmdProposeDispute() *cobra.Command {
 
 			payFromBond, _ := fs.GetBool(FlagPayFromBond)
 
-			validatorAddress, _ := fs.GetString(FlagAddressValidator)
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
@@ -70,7 +68,6 @@ func CmdProposeDispute() *cobra.Command {
 				*argDisputeCategory,
 				argFee,
 				payFromBond,
-				validatorAddress,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err

@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	"github.com/stretchr/testify/suite"
-
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/stretchr/testify/suite"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
@@ -51,6 +52,7 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	modulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	"github.com/tellor-io/layer/app"
 )
@@ -192,19 +194,21 @@ func (suite *IntegrationTestSuite) SetupTest() {
 
 }
 
-func (suite *IntegrationTestSuite) TestVotingOnDispute() {
-	ctx := suite.ctx
+func (suite *IntegrationTestSuite) newKeysWithTokens() (sdk.AccAddress, string) {
 	denom := sdk.DefaultBondDenom
-	require := suite.Require()
-
 	PrivKey := secp256k1.GenPrivKey()
 	PubKey := PrivKey.PubKey()
 	Addr := sdk.AccAddress(PubKey.Address())
-	_, keeper := suite.initKeepersWithmAccPerms(make(map[string]bool))
-	require.NoError(keeper.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(100000000000000)))))
-	require.NoError(keeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, Addr, sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(100000000)))))
+	suite.mintTokens(Addr)
+	return Addr, denom
+}
 
-	suite.initKeepersWithmAccPerms(make(map[string]bool))
+func (suite *IntegrationTestSuite) TestVotingOnDispute() {
+	require := suite.Require()
+	ctx := suite.ctx
+	k := suite.disputekeeper
+	Addr, denom := suite.newKeysWithTokens()
+
 	report, valAddr := suite.microReport()
 	// Propose dispute pay half of the fee from account
 	_, err := suite.msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
@@ -213,8 +217,8 @@ func (suite *IntegrationTestSuite) TestVotingOnDispute() {
 		Fee:             sdk.NewCoin(denom, sdk.NewInt(5000)),
 		DisputeCategory: types.Warning,
 	})
-	require.Equal(uint64(1), suite.disputekeeper.GetDisputeCount(ctx))
-	require.Equal(1, len(suite.disputekeeper.GetOpenDisputeIds(ctx).Ids))
+	require.Equal(uint64(1), k.GetDisputeCount(ctx))
+	require.Equal(1, len(k.GetOpenDisputeIds(ctx).Ids))
 	require.NoError(err)
 	// check validator wasn't slashed/jailed
 	val, found := suite.stakingKeeper.GetValidator(ctx, valAddr)
@@ -235,12 +239,70 @@ func (suite *IntegrationTestSuite) TestVotingOnDispute() {
 	require.True(val.IsJailed())
 	// check validator was slashed 1% of tokens
 	require.Equal(val.GetBondedTokens(), bondedTokensBefore.Sub(bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))))
-
-	ids := suite.disputekeeper.CheckPrevoteDisputesForExpiration(ctx)
-	suite.disputekeeper.StartVoting(ctx, ids)
-
+	dispute := k.GetDisputeById(suite.ctx, 0)
+	require.Equal(types.Prevote, dispute.DisputeStatus)
+	// these are called during begin block
+	ids := k.CheckPrevoteDisputesForExpiration(ctx)
+	k.StartVoting(ctx, ids)
+	dispute = k.GetDisputeById(suite.ctx, 0)
+	require.Equal(types.Voting, dispute.DisputeStatus)
+	// vote on dispute
+	_, err = suite.msgServer.Vote(ctx, &types.MsgVote{
+		Voter: Addr.String(),
+		Id:    0,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	})
+	require.NoError(err)
+	voterV := k.GetVoterVote(ctx, Addr.String(), 0)
+	require.Equal(types.VoteEnum_VOTE_SUPPORT, voterV.Vote)
+	v := k.GetVote(ctx, 0)
+	require.Equal(v.VoteResult, types.VoteResult_NO_TALLY)
+	require.Equal(v.Voters, []string{Addr.String()})
 }
 
+func (suite *IntegrationTestSuite) TestProposeDisputeFromBond() {
+	require := suite.Require()
+	ctx := suite.ctx
+	// k := suite.disputekeeper
+	report, valAddr := suite.microReport()
+	val, found := suite.stakingKeeper.GetValidator(ctx, valAddr)
+	require.True(found)
+	bondedTokensBefore := val.GetBondedTokens()
+	onePercent := bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))
+	fmt.Println(onePercent, val.GetMinSelfDelegation())
+	disputeFee := sdk.NewCoin("stake", onePercent)
+	// slashAmount := disputeFee.Amount
+	_, err := suite.msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
+		Creator:         sdk.AccAddress(valAddr).String(),
+		Report:          &report,
+		DisputeCategory: types.Warning,
+		Fee:             disputeFee,
+		PayFromBond:     true,
+	})
+	require.NoError(err)
+
+	val, _ = suite.stakingKeeper.GetValidator(ctx, valAddr)
+	// require.Equal(val.GetBondedTokens(), bondedTokensBefore.Sub(slashAmount).Sub(disputeFee.Amount))
+	require.True(val.IsJailed())
+	// jail time for a warning is zero seconds so unjailing should be immediate
+	// TODO: have to unjail through the staking keeper, if no self delegation then validator can't unjail
+	suite.mintTokens(sdk.AccAddress(valAddr))
+	_, err = suite.stakingKeeper.Delegate(ctx, sdk.AccAddress(valAddr), sdk.NewInt(10), stakingtypes.Unbonded, val, true)
+	require.NoError(err)
+	err = suite.slashingKeeper.Unjail(ctx, valAddr)
+	require.NoError(err)
+	val, _ = suite.stakingKeeper.GetValidator(ctx, valAddr)
+	require.False(val.IsJailed())
+}
+
+func (suite *IntegrationTestSuite) mintTokens(addr sdk.AccAddress) {
+	ctx := suite.ctx
+	require := suite.Require()
+	suite.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
+	_, bank := suite.initKeepersWithmAccPerms(make(map[string]bool))
+	require.NoError(bank.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000)))))
+	require.NoError(bank.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000)))))
+}
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

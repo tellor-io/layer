@@ -20,7 +20,6 @@ message MsgProposeDispute {
   DisputeCategory          disputeCategory  = 3;
   cosmos.base.v1beta1.Coin fee              = 4 [(gogoproto.nullable) = false];
   bool                     payFromBond      = 5;
-  string                   validatorAddress = 6;
 }
 
 message MsgProposeDisputeResponse {}

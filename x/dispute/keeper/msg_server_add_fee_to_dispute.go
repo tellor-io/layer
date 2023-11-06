@@ -24,7 +24,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		return nil, types.ErrDisputeFeeAlreadyMet
 	}
 	// Pay fee
-	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.ValidatorAddress, msg.Amount, msg.PayFromBond); err != nil {
+	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.Amount, msg.PayFromBond); err != nil {
 		return nil, err
 	}
 	// Don't take payment more than slash amount
