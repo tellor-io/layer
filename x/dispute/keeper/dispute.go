@@ -108,6 +108,10 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		return fmt.Errorf("Error calculating dispute fee")
 	}
 	feeList := make([]types.PayerInfo, 0)
+
+	if msg.Fee.Amount.GT(disputeFee) {
+		msg.Fee.Amount = disputeFee
+	}
 	dispute := types.Dispute{
 		HashId:            hashId[:],
 		DisputeId:         disputeId,
@@ -172,14 +176,14 @@ func (k Keeper) SetOpenDisputeIds(ctx sdk.Context, ids types.OpenDisputes) {
 }
 
 // Get percentage of slash amount based on category
-func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.Int {
+func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.LegacyDec {
 	switch category {
 	case types.Warning:
-		return math.NewInt(1).Quo(math.NewInt(100))
+		return sdk.NewDecWithPrec(1, 2) // 1%
 	case types.Minor:
-		return math.NewInt(1).Quo(math.NewInt(20))
+		return sdk.NewDecWithPrec(5, 2) // 5%
 	case types.Major:
-		return math.NewInt(1)
+		return sdk.NewDecWithPrec(1, 0) // 100%
 	default:
 		panic("invalid dispute category")
 	}

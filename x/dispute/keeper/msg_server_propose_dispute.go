@@ -9,7 +9,12 @@ import (
 
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
+	if msg.Fee.Amount.IsZero() {
+		return nil, types.ErrZeroFeeAmount
+	}
+	if msg.Fee.Denom != sdk.DefaultBondDenom {
+		return nil, types.ErrInvalidFeeDenom
+	}
 	dispute := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
 
 	if dispute == nil {

@@ -27,12 +27,20 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.ValidatorAddress, msg.Amount, msg.PayFromBond); err != nil {
 		return nil, err
 	}
-
+	// Don't take payment more than slash amount
+	fee := dispute.SlashAmount.Sub(dispute.FeeTotal)
+	if msg.Amount.Amount.GT(fee) {
+		msg.Amount.Amount = fee
+	}
 	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
 		PayerAddress: msg.Creator,
 		Amount:       msg.Amount,
 		FromBond:     msg.PayFromBond,
 	})
+	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
+	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
+		k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory)
+	}
 	k.Keeper.SetDisputeById(ctx, dispute.DisputeId, *dispute)
 	k.Keeper.SetDisputeByReporter(ctx, *dispute)
 

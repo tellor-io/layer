@@ -5,18 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 
-	// this line is used by starport scaffolding # 1
-
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
+	"cosmossdk.io/depinject"
 	abci "github.com/cometbft/cometbft/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"cosmossdk.io/core/appmodule"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+
+	// this line is used by starport scaffolding # 1
+
+	modulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	"github.com/tellor-io/layer/x/dispute/client/cli"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -39,6 +44,12 @@ type AppModuleBasic struct {
 func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (AppModuleBasic) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModuleBasic) IsAppModule() {}
 
 // Name returns the name of the module as a string
 func (AppModuleBasic) Name() string {
@@ -151,4 +162,57 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func AppWiringSetup() {
+	appmodule.Register(&modulev1.Module{},
+		appmodule.Provide(ProvideModule))
+
+}
+
+type DisputeInputs struct {
+	depinject.In
+
+	KvStoreKey  *storetypes.KVStoreKey
+	MemStoreKey *storetypes.MemoryStoreKey
+	Cdc         codec.Codec
+	Config      *modulev1.Module
+
+	AccountKeeper  types.AccountKeeper
+	BankKeeper     types.BankKeeper
+	SlashingKeeper types.SlashingKeeper
+	StakingKeeper  types.StakingKeeper
+}
+
+type DisputeOutputs struct {
+	depinject.Out
+
+	DisputeKeeper keeper.Keeper
+	Module        appmodule.AppModule
+}
+
+func ProvideModule(in DisputeInputs) DisputeOutputs {
+
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.KvStoreKey,
+		in.MemStoreKey,
+		paramtypes.Subspace{},
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.SlashingKeeper,
+		in.StakingKeeper,
+	)
+	m := NewAppModule(
+		in.Cdc,
+		*k,
+		in.AccountKeeper,
+		in.BankKeeper,
+	)
+
+	return DisputeOutputs{DisputeKeeper: *k, Module: m}
 }
