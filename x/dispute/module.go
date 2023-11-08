@@ -5,23 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/depinject"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
+	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	// this line is used by starport scaffolding # 1
+	abci "github.com/cometbft/cometbft/abci/types"
 
-	modulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	"github.com/tellor-io/layer/x/dispute/client/cli"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -41,15 +40,15 @@ type AppModuleBasic struct {
 	cdc codec.BinaryCodec
 }
 
-func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
-}
-
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
 func (AppModuleBasic) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModuleBasic) IsAppModule() {}
+
+func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
+	return AppModuleBasic{cdc: cdc}
+}
 
 // Name returns the name of the module as a string
 func (AppModuleBasic) Name() string {
@@ -169,7 +168,7 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 // ----------------------------------------------------------------------------
 
 func AppWiringSetup() {
-	appmodule.Register(&modulev1.Module{},
+	appmodule.Register(&disputemodulev1.Module{},
 		appmodule.Provide(ProvideModule))
 
 }
@@ -180,7 +179,7 @@ type DisputeInputs struct {
 	KvStoreKey  *storetypes.KVStoreKey
 	MemStoreKey *storetypes.MemoryStoreKey
 	Cdc         codec.Codec
-	Config      *modulev1.Module
+	Config      *disputemodulev1.Module
 
 	AccountKeeper  types.AccountKeeper
 	BankKeeper     types.BankKeeper
