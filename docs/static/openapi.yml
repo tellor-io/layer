@@ -46753,12 +46753,12 @@ paths:
           schema:
             type: object
             properties:
-              tips:
+              totalTips:
                 type: object
                 properties:
-                  tipper:
+                  address:
                     type: string
-                  totalTipped:
+                  total:
                     type: object
                     properties:
                       denom:
@@ -75815,12 +75815,12 @@ definitions:
   layer.oracle.QueryGetUserTipTotalResponse:
     type: object
     properties:
-      tips:
+      totalTips:
         type: object
         properties:
-          tipper:
+          address:
             type: string
-          totalTipped:
+          total:
             type: object
             properties:
               denom:
@@ -75891,12 +75891,12 @@ definitions:
 
           NOTE: The amount field is an Int which implements the custom method
           signatures required by gogoproto.
-  layer.oracle.TipsByTipper:
+  layer.oracle.UserTipTotal:
     type: object
     properties:
-      tipper:
+      address:
         type: string
-      totalTipped:
+      total:
         type: object
         properties:
           denom:

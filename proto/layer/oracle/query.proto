@@ -9,7 +9,7 @@ import "layer/oracle/params.proto";
 import "layer/oracle/reports.proto";
 import "layer/oracle/micro_report.proto";
 import "layer/oracle/tips.proto";
-import "layer/oracle/tips_by_tipper.proto";
+import "layer/oracle/user_tip.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -93,6 +93,6 @@ message QueryGetUserTipTotalRequest {
 }
 
 message QueryGetUserTipTotalResponse {
-  TipsByTipper tips = 1;
+  UserTipTotal totalTips = 1;
 }
 

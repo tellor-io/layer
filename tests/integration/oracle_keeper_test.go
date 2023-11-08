@@ -4,17 +4,14 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/oracle"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *IntegrationTestSuite) oracleKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
-	oracle.AppWiringSetup()
 	types.RegisterQueryServer(s.queryHelper, s.oraclekeeper)
-	queryClient = types.NewQueryClient(s.queryHelper)
 	types.RegisterInterfaces(s.interfaceRegistry)
-
+	queryClient = types.NewQueryClient(s.queryHelper)
 	msgServer = keeper.NewMsgServerImpl(s.oraclekeeper)
 	return
 }
@@ -38,8 +35,8 @@ func (s *IntegrationTestSuite) TestTipping() {
 	require.Equal(tip.Sub(twoPercent), tips.Amount)
 	require.Equal(tips.TotalTips, tips.Amount)
 	userTips := s.oraclekeeper.GetUserTips(s.ctx, store, addr.String(), ethQueryData)
-	require.Equal(userTips.Tipper, addr.String())
-	require.Equal(userTips.TotalTipped, tips.Amount)
+	require.Equal(userTips.Address, addr.String())
+	require.Equal(userTips.Total, tips.Amount)
 
 	// tip same query again
 	_, err = msgServer.Tip(s.ctx, &msg)
@@ -58,8 +55,8 @@ func (s *IntegrationTestSuite) TestTipping() {
 	require.Equal(tip.Sub(twoPercent), tips.Amount)
 	require.Equal(tips.TotalTips, tips.Amount)
 	userTips = s.oraclekeeper.GetUserTips(s.ctx, store, addr.String(), btcQueryData)
-	require.Equal(userTips.Tipper, addr.String())
-	require.Equal(userTips.TotalTipped, tips.Amount)
+	require.Equal(userTips.Address, addr.String())
+	require.Equal(userTips.Total, tips.Amount)
 	fmt.Println("TestTipping passed")
 }
 
@@ -100,5 +97,5 @@ func (s *IntegrationTestSuite) TestGetUserTipTotal() {
 	// Get current tip
 	resp, err := s.oraclekeeper.GetUserTipTotal(s.ctx, &types.QueryGetUserTipTotalRequest{Tipper: addr.String(), QueryData: ethQueryData})
 	require.NoError(err)
-	require.Equal(resp.Tips, &types.TipsByTipper{Tipper: addr.String(), TotalTipped: tip.Sub(twoPercent)})
+	require.Equal(resp.TotalTips, &types.UserTipTotal{Address: addr.String(), Total: tip.Sub(twoPercent)})
 }

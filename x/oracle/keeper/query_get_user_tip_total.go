@@ -20,7 +20,7 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 	if rk.Has0xPrefix(req.QueryData) {
 		req.QueryData = req.QueryData[2:]
 	}
-	tips := k.GetUserTips(ctx, store, req.Tipper, req.QueryData)
+	totalTips := k.GetUserTips(ctx, store, req.Tipper, req.QueryData)
 
-	return &types.QueryGetUserTipTotalResponse{Tips: &tips}, nil
+	return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 }

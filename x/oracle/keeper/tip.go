@@ -37,7 +37,7 @@ func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, query
 
 func (k Keeper) SetTipperTipsForQuery(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string, tip sdk.Coin) {
 	tips := k.GetUserTips(ctx, tipStore, tipper, queryData)
-	tips.TotalTipped = tips.TotalTipped.Add(tip)
+	tips.Total = tips.Total.Add(tip)
 	tipStore.Set(k.TipperKey(tipper, queryData), k.cdc.MustMarshal(&tips))
 
 }
@@ -62,12 +62,12 @@ func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData st
 	return tips, queryId
 }
 
-func (k Keeper) GetUserTips(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string) (tips types.TipsByTipper) {
+func (k Keeper) GetUserTips(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string) (tips types.UserTipTotal) {
 	bz := tipStore.Get(k.TipperKey(tipper, queryData))
 	if bz == nil {
-		return types.TipsByTipper{
-			Tipper:      tipper,
-			TotalTipped: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+		return types.UserTipTotal{
+			Address: tipper,
+			Total:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
 		}
 	}
 	k.cdc.Unmarshal(bz, &tips)
