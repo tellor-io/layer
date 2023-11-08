@@ -2,26 +2,38 @@ syntax = "proto3";
 
 package layer.oracle;
 
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
+
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Msg defines the Msg service.
 service Msg {
   rpc SubmitValue  (MsgSubmitValue ) returns (MsgSubmitValueResponse );
   rpc CommitReport (MsgCommitReport) returns (MsgCommitReportResponse);
+  rpc Tip          (MsgTip         ) returns (MsgTipResponse         );
 }
 message MsgSubmitValue {
-  string creator = 1;
-  string queryData     = 2;
-  string value   = 3;
+  string creator   = 1;
+  string queryData = 2;
+  string value     = 3;
 }
 
 message MsgSubmitValueResponse {}
 
 message MsgCommitReport {
-  string creator     = 1;
-  string queryData     = 2;
+  string creator   = 1;
+  string queryData = 2;
   string signature = 3; //signature of value in submit value
 }
 
 message MsgCommitReportResponse {}
+
+message MsgTip {
+  string                   tipper    = 1;
+  string                   queryData = 2;
+  cosmos.base.v1beta1.Coin amount    = 3 [(gogoproto.nullable) = false];
+}
+
+message MsgTipResponse {}
 

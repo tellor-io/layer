@@ -46673,6 +46673,135 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /tellor-io/layer/oracle/get_current_tip/{queryData}:
+    get:
+      summary: Queries a list of GetCurrentTip items.
+      operationId: LayerOracleGetCurrentTip
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tips:
+                type: object
+                properties:
+                  queryData:
+                    type: string
+                  amount:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  totalTips:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryData
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_user_tip_total/{tipper}/{queryData}:
+    get:
+      summary: Queries a list of GetUserTipTotal items.
+      operationId: LayerOracleGetUserTipTotal
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              totalTips:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  total:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: tipper
+          in: path
+          required: true
+          type: string
+        - name: queryData
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /layer/registry/get_data_spec/{queryType}:
     get:
       summary: Queries a list of GetDataSpec items.
@@ -75597,9 +75726,49 @@ definitions:
     type: object
   layer.oracle.MsgSubmitValueResponse:
     type: object
+  layer.oracle.MsgTipResponse:
+    type: object
   layer.oracle.Params:
     type: object
     description: Params defines the parameters for the module.
+  layer.oracle.QueryGetCurrentTipResponse:
+    type: object
+    properties:
+      tips:
+        type: object
+        properties:
+          queryData:
+            type: string
+          amount:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+          totalTips:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
   layer.oracle.QueryGetReportsbyQidResponse:
     type: object
     properties:
@@ -75643,6 +75812,29 @@ definitions:
             timestamp:
               type: string
               format: date-time
+  layer.oracle.QueryGetUserTipTotalResponse:
+    type: object
+    properties:
+      totalTips:
+        type: object
+        properties:
+          address:
+            type: string
+          total:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
   layer.oracle.QueryParamsResponse:
     type: object
     properties:
@@ -75670,6 +75862,52 @@ definitions:
             timestamp:
               type: string
               format: date-time
+  layer.oracle.Tips:
+    type: object
+    properties:
+      queryData:
+        type: string
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      totalTips:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+  layer.oracle.UserTipTotal:
+    type: object
+    properties:
+      address:
+        type: string
+      total:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
   layer.registry.DataSpec:
     type: object
     properties:
