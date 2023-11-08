@@ -9,17 +9,17 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) error {
+func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {
 	twoPercent := tip.Amount.Mul(sdk.NewInt(2)).Quo(sdk.NewInt(100))
 	burnCoin := sdk.NewCoin(tip.Denom, twoPercent)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, tipper, types.ModuleName, sdk.NewCoins(tip)); err != nil {
-		return err
+		return sdk.NewCoin(tip.Denom, sdk.ZeroInt()), err
 	}
 	// burn 2% of tip
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(burnCoin)); err != nil {
-		return err
+		return sdk.NewCoin(tip.Denom, sdk.ZeroInt()), err
 	}
-	return nil
+	return tip.Sub(burnCoin), nil
 }
 
 func (k Keeper) SetTip(ctx sdk.Context, tipper sdk.AccAddress, queryData string, tip sdk.Coin) {
@@ -31,7 +31,7 @@ func (k Keeper) SetTip(ctx sdk.Context, tipper sdk.AccAddress, queryData string,
 func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, queryData string, tip sdk.Coin) {
 	tips, queryId := k.GetQueryTips(ctx, tipStore, queryData)
 	tips.Amount = tips.Amount.Add(tip)
-	tips.TotalTips = tips.TotalTips.Add(tips.Amount)
+	tips.TotalTips = tips.TotalTips.Add(tip)
 	tipStore.Set(queryId, k.cdc.MustMarshal(&tips))
 }
 

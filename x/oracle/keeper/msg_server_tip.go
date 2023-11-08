@@ -20,10 +20,11 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	}
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
 
-	if err := k.Keeper.transfer(ctx, tipper, msg.Amount); err != nil {
+	tip, err := k.Keeper.transfer(ctx, tipper, msg.Amount)
+	if err != nil {
 		return nil, err
 	}
-	k.Keeper.SetTip(ctx, tipper, msg.QueryData, msg.Amount)
+	k.Keeper.SetTip(ctx, tipper, msg.QueryData, tip)
 
 	return &types.MsgTipResponse{}, nil
 }
