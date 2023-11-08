@@ -62,3 +62,43 @@ func (s *IntegrationTestSuite) TestTipping() {
 	require.Equal(userTips.TotalTipped, tips.Amount)
 	fmt.Println("TestTipping passed")
 }
+
+func (s *IntegrationTestSuite) TestGetCurrentTip() {
+	require := s.Require()
+	_, msgServer := s.oracleKeeper()
+	addr, denom := s.newKeysWithTokens()
+	tip := sdk.NewCoin(denom, sdk.NewInt(1000))
+	twoPercent := sdk.NewCoin(denom, tip.Amount.Mul(sdk.NewInt(2)).Quo(sdk.NewInt(100)))
+	msg := types.MsgTip{
+		Tipper:    addr.String(),
+		QueryData: ethQueryData,
+		Amount:    tip,
+	}
+	_, err := msgServer.Tip(s.ctx, &msg)
+	require.NoError(err)
+
+	// Get current tip
+	resp, err := s.oraclekeeper.GetCurrentTip(s.ctx, &types.QueryGetCurrentTipRequest{QueryData: ethQueryData})
+	require.NoError(err)
+	require.Equal(resp.Tips, &types.Tips{QueryData: ethQueryData, Amount: tip.Sub(twoPercent), TotalTips: tip.Sub(twoPercent)})
+}
+
+func (s *IntegrationTestSuite) TestGetUserTipTotal() {
+	require := s.Require()
+	_, msgServer := s.oracleKeeper()
+	addr, denom := s.newKeysWithTokens()
+	tip := sdk.NewCoin(denom, sdk.NewInt(1000))
+	twoPercent := sdk.NewCoin(denom, tip.Amount.Mul(sdk.NewInt(2)).Quo(sdk.NewInt(100)))
+	msg := types.MsgTip{
+		Tipper:    addr.String(),
+		QueryData: ethQueryData,
+		Amount:    tip,
+	}
+	_, err := msgServer.Tip(s.ctx, &msg)
+	require.NoError(err)
+
+	// Get current tip
+	resp, err := s.oraclekeeper.GetUserTipTotal(s.ctx, &types.QueryGetUserTipTotalRequest{Tipper: addr.String(), QueryData: ethQueryData})
+	require.NoError(err)
+	require.Equal(resp.Tips, &types.TipsByTipper{Tipper: addr.String(), TotalTipped: tip.Sub(twoPercent)})
+}

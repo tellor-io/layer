@@ -8,6 +8,9 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "layer/oracle/params.proto";
 import "layer/oracle/reports.proto";
 import "layer/oracle/micro_report.proto";
+import "layer/oracle/tips.proto";
+import "layer/oracle/tips_by_tipper.proto";
+
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Query defines the gRPC querier service.
@@ -20,18 +23,28 @@ service Query {
   }
   
   // Queries a list of GetReportsbyQid items.
-  rpc GetReportsbyQid (QueryGetReportsbyQidRequest) returns (QueryGetReportsbyQidResponse) {
+  rpc GetReportsbyQid         (QueryGetReportsbyQidRequest        ) returns (QueryGetReportsbyQidResponse     ) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{queryId}";
   
   }
-
-  rpc GetReportsbyReporter (QueryGetReportsbyReporterRequest) returns (QueryGetReportsbyReporterResponse) {
+  rpc GetReportsbyReporter    (QueryGetReportsbyReporterRequest   ) returns (QueryGetReportsbyReporterResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter/{reporter}";
   
   }
-
-  rpc GetReportsbyReporterQid (QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse) {
+  rpc GetReportsbyReporterQid (QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse     ) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{queryId}";
+  
+  }
+  
+  // Queries a list of GetCurrentTip items.
+  rpc GetCurrentTip (QueryGetCurrentTipRequest) returns (QueryGetCurrentTipResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_current_tip/{queryData}";
+  
+  }
+  
+  // Queries a list of GetUserTipTotal items.
+  rpc GetUserTipTotal (QueryGetUserTipTotalRequest) returns (QueryGetUserTipTotalResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}/{queryData}";
   
   }
 }
@@ -63,5 +76,23 @@ message QueryGetReportsbyReporterResponse {
 
 message QueryGetReportsbyReporterQidRequest {
   string reporter = 1;
-  string queryId = 2;
+  string queryId  = 2;
 }
+
+message QueryGetCurrentTipRequest {
+  string queryData = 1;
+}
+
+message QueryGetCurrentTipResponse {
+  Tips tips = 1;
+}
+
+message QueryGetUserTipTotalRequest {
+  string tipper    = 1;
+  string queryData = 2;
+}
+
+message QueryGetUserTipTotalResponse {
+  TipsByTipper tips = 1;
+}
+
