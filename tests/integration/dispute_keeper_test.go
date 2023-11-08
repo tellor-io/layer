@@ -1,15 +1,12 @@
 package integration_test
 
 import (
-	"testing"
-
 	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/suite"
 )
 
 func (s *IntegrationTestSuite) disputeKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
@@ -113,22 +110,4 @@ func (suite *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	require.NoError(err)
 	val, _ = suite.stakingKeeper.GetValidator(ctx, valAddr)
 	require.False(val.IsJailed())
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-}
-
-func (suite *IntegrationTestSuite) microReport() (types.MicroReport, sdk.ValAddress) {
-	val := suite.stakingKeeper.GetAllValidators(suite.ctx)[0]
-	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
-	suite.Require().NoError(err)
-	return types.MicroReport{
-		Reporter:  sdk.AccAddress(valAddr).String(),
-		Power:     val.GetConsensusPower(val.GetBondedTokens()),
-		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
-	}, valAddr
-
 }

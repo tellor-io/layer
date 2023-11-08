@@ -52,8 +52,9 @@ import (
 	"github.com/tellor-io/layer/x/registry"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/tests/integration"
 )
@@ -180,4 +181,22 @@ func (suite *IntegrationTestSuite) newKeysWithTokens() (sdk.AccAddress, string) 
 	Addr := sdk.AccAddress(PubKey.Address())
 	suite.mintTokens(Addr)
 	return Addr, denom
+}
+
+func (suite *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
+	val := suite.stakingKeeper.GetAllValidators(suite.ctx)[0]
+	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	suite.Require().NoError(err)
+	return disputetypes.MicroReport{
+		Reporter:  sdk.AccAddress(valAddr).String(),
+		Power:     val.GetConsensusPower(val.GetBondedTokens()),
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: 1696516597,
+	}, valAddr
+
+}
+
+func TestKeeperTestSuite(t *testing.T) {
+	suite.Run(t, new(IntegrationTestSuite))
 }
