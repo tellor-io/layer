@@ -6,11 +6,14 @@ import (
 	"fmt"
 
 	// this line is used by starport scaffolding # 1
-
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	abci "github.com/cometbft/cometbft/abci/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
+	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -35,6 +38,12 @@ var (
 type AppModuleBasic struct {
 	cdc codec.BinaryCodec
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (AppModuleBasic) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModuleBasic) IsAppModule() {}
 
 func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
@@ -146,4 +155,50 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func AppWiringSetup() {
+	appmodule.Register(&registrymodulev1.Module{},
+		appmodule.Provide(ProvideModule))
+}
+
+type RegistryInputs struct {
+	depinject.In
+
+	KvStoreKey  *storetypes.KVStoreKey
+	MemStoreKey *storetypes.MemoryStoreKey
+	Cdc         codec.Codec
+	Config      *registrymodulev1.Module
+
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+}
+
+type RegistryOutputs struct {
+	depinject.Out
+
+	RegistryKeeper keeper.Keeper
+	Module         appmodule.AppModule
+}
+
+func ProvideModule(in RegistryInputs) RegistryOutputs {
+
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.KvStoreKey,
+		in.MemStoreKey,
+		paramtypes.Subspace{},
+	)
+	m := NewAppModule(
+		in.Cdc,
+		*k,
+		in.AccountKeeper,
+		in.BankKeeper,
+	)
+
+	return RegistryOutputs{RegistryKeeper: *k, Module: m}
 }
