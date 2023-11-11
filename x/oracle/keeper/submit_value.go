@@ -5,96 +5,89 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
-	registryTypes "github.com/tellor-io/layer/x/registry/types"
+	regTypes "github.com/tellor-io/layer/x/registry/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetSignature(ctx sdk.Context, reporter string, queryId []byte) (*types.CommitValue, error) {
-
-	commitStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
-	commit := commitStore.Get(append([]byte(reporter), queryId...))
+func (k Keeper) GetSignature(ctx sdk.Context, reporter sdk.AccAddress, queryId []byte) (*types.CommitReport, error) {
+	commitStore := k.CommitStore(ctx)
+	commit := commitStore.Get(append(reporter, queryId...))
 	if commit == nil {
 		return nil, status.Error(codes.NotFound, "no commits to reveal found")
 	}
-	var commitValue types.CommitValue
-	k.cdc.Unmarshal(commit, &commitValue)
-	return &commitValue, nil
+	var commitReport types.CommitReport
+	k.cdc.Unmarshal(commit, &commitReport)
+	return &commitReport, nil
 }
 
-func (k Keeper) setValueByReporter(ctx sdk.Context, reporter, val string, queryId []byte, power int64) error {
-	queryIdHex := hex.EncodeToString(queryId)
-	reporterStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
+func (k Keeper) setValueByReporter(ctx sdk.Context, report *types.MicroReport) {
+	reporterStore := k.ReporterStore(ctx)
 	// reporter-query id pair
-	reporterQueryIdKey := []byte(reporter + ":" + queryIdHex)
+	reporterQueryIdKey := []byte(report.Reporter + ":" + report.QueryId)
 	// get reports list from store and unmarshal
 	var reportsList types.Reports
-	if err := k.cdc.Unmarshal(reporterStore.Get(reporterQueryIdKey), &reportsList); err != nil {
-		return fmt.Errorf("failed to unmarshal reports: %v", err)
-	}
-	report := &types.MicroReport{
-		Reporter:  reporter,
-		Power:     power,
-		QueryId:   queryIdHex,
-		Value:     val,
-		Timestamp: ctx.BlockTime(),
-	}
-	// append report to reports list
+	k.cdc.MustUnmarshal(reporterStore.Get(reporterQueryIdKey), &reportsList) // panics if can't unmarshal
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
 	reporterStore.Set(reporterQueryIdKey, k.cdc.MustMarshal(&reportsList))
-	return nil
 }
 
-func (k Keeper) setValueByQueryId(ctx sdk.Context, reporter, val string, queryId []byte, power int64) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
-	report := &types.MicroReport{
-		Reporter:  reporter,
-		Power:     power,
-		QueryId:   hex.EncodeToString(queryId),
-		Value:     val,
-		Timestamp: ctx.BlockTime(),
-	}
+func (k Keeper) setValueByQueryId(ctx sdk.Context, queryId []byte, report *types.MicroReport) {
+	store := k.ReportsStore(ctx)
 	var reportsList types.Reports
-	if err := k.cdc.Unmarshal(store.Get(queryId), &reportsList); err != nil {
-		return fmt.Errorf("failed to unmarshal reports: %v", err)
-	}
+	k.cdc.MustUnmarshal(store.Get(queryId), &reportsList) // panics if can't unmarshal
 	reportsList.MicroReports = append(reportsList.MicroReports, report)
 	store.Set(queryId, k.cdc.MustMarshal(&reportsList))
-	return nil
 }
 
-func (k Keeper) setValue(ctx sdk.Context, reporter, val string, queryData []byte, power int64) error {
-	queryId := HashQueryData(queryData)
+func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, queryData []byte, power, block int64) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, err := decodeQueryType(queryData)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
-	valueType, err := getValueType(k.registryKeeper, k.cdc, ctx, queryType)
-	if err != nil {
+	dataSpec := k.GetValueType(ctx, queryType)
+	if dataSpec == nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
 	// decode value using value type from data spec and check if decodes successfully
 	// value is not used, only used to check if it decodes successfully
-	value, err := decodeValue(val, valueType)
-	ctx.Logger().Info(fmt.Sprintf("value: %v", value[0]))
-	if err != nil {
+	if _, err := decodeValue(val, dataSpec.ValueType); err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
 	}
-	// set value by reporter
-	if err := k.setValueByReporter(ctx, reporter, val, queryId, power); err != nil {
-		return err
+
+	queryId := HashQueryData(queryData)
+	report := &types.MicroReport{
+		Reporter:        reporter.String(),
+		Power:           power,
+		QueryType:       queryType,
+		QueryId:         hex.EncodeToString(queryId),
+		Value:           val,
+		AggregateMethod: dataSpec.AggregationMethod,
+		BlockNumber:     block,
+		Timestamp:       ctx.BlockTime(),
 	}
-	// set value by query id
-	if err := k.setValueByQueryId(ctx, reporter, val, queryId, power); err != nil {
-		return err
-	}
+
+	k.setValueByReporter(ctx, report)
+	k.setValueByQueryId(ctx, queryId, report)
+	k.AppendReport(ctx, report)
 	return nil
+}
+
+func (k Keeper) AppendReport(ctx sdk.Context, report *types.MicroReport) {
+	store := k.ReportsStore(ctx)
+	// get reports for current block height to append new report
+	var reportsByHeight types.Reports
+	key := types.BlockKey(report.BlockNumber)
+	bz := store.Get(key)
+	k.cdc.MustUnmarshal(bz, &reportsByHeight)
+	reportsByHeight.MicroReports = append(reportsByHeight.MicroReports, report)
+	store.Set(key, k.cdc.MustMarshal(&reportsByHeight))
+	// delete reports that were stored by height(only) for previous block height
+	store.Delete(types.BlockKey(report.BlockNumber - 1))
 }
 
 func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int64, bool) {
@@ -175,17 +168,17 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unpack value: %v", err)
 	}
+	fmt.Println("Decoded value: ", result[0])
 	return result, nil
 }
 
-func getValueType(registry types.RegistryKeeper, cdc codec.BinaryCodec, ctx sdk.Context, queryType string) (string, error) {
+func (k Keeper) GetValueType(ctx sdk.Context, queryType string) *regTypes.DataSpec {
 	// get data spec from registry by query type to validate value
-	dataSpecBytes := registry.Spec(ctx, queryType)
+	dataSpecBytes := k.registryKeeper.Spec(ctx, queryType)
 	if dataSpecBytes == nil {
-		return "", status.Error(codes.NotFound, fmt.Sprintf("data spec not found for query type: %s", queryType))
+		return nil
 	}
-	var dataSpec registryTypes.DataSpec
-	cdc.Unmarshal(dataSpecBytes, &dataSpec)
-
-	return dataSpec.ValueType, nil
+	var dataSpec regTypes.DataSpec
+	k.cdc.Unmarshal(dataSpecBytes, &dataSpec)
+	return &dataSpec
 }

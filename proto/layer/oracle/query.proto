@@ -10,6 +10,7 @@ import "layer/oracle/reports.proto";
 import "layer/oracle/micro_report.proto";
 import "layer/oracle/tips.proto";
 import "layer/oracle/user_tip.proto";
+import "layer/oracle/aggregate.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -45,6 +46,12 @@ service Query {
   // Queries a list of GetUserTipTotal items.
   rpc GetUserTipTotal (QueryGetUserTipTotalRequest) returns (QueryGetUserTipTotalResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}/{queryData}";
+  
+  }
+  
+  // Queries a list of GetAggregatedReport items.
+  rpc GetAggregatedReport (QueryGetAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{queryId}/{blockNumber}";
   
   }
 }
@@ -94,5 +101,14 @@ message QueryGetUserTipTotalRequest {
 
 message QueryGetUserTipTotalResponse {
   UserTipTotal totalTips = 1;
+}
+
+message QueryGetAggregatedReportRequest {
+  string queryId     = 1;
+  int64 blockNumber = 2;
+}
+
+message QueryGetAggregatedReportResponse {
+  Aggregate report = 1;
 }
 

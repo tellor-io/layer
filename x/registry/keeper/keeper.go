@@ -51,6 +51,7 @@ func (k Keeper) SetGenesisSpec(ctx sdk.Context) {
 	var dataSpec types.DataSpec
 	dataSpec.DocumentHash = ""
 	dataSpec.ValueType = "uint256"
+	dataSpec.AggregationMethod = "Weighted-Median"
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
 	store.Set([]byte("SpotPrice"), k.cdc.MustMarshal(&dataSpec))
 

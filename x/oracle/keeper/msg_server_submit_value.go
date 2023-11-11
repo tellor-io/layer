@@ -15,49 +15,51 @@ import (
 
 func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	msgSender, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid sender address: %v", err))
-	}
-	valAddr := sdk.ValAddress(msgSender)
+	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
 	// check if validator is bonded and active
-	votingPower, isBonded := k.IsReporterStaked(ctx, valAddr)
+	votingPower, isBonded := k.IsReporterStaked(ctx, sdk.ValAddress(reporter))
 	if !isBonded {
-		return nil, status.Error(codes.Unauthenticated, "validator is not staked")
+		return nil, types.ErrValidatorNotBonded
 	}
 	// check if querydata has prefix 0x
 	if registryKeeper.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
 	}
 	// decode query data hex string to bytes
-	queryData, err := hex.DecodeString(msg.QueryData)
+	qDataBytes, err := hex.DecodeString(msg.QueryData)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.GetSignature(ctx, msg.Creator, HashQueryData(queryData))
+	commitValue, err := k.GetSignature(ctx, reporter, HashQueryData(qDataBytes))
 	if err != nil {
 		return nil, err
 	}
+	currentBlock := ctx.BlockHeight()
 	// check if value is being revealed in the one block after commit
-	if ctx.BlockHeight()-1 != commitValue.Block {
-		return nil, status.Error(codes.InvalidArgument, "missed block height to reveal")
+	if currentBlock-1 != commitValue.Block {
+		return nil, types.ErrMissedCommitRevealWindow
 	}
 	// if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
 	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
 	// }
 	// verify value signature
 	if !k.VerifySignature(ctx, msg.Creator, msg.Value, commitValue.Report.Signature) {
-		return nil, status.Error(codes.InvalidArgument, "unable to verify signature")
+		return nil, types.ErrSignatureVerificationFailed
 	}
 	// set value
-	if err := k.setValue(ctx, msg.Creator, msg.Value, queryData, votingPower); err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to set value: %v", err))
-	}
-	// emit event
-	err = ctx.EventManager().EmitTypedEvent(msg)
-	if err != nil {
+	if err := k.setValue(ctx, reporter, msg.Value, qDataBytes, votingPower, currentBlock); err != nil {
 		return nil, err
 	}
+	// emit event
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"NewReport",
+			sdk.NewAttribute("reporter", msg.Creator),
+			sdk.NewAttribute("query_data", msg.QueryData),
+			sdk.NewAttribute("value", msg.Value),
+		),
+	})
+
 	return &types.MsgSubmitValueResponse{}, nil
 }
