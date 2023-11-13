@@ -88,6 +88,8 @@ contract BridgeTest is Test {
     }
 
     function testVerifyBlockHeader() public {
+        
+        
         bool result = bridge.verifyBlockHeader(multistore, merkleParts, votePart, sigDataArray);
         assertEq(result, true);
     }

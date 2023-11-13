@@ -105,13 +105,17 @@ contract LayerLightClientBridge {
     ) public {
         // if same data for block height already exists, return
         // require last block header less than unbonding period old
+        require(_merkleParts.height > latestBlockHeight, "Block already relayed");
         require(verifyBlockHeader(_multiStore, _merkleParts, _commonEncodedVotePart, _signatures), "Invalid block header");
         blockDetails[_merkleParts.height] = BlockDetail({
             oracleHash: _multiStore.oracleIAVLStateHash,
             timeSecond: _merkleParts.timeSecond,
             timeNanoSecondFraction: _merkleParts.timeNanoSecondFraction
         });
+        latestBlockHeight = _merkleParts.height;
     }
+
+    
     
 
     function verifyBlockHeader(

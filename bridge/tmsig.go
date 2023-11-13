@@ -76,11 +76,45 @@ func (s bridgeServer) TmSig(_ context.Context, req *QueryTmRequest) (*QueryTmRes
 	if err != nil {
 		panic(err)
 	}
+
 	return &QueryTmResponse{
 		TmSig:  sigs,
 		Common: common,
 	}, nil
 }
+
+// func (s bridgeServer) TmSig(_ context.Context, req *QueryTmRequest) (*QueryTmResponse, error) {
+// 	commit, err := s.getCommit(req.Height)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	sigs, common, err := GetSignaturesAndPrefix(&commit.SignedHeader)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// Decode from Base64
+// 	prefixData, err := base64.StdEncoding.DecodeString(string(common.SignedDataPrefix))
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	suffixData, err := base64.StdEncoding.DecodeString(string(common.SignedDataSuffix))
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// Encode to hexadecimal
+// 	hexPrefix := hex.EncodeToString(prefixData)
+// 	hexSuffix := hex.EncodeToString(suffixData)
+
+// 	return &QueryTmResponse{
+// 		TmSig: sigs,
+// 		Common: CommonEncodedVotePart{
+// 			SignedDataPrefix: hexPrefix,
+// 			SignedDataSuffix: hexSuffix,
+// 		},
+// 	}, nil
+// }
 
 // func fetchSig(clientCtx client.Context, height *int64) ([]byte, error) {
 // 	node, err := clientCtx.GetNode()

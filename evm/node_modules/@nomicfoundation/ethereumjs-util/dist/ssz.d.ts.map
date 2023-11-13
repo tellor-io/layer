@@ -1,0 +1,1 @@
+{"version":3,"file":"ssz.d.ts","sourceRoot":"","sources":["../src/ssz.ts"],"names":[],"mappings":"AAAA,OAAO,EACL,cAAc,EACd,aAAa,EACb,iBAAiB,EACjB,cAAc,EACd,cAAc,EACf,MAAM,gBAAgB,CAAA;AAIvB,eAAO,MAAM,SAAS,gBAAwB,CAAA;AAC9C,eAAO,MAAM,YAAY,gBAAwB,CAAA;AACjD,eAAO,MAAM,OAAO,gBAAyB,CAAA;AAE7C,eAAO,MAAM,UAAU;;;;;EAQtB,CAAA;AACD,eAAO,MAAM,WAAW;;;;;GAAiE,CAAA"}

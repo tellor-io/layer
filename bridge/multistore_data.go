@@ -71,13 +71,16 @@ func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRe
 			fmt.Println("Defaulting to nothing found")
 		}
 	}
+	log.Printf(fmt.Sprintf("mintStore %s", bytes.HexBytes(multistoreProof.Path[0].Prefix).String()))
+	// print whole multistoreProof.Path to see all the paths
+	// log.Printf(fmt.Sprintf("path0:	%s", bytes.HexBytes(multistoreProof.GetPath()).String()))
 	logCtx := sdk.UnwrapSDKContext(ctx)
 	s.Logger(logCtx).Error(fmt.Sprintf("iavlProof %v", iavlProof))
 
 	return &QueryMultistoreResponse{
 		MutiStoreTree: MutiStoreTreeFields{
 			OracleIavlStateHash:              bytes.HexBytes(multistoreProof.Value).String(),
-			MintStoreMerkleHash:              bytes.HexBytes(multistoreProof.Path[0].Prefix).String(),
+			MintStoreMerkleHash:              bytes.HexBytes(multistoreProof.Path[0].Prefix[1:]).String(),
 			IcacontrollerToIcahostMerkleHash: bytes.HexBytes(multistoreProof.Path[1].Prefix[1:]).String(),
 			FeegrantToIbcMerkleHash:          bytes.HexBytes(multistoreProof.Path[2].Prefix[1:]).String(),
 			AccToEvidenceMerkleHash:          bytes.HexBytes(multistoreProof.Path[3].Prefix[1:]).String(),
