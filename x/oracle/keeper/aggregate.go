@@ -21,8 +21,11 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 	}
 
 	for _, reports := range reportMapping {
-		if reports[0].AggregateMethod == "Weighted-Median" {
+		if reports[0].AggregateMethod == "weighted-median" {
 			k.WeightedMedian(ctx, reports)
+		}
+		if reports[0].AggregateMethod == "weighted-mode" {
+			k.WeightedMode(ctx, reports)
 		}
 	}
 }
