@@ -61,6 +61,22 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+func (k Keeper) CommitStore(ctx sdk.Context) storetypes.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportStoreKey))
+}
+
+func (k Keeper) AggregateStore(ctx sdk.Context) storetypes.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.AggregateStoreKey))
+}
+
+func (k Keeper) ReporterStore(ctx sdk.Context) storetypes.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
+}
+
+func (k Keeper) ReportsStore(ctx sdk.Context) storetypes.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
+}
+
 func (k Keeper) TipStore(ctx sdk.Context) storetypes.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TipStoreKey))
 }

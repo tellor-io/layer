@@ -11,8 +11,12 @@ message Commit {
   string signature = 3; //signature of value in submit value
 }
 
-message CommitValue {
+message CommitReport {
   
   Commit report = 1; 
   int64 block = 2; 
+}
+
+message CommitsByHeight {
+  repeated Commit commits = 1;
 }

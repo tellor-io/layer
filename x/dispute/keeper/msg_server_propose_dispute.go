@@ -9,7 +9,7 @@ import (
 
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if msg.Fee.Amount.IsZero() {
+	if msg.Fee.Amount.IsZero() || msg.Fee.Amount.IsNegative() {
 		return nil, types.ErrZeroFeeAmount
 	}
 	if msg.Fee.Denom != sdk.DefaultBondDenom {

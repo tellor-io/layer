@@ -46496,10 +46496,17 @@ paths:
                         power:
                           type: string
                           format: int64
+                        queryType:
+                          type: string
                         queryId:
+                          type: string
+                        aggregateMethod:
                           type: string
                         value:
                           type: string
+                        blockNumber:
+                          type: string
+                          format: int64
                         timestamp:
                           type: string
                           format: date-time
@@ -46547,10 +46554,17 @@ paths:
                     power:
                       type: string
                       format: int64
+                    queryType:
+                      type: string
                     queryId:
+                      type: string
+                    aggregateMethod:
                       type: string
                     value:
                       type: string
+                    blockNumber:
+                      type: string
+                      format: int64
                     timestamp:
                       type: string
                       format: date-time
@@ -46601,10 +46615,17 @@ paths:
                         power:
                           type: string
                           format: int64
+                        queryType:
+                          type: string
                         queryId:
+                          type: string
+                        aggregateMethod:
                           type: string
                         value:
                           type: string
+                        blockNumber:
+                          type: string
+                          format: int64
                         timestamp:
                           type: string
                           format: date-time
@@ -46671,6 +46692,71 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_aggregated_report/{queryId}/{blockNumber}:
+    get:
+      summary: Queries a list of GetAggregatedReport items.
+      operationId: LayerOracleGetAggregatedReport
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              report:
+                type: object
+                properties:
+                  queryId:
+                    type: string
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+        - name: blockNumber
+          in: path
+          required: true
+          type: string
+          format: int64
       tags:
         - Query
   /tellor-io/layer/oracle/get_current_tip/{queryData}:
@@ -46818,6 +46904,8 @@ paths:
                   documentHash:
                     type: string
                   valueType:
+                    type: string
+                  aggregationMethod:
                     type: string
         default:
           description: An unexpected error response.
@@ -75707,6 +75795,39 @@ definitions:
       - VOTE_SUPPORT
       - VOTE_AGAINST
     default: VOTE_INVALID
+  layer.oracle.Aggregate:
+    type: object
+    properties:
+      queryId:
+        type: string
+      aggregateValue:
+        type: string
+      aggregateReporter:
+        type: string
+      reporterPower:
+        type: string
+        format: int64
+      standardDeviation:
+        type: number
+        format: double
+      reporters:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            power:
+              type: string
+              format: int64
+  layer.oracle.AggregateReporter:
+    type: object
+    properties:
+      reporter:
+        type: string
+      power:
+        type: string
+        format: int64
   layer.oracle.MicroReport:
     type: object
     properties:
@@ -75715,10 +75836,17 @@ definitions:
       power:
         type: string
         format: int64
+      queryType:
+        type: string
       queryId:
+        type: string
+      aggregateMethod:
         type: string
       value:
         type: string
+      blockNumber:
+        type: string
+        format: int64
       timestamp:
         type: string
         format: date-time
@@ -75731,6 +75859,34 @@ definitions:
   layer.oracle.Params:
     type: object
     description: Params defines the parameters for the module.
+  layer.oracle.QueryGetAggregatedReportResponse:
+    type: object
+    properties:
+      report:
+        type: object
+        properties:
+          queryId:
+            type: string
+          aggregateValue:
+            type: string
+          aggregateReporter:
+            type: string
+          reporterPower:
+            type: string
+            format: int64
+          standardDeviation:
+            type: number
+            format: double
+          reporters:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                power:
+                  type: string
+                  format: int64
   layer.oracle.QueryGetCurrentTipResponse:
     type: object
     properties:
@@ -75785,10 +75941,17 @@ definitions:
                 power:
                   type: string
                   format: int64
+                queryType:
+                  type: string
                 queryId:
+                  type: string
+                aggregateMethod:
                   type: string
                 value:
                   type: string
+                blockNumber:
+                  type: string
+                  format: int64
                 timestamp:
                   type: string
                   format: date-time
@@ -75805,10 +75968,17 @@ definitions:
             power:
               type: string
               format: int64
+            queryType:
+              type: string
             queryId:
+              type: string
+            aggregateMethod:
               type: string
             value:
               type: string
+            blockNumber:
+              type: string
+              format: int64
             timestamp:
               type: string
               format: date-time
@@ -75855,10 +76025,17 @@ definitions:
             power:
               type: string
               format: int64
+            queryType:
+              type: string
             queryId:
+              type: string
+            aggregateMethod:
               type: string
             value:
               type: string
+            blockNumber:
+              type: string
+              format: int64
             timestamp:
               type: string
               format: date-time
@@ -75915,6 +76092,8 @@ definitions:
         type: string
       valueType:
         type: string
+      aggregationMethod:
+        type: string
   layer.registry.MsgRegisterQueryResponse:
     type: object
     properties:
@@ -75934,6 +76113,8 @@ definitions:
           documentHash:
             type: string
           valueType:
+            type: string
+          aggregationMethod:
             type: string
   layer.registry.QueryGetQueryDataResponse:
     type: object
