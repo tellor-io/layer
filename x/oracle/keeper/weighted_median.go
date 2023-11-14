@@ -12,30 +12,36 @@ import (
 
 func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 	var medianReport types.Aggregate
-	sort.SliceStable(reports, func(i, j int) bool {
-		bi1 := new(big.Int)
-		bi2 := new(big.Int)
-		value1, _ := bi1.SetString(reports[i].Value, 16)
-		value2, _ := bi2.SetString(reports[j].Value, 16)
-		return value1.Cmp(value2) < 0
-	})
-	var totalReporterPower int64
-	var weightedSum int64
-	for _, s := range reports {
-		bi := new(big.Int)
-		val, _ := bi.SetString(s.Value, 16)
-		weightedSum += s.Power * val.Int64()
-		totalReporterPower += s.Power
-		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: s.Reporter, Power: s.Power})
-	}
-	halfTotalPower := totalReporterPower / 2
-	weightedMean := float64(weightedSum) / float64(totalReporterPower)
+	values := make(map[string]*big.Int)
 
-	// Find the weighted median.
-	var cumulativePower int64
+	for _, r := range reports {
+		val, ok := new(big.Int).SetString(r.Value, 16)
+		if !ok {
+			ctx.Logger().Error("WeightedMedian", "error", "failed to parse value")
+			return
+		}
+		values[r.Reporter] = val
+	}
+
+	sort.SliceStable(reports, func(i, j int) bool {
+		return values[reports[i].Reporter].Cmp(values[reports[j].Reporter]) < 0
+
+	})
+
+	var totalReporterPower, weightedSum big.Int
+	for _, r := range reports {
+		weightedSum.Add(&weightedSum, new(big.Int).Mul(values[r.Reporter], big.NewInt(r.Power)))
+		totalReporterPower.Add(&totalReporterPower, big.NewInt(r.Power))
+		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
+	}
+
+	halfTotalPower := new(big.Int).Div(&totalReporterPower, big.NewInt(2))
+	cumulativePower := new(big.Int)
+
+	// Find the weighted median
 	for _, s := range reports {
-		cumulativePower += s.Power
-		if cumulativePower >= halfTotalPower {
+		cumulativePower.Add(cumulativePower, big.NewInt(s.Power))
+		if cumulativePower.Cmp(halfTotalPower) >= 0 {
 			medianReport.ReporterPower = s.Power
 			medianReport.AggregateReporter = s.Reporter
 			medianReport.AggregateValue = s.Value
@@ -46,16 +52,22 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 
 	// Calculate the weighted standard deviation
 	var sumWeightedSquaredDiffs float64
-	for _, s := range reports {
-		bi := new(big.Int)
-		val, _ := bi.SetString(s.Value, 16)
-		diff := float64(val.Uint64()) - weightedMean
-		weightedSquaredDiff := float64(s.Power) * diff * diff
-		sumWeightedSquaredDiffs += weightedSquaredDiff
+	weightedMean := new(big.Float).Quo(new(big.Float).SetInt(&weightedSum), new(big.Float).SetInt(&totalReporterPower))
+
+	for _, r := range reports {
+		valBigFloat := new(big.Float).SetInt(values[r.Reporter])
+		diff := new(big.Float).Sub(valBigFloat, weightedMean)
+		diffSquared := new(big.Float).Mul(diff, diff)
+		weightedSquaredDiff := diffSquared.Mul(diffSquared, new(big.Float).SetInt64(r.Power))
+		diffStdDev, _ := weightedSquaredDiff.Float64()
+		sumWeightedSquaredDiffs += diffStdDev
 	}
-	weightedStdDev := math.Sqrt(sumWeightedSquaredDiffs / float64(totalReporterPower))
+	weightedStdDev := math.Sqrt(sumWeightedSquaredDiffs / float64(totalReporterPower.Int64()))
 	medianReport.StandardDeviation = weightedStdDev
+
 	store := k.AggregateStore(ctx)
-	store.Set([]byte(fmt.Sprintf("%s-%d", medianReport.QueryId, ctx.BlockHeight())), k.cdc.MustMarshal(&medianReport))
+	key := []byte(fmt.Sprintf("%s-%d", medianReport.QueryId, ctx.BlockHeight()))
+	store.Set(key, k.cdc.MustMarshal(&medianReport))
+	ctx.Logger().Error("WeightedMedian", "medianReport", medianReport)
 
 }

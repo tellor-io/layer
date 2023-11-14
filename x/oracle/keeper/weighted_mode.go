@@ -8,29 +8,32 @@ import (
 )
 
 func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) {
-	var modeReport types.Aggregate
-	weightSum := make(map[types.MicroReport]int64)
-
-	for _, r := range reports {
-		weightSum[r] += r.Power
-		modeReport.Reporters = append(modeReport.Reporters,
-			&types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
+	if len(reports) == 0 {
+		return
 	}
 
-	var maxWeight int64
+	var modeReport types.MicroReport
+	var modeReporters []*types.AggregateReporter
+	var maxWeight = int64(0)
 
-	for report, weight := range weightSum {
-		if weight > maxWeight {
-			maxWeight = weight
-			modeReport.QueryId = report.QueryId
-			modeReport.AggregateValue = report.Value
-			modeReport.AggregateReporter = report.Reporter
-			modeReport.ReporterPower = report.Power
+	for _, r := range reports {
+		modeReporters = append(modeReporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
+		if r.Power > maxWeight {
+			maxWeight = r.Power
+			modeReport = r
 		}
 	}
 
+	aggregateReport := types.Aggregate{
+		QueryId:           modeReport.QueryId,
+		AggregateValue:    modeReport.Value,
+		AggregateReporter: modeReport.Reporter,
+		ReporterPower:     modeReport.Power,
+		Reporters:         modeReporters,
+	}
+
 	store := k.AggregateStore(ctx)
-	store.Set(
-		[]byte(fmt.Sprintf("%s-%d", modeReport.QueryId, ctx.BlockHeight())),
-		k.cdc.MustMarshal(&modeReport))
+	key := []byte(fmt.Sprintf("%s-%d", modeReport.QueryId, ctx.BlockHeight()))
+	store.Set(key, k.cdc.MustMarshal(&aggregateReport))
+
 }
