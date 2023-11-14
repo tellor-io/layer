@@ -312,7 +312,7 @@ Right[F], Left[I6], Left[I10], Left[I15], Right[I20]
                         _merkleInnerHash(
                             _merkleLeafHash( // [E]
                                 abi.encodePacked(
-                                        hex"066c7571636861696e20", // oracle prefix (uint8(6) + "oracle" + uint8(32)) NOTE: Switch to Tellor Layer oracle prefix
+                                        hex"086f7261636c6520", // oracle prefix (uint8(6) + "oracle" + uint8(32)) NOTE: Switch to Tellor Layer oracle prefix
                                         sha256(                    // using (uint8(6) + "luqchain" + uint8(32)) /// oracle: 0x6f7261636c65 ; luqchain: 0x6c7571636861696e
                                             abi.encodePacked(
                                                 _store.oracleIAVLStateHash
@@ -330,11 +330,23 @@ Right[F], Left[I6], Left[I10], Left[I15], Right[I20]
         return _appHash;
     }
 
+    function getAppHash3(MultistoreData memory _store) public pure returns(bytes32) {
+        // oracle prefix (uint8(6) + "oracle" + uint8(32)) NOTE: Switch to Tellor Layer oracle prefix
+        // using (uint8(8) + "oracle" + uint8(32)) /// oracle: 0x6f7261636c65
+        bytes32 _ELeaf = _merkleLeafHash(abi.encodePacked(hex"066f7261636c6520", sha256(abi.encodePacked(_store.oracleIAVLStateHash))));
+        bytes32 _I7 = _merkleInnerHash(_ELeaf, _store.paramsStoreMerkleHash);
+        bytes32 _I11 = _merkleInnerHash(_store.slashingToStakingStoresMerkleHash, _I7);
+        bytes32 _I16 = _merkleInnerHash(_store.govToMintStoresMerkleHash, _I11); 
+        bytes32 _I19 = _merkleInnerHash(_store.authToFeegrantStoresMerkleHash, _I16);
+        bytes32 _appHash = _merkleInnerHash(_I19, _store.transferToUpgradeStoresMerkleHash);
+        return _appHash;
+    }
+
     function getAppHash(MultistoreData memory _store) public pure returns(bytes32) {
         // oracle prefix (uint8(6) + "oracle" + uint8(32)) NOTE: Switch to Tellor Layer oracle prefix
-        // using (uint8(8) + "luqchain" + uint8(32)) /// oracle: 0x6f7261636c65 ; luqchain: 0x6c7571636861696e
-        bytes32 _ELeaf = _merkleLeafHash(abi.encodePacked(hex"086f7261636c6520", sha256(abi.encodePacked(_store.oracleIAVLStateHash))));
-        bytes32 _I7 = _merkleInnerHash(_ELeaf, _store.paramsStoreMerkleHash);
+        // using (uint8(8) + "oracle" + uint8(32)) /// oracle: 0x6f7261636c65
+        bytes32 _FLeaf = _merkleLeafHash(abi.encodePacked(hex"066f7261636c6520", sha256(abi.encodePacked(_store.oracleIAVLStateHash))));
+        bytes32 _I7 = _merkleInnerHash(_store.paramsStoreMerkleHash, _FLeaf);
         bytes32 _I11 = _merkleInnerHash(_store.slashingToStakingStoresMerkleHash, _I7);
         bytes32 _I16 = _merkleInnerHash(_store.govToMintStoresMerkleHash, _I11); 
         bytes32 _I19 = _merkleInnerHash(_store.authToFeegrantStoresMerkleHash, _I16);

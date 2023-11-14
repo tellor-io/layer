@@ -125,11 +125,17 @@ describe("LayerLightClientBridge - Function Tests", function () {
     })
 
     it.only("test verifyBlockHeader", async function() {
-        multistoreData = await h.getMultistore()
+        multistoreData = await h.getMultistore(startHeight)
         merklePartsData = await h.getBlockHeaderMerkleParts(startHeight)
         commonPartsData = await h.getCommonEncodedVoteParts(startHeight)
         tmSigData = await h.getTmSig(startHeight)
         result = await bridge.verifyBlockHeader(multistoreData, merklePartsData, commonPartsData, tmSigData)
+
+        console.log("multistore: ", multistoreData)
+        console.log("merkleParts: ", merklePartsData)
+        console.log("commonParts: ", commonPartsData)
+        console.log("tmSig: ", tmSigData)
+
         assert.equal(result, true)
     })
     

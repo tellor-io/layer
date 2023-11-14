@@ -48,7 +48,9 @@ message QueryBlockheaderMerkleResponse {
 message QueryBlockheaderMerkleEVMResponse {
     BlockHeaderMerkleEvm blockheaderMerkleEvm = 1 [(gogoproto.nullable) = false];
 }
-message QueryMultistoreRequest {}
+message QueryMultistoreRequest {
+    int64 height = 1;
+}
 message QueryMultistoreResponse {
     MutiStoreTreeFields MutiStoreTree = 1 [(gogoproto.nullable) = false];
     repeated IAVLMerklePathEvm iavl = 2 [(gogoproto.nullable) = false];

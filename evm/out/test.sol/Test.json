@@ -1306,52 +1306,52 @@
         3709
       ],
       "StdChains": [
-        10982
+        10995
       ],
       "StdCheats": [
-        13835
+        13848
       ],
       "StdInvariant": [
         4034
       ],
       "StdStorage": [
-        14443
+        14456
       ],
       "StdStyle": [
-        17293
+        17306
       ],
       "StdUtils": [
-        18141
+        18154
       ],
       "Test": [
         4085
       ],
       "TestBase": [
-        10235
+        10248
       ],
       "Vm": [
-        19834
+        19847
       ],
       "console": [
-        27898
+        27911
       ],
       "console2": [
-        36023
+        36036
       ],
       "safeconsole": [
-        49098
+        49111
       ],
       "stdError": [
         3775
       ],
       "stdJson": [
-        14411
+        14424
       ],
       "stdMath": [
-        10169
+        10182
       ],
       "stdStorage": [
-        16082
+        16095
       ]
     },
     "nodeType": "SourceUnit",
@@ -1391,7 +1391,7 @@
         "file": "./console.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 27899,
+        "sourceUnit": 27912,
         "symbolAliases": [
           {
             "foreign": {
@@ -1416,7 +1416,7 @@
         "file": "./console2.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 36024,
+        "sourceUnit": 36037,
         "symbolAliases": [
           {
             "foreign": {
@@ -1441,7 +1441,7 @@
         "file": "./safeconsole.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 49099,
+        "sourceUnit": 49112,
         "symbolAliases": [
           {
             "foreign": {
@@ -1491,7 +1491,7 @@
         "file": "./StdChains.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 10983,
+        "sourceUnit": 10996,
         "symbolAliases": [
           {
             "foreign": {
@@ -1516,7 +1516,7 @@
         "file": "./StdCheats.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 13836,
+        "sourceUnit": 13849,
         "symbolAliases": [
           {
             "foreign": {
@@ -1591,7 +1591,7 @@
         "file": "./StdJson.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 14412,
+        "sourceUnit": 14425,
         "symbolAliases": [
           {
             "foreign": {
@@ -1616,7 +1616,7 @@
         "file": "./StdMath.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 10170,
+        "sourceUnit": 10183,
         "symbolAliases": [
           {
             "foreign": {
@@ -1641,7 +1641,7 @@
         "file": "./StdStorage.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 16083,
+        "sourceUnit": 16096,
         "symbolAliases": [
           {
             "foreign": {
@@ -1677,7 +1677,7 @@
         "file": "./StdStyle.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 17294,
+        "sourceUnit": 17307,
         "symbolAliases": [
           {
             "foreign": {
@@ -1702,7 +1702,7 @@
         "file": "./StdUtils.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 18142,
+        "sourceUnit": 18155,
         "symbolAliases": [
           {
             "foreign": {
@@ -1727,7 +1727,7 @@
         "file": "./Vm.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 19835,
+        "sourceUnit": 19848,
         "symbolAliases": [
           {
             "foreign": {
@@ -1752,7 +1752,7 @@
         "file": "./Base.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 4086,
-        "sourceUnit": 10245,
+        "sourceUnit": 10258,
         "symbolAliases": [
           {
             "foreign": {
@@ -1805,7 +1805,7 @@
               "id": 4071,
               "name": "TestBase",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 10235,
+              "referencedDeclaration": 10248,
               "src": "901:8:12"
             },
             "id": 4072,
@@ -1841,7 +1841,7 @@
               "id": 4077,
               "name": "StdChains",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 10982,
+              "referencedDeclaration": 10995,
               "src": "934:9:12"
             },
             "id": 4078,
@@ -1853,7 +1853,7 @@
               "id": 4079,
               "name": "StdCheats",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 13835,
+              "referencedDeclaration": 13848,
               "src": "945:9:12"
             },
             "id": 4080,
@@ -1877,7 +1877,7 @@
               "id": 4083,
               "name": "StdUtils",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 18141,
+              "referencedDeclaration": 18154,
               "src": "970:8:12"
             },
             "id": 4084,
@@ -1889,26 +1889,26 @@
           2291,
           3709,
           4034,
-          10232,
-          10235,
-          10982,
-          13042,
-          13835,
-          18141
+          10245,
+          10248,
+          10995,
+          13055,
+          13848,
+          18154
         ],
         "contractKind": "contract",
         "fullyImplemented": true,
         "linearizedBaseContracts": [
           4085,
-          18141,
+          18154,
           4034,
-          13835,
-          13042,
-          10982,
+          13848,
+          13055,
+          10995,
           3709,
           2291,
-          10235,
-          10232
+          10248,
+          10245
         ],
         "name": "Test",
         "nameLocation": "893:4:12",

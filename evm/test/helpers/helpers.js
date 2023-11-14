@@ -38,8 +38,8 @@ getValidatorSet = async (height) => {
     }
 }
 
-getMultistore = async () => {
-    url = "http://localhost:1317/layer/bridge/multistore"
+getMultistore = async (height) => {
+    url = "http://localhost:1317/layer/bridge/multistore?height=" + height
     try {
         const response = await axios.get(url)
         multistoreResp = response.data.MutiStoreTree
@@ -125,7 +125,7 @@ getMultistore = async () => {
 // }
 
 getBlockHeaderMerkleParts = async (height) => {
-  url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?" + height
+  url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?height=" + height
   try {
       const response = await axios.get(url)
       headerParts = response.data.blockheaderMerkleEvm
@@ -146,7 +146,7 @@ getBlockHeaderMerkleParts = async (height) => {
 } 
 
 getCommonEncodedVoteParts = async (height) => {
-  url = "http://localhost:1317/layer/bridge/tmsig?" + height
+  url = "http://localhost:1317/layer/bridge/tmsig?height=" + height
   try {
       const response = await axios.get(url)
       common = response.data.common
@@ -164,7 +164,7 @@ getCommonEncodedVoteParts = async (height) => {
 }
 
 getTmSig = async (height) => {
-  url = "http://localhost:1317/layer/bridge/tmsig?" + height
+  url = "http://localhost:1317/layer/bridge/tmsig?height=" + height
   try {
       const response = await axios.get(url)
       tmSig = response.data.tmSig

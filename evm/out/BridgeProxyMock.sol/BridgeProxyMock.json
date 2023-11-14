@@ -202,20 +202,20 @@
   },
   "ast": {
     "absolutePath": "src/testing/BridgeProxyMock.sol",
-    "id": 8278,
+    "id": 8291,
     "exportedSymbols": {
       "BridgeProxyMock": [
-        8277
+        8290
       ],
       "IBridgeProxy": [
-        8226
+        8239
       ]
     },
     "nodeType": "SourceUnit",
     "src": "32:585:22",
     "nodes": [
       {
-        "id": 8228,
+        "id": 8241,
         "nodeType": "PragmaDirective",
         "src": "32:22:22",
         "nodes": [],
@@ -226,19 +226,19 @@
         ]
       },
       {
-        "id": 8230,
+        "id": 8243,
         "nodeType": "ImportDirective",
         "src": "56:62:22",
         "nodes": [],
         "absolutePath": "src/interfaces/IBridgeProxy.sol",
         "file": "../interfaces/IBridgeProxy.sol",
         "nameLocation": "-1:-1:-1",
-        "scope": 8278,
-        "sourceUnit": 8227,
+        "scope": 8291,
+        "sourceUnit": 8240,
         "symbolAliases": [
           {
             "foreign": {
-              "id": 8229,
+              "id": 8242,
               "name": "IBridgeProxy",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
@@ -251,12 +251,12 @@
         "unitAlias": ""
       },
       {
-        "id": 8277,
+        "id": 8290,
         "nodeType": "ContractDefinition",
         "src": "120:495:22",
         "nodes": [
           {
-            "id": 8234,
+            "id": 8247,
             "nodeType": "VariableDeclaration",
             "src": "167:29:22",
             "nodes": [],
@@ -265,7 +265,7 @@
             "mutability": "mutable",
             "name": "implementation",
             "nameLocation": "182:14:22",
-            "scope": 8277,
+            "scope": 8290,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -273,7 +273,7 @@
               "typeString": "address"
             },
             "typeName": {
-              "id": 8233,
+              "id": 8246,
               "name": "address",
               "nodeType": "ElementaryTypeName",
               "src": "167:7:22",
@@ -286,12 +286,12 @@
             "visibility": "public"
           },
           {
-            "id": 8237,
+            "id": 8250,
             "nodeType": "VariableDeclaration",
             "src": "202:27:22",
             "nodes": [],
             "baseFunctions": [
-              8214
+              8227
             ],
             "constant": false,
             "functionSelector": "5c975abb",
@@ -299,12 +299,12 @@
             "name": "paused",
             "nameLocation": "223:6:22",
             "overrides": {
-              "id": 8236,
+              "id": 8249,
               "nodeType": "OverrideSpecifier",
               "overrides": [],
               "src": "214:8:22"
             },
-            "scope": 8277,
+            "scope": 8290,
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -312,7 +312,7 @@
               "typeString": "bool"
             },
             "typeName": {
-              "id": 8235,
+              "id": 8248,
               "name": "bool",
               "nodeType": "ElementaryTypeName",
               "src": "202:4:22",
@@ -324,29 +324,29 @@
             "visibility": "public"
           },
           {
-            "id": 8247,
+            "id": 8260,
             "nodeType": "FunctionDefinition",
             "src": "236:86:22",
             "nodes": [],
             "body": {
-              "id": 8246,
+              "id": 8259,
               "nodeType": "Block",
               "src": "273:49:22",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 8244,
+                    "id": 8257,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 8242,
+                      "id": 8255,
                       "name": "implementation",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8234,
+                      "referencedDeclaration": 8247,
                       "src": "283:14:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -356,11 +356,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 8243,
+                      "id": 8256,
                       "name": "_implementation",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8239,
+                      "referencedDeclaration": 8252,
                       "src": "300:15:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -373,7 +373,7 @@
                       "typeString": "address"
                     }
                   },
-                  "id": 8245,
+                  "id": 8258,
                   "nodeType": "ExpressionStatement",
                   "src": "283:32:22"
                 }
@@ -385,17 +385,17 @@
             "name": "",
             "nameLocation": "-1:-1:-1",
             "parameters": {
-              "id": 8240,
+              "id": 8253,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8239,
+                  "id": 8252,
                   "mutability": "mutable",
                   "name": "_implementation",
                   "nameLocation": "256:15:22",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8247,
+                  "scope": 8260,
                   "src": "248:23:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -404,7 +404,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8238,
+                    "id": 8251,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "248:7:22",
@@ -420,40 +420,40 @@
               "src": "247:25:22"
             },
             "returnParameters": {
-              "id": 8241,
+              "id": 8254,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "273:0:22"
             },
-            "scope": 8277,
+            "scope": 8290,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "public"
           },
           {
-            "id": 8258,
+            "id": 8271,
             "nodeType": "FunctionDefinition",
             "src": "328:128:22",
             "nodes": [],
             "body": {
-              "id": 8257,
+              "id": 8270,
               "nodeType": "Block",
               "src": "404:52:22",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 8255,
+                    "id": 8268,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 8253,
+                      "id": 8266,
                       "name": "implementation",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8234,
+                      "referencedDeclaration": 8247,
                       "src": "414:14:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -463,11 +463,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 8254,
+                      "id": 8267,
                       "name": "_newImplementation",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8249,
+                      "referencedDeclaration": 8262,
                       "src": "431:18:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -480,14 +480,14 @@
                       "typeString": "address"
                     }
                   },
-                  "id": 8256,
+                  "id": 8269,
                   "nodeType": "ExpressionStatement",
                   "src": "414:35:22"
                 }
               ]
             },
             "baseFunctions": [
-              8219
+              8232
             ],
             "functionSelector": "025b22bc",
             "implemented": true,
@@ -496,23 +496,23 @@
             "name": "updateImplementation",
             "nameLocation": "337:20:22",
             "overrides": {
-              "id": 8251,
+              "id": 8264,
               "nodeType": "OverrideSpecifier",
               "overrides": [],
               "src": "395:8:22"
             },
             "parameters": {
-              "id": 8250,
+              "id": 8263,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 8249,
+                  "id": 8262,
                   "mutability": "mutable",
                   "name": "_newImplementation",
                   "nameLocation": "366:18:22",
                   "nodeType": "VariableDeclaration",
-                  "scope": 8258,
+                  "scope": 8271,
                   "src": "358:26:22",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -521,7 +521,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 8248,
+                    "id": 8261,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "358:7:22",
@@ -537,40 +537,40 @@
               "src": "357:28:22"
             },
             "returnParameters": {
-              "id": 8252,
+              "id": 8265,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "404:0:22"
             },
-            "scope": 8277,
+            "scope": 8290,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 8267,
+            "id": 8280,
             "nodeType": "FunctionDefinition",
             "src": "462:71:22",
             "nodes": [],
             "body": {
-              "id": 8266,
+              "id": 8279,
               "nodeType": "Block",
               "src": "503:30:22",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 8264,
+                    "id": 8277,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 8262,
+                      "id": 8275,
                       "name": "paused",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8237,
+                      "referencedDeclaration": 8250,
                       "src": "513:6:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_bool",
@@ -581,7 +581,7 @@
                     "operator": "=",
                     "rightHandSide": {
                       "hexValue": "74727565",
-                      "id": 8263,
+                      "id": 8276,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -601,14 +601,14 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 8265,
+                  "id": 8278,
                   "nodeType": "ExpressionStatement",
                   "src": "513:13:22"
                 }
               ]
             },
             "baseFunctions": [
-              8222
+              8235
             ],
             "functionSelector": "7dd0480f",
             "implemented": true,
@@ -617,52 +617,52 @@
             "name": "pauseBridge",
             "nameLocation": "471:11:22",
             "overrides": {
-              "id": 8260,
+              "id": 8273,
               "nodeType": "OverrideSpecifier",
               "overrides": [],
               "src": "494:8:22"
             },
             "parameters": {
-              "id": 8259,
+              "id": 8272,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "482:2:22"
             },
             "returnParameters": {
-              "id": 8261,
+              "id": 8274,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "503:0:22"
             },
-            "scope": 8277,
+            "scope": 8290,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
           },
           {
-            "id": 8276,
+            "id": 8289,
             "nodeType": "FunctionDefinition",
             "src": "539:74:22",
             "nodes": [],
             "body": {
-              "id": 8275,
+              "id": 8288,
               "nodeType": "Block",
               "src": "582:31:22",
               "nodes": [],
               "statements": [
                 {
                   "expression": {
-                    "id": 8273,
+                    "id": 8286,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 8271,
+                      "id": 8284,
                       "name": "paused",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 8237,
+                      "referencedDeclaration": 8250,
                       "src": "592:6:22",
                       "typeDescriptions": {
                         "typeIdentifier": "t_bool",
@@ -673,7 +673,7 @@
                     "operator": "=",
                     "rightHandSide": {
                       "hexValue": "66616c7365",
-                      "id": 8272,
+                      "id": 8285,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": true,
@@ -693,14 +693,14 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 8274,
+                  "id": 8287,
                   "nodeType": "ExpressionStatement",
                   "src": "592:14:22"
                 }
               ]
             },
             "baseFunctions": [
-              8225
+              8238
             ],
             "functionSelector": "a82f143c",
             "implemented": true,
@@ -709,24 +709,24 @@
             "name": "unpauseBridge",
             "nameLocation": "548:13:22",
             "overrides": {
-              "id": 8269,
+              "id": 8282,
               "nodeType": "OverrideSpecifier",
               "overrides": [],
               "src": "573:8:22"
             },
             "parameters": {
-              "id": 8268,
+              "id": 8281,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "561:2:22"
             },
             "returnParameters": {
-              "id": 8270,
+              "id": 8283,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "582:0:22"
             },
-            "scope": 8277,
+            "scope": 8290,
             "stateMutability": "nonpayable",
             "virtual": false,
             "visibility": "external"
@@ -736,29 +736,29 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 8231,
+              "id": 8244,
               "name": "IBridgeProxy",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 8226,
+              "referencedDeclaration": 8239,
               "src": "148:12:22"
             },
-            "id": 8232,
+            "id": 8245,
             "nodeType": "InheritanceSpecifier",
             "src": "148:12:22"
           }
         ],
         "contractDependencies": [
-          8226
+          8239
         ],
         "contractKind": "contract",
         "fullyImplemented": true,
         "linearizedBaseContracts": [
-          8277,
-          8226
+          8290,
+          8239
         ],
         "name": "BridgeProxyMock",
         "nameLocation": "129:15:22",
-        "scope": 8278
+        "scope": 8291
       }
     ],
     "license": "MIT"

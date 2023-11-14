@@ -28,11 +28,15 @@ func hashQdata(queryData string) ([]byte, error) {
 }
 
 func (s bridgeServer) MultistoreTree(ctx context.Context, req *QueryMultistoreRequest) (*QueryMultistoreResponse, error) {
+	var h *int64
+	if req.Height != 0 {
+		h = &req.Height
+	}
 	resp, err := s.clientCtx.Client.ABCIQueryWithOptions(
 		context.Background(),
 		"/store/oracle/key",
 		bytes.HexBytes(types.KeyPrefix(types.ReportsKey)),
-		cometclient.ABCIQueryOptions{Prove: true},
+		cometclient.ABCIQueryOptions{Height: *h, Prove: true},
 	)
 	if err != nil {
 		return nil, err
