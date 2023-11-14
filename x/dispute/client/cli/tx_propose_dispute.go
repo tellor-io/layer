@@ -17,16 +17,7 @@ import (
 
 var _ = strconv.Itoa(0)
 
-const (
-	FlagAddressValidator = "validator-address"
-	FlagPayFromBond      = "pay-from-bond"
-)
-
-func FlagSetValidatorAddress() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagAddressValidator, "", "The validator address where the delegation is to pool stake from.")
-	return fs
-}
+const FlagPayFromBond = "pay-from-bond"
 
 func FlagSetPayFromBond() *flag.FlagSet {
 	fs := flag.NewFlagSet("", flag.ContinueOnError)
@@ -76,7 +67,6 @@ func CmdProposeDispute() *cobra.Command {
 		},
 	}
 	cmd.Flags().AddFlagSet(FlagSetPayFromBond())
-	cmd.Flags().AddFlagSet(FlagSetValidatorAddress())
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

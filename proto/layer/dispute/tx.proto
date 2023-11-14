@@ -29,7 +29,6 @@ message MsgAddFeeToDispute {
   uint64                   disputeId        = 2;
   cosmos.base.v1beta1.Coin amount           = 3 [(gogoproto.nullable) = false];
   bool                     payFromBond      = 4;
-  string                   validatorAddress = 5;
 }
 
 message MsgAddFeeToDisputeResponse {}
