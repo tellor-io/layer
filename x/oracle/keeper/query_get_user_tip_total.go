@@ -16,11 +16,19 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	tipper := sdk.MustAccAddressFromBech32(req.Tipper)
+
+	var totalTips types.UserTipTotal
 	store := k.TipStore(ctx)
+	if req.QueryData == "" {
+		totalTips = k.GetUserTips(ctx, store, tipper)
+		return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
+	}
 	if rk.Has0xPrefix(req.QueryData) {
 		req.QueryData = req.QueryData[2:]
 	}
-	totalTips := k.GetUserTips(ctx, store, req.Tipper, req.QueryData)
+	totalTips = k.GetUserQueryTips(ctx, store, tipper.String(), req.QueryData)
 
 	return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 }

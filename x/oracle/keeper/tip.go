@@ -26,6 +26,7 @@ func (k Keeper) SetTip(ctx sdk.Context, tipper sdk.AccAddress, queryData string,
 	tipStore := k.TipStore(ctx)
 	k.SetQueryTips(ctx, tipStore, queryData, tip)
 	k.SetTipperTipsForQuery(ctx, tipStore, tipper.String(), queryData, tip)
+	k.SetTipperTotalTips(ctx, tipStore, tipper, tip)
 }
 
 func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, queryData string, tip sdk.Coin) {
@@ -36,10 +37,16 @@ func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, query
 }
 
 func (k Keeper) SetTipperTipsForQuery(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string, tip sdk.Coin) {
-	tips := k.GetUserTips(ctx, tipStore, tipper, queryData)
+	tips := k.GetUserQueryTips(ctx, tipStore, tipper, queryData)
 	tips.Total = tips.Total.Add(tip)
 	tipStore.Set(k.TipperKey(tipper, queryData), k.cdc.MustMarshal(&tips))
 
+}
+
+func (k Keeper) SetTipperTotalTips(ctx sdk.Context, tipStore sdk.KVStore, tipper sdk.AccAddress, tip sdk.Coin) {
+	tips := k.GetUserTips(ctx, tipStore, tipper)
+	tips.Total = tips.Total.Add(tip)
+	tipStore.Set(tipper, k.cdc.MustMarshal(&tips))
 }
 
 func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData string) (types.Tips, []byte) {
@@ -62,7 +69,20 @@ func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData st
 	return tips, queryId
 }
 
-func (k Keeper) GetUserTips(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string) (tips types.UserTipTotal) {
+func (k Keeper) GetUserTips(ctx sdk.Context, tipStore sdk.KVStore, tipper sdk.AccAddress) types.UserTipTotal {
+	bz := tipStore.Get(tipper)
+	if bz == nil {
+		return types.UserTipTotal{
+			Address: tipper.String(),
+			Total:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+		}
+	}
+	var tips types.UserTipTotal
+	k.cdc.Unmarshal(bz, &tips)
+	return tips
+}
+
+func (k Keeper) GetUserQueryTips(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string) (tips types.UserTipTotal) {
 	bz := tipStore.Get(k.TipperKey(tipper, queryData))
 	if bz == nil {
 		return types.UserTipTotal{
