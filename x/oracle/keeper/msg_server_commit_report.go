@@ -5,10 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-	registryKeeper "github.com/tellor-io/layer/x/registry/keeper"
+	rk "github.com/tellor-io/layer/x/registry/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -16,19 +15,16 @@ import (
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	delAddr, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid sender address: %v", err))
-	}
+	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
 
 	// get delegation info
-	validator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(delAddr))
+	validator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(reporter))
 	// check if msg sender is validator
-	if !delAddr.Equals(validator.GetOperator()) {
+	if !reporter.Equals(validator.GetOperator()) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
 	}
 
-	if registryKeeper.Has0xPrefix(msg.QueryData) {
+	if rk.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
 	}
 	queryData, err := hex.DecodeString(msg.QueryData)
@@ -36,7 +32,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
 	queryId := HashQueryData(queryData)
-	report := types.CommitValue{
+	report := types.CommitReport{
 		Report: &types.Commit{
 			Creator:   msg.Creator,
 			QueryId:   queryId,
@@ -44,8 +40,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		},
 		Block: ctx.BlockHeight(),
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CommitReportKey))
-	store.Set(append([]byte(msg.Creator), queryId...), k.cdc.MustMarshal(&report))
+	k.SetCommitReport(ctx, reporter, &report)
 
 	return &types.MsgCommitReportResponse{}, nil
 }

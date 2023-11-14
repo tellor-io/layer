@@ -7,4 +7,5 @@ message DataSpec {
   
   string documentHash = 1; 
   string valueType = 2; 
+  string aggregationMethod = 3;
 }
