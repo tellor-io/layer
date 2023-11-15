@@ -8,7 +8,7 @@ import (
 )
 
 func TestQueryGetDataSpec(t *testing.T) {
-	ms, ctx, k := setupMsgServer(t)
+	ms, ctx, k, _ := setupMsgServer(t)
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
