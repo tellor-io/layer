@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) TestCommitValue() {
 	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
 	require.Nil(err)
 	_hexxy, _ := hex.DecodeString(queryData)
-	commitValue, err := s.oracleKeeper.GetSignature(s.ctx, Addr.String(), keeper.HashQueryData(_hexxy))
+	commitValue, err := s.oracleKeeper.GetSignature(s.ctx, Addr, keeper.HashQueryData(_hexxy))
 
 	require.Equal(true, s.oracleKeeper.VerifySignature(s.ctx, Addr.String(), value, commitValue.Report.Signature))
 	require.Equal(commitValue.Report.Creator, Addr.String())

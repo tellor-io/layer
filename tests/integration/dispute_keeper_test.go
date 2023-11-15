@@ -76,19 +76,18 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	require.Equal(v.Voters, []string{Addr.String()})
 }
 
-func (suite *IntegrationTestSuite) TestProposeDisputeFromBond() {
-	_, msgServer := suite.disputeKeeper()
-	require := suite.Require()
-	ctx := suite.ctx
+func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
+	_, msgServer := s.disputeKeeper()
+	require := s.Require()
+	ctx := s.ctx
 	// k := suite.disputekeeper
-	report, valAddr := suite.microReport()
-	val, found := suite.stakingKeeper.GetValidator(ctx, valAddr)
+	report, valAddr := s.microReport()
+	val, found := s.stakingKeeper.GetValidator(ctx, valAddr)
 	require.True(found)
 	bondedTokensBefore := val.GetBondedTokens()
 	onePercent := bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))
-
 	disputeFee := sdk.NewCoin("stake", onePercent)
-	// slashAmount := disputeFee.Amount
+	slashAmount := disputeFee.Amount
 	_, err := msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
 		Creator:         sdk.AccAddress(valAddr).String(),
 		Report:          &report,
@@ -98,16 +97,27 @@ func (suite *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	})
 	require.NoError(err)
 
-	val, _ = suite.stakingKeeper.GetValidator(ctx, valAddr)
-	// require.Equal(val.GetBondedTokens(), bondedTokensBefore.Sub(slashAmount).Sub(disputeFee.Amount))
+	val, _ = s.stakingKeeper.GetValidator(ctx, valAddr)
+	require.Equal(val.GetBondedTokens(), bondedTokensBefore.Sub(slashAmount).Sub(disputeFee.Amount))
 	require.True(val.IsJailed())
 	// jail time for a warning is zero seconds so unjailing should be immediate
 	// TODO: have to unjail through the staking keeper, if no self delegation then validator can't unjail
-	suite.mintTokens(sdk.AccAddress(valAddr))
-	_, err = suite.stakingKeeper.Delegate(ctx, sdk.AccAddress(valAddr), sdk.NewInt(10), stakingtypes.Unbonded, val, true)
+	s.mintTokens(sdk.AccAddress(valAddr))
+	_, err = s.stakingKeeper.Delegate(ctx, sdk.AccAddress(valAddr), sdk.NewInt(10), stakingtypes.Unbonded, val, true)
 	require.NoError(err)
-	err = suite.slashingKeeper.Unjail(ctx, valAddr)
+	err = s.slashingKeeper.Unjail(ctx, valAddr)
 	require.NoError(err)
-	val, _ = suite.stakingKeeper.GetValidator(ctx, valAddr)
+	val, _ = s.stakingKeeper.GetValidator(ctx, valAddr)
 	require.False(val.IsJailed())
 }
+
+// func (suite *IntegrationTestSuite) proposeMsg(addr string, feeAmount math.Int, fromBond, slash) {
+// 	ctx := suite.ctx
+// 	require := suite.Require()
+// 	report, valAddr := suite.microReport()
+// 	_, err := suite.msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
+// 		Creator: 	   addr,
+// 		Report:        &report,
+// 		Fee:           sdk.NewCoin("stake", feeAmount),
+
+// }

@@ -9,7 +9,10 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 message MicroReport {
   string reporter = 1;
   int64 power = 2;
-  string queryId = 3; 
-  string value = 4; 
-  google.protobuf.Timestamp  timestamp = 5 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
+  string queryType = 3;
+  string queryId = 4; 
+  string aggregateMethod = 5;
+  string value = 6; 
+  int64 blockNumber = 7;
+  google.protobuf.Timestamp  timestamp = 8 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
 }

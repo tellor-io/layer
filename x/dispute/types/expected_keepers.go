@@ -18,6 +18,9 @@ type SlashingKeeper interface {
 
 type StakingKeeper interface {
 	// Methods imported from staking should be defined here
+	AddValidatorTokensAndShares(ctx sdk.Context, validator stakingtypes.Validator,
+		tokensToAdd math.Int,
+	) (valOut stakingtypes.Validator, addedShares sdk.Dec)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool,
 	) (newShares sdk.Dec, err error)
 	DeleteValidatorByPowerIndex(ctx sdk.Context, validator stakingtypes.Validator)
