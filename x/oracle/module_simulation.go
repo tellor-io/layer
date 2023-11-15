@@ -31,6 +31,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCommitReport int = 100
 
+	opWeightMsgTip = "op_weight_msg_tip"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgTip int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -81,6 +85,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		oraclesimulation.SimulateMsgCommitReport(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgTip int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgTip, &weightMsgTip, nil,
+		func(_ *rand.Rand) {
+			weightMsgTip = defaultWeightMsgTip
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgTip,
+		oraclesimulation.SimulateMsgTip(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -102,6 +117,14 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgCommitReport,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				oraclesimulation.SimulateMsgCommitReport(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgTip,
+			defaultWeightMsgTip,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				oraclesimulation.SimulateMsgTip(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

@@ -10,6 +10,9 @@ const (
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
 
+	// TipStoreKey defines the tip store key
+	TipStoreKey = "tipStore"
+
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_oracle"
 

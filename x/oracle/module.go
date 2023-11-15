@@ -7,16 +7,20 @@ import (
 
 	// this line is used by starport scaffolding # 1
 
+	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/depinject"
+	abci "github.com/cometbft/cometbft/abci/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	"github.com/tellor-io/layer/x/oracle/client/cli"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -35,6 +39,12 @@ var (
 type AppModuleBasic struct {
 	cdc codec.BinaryCodec
 }
+
+// IsOnePerModuleType implements the depinject.OnePerModuleType interface.
+func (AppModuleBasic) IsOnePerModuleType() {}
+
+// IsAppModule implements the appmodule.AppModule interface.
+func (AppModuleBasic) IsAppModule() {}
 
 func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
@@ -146,4 +156,57 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func AppWiringSetup() {
+	appmodule.Register(&oraclemodulev1.Module{},
+		appmodule.Provide(ProvideModule))
+
+}
+
+type OracleInputs struct {
+	depinject.In
+
+	KvStoreKey  *storetypes.KVStoreKey
+	MemStoreKey *storetypes.MemoryStoreKey
+	Cdc         codec.Codec
+	Config      *oraclemodulev1.Module
+
+	AccountKeeper  types.AccountKeeper
+	BankKeeper     types.BankKeeper
+	StakingKeeper  types.StakingKeeper
+	RegistryKeeper types.RegistryKeeper
+}
+
+type OracleOutputs struct {
+	depinject.Out
+
+	OracleKeeper keeper.Keeper
+	Module       appmodule.AppModule
+}
+
+func ProvideModule(in OracleInputs) OracleOutputs {
+
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.KvStoreKey,
+		in.MemStoreKey,
+		paramtypes.Subspace{},
+		in.AccountKeeper,
+		in.BankKeeper,
+		in.StakingKeeper,
+		in.RegistryKeeper,
+	)
+	m := NewAppModule(
+		in.Cdc,
+		*k,
+		in.AccountKeeper,
+		in.BankKeeper,
+	)
+
+	return OracleOutputs{OracleKeeper: *k, Module: m}
 }

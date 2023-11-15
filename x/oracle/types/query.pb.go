@@ -341,6 +341,190 @@ func (m *QueryGetReportsbyReporterQidRequest) GetQueryId() string {
 	return ""
 }
 
+type QueryGetCurrentTipRequest struct {
+	QueryData string `protobuf:"bytes,1,opt,name=queryData,proto3" json:"queryData,omitempty"`
+}
+
+func (m *QueryGetCurrentTipRequest) Reset()         { *m = QueryGetCurrentTipRequest{} }
+func (m *QueryGetCurrentTipRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCurrentTipRequest) ProtoMessage()    {}
+func (*QueryGetCurrentTipRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{7}
+}
+func (m *QueryGetCurrentTipRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCurrentTipRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCurrentTipRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCurrentTipRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCurrentTipRequest.Merge(m, src)
+}
+func (m *QueryGetCurrentTipRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCurrentTipRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCurrentTipRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCurrentTipRequest proto.InternalMessageInfo
+
+func (m *QueryGetCurrentTipRequest) GetQueryData() string {
+	if m != nil {
+		return m.QueryData
+	}
+	return ""
+}
+
+type QueryGetCurrentTipResponse struct {
+	Tips *Tips `protobuf:"bytes,1,opt,name=tips,proto3" json:"tips,omitempty"`
+}
+
+func (m *QueryGetCurrentTipResponse) Reset()         { *m = QueryGetCurrentTipResponse{} }
+func (m *QueryGetCurrentTipResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCurrentTipResponse) ProtoMessage()    {}
+func (*QueryGetCurrentTipResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{8}
+}
+func (m *QueryGetCurrentTipResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetCurrentTipResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetCurrentTipResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetCurrentTipResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCurrentTipResponse.Merge(m, src)
+}
+func (m *QueryGetCurrentTipResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetCurrentTipResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCurrentTipResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetCurrentTipResponse proto.InternalMessageInfo
+
+func (m *QueryGetCurrentTipResponse) GetTips() *Tips {
+	if m != nil {
+		return m.Tips
+	}
+	return nil
+}
+
+type QueryGetUserTipTotalRequest struct {
+	Tipper    string `protobuf:"bytes,1,opt,name=tipper,proto3" json:"tipper,omitempty"`
+	QueryData string `protobuf:"bytes,2,opt,name=queryData,proto3" json:"queryData,omitempty"`
+}
+
+func (m *QueryGetUserTipTotalRequest) Reset()         { *m = QueryGetUserTipTotalRequest{} }
+func (m *QueryGetUserTipTotalRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetUserTipTotalRequest) ProtoMessage()    {}
+func (*QueryGetUserTipTotalRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{9}
+}
+func (m *QueryGetUserTipTotalRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetUserTipTotalRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetUserTipTotalRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetUserTipTotalRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetUserTipTotalRequest.Merge(m, src)
+}
+func (m *QueryGetUserTipTotalRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetUserTipTotalRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetUserTipTotalRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetUserTipTotalRequest proto.InternalMessageInfo
+
+func (m *QueryGetUserTipTotalRequest) GetTipper() string {
+	if m != nil {
+		return m.Tipper
+	}
+	return ""
+}
+
+func (m *QueryGetUserTipTotalRequest) GetQueryData() string {
+	if m != nil {
+		return m.QueryData
+	}
+	return ""
+}
+
+type QueryGetUserTipTotalResponse struct {
+	TotalTips *UserTipTotal `protobuf:"bytes,1,opt,name=totalTips,proto3" json:"totalTips,omitempty"`
+}
+
+func (m *QueryGetUserTipTotalResponse) Reset()         { *m = QueryGetUserTipTotalResponse{} }
+func (m *QueryGetUserTipTotalResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetUserTipTotalResponse) ProtoMessage()    {}
+func (*QueryGetUserTipTotalResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{10}
+}
+func (m *QueryGetUserTipTotalResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetUserTipTotalResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetUserTipTotalResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetUserTipTotalResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetUserTipTotalResponse.Merge(m, src)
+}
+func (m *QueryGetUserTipTotalResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetUserTipTotalResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetUserTipTotalResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetUserTipTotalResponse proto.InternalMessageInfo
+
+func (m *QueryGetUserTipTotalResponse) GetTotalTips() *UserTipTotal {
+	if m != nil {
+		return m.TotalTips
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.oracle.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.oracle.QueryParamsResponse")
@@ -349,47 +533,63 @@ func init() {
 	proto.RegisterType((*QueryGetReportsbyReporterRequest)(nil), "layer.oracle.QueryGetReportsbyReporterRequest")
 	proto.RegisterType((*QueryGetReportsbyReporterResponse)(nil), "layer.oracle.QueryGetReportsbyReporterResponse")
 	proto.RegisterType((*QueryGetReportsbyReporterQidRequest)(nil), "layer.oracle.QueryGetReportsbyReporterQidRequest")
+	proto.RegisterType((*QueryGetCurrentTipRequest)(nil), "layer.oracle.QueryGetCurrentTipRequest")
+	proto.RegisterType((*QueryGetCurrentTipResponse)(nil), "layer.oracle.QueryGetCurrentTipResponse")
+	proto.RegisterType((*QueryGetUserTipTotalRequest)(nil), "layer.oracle.QueryGetUserTipTotalRequest")
+	proto.RegisterType((*QueryGetUserTipTotalResponse)(nil), "layer.oracle.QueryGetUserTipTotalResponse")
 }
 
 func init() { proto.RegisterFile("layer/oracle/query.proto", fileDescriptor_bb27caa9d264c5c4) }
 
 var fileDescriptor_bb27caa9d264c5c4 = []byte{
-	// 555 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x41, 0x6f, 0xd3, 0x30,
-	0x14, 0xc7, 0x9b, 0xc1, 0x3a, 0xf0, 0x26, 0x21, 0x99, 0x02, 0x5d, 0xa8, 0xb2, 0x2e, 0x5c, 0xd6,
-	0x21, 0x62, 0xb5, 0x08, 0xed, 0x04, 0x48, 0x9b, 0x10, 0xda, 0x01, 0x89, 0x45, 0xe2, 0x02, 0x87,
-	0xc9, 0x69, 0xad, 0x2c, 0x22, 0x8d, 0x53, 0xc7, 0x45, 0x44, 0xd3, 0x2e, 0x5c, 0xb8, 0x22, 0x71,
-	0xe4, 0x4b, 0xf0, 0x0d, 0xb8, 0xee, 0x38, 0x89, 0x0b, 0x27, 0x84, 0x5a, 0x3e, 0x08, 0x9a, 0xfd,
-	0xd2, 0xd5, 0x5b, 0x56, 0xaa, 0xdd, 0x1c, 0xbf, 0xbf, 0xff, 0xef, 0xe7, 0xbf, 0x5f, 0x8b, 0xea,
-	0x31, 0xcd, 0x99, 0x20, 0x5c, 0xd0, 0x6e, 0xcc, 0xc8, 0x60, 0xc8, 0x44, 0xee, 0xa5, 0x82, 0x4b,
-	0x8e, 0x57, 0x54, 0xc5, 0xd3, 0x15, 0xbb, 0x16, 0xf2, 0x90, 0xab, 0x02, 0x39, 0x5d, 0x69, 0x8d,
-	0xdd, 0x08, 0x39, 0x0f, 0x63, 0x46, 0x68, 0x1a, 0x11, 0x9a, 0x24, 0x5c, 0x52, 0x19, 0xf1, 0x24,
-	0x83, 0xea, 0x66, 0x97, 0x67, 0x7d, 0x9e, 0x91, 0x80, 0x66, 0x60, 0x4d, 0x3e, 0xb4, 0x03, 0x26,
-	0x69, 0x9b, 0xa4, 0x34, 0x8c, 0x12, 0x25, 0x06, 0xed, 0xaa, 0xc1, 0x91, 0x52, 0x41, 0xfb, 0x85,
-	0x8d, 0x6d, 0x94, 0x04, 0x4b, 0xb9, 0x90, 0x45, 0x6d, 0xcd, 0xa8, 0xf5, 0xa3, 0xae, 0xe0, 0xfb,
-	0x5a, 0xa1, 0x05, 0x6e, 0x0d, 0xe1, 0xbd, 0xd3, 0xce, 0xaf, 0x95, 0xa3, 0xcf, 0x06, 0x43, 0x96,
-	0x49, 0x77, 0x17, 0xdd, 0x36, 0x76, 0xb3, 0x94, 0x27, 0x19, 0xc3, 0x1d, 0x54, 0xd5, 0x9d, 0xeb,
-	0x56, 0xd3, 0xda, 0x58, 0xee, 0xd4, 0xbc, 0xe9, 0x0c, 0x3c, 0xad, 0xde, 0xbe, 0x7e, 0xfc, 0x7b,
-	0xad, 0xe2, 0x83, 0xd2, 0xdd, 0x42, 0xf7, 0x95, 0xd5, 0x4b, 0x26, 0x7d, 0x8d, 0x16, 0xe4, 0x7b,
-	0x51, 0x0f, 0x3a, 0xe1, 0x3a, 0x5a, 0x52, 0x37, 0xdf, 0xed, 0x29, 0xcf, 0x9b, 0x7e, 0xf1, 0xe9,
-	0xbe, 0x41, 0x8d, 0xf2, 0x83, 0x00, 0xf3, 0x04, 0x2d, 0xc1, 0x5d, 0x81, 0xe6, 0x8e, 0x49, 0x03,
-	0x87, 0x00, 0xa7, 0xd0, 0xba, 0xcf, 0x50, 0xf3, 0x82, 0xad, 0x5e, 0x30, 0x51, 0x40, 0xd9, 0xe8,
-	0x86, 0x80, 0x2d, 0xa0, 0x9a, 0x7c, 0xbb, 0x07, 0x68, 0x7d, 0xc6, 0x79, 0x60, 0xdb, 0x41, 0x2b,
-	0x2a, 0x6b, 0x7f, 0x02, 0x78, 0x6d, 0x63, 0xb9, 0xb3, 0x6a, 0x02, 0xbe, 0x3a, 0x53, 0x00, 0xa4,
-	0x71, 0xc8, 0x7d, 0x87, 0x1e, 0x5c, 0xda, 0x69, 0x2a, 0xc1, 0x19, 0xb0, 0xd3, 0xe9, 0x2e, 0x18,
-	0xe9, 0x76, 0x3e, 0x2f, 0xa2, 0x45, 0xe5, 0x8e, 0xdf, 0xa3, 0xaa, 0x7e, 0x38, 0xdc, 0x34, 0xf9,
-	0x2e, 0xce, 0x85, 0xbd, 0x3e, 0x43, 0xa1, 0xaf, 0xee, 0x36, 0x3e, 0xfd, 0xfc, 0xfb, 0x75, 0xe1,
-	0x2e, 0xae, 0x91, 0x92, 0x89, 0xc5, 0xdf, 0x2c, 0x74, 0xeb, 0xdc, 0x83, 0xe2, 0x56, 0x89, 0x69,
-	0xf9, 0xb4, 0xd8, 0x9b, 0xf3, 0x48, 0x01, 0xa4, 0xad, 0x40, 0x1e, 0xe2, 0x96, 0x09, 0x12, 0x32,
-	0x09, 0xbf, 0x80, 0x2c, 0xc8, 0xf7, 0x07, 0x51, 0x8f, 0x1c, 0x42, 0x26, 0x47, 0xf8, 0xbb, 0x85,
-	0x6a, 0x65, 0x69, 0x63, 0xef, 0x3f, 0x7d, 0xcf, 0x0d, 0x90, 0x4d, 0xe6, 0xd6, 0x03, 0xec, 0x96,
-	0x82, 0x6d, 0x63, 0x32, 0x0b, 0xb6, 0x78, 0x56, 0x72, 0x58, 0xac, 0x8e, 0xf0, 0x0f, 0x0b, 0xdd,
-	0xbb, 0x64, 0x40, 0x70, 0x7b, 0x4e, 0x8a, 0x2b, 0x06, 0xfc, 0x42, 0x31, 0x3f, 0xc7, 0x4f, 0xe7,
-	0x61, 0xd6, 0x49, 0x4f, 0xb8, 0xcf, 0x42, 0xdf, 0xde, 0x39, 0x1e, 0x39, 0xd6, 0xc9, 0xc8, 0xb1,
-	0xfe, 0x8c, 0x1c, 0xeb, 0xcb, 0xd8, 0xa9, 0x9c, 0x8c, 0x9d, 0xca, 0xaf, 0xb1, 0x53, 0x79, 0xdb,
-	0x0a, 0x23, 0x79, 0x30, 0x0c, 0xbc, 0x2e, 0xef, 0x13, 0xc9, 0xe2, 0x98, 0x8b, 0x47, 0x11, 0x87,
-	0x66, 0x1f, 0x8b, 0x76, 0x32, 0x4f, 0x59, 0x16, 0x54, 0xd5, 0xbf, 0xd9, 0xe3, 0x7f, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0xec, 0x29, 0x73, 0x54, 0xaf, 0x05, 0x00, 0x00,
+	// 749 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0xc7, 0xbb, 0x88, 0x45, 0x06, 0x8c, 0xc9, 0x58, 0xf9, 0xb1, 0x34, 0x05, 0xd6, 0x44, 0x01,
+	0x63, 0x27, 0x2d, 0x21, 0x68, 0x8c, 0x12, 0x01, 0x43, 0x38, 0x98, 0x48, 0x2d, 0x89, 0xd1, 0x43,
+	0xb3, 0x2d, 0x93, 0x32, 0xb1, 0xed, 0x0c, 0xb3, 0x53, 0x63, 0x43, 0x7a, 0xf1, 0x2f, 0x30, 0xf1,
+	0xe8, 0xc1, 0x7f, 0x41, 0xff, 0x02, 0xaf, 0x1c, 0x49, 0xbc, 0x78, 0xd1, 0x18, 0xf0, 0x0f, 0x31,
+	0x9d, 0x79, 0xdb, 0x76, 0xe8, 0xb6, 0x34, 0xde, 0x76, 0xe7, 0x7d, 0xdf, 0x9b, 0xcf, 0xbc, 0x7d,
+	0xdf, 0x1d, 0x34, 0x53, 0xf1, 0x1b, 0x54, 0x12, 0x2e, 0xfd, 0x52, 0x85, 0x92, 0xa3, 0x3a, 0x95,
+	0x8d, 0xb4, 0x90, 0x5c, 0x71, 0x3c, 0xa9, 0x23, 0x69, 0x13, 0x71, 0x13, 0x65, 0x5e, 0xe6, 0x3a,
+	0x40, 0x5a, 0x4f, 0x46, 0xe3, 0x26, 0xcb, 0x9c, 0x97, 0x2b, 0x94, 0xf8, 0x82, 0x11, 0xbf, 0x56,
+	0xe3, 0xca, 0x57, 0x8c, 0xd7, 0x02, 0x88, 0xae, 0x94, 0x78, 0x50, 0xe5, 0x01, 0x29, 0xfa, 0x01,
+	0x94, 0x26, 0xef, 0x32, 0x45, 0xaa, 0xfc, 0x0c, 0x11, 0x7e, 0x99, 0xd5, 0xb4, 0x18, 0xb4, 0xb3,
+	0x16, 0x87, 0xf0, 0xa5, 0x5f, 0x0d, 0xcb, 0xb8, 0x56, 0x48, 0x52, 0xc1, 0xa5, 0x0a, 0x63, 0xf3,
+	0x56, 0xac, 0xca, 0x4a, 0x92, 0x17, 0x8c, 0x02, 0x04, 0xd3, 0x96, 0x40, 0x31, 0x11, 0x66, 0xce,
+	0x59, 0x81, 0x7a, 0x40, 0x65, 0x41, 0x31, 0x61, 0x82, 0x5e, 0x02, 0xe1, 0xbd, 0x16, 0xef, 0x0b,
+	0xcd, 0x91, 0xa3, 0x47, 0x75, 0x1a, 0x28, 0x6f, 0x17, 0xdd, 0xb4, 0x56, 0x03, 0xc1, 0x6b, 0x01,
+	0xc5, 0x59, 0x14, 0x37, 0xbc, 0x33, 0xce, 0x82, 0xb3, 0x34, 0x91, 0x4d, 0xa4, 0xbb, 0x3b, 0x97,
+	0x36, 0xea, 0xcd, 0xd1, 0x93, 0xdf, 0xf3, 0xb1, 0x1c, 0x28, 0xbd, 0x75, 0x34, 0xa7, 0x4b, 0xed,
+	0x50, 0x95, 0x33, 0x07, 0x2a, 0x36, 0xf6, 0xd8, 0x01, 0xec, 0x84, 0x67, 0xd0, 0x98, 0xee, 0xd7,
+	0xee, 0x81, 0xae, 0x39, 0x9e, 0x0b, 0x5f, 0xbd, 0x7d, 0x94, 0x8c, 0x4e, 0x04, 0x98, 0x35, 0x34,
+	0x06, 0x1d, 0x02, 0x9a, 0x5b, 0x36, 0x0d, 0x24, 0x01, 0x4e, 0xa8, 0xf5, 0x9e, 0xa0, 0x85, 0x9e,
+	0xb2, 0xe6, 0x81, 0xca, 0x10, 0xca, 0x45, 0xd7, 0x24, 0x2c, 0x01, 0x55, 0xfb, 0xdd, 0x3b, 0x44,
+	0x8b, 0x03, 0xf2, 0x81, 0x6d, 0x0b, 0x4d, 0xea, 0x2f, 0x94, 0x6b, 0x03, 0x5e, 0x59, 0x9a, 0xc8,
+	0xce, 0xda, 0x80, 0xcf, 0x3b, 0x0a, 0x80, 0xb4, 0x92, 0xbc, 0x37, 0xe8, 0x76, 0xdf, 0x9d, 0xba,
+	0x3a, 0x38, 0x00, 0xb6, 0xbb, 0xbb, 0x23, 0x76, 0x77, 0x1f, 0xa2, 0xd9, 0xb0, 0xf8, 0x56, 0x5d,
+	0x4a, 0x5a, 0x53, 0x79, 0x26, 0xc2, 0x92, 0x49, 0x34, 0xae, 0x75, 0xdb, 0xbe, 0xf2, 0xa1, 0x66,
+	0x67, 0xc1, 0xdb, 0x46, 0x6e, 0x54, 0x2a, 0x1c, 0xfd, 0x0e, 0x1a, 0x6d, 0xcd, 0x1e, 0x7c, 0x13,
+	0x6c, 0x1f, 0x39, 0xcf, 0x44, 0x90, 0xd3, 0x71, 0xef, 0x65, 0x67, 0x2e, 0xf6, 0x03, 0x2a, 0xf3,
+	0x4c, 0xe4, 0xb9, 0xf2, 0x2b, 0x21, 0xc2, 0x14, 0x8a, 0x2b, 0x26, 0x44, 0xfb, 0x4c, 0xf0, 0x66,
+	0xa3, 0x8d, 0x5c, 0x44, 0x7b, 0xd5, 0x99, 0x19, 0xbb, 0x28, 0xc0, 0x3d, 0x40, 0xe3, 0xaa, 0xb5,
+	0x90, 0xef, 0x10, 0xba, 0x36, 0xa1, 0x95, 0xd6, 0x11, 0x67, 0x7f, 0x8d, 0xa1, 0xab, 0xba, 0x34,
+	0x7e, 0x8b, 0xe2, 0x66, 0xd0, 0xf1, 0x82, 0x9d, 0xda, 0xeb, 0x23, 0x77, 0x71, 0x80, 0xc2, 0x20,
+	0x79, 0xc9, 0x0f, 0x3f, 0xfe, 0x7e, 0x1a, 0x99, 0xc2, 0x09, 0x12, 0xf1, 0x5f, 0xc0, 0x9f, 0x1d,
+	0x74, 0xe3, 0x82, 0x01, 0xf0, 0x72, 0x44, 0xd1, 0x68, 0x77, 0xb9, 0x2b, 0xc3, 0x48, 0x01, 0x24,
+	0xa3, 0x41, 0xee, 0xe1, 0x65, 0x1b, 0xa4, 0x4c, 0x15, 0xfc, 0x67, 0x82, 0x62, 0xa3, 0x70, 0xc4,
+	0x0e, 0xc8, 0x31, 0xcc, 0x50, 0x13, 0x7f, 0x75, 0x50, 0x22, 0x6a, 0x3a, 0x71, 0xfa, 0x92, 0x7d,
+	0x2f, 0x18, 0xce, 0x25, 0x43, 0xeb, 0x01, 0x76, 0x5d, 0xc3, 0x66, 0x30, 0x19, 0x04, 0x1b, 0xda,
+	0x80, 0x1c, 0x87, 0x4f, 0x4d, 0xfc, 0xdd, 0x41, 0xd3, 0x7d, 0x0c, 0x85, 0x33, 0x43, 0x52, 0xfc,
+	0x67, 0x83, 0x9f, 0x69, 0xe6, 0x0d, 0xfc, 0x78, 0x18, 0x66, 0xd3, 0xe9, 0x36, 0x77, 0x57, 0xd3,
+	0xbf, 0x38, 0xe8, 0xba, 0x65, 0x3d, 0x7c, 0x37, 0x1a, 0xa2, 0xc7, 0xd7, 0xee, 0xd2, 0xe5, 0x42,
+	0x60, 0x7d, 0xa4, 0x59, 0xd7, 0xf0, 0x2a, 0x51, 0xb4, 0x52, 0xe1, 0xf2, 0x3e, 0xe3, 0xbd, 0xd4,
+	0x25, 0x93, 0xd7, 0xba, 0x4d, 0x80, 0xaf, 0x65, 0xc2, 0x26, 0xfe, 0x66, 0x86, 0xb6, 0xdb, 0x4a,
+	0xfd, 0x86, 0x36, 0xc2, 0xfa, 0xfd, 0x7a, 0x1a, 0x65, 0x68, 0x6f, 0x47, 0x73, 0x3e, 0xc5, 0x1b,
+	0x83, 0x38, 0xc3, 0x2b, 0xaf, 0xa0, 0xed, 0x4c, 0x8e, 0xcd, 0xaf, 0xa4, 0xd9, 0xcd, 0xbc, 0xb9,
+	0x75, 0x72, 0x96, 0x72, 0x4e, 0xcf, 0x52, 0xce, 0x9f, 0xb3, 0x94, 0xf3, 0xf1, 0x3c, 0x15, 0x3b,
+	0x3d, 0x4f, 0xc5, 0x7e, 0x9e, 0xa7, 0x62, 0xaf, 0x97, 0xcb, 0x4c, 0x1d, 0xd6, 0x8b, 0xe9, 0x12,
+	0xaf, 0xf6, 0x6c, 0xf2, 0xbe, 0x7d, 0xdd, 0x36, 0x04, 0x0d, 0x8a, 0x71, 0x7d, 0xa7, 0xae, 0xfe,
+	0x0b, 0x00, 0x00, 0xff, 0xff, 0xe9, 0xc8, 0xb7, 0xae, 0x6b, 0x08, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -410,6 +610,10 @@ type QueryClient interface {
 	GetReportsbyQid(ctx context.Context, in *QueryGetReportsbyQidRequest, opts ...grpc.CallOption) (*QueryGetReportsbyQidResponse, error)
 	GetReportsbyReporter(ctx context.Context, in *QueryGetReportsbyReporterRequest, opts ...grpc.CallOption) (*QueryGetReportsbyReporterResponse, error)
 	GetReportsbyReporterQid(ctx context.Context, in *QueryGetReportsbyReporterQidRequest, opts ...grpc.CallOption) (*QueryGetReportsbyQidResponse, error)
+	// Queries a list of GetCurrentTip items.
+	GetCurrentTip(ctx context.Context, in *QueryGetCurrentTipRequest, opts ...grpc.CallOption) (*QueryGetCurrentTipResponse, error)
+	// Queries a list of GetUserTipTotal items.
+	GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTotalRequest, opts ...grpc.CallOption) (*QueryGetUserTipTotalResponse, error)
 }
 
 type queryClient struct {
@@ -456,6 +660,24 @@ func (c *queryClient) GetReportsbyReporterQid(ctx context.Context, in *QueryGetR
 	return out, nil
 }
 
+func (c *queryClient) GetCurrentTip(ctx context.Context, in *QueryGetCurrentTipRequest, opts ...grpc.CallOption) (*QueryGetCurrentTipResponse, error) {
+	out := new(QueryGetCurrentTipResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetCurrentTip", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTotalRequest, opts ...grpc.CallOption) (*QueryGetUserTipTotalResponse, error) {
+	out := new(QueryGetUserTipTotalResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetUserTipTotal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -464,6 +686,10 @@ type QueryServer interface {
 	GetReportsbyQid(context.Context, *QueryGetReportsbyQidRequest) (*QueryGetReportsbyQidResponse, error)
 	GetReportsbyReporter(context.Context, *QueryGetReportsbyReporterRequest) (*QueryGetReportsbyReporterResponse, error)
 	GetReportsbyReporterQid(context.Context, *QueryGetReportsbyReporterQidRequest) (*QueryGetReportsbyQidResponse, error)
+	// Queries a list of GetCurrentTip items.
+	GetCurrentTip(context.Context, *QueryGetCurrentTipRequest) (*QueryGetCurrentTipResponse, error)
+	// Queries a list of GetUserTipTotal items.
+	GetUserTipTotal(context.Context, *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -481,6 +707,12 @@ func (*UnimplementedQueryServer) GetReportsbyReporter(ctx context.Context, req *
 }
 func (*UnimplementedQueryServer) GetReportsbyReporterQid(ctx context.Context, req *QueryGetReportsbyReporterQidRequest) (*QueryGetReportsbyQidResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReportsbyReporterQid not implemented")
+}
+func (*UnimplementedQueryServer) GetCurrentTip(ctx context.Context, req *QueryGetCurrentTipRequest) (*QueryGetCurrentTipResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentTip not implemented")
+}
+func (*UnimplementedQueryServer) GetUserTipTotal(ctx context.Context, req *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserTipTotal not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -559,6 +791,42 @@ func _Query_GetReportsbyReporterQid_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCurrentTip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCurrentTipRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCurrentTip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetCurrentTip",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCurrentTip(ctx, req.(*QueryGetCurrentTipRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetUserTipTotal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetUserTipTotalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetUserTipTotal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetUserTipTotal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetUserTipTotal(ctx, req.(*QueryGetUserTipTotalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.oracle.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -578,6 +846,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReportsbyReporterQid",
 			Handler:    _Query_GetReportsbyReporterQid_Handler,
+		},
+		{
+			MethodName: "GetCurrentTip",
+			Handler:    _Query_GetCurrentTip_Handler,
+		},
+		{
+			MethodName: "GetUserTipTotal",
+			Handler:    _Query_GetUserTipTotal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -807,6 +1083,143 @@ func (m *QueryGetReportsbyReporterQidRequest) MarshalToSizedBuffer(dAtA []byte) 
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetCurrentTipRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCurrentTipRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCurrentTipRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.QueryData) > 0 {
+		i -= len(m.QueryData)
+		copy(dAtA[i:], m.QueryData)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.QueryData)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetCurrentTipResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetCurrentTipResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetCurrentTipResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Tips != nil {
+		{
+			size, err := m.Tips.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetUserTipTotalRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetUserTipTotalRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetUserTipTotalRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.QueryData) > 0 {
+		i -= len(m.QueryData)
+		copy(dAtA[i:], m.QueryData)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.QueryData)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Tipper) > 0 {
+		i -= len(m.Tipper)
+		copy(dAtA[i:], m.Tipper)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Tipper)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetUserTipTotalResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetUserTipTotalResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetUserTipTotalResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TotalTips != nil {
+		{
+			size, err := m.TotalTips.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -902,6 +1315,62 @@ func (m *QueryGetReportsbyReporterQidRequest) Size() (n int) {
 	}
 	l = len(m.QueryId)
 	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetCurrentTipRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.QueryData)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetCurrentTipResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Tips != nil {
+		l = m.Tips.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetUserTipTotalRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Tipper)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.QueryData)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetUserTipTotalResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.TotalTips != nil {
+		l = m.TotalTips.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1469,6 +1938,374 @@ func (m *QueryGetReportsbyReporterQidRequest) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.QueryId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCurrentTipRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCurrentTipRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCurrentTipRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryData = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetCurrentTipResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetCurrentTipResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetCurrentTipResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tips", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Tips == nil {
+				m.Tips = &Tips{}
+			}
+			if err := m.Tips.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetUserTipTotalRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetUserTipTotalRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetUserTipTotalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tipper", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tipper = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryData = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetUserTipTotalResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetUserTipTotalResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetUserTipTotalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalTips", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.TotalTips == nil {
+				m.TotalTips = &UserTipTotal{}
+			}
+			if err := m.TotalTips.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
