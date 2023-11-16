@@ -27,11 +27,14 @@ func (s *KeeperTestSuite) TestSubmitValue() {
 	report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
 	require.Nil(err)
 	microReport := types.MicroReport{
-		Reporter:  Addr.String(),
-		Power:     1,
-		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-		Value:     value,
-		Timestamp: s.ctx.BlockTime(),
+		Reporter:        Addr.String(),
+		Power:           1,
+		QueryType:       "SpotPrice",
+		QueryId:         "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		AggregateMethod: "weighted-median",
+		Value:           value,
+		BlockNumber:     s.ctx.BlockHeight(),
+		Timestamp:       s.ctx.BlockTime(),
 	}
 	expectedReport := types.QueryGetReportsbyQidResponse{
 		Reports: types.Reports{
