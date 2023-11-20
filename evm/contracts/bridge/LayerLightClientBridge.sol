@@ -26,7 +26,7 @@ contract LayerLightClientBridge {
         RESOLVE_STATUS_EXPIRED
     }
 
-    struct Value {
+    struct Report {
         string clientID;
         uint64 oracleScriptID;
         bytes params;
@@ -208,29 +208,29 @@ contract LayerLightClientBridge {
 
     function verifyOracleData(
         uint256 _blockHeight,
-        Value calldata _value,
+        Report calldata _report,
         uint256 _oracleHeight,
         IAVLMerklePath[] calldata _merklePaths
-    ) public view returns(Value memory) {
+    ) public view returns(Report memory) {
         bytes32 _oracleStateRoot = blockDetails[_blockHeight].oracleHash;
         require(
             _oracleStateRoot != bytes32(0), "No root at this height"
         );
 
-        bytes32 _dataHash = sha256(protoEncode(_value));
+        bytes32 _dataHash = sha256(protoEncode(_report));
 
         require(
             verifyProof(
                 _oracleStateRoot,
                 _oracleHeight,
-                abi.encodePacked(uint8(255), _value.requestID),
+                abi.encodePacked(uint8(255), _report.requestID),
                 _dataHash,
                 _merklePaths
             ),
             "Invalid proof"
         );
 
-        return _value;
+        return _report;
     }
 
     // ************************************************************ 
@@ -501,7 +501,7 @@ Right[F], Left[I6], Left[I10], Left[I15], Right[I20]
             );
     }
 
-    function protoEncode(Value memory instance)
+    function protoEncode(Report memory instance)
         internal
         pure
         returns (bytes memory)
