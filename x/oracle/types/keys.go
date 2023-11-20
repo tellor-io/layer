@@ -21,7 +21,7 @@ const (
 	ReportsKey = "Reports-value-"
 
 	// TipStoreKey defines the tip store key
-	TipStoreKey = "tip_store"
+	//TipStoreKey = "tip_store"
 
 	// CommitReportStoreKey defines the commit store key
 	CommitReportStoreKey = "commit_report_store"
