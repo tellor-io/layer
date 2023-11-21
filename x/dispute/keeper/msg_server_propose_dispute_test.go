@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
@@ -18,7 +19,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 		Timestamp: 1696516597,
 	}
 
-	fee := sdk.NewCoin("trb", math.NewInt(10000000000))
+	fee := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(10000000000))
 
 	msg := types.MsgProposeDispute{
 		Creator:         Addr.String(),
@@ -28,12 +29,20 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 		PayFromBond:     false,
 	}
 	addy, _ := sdk.AccAddressFromBech32(Addr.String())
-	s.bankKeeper.On("HasBalance", mock.Anything, mock.Anything, mock.Anything).Return(true)
-	s.bankKeeper.On("SendCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	val, _ := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
 	val.Jailed = false
 	val.Status = stakingtypes.Bonded
 	val.Tokens = math.NewInt(1000000000)
+
+	// mock dependency modules
+	s.bankKeeper.On("HasBalance", mock.Anything, mock.Anything, mock.Anything).Return(true)
+	s.bankKeeper.On("SendCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.stakingKeeper.On("TokensFromConsensusPower", mock.Anything, mock.Anything).Return(math.NewInt(100))
+	s.slashingKeeper.On("GetValidatorSigningInfo", mock.Anything, mock.Anything).Return(slashingtypes.ValidatorSigningInfo{}, false)
+	s.slashingKeeper.On("SetValidatorSigningInfo", mock.Anything, mock.Anything, mock.Anything).Return()
+	s.stakingKeeper.On("Jail", mock.Anything, mock.Anything).Return()
+	s.stakingKeeper.On("RemoveValidatorTokens", mock.Anything, mock.Anything, mock.Anything).Return(val)
 	s.stakingKeeper.On("GetValidator", mock.Anything, mock.Anything).Return(val, true)
 	msgRes, err := s.msgServer.ProposeDispute(s.goCtx, &msg)
 	require.Nil(err)

@@ -9,13 +9,12 @@ const TypeMsgAddFeeToDispute = "add_fee_to_dispute"
 
 var _ sdk.Msg = &MsgAddFeeToDispute{}
 
-func NewMsgAddFeeToDispute(creator string, disputeId uint64, amount sdk.Coin, payFromBond bool, validatorAddress string) *MsgAddFeeToDispute {
+func NewMsgAddFeeToDispute(creator string, disputeId uint64, amount sdk.Coin, payFromBond bool) *MsgAddFeeToDispute {
 	return &MsgAddFeeToDispute{
-		Creator:          creator,
-		DisputeId:        disputeId,
-		Amount:           amount,
-		PayFromBond:      payFromBond,
-		ValidatorAddress: validatorAddress,
+		Creator:     creator,
+		DisputeId:   disputeId,
+		Amount:      amount,
+		PayFromBond: payFromBond,
 	}
 }
 

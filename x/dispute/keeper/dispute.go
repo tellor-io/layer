@@ -108,6 +108,10 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		return fmt.Errorf("Error calculating dispute fee")
 	}
 	feeList := make([]types.PayerInfo, 0)
+
+	if msg.Fee.Amount.GT(disputeFee) {
+		msg.Fee.Amount = disputeFee
+	}
 	dispute := types.Dispute{
 		HashId:            hashId[:],
 		DisputeId:         disputeId,
@@ -132,7 +136,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	}
 	k.SetDispute(ctx, dispute)
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, msg.Creator, msg.ValidatorAddress, msg.Fee, msg.PayFromBond); err != nil {
+	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
 		return err
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
@@ -172,14 +176,14 @@ func (k Keeper) SetOpenDisputeIds(ctx sdk.Context, ids types.OpenDisputes) {
 }
 
 // Get percentage of slash amount based on category
-func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.Int {
+func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.LegacyDec {
 	switch category {
 	case types.Warning:
-		return math.NewInt(1).Quo(math.NewInt(100))
+		return sdk.NewDecWithPrec(1, 2) // 1%
 	case types.Minor:
-		return math.NewInt(1).Quo(math.NewInt(20))
+		return sdk.NewDecWithPrec(5, 2) // 5%
 	case types.Major:
-		return math.NewInt(1)
+		return sdk.NewDecWithPrec(1, 0) // 100%
 	default:
 		panic("invalid dispute category")
 	}
@@ -216,14 +220,14 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, reporter string, category types.D
 }
 
 // Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, valAddress string, fee sdk.Coin, fromBond bool) error {
+func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool) error {
 	proposer, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
 		return err
 	}
 	if fromBond {
 		// pay fee from given validator
-		err := k.ValidatorPayFeeFromBond(ctx, proposer, fee)
+		err := k.PayFromBond(ctx, proposer, fee)
 		if err != nil {
 			return err
 		}
