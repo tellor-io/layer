@@ -5,13 +5,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestVote() {
-	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)))
 	require := s.Require()
 	// Add dispute
 	s.TestMsgProposeDisputeFromAccount()
+	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)))
+	s.oracleKeeper.On("GetUserTips", mock.Anything, mock.Anything).Return(oracletypes.UserTipTotal{Address: "", Total: sdk.NewCoin("trb", math.NewInt(1))})
 	voteMsg := types.MsgVote{
 		Voter: Addr.String(),
 		Id:    0,

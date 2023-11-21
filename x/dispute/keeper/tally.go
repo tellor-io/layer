@@ -74,48 +74,41 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 	scaledAgainst := (againstTokenHolders.Add(againstValidators).Add(againstUsers).Add(againstTeam)).Quo(numGroups)
 	scaledInvalid := (invalidTokenHolders.Add(invalidValidators).Add(invalidUsers).Add(invalidTeam)).Quo(numGroups)
 
-	totalQuorum := sdk.NewDecWithPrec(51, 2) // 51% quorum
+	tokenHolderRatio := ratio(k.GetTotalSupply(ctx), tokenHolderVoteSum)
+	validatorRatio := ratio(k.GetTotalValidatorPower(ctx), validatorVoteSum)
+	userRatio := ratio(k.GetTotalTips(ctx), userVoteSum)
+	teamRatio := ratio(math.NewInt(1), teamVoteSum)
+	totalRatio := tokenHolderRatio.Add(validatorRatio).Add(userRatio).Add(teamRatio)
 
-	totalVotesDec := tokenHolderVoteSumDec.Add(validatorVoteSumDec).Add(userVoteSumDec).Add(teamVoteSumDec)
-	// The maximum potential votes include total supply of tokens, total validator power, total tips, and the team's vote.
-	// The team's vote is represented as 1 since it's controlled by a single multisig address.
-	maximumVotesDec := sdk.NewDecFromInt(k.GetTotalSupply(ctx)).Add(sdk.NewDecFromInt(k.GetTotalValidatorPower(ctx))).Add(sdk.NewDecFromInt(k.GetTotalTips(ctx))).Add(sdk.NewDecFromInt(math.NewInt(1)))
-
-	participationRate := totalVotesDec.Quo(maximumVotesDec)
-
-	if participationRate.GTE(totalQuorum) {
-		combinedSupport := scaledSupport.Mul(participationRate)
-		combinedAgainst := scaledAgainst.Mul(participationRate)
-		combinedInvalid := scaledInvalid.Mul(participationRate)
-
-		switch {
-		case combinedSupport.GT(combinedAgainst) && combinedSupport.GT(combinedInvalid):
-			k.SetDisputeStatus(ctx, id, types.Resolved)
-			k.SetVoteResult(ctx, id, types.VoteResult_SUPPORT)
-		case combinedAgainst.GT(combinedSupport) && combinedAgainst.GT(combinedInvalid):
-			k.SetDisputeStatus(ctx, id, types.Resolved)
-			k.SetVoteResult(ctx, id, types.VoteResult_AGAINST)
-		case combinedInvalid.GT(combinedSupport) && combinedInvalid.GT(combinedAgainst):
-			k.SetDisputeStatus(ctx, id, types.Resolved)
-			k.SetVoteResult(ctx, id, types.VoteResult_INVALID)
-		default:
+	if vote.VoteResult == types.VoteResult_NO_TALLY {
+		if totalRatio.GTE(sdk.NewDec(51)) {
+			switch {
+			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
+				k.SetDisputeStatus(ctx, id, types.Resolved)
+				k.SetVoteResult(ctx, id, types.VoteResult_SUPPORT)
+			case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
+				k.SetDisputeStatus(ctx, id, types.Resolved)
+				k.SetVoteResult(ctx, id, types.VoteResult_AGAINST)
+			case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
+				k.SetDisputeStatus(ctx, id, types.Resolved)
+				k.SetVoteResult(ctx, id, types.VoteResult_INVALID)
+			default:
+			}
 		}
-	} else {
-		// Check if vote period ended
-		if vote.VoteEnd.After(ctx.BlockTime()) {
-			return
-		}
-		switch {
-		case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
-			k.SetDisputeStatus(ctx, id, types.Unresolved)
-			k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT)
-		case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
-			k.SetDisputeStatus(ctx, id, types.Unresolved)
-			k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST)
-		case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
-			k.SetDisputeStatus(ctx, id, types.Unresolved)
-			k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
-		default:
+
+		if vote.VoteEnd.Before(ctx.BlockTime()) {
+			switch {
+			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
+				k.SetDisputeStatus(ctx, id, types.Unresolved)
+				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT)
+			case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
+				k.SetDisputeStatus(ctx, id, types.Unresolved)
+				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST)
+			case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
+				k.SetDisputeStatus(ctx, id, types.Unresolved)
+				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
+			default:
+			}
 		}
 	}
 
@@ -144,20 +137,20 @@ func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, vot
 	tallies = k.GetTally(ctx, id)
 	switch voteFor {
 	case types.VoteEnum_VOTE_SUPPORT:
-		tallies.ForVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
-		tallies.ForVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
-		tallies.ForVotes.Users.Add(k.GetUserTips(ctx, voter))
-		tallies.ForVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+		tallies.ForVotes.Validators = tallies.ForVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.ForVotes.TokenHolders = tallies.ForVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.ForVotes.Users = tallies.ForVotes.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.ForVotes.Team = tallies.ForVotes.Team.Add(k.IsTeamAddress(ctx, voter))
 	case types.VoteEnum_VOTE_AGAINST:
-		tallies.AgainstVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
-		tallies.AgainstVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
-		tallies.AgainstVotes.Users.Add(k.GetUserTips(ctx, voter))
-		tallies.AgainstVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+		tallies.AgainstVotes.Validators = tallies.AgainstVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.AgainstVotes.TokenHolders = tallies.AgainstVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.AgainstVotes.Users = tallies.AgainstVotes.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.AgainstVotes.Team = tallies.AgainstVotes.Team.Add(k.IsTeamAddress(ctx, voter))
 	case types.VoteEnum_VOTE_INVALID:
-		tallies.Invalid.Validators.Add(k.GetValidatorPower(ctx, voter))
-		tallies.Invalid.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
-		tallies.Invalid.Users.Add(k.GetUserTips(ctx, voter))
-		tallies.Invalid.Team.Add(k.IsTeamAddress(ctx, voter))
+		tallies.Invalid.Validators = tallies.Invalid.Validators.Add(k.GetValidatorPower(ctx, voter))
+		tallies.Invalid.TokenHolders = tallies.Invalid.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
+		tallies.Invalid.Users = tallies.Invalid.Users.Add(k.GetUserTips(ctx, voter))
+		tallies.Invalid.Team = tallies.Invalid.Team.Add(k.IsTeamAddress(ctx, voter))
 	default:
 		panic("invalid vote type")
 	}
@@ -168,15 +161,12 @@ func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, vot
 }
 
 func (k Keeper) GetValidatorPower(ctx sdk.Context, voter string) math.Int {
-	addr, err := sdk.AccAddressFromBech32(voter)
-	if err != nil {
-		panic(err)
-	}
+	addr := sdk.MustAccAddressFromBech32(voter)
 	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
 	if !found {
 		return sdk.ZeroInt()
 	}
-	power := validator.GetConsensusPower(validator.GetBondedTokens())
+	power := validator.GetConsensusPower(sdk.DefaultPowerReduction)
 	return math.NewInt(power)
 }
 
@@ -189,11 +179,15 @@ func (k Keeper) GetAccountBalance(ctx sdk.Context, voter string) math.Int {
 }
 
 func (k Keeper) GetUserTips(ctx sdk.Context, voter string) math.Int {
-	return sdk.ZeroInt()
+	userTips := k.oracleKeeper.GetUserTips(ctx, sdk.MustAccAddressFromBech32(voter))
+	return userTips.Total.Amount
 }
 
 func (k Keeper) IsTeamAddress(ctx sdk.Context, voter string) math.Int {
-	return math.NewIntFromUint64(1)
+	if voter != types.TeamAddress {
+		return math.ZeroInt()
+	}
+	return math.NewInt(1)
 }
 
 // Get total trb supply
@@ -209,5 +203,14 @@ func (k Keeper) GetTotalValidatorPower(ctx sdk.Context) math.Int {
 
 // Get total number of tips
 func (k Keeper) GetTotalTips(ctx sdk.Context) math.Int {
-	return math.NewIntFromUint64(1)
+	return k.oracleKeeper.GetTotalTips(ctx).Amount
+}
+
+func ratio(total, part math.Int) math.LegacyDec {
+	if total.IsZero() {
+		return math.LegacyZeroDec()
+	}
+	total = total.MulRaw(4)
+	ratio := sdk.NewDecFromInt(part).Quo(sdk.NewDecFromInt(total))
+	return ratio.MulInt64(100)
 }

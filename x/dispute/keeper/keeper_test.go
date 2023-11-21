@@ -38,6 +38,7 @@ type KeeperTestSuite struct {
 
 	accountKeeper  *mocks.AccountKeeper
 	bankKeeper     *mocks.BankKeeper
+	oracleKeeper   *mocks.OracleKeeper
 	slashingKeeper *mocks.SlashingKeeper
 	stakingKeeper  *mocks.StakingKeeper
 
@@ -67,6 +68,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	)
 	s.accountKeeper = mocks.NewAccountKeeper(s.T())
 	s.bankKeeper = mocks.NewBankKeeper(s.T())
+	s.oracleKeeper = mocks.NewOracleKeeper(s.T())
 	s.slashingKeeper = mocks.NewSlashingKeeper(s.T())
 	s.stakingKeeper = mocks.NewStakingKeeper(s.T())
 
@@ -77,6 +79,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		paramsSubspace,
 		s.accountKeeper,
 		s.bankKeeper,
+		s.oracleKeeper,
 		s.slashingKeeper,
 		s.stakingKeeper,
 	)

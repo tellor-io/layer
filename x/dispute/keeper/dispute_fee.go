@@ -63,25 +63,21 @@ func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) err
 	// TODO: loophole bypassing redelegation MaxEntries check
 	// k.GetLastRefundBlockTime(ctx, delAddr)
 	// k.SetLastRefundBlockTime(ctx, delAddr, currentBlock)
-	delAddr, err := sdk.AccAddressFromBech32(refundTo)
-	if err != nil {
-		return err
-	}
+	delAddr := sdk.MustAccAddressFromBech32(refundTo)
 	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
 	if !found {
 		return stakingtypes.ErrNoValidatorFound
 	}
 	validator, _ = k.stakingKeeper.AddValidatorTokensAndShares(ctx, validator, fee.Amount)
 
-	// var poolName string
-	// switch validator.GetStatus() {
-	// case stakingtypes.Bonded:
-	// 	poolName = stakingtypes.BondedPoolName
-	// case stakingtypes.Unbonded, stakingtypes.Unbonding:
-	// 	poolName = stakingtypes.NotBondedPoolName
-	// }
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee)); err != nil {
-		return err
+	if validator.IsBonded() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee)); err != nil {
+			return err
+		}
+	} else {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(fee)); err != nil {
+			return err
+		}
 	}
 	return nil
 }

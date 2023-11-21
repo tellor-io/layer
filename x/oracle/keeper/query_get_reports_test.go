@@ -15,7 +15,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	require.Nil(err)
 	MicroReport := &types.MicroReport{
 		Reporter:        Addr.String(),
-		Power:           1,
+		Power:           1000000000000,
 		QueryType:       "SpotPrice",
 		QueryId:         "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		AggregateMethod: "weighted-median",
