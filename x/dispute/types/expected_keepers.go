@@ -6,8 +6,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 type SlashingKeeper interface {
@@ -18,6 +20,9 @@ type SlashingKeeper interface {
 
 type StakingKeeper interface {
 	// Methods imported from staking should be defined here
+	AddValidatorTokensAndShares(ctx sdk.Context, validator stakingtypes.Validator,
+		tokensToAdd math.Int,
+	) (valOut stakingtypes.Validator, addedShares sdk.Dec)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool,
 	) (newShares sdk.Dec, err error)
 	DeleteValidatorByPowerIndex(ctx sdk.Context, validator stakingtypes.Validator)
@@ -39,6 +44,7 @@ type StakingKeeper interface {
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetModuleAddress(moduleName string) sdk.AccAddress
 	// Methods imported from account should be defined here
 }
 
@@ -47,9 +53,15 @@ type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 	HasBalance(ctx sdk.Context, addr sdk.AccAddress, amt sdk.Coin) bool
+	InputOutputCoins(ctx sdk.Context, inputs []banktypes.Input, outputs []banktypes.Output) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
+}
+
+type OracleKeeper interface {
+	GetTotalTips(ctx sdk.Context) sdk.Coin
+	GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) oracletypes.UserTipTotal
 }

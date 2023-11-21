@@ -6,10 +6,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tellor-io/layer/x/registry/types"
+	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slashFactor math.Int) math.Int {
+func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slashFactor math.LegacyDec) math.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -18,10 +18,8 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
 	amount := k.stakingKeeper.TokensFromConsensusPower(ctx, power)
-	slashAmount := amount.Mul(slashFactor)
-
-	// ref https://github.com/cosmos/cosmos-sdk/issues/1348
-
+	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
+	slashAmount := slashAmountDec.TruncateInt()
 	validator, found := k.stakingKeeper.GetValidator(ctx, opAddr)
 	if !found {
 		// If not found, the validator must have been overslashed and removed - so we don't need to do anything
@@ -40,13 +38,8 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 		panic(fmt.Sprintf("should not be slashing unbonded validator: %s", validator.GetOperator()))
 	}
 
-	// Track remaining slash amount for the validator
-	// This will decrease when we slash unbondings and
-	// redelegations, as that stake has since unbonded
-	remainingSlashAmount := slashAmount
-
 	// cannot decrease balance below zero
-	tokensToBurn := sdk.MinInt(remainingSlashAmount, validator.Tokens)
+	tokensToBurn := sdk.MinInt(slashAmount, validator.Tokens)
 	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution

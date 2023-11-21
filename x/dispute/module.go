@@ -183,6 +183,7 @@ type DisputeInputs struct {
 
 	AccountKeeper  types.AccountKeeper
 	BankKeeper     types.BankKeeper
+	OracleKeeper   types.OracleKeeper
 	SlashingKeeper types.SlashingKeeper
 	StakingKeeper  types.StakingKeeper
 }
@@ -203,6 +204,7 @@ func ProvideModule(in DisputeInputs) DisputeOutputs {
 		paramtypes.Subspace{},
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.OracleKeeper,
 		in.SlashingKeeper,
 		in.StakingKeeper,
 	)

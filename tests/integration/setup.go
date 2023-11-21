@@ -4,7 +4,11 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/appconfig"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
@@ -66,5 +70,16 @@ func RegistryModule() configurator.ModuleOption {
 			Name:   "registry",
 			Config: appconfig.WrapAny(&registrymodulev1.Module{}),
 		}
+	}
+}
+
+func DefaultStartUpConfig() sims.StartupConfig {
+	priv := secp256k1.GenPrivKey()
+	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
+	ga := sims.GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))}
+	return sims.StartupConfig{
+		ValidatorSet:    sims.CreateRandomValidatorSet,
+		AtGenesis:       false,
+		GenesisAccounts: []sims.GenesisAccount{ga},
 	}
 }

@@ -101,7 +101,7 @@ func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int6
 		return 0, false
 	}
 	// get voting power
-	votingPower := validator.GetConsensusPower(validator.GetBondedTokens())
+	votingPower := validator.GetConsensusPower(sdk.DefaultPowerReduction)
 
 	return votingPower, validator.IsBonded()
 }

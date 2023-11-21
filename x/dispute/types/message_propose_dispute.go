@@ -9,14 +9,13 @@ const TypeMsgProposeDispute = "propose_dispute"
 
 var _ sdk.Msg = &MsgProposeDispute{}
 
-func NewMsgProposeDispute(creator string, report *MicroReport, disputeCategory DisputeCategory, fee sdk.Coin, payFromBond bool, validatorAddress string) *MsgProposeDispute {
+func NewMsgProposeDispute(creator string, report *MicroReport, disputeCategory DisputeCategory, fee sdk.Coin, payFromBond bool) *MsgProposeDispute {
 	return &MsgProposeDispute{
-		Creator:          creator,
-		Report:           report,
-		DisputeCategory:  disputeCategory,
-		Fee:              fee,
-		PayFromBond:      payFromBond,
-		ValidatorAddress: validatorAddress,
+		Creator:         creator,
+		Report:          report,
+		DisputeCategory: disputeCategory,
+		Fee:             fee,
+		PayFromBond:     payFromBond,
 	}
 }
 

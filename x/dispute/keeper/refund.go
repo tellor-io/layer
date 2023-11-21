@@ -6,7 +6,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tellor-io/layer/x/registry/types"
+	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func (k Keeper) Refund(ctx sdk.Context, consAddr sdk.ConsAddress, power int64, refundAmount math.Int) math.Int {
