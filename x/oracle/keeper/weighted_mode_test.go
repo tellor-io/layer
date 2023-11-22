@@ -91,17 +91,17 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	}
 
 	s.oracleKeeper.WeightedMode(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: "query1"})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: "query2"})
 	require.Nil(err)
-	//require.Equal(res.Report.QueryId, "query1", "query id is not correct")
-	//require.Equal(res.Report.AggregateReporter, "reporter4", "aggregate reporter is not correct")
+	require.Equal(res.Report.QueryId, "query2", "query id is not correct")
+	require.Equal(res.Report.AggregateReporter, "reporter7", "aggregate reporter is not correct")
 	require.Equal(res.Report.AggregateValue, "ccc", "aggregate value is not correct")
-	//require.Equal(res.Report.ReporterPower, int64(20), "aggregate reporter power is not correct")
+	require.Equal(res.Report.ReporterPower, int64(2), "aggregate reporter power is not correct")
 	//  check list of reporters in the aggregate report
-	require.Equal(res.Report.Reporters[0].Reporter, "reporter1", "reporter is not correct")
-	require.Equal(res.Report.Reporters[1].Reporter, "reporter2", "reporter is not correct")
-	require.Equal(res.Report.Reporters[2].Reporter, "reporter3", "reporter is not correct")
-	require.Equal(res.Report.Reporters[3].Reporter, "reporter4", "reporter is not correct")
-	require.Equal(res.Report.Reporters[4].Reporter, "reporter5", "reporter is not correct")
+	require.Equal(res.Report.Reporters[0].Reporter, "reporter6", "reporter is not correct")
+	require.Equal(res.Report.Reporters[1].Reporter, "reporter7", "reporter is not correct")
+	require.Equal(res.Report.Reporters[2].Reporter, "reporter8", "reporter is not correct")
+	require.Equal(res.Report.Reporters[3].Reporter, "reporter9", "reporter is not correct")
+	require.Equal(res.Report.Reporters[4].Reporter, "reporter10", "reporter is not correct")
 
 }
