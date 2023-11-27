@@ -27,14 +27,14 @@ func TestKeeper(t *testing.T) {
 	k.SetGenesisSpec(unwrappedCtx)
 	k.SetGenesisQuery(unwrappedCtx)
 
-	//GetGenesisSpec
+	//GetGenesisSpec()
 	genesisSpec := k.GetGenesisSpec(unwrappedCtx)
 	genesisHash := genesisSpec.DocumentHash
 	require.Equal(t, genesisHash, "", "hashes do no match")
 	genesisType := genesisSpec.ValueType
 	require.Equal(t, genesisType, "uint256", "types do no match")
 
-	// GetGenesisQuery
+	// GetGenesisQuery()
 	trbQuery, btcQuery, ethQuery := k.GetGenesisQuery(unwrappedCtx)
 	trbQueryData := keeper.SpotQueryData("trb", "usd")
 	require.Equal(t, trbQuery, bytes.HexBytes(trbQueryData).String(), "trb query data doesnt match")

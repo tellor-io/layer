@@ -13,7 +13,7 @@ func TestRegisterQuery(t *testing.T) {
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
 
-	// register a spec
+	// register spec1
 	spec1 := types.DataSpec{DocumentHash: "hash1", ValueType: "uint256"}
 	specInput := &types.MsgRegisterSpec{
 		Creator:   "creator1",
@@ -24,7 +24,7 @@ func TestRegisterQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
-	// register query for that spec
+	// register query for spec1
 	queryInput := &types.MsgRegisterQuery{
 		Creator:    "creator1",
 		QueryType:  "queryType1",
@@ -36,7 +36,9 @@ func TestRegisterQuery(t *testing.T) {
 	require.NotNil(t, registerQueryResult)
 	queryID1 := registerQueryResult.QueryId
 
-	// try to register query for unregsitered query type
+	// Require Statements
+	//
+	// register query for unregistered query type
 	queryInput = &types.MsgRegisterQuery{
 		Creator:    "creator1",
 		QueryType:  "unregisteredQueryType",
@@ -47,29 +49,30 @@ func TestRegisterQuery(t *testing.T) {
 	require.ErrorContains(t, err, "query type not registered")
 	require.Nil(t, registerQueryResult)
 
-	//try to register mismatched datatype and datafields -- test all 256 combinations of data types now ?
+	// register mismatched datatype and datafields -- test all 256 combinations of data types now ?
 	queryInput = &types.MsgRegisterQuery{
 		Creator:    "creator1",
 		QueryType:  "queryType1",
 		DataTypes:  []string{"uint256", "uint256"},
-		DataFields: []string{"a", "b"},
+		DataFields: []string{"x", "y"},
 	}
 	registerQueryResult, err = ms.RegisterQuery(ctx, queryInput)
 	require.ErrorContains(t, err, "failed to encode arguments")
 	require.Nil(t, registerQueryResult)
 
-	// how would you arrive at err "failed to encode query data" ?
+	// how to get "failed to encode query data" ?
 	queryInput = &types.MsgRegisterQuery{
 		Creator:    "creator1",
 		QueryType:  "queryType1",
-		DataTypes:  []string{"uint256", "bool"},
-		DataFields: []string{"c", "d"},
+		DataTypes:  []string{"uint256", "bytes"},
+		DataFields: []string{"", ""},
 	}
 	registerQueryResult, err = ms.RegisterQuery(ctx, queryInput)
 	require.ErrorContains(t, err, "failed to encode arguments")
+	//require.ErrorContains(t, err, "failed to encode query data")
 	require.Nil(t, registerQueryResult)
 
-	// try to register query that already exists
+	// register query that already exists
 	queryInput = &types.MsgRegisterQuery{
 		Creator:    "creator1",
 		QueryType:  "queryType1",
@@ -78,6 +81,17 @@ func TestRegisterQuery(t *testing.T) {
 	}
 	registerQueryResult, err = ms.RegisterQuery(ctx, queryInput)
 	require.ErrorContains(t, err, "query ID ", queryID1, " already exists")
+	require.Nil(t, registerQueryResult)
+
+	// register empty data types
+	queryInput = &types.MsgRegisterQuery{
+		Creator:    "creator1",
+		QueryType:  "queryType1",
+		DataTypes:  []string{"", ""},
+		DataFields: []string{"", ""},
+	}
+	registerQueryResult, err = ms.RegisterQuery(ctx, queryInput)
+	require.ErrorContains(t, err, "failed to encode arguments")
 	require.Nil(t, registerQueryResult)
 
 }
