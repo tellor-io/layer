@@ -1,1288 +1,757 @@
 {
-  "_format": "ethers-rs-sol-cache-3",
-  "paths": {
-    "artifacts": "out",
-    "build_infos": "out/build-info",
-    "sources": "src",
-    "tests": "test",
-    "scripts": "script",
-    "libraries": [
-      "lib"
-    ]
-  },
+  "_format": "hh-sol-cache-2",
   "files": {
-    "lib/forge-std/lib/ds-test/src/test.sol": {
-      "lastModificationDate": 1696510338562,
-      "contentHash": "9febff9d09f18af5306669dc276c4c43",
-      "sourceName": "lib/forge-std/lib/ds-test/src/test.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/Constants.sol": {
+      "lastModificationDate": 1701199758281,
+      "contentHash": "45c92dbeee4d67e77ef0a58c1d22010d",
+      "sourceName": "contracts/bridge/Constants.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [],
-      "versionRequirement": ">=0.5.0",
-      "artifacts": {
-        "DSTest": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "test.sol/DSTest.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
     },
-    "lib/forge-std/src/Base.sol": {
-      "lastModificationDate": 1696510338563,
-      "contentHash": "ee13c050b1914464f1d3f90cde90204b",
-      "sourceName": "lib/forge-std/src/Base.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/verifier/DAVerifier.sol": {
+      "lastModificationDate": 1701200496195,
+      "contentHash": "9c1ac923399db4faa027edaf44f57aa7",
+      "sourceName": "contracts/bridge/lib/verifier/DAVerifier.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/Vm.sol"
+        "../../ECDSA.sol",
+        "../../Constants.sol",
+        "../../DataRootTuple.sol",
+        "../../IDAOracle.sol",
+        "../tree/binary/BinaryMerkleProof.sol",
+        "../tree/binary/BinaryMerkleTree.sol",
+        "../tree/namespace/NamespaceMerkleTree.sol",
+        "../tree/Types.sol"
       ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "CommonBase": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/CommonBase.0.8.17.json"
-        },
-        "ScriptBase": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/ScriptBase.0.8.17.json"
-        },
-        "TestBase": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Base.sol/TestBase.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": [
+        "DAVerifier"
+      ]
     },
-    "lib/forge-std/src/Script.sol": {
-      "lastModificationDate": 1696510338563,
-      "contentHash": "ba325c778a7da8a21c2136aa32763c14",
-      "sourceName": "lib/forge-std/src/Script.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/ECDSA.sol": {
+      "lastModificationDate": 1701201017694,
+      "contentHash": "3a594d32a18782cfb8fa0eb8811d05b3",
+      "sourceName": "contracts/bridge/ECDSA.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/src/Base.sol",
-        "lib/forge-std/src/StdChains.sol",
-        "lib/forge-std/src/StdCheats.sol",
-        "lib/forge-std/src/StdJson.sol",
-        "lib/forge-std/src/StdMath.sol",
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/StdStyle.sol",
-        "lib/forge-std/src/StdUtils.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console.sol",
-        "lib/forge-std/src/console2.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol",
-        "lib/forge-std/src/safeconsole.sol"
-      ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "Script": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Script.sol/Script.json"
-        }
-      }
-    },
-    "lib/forge-std/src/StdAssertions.sol": {
-      "lastModificationDate": 1696510338563,
-      "contentHash": "6cc2858240bcd443debbbf075490e325",
-      "sourceName": "lib/forge-std/src/StdAssertions.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
+              ],
               "": [
                 "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/lib/ds-test/src/test.sol",
-        "lib/forge-std/src/StdMath.sol"
-      ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "StdAssertions": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdAssertions.sol/StdAssertions.json"
-        }
-      }
-    },
-    "lib/forge-std/src/StdChains.sol": {
-      "lastModificationDate": 1696510338563,
-      "contentHash": "b0324b2e5a11948f852032aa293b3a05",
-      "sourceName": "lib/forge-std/src/StdChains.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/src/Vm.sol"
-      ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "StdChains": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdChains.sol/StdChains.0.8.17.json"
-        }
-      }
-    },
-    "lib/forge-std/src/StdCheats.sol": {
-      "lastModificationDate": 1696510338564,
-      "contentHash": "d984e2c76dae07bac1e292af2a5d4fd1",
-      "sourceName": "lib/forge-std/src/StdCheats.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console2.sol"
-      ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "StdCheats": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdCheats.sol/StdCheats.0.8.17.json"
-        },
-        "StdCheatsSafe": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdCheats.sol/StdCheatsSafe.0.8.17.json"
-        }
-      }
-    },
-    "lib/forge-std/src/StdError.sol": {
-      "lastModificationDate": 1696510338564,
-      "contentHash": "64c896e1276a291776e5ea5aecb3870a",
-      "sourceName": "lib/forge-std/src/StdError.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "stdError": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdError.sol/stdError.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "ECDSA"
+      ]
     },
-    "lib/forge-std/src/StdInvariant.sol": {
-      "lastModificationDate": 1696510338564,
-      "contentHash": "0a580d6fac69e9d4b6504f747f3c0c24",
-      "sourceName": "lib/forge-std/src/StdInvariant.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/DataRootTuple.sol": {
+      "lastModificationDate": 1701199733067,
+      "contentHash": "fda5fe601f60847310836b76c16cdc97",
+      "sourceName": "contracts/bridge/DataRootTuple.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "StdInvariant": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "StdInvariant.sol/StdInvariant.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
     },
-    "lib/forge-std/src/StdJson.sol": {
-      "lastModificationDate": 1696510338564,
-      "contentHash": "b5de4d3e9eda3333019b0e407ec2a1ac",
-      "sourceName": "lib/forge-std/src/StdJson.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/IDAOracle.sol": {
+      "lastModificationDate": 1701199934970,
+      "contentHash": "c5901c06ba89bb90356e0c8c0d2f8917",
+      "sourceName": "contracts/bridge/IDAOracle.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [
-        "lib/forge-std/src/Vm.sol"
+        "./DataRootTuple.sol",
+        "./lib/tree/binary/BinaryMerkleProof.sol"
       ],
-      "versionRequirement": ">=0.6.0, <0.9.0",
-      "artifacts": {
-        "stdJson": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdJson.sol/stdJson.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "IDAOracle"
+      ]
     },
-    "lib/forge-std/src/StdMath.sol": {
-      "lastModificationDate": 1696510338564,
-      "contentHash": "9da8f453eba6bb98f3d75bc6822bfb29",
-      "sourceName": "lib/forge-std/src/StdMath.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/binary/BinaryMerkleProof.sol": {
+      "lastModificationDate": 1701199887300,
+      "contentHash": "db2cdd2154f2907aef984c4f75f1c1d8",
+      "sourceName": "contracts/bridge/lib/tree/binary/BinaryMerkleProof.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "stdMath": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdMath.sol/stdMath.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
     },
-    "lib/forge-std/src/StdStorage.sol": {
-      "lastModificationDate": 1696510338565,
-      "contentHash": "abd6f3379e6e2a7979b18abc21aea0c1",
-      "sourceName": "lib/forge-std/src/StdStorage.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/binary/BinaryMerkleTree.sol": {
+      "lastModificationDate": 1701199887301,
+      "contentHash": "f978cf871c9f7d02f0b89806bc5430e1",
+      "sourceName": "contracts/bridge/lib/tree/binary/BinaryMerkleTree.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [
-        "lib/forge-std/src/Vm.sol"
+        "../Constants.sol",
+        "../Utils.sol",
+        "./TreeHasher.sol",
+        "./BinaryMerkleProof.sol"
       ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "stdStorage": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStorage.sol/stdStorage.0.8.17.json"
-        },
-        "stdStorageSafe": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStorage.sol/stdStorageSafe.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": [
+        "BinaryMerkleTree"
+      ]
     },
-    "lib/forge-std/src/StdStyle.sol": {
-      "lastModificationDate": 1696510338565,
-      "contentHash": "6281165a12aa639705c691fccefd855e",
-      "sourceName": "lib/forge-std/src/StdStyle.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/namespace/NamespaceMerkleTree.sol": {
+      "lastModificationDate": 1701199887307,
+      "contentHash": "46573bbf9a5bedadff58c5a405459ffe",
+      "sourceName": "contracts/bridge/lib/tree/namespace/NamespaceMerkleTree.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [
-        "lib/forge-std/src/Vm.sol"
+        "../Constants.sol",
+        "../Types.sol",
+        "../Utils.sol",
+        "./NamespaceMerkleProof.sol",
+        "./NamespaceMerkleMultiproof.sol",
+        "./NamespaceNode.sol",
+        "./TreeHasher.sol"
       ],
-      "versionRequirement": ">=0.4.22, <0.9.0",
-      "artifacts": {
-        "StdStyle": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdStyle.sol/StdStyle.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": [
+        "NamespaceMerkleTree"
+      ]
     },
-    "lib/forge-std/src/StdUtils.sol": {
-      "lastModificationDate": 1696510338565,
-      "contentHash": "3ce83748fd76644688f916c9cced545b",
-      "sourceName": "lib/forge-std/src/StdUtils.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/Types.sol": {
+      "lastModificationDate": 1701199887298,
+      "contentHash": "7ada94c67835e2c5253c52639e2c0c19",
+      "sourceName": "contracts/bridge/lib/tree/Types.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol"
-      ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "StdUtils": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "StdUtils.sol/StdUtils.0.8.17.json"
-        }
-      }
-    },
-    "lib/forge-std/src/Test.sol": {
-      "lastModificationDate": 1696510338565,
-      "contentHash": "15866901137b5670eabf31362523bd28",
-      "sourceName": "lib/forge-std/src/Test.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
+              ],
               "": [
                 "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/lib/ds-test/src/test.sol",
-        "lib/forge-std/src/Base.sol",
-        "lib/forge-std/src/StdAssertions.sol",
-        "lib/forge-std/src/StdChains.sol",
-        "lib/forge-std/src/StdCheats.sol",
-        "lib/forge-std/src/StdError.sol",
-        "lib/forge-std/src/StdInvariant.sol",
-        "lib/forge-std/src/StdJson.sol",
-        "lib/forge-std/src/StdMath.sol",
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/StdStyle.sol",
-        "lib/forge-std/src/StdUtils.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console.sol",
-        "lib/forge-std/src/console2.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol",
-        "lib/forge-std/src/safeconsole.sol"
-      ],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "Test": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "Test.sol/Test.json"
-        }
-      }
-    },
-    "lib/forge-std/src/Vm.sol": {
-      "lastModificationDate": 1696510338565,
-      "contentHash": "99c76f92020cc3d67eca52e07eea5d77",
-      "sourceName": "lib/forge-std/src/Vm.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "Vm": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Vm.sol/Vm.0.8.17.json"
-        },
-        "VmSafe": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Vm.sol/VmSafe.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
     },
-    "lib/forge-std/src/console.sol": {
-      "lastModificationDate": 1696510338566,
-      "contentHash": "100b8a33b917da1147740d7ab8b0ded3",
-      "sourceName": "lib/forge-std/src/console.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/Constants.sol": {
+      "lastModificationDate": 1701199887296,
+      "contentHash": "669d9a90c7890637c69dd961aecb628f",
+      "sourceName": "contracts/bridge/lib/tree/Constants.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
+              ],
+              "": [
+                "ast"
               ]
             }
+          }
+        }
+      },
+      "imports": [
+        "./Types.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": [
+        "Constants"
+      ]
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/Utils.sol": {
+      "lastModificationDate": 1701199887299,
+      "contentHash": "89413d10d1136a4f0176d77470b17121",
+      "sourceName": "contracts/bridge/lib/tree/Utils.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
           },
-          "evmVersion": "london",
-          "libraries": {}
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Constants.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/binary/TreeHasher.sol": {
+      "lastModificationDate": 1701199887302,
+      "contentHash": "03205173142f2ce6ca93d343d3e5bed2",
+      "sourceName": "contracts/bridge/lib/tree/binary/TreeHasher.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Constants.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/namespace/NamespaceMerkleProof.sol": {
+      "lastModificationDate": 1701199887306,
+      "contentHash": "e931f5a3f7cc4afb8b21a8298f3b36d0",
+      "sourceName": "contracts/bridge/lib/tree/namespace/NamespaceMerkleProof.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./NamespaceNode.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/namespace/NamespaceMerkleMultiproof.sol": {
+      "lastModificationDate": 1701199887305,
+      "contentHash": "dec128e5b3f980dfe01932de4a7d6732",
+      "sourceName": "contracts/bridge/lib/tree/namespace/NamespaceMerkleMultiproof.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./NamespaceNode.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/namespace/NamespaceNode.sol": {
+      "lastModificationDate": 1701199887308,
+      "contentHash": "99d9f409f7996ecc1eb91b0c9dce23a5",
+      "sourceName": "contracts/bridge/lib/tree/namespace/NamespaceNode.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Types.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/lib/tree/namespace/TreeHasher.sol": {
+      "lastModificationDate": 1701199887309,
+      "contentHash": "b69e7b82bb9877f114b3435577016abf",
+      "sourceName": "contracts/bridge/lib/tree/namespace/TreeHasher.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Constants.sol",
+        "../Types.sol",
+        "./NamespaceNode.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": []
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/bridge/LayerLightClientBridge.sol": {
+      "lastModificationDate": 1701201028027,
+      "contentHash": "a1eb543d5cd93bb3d52c25ed63957feb",
+      "sourceName": "contracts/bridge/LayerLightClientBridge.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ECDSA.sol",
+        "./Constants.sol",
+        "./DataRootTuple.sol",
+        "./IDAOracle.sol",
+        "./lib/tree/binary/BinaryMerkleProof.sol",
+        "./lib/tree/binary/BinaryMerkleTree.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.22"
+      ],
+      "artifacts": [
+        "Blobstream"
+      ]
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/forking/SimpleSchelling.sol": {
+      "lastModificationDate": 1701200441781,
+      "contentHash": "75477aa462d44e8208a2c0872eeef56c",
+      "sourceName": "contracts/forking/SimpleSchelling.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../interfaces/IBridgeProxy.sol"
+      ],
+      "versionPragmas": [
+        "0.8.22"
+      ],
+      "artifacts": [
+        "SimpleSchelling"
+      ]
+    },
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/interfaces/IBridgeProxy.sol": {
+      "lastModificationDate": 1701200439955,
+      "contentHash": "f84e6be8074ccd07b3afdfa511e118a8",
+      "sourceName": "contracts/interfaces/IBridgeProxy.sol",
+      "solcConfig": {
+        "version": "0.8.22",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
         }
       },
       "imports": [],
-      "versionRequirement": ">=0.4.22, <0.9.0",
-      "artifacts": {
-        "console": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "console.sol/console.0.8.17.json"
-        }
-      }
+      "versionPragmas": [
+        "0.8.22"
+      ],
+      "artifacts": [
+        "IBridgeProxy"
+      ]
     },
-    "lib/forge-std/src/console2.sol": {
-      "lastModificationDate": 1696510338566,
-      "contentHash": "491ca717c1915995e78cc361485a3067",
-      "sourceName": "lib/forge-std/src/console2.sol",
+    "/Users/nicholasfett/Company/Code/layer/evm/contracts/testing/BridgeProxyMock.sol": {
+      "lastModificationDate": 1701200453683,
+      "contentHash": "63510775e0ef4928b56a652680e3bddd",
+      "sourceName": "contracts/testing/BridgeProxyMock.sol",
       "solcConfig": {
+        "version": "0.8.22",
         "settings": {
+          "evmVersion": "paris",
           "optimizer": {
-            "enabled": true,
+            "enabled": false,
             "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
           },
           "outputSelection": {
             "*": {
-              "": [
-                "ast"
-              ],
               "*": [
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
                 "evm.methodIdentifiers",
                 "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": ">=0.4.22, <0.9.0",
-      "artifacts": {
-        "console2": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "console2.sol/console2.0.8.17.json"
-        }
-      }
-    },
-    "lib/forge-std/src/interfaces/IMulticall3.sol": {
-      "lastModificationDate": 1696510338570,
-      "contentHash": "7b131ca1ca32ef6378b7b9ad5488b901",
-      "sourceName": "lib/forge-std/src/interfaces/IMulticall3.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
+              ],
               "": [
                 "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
               ]
             }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "IMulticall3": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "IMulticall3.sol/IMulticall3.0.8.17.json"
-        }
-      }
-    },
-    "lib/forge-std/src/safeconsole.sol": {
-      "lastModificationDate": 1696510338570,
-      "contentHash": "ac3b1bf5a444db5db3656021830258a8",
-      "sourceName": "lib/forge-std/src/safeconsole.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": ">=0.6.2, <0.9.0",
-      "artifacts": {
-        "safeconsole": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "safeconsole.sol/safeconsole.0.8.17.json"
-        }
-      }
-    },
-    "script/Counter.s.sol": {
-      "lastModificationDate": 1696510338774,
-      "contentHash": "0705c52104730a78aef4aa6694175c81",
-      "sourceName": "script/Counter.s.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
+          }
         }
       },
       "imports": [
-        "lib/forge-std/src/Base.sol",
-        "lib/forge-std/src/Script.sol",
-        "lib/forge-std/src/StdChains.sol",
-        "lib/forge-std/src/StdCheats.sol",
-        "lib/forge-std/src/StdJson.sol",
-        "lib/forge-std/src/StdMath.sol",
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/StdStyle.sol",
-        "lib/forge-std/src/StdUtils.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console.sol",
-        "lib/forge-std/src/console2.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol",
-        "lib/forge-std/src/safeconsole.sol"
+        "../interfaces/IBridgeProxy.sol"
       ],
-      "versionRequirement": "^0.8.13",
-      "artifacts": {
-        "CounterScript": {
-          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Counter.s.sol/CounterScript.json"
-        }
-      }
-    },
-    "src/bridge/LayerLightClientBridge.sol": {
-      "lastModificationDate": 1699538003001,
-      "contentHash": "9c20499b869b0798a1f54ff498e49ed8",
-      "sourceName": "src/bridge/LayerLightClientBridge.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "src/bridge/ProtobufLib.sol"
+      "versionPragmas": [
+        "0.8.22"
       ],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "LayerLightClientBridge": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "LayerLightClientBridge.sol/LayerLightClientBridge.json"
-        }
-      }
-    },
-    "src/bridge/ProtobufLib.sol": {
-      "lastModificationDate": 1694810331081,
-      "contentHash": "8cf0437ac10b343094c633d45f2d0138",
-      "sourceName": "src/bridge/ProtobufLib.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "ProtobufLib": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "ProtobufLib.sol/ProtobufLib.json"
-        }
-      }
-    },
-    "src/forking/SimpleSchelling.sol": {
-      "lastModificationDate": 1696510338775,
-      "contentHash": "c097fba55c81df01a99f82efeb9db984",
-      "sourceName": "src/forking/SimpleSchelling.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "src/interfaces/IBridgeProxy.sol"
-      ],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "SimpleSchelling": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "SimpleSchelling.sol/SimpleSchelling.json"
-        }
-      }
-    },
-    "src/interfaces/IBridgeProxy.sol": {
-      "lastModificationDate": 1696510338775,
-      "contentHash": "152e1ab0d58bcf0f8815b3f3053404fa",
-      "sourceName": "src/interfaces/IBridgeProxy.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "IBridgeProxy": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "IBridgeProxy.sol/IBridgeProxy.json"
-        }
-      }
-    },
-    "src/testing/BridgeProxyMock.sol": {
-      "lastModificationDate": 1696510338776,
-      "contentHash": "63181fb6ce0a2bed18efba186250c2fe",
-      "sourceName": "src/testing/BridgeProxyMock.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "src/interfaces/IBridgeProxy.sol"
-      ],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "BridgeProxyMock": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "BridgeProxyMock.sol/BridgeProxyMock.json"
-        }
-      }
-    },
-    "test/BridgeTest.t.sol": {
-      "lastModificationDate": 1699281668079,
-      "contentHash": "94f96300879a34282bdce7891cd331cc",
-      "sourceName": "test/BridgeTest.t.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/lib/ds-test/src/test.sol",
-        "lib/forge-std/src/Base.sol",
-        "lib/forge-std/src/StdAssertions.sol",
-        "lib/forge-std/src/StdChains.sol",
-        "lib/forge-std/src/StdCheats.sol",
-        "lib/forge-std/src/StdError.sol",
-        "lib/forge-std/src/StdInvariant.sol",
-        "lib/forge-std/src/StdJson.sol",
-        "lib/forge-std/src/StdMath.sol",
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/StdStyle.sol",
-        "lib/forge-std/src/StdUtils.sol",
-        "lib/forge-std/src/Test.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console.sol",
-        "lib/forge-std/src/console2.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol",
-        "lib/forge-std/src/safeconsole.sol",
-        "src/bridge/LayerLightClientBridge.sol",
-        "src/bridge/ProtobufLib.sol"
-      ],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "BridgeTest": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "BridgeTest.t.sol/BridgeTest.json"
-        }
-      }
-    },
-    "test/BridgeTestHardcode.t.sol": {
-      "lastModificationDate": 1698935792788,
-      "contentHash": "2d9fc59058637b86f09faebd12753405",
-      "sourceName": "test/BridgeTestHardcode.t.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/lib/ds-test/src/test.sol",
-        "lib/forge-std/src/Base.sol",
-        "lib/forge-std/src/StdAssertions.sol",
-        "lib/forge-std/src/StdChains.sol",
-        "lib/forge-std/src/StdCheats.sol",
-        "lib/forge-std/src/StdError.sol",
-        "lib/forge-std/src/StdInvariant.sol",
-        "lib/forge-std/src/StdJson.sol",
-        "lib/forge-std/src/StdMath.sol",
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/StdStyle.sol",
-        "lib/forge-std/src/StdUtils.sol",
-        "lib/forge-std/src/Test.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console.sol",
-        "lib/forge-std/src/console2.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol",
-        "lib/forge-std/src/safeconsole.sol",
-        "src/bridge/LayerLightClientBridge.sol",
-        "src/bridge/ProtobufLib.sol"
-      ],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "CounterTest": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "BridgeTestHardcode.t.sol/CounterTest.json"
-        }
-      }
-    },
-    "test/SimpleSchellingFunction.t.sol": {
-      "lastModificationDate": 1696510338776,
-      "contentHash": "62707c89774876197b1c2b8928ee73cd",
-      "sourceName": "test/SimpleSchellingFunction.t.sol",
-      "solcConfig": {
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "metadata": {
-            "bytecodeHash": "ipfs",
-            "appendCBOR": true
-          },
-          "outputSelection": {
-            "*": {
-              "": [
-                "ast"
-              ],
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ]
-            }
-          },
-          "evmVersion": "london",
-          "libraries": {}
-        }
-      },
-      "imports": [
-        "lib/forge-std/lib/ds-test/src/test.sol",
-        "lib/forge-std/src/Base.sol",
-        "lib/forge-std/src/StdAssertions.sol",
-        "lib/forge-std/src/StdChains.sol",
-        "lib/forge-std/src/StdCheats.sol",
-        "lib/forge-std/src/StdError.sol",
-        "lib/forge-std/src/StdInvariant.sol",
-        "lib/forge-std/src/StdJson.sol",
-        "lib/forge-std/src/StdMath.sol",
-        "lib/forge-std/src/StdStorage.sol",
-        "lib/forge-std/src/StdStyle.sol",
-        "lib/forge-std/src/StdUtils.sol",
-        "lib/forge-std/src/Test.sol",
-        "lib/forge-std/src/Vm.sol",
-        "lib/forge-std/src/console.sol",
-        "lib/forge-std/src/console2.sol",
-        "lib/forge-std/src/interfaces/IMulticall3.sol",
-        "lib/forge-std/src/safeconsole.sol",
-        "src/forking/SimpleSchelling.sol",
-        "src/interfaces/IBridgeProxy.sol",
-        "src/testing/BridgeProxyMock.sol"
-      ],
-      "versionRequirement": "=0.8.3",
-      "artifacts": {
-        "CounterTest": {
-          "0.8.3+commit.8d00100c.Darwin.appleclang": "SimpleSchellingFunction.t.sol/CounterTest.json"
-        }
-      }
+      "artifacts": [
+        "BridgeProxyMock"
+      ]
     }
   }
 }
