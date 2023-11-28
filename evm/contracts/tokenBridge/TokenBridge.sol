@@ -24,14 +24,16 @@ contract TokenBridge {
     }
 
     function crossChainReceive(bytes memory _proof) external {
-        bytes32 _proofHash = keccak256(_proof);
-        require(!receivePaid(_proofHash), "invalid proof");
-        require(_verifyReceiveProof(_proof), "invalid proof");
-        receivePaid[_proofHash] = true;
-        token.transfer(_recipient, _amount);
+        // bytes32 _proofHash = keccak256(_proof);
+        // require(!receivePaid(_proofHash), "invalid proof");
+        // require(_verifyReceiveProof(_proof), "invalid proof");
+        // receivePaid[_proofHash] = true;
+        // token.transfer(_recipient, _amount);
     }
 
     function _verifyReceiveProof(bytes memory _proof) internal returns(bool) {
         // verify inclusion proof in the bridge contract
     }
+
+    // handle tokens sent to this contract, team recover
 }

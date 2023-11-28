@@ -1,0 +1,18 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ITellorMaster",
+  "sourceName": "contracts/transition/TellorLayerTransition.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "mintToOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
