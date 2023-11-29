@@ -1,0 +1,39 @@
+{
+  "name": "usingtellor",
+  "version": "5.0.4",
+  "main": "hardhat.config.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.5",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "babel-eslint": "^10.1.0",
+    "chai": "^4.3.6",
+    "eslint": "^8.10.0",
+    "ethereum-waffle": "^4.0.0-alpha.0",
+    "ethers": "^5.6.0",
+    "ethlint": "^1.2.5",
+    "hardhat": "^2.11.2",
+    "prettier": "^2.6.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solc": "^0.8.12",
+    "solium": "^1.2.5"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "eth-json-rpc-filters": "^4.2.2",
+    "ethereumjs-tx": "^2.1.2",
+    "web3": "^1.7.1"
+  },
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tellor-io/usingtellor"
+  },
+  "author": "Tellor",
+  "license": "MIT",
+  "homepage": "https://github.com/tellor-io/usingtellor"
+}

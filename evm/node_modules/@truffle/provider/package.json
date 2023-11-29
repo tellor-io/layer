@@ -1,0 +1,42 @@
+{
+  "name": "@truffle/provider",
+  "description": "Beefed up provider module for Truffle",
+  "license": "MIT",
+  "author": "Tim Coulter <tim@trufflesuite.com>",
+  "homepage": "https://github.com/trufflesuite/truffle/tree/master/packages/provider#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trufflesuite/truffle.git",
+    "directory": "packages/provider"
+  },
+  "bugs": {
+    "url": "https://github.com/trufflesuite/truffle/issues"
+  },
+  "version": "0.2.64",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "exit 0",
+    "test": "mocha"
+  },
+  "types": "./typings/index.d.ts",
+  "dependencies": {
+    "@truffle/error": "^0.1.1",
+    "@truffle/interface-adapter": "^0.5.25",
+    "debug": "^4.3.1",
+    "web3": "1.7.4"
+  },
+  "devDependencies": {
+    "ganache": "7.5.0",
+    "mocha": "10.1.0"
+  },
+  "keywords": [
+    "ethereum",
+    "http",
+    "provider",
+    "truffle"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "gitHead": "94dda0c2a75fda1ace35ab0009856699e2e06ede"
+}

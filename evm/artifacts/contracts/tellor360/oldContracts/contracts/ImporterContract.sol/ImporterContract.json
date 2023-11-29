@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ImporterContract",
+  "sourceName": "contracts/tellor360/oldContracts/contracts/ImporterContract.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212201b9f6aa9296e47e90a8da790e32c2877a9cb776da4e8fe1ed745a6c75199dee264736f6c63430008030033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212201b9f6aa9296e47e90a8da790e32c2877a9cb776da4e8fe1ed745a6c75199dee264736f6c63430008030033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

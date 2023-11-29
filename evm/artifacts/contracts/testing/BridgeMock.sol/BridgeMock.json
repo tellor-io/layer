@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BridgeMock",
+  "sourceName": "contracts/testing/BridgeMock.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea264697066735822122047f11bc8fdbcbf85f9797074f412cbb2afaeadff9841669c8151b053b650f2cb64736f6c63430008030033",
+  "deployedBytecode": "0x6080604052600080fdfea264697066735822122047f11bc8fdbcbf85f9797074f412cbb2afaeadff9841669c8151b053b650f2cb64736f6c63430008030033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

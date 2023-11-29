@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TellorVariables",
+  "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorVariables.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220a68444802b353d9473070b0c7df5fa39823675b1fc873792566fd26d7084ebf864736f6c63430008030033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220a68444802b353d9473070b0c7df5fa39823675b1fc873792566fd26d7084ebf864736f6c63430008030033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

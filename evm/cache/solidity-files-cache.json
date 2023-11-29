@@ -9,8 +9,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -47,8 +47,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -82,8 +82,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -117,8 +117,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -154,8 +154,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -189,8 +189,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -218,47 +218,16 @@
         "BridgeProxyMock"
       ]
     },
-    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/testing/BridgeStructTest.sol": {
-      "lastModificationDate": 1699543559228,
-      "contentHash": "dc1b382f9dc44a2a95da12438b0c2379",
-      "sourceName": "contracts/testing/BridgeStructTest.sol",
-      "solcConfig": {
-        "version": "0.8.3",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [],
-      "artifacts": []
-    },
     "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/transition/TellorLayerTransition.sol": {
-      "lastModificationDate": 1701183546791,
-      "contentHash": "0b59d7a25dc00c7213e447e4a4313e94",
+      "lastModificationDate": 1701280542988,
+      "contentHash": "8d1d0169e7bcc1226f1c7e4b143a9336",
       "sourceName": "contracts/transition/TellorLayerTransition.sol",
       "solcConfig": {
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -296,8 +265,8 @@
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -324,15 +293,15 @@
       ]
     },
     "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tokenBridge/TokenBridge.sol": {
-      "lastModificationDate": 1701183584216,
-      "contentHash": "0054174dc73fa195f0f7308b66eedad1",
+      "lastModificationDate": 1701279273382,
+      "contentHash": "cf89d9945085258c3bf1c92461de8297",
       "sourceName": "contracts/tokenBridge/TokenBridge.sol",
       "solcConfig": {
         "version": "0.8.3",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 300
           },
           "outputSelection": {
             "*": {
@@ -358,6 +327,2301 @@
       ],
       "artifacts": [
         "TokenBridge"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/TestController.sol": {
+      "lastModificationDate": 1701193375949,
+      "contentHash": "996eb2fa0b9d60a4c286124cca492f70",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/TestController.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Controller.sol",
+        "hardhat/console.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TestController"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Controller.sol": {
+      "lastModificationDate": 1701193375942,
+      "contentHash": "6ecb4f63a14e3bcecdae3052855db7bd",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Controller.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./TellorStaking.sol",
+        "./interfaces/IController.sol",
+        "./Transition.sol",
+        "./Getters.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Controller"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/interfaces/IController.sol": {
+      "lastModificationDate": 1701193375972,
+      "contentHash": "00aeb688350762a34a13da186b0d78d6",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/interfaces/IController.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IController"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Transition.sol": {
+      "lastModificationDate": 1701193375960,
+      "contentHash": "29d80dfc3f10b7cdd50964a32a7f274d",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Transition.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./tellor3/TellorStorage.sol",
+        "./TellorVars.sol",
+        "./interfaces/IOracle.sol",
+        "./interfaces/IController.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Transition"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Getters.sol": {
+      "lastModificationDate": 1701193375959,
+      "contentHash": "fd120f4e0a647c51632289db238aa3e7",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Getters.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./tellor3/TellorStorage.sol",
+        "./TellorVars.sol",
+        "./interfaces/IOracle.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Getters"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/TellorStaking.sol": {
+      "lastModificationDate": 1701193375958,
+      "contentHash": "b46d67849a71d2ae479bb73fca688647",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/TellorStaking.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Token.sol",
+        "./interfaces/IGovernance.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TellorStaking"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/TellorVars.sol": {
+      "lastModificationDate": 1701193375945,
+      "contentHash": "bb6f0c59b1b5b89dc73fa81161a7ad86",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/TellorVars.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./tellor3/TellorVariables.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TellorVars"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/TellorStorage.sol": {
+      "lastModificationDate": 1701193375937,
+      "contentHash": "5fe436c9f4e6e91a8295b3f4262dacd1",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorStorage.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.7.4"
+      ],
+      "artifacts": [
+        "TellorStorage"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/interfaces/IOracle.sol": {
+      "lastModificationDate": 1701193375969,
+      "contentHash": "797b290d214edbd6a3846c49f7166242",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/interfaces/IOracle.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IOracle"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/TellorVariables.sol": {
+      "lastModificationDate": 1701193375940,
+      "contentHash": "c869da292c85aa4bedac5de9f858bf10",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorVariables.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.7.4"
+      ],
+      "artifacts": [
+        "TellorVariables"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/interfaces/IGovernance.sol": {
+      "lastModificationDate": 1701193375971,
+      "contentHash": "950ac56f5edf8bcc0c39a53f9392edb4",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/interfaces/IGovernance.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IGovernance"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Token.sol": {
+      "lastModificationDate": 1701193375924,
+      "contentHash": "8dd8541e2e6cf211abc90e0fcd820bda",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Token.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./tellor3/TellorStorage.sol",
+        "./TellorVars.sol",
+        "./interfaces/IGovernance.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Token"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Treasury.sol": {
+      "lastModificationDate": 1701193375962,
+      "contentHash": "4ba0b97058af64f932d94e009440d81e",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Treasury.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IController.sol",
+        "./TellorVars.sol",
+        "./interfaces/IGovernance.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Treasury"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Oracle.sol": {
+      "lastModificationDate": 1701193375944,
+      "contentHash": "6fdce09dc8451d784f410bc9f6f76edc",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Oracle.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IController.sol",
+        "./TellorVars.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Oracle"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/Governance.sol": {
+      "lastModificationDate": 1701193375943,
+      "contentHash": "ed7b4b5f8511a1fc6df2375aa181d9f6",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/Governance.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./TellorVars.sol",
+        "./interfaces/IOracle.sol",
+        "./interfaces/IController.sol",
+        "./interfaces/ITreasury.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Governance"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/interfaces/ITreasury.sol": {
+      "lastModificationDate": 1701193375964,
+      "contentHash": "72bbfde6bf558ecf25b42603f8e0d344",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/interfaces/ITreasury.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "ITreasury"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/TestGovernance.sol": {
+      "lastModificationDate": 1701193375954,
+      "contentHash": "d88795b2c4d8a657caad8598290a8a8f",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/TestGovernance.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Governance.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TestGovernance"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/ITellor.sol": {
+      "lastModificationDate": 1701193375931,
+      "contentHash": "2eb080755aa81fcee83f69e5d700627b",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/ITellor.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.7.4"
+      ],
+      "artifacts": [
+        "ITellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/NewTransition.sol": {
+      "lastModificationDate": 1701193375992,
+      "contentHash": "862abea3731aa3e824b03006732e02b5",
+      "sourceName": "contracts/tellor360/NewTransition.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./oldContracts/contracts/TellorVars.sol",
+        "./oldContracts/contracts/interfaces/IOracle.sol",
+        "./oldContracts/contracts/tellor3/TellorStorage.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "NewTransition"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/Tellor360.sol": {
+      "lastModificationDate": 1701193375973,
+      "contentHash": "a08f49ffd8e2c977ae2540b99c385aa5",
+      "sourceName": "contracts/tellor360/Tellor360.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./BaseToken.sol",
+        "./NewTransition.sol",
+        "./interfaces/ITellorFlex.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Tellor360"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/BaseToken.sol": {
+      "lastModificationDate": 1701193375993,
+      "contentHash": "969c2636956724d1191a4af0c9f86364",
+      "sourceName": "contracts/tellor360/BaseToken.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./oldContracts/contracts/TellorVars.sol",
+        "./oldContracts/contracts/interfaces/IGovernance.sol",
+        "./oldContracts/contracts/tellor3/TellorStorage.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "BaseToken"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/interfaces/ITellorFlex.sol": {
+      "lastModificationDate": 1701193375995,
+      "contentHash": "8deb2365ea4293dbee831f56a9f50cba",
+      "sourceName": "contracts/tellor360/interfaces/ITellorFlex.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "ITellorFlex"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/Test360.sol": {
+      "lastModificationDate": 1701193375980,
+      "contentHash": "6f7b5146aa793ceb408165821ad40fdf",
+      "sourceName": "contracts/tellor360/testing/Test360.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Tellor360.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Test360"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/TestToken.sol": {
+      "lastModificationDate": 1701193375991,
+      "contentHash": "a5c9f0b4b4260148cc90431ed46f127d",
+      "sourceName": "contracts/tellor360/testing/TestToken.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../BaseToken.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TestToken"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/TestToken.sol": {
+      "lastModificationDate": 1701193375957,
+      "contentHash": "7d6408482c3ab4b59c342503525c81d8",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/TestToken.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../../BaseToken.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TestToken"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/ImporterContract.sol": {
+      "lastModificationDate": 1701194026271,
+      "contentHash": "d011effed3faa20fecb2594757255d0b",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/ImporterContract.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "tellorflex/contracts/TellorFlex.sol",
+        "polygongovernance/contracts/Governance.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ImporterContract"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/interfaces/IERC20.sol": {
+      "lastModificationDate": 1701193375965,
+      "contentHash": "3e4bb40126fc7c2e0669dc4828c7ab87",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/interfaces/IERC20.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IERC20"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol": {
+      "lastModificationDate": 1701193375967,
+      "contentHash": "4956794863f9615339c7e07679795745",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "ITellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/ForceSendEther.sol": {
+      "lastModificationDate": 1701193375956,
+      "contentHash": "2e1b2a64ed325ac550e483a7de627a64",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/ForceSendEther.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "ForceSendEther"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/IPriceFeed.sol": {
+      "lastModificationDate": 1701193375950,
+      "contentHash": "125f971e33de188bf4a50b2bf4644d2d",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/IPriceFeed.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IPriceFeed"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/IsUsingTellor.sol": {
+      "lastModificationDate": 1701193375952,
+      "contentHash": "0299d7c39c5ad60015b3a99d1176fdb3",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/IsUsingTellor.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./UsingTellor.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IsUsingTellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/UsingTellor.sol": {
+      "lastModificationDate": 1701193375946,
+      "contentHash": "56c5d8e134c0a8708d1b6d2a250b7b01",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/UsingTellor.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "ITellor",
+        "UsingTellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/MedianOracle.sol": {
+      "lastModificationDate": 1701193375953,
+      "contentHash": "f657ae6ab516eaed0ac686f7e6675650",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/MedianOracle.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "MedianOracle"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/testing/TellorProvider.sol": {
+      "lastModificationDate": 1701193375948,
+      "contentHash": "9684233e424bd92b10f418eb1f047498",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/testing/TellorProvider.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IMedianOracle",
+        "ITellorGetters",
+        "TellorProvider"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/IPriceFeed.sol": {
+      "lastModificationDate": 1701193375976,
+      "contentHash": "fc6733241e13c11462dce6926df1e4aa",
+      "sourceName": "contracts/tellor360/testing/IPriceFeed.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IPriceFeed"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/TellorProvider.sol": {
+      "lastModificationDate": 1701193375975,
+      "contentHash": "f8f0840fd55393f8bc199303eb946b5a",
+      "sourceName": "contracts/tellor360/testing/TellorProvider.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IMedianOracle",
+        "ITellorGetters",
+        "TellorProvider"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/TestGovernance.sol": {
+      "lastModificationDate": 1701193375990,
+      "contentHash": "c96a53b532b7fa139001278d090b5128",
+      "sourceName": "contracts/tellor360/testing/TestGovernance.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "polygongovernance/contracts/Governance.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TestGovernance"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/polygongovernance/contracts/Governance.sol": {
+      "lastModificationDate": 1701193746452,
+      "contentHash": "e94bfba76bb3655510b3d79dc83aabc3",
+      "sourceName": "polygongovernance/contracts/Governance.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IOracle.sol",
+        "./interfaces/IERC20.sol",
+        "usingtellor/contracts/UsingTellor.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "Governance"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/polygongovernance/contracts/interfaces/IOracle.sol": {
+      "lastModificationDate": 1701193746453,
+      "contentHash": "32503df741051c01c27ba3cea1c3580b",
+      "sourceName": "polygongovernance/contracts/interfaces/IOracle.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IOracle"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/polygongovernance/contracts/interfaces/IERC20.sol": {
+      "lastModificationDate": 1701193746453,
+      "contentHash": "b877d87598b67b4b8e786129fe4468f8",
+      "sourceName": "polygongovernance/contracts/interfaces/IERC20.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IERC20"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/usingtellor/contracts/UsingTellor.sol": {
+      "lastModificationDate": 1701193745932,
+      "contentHash": "cb5640ed4217a27ad9452b7d01395c25",
+      "sourceName": "usingtellor/contracts/UsingTellor.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interface/ITellor.sol",
+        "./interface/IERC2362.sol",
+        "./interface/IMappingContract.sol"
+      ],
+      "versionPragmas": [
+        ">=0.8.0"
+      ],
+      "artifacts": [
+        "UsingTellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/usingtellor/contracts/interface/IERC2362.sol": {
+      "lastModificationDate": 1701193745932,
+      "contentHash": "4adb8ed9c9f17cd35179df77aa211b8d",
+      "sourceName": "usingtellor/contracts/interface/IERC2362.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.0"
+      ],
+      "artifacts": [
+        "IERC2362"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/usingtellor/contracts/interface/ITellor.sol": {
+      "lastModificationDate": 1701193745932,
+      "contentHash": "50674ad600c2230d403807a33bce316b",
+      "sourceName": "usingtellor/contracts/interface/ITellor.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.8.0"
+      ],
+      "artifacts": [
+        "Autopay",
+        "ITellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/usingtellor/contracts/interface/IMappingContract.sol": {
+      "lastModificationDate": 1701193745932,
+      "contentHash": "9691e55eaec78029b3aee5ec06caf756",
+      "sourceName": "usingtellor/contracts/interface/IMappingContract.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "IMappingContract"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/TellorTransfer.sol": {
+      "lastModificationDate": 1701193375929,
+      "contentHash": "6aea1444c33bcc10c2a49261d677e574",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorTransfer.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./SafeMath.sol",
+        "./TellorStorage.sol",
+        "./TellorVariables.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "TellorTransfer"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/SafeMath.sol": {
+      "lastModificationDate": 1701193375933,
+      "contentHash": "9f3c86496405c12c49e21f6cdc20b72c",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/SafeMath.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "SafeMath"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/TellorMaster.sol": {
+      "lastModificationDate": 1701193375936,
+      "contentHash": "b9c75cdd2cdd5a43bdade7f2f8012047",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorMaster.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./TellorStorage.sol",
+        "./TellorVariables.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "TellorMaster"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/TellorGetters.sol": {
+      "lastModificationDate": 1701193375935,
+      "contentHash": "6e5334d061ef3e9f21836907ed125260",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorGetters.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./SafeMath.sol",
+        "./TellorStorage.sol",
+        "./TellorVariables.sol",
+        "./Utilities.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "TellorGetters"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/Utilities.sol": {
+      "lastModificationDate": 1701193375934,
+      "contentHash": "bda19c236a87c33dc7ed3a9d32da84cc",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/Utilities.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "Utilities"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/TellorStake.sol": {
+      "lastModificationDate": 1701193375938,
+      "contentHash": "2c74ea3a06de0994f4fec6f2ead4f555",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorStake.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./TellorTransfer.sol",
+        "./TellorGetters.sol",
+        "./Extension.sol",
+        "./Utilities.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "TellorStake"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/Extension.sol": {
+      "lastModificationDate": 1701193375939,
+      "contentHash": "f8ab0ef35489885f4ef40e04643dd203",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/Extension.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./SafeMath.sol",
+        "./TellorGetters.sol",
+        "./TellorVariables.sol",
+        "./Utilities.sol"
+      ],
+      "versionPragmas": [
+        ">=0.7.4"
+      ],
+      "artifacts": [
+        "Extension"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/Tellor.sol": {
+      "lastModificationDate": 1701193375928,
+      "contentHash": "f533c80c4c2ef53658bb4815131b55e8",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/Tellor.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./TellorStake.sol",
+        "./TellorGetters.sol",
+        "./Utilities.sol",
+        "./ITellor.sol",
+        "./SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "Tellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/Mocks/UtilitiesTest.sol": {
+      "lastModificationDate": 1701193375925,
+      "contentHash": "bc23ed9bf23ca013f48adbade0ea5eb9",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/Mocks/UtilitiesTest.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Utilities.sol",
+        "../Tellor.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "UtilitiesTest"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/oldContracts/contracts/tellor3/Mocks/TellorTest.sol": {
+      "lastModificationDate": 1701193375926,
+      "contentHash": "b2b320b02d028059ac2916186d84c5ae",
+      "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/Mocks/TellorTest.sol",
+      "solcConfig": {
+        "version": "0.7.4",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../Tellor.sol"
+      ],
+      "versionPragmas": [
+        "0.7.4"
+      ],
+      "artifacts": [
+        "TellorTest"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/MedianOracle.sol": {
+      "lastModificationDate": 1701193375988,
+      "contentHash": "a733b4241d88969468eff008c0df4fc1",
+      "sourceName": "contracts/tellor360/testing/MedianOracle.sol",
+      "solcConfig": {
+        "version": "0.4.24",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.4.24",
+        "^0.4.24",
+        "^0.4.24",
+        "0.4.24"
+      ],
+      "artifacts": [
+        "IOracle",
+        "MedianOracle",
+        "Ownable",
+        "SafeMath",
+        "Select"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/liquity/ITellor.sol": {
+      "lastModificationDate": 1701193375982,
+      "contentHash": "c1bd2caf347f1f4deea3fbf94551ef65",
+      "sourceName": "contracts/tellor360/testing/liquity/ITellor.sol",
+      "solcConfig": {
+        "version": "0.6.11",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.6.11"
+      ],
+      "artifacts": [
+        "ITellor"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/liquity/TellorCaller.sol": {
+      "lastModificationDate": 1701193375987,
+      "contentHash": "32c2a54625ac9bf98cd8e3a9dac6ab3d",
+      "sourceName": "contracts/tellor360/testing/liquity/TellorCaller.sol",
+      "solcConfig": {
+        "version": "0.6.11",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./ITellorCaller.sol",
+        "./ITellor.sol",
+        "./SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "0.6.11"
+      ],
+      "artifacts": [
+        "TellorCaller"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/liquity/ITellorCaller.sol": {
+      "lastModificationDate": 1701193375985,
+      "contentHash": "37d470c7a90a64c2e2adde381def44c8",
+      "sourceName": "contracts/tellor360/testing/liquity/ITellorCaller.sol",
+      "solcConfig": {
+        "version": "0.6.11",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.6.11"
+      ],
+      "artifacts": [
+        "ITellorCaller"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/tellor360/testing/liquity/SafeMath.sol": {
+      "lastModificationDate": 1701193375983,
+      "contentHash": "df1366c14c6227b7790aef2b451bfb1a",
+      "sourceName": "contracts/tellor360/testing/liquity/SafeMath.sol",
+      "solcConfig": {
+        "version": "0.6.11",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 100
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.6.11"
+      ],
+      "artifacts": [
+        "SafeMath"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/tellorflex/contracts/TellorFlex.sol": {
+      "lastModificationDate": 1701193746609,
+      "contentHash": "ad300c29edbebb8aa3dadf235789de4c",
+      "sourceName": "tellorflex/contracts/TellorFlex.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./interfaces/IERC20.sol"
+      ],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "TellorFlex"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/node_modules/tellorflex/contracts/interfaces/IERC20.sol": {
+      "lastModificationDate": 1701193746609,
+      "contentHash": "b877d87598b67b4b8e786129fe4468f8",
+      "sourceName": "tellorflex/contracts/interfaces/IERC20.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "IERC20"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/testing/BridgeMock.sol": {
+      "lastModificationDate": 1701279225235,
+      "contentHash": "ad2c9c72bd4a82af38eb607d3d9b5444",
+      "sourceName": "contracts/testing/BridgeMock.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "BridgeMock"
       ]
     }
   }

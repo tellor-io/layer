@@ -1,0 +1,27 @@
+name: Tests
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run tests
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+    - run: npm install
+    - run: npx hardhat test
+      env:
+        CI: true
+        # These are not needed for the tests but
+        # hardhat fails to start when not present.
+        NODE_URL_RINKEBY: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        NODE_URL_MAINNET: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        PRIVATE_KEY: "00000000000000000000000000000000000000000000000000"

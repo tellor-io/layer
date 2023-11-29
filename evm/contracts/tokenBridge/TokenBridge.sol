@@ -5,13 +5,15 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 
 contract TokenBridge {
     IERC20 public token;
+    address public dataBridge;
 
     mapping(bytes32 => bool) public receivePaid;
 
     event CrossChainSend(uint256 amount, uint256 fee, address recipient);
  
-    constructor(address _token) {
+    constructor(address _token, address _dataBridge) {
         token = IERC20(_token);
+        dataBridge = _dataBridge;
     }
 
     function crossChainSend(uint256 _amount, uint256 _fee, address _recipient) external {

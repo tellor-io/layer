@@ -1,0 +1,28 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "no-unused-vars": "error",
+    "code-complexity": [
+      "warn",
+      7
+    ],
+    "compiler-version": [
+      "error",
+      ">=0.8.0"
+    ],
+    "contract-name-camelcase": "error",
+    "not-rely-on-time": "off",
+    "reason-string": [
+      "warn",
+      {
+        "maxLength": 70
+      }
+    ],
+    "func-visibility": [
+      "warn",
+      {
+        "ignoreConstructors": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "ForceSendEther",
+  "sourceName": "contracts/tellor360/oldContracts/contracts/testing/ForceSendEther.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address payable",
+          "name": "_beneficiary",
+          "type": "address"
+        }
+      ],
+      "name": "forceSendEther",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060a98061001e6000396000f3fe608060405260043610601f5760003560e01c806306c4a68414602a576025565b36602557005b600080fd5b603960353660046047565b603b565b005b806001600160a01b0316ff5b6000602082840312156057578081fd5b81356001600160a01b0381168114606c578182fd5b939250505056fea2646970667358221220856ef12d569edb90403abe7474f304472184ac87cc2c64f707f7f31dd08fef0d64736f6c63430008030033",
+  "deployedBytecode": "0x608060405260043610601f5760003560e01c806306c4a68414602a576025565b36602557005b600080fd5b603960353660046047565b603b565b005b806001600160a01b0316ff5b6000602082840312156057578081fd5b81356001600160a01b0381168114606c578182fd5b939250505056fea2646970667358221220856ef12d569edb90403abe7474f304472184ac87cc2c64f707f7f31dd08fef0d64736f6c63430008030033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,299 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "TellorStorage",
+  "sourceName": "contracts/tellor360/oldContracts/contracts/tellor3/TellorStorage.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "_allowances",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "addresses",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "balances",
+      "outputs": [
+        {
+          "internalType": "uint128",
+          "name": "fromBlock",
+          "type": "uint128"
+        },
+        {
+          "internalType": "uint128",
+          "name": "value",
+          "type": "uint128"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "bytesVars",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "currentMiners",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "miner",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "disputeIdByDisputeHash",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "disputesById",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "hash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "int256",
+          "name": "tally",
+          "type": "int256"
+        },
+        {
+          "internalType": "bool",
+          "name": "executed",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "disputeVotePassed",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "isPropFork",
+          "type": "bool"
+        },
+        {
+          "internalType": "address",
+          "name": "reportedMiner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "reportingParty",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "proposedForkAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "migrated",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "minersByChallenge",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "newValueTimestamps",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "requestIdByQueryHash",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "uints",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610511806100206000396000f3fe608060405234801561001057600080fd5b50600436106100d45760003560e01c806362dd1d2a11610081578063cbf1304d1161005b578063cbf1304d1461025c578063d01f4d9e14610298578063db085beb146102b8576100d4565b806362dd1d2a146101db578063699f200f146101fb578063b59e14d41461023c576100d4565b806348b18e54116100b257806348b18e541461015a5780634ba0a5ee146101985780635700242c146101bb576100d4565b8063024c2ddd146100d95780631fd2236414610117578063438c0aa314610147575b600080fd5b6101046100e7366004610446565b604a60209081526000928352604080842090915290825290205481565b6040519081526020015b60405180910390f35b61012a6101253660046104a1565b610371565b604080519283526001600160a01b0390911660208301520161010e565b6101046101553660046104a1565b61039c565b6101886101683660046104b9565b603960209081526000928352604080842090915290825290205460ff1681565b604051901515815260200161010e565b6101886101a6366004610425565b604b6020526000908152604090205460ff1681565b6101046101c93660046104a1565b60376020526000908152604090205481565b6101046101e93660046104a1565b60486020526000908152604090205481565b6102246102093660046104a1565b6047602052600090815260409020546001600160a01b031681565b6040516001600160a01b03909116815260200161010e565b61010461024a3660046104a1565b60466020526000908152604090205481565b61026f61026a366004610478565b6103bd565b604080516fffffffffffffffffffffffffffffffff93841681529290911660208301520161010e565b6101046102a63660046104a1565b60386020526000908152604090205481565b6103226102c63660046104a1565b603660205260009081526040902080546001820154600283015460038401546004909401549293919260ff808316936101008404821693620100008104909216926001600160a01b036301000000909304831692918216911688565b604080519889526020890197909752941515958701959095529115156060860152151560808501526001600160a01b0390811660a085015291821660c08401521660e08201526101000161010e565b603a816005811061038157600080fd5b6002020180546001909101549091506001600160a01b031682565b603381815481106103ac57600080fd5b600091825260209091200154905081565b604960205281600052604060002081815481106103d957600080fd5b6000918252602090912001546fffffffffffffffffffffffffffffffff8082169350600160801b90910416905082565b80356001600160a01b038116811461042057600080fd5b919050565b600060208284031215610436578081fd5b61043f82610409565b9392505050565b60008060408385031215610458578081fd5b61046183610409565b915061046f60208401610409565b90509250929050565b6000806040838503121561048a578182fd5b61049383610409565b946020939093013593505050565b6000602082840312156104b2578081fd5b5035919050565b600080604083850312156104cb578182fd5b8235915061046f6020840161040956fea264697066735822122031e16452d74530d5089c3c66e211ca395b6341943250866daa8513c37a6c745064736f6c63430008030033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100d45760003560e01c806362dd1d2a11610081578063cbf1304d1161005b578063cbf1304d1461025c578063d01f4d9e14610298578063db085beb146102b8576100d4565b806362dd1d2a146101db578063699f200f146101fb578063b59e14d41461023c576100d4565b806348b18e54116100b257806348b18e541461015a5780634ba0a5ee146101985780635700242c146101bb576100d4565b8063024c2ddd146100d95780631fd2236414610117578063438c0aa314610147575b600080fd5b6101046100e7366004610446565b604a60209081526000928352604080842090915290825290205481565b6040519081526020015b60405180910390f35b61012a6101253660046104a1565b610371565b604080519283526001600160a01b0390911660208301520161010e565b6101046101553660046104a1565b61039c565b6101886101683660046104b9565b603960209081526000928352604080842090915290825290205460ff1681565b604051901515815260200161010e565b6101886101a6366004610425565b604b6020526000908152604090205460ff1681565b6101046101c93660046104a1565b60376020526000908152604090205481565b6101046101e93660046104a1565b60486020526000908152604090205481565b6102246102093660046104a1565b6047602052600090815260409020546001600160a01b031681565b6040516001600160a01b03909116815260200161010e565b61010461024a3660046104a1565b60466020526000908152604090205481565b61026f61026a366004610478565b6103bd565b604080516fffffffffffffffffffffffffffffffff93841681529290911660208301520161010e565b6101046102a63660046104a1565b60386020526000908152604090205481565b6103226102c63660046104a1565b603660205260009081526040902080546001820154600283015460038401546004909401549293919260ff808316936101008404821693620100008104909216926001600160a01b036301000000909304831692918216911688565b604080519889526020890197909752941515958701959095529115156060860152151560808501526001600160a01b0390811660a085015291821660c08401521660e08201526101000161010e565b603a816005811061038157600080fd5b6002020180546001909101549091506001600160a01b031682565b603381815481106103ac57600080fd5b600091825260209091200154905081565b604960205281600052604060002081815481106103d957600080fd5b6000918252602090912001546fffffffffffffffffffffffffffffffff8082169350600160801b90910416905082565b80356001600160a01b038116811461042057600080fd5b919050565b600060208284031215610436578081fd5b61043f82610409565b9392505050565b60008060408385031215610458578081fd5b61046183610409565b915061046f60208401610409565b90509250929050565b6000806040838503121561048a578182fd5b61049383610409565b946020939093013593505050565b6000602082840312156104b2578081fd5b5035919050565b600080604083850312156104cb578182fd5b8235915061046f6020840161040956fea264697066735822122031e16452d74530d5089c3c66e211ca395b6341943250866daa8513c37a6c745064736f6c63430008030033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

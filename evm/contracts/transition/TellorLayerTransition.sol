@@ -258,4 +258,8 @@ contract TellorLayerTransition {
     {
         return values[_queryId][_timestamp];
     }
+
+    function verify() external pure returns (uint256) {
+        return 9999;
+    }
 }
