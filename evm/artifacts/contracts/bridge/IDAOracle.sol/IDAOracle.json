@@ -6,9 +6,9 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "_tupleRootNonce",
-          "type": "uint256"
+          "internalType": "bytes32",
+          "name": "_oracleRoot",
+          "type": "bytes32"
         },
         {
           "components": [

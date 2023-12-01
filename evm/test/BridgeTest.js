@@ -7,28 +7,29 @@ const { prependOnceListener } = require("process");
 const BN = ethers.BigNumber.from
 const abiCoder = new ethers.utils.AbiCoder();
 
-describe("LayerLightClientBridge - Function Tests", function () {
+describe("Blobstream - Function Tests", function () {
 
-    let bridge, accounts, validators, powers;
+    let bridge, validatorHash, valPower, accounts, validators, powers;
     let startHeight = 0;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
     const CHAIN_ID = "layer"
     
 
     beforeEach(async function () {
-        const Bridge = await ethers.getContractFactory("LayerLightClientBridge");
-        bridge = await Bridge.deploy(UNBONDING_PERIOD);
-        accounts = await ethers.getSigners();
-
+        const Bridge = await ethers.getContractFactory("Blobstream");
         if(startHeight == 0) {
             startHeight = await h.getLatestBlockNumber()
             valsResponse = await h.getValidatorSet(startHeight)
             validators = valsResponse[0]
             powers = valsResponse[1]
         }
-
-        await bridge.init(validators, powers, CHAIN_ID)
-
+        for(i = 0; i< powers.length; i++){
+            valPower += powers[i]
+        }
+        let enc = ethers.utils.defaultAbiCoder.encode(["address[]"], validators)
+        let validatorHash = web3.utils.keccak256(enc);
+        bridge = await Bridge.deploy(startHeight,valPower * 2/3,validatorHash) ;
+        accounts = await ethers.getSigners();
     });
 
     it("Should be able to set the bridge address", async function () {

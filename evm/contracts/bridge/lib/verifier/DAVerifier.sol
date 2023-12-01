@@ -31,7 +31,7 @@ struct SharesProof {
 /// was committed to, by the Blobstream smart contract, at some specif nonce.
 struct AttestationProof {
     // the attestation nonce that commits to the data root tuple.
-    uint256 tupleRootNonce;
+    bytes32 oracleRoot;
     // the data root tuple that was committed to.
     DataRootTuple tuple;
     // the binary merkle proof of the tuple to the commitment.
@@ -144,7 +144,7 @@ library DAVerifier {
         // checking that the data root was committed to by the Blobstream smart contract
         if (
             !_bridge.verifyAttestation(
-                _attestationProof.tupleRootNonce, _attestationProof.tuple, _attestationProof.proof
+                _attestationProof.oracleRoot, _attestationProof.tuple, _attestationProof.proof
             )
         ) {
             return (false, ErrorCodes.InvalidDataRootTupleToDataRootTupleRootProof);
@@ -175,7 +175,7 @@ library DAVerifier {
         // checking that the data root was committed to by the Blobstream smart contract
         if (
             !_bridge.verifyAttestation(
-                _attestationProof.tupleRootNonce, _attestationProof.tuple, _attestationProof.proof
+                _attestationProof.oracleRoot, _attestationProof.tuple, _attestationProof.proof
             )
         ) {
             return (false, ErrorCodes.InvalidDataRootTupleToDataRootTupleRootProof);
