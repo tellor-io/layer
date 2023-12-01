@@ -1,4 +1,5 @@
 package keeper_test
+// package name is keeper_test instead of keeper
 
 import (
 	"testing"
@@ -6,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/registry/types"
 )
-
+// all tests start with Test and take in a *testing.T object
 func TestRegisterQuery(t *testing.T) {
 	ms, ctx, k, _ := setupMsgServer(t)
 	require.NotNil(t, ms)
@@ -77,7 +78,7 @@ func TestRegisterQuery(t *testing.T) {
 		Creator:    "creator1",
 		QueryType:  "queryType1",
 		DataTypes:  []string{"uint256", "uint256"},
-		DataFields: []string{"1", "2"},
+		DataFields: []string{"1", "2"}, 
 	}
 	registerQueryResult, err = ms.RegisterQuery(ctx, queryInput)
 	require.ErrorContains(t, err, "query ID ", queryID1, " already exists")

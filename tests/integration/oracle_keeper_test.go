@@ -111,6 +111,9 @@ func (s *IntegrationTestSuite) TestGetUserTipTotal() {
 
 func (s *IntegrationTestSuite) TestSmallTip() {
 	_, msgServer := s.oracleKeeper()
+	// do this but with all the modules / keepers 
+	// test interactions between modules 
+	// can play around with the sdk modules 
 	addr := s.newKeysWithTokens()
 	tip := sdk.NewCoin(s.denom, sdk.NewInt(10))
 	twoPercent := sdk.NewCoin(s.denom, tip.Amount.Mul(sdk.NewInt(2)).Quo(sdk.NewInt(100)))
