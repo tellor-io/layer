@@ -219,8 +219,8 @@
       ]
     },
     "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/transition/TellorLayerTransition.sol": {
-      "lastModificationDate": 1701280542988,
-      "contentHash": "8d1d0169e7bcc1226f1c7e4b143a9336",
+      "lastModificationDate": 1701478460222,
+      "contentHash": "430fe4335177ad6c4f3664e3c60cf6f9",
       "sourceName": "contracts/transition/TellorLayerTransition.sol",
       "solcConfig": {
         "version": "0.8.3",
@@ -247,7 +247,8 @@
       },
       "imports": [
         "../bridge/LayerLightClientBridge.sol",
-        "../interfaces/IERC20.sol"
+        "../interfaces/IERC20.sol",
+        "../interfaces/ITellorFlex.sol"
       ],
       "versionPragmas": [
         "0.8.3"
@@ -2622,6 +2623,76 @@
       ],
       "artifacts": [
         "BridgeMock"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/interfaces/ITellorFlex.sol": {
+      "lastModificationDate": 1701470770510,
+      "contentHash": "0396b2ea84581735c70cbf5f9f33a1a8",
+      "sourceName": "contracts/interfaces/ITellorFlex.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.0"
+      ],
+      "artifacts": [
+        "ITellorFlex"
+      ]
+    },
+    "/Users/timothykernell/Documents/tellor/cosmos/layer/evm/contracts/usingtellor/UsingTellorLayer.sol": {
+      "lastModificationDate": 1701453444149,
+      "contentHash": "3d610805caa35e33dbf38cb2ea376573",
+      "sourceName": "contracts/usingtellor/UsingTellorLayer.sol",
+      "solcConfig": {
+        "version": "0.8.3",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 300
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "0.8.3"
+      ],
+      "artifacts": [
+        "UsingTellorLayer"
       ]
     }
   }

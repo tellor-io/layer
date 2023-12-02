@@ -1,0 +1,74 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "UsingTellorLayer",
+  "sourceName": "contracts/usingtellor/UsingTellorLayer.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_bridge",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "bridge",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentValue",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getDataBefore",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNewValueCountByQueryId",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161014e38038061014e83398101604081905261002f91610054565b600080546001600160a01b0319166001600160a01b0392909216919091179055610082565b600060208284031215610065578081fd5b81516001600160a01b038116811461007b578182fd5b9392505050565b60be806100906000396000f3fe6080604052348015600f57600080fd5b506004361060465760003560e01c80630f76c11414604b578063bb4271a614604b578063e78cea9214605f578063f2caaf3814604b575b600080fd5b604051600081526020015b60405180910390f35b6000546071906001600160a01b031681565b6040516001600160a01b039091168152602001605656fea26469706673582212202a71734d63913c0a3c8afff9f3a8932df31ce3404c507d0bf83c4605d4369eef64736f6c63430008030033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060465760003560e01c80630f76c11414604b578063bb4271a614604b578063e78cea9214605f578063f2caaf3814604b575b600080fd5b604051600081526020015b60405180910390f35b6000546071906001600160a01b031681565b6040516001600160a01b039091168152602001605656fea26469706673582212202a71734d63913c0a3c8afff9f3a8932df31ce3404c507d0bf83c4605d4369eef64736f6c63430008030033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

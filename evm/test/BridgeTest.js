@@ -124,7 +124,7 @@ describe("LayerLightClientBridge - Function Tests", function () {
 
     })
 
-    it.only("test verifyBlockHeader", async function() {
+    it("test verifyBlockHeader", async function() {
         console.log("startHeight: ", startHeight)
         multistoreData = await h.getMultistore(startHeight - 1)
         merklePartsData = await h.getBlockHeaderMerkleParts(startHeight)

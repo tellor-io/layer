@@ -1,6 +1,7 @@
 const { expect } = require("chai");
 const h = require("./helpers/helpers");
-var assert = require('assert');
+const hre = require("hardhat");
+var assert = require('chai').assert;
 const web3 = require('web3');
 const { ethers } = require("hardhat");
 
@@ -70,7 +71,7 @@ describe("Function Tests - TellorLayerTransition", function() {
     tbridge = await TokenBridgeFac.deploy(tellor.address, dbridge.address)
     await tbridge.deployed()
     TransitionFac = await ethers.getContractFactory("TellorLayerTransition")
-    transition = await TransitionFac.deploy(tellor.address, tbridge.address, dbridge.address)
+    transition = await TransitionFac.deploy(tellor.address, tbridge.address, dbridge.address, flex.address)
     await transition.deployed()
     
     // stake reporter to flex
@@ -82,13 +83,13 @@ describe("Function Tests - TellorLayerTransition", function() {
 
   });
 
-  it("metatest()", async function() {
-    // assert(1==1)
-    symbol = await tellor.symbol();
-    console.log("SYMBOL: ", symbol)
+  it("constructor()", async function() {
+    assert(await transition.token() == tellor.address, "token address should be set")
+    assert(await transition.tokenBridge() == tbridge.address, "bridge address should be set")
+    assert(await transition.dataBridge() == dbridge.address, "dataBridge address should be set")
   })
 
-  it("upgrade to transition contract", async function() {
+  it("mintToOracle", async function() {
     ORACLE_ADDR_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"]);
     ORACLE_ADDR_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_QUERY_DATA_ARGS]);
     ORACLE_ADDR_QUERY_ID = web3.utils.keccak256(ORACLE_ADDR_QUERY_DATA);
@@ -104,6 +105,107 @@ describe("Function Tests - TellorLayerTransition", function() {
     await tellor.mintToOracle()
     transitionBalAfter = await tellor.balanceOf(transition.address)
     assert(transitionBalAfter > 0, "transition contract should have TRB")
+  })
+
+  it("transferToTokenBridge", async function() {
+    ORACLE_ADDR_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"]);
+    ORACLE_ADDR_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_QUERY_DATA_ARGS]);
+    ORACLE_ADDR_QUERY_ID = web3.utils.keccak256(ORACLE_ADDR_QUERY_DATA);
+    VALUE = abiCoder.encode(["address"], [transition.address]);
+    await flex.connect(reporter).submitValue(ORACLE_ADDR_QUERY_ID, VALUE, 0, ORACLE_ADDR_QUERY_DATA);
+    await h.advanceTime(43200 + 1)
+    await tellor.updateOracleAddress()
+    await h.advanceTime(86400 * 8)
+    await tellor.updateOracleAddress()
+
+    transitionBalBefore = await tellor.balanceOf(transition.address)
+    tBridgeBalBefore = await tellor.balanceOf(tbridge.address)
+    assert(transitionBalBefore.eq(0), "transition contract should have 0 TRB")
+    assert(tBridgeBalBefore.eq(0), "bridge contract should have 0 TRB")
+    await transition.transferToTokenBridge()
+    transitionBalAfter = await tellor.balanceOf(transition.address)
+    tBridgeBalAfter = await tellor.balanceOf(tbridge.address)
+    assert(transitionBalAfter == 0, "transition contract should have 0 TRB")
+    assert(tBridgeBalAfter > 0, "bridge contract should have TRB")
+  })
+
+  it("getDataBefore", async function() {
+    ORACLE_ADDR_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"]);
+    ORACLE_ADDR_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_QUERY_DATA_ARGS]);
+    ORACLE_ADDR_QUERY_ID = web3.utils.keccak256(ORACLE_ADDR_QUERY_DATA);
+    VALUE = abiCoder.encode(["address"], [transition.address]);
+    await flex.connect(reporter).submitValue(ORACLE_ADDR_QUERY_ID, VALUE, 0, ORACLE_ADDR_QUERY_DATA);
+    await h.advanceTime(43200 + 1)
+    await tellor.updateOracleAddress()
+    await h.advanceTime(86400 * 8)
+    await tellor.updateOracleAddress()
+
+    blocky1 = await h.getBlock()
+    flexVal = await flex.getDataBefore(ETH_QUERY_ID, blocky1.timestamp)
+    decodedFlexVal = abiCoder.decode(["uint256"], flexVal._value)
+    assert.isAbove(flexVal._timestampRetrieved, 0, "timestamp should be greater than block timestamp")
+    assert.isAbove(decodedFlexVal[0], 0, "value should be greater than 0")
+
+    layerTransitionVal = await transition.getDataBefore(ETH_QUERY_ID, blocky1.timestamp)
+    decodedLayerTransitionVal = abiCoder.decode(["uint256"], layerTransitionVal._value)
+    assert.equal(layerTransitionVal._timestampRetrieved.toNumber(), flexVal._timestampRetrieved.toNumber(), "timestamp should be equal")
+    assert.isTrue(decodedLayerTransitionVal[0].eq(decodedFlexVal[0]), "value should be equal")
+  })
+
+  it("getIndexForDataBefore", async function() {
+    ORACLE_ADDR_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"]);
+    ORACLE_ADDR_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_QUERY_DATA_ARGS]);
+    ORACLE_ADDR_QUERY_ID = web3.utils.keccak256(ORACLE_ADDR_QUERY_DATA);
+    VALUE = abiCoder.encode(["address"], [transition.address]);
+    await flex.connect(reporter).submitValue(ORACLE_ADDR_QUERY_ID, VALUE, 0, ORACLE_ADDR_QUERY_DATA);
+    await h.advanceTime(43200 + 1)
+    await tellor.updateOracleAddress()
+    await h.advanceTime(86400 * 8)
+    await tellor.updateOracleAddress()
+
+    blocky1 = await h.getBlock()
+    flexVal = await flex.getIndexForDataBefore(ETH_QUERY_ID, blocky1.timestamp)
+    assert.isAbove(flexVal._index.toNumber(), 0, "timestamp should be greater than block timestamp")
+
+    layerTransitionVal = await transition.getIndexForDataBefore(ETH_QUERY_ID, blocky1.timestamp)
+    assert.equal(layerTransitionVal._index.toNumber(), flexVal._index.toNumber(), "timestamp should be equal")
+  })
+
+  it("getNewValueCountbyQueryId", async function() {
+    ORACLE_ADDR_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"]);
+    ORACLE_ADDR_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_QUERY_DATA_ARGS]);
+    ORACLE_ADDR_QUERY_ID = web3.utils.keccak256(ORACLE_ADDR_QUERY_DATA);
+    VALUE = abiCoder.encode(["address"], [transition.address]);
+    await flex.connect(reporter).submitValue(ORACLE_ADDR_QUERY_ID, VALUE, 0, ORACLE_ADDR_QUERY_DATA);
+    await h.advanceTime(43200 + 1)
+    await tellor.updateOracleAddress()
+    await h.advanceTime(86400 * 8)
+    await tellor.updateOracleAddress()
+
+    blocky1 = await h.getBlock()
+    flexVal = await flex.getNewValueCountbyQueryId(ETH_QUERY_ID)
+    assert.isAbove(flexVal.toNumber(), 0, "timestamp should be greater than block timestamp")
+
+    layerTransitionVal = await transition.getNewValueCountbyQueryId(ETH_QUERY_ID)
+    assert.equal(layerTransitionVal.toNumber(), flexVal.toNumber(), "timestamp should be equal")
+  })
+
+  it("getReporterByTimestamp", async function() {
+    ORACLE_ADDR_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"]);
+    ORACLE_ADDR_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_QUERY_DATA_ARGS]);
+    ORACLE_ADDR_QUERY_ID = web3.utils.keccak256(ORACLE_ADDR_QUERY_DATA);
+    VALUE = abiCoder.encode(["address"], [transition.address]);
+    await flex.connect(reporter).submitValue(ORACLE_ADDR_QUERY_ID, VALUE, 0, ORACLE_ADDR_QUERY_DATA);
+    blocky1 = await h.getBlock()
+    await h.advanceTime(43200 + 1)
+    await tellor.updateOracleAddress()
+    await h.advanceTime(86400 * 8)
+    await tellor.updateOracleAddress()
     
+    flexVal = await flex.getReporterByTimestamp(ORACLE_ADDR_QUERY_ID, blocky1.timestamp)
+    assert.equal(flexVal, reporter.address, "timestamp should be greater than block timestamp")
+
+    layerTransitionVal = await transition.getReporterByTimestamp(ORACLE_ADDR_QUERY_ID, blocky1.timestamp)
+    assert.equal(layerTransitionVal, reporter.address, "timestamp should be equal")
   })
 })
