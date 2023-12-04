@@ -3,7 +3,7 @@ accounts:
 - name: alice
   coins:
   - 20000token
-  - 200000000stake
+  - 200000000loya
 - name: bob
   coins:
   - 10000token
@@ -18,4 +18,4 @@ faucet:
   - 100000stake
 validators:
 - name: alice
-  bonded: 100000000stake
+  bonded: 100000000loya

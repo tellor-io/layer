@@ -24,7 +24,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "fee_collector"},
 					{Account: "distribution"},
 					{Account: "oracle", Permissions: []string{"burner"}},
-					{Account: "dispute"},
+					{Account: "dispute", Permissions: []string{"burner"}},
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},

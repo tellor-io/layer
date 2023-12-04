@@ -51,14 +51,7 @@ func (k Keeper) PayFromBond(ctx sdk.Context, delAddr sdk.AccAddress, fee sdk.Coi
 	return nil
 }
 
-func (k Keeper) RefundToAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coin) error {
-	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(fee))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
+// Refund coins to bonded pool
 func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) error {
 	// TODO: loophole bypassing redelegation MaxEntries check
 	// k.GetLastRefundBlockTime(ctx, delAddr)
@@ -82,15 +75,20 @@ func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) err
 	return nil
 }
 
-// Returns Validtor object from validator address string
-func (k Keeper) validator(ctx sdk.Context, valAddr string) stakingtypes.Validator {
-	valAddress, err := sdk.ValAddressFromBech32(valAddr)
-	if err != nil {
-		panic(err)
+// Pay dispute fee
+func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool) error {
+	proposer := sdk.MustAccAddressFromBech32(sender)
+	if fromBond {
+		// pay fee from given validator
+		err := k.PayFromBond(ctx, proposer, fee)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := k.PayFromAccount(ctx, proposer, fee)
+		if err != nil {
+			return err
+		}
 	}
-	val, found := k.stakingKeeper.GetValidator(ctx, valAddress)
-	if !found {
-		panic(fmt.Errorf("validator %s not found", valAddr))
-	}
-	return val
+	return nil
 }

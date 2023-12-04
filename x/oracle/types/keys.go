@@ -32,6 +32,6 @@ func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
 
-func BlockKey(blockHeight int64) []byte {
-	return sdk.Uint64ToBigEndian(uint64(blockHeight))
+func NumKey(num int64) []byte {
+	return sdk.Uint64ToBigEndian(uint64(num))
 }
