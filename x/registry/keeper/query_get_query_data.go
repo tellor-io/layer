@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/tellor-io/layer/x/registry/types"
 
@@ -25,7 +26,7 @@ func (k Keeper) GetQueryData(goCtx context.Context, req *types.QueryGetQueryData
 		return nil, err
 	}
 
-	return &types.QueryGetQueryDataResponse{QueryData: hex.EncodeToString(queryData)}, nil
+	return &types.QueryGetQueryDataResponse{QueryData: strings.ToLower(hex.EncodeToString(queryData))}, nil
 }
 
 func (k Keeper) QueryData(ctx sdk.Context, queryId string) ([]byte, error) {
