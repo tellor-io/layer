@@ -52,6 +52,9 @@ func (k Keeper) RefundDisputeFeeToBond(ctx sdk.Context, fromBond []types.PayerIn
 }
 
 func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) error {
+	if totalAmount.IsZero() {
+		return nil
+	}
 	// multisend to voters
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(Denom, totalAmount)))}

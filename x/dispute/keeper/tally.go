@@ -107,6 +107,9 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 			case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
 				k.SetDisputeStatus(ctx, id, disputeStatus)
 				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
+			case len(vote.Voters) == 0:
+				k.SetDisputeStatus(ctx, id, disputeStatus)
+				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
 			default:
 			}
 		}

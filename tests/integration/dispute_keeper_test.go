@@ -677,3 +677,32 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	// reporter stake should be restored after dispute expires for invalid vote
 	s.Equal(reporterStakeBefore, reporterStakeAfter)
 }
+
+func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
+	_, msgServer := s.disputeKeeper()
+	addrs, valAddrs := s.createValidators([]int64{1, 2, 3})
+	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
+	reporterStakeBefore := reporter.GetBondedTokens()
+	report := types.MicroReport{
+		Reporter:  addrs[0].String(),
+		Power:     reporter.GetConsensusPower(sdk.DefaultPowerReduction),
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: 1696516597,
+	}
+	disputeFee := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	// Propose dispute pay half of the fee from account
+	_, err := msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
+		Creator:         addrs[1].String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.denom, disputeFee),
+		DisputeCategory: types.Warning,
+	})
+	s.NoError(err)
+	s.NotEqual(reporterStakeBefore, s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens())
+	// forward time to end vote
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*3 + 1))
+	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime().Add(1)}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	s.Equal(reporterStakeBefore, s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens())
+}

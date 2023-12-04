@@ -25,7 +25,11 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
 	// the burnAmount %5 of disputeFee, half of which is burned and the other half is distributed to the voters
 	burnCoins := dispute.BurnAmount.QuoRaw(2)
-
+	voterReward := burnCoins
+	if len(vote.Voters) == 0 {
+		burnCoins = dispute.BurnAmount
+		voterReward = sdk.ZeroInt()
+	}
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 		// burn half the burnAmount
@@ -33,7 +37,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 			panic(err)
 		}
 		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, burnCoins); err != nil {
+		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
 			panic(err)
 		}
 		// refund all fees to each dispute fee payer and restore validator bond/power
@@ -50,7 +54,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 			panic(err)
 		}
 		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, burnCoins); err != nil {
+		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
 			panic(err)
 		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
@@ -66,7 +70,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 			panic(err)
 		}
 		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, burnCoins); err != nil {
+		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
 			panic(err)
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
