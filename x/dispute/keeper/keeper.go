@@ -72,3 +72,5 @@ func (k Keeper) disputeStore(ctx sdk.Context) prefix.Store {
 func (k Keeper) voteStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.VotesKeyPrefix())
 }
+
+
