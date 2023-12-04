@@ -13,7 +13,7 @@ import (
 )
 
 func TestQueryGetQueryData(t *testing.T) {
-	ms, ctx, k, _ := setupMsgServer(t)
+	ms, ctx, k := setupMsgServer(t)
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
@@ -60,7 +60,7 @@ func TestQueryGetQueryData(t *testing.T) {
 }
 
 func TestIsQueryIdValid(t *testing.T) {
-	ms, ctx, k, _ := setupMsgServer(t)
+	ms, ctx, k := setupMsgServer(t)
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
