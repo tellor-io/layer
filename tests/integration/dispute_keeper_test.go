@@ -400,9 +400,11 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	_, msgServer := s.disputeKeeper()
 	addrs, valAddrs := s.createValidators([]int64{1, 2, 3})
+	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
+	reporterStakeBefore := reporter.GetBondedTokens()
 	report := types.MicroReport{
 		Reporter:  addrs[0].String(),
-		Power:     s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
+		Power:     reporter.GetConsensusPower(sdk.DefaultPowerReduction),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
@@ -416,6 +418,9 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
+	// check reporter stake
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
@@ -446,6 +451,10 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.Error(err)
+	// check reporter stake
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
+	// forward time to after vote end
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
@@ -456,6 +465,9 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
+	// check reporter stake
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	// voting that doesn't reach quorum
@@ -492,6 +504,9 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
+	// check reporter stake
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	// voting that doesn't reach quorum
@@ -528,6 +543,9 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
+	// check reporter stake
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	// voting that doesn't reach quorum
@@ -564,6 +582,9 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
+	// check reporter stake
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	// voting that doesn't reach quorum
@@ -602,6 +623,8 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		DisputeCategory: types.Warning,
 	})
 	s.Equal(err.Error(), "can't start a new round for this dispute 4; dispute status DISPUTE_STATUS_RESOLVED") //max rounds reached
+	// check reporter stake, stake should be restored due to invalid vote final result
+	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore)
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
