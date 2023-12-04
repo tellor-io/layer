@@ -9,7 +9,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 	reportsStore := k.ReportsStore(ctx)
 	currentHeight := ctx.BlockHeight()
 
-	bz := reportsStore.Get(types.BlockKey(currentHeight))
+	bz := reportsStore.Get(types.NumKey(currentHeight))
 	var revealedReports types.Reports
 	k.cdc.Unmarshal(bz, &revealedReports)
 

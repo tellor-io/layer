@@ -63,3 +63,14 @@ func (k Keeper) SetVoteResult(ctx sdk.Context, id uint64, result types.VoteResul
 	vote.VoteEnd = ctx.BlockTime()
 	k.SetVote(ctx, id, vote)
 }
+
+// Set vote start info for a dispute
+func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) {
+	store := k.voteStore(ctx)
+	vote := types.Vote{
+		Id:        id,
+		VoteStart: ctx.BlockTime(),
+		VoteEnd:   ctx.BlockTime().Add(86400 * 2),
+	}
+	store.Set(types.DisputeIdBytes(id), k.cdc.MustMarshal(&vote))
+}

@@ -55,5 +55,5 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 	require.NotNil(disputeRes)
 	require.Equal(disputeRes.DisputeCategory, types.Warning)
 	require.Equal(disputeRes.ReportEvidence.Reporter, "trb1auznue6n56c0ptmmq7vydst8a0vyluje3q6dgn")
-	require.Equal(disputeRes.DisputeStatus, types.Prevote)
+	require.Equal(disputeRes.DisputeStatus, types.Voting)
 }
