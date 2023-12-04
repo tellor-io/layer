@@ -29,6 +29,7 @@ func TestQueryGetQueryData(t *testing.T) {
 	registerSpecResult, err := ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
+
 	queryInput := &types.MsgRegisterQuery{
 		Creator:    "creator1",
 		QueryType:  "queryType1",
@@ -76,11 +77,10 @@ func TestIsQueryIdValid(t *testing.T) {
 	require.False(t, keeper.IsQueryIdValid(""))
 	require.False(t, keeper.IsQueryIdValid("0x"))
 	require.False(t, keeper.IsQueryIdValid("0x                                                               "))
-	//queryID can have symbols
-	//require.False(t, keeper.IsQueryIdValid("0X000000000000000000000000000000000000000000000000000000000000000$"))
-	//64 characters with 0x
-	require.True(t, keeper.IsQueryIdValid("0xabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678999"))
-	require.True(t, keeper.IsQueryIdValid("0XabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678999"))
-	require.True(t, keeper.IsQueryIdValid("0x0000000000000000000000000000000000000000000000000000000000000000"))
-	require.True(t, keeper.IsQueryIdValid("0X0000000000000000000000000000000000000000000000000000000000000000"))
+
+	//64 characters with 0x / 0X
+	require.True(t, keeper.IsQueryIdValid("0xabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678999")) // 0x
+	require.True(t, keeper.IsQueryIdValid("0XabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ012345678999")) // 0X
+	require.True(t, keeper.IsQueryIdValid("0x0000000000000000000000000000000000000000000000000000000000000000")) // 0x
+	require.True(t, keeper.IsQueryIdValid("0X0000000000000000000000000000000000000000000000000000000000000000")) // 0X
 }
