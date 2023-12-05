@@ -16,6 +16,6 @@ var (
 	ErrVoterHasAlreadyVoted    = sdkerrors.Register(ModuleName, 7, "voter has already voted")
 	ErrVoteDoesNotExist        = sdkerrors.Register(ModuleName, 8, "vote does not exist")
 	ErrVotingPeriodEnded       = sdkerrors.Register(ModuleName, 9, "voting period ended")
-	ErrZeroFeeAmount           = sdkerrors.Register(ModuleName, 10, "zero fee amount")
+	ErrMinimumTRBrequired      = sdkerrors.Register(ModuleName, 10, "Minimum fee amount is 1 TRB")
 	ErrInvalidFeeDenom         = sdkerrors.Register(ModuleName, 11, "invalid fee denom")
 )

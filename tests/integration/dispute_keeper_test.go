@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -23,30 +24,39 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	require := s.Require()
 	ctx := s.ctx
 	k := s.disputekeeper
+	addrs, valAddrs := s.createValidators([]int64{1000, 20})
+	report := types.MicroReport{
+		Reporter:  addrs[0].String(),
+		Power:     s.stakingKeeper.Validator(ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: 1696516597,
+	}
 	Addr := s.newKeysWithTokens()
+	valAddr := valAddrs[0]
 
-	report, valAddr := s.microReport()
 	// Propose dispute pay half of the fee from account
 	_, err := msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
-		Creator:         Addr.String(),
+		Creator:         addrs[1].String(),
 		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, sdk.NewInt(5000)),
+		Fee:             sdk.NewCoin(s.denom, sdk.NewInt(5_000_000)),
 		DisputeCategory: types.Warning,
 	})
+	require.NoError(err)
 	require.Equal(uint64(1), k.GetDisputeCount(ctx))
 	require.Equal(1, len(k.GetOpenDisputeIds(ctx).Ids))
-	require.NoError(err)
+
 	// check validator wasn't slashed/jailed
 	val, found := s.stakingKeeper.GetValidator(ctx, valAddr)
 	bondedTokensBefore := val.GetBondedTokens()
 	require.True(found)
 	require.False(val.IsJailed())
-	require.Equal(bondedTokensBefore, sdk.NewInt(1000000))
+	require.Equal(bondedTokensBefore, sdk.NewInt(1000_000_000))
 	// Add dispute fee to complete the fee and jail/slash validator
 	_, err = msgServer.AddFeeToDispute(ctx, &types.MsgAddFeeToDispute{
-		Creator:   Addr.String(),
+		Creator:   addrs[1].String(),
 		DisputeId: 0,
-		Amount:    sdk.NewCoin(s.denom, sdk.NewInt(5000)),
+		Amount:    sdk.NewCoin(s.denom, sdk.NewInt(5_000_000)),
 	})
 	require.NoError(err)
 	// check validator was slashed/jailed
@@ -80,10 +90,18 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	_, msgServer := s.disputeKeeper()
 	require := s.Require()
 	ctx := s.ctx
-	// k := suite.disputekeeper
-	report, valAddr := s.microReport()
+	addrs, valAddrs := s.createValidators([]int64{100})
+	report := types.MicroReport{
+		Reporter:  addrs[0].String(),
+		Power:     s.stakingKeeper.Validator(ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: 1696516597,
+	}
+	valAddr := valAddrs[0]
 	val, found := s.stakingKeeper.GetValidator(ctx, valAddr)
 	require.True(found)
+
 	bondedTokensBefore := val.GetBondedTokens()
 	onePercent := bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	disputeFee := sdk.NewCoin("stake", onePercent)
@@ -114,7 +132,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	ctx := s.ctx
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{2, 3, 4, 5})
+	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	report := types.MicroReport{
 		Reporter:  addrs[0].String(),
 		Power:     s.stakingKeeper.Validator(ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
@@ -186,18 +204,38 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 
 }
 
+func (suite *IntegrationTestSuite) getTestMetadata() banktypes.Metadata {
+	return banktypes.Metadata{
+		Name:        "Tellor Layer Tributes",
+		Symbol:      "TRB",
+		Description: "The native staking token of the TellorLayer.",
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: "loya", Exponent: uint32(0), Aliases: nil},
+			{Denom: "mloya", Exponent: uint32(3), Aliases: []string{"milliloya"}},
+			{Denom: "trb", Exponent: uint32(6), Aliases: nil},
+		},
+		Base:    "loya",
+		Display: "trb",
+	}
+
+}
+
 func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{1, 2, 3})
+
+	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
+	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
+
 	report := types.MicroReport{
 		Reporter:  addrs[0].String(),
-		Power:     s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
+		Power:     reporter.GetConsensusPower(sdk.DefaultPowerReduction),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
 	}
 
 	disputeFee := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+
 	// Propose dispute pay half of the fee from account
 	_, err := msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
 		Creator:         addrs[1].String(),
@@ -231,7 +269,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
 	s.disputekeeper.TallyVote(ctx, ids[0])
 
-	reporter := s.stakingKeeper.Validator(ctx, valAddrs[0])
+	reporter = s.stakingKeeper.Validator(ctx, valAddrs[0])
 	bond := reporter.GetBondedTokens()
 	// execute vote
 	s.disputekeeper.ExecuteVote(ctx, ids)
