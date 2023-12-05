@@ -7,6 +7,8 @@ import (
 )
 
 func initSDKConfig() {
+	// set bond denom prefix
+	sdk.DefaultBondDenom = "loya"
 	// Set prefixes
 	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
 	validatorAddressPrefix := app.AccountAddressPrefix + "valoper"

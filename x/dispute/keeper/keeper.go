@@ -13,6 +13,8 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
+var Denom = sdk.DefaultBondDenom
+
 type (
 	Keeper struct {
 		cdc        codec.BinaryCodec

@@ -6,12 +6,6 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k Keeper) Tally(ctx sdk.Context, ids []uint64) {
-	for _, id := range ids {
-		k.TallyVote(ctx, id)
-	}
-}
-
 // Add invalid vote type and return all fees to the paying parties
 func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 	dispute := k.GetDisputeById(ctx, id)
@@ -81,6 +75,7 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 	totalRatio := tokenHolderRatio.Add(validatorRatio).Add(userRatio).Add(teamRatio)
 
 	if vote.VoteResult == types.VoteResult_NO_TALLY {
+		// quorum reached case
 		if totalRatio.GTE(sdk.NewDec(51)) {
 			switch {
 			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
@@ -95,17 +90,25 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 			default:
 			}
 		}
-
+		// quorum not reached case
 		if vote.VoteEnd.Before(ctx.BlockTime()) {
+			disputeStatus := types.Unresolved
+			// check if rounds have been exhausted or dispute has expired in order to disperse funds
+			if dispute.BurnAmount.MulRaw(2).GT(dispute.SlashAmount) || dispute.DisputeEndTime.Before(ctx.BlockTime()) {
+				disputeStatus = types.Resolved
+			}
 			switch {
 			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
-				k.SetDisputeStatus(ctx, id, types.Unresolved)
+				k.SetDisputeStatus(ctx, id, disputeStatus)
 				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT)
 			case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
-				k.SetDisputeStatus(ctx, id, types.Unresolved)
+				k.SetDisputeStatus(ctx, id, disputeStatus)
 				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST)
 			case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
-				k.SetDisputeStatus(ctx, id, types.Unresolved)
+				k.SetDisputeStatus(ctx, id, disputeStatus)
+				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
+			case len(vote.Voters) == 0:
+				k.SetDisputeStatus(ctx, id, disputeStatus)
 				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
 			default:
 			}

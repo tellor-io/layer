@@ -153,9 +153,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	ids := am.keeper.CheckPrevoteDisputesForExpiration(ctx)
-	am.keeper.StartVoting(ctx, ids)
 	am.keeper.Tally(ctx, ids)
-	// am.keeper.ExecuteVotes(ctx, ids)
+	am.keeper.ExecuteVotes(ctx, ids)
 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block

@@ -19,15 +19,12 @@ func (s *KeeperTestSuite) TestVote() {
 		Id:    0,
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	}
-	// vote shouldn't have started yet
+	// vote should have started
 	_, err := s.msgServer.Vote(s.goCtx, &voteMsg)
-	require.Equal(types.ErrDisputeNotInVotingState, err)
-
-	disputeIds := s.disputeKeeper.CheckPrevoteDisputesForExpiration(s.ctx)
-	s.disputeKeeper.StartVoting(s.ctx, disputeIds)
+	require.NoError(err)
 
 	_, err = s.msgServer.Vote(s.goCtx, &voteMsg)
-	require.Nil(err)
+	require.Error(err)
 
 	voterVote := s.disputeKeeper.GetVoterVote(s.ctx, Addr.String(), 0)
 	require.Equal(voterVote.Voter, Addr.String())
