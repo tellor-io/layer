@@ -7,7 +7,7 @@ const { prependOnceListener } = require("process");
 const BN = ethers.BigNumber.from
 const abiCoder = new ethers.utils.AbiCoder();
 
-describe("Blobstream - Function Tests", function () {
+describe("BlobstreamO - Function Tests", function () {
 
     let bridge, validatorHash, valPower, accounts, validators, powers;
     let startHeight = 0;
@@ -16,7 +16,7 @@ describe("Blobstream - Function Tests", function () {
     
 
     beforeEach(async function () {
-        const Bridge = await ethers.getContractFactory("Blobstream");
+        const Bridge = await ethers.getContractFactory("BlobstreamO");
         if(startHeight == 0) {
             startHeight = await h.getLatestBlockNumber()
             valsResponse = await h.getValidatorSet(startHeight)
