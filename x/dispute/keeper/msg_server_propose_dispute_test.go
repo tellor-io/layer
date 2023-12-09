@@ -13,7 +13,7 @@ import (
 func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 	require := s.Require()
 	report := types.MicroReport{
-		Reporter:  "trb1auznue6n56c0ptmmq7vydst8a0vyluje3q6dgn",
+		Reporter:  "tellor1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34ds5rz",
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
@@ -54,6 +54,6 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 	disputeRes := s.disputeKeeper.GetDisputeById(s.ctx, 0)
 	require.NotNil(disputeRes)
 	require.Equal(disputeRes.DisputeCategory, types.Warning)
-	require.Equal(disputeRes.ReportEvidence.Reporter, "trb1auznue6n56c0ptmmq7vydst8a0vyluje3q6dgn")
+	require.Equal(disputeRes.ReportEvidence.Reporter, "tellor1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34ds5rz")
 	require.Equal(disputeRes.DisputeStatus, types.Voting)
 }

@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+	"math/big"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -77,6 +80,7 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 	if vote.VoteResult == types.VoteResult_NO_TALLY {
 		// quorum reached case
 		if totalRatio.GTE(sdk.NewDec(51)) {
+			fmt.Println("quorum reached")
 			switch {
 			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
 				k.SetDisputeStatus(ctx, id, types.Resolved)
@@ -89,12 +93,13 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 				k.SetVoteResult(ctx, id, types.VoteResult_INVALID)
 			default:
 			}
+			return
 		}
 		// quorum not reached case
 		if vote.VoteEnd.Before(ctx.BlockTime()) {
 			disputeStatus := types.Unresolved
 			// check if rounds have been exhausted or dispute has expired in order to disperse funds
-			if dispute.BurnAmount.MulRaw(2).GT(dispute.SlashAmount) || dispute.DisputeEndTime.Before(ctx.BlockTime()) {
+			if dispute.DisputeEndTime.Before(ctx.BlockTime()) {
 				disputeStatus = types.Resolved
 			}
 			switch {
@@ -112,9 +117,9 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 				k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
 			default:
 			}
+			return
 		}
 	}
-
 }
 
 func (k Keeper) GetTally(ctx sdk.Context, id uint64) *types.Tally {
@@ -138,28 +143,39 @@ func (k Keeper) GetTally(ctx sdk.Context, id uint64) *types.Tally {
 func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, voter string) error {
 	var tallies *types.Tally
 	tallies = k.GetTally(ctx, id)
+	valP := k.GetValidatorPower(ctx, voter)
+	tkHol := k.GetAccountBalance(ctx, voter)
+	usrTps := k.GetUserTips(ctx, voter)
+	team := k.IsTeamAddress(ctx, voter)
+
+	voterPower := math.ZeroInt()
+	voterPower = voterPower.Add(calculateVotingPower(valP, k.GetTotalValidatorPower(ctx)))
+	voterPower = voterPower.Add(calculateVotingPower(tkHol, k.GetTotalSupply(ctx)))
+	voterPower = voterPower.Add(calculateVotingPower(usrTps, k.GetTotalTips(ctx)))
+	voterPower = voterPower.Add(calculateVotingPower(team, math.NewInt(1)))
+
 	switch voteFor {
 	case types.VoteEnum_VOTE_SUPPORT:
-		tallies.ForVotes.Validators = tallies.ForVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
-		tallies.ForVotes.TokenHolders = tallies.ForVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
-		tallies.ForVotes.Users = tallies.ForVotes.Users.Add(k.GetUserTips(ctx, voter))
-		tallies.ForVotes.Team = tallies.ForVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+		tallies.ForVotes.Validators = tallies.ForVotes.Validators.Add(valP)
+		tallies.ForVotes.TokenHolders = tallies.ForVotes.TokenHolders.Add(tkHol)
+		tallies.ForVotes.Users = tallies.ForVotes.Users.Add(usrTps)
+		tallies.ForVotes.Team = tallies.ForVotes.Team.Add(team)
 	case types.VoteEnum_VOTE_AGAINST:
-		tallies.AgainstVotes.Validators = tallies.AgainstVotes.Validators.Add(k.GetValidatorPower(ctx, voter))
-		tallies.AgainstVotes.TokenHolders = tallies.AgainstVotes.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
-		tallies.AgainstVotes.Users = tallies.AgainstVotes.Users.Add(k.GetUserTips(ctx, voter))
-		tallies.AgainstVotes.Team = tallies.AgainstVotes.Team.Add(k.IsTeamAddress(ctx, voter))
+		tallies.AgainstVotes.Validators = tallies.AgainstVotes.Validators.Add(valP)
+		tallies.AgainstVotes.TokenHolders = tallies.AgainstVotes.TokenHolders.Add(tkHol)
+		tallies.AgainstVotes.Users = tallies.AgainstVotes.Users.Add(usrTps)
+		tallies.AgainstVotes.Team = tallies.AgainstVotes.Team.Add(team)
 	case types.VoteEnum_VOTE_INVALID:
-		tallies.Invalid.Validators = tallies.Invalid.Validators.Add(k.GetValidatorPower(ctx, voter))
-		tallies.Invalid.TokenHolders = tallies.Invalid.TokenHolders.Add(k.GetAccountBalance(ctx, voter))
-		tallies.Invalid.Users = tallies.Invalid.Users.Add(k.GetUserTips(ctx, voter))
-		tallies.Invalid.Team = tallies.Invalid.Team.Add(k.IsTeamAddress(ctx, voter))
+		tallies.Invalid.Validators = tallies.Invalid.Validators.Add(valP)
+		tallies.Invalid.TokenHolders = tallies.Invalid.TokenHolders.Add(tkHol)
+		tallies.Invalid.Users = tallies.Invalid.Users.Add(usrTps)
+		tallies.Invalid.Team = tallies.Invalid.Team.Add(team)
 	default:
 		panic("invalid vote type")
 	}
 
-	store := k.voteStore(ctx)
-	store.Set(types.TallyKeyPrefix(id), k.cdc.MustMarshal(tallies))
+	k.SetVoterTally(ctx, id, tallies)
+	k.SetVoterPower(ctx, sdk.MustAccAddressFromBech32(voter), voterPower)
 	return nil
 }
 
@@ -209,6 +225,25 @@ func (k Keeper) GetTotalTips(ctx sdk.Context) math.Int {
 	return k.oracleKeeper.GetTotalTips(ctx).Amount
 }
 
+func (k Keeper) SetVoterTally(ctx sdk.Context, id uint64, tally *types.Tally) {
+	voteStore := k.voteStore(ctx)
+	voteStore.Set(types.TallyKeyPrefix(id), k.cdc.MustMarshal(tally))
+}
+
+func (k Keeper) SetVoterPower(ctx sdk.Context, voter sdk.AccAddress, vp math.Int) {
+	store := k.voterPowerStore(ctx)
+	store.Set(voter, vp.BigInt().Bytes())
+}
+
+func (k Keeper) GetVoterPower(ctx sdk.Context, voter sdk.AccAddress) math.Int {
+	store := k.voterPowerStore(ctx)
+	vpBytes := store.Get(voter)
+	if vpBytes == nil {
+		return math.ZeroInt()
+	}
+	return math.NewIntFromBigInt(new(big.Int).SetBytes(vpBytes))
+}
+
 func ratio(total, part math.Int) math.LegacyDec {
 	if total.IsZero() {
 		return math.LegacyZeroDec()
@@ -216,4 +251,51 @@ func ratio(total, part math.Int) math.LegacyDec {
 	total = total.MulRaw(4)
 	ratio := sdk.NewDecFromInt(part).Quo(sdk.NewDecFromInt(total))
 	return ratio.MulInt64(100)
+}
+
+func calculateVotingPower(n, d math.Int) math.Int {
+	if d.IsZero() {
+		return math.ZeroInt()
+	}
+	scalingFactor := math.NewInt(1_000_000)
+	// TODO: round?
+	return n.Mul(scalingFactor).Quo(d).MulRaw(25).Quo(scalingFactor)
+}
+
+func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalTokens math.Int) map[string]math.Int {
+	// remove duplicates from voters list
+	seen := make(map[string]bool)
+	var uniqueVoters []string
+	for _, voter := range voters {
+		if !seen[voter] {
+			seen[voter] = true
+			uniqueVoters = append(uniqueVoters, voter)
+		}
+	}
+	var totalPower = math.ZeroInt()
+	powers := make(map[string]math.Int)
+	for _, voter := range uniqueVoters {
+		voterShare := k.GetVoterPower(ctx, sdk.MustAccAddressFromBech32(voter))
+		totalPower = totalPower.Add(voterShare)
+		powers[voter] = voterShare
+	}
+
+	// Calculate and allocate tokens based on each person's share of the total power
+	tokenDistribution := make(map[string]math.Int)
+	scalingFactor := math.NewInt(1_000_000)
+	totalShare := math.ZeroInt()
+	for voter, power := range powers {
+		share := power.Mul(scalingFactor).Quo(totalPower)
+		tokens := share.Mul(totalTokens).Quo(scalingFactor)
+		tokenDistribution[voter] = tokens
+		totalShare = totalShare.Add(tokens)
+	}
+
+	if totalTokens.GT(totalShare) {
+		// Give the remainder to the last voter in the list TODO: randomize this
+		lastVoter := len(voters) - 1
+		tokenDistribution[voters[lastVoter]] = tokenDistribution[voters[lastVoter]].Add(totalTokens.Sub(totalShare))
+	}
+
+	return tokenDistribution
 }

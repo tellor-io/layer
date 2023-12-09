@@ -22,13 +22,10 @@ func (s *IntegrationTestSuite) disputeKeeper() (queryClient types.QueryClient, m
 
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	_, msgServer := s.disputeKeeper()
-	require := s.Require()
-	ctx := s.ctx
-	k := s.disputekeeper
 	addrs, valAddrs := s.createValidators([]int64{1000, 20})
 	report := types.MicroReport{
 		Reporter:  addrs[0].String(),
-		Power:     s.stakingKeeper.Validator(ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
+		Power:     s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
@@ -37,51 +34,49 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	valAddr := valAddrs[0]
 
 	// Propose dispute pay half of the fee from account
-	_, err := msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
+	_, err := msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
 		Creator:         addrs[1].String(),
 		Report:          &report,
 		Fee:             sdk.NewCoin(s.denom, sdk.NewInt(5_000_000)),
 		DisputeCategory: types.Warning,
 	})
-	require.NoError(err)
-	require.Equal(uint64(1), k.GetDisputeCount(ctx))
-	require.Equal(1, len(k.GetOpenDisputeIds(ctx).Ids))
+	s.NoError(err)
+	s.Equal(uint64(1), s.disputekeeper.GetDisputeCount(s.ctx))
+	s.Equal(1, len(s.disputekeeper.GetOpenDisputeIds(s.ctx).Ids))
 
 	// check validator wasn't slashed/jailed
-	val, found := s.stakingKeeper.GetValidator(ctx, valAddr)
+	val, found := s.stakingKeeper.GetValidator(s.ctx, valAddr)
 	bondedTokensBefore := val.GetBondedTokens()
-	require.True(found)
-	require.False(val.IsJailed())
-	require.Equal(bondedTokensBefore, sdk.NewInt(1000_000_000))
+	s.True(found)
+	s.False(val.IsJailed())
+	s.Equal(bondedTokensBefore, sdk.NewInt(1000_000_000))
 	// Add dispute fee to complete the fee and jail/slash validator
-	_, err = msgServer.AddFeeToDispute(ctx, &types.MsgAddFeeToDispute{
+	_, err = msgServer.AddFeeToDispute(s.ctx, &types.MsgAddFeeToDispute{
 		Creator:   addrs[1].String(),
 		DisputeId: 0,
 		Amount:    sdk.NewCoin(s.denom, sdk.NewInt(5_000_000)),
 	})
-	require.NoError(err)
+	s.NoError(err)
 	// check validator was slashed/jailed
-	val, found = s.stakingKeeper.GetValidator(ctx, valAddr)
-	require.True(found)
-	require.True(val.IsJailed())
+	val, found = s.stakingKeeper.GetValidator(s.ctx, valAddr)
+	s.True(found)
+	s.True(val.IsJailed())
 	// check validator was slashed 1% of tokens
-	require.Equal(val.GetBondedTokens(), bondedTokensBefore.Sub(bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))))
-	dispute := k.GetDisputeById(ctx, 0)
-	require.Equal(types.Voting, dispute.DisputeStatus)
-	dispute = k.GetDisputeById(ctx, 0)
-	require.Equal(types.Voting, dispute.DisputeStatus)
+	s.Equal(val.GetBondedTokens(), bondedTokensBefore.Sub(bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))))
+	dispute := s.disputekeeper.GetDisputeById(s.ctx, 0)
+	s.Equal(types.Voting, dispute.DisputeStatus)
 	// vote on dispute
-	_, err = msgServer.Vote(ctx, &types.MsgVote{
+	_, err = msgServer.Vote(s.ctx, &types.MsgVote{
 		Voter: Addr.String(),
 		Id:    0,
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	})
-	require.NoError(err)
-	voterV := k.GetVoterVote(ctx, Addr.String(), 0)
-	require.Equal(types.VoteEnum_VOTE_SUPPORT, voterV.Vote)
-	v := k.GetVote(ctx, 0)
-	require.Equal(v.VoteResult, types.VoteResult_NO_TALLY)
-	require.Equal(v.Voters, []string{Addr.String()})
+	s.NoError(err)
+	voterV := s.disputekeeper.GetVoterVote(s.ctx, Addr.String(), 0)
+	s.Equal(types.VoteEnum_VOTE_SUPPORT, voterV.Vote)
+	v := s.disputekeeper.GetVote(s.ctx, 0)
+	s.Equal(v.VoteResult, types.VoteResult_NO_TALLY)
+	s.Equal(v.Voters, []string{Addr.String()})
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
@@ -128,7 +123,6 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
-	ctx := s.ctx
 	_, msgServer := s.disputeKeeper()
 	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	reporterAddr := addrs[0].String()
@@ -136,32 +130,26 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	disputerAddr := disputerAcc.String()
 	report := types.MicroReport{
 		Reporter:  reporterAddr,
-		Power:     s.stakingKeeper.Validator(ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
+		Power:     s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetConsensusPower(sdk.DefaultPowerReduction),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
 	}
-	disputeFee := s.disputekeeper.GetDisputeFee(ctx, reporterAddr, types.Warning)
+	disputeFee := s.disputekeeper.GetDisputeFee(s.ctx, reporterAddr, types.Warning)
 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
-	// voter Reward is half of the burn amount divided by number of voters
-	voterReward := burnAmount.QuoRaw(2).QuoRaw(4)
-
-	disputerBalanceBefore := s.bankKeeper.GetBalance(ctx, disputerAcc, s.denom)
+	disputerBalanceBefore := s.bankKeeper.GetBalance(s.ctx, disputerAcc, s.denom)
 	// Propose dispute pay half of the fee from account
-	_, err := msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
+	_, err := msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
 		Creator:         disputerAddr,
 		Report:          &report,
 		Fee:             sdk.NewCoin(s.denom, disputeFee),
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
-	// balance should be less than before paying fee
-	disputerBalanceAfter := s.bankKeeper.GetBalance(ctx, disputerAcc, s.denom)
-	s.True(disputerBalanceAfter.IsLT(disputerBalanceBefore))
+	s.True(s.bankKeeper.GetBalance(s.ctx, disputerAcc, s.denom).IsLT(disputerBalanceBefore))
 
 	// start vote
-	ids := s.disputekeeper.CheckPrevoteDisputesForExpiration(ctx)
-
+	ids := s.disputekeeper.CheckPrevoteDisputesForExpiration(s.ctx)
 	votes := []types.MsgVote{
 		{
 			Voter: reporterAddr,
@@ -184,21 +172,23 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
 	}
-
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
 	// tally vote
-	s.disputekeeper.TallyVote(ctx, ids[0])
-	reporter := s.stakingKeeper.Validator(ctx, valAddrs[0])
+	s.disputekeeper.TallyVote(s.ctx, ids[0])
+	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	valTknBeforeExecuteVote := reporter.GetBondedTokens()
-	disputerBalanceBeforeExecuteVote := s.bankKeeper.GetBalance(ctx, disputerAcc, s.denom)
+	disputerBalanceBeforeExecuteVote := s.bankKeeper.GetBalance(s.ctx, disputerAcc, s.denom)
 	// execute vote
-	s.disputekeeper.ExecuteVotes(ctx, ids)
-	s.True(s.stakingKeeper.Validator(ctx, valAddrs[0]).GetBondedTokens().GT(valTknBeforeExecuteVote))
+	s.disputekeeper.ExecuteVotes(s.ctx, ids)
+	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().GT(valTknBeforeExecuteVote))
 	// dispute fee returned so balance should be the same as before paying fee
-	disputerBalanceAfterExecuteVote := s.bankKeeper.GetBalance(ctx, disputerAcc, s.denom)
+	disputerBalanceAfterExecuteVote := s.bankKeeper.GetBalance(s.ctx, disputerAcc, s.denom)
+	voters := s.disputekeeper.GetVote(s.ctx, 0).Voters
+	rewards := s.disputekeeper.CalculateVoterShare(s.ctx, voters, burnAmount.QuoRaw(2))
+	voterReward := rewards[disputerAddr]
 	// add dispute fee returned minus burn amount plus the voter reward
 	disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(voterReward)
 	s.Equal(disputerBalanceBeforeExecuteVote, disputerBalanceAfterExecuteVote)
@@ -217,7 +207,6 @@ func (suite *IntegrationTestSuite) getTestMetadata() banktypes.Metadata {
 		Base:    "loya",
 		Display: "trb",
 	}
-
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
@@ -251,19 +240,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 			Id:    0,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: addrs[1].String(),
-			Id:    0,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
 	// start vote
 	_, err = msgServer.Vote(s.ctx, &vote[0])
 	s.NoError(err)
-	_, err = msgServer.Vote(s.ctx, &vote[1])
-	s.NoError(err)
 
-	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
 	s.disputekeeper.TallyVote(ctx, 0)
 
 	reporter = s.stakingKeeper.Validator(ctx, valAddrs[0])
@@ -278,7 +260,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{2, 3, 4, 5})
+	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	disputerBefore := s.stakingKeeper.Validator(s.ctx, valAddrs[1])
 	reporterAddr := sdk.AccAddress(valAddrs[0]).String()
@@ -349,9 +331,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		s.bankKeeper.GetBalance(s.ctx, addrs[2], s.denom),
 		s.bankKeeper.GetBalance(s.ctx, addrs[3], s.denom),
 	}
-	voterReward := twoPercentBurn.QuoRaw(4)
+	voters := s.disputekeeper.GetVote(s.ctx, 0).Voters
+	votersReward := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
 	for i := range votersBalanceBefore {
-		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(voterReward)
+		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))
 	}
 	s.True(disputerBefore.GetBondedTokens().Add(disputeFee).Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[1]).GetBondedTokens()))
@@ -359,7 +342,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{2, 3, 4, 5})
+	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	reporterBefore := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	reporterAddr := sdk.AccAddress(valAddrs[0]).String()
 	disputerAddr := sdk.AccAddress(valAddrs[1]).String()
@@ -428,16 +411,17 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		s.bankKeeper.GetBalance(s.ctx, addrs[2], s.denom),
 		s.bankKeeper.GetBalance(s.ctx, addrs[3], s.denom),
 	}
-	voterReward := twoPercentBurn.QuoRaw(4)
+	voters := s.disputekeeper.GetVote(s.ctx, 0).Voters
+	votersReward := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
 	for i := range votersBalanceBefore {
-		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(voterReward)
+		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))
 	}
 }
 
 func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{1, 2, 3})
+	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	reporterStakeBefore := reporter.GetBondedTokens()
 	report := types.MicroReport{
@@ -448,18 +432,24 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		Timestamp: 1696516597,
 	}
 	disputeFee := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
-	// Propose dispute pay half of the fee from account
-	_, err := msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
+	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
+	dispute := types.MsgProposeDispute{
 		Creator:         addrs[1].String(),
 		Report:          &report,
 		Fee:             sdk.NewCoin(s.denom, disputeFee),
 		DisputeCategory: types.Warning,
-	})
+	}
+	balanceBefore := s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	// Propose dispute pay half of the fee from account
+	_, err := msgServer.ProposeDispute(s.ctx, &dispute)
 	s.NoError(err)
+	balanceAfter := s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.True(balanceBefore.Amount.Sub(disputeFee).Equal(balanceAfter.Amount))
 	// check reporter stake
 	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime().Add(1)}
+	// begin block
+	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime()}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
 	votes := []types.MsgVote{
@@ -468,41 +458,28 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 			Id:    0,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: addrs[1].String(),
-			Id:    0,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
-
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
 
-	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
+	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime()}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
-	s.Error(err)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
+	s.Equal(err.Error(), "can't start a new round for this dispute 0; dispute status DISPUTE_STATUS_VOTING")
 	// check reporter stake
 	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	// forward time to after vote end
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
 	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(2))), balanceAfter)
 	// check reporter stake
 	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
@@ -515,33 +492,22 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 			Id:    1,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: addrs[1].String(),
-			Id:    1,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
-	s.Error(err) //fails since hasn't been tallied and executed
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
+	s.Equal(err.Error(), "can't start a new round for this dispute 1; dispute status DISPUTE_STATUS_VOTING") //fails since hasn't been tallied and executed
+
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
 	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(4))), balanceAfter)
 	// check reporter stake
 	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
@@ -554,33 +520,21 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 			Id:    2,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: addrs[1].String(),
-			Id:    2,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
 	s.Error(err) //fails since hasn't been tallied and executed
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
 	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(8))), balanceAfter)
 	// check reporter stake
 	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
@@ -593,33 +547,21 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 			Id:    3,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: addrs[1].String(),
-			Id:    3,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
-	s.Error(err) //fails since hasn't been tallied and executed
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
+	s.Equal(err.Error(), "can't start a new round for this dispute 3; dispute status DISPUTE_STATUS_VOTING")
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
 	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(16))), balanceAfter)
 	// check reporter stake
 	s.True(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
@@ -632,42 +574,51 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 			Id:    4,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: addrs[1].String(),
-			Id:    4,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
 	s.Equal(err.Error(), "can't start a new round for this dispute 4; dispute status DISPUTE_STATUS_VOTING") //fails since hasn't been tallied and executed
 	// forward time to end vote
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 
-	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         addrs[1].String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.denom, disputeFee),
-		DisputeCategory: types.Warning,
-	})
-	s.Equal(err.Error(), "can't start a new round for this dispute 4; dispute status DISPUTE_STATUS_RESOLVED") //max rounds reached
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
+	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, disputeFee)), balanceAfter)
+
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
+	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
+	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, disputeFee)), balanceAfter)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
+	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
+	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
+	s.NoError(err)
+	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
+	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, disputeFee)), balanceAfter)
+	// forward time and end dispute
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS))
+	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
+	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	// check reporter stake, stake should be restored due to invalid vote final result
 	s.Equal(s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens(), reporterStakeBefore)
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{1, 2, 3})
+	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	reporterStakeBefore := reporter.GetBondedTokens()
 	report := types.MicroReport{
@@ -718,7 +669,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	_, msgServer := s.disputeKeeper()
-	addrs, valAddrs := s.createValidators([]int64{1, 2, 3})
+	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 	reporter := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	reporterStakeBefore := reporter.GetBondedTokens()
 	report := types.MicroReport{
@@ -738,8 +689,8 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	})
 	s.NoError(err)
 	s.NotEqual(reporterStakeBefore, s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens())
-	// forward time to end vote
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*3 + 1))
+	// forward time to end dispute
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS))
 	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime().Add(1)}
 	s.app.BeginBlock(abci.RequestBeginBlock{Header: header})
 	s.Equal(reporterStakeBefore, s.stakingKeeper.Validator(s.ctx, valAddrs[0]).GetBondedTokens())

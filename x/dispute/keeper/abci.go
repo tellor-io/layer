@@ -18,6 +18,10 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 	if dispute == nil {
 		return
 	}
+	var voters []string
+	for _, id := range dispute.PrevDisputeIds {
+		voters = append(voters, k.GetVote(ctx, id).Voters...)
+	}
 	vote := k.GetVote(ctx, id)
 	if vote.Executed || dispute.DisputeStatus == types.Unresolved {
 		return
@@ -37,7 +41,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 			panic(err)
 		}
 		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
+		if err := k.RewardVoters(ctx, voters, voterReward); err != nil {
 			panic(err)
 		}
 		// refund all fees to each dispute fee payer and restore validator bond/power
@@ -54,7 +58,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 			panic(err)
 		}
 		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
+		if err := k.RewardVoters(ctx, voters, voterReward); err != nil {
 			panic(err)
 		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
@@ -70,7 +74,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 			panic(err)
 		}
 		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
+		if err := k.RewardVoters(ctx, voters, voterReward); err != nil {
 			panic(err)
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool

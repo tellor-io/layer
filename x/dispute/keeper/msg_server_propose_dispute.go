@@ -28,7 +28,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 		}
 	} else {
 		// Add round to Existing Dispute
-		if err := k.Keeper.AddDisputeRound(ctx, *dispute); err != nil {
+		if err := k.Keeper.AddDisputeRound(ctx, *dispute, *msg); err != nil {
 			return nil, err
 		}
 	}

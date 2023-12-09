@@ -41,7 +41,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
 		k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory)
 		// begin voting immediately
-		dispute.DisputeEndTime = ctx.BlockTime().Add(86400 * 3)
+		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
 		k.Keeper.SetStartVote(ctx, dispute.DisputeId)
 	}

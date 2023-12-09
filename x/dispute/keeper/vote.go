@@ -70,7 +70,7 @@ func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) {
 	vote := types.Vote{
 		Id:        id,
 		VoteStart: ctx.BlockTime(),
-		VoteEnd:   ctx.BlockTime().Add(86400 * 2),
+		VoteEnd:   ctx.BlockTime().Add(TWO_DAYS),
 	}
 	store.Set(types.DisputeIdBytes(id), k.cdc.MustMarshal(&vote))
 }

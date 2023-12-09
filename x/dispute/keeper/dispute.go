@@ -103,6 +103,7 @@ func (k Keeper) SetDisputeByReporter(ctx sdk.Context, dispute types.Dispute) {
 func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) error {
 	disputeId := k.GetDisputeCount(ctx)
 	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
+	// slash amount
 	disputeFee := k.GetDisputeFee(ctx, msg.Report.Reporter, msg.DisputeCategory)
 	if disputeFee.IsZero() {
 		return fmt.Errorf("Error calculating dispute fee")
@@ -112,19 +113,20 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	if msg.Fee.Amount.GT(disputeFee) {
 		msg.Fee.Amount = disputeFee
 	}
+	fivePercent := disputeFee.MulRaw(1).QuoRaw(20)
 	dispute := types.Dispute{
 		HashId:            hashId[:],
 		DisputeId:         disputeId,
 		DisputeCategory:   msg.DisputeCategory,
-		DisputeFee:        disputeFee,
 		DisputeStatus:     types.Prevote,
 		DisputeStartTime:  ctx.BlockTime(),
-		DisputeEndTime:    ctx.BlockTime().Add(86400), // one day to fully pay fee
+		DisputeEndTime:    ctx.BlockTime().Add(ONE_DAY), // one day to fully pay fee
 		DisputeStartBlock: ctx.BlockHeight(),
 		DisputeRound:      1,
 		SlashAmount:       disputeFee,
 		// burn amount is calculated as 5% of dispute fee
-		BurnAmount:     disputeFee.MulRaw(1).QuoRaw(20),
+		BurnAmount:     fivePercent,
+		DisputeFee:     disputeFee.Sub(fivePercent),
 		ReportEvidence: *msg.Report,
 		FeePayers: append(feeList, types.PayerInfo{
 			PayerAddress: msg.Creator,
@@ -142,7 +144,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
 		k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory)
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
-		dispute.DisputeEndTime = ctx.BlockTime().Add(86400 * 3)
+		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
 		k.SetStartVote(ctx, dispute.DisputeId) // starting voting immediately
 	}
@@ -216,7 +218,7 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, reporter string, category types.D
 }
 
 // Update existing dispute when conditions are met
-func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute) error {
+func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg types.MsgProposeDispute) error {
 	if dispute.DisputeStatus != types.Unresolved {
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute status %s", dispute.DisputeId, dispute.DisputeStatus)
 	}
@@ -224,21 +226,37 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute) error {
 	if dispute.DisputeEndTime.Before(ctx.BlockTime()) {
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
-	// if burnAmount is greater or equal to slashAmount then we can't update it
-	if dispute.BurnAmount.MulRaw(2).GT(dispute.SlashAmount) {
-		return fmt.Errorf("this dispute has reached max rounds %d", dispute.DisputeRound)
+
+	dispute.BurnAmount = dispute.BurnAmount.MulRaw(2)
+	if dispute.BurnAmount.GT(dispute.SlashAmount) {
+		dispute.BurnAmount = dispute.SlashAmount
 	}
 
-	// increment burn amount by double
-	dispute.BurnAmount = dispute.BurnAmount.MulRaw(2)
+	if msg.Fee.Amount.LT(dispute.BurnAmount) {
+		return fmt.Errorf("fee amount is less than amount required")
+	} else {
+		msg.Fee.Amount = dispute.BurnAmount
+	}
+
+	// Pay the dispute fee
+	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
+		return err
+	}
+	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
+		PayerAddress: msg.Creator,
+		Amount:       msg.Fee,
+		FromBond:     msg.PayFromBond,
+	})
+	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.GetDisputeCount(ctx)
 	dispute.DisputeId = disputeId
 	dispute.DisputeStatus = types.Voting // starting voting immediately
 	dispute.DisputeStartTime = ctx.BlockTime()
-	dispute.DisputeEndTime = ctx.BlockTime().Add(86400 * 3)
+	// add 3 days to block time
+	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 	dispute.DisputeStartBlock = ctx.BlockHeight()
-	dispute.DisputeRound = dispute.DisputeRound + 1
-
+	dispute.DisputeRound++
+	// from previous dispute id from open disputes
 	k.removeId(ctx, dispute.PrevDisputeIds[len(dispute.PrevDisputeIds)-1])
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 
