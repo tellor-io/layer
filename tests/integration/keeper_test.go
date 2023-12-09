@@ -235,6 +235,18 @@ func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, strateg
 
 	return testAddrs
 }
+
+type ModuleAccs struct {
+	staking authtypes.AccountI
+	dispute authtypes.AccountI
+}
+
+func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
+	return ModuleAccs{
+		staking: s.accountKeeper.GetModuleAccount(s.ctx, "bonded_tokens_pool"),
+		dispute: s.accountKeeper.GetModuleAccount(s.ctx, "dispute"),
+	}
+}
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

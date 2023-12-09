@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"math/big"
 	"time"
 
 	"cosmossdk.io/math"
@@ -44,7 +45,7 @@ func (k Keeper) GetDisputeCount(ctx sdk.Context) uint64 {
 	bz := store.Get(byteKey)
 	// Count doesn't exist: no disputes yet
 	if bz == nil {
-		return 0
+		return 1
 	}
 	return binary.BigEndian.Uint64(bz)
 }
@@ -227,26 +228,28 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
 
-	dispute.BurnAmount = dispute.BurnAmount.MulRaw(2)
-	if dispute.BurnAmount.GT(dispute.SlashAmount) {
-		dispute.BurnAmount = dispute.SlashAmount
+	fee := func(fivePercent math.Int, round int64) math.Int {
+		base := new(big.Int).Exp(big.NewInt(2), big.NewInt(round), nil)
+		return fivePercent.Mul(math.NewIntFromBigInt(base))
+	}
+	fivePercent := dispute.SlashAmount.MulRaw(1).QuoRaw(20)
+	roundFee := fee(fivePercent, int64(dispute.DisputeRound))
+	if roundFee.GT(dispute.SlashAmount) {
+		roundFee = dispute.SlashAmount
 	}
 
-	if msg.Fee.Amount.LT(dispute.BurnAmount) {
+	if msg.Fee.Amount.LT(roundFee) {
 		return fmt.Errorf("fee amount is less than amount required")
 	} else {
-		msg.Fee.Amount = dispute.BurnAmount
+		msg.Fee.Amount = roundFee
 	}
 
 	// Pay the dispute fee
 	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
 		return err
 	}
-	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
-		PayerAddress: msg.Creator,
-		Amount:       msg.Fee,
-		FromBond:     msg.PayFromBond,
-	})
+
+	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.GetDisputeCount(ctx)
 	dispute.DisputeId = disputeId
