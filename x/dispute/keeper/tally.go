@@ -262,7 +262,7 @@ func calculateVotingPower(n, d math.Int) math.Int {
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25).Quo(scalingFactor)
 }
 
-func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalTokens math.Int) map[string]math.Int {
+func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalTokens math.Int) (map[string]math.Int, math.Int) {
 	// remove duplicates from voters list
 	seen := make(map[string]bool)
 	var uniqueVoters []string
@@ -290,12 +290,10 @@ func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalToken
 		tokenDistribution[voter] = tokens
 		totalShare = totalShare.Add(tokens)
 	}
-
+	var burnedRemainder = math.ZeroInt()
 	if totalTokens.GT(totalShare) {
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, totalTokens.Sub(totalShare)))); err != nil {
-			panic(err)
-		}
+		burnedRemainder = totalTokens.Sub(totalShare)
 	}
 
-	return tokenDistribution
+	return tokenDistribution, burnedRemainder
 }

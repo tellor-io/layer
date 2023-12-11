@@ -187,7 +187,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// dispute fee returned so balance should be the same as before paying fee
 	disputerBalanceAfterExecuteVote := s.bankKeeper.GetBalance(s.ctx, disputerAcc, s.denom)
 	voters := s.disputekeeper.GetVote(s.ctx, 1).Voters
-	rewards := s.disputekeeper.CalculateVoterShare(s.ctx, voters, burnAmount.QuoRaw(2))
+	rewards, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, burnAmount.QuoRaw(2))
 	voterReward := rewards[disputerAddr]
 	// add dispute fee returned minus burn amount plus the voter reward
 	disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(voterReward)
@@ -332,7 +332,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		s.bankKeeper.GetBalance(s.ctx, addrs[3], s.denom),
 	}
 	voters := s.disputekeeper.GetVote(s.ctx, 1).Voters
-	votersReward := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
+	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
 	for i := range votersBalanceBefore {
 		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))
@@ -412,7 +412,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		s.bankKeeper.GetBalance(s.ctx, addrs[3], s.denom),
 	}
 	voters := s.disputekeeper.GetVote(s.ctx, 1).Voters
-	votersReward := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
+	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
 	for i := range votersBalanceBefore {
 		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))

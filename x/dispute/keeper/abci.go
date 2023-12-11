@@ -36,12 +36,13 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 	}
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount))); err != nil {
+		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
 			panic(err)
 		}
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, voters, voterReward); err != nil {
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			panic(err)
 		}
 		// refund all fees to each dispute fee payer and restore validator bond/power
@@ -59,12 +60,12 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 		vote.Executed = true
 		k.SetVote(ctx, id, vote)
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount))); err != nil {
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
 			panic(err)
 		}
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, voters, voterReward); err != nil {
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			panic(err)
 		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
@@ -77,12 +78,12 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 		vote.Executed = true
 		k.SetVote(ctx, id, vote)
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
-		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount))); err != nil {
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
 			panic(err)
 		}
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, voters, voterReward); err != nil {
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			panic(err)
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool

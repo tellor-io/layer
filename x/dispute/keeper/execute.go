@@ -51,11 +51,12 @@ func (k Keeper) RefundDisputeFeeToBond(ctx sdk.Context, fromBond []types.PayerIn
 	return nil
 }
 
-func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) error {
+func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
-		return nil
+		return totalAmount, nil
 	}
-	tokenDistribution := k.CalculateVoterShare(ctx, voters, totalAmount)
+	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount)
+	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
 	for voter, share := range tokenDistribution {
 		reward := sdk.NewCoins(sdk.NewCoin(Denom, share))
@@ -63,5 +64,5 @@ func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.
 	}
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(Denom, totalAmount)))}
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }
