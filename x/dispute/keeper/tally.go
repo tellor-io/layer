@@ -292,9 +292,9 @@ func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalToken
 	}
 
 	if totalTokens.GT(totalShare) {
-		// Give the remainder to the last voter in the list TODO: randomize this
-		lastVoter := len(voters) - 1
-		tokenDistribution[voters[lastVoter]] = tokenDistribution[voters[lastVoter]].Add(totalTokens.Sub(totalShare))
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, totalTokens.Sub(totalShare)))); err != nil {
+			panic(err)
+		}
 	}
 
 	return tokenDistribution
