@@ -51,20 +51,18 @@ func (k Keeper) RefundDisputeFeeToBond(ctx sdk.Context, fromBond []types.PayerIn
 	return nil
 }
 
-func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) error {
+func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
-		return nil
+		return totalAmount, nil
 	}
-	// multisend to voters
-	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(Denom, totalAmount)))}
-
+	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount)
+	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
-	amount := totalAmount.QuoRaw(int64(len(voters)))
-	reward := sdk.NewCoins(sdk.NewCoin(Denom, amount))
-	for _, voter := range voters {
+	for voter, share := range tokenDistribution {
+		reward := sdk.NewCoins(sdk.NewCoin(Denom, share))
 		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(voter), reward))
 	}
-
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(Denom, totalAmount)))}
+	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }

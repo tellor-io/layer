@@ -128,8 +128,13 @@ import (
 )
 
 const (
-	AccountAddressPrefix = "trb"
+	AccountAddressPrefix = "tellor"
 	Name                 = "layer"
+	// BondDenom defines the native staking token denomination.
+	BondDenom = "loya"
+
+	// DisplayDenom defines the name, symbol, and display value of the Tellor Tributes token.
+	DisplayDenom = "TRB"
 )
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
@@ -161,9 +166,9 @@ var (
 		auth.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bank.AppModuleBasic{},
+		bankModule{},
 		capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
+		stakingModule{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(getGovProposalHandlers()),

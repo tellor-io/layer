@@ -18,63 +18,78 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 	if dispute == nil {
 		return
 	}
+	var voters []string
+	for _, id := range dispute.PrevDisputeIds {
+		voters = append(voters, k.GetVote(ctx, id).Voters...)
+	}
 	vote := k.GetVote(ctx, id)
-	if vote.Executed || dispute.DisputeStatus == types.Unresolved {
+	if vote.Executed || dispute.DisputeStatus != types.Resolved {
 		return
 	}
 	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
 	// the burnAmount %5 of disputeFee, half of which is burned and the other half is distributed to the voters
-	burnCoins := dispute.BurnAmount.QuoRaw(2)
-	voterReward := burnCoins
-	if len(vote.Voters) == 0 {
-		burnCoins = dispute.BurnAmount
+	halfBurnAmount := dispute.BurnAmount.QuoRaw(2)
+	voterReward := halfBurnAmount
+	if len(voters) == 0 {
+		halfBurnAmount = dispute.BurnAmount
 		voterReward = sdk.ZeroInt()
 	}
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, burnCoins))); err != nil {
+		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
 			panic(err)
 		}
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			panic(err)
 		}
 		// refund all fees to each dispute fee payer and restore validator bond/power
 		// burn dispute fee then pay back the remaining dispute fee to the fee payers
 		fromAcc, fromBond := k.SortPayerInfo(dispute.FeePayers)
-		k.RefundDisputeFeeToAccount(ctx, fromAcc)
-		k.RefundDisputeFeeToBond(ctx, fromBond)
-		k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(Denom, dispute.SlashAmount))
+		if err := k.RefundDisputeFeeToAccount(ctx, fromAcc); err != nil {
+			panic(err)
+		}
+		if err := k.RefundDisputeFeeToBond(ctx, fromBond); err != nil {
+			panic(err)
+		}
+		if err := k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(Denom, dispute.SlashAmount)); err != nil {
+			panic(err)
+		}
 		vote.Executed = true
 		k.SetVote(ctx, id, vote)
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, burnCoins))); err != nil {
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
 			panic(err)
 		}
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			panic(err)
 		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
 		reporterSlashAmount := dispute.SlashAmount.QuoRaw(int64(len(dispute.FeePayers)))
 		for _, disputer := range dispute.FeePayers {
-			k.RefundToBond(ctx, disputer.PayerAddress, sdk.NewCoin(Denom, reporterSlashAmount))
+			if err := k.RefundToBond(ctx, disputer.PayerAddress, sdk.NewCoin(Denom, reporterSlashAmount)); err != nil {
+				panic(err)
+			}
 		}
 		vote.Executed = true
 		k.SetVote(ctx, id, vote)
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
-		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, burnCoins))); err != nil {
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
 			panic(err)
 		}
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
-		if err := k.RewardVoters(ctx, vote.Voters, voterReward); err != nil {
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(Denom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			panic(err)
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
-		k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(Denom, dispute.SlashAmount.Add(disputeFeeMinusBurn)))
+		if err := k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(Denom, dispute.SlashAmount.Add(disputeFeeMinusBurn))); err != nil {
+			panic(err)
+		}
 		vote.Executed = true
 		k.SetVote(ctx, id, vote)
 	default:

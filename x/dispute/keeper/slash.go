@@ -42,15 +42,6 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 	tokensToBurn := sdk.MinInt(slashAmount, validator.Tokens)
 	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
-	// we need to calculate the *effective* slash fraction for distribution
-	if validator.Tokens.IsPositive() {
-		effectiveFraction := sdk.NewDecFromInt(tokensToBurn).QuoRoundUp(sdk.NewDecFromInt(validator.Tokens))
-		// possible if power has changed
-		if effectiveFraction.GT(math.LegacyOneDec()) {
-			effectiveFraction = math.LegacyOneDec()
-		}
-	}
-
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
 	validator = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, tokensToBurn)

@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"math/big"
 	"time"
 
 	"cosmossdk.io/math"
@@ -204,7 +205,9 @@ func (s *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValA
 func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	ctx := s.ctx
 	acctNum := len(powers)
-	addrs := s.addTestAddrs(acctNum, sdk.NewInt(30000000), simtestutil.CreateIncrementalAccounts)
+	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
+	amount := new(big.Int).Mul(big.NewInt(1000), base)
+	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), simtestutil.CreateIncrementalAccounts)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
@@ -231,6 +234,18 @@ func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, strateg
 	}
 
 	return testAddrs
+}
+
+type ModuleAccs struct {
+	staking authtypes.AccountI
+	dispute authtypes.AccountI
+}
+
+func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
+	return ModuleAccs{
+		staking: s.accountKeeper.GetModuleAccount(s.ctx, "bonded_tokens_pool"),
+		dispute: s.accountKeeper.GetModuleAccount(s.ctx, "dispute"),
+	}
 }
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))

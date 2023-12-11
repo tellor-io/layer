@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +12,12 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tellor-io/layer/x/dispute/types"
+)
+
+const (
+	ONE_DAY    = 24 * time.Hour
+	TWO_DAYS   = 2 * 24 * time.Hour
+	THREE_DAYS = 3 * 24 * time.Hour
 )
 
 var Denom = sdk.DefaultBondDenom
@@ -75,4 +82,7 @@ func (k Keeper) voteStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.VotesKeyPrefix())
 }
 
-
+// Get voter power store
+func (k Keeper) voterPowerStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.VoterPowerKeyPrefix())
+}
