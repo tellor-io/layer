@@ -4,8 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -88,22 +89,20 @@ func (s *E2ETestSuite) TestRegisterSubmitDispute() {
 
 	// get account with tokens
 	accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
+	account := authtypes.BaseAccount{
+		Address: accAddr.String(),
+		PubKey:  codectypes.UnsafePackAny(valPubKey),
+	}
+	s.accountKeeper.SetAccount(s.ctx, &account)
 	valAddr := sdk.ValAddress(accAddr)
-	fmt.Println("accAddr: ", accAddr)
-	fmt.Println("valAddr: ", valAddr)
-	fmt.Println("valPrivKey: ", valPrivKey)
-	fmt.Println("valPubKey: ", valPubKey)
-	addrs := s.addTestAddrs(1, sdk.NewInt(30000000), simtestutil.CreateIncrementalAccounts)
 	// stake tokens
 	val, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
 	require.NoError(err)
-	fmt.Println("val before: ", val)
 	s.stakingKeeper.SetValidator(s.ctx, val)
 	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, val)
 	s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
-	newshares, err := s.stakingKeeper.Delegate(s.ctx, addrs[0], s.stakingKeeper.TokensFromConsensusPower(s.ctx, 10), stakingtypes.Unbonded, val, true)
-	fmt.Println("test:", newshares)
-	fmt.Println("err:", err)
+	_, err = s.stakingKeeper.Delegate(s.ctx, accAddr, sdk.NewInt(1000000), stakingtypes.Unbonded, val, true)
+	require.NoError(err)
 	_ = staking.EndBlocker(s.ctx, s.stakingKeeper) // updates
 
 	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
