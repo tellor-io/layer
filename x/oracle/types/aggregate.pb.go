@@ -6,16 +6,21 @@ package types
 import (
 	encoding_binary "encoding/binary"
 	fmt "fmt"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
 	math_bits "math/bits"
+	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -30,6 +35,8 @@ type Aggregate struct {
 	ReporterPower     int64                `protobuf:"varint,4,opt,name=reporterPower,proto3" json:"reporterPower,omitempty"`
 	StandardDeviation float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
 	Reporters         []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
+	Flagged           bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
+	Nonce             int64                `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
 }
 
 func (m *Aggregate) Reset()         { *m = Aggregate{} }
@@ -107,32 +114,144 @@ func (m *Aggregate) GetReporters() []*AggregateReporter {
 	return nil
 }
 
+func (m *Aggregate) GetFlagged() bool {
+	if m != nil {
+		return m.Flagged
+	}
+	return false
+}
+
+func (m *Aggregate) GetNonce() int64 {
+	if m != nil {
+		return m.Nonce
+	}
+	return 0
+}
+
+type AggregateNonce struct {
+	Nonce uint64 `protobuf:"varint,1,opt,name=nonce,proto3" json:"nonce,omitempty"`
+}
+
+func (m *AggregateNonce) Reset()         { *m = AggregateNonce{} }
+func (m *AggregateNonce) String() string { return proto.CompactTextString(m) }
+func (*AggregateNonce) ProtoMessage()    {}
+func (*AggregateNonce) Descriptor() ([]byte, []int) {
+	return fileDescriptor_788ad347f505f8a6, []int{1}
+}
+func (m *AggregateNonce) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AggregateNonce) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AggregateNonce.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AggregateNonce) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AggregateNonce.Merge(m, src)
+}
+func (m *AggregateNonce) XXX_Size() int {
+	return m.Size()
+}
+func (m *AggregateNonce) XXX_DiscardUnknown() {
+	xxx_messageInfo_AggregateNonce.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AggregateNonce proto.InternalMessageInfo
+
+func (m *AggregateNonce) GetNonce() uint64 {
+	if m != nil {
+		return m.Nonce
+	}
+	return 0
+}
+
+type AvailableTimestamps struct {
+	Timestamps []time.Time `protobuf:"bytes,1,rep,name=timestamps,proto3,stdtime" json:"timestamps"`
+}
+
+func (m *AvailableTimestamps) Reset()         { *m = AvailableTimestamps{} }
+func (m *AvailableTimestamps) String() string { return proto.CompactTextString(m) }
+func (*AvailableTimestamps) ProtoMessage()    {}
+func (*AvailableTimestamps) Descriptor() ([]byte, []int) {
+	return fileDescriptor_788ad347f505f8a6, []int{2}
+}
+func (m *AvailableTimestamps) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *AvailableTimestamps) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_AvailableTimestamps.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *AvailableTimestamps) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AvailableTimestamps.Merge(m, src)
+}
+func (m *AvailableTimestamps) XXX_Size() int {
+	return m.Size()
+}
+func (m *AvailableTimestamps) XXX_DiscardUnknown() {
+	xxx_messageInfo_AvailableTimestamps.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AvailableTimestamps proto.InternalMessageInfo
+
+func (m *AvailableTimestamps) GetTimestamps() []time.Time {
+	if m != nil {
+		return m.Timestamps
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*Aggregate)(nil), "layer.oracle.Aggregate")
+	proto.RegisterType((*AggregateNonce)(nil), "layer.oracle.AggregateNonce")
+	proto.RegisterType((*AvailableTimestamps)(nil), "layer.oracle.AvailableTimestamps")
 }
 
 func init() { proto.RegisterFile("layer/oracle/aggregate.proto", fileDescriptor_788ad347f505f8a6) }
 
 var fileDescriptor_788ad347f505f8a6 = []byte{
-	// 277 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xc9, 0x49, 0xac, 0x4c,
-	0x2d, 0xd2, 0xcf, 0x2f, 0x4a, 0x4c, 0xce, 0x49, 0xd5, 0x4f, 0x4c, 0x4f, 0x2f, 0x4a, 0x4d, 0x4f,
-	0x2c, 0x49, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x01, 0xcb, 0xea, 0x41, 0x64, 0xa5,
-	0x54, 0xb1, 0xab, 0x8d, 0x2f, 0x4a, 0x2d, 0xc8, 0x2f, 0x2a, 0x49, 0x2d, 0x82, 0x68, 0x52, 0xea,
-	0x63, 0xe2, 0xe2, 0x74, 0x84, 0x49, 0x0a, 0x49, 0x70, 0xb1, 0x17, 0x96, 0xa6, 0x16, 0x55, 0x7a,
-	0xa6, 0x48, 0x30, 0x2a, 0x30, 0x6a, 0x70, 0x06, 0xc1, 0xb8, 0x42, 0x6a, 0x5c, 0x7c, 0x70, 0x33,
-	0xc2, 0x12, 0x73, 0x4a, 0x53, 0x25, 0x98, 0xc0, 0x0a, 0xd0, 0x44, 0x85, 0x74, 0xb8, 0x04, 0xe1,
-	0x22, 0x41, 0x50, 0xab, 0x24, 0x98, 0xc1, 0x4a, 0x31, 0x25, 0x84, 0x54, 0xb8, 0x78, 0x61, 0xee,
-	0x09, 0xc8, 0x2f, 0x4f, 0x2d, 0x92, 0x60, 0x51, 0x60, 0xd4, 0x60, 0x0e, 0x42, 0x15, 0x04, 0x99,
-	0x59, 0x5c, 0x92, 0x98, 0x97, 0x92, 0x58, 0x94, 0xe2, 0x92, 0x5a, 0x96, 0x99, 0x58, 0x92, 0x99,
-	0x9f, 0x27, 0xc1, 0xaa, 0xc0, 0xa8, 0xc1, 0x18, 0x84, 0x29, 0x21, 0x64, 0xcb, 0xc5, 0x09, 0xd3,
-	0x5e, 0x2c, 0xc1, 0xa6, 0xc0, 0xac, 0xc1, 0x6d, 0x24, 0xaf, 0x87, 0x1c, 0x34, 0x7a, 0x8e, 0xe8,
-	0xee, 0x08, 0x42, 0xe8, 0x70, 0x72, 0x3e, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07,
-	0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86,
-	0x28, 0xcd, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0xfd, 0x92, 0xd4, 0x9c,
-	0x9c, 0xfc, 0x22, 0xdd, 0xcc, 0x7c, 0x7d, 0x48, 0x30, 0x57, 0xc0, 0x02, 0xba, 0xa4, 0xb2, 0x20,
-	0xb5, 0x38, 0x89, 0x0d, 0x1c, 0xb8, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0xc4, 0x53, 0x19,
-	0xdd, 0xb1, 0x01, 0x00, 0x00,
+	// 401 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x52, 0x4d, 0x8f, 0xd3, 0x30,
+	0x10, 0x8d, 0xb7, 0xfb, 0xd1, 0x1a, 0x58, 0x09, 0xb3, 0x07, 0xab, 0x42, 0x49, 0xb4, 0x82, 0x55,
+	0x90, 0xc0, 0x91, 0xe0, 0xcc, 0xa1, 0xcb, 0x5e, 0xb8, 0x20, 0x14, 0x21, 0x0e, 0x70, 0x40, 0x4e,
+	0x33, 0x6b, 0x22, 0xb9, 0x71, 0x70, 0x9c, 0x42, 0xff, 0x45, 0x7f, 0x11, 0xe7, 0x1e, 0x7b, 0xe4,
+	0x04, 0xa8, 0xfd, 0x23, 0x28, 0x4e, 0x9d, 0x96, 0x76, 0x6f, 0x9e, 0x79, 0xef, 0xcd, 0x3c, 0xcd,
+	0x33, 0x7e, 0x2c, 0xf9, 0x0c, 0x74, 0xac, 0x34, 0x1f, 0x4b, 0x88, 0xb9, 0x10, 0x1a, 0x04, 0x37,
+	0xc0, 0x4a, 0xad, 0x8c, 0x22, 0xf7, 0x2d, 0xca, 0x5a, 0x74, 0x78, 0x21, 0x94, 0x50, 0x16, 0x88,
+	0x9b, 0x57, 0xcb, 0x19, 0x06, 0x42, 0x29, 0x21, 0x21, 0xb6, 0x55, 0x5a, 0xdf, 0xc6, 0x26, 0x9f,
+	0x40, 0x65, 0xf8, 0xa4, 0xdc, 0x10, 0x9e, 0xde, 0xbd, 0xe2, 0x8b, 0x86, 0x52, 0x69, 0x03, 0xba,
+	0xa5, 0x5d, 0xfe, 0x3c, 0xc2, 0x83, 0x91, 0x03, 0x09, 0xc5, 0x67, 0xdf, 0x6a, 0xd0, 0xb3, 0xb7,
+	0x19, 0x45, 0x21, 0x8a, 0x06, 0x89, 0x2b, 0xc9, 0x15, 0x3e, 0xef, 0x66, 0x7c, 0xe4, 0xb2, 0x06,
+	0x7a, 0x64, 0x09, 0x7b, 0x5d, 0xf2, 0x1c, 0x3f, 0xec, 0x3a, 0xc9, 0x66, 0x15, 0xed, 0x59, 0xea,
+	0x21, 0x40, 0x9e, 0xe0, 0x07, 0xce, 0xcf, 0x7b, 0xf5, 0x1d, 0x34, 0x3d, 0x0e, 0x51, 0xd4, 0x4b,
+	0xfe, 0x6f, 0x36, 0x33, 0x2b, 0xc3, 0x8b, 0x8c, 0xeb, 0xec, 0x06, 0xa6, 0x39, 0x37, 0xb9, 0x2a,
+	0xe8, 0x49, 0x88, 0x22, 0x94, 0x1c, 0x02, 0xe4, 0x35, 0x1e, 0x38, 0x79, 0x45, 0x4f, 0xc3, 0x5e,
+	0x74, 0xef, 0x65, 0xc0, 0x76, 0x2f, 0xca, 0x46, 0xfb, 0x3e, 0x92, 0xad, 0xa2, 0x39, 0xc1, 0xad,
+	0xe4, 0x42, 0x40, 0x46, 0xcf, 0x42, 0x14, 0xf5, 0x13, 0x57, 0x92, 0x0b, 0x7c, 0x52, 0xa8, 0x62,
+	0x0c, 0xb4, 0x6f, 0x4d, 0xb6, 0xc5, 0xe5, 0x15, 0x3e, 0xef, 0xe6, 0xbd, 0x6b, 0x3a, 0x5b, 0x5e,
+	0x73, 0xc2, 0x63, 0xc7, 0xfb, 0x8c, 0x1f, 0x8d, 0xa6, 0x3c, 0x97, 0x3c, 0x95, 0xf0, 0xc1, 0x65,
+	0x55, 0x91, 0x1b, 0x8c, 0xbb, 0xe4, 0x2a, 0x8a, 0xac, 0xdd, 0x21, 0x6b, 0xc3, 0x65, 0x2e, 0x5c,
+	0xd6, 0x09, 0xae, 0xfb, 0x8b, 0xdf, 0x81, 0x37, 0xff, 0x13, 0xa0, 0x64, 0x47, 0x77, 0xfd, 0x66,
+	0xb1, 0xf2, 0xd1, 0x72, 0xe5, 0xa3, 0xbf, 0x2b, 0x1f, 0xcd, 0xd7, 0xbe, 0xb7, 0x5c, 0xfb, 0xde,
+	0xaf, 0xb5, 0xef, 0x7d, 0x7a, 0x26, 0x72, 0xf3, 0xb5, 0x4e, 0xd9, 0x58, 0x4d, 0x62, 0x03, 0x52,
+	0x2a, 0xfd, 0x22, 0x57, 0x71, 0xfb, 0x37, 0x7e, 0xb8, 0xdf, 0x61, 0x66, 0x25, 0x54, 0xe9, 0xa9,
+	0x5d, 0xf7, 0xea, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfe, 0xb7, 0x50, 0xfd, 0x9d, 0x02, 0x00,
+	0x00,
 }
 
 func (m *Aggregate) Marshal() (dAtA []byte, err error) {
@@ -155,6 +274,21 @@ func (m *Aggregate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Nonce != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.Nonce))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.Flagged {
+		i--
+		if m.Flagged {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
 	if len(m.Reporters) > 0 {
 		for iNdEx := len(m.Reporters) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -204,6 +338,69 @@ func (m *Aggregate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *AggregateNonce) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AggregateNonce) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AggregateNonce) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Nonce != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.Nonce))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *AvailableTimestamps) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AvailableTimestamps) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *AvailableTimestamps) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Timestamps) > 0 {
+		for iNdEx := len(m.Timestamps) - 1; iNdEx >= 0; iNdEx-- {
+			n, err := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Timestamps[iNdEx], dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Timestamps[iNdEx]):])
+			if err != nil {
+				return 0, err
+			}
+			i -= n
+			i = encodeVarintAggregate(dAtA, i, uint64(n))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintAggregate(dAtA []byte, offset int, v uint64) int {
 	offset -= sovAggregate(v)
 	base := offset
@@ -242,6 +439,39 @@ func (m *Aggregate) Size() (n int) {
 	if len(m.Reporters) > 0 {
 		for _, e := range m.Reporters {
 			l = e.Size()
+			n += 1 + l + sovAggregate(uint64(l))
+		}
+	}
+	if m.Flagged {
+		n += 2
+	}
+	if m.Nonce != 0 {
+		n += 1 + sovAggregate(uint64(m.Nonce))
+	}
+	return n
+}
+
+func (m *AggregateNonce) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Nonce != 0 {
+		n += 1 + sovAggregate(uint64(m.Nonce))
+	}
+	return n
+}
+
+func (m *AvailableTimestamps) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Timestamps) > 0 {
+		for _, e := range m.Timestamps {
+			l = github_com_cosmos_gogoproto_types.SizeOfStdTime(e)
 			n += 1 + l + sovAggregate(uint64(l))
 		}
 	}
@@ -440,6 +670,198 @@ func (m *Aggregate) Unmarshal(dAtA []byte) error {
 			}
 			m.Reporters = append(m.Reporters, &AggregateReporter{})
 			if err := m.Reporters[len(m.Reporters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flagged", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Flagged = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nonce", wireType)
+			}
+			m.Nonce = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Nonce |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAggregate(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AggregateNonce) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAggregate
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AggregateNonce: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AggregateNonce: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Nonce", wireType)
+			}
+			m.Nonce = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Nonce |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAggregate(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AvailableTimestamps) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAggregate
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AvailableTimestamps: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AvailableTimestamps: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamps", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Timestamps = append(m.Timestamps, time.Time{})
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&(m.Timestamps[len(m.Timestamps)-1]), dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

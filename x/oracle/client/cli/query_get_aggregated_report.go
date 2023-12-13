@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -30,7 +29,6 @@ func CmdGetAggregatedReport() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqQueryId := args[0]
-			reqBlockNumber, err := cmd.Flags().GetString(FlagBlockNumber)
 			if err != nil {
 				return err
 			}
@@ -43,8 +41,7 @@ func CmdGetAggregatedReport() *cobra.Command {
 
 			params := &types.QueryGetAggregatedReportRequest{
 
-				QueryId:     reqQueryId,
-				BlockNumber: cast.ToInt64(reqBlockNumber),
+				QueryId: reqQueryId,
 			}
 
 			res, err := queryClient.GetAggregatedReport(cmd.Context(), params)

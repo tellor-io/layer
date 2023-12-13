@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,12 +17,20 @@ func (k Keeper) GetAggregatedReport(goCtx context.Context, req *types.QueryGetAg
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	if req.BlockNumber == 0 {
-		req.BlockNumber = ctx.BlockHeight()
-	}
+
 	var aggregatedReport types.Aggregate
 	store := k.AggregateStore(ctx)
-	bz := store.Get([]byte(fmt.Sprintf("%s-%d", req.QueryId, req.BlockNumber)))
+	queryId, err := hex.DecodeString(req.QueryId)
+	if err != nil {
+		panic(err)
+	}
+	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
+	if len(availableTimestamps.Timestamps) == 0 {
+		return nil, fmt.Errorf("no available timestamps")
+	}
+	mostRecentTimestamp := availableTimestamps.Timestamps[len(availableTimestamps.Timestamps)-1]
+	key := types.AggregateKey(queryId, mostRecentTimestamp)
+	bz := store.Get(key)
 	k.cdc.MustUnmarshal(bz, &aggregatedReport)
 	return &types.QueryGetAggregatedReportResponse{Report: &aggregatedReport}, nil
 }
