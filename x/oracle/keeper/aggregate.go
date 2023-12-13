@@ -54,7 +54,7 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 	if len(availableTimestamps.Timestamps) == 0 {
 		return nil, types.ErrIntOverflowAggregate
 	}
-	found, index := findTimestampBefore(availableTimestamps.Timestamps, timestamp)
+	found, index := FindTimestampBefore(availableTimestamps.Timestamps, timestamp)
 	if found {
 		key := types.AggregateKey(queryId, availableTimestamps.Timestamps[index])
 		store := k.AggregateStore(ctx)
@@ -121,10 +121,13 @@ func (k Keeper) GetCurrentValueForQueryId(ctx sdk.Context, queryId []byte) *type
 	return &report
 }
 
-func findTimestampBefore(timestamps []time.Time, target time.Time) (bool, int) {
+func FindTimestampBefore(timestamps []time.Time, target time.Time) (bool, int) {
 	switch len(timestamps) {
+	case 0:
+		return false, 0
+
 	case 1:
-		if timestamps[0].Before(target) {
+		if timestamps[0].Before(target) || timestamps[0].Equal(target) {
 			return true, 0
 		}
 		return false, 0
@@ -134,13 +137,16 @@ func findTimestampBefore(timestamps []time.Time, target time.Time) (bool, int) {
 		midTimestamp := timestamps[midIdx]
 
 		if target.Before(midTimestamp) {
-			return findTimestampBefore(timestamps[:midIdx], target)
+			return FindTimestampBefore(timestamps[:midIdx], target)
 		} else {
-			// Check if the mid is the closest timestamp less than or equal to target
 			if midIdx == len(timestamps)-1 || timestamps[midIdx+1].After(target) {
 				return true, midIdx
 			}
-			return findTimestampBefore(timestamps[midIdx+1:], target)
+			found, idx := FindTimestampBefore(timestamps[midIdx+1:], target)
+			if found {
+				return true, midIdx + 1 + idx
+			}
+			return true, midIdx
 		}
 	}
 }
