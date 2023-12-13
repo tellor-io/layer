@@ -1,6 +1,8 @@
 syntax = "proto3";
 package layer.oracle;
 
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 import "layer/oracle/aggregate_reporter.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
@@ -13,4 +15,10 @@ message Aggregate {
   int64 reporterPower = 4; 
   double standardDeviation = 5;
   repeated AggregateReporter reporters = 6; 
+  bool flagged = 7;
+  int64 nonce = 8;
+}
+
+message AvailableTimestamps {
+  repeated google.protobuf.Timestamp  timestamps = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }

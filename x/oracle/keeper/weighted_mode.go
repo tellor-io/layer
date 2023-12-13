@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -55,8 +53,6 @@ func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) {
 		Reporters:         modeReporters,
 	}
 
-	store := k.AggregateStore(ctx)
-	key := []byte(fmt.Sprintf("%s-%d", modeReport.QueryId, ctx.BlockHeight()))
-	store.Set(key, k.cdc.MustMarshal(&aggregateReport))
+	k.SetAggregate(ctx, &aggregateReport)
 
 }

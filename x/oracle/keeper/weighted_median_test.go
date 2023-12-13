@@ -8,46 +8,46 @@ import (
 
 func (s *KeeperTestSuite) TestWeightedMedian() {
 	require := s.Require()
-
+	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
 	// normal scenario - 5 reporters various weights
 	reports := []types.MicroReport{
 		{
 			Reporter: "reporter1",
 			Value:    "a", // Hex value for 10
 			Power:    10,
-			QueryId:  "query1",
+			QueryId:  qId,
 		},
 		{
 			Reporter: "reporter2",
 			Value:    "14", // Hex value for 20
 			Power:    4,
-			QueryId:  "query1",
+			QueryId:  qId,
 		},
 		{
 			Reporter: "reporter3",
 			Value:    "1e", // Hex value for 30
 			Power:    2,
-			QueryId:  "query1",
+			QueryId:  qId,
 		},
 		{
 			Reporter: "reporter4",
 			Value:    "28", // Hex value for 40
 			Power:    20,
-			QueryId:  "query1",
+			QueryId:  qId,
 		},
 		{
 			Reporter: "reporter5",
 			Value:    "32", // Hex value for 50
 			Power:    8,
-			QueryId:  "query1",
+			QueryId:  qId,
 		},
 	}
 
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: "query1"})
+	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
 	//fmt.Println("REPORT 1: ", res.Report)
-	require.Equal(res.Report.QueryId, "query1", "query id is not correct")
+	require.Equal(res.Report.QueryId, qId, "query id is not correct")
 	require.Equal(res.Report.AggregateReporter, "reporter4", "aggregate reporter is not correct")
 	require.Equal(res.Report.AggregateValue, "28", "aggregate value is not correct")
 	require.Equal(res.Report.ReporterPower, int64(20), "reporter power is not correct")
@@ -64,37 +64,38 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 
 	// special case A -- lower weighted median and upper weighted median are equal, powers are equal
 	// calculates lower median
+	qId2 := "a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac"
 	reports = []types.MicroReport{
 		{
 			Reporter: "reporter6",
 			Value:    "a", // Hex value for 10
 			Power:    1,
-			QueryId:  "query2",
+			QueryId:  qId2,
 		},
 		{
 			Reporter: "reporter7",
 			Value:    "a", // Hex value for 10
 			Power:    1,
-			QueryId:  "query2",
+			QueryId:  qId2,
 		},
 		{
 			Reporter: "reporter8",
 			Value:    "14", // Hex value for 20
 			Power:    1,
-			QueryId:  "query2",
+			QueryId:  qId2,
 		},
 		{
 			Reporter: "reporter9",
 			Value:    "14", // Hex value for 20
 			Power:    1,
-			QueryId:  "query2",
+			QueryId:  qId2,
 		},
 	}
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: "query2"})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId2})
 	require.Nil(err)
 	//fmt.Println("REPORT 2: ", res.Report)
-	require.Equal(res.Report.QueryId, "query2", "query id is not correct")
+	require.Equal(res.Report.QueryId, qId2, "query id is not correct")
 	require.Equal(res.Report.AggregateReporter, "reporter7", "aggregate reporter is not correct")
 	require.Equal(res.Report.AggregateValue, "a", "aggregate value is not correct")
 	require.Equal(res.Report.ReporterPower, int64(1), "reporter power is not correct")
@@ -110,37 +111,38 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 
 	// special case B -- lower weighted median and upper weighted median are equal, powers are not all equal
 	// calculates lower median
+	qId3 := "48e9e2c732ba278de6ac88a3a57a5c5ba13d3d8370e709b3b98333a57876ca95"
 	reports = []types.MicroReport{
 		{
 			Reporter: "reporter10",
 			Value:    "a", // Hex value for 10
 			Power:    1,
-			QueryId:  "query3",
+			QueryId:  qId3,
 		},
 		{
 			Reporter: "reporter11",
 			Value:    "a", // Hex value for 10
 			Power:    2,
-			QueryId:  "query3",
+			QueryId:  qId3,
 		},
 		{
 			Reporter: "reporter12",
 			Value:    "14", // Hex value for 20
 			Power:    1,
-			QueryId:  "query3",
+			QueryId:  qId3,
 		},
 		{
 			Reporter: "reporter13",
 			Value:    "14", // Hex value for 20
 			Power:    2,
-			QueryId:  "query3",
+			QueryId:  qId3,
 		},
 	}
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: "query3"})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId3})
 	require.Nil(err)
 	//fmt.Println("REPORT 3: ", res.Report)
-	require.Equal(res.Report.QueryId, "query3", "query id is not correct")
+	require.Equal(res.Report.QueryId, qId3, "query id is not correct")
 	require.Equal(res.Report.AggregateReporter, "reporter11", "aggregate reporter is not correct")
 	require.Equal(res.Report.AggregateValue, "a", "aggregate value is not correct")
 	require.Equal(res.Report.ReporterPower, int64(2), "reporter power is not correct")
@@ -155,43 +157,44 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	require.Equal(res.Report.StandardDeviation, math.Sqrt(sum), "std deviation is not correct")
 
 	// 5 reporters with even weights, should be equal to normal median
+	qId4 := "907154958baee4fb0ce2bbe50728141ac76eb2dc1731b3d40f0890746dd07e62"
 	reports = []types.MicroReport{
 		{
 			Reporter: "reporter14",
 			Value:    "a", // Hex value for 10
 			Power:    5,
-			QueryId:  "query4",
+			QueryId:  qId4,
 		},
 		{
 			Reporter: "reporter15",
 			Value:    "14", // Hex value for 20
 			Power:    5,
-			QueryId:  "query4",
+			QueryId:  qId4,
 		},
 		{
 			Reporter: "reporter16",
 			Value:    "1e", // Hex value for 30
 			Power:    5,
-			QueryId:  "query4",
+			QueryId:  qId4,
 		},
 		{
 			Reporter: "reporter17",
 			Value:    "28", // Hex value for 40
 			Power:    5,
-			QueryId:  "query4",
+			QueryId:  qId4,
 		},
 		{
 			Reporter: "reporter18",
 			Value:    "32", // Hex value for 50
 			Power:    5,
-			QueryId:  "query4",
+			QueryId:  qId4,
 		},
 	}
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: "query4"})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId4})
 	require.Nil(err)
 	//fmt.Println("REPORT 4: ", res.Report)
-	require.Equal(res.Report.QueryId, "query4", "query id is not correct")
+	require.Equal(res.Report.QueryId, qId4, "query id is not correct")
 	require.Equal(res.Report.AggregateReporter, "reporter16", "aggregate reporter is not correct")
 	require.Equal(res.Report.AggregateValue, "1e", "aggregate value is not correct")
 	require.Equal(res.Report.ReporterPower, int64(5), "reporter power is not correct")

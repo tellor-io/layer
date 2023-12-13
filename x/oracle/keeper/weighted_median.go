@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 	"sort"
@@ -65,9 +64,5 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 	weightedStdDev := math.Sqrt(sumWeightedSquaredDiffs / float64(totalReporterPower.Int64()))
 	medianReport.StandardDeviation = weightedStdDev
 
-	store := k.AggregateStore(ctx)
-	key := []byte(fmt.Sprintf("%s-%d", medianReport.QueryId, ctx.BlockHeight()))
-	store.Set(key, k.cdc.MustMarshal(&medianReport))
-	ctx.Logger().Error("WeightedMedian", "medianReport", medianReport)
-
+	k.SetAggregate(ctx, &medianReport)
 }

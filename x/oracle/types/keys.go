@@ -1,6 +1,11 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"fmt"
+	"time"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 const (
 	// ModuleName defines the module name
@@ -34,4 +39,16 @@ func KeyPrefix(p string) []byte {
 
 func NumKey(num int64) []byte {
 	return sdk.Uint64ToBigEndian(uint64(num))
+}
+
+func AvailableTimestampsKey(queryId []byte) []byte {
+	return []byte(fmt.Sprintf("%s:%s", "timestamps", queryId))
+}
+
+func MaxNonceKey(queryId []byte) []byte {
+	return []byte(fmt.Sprintf("%s:%s", "maxNonce", queryId))
+}
+
+func AggregateKey(queryId []byte, timestamp time.Time) []byte {
+	return []byte(fmt.Sprintf("%s:%s:%v", "aggregate", queryId, timestamp))
 }
