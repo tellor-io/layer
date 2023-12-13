@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: qId})
+	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
 	//fmt.Println("REPORT 1: ", res.Report)
 	require.Equal(res.Report.QueryId, qId, "query id is not correct")
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		},
 	}
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: qId2})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId2})
 	require.Nil(err)
 	//fmt.Println("REPORT 2: ", res.Report)
 	require.Equal(res.Report.QueryId, qId2, "query id is not correct")
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		},
 	}
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: qId3})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId3})
 	require.Nil(err)
 	//fmt.Println("REPORT 3: ", res.Report)
 	require.Equal(res.Report.QueryId, qId3, "query id is not correct")
@@ -191,7 +191,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		},
 	}
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: qId4})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId4})
 	require.Nil(err)
 	//fmt.Println("REPORT 4: ", res.Report)
 	require.Equal(res.Report.QueryId, qId4, "query id is not correct")

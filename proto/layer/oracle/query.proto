@@ -50,7 +50,7 @@ service Query {
   }
   
   // Queries a list of GetAggregatedReport items.
-  rpc GetAggregatedReport (QueryGetAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
+  rpc GetAggregatedReport (QueryGetCurrentAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{queryId}";
   
   }
@@ -108,7 +108,7 @@ message QueryGetUserTipTotalResponse {
   UserTipTotal totalTips = 1;
 }
 
-message QueryGetAggregatedReportRequest {
+message QueryGetCurrentAggregatedReportRequest {
   string queryId     = 1;
 }
 

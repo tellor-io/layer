@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,7 +57,7 @@ func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
 func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
 	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
 	if len(availableTimestamps.Timestamps) == 0 {
-		return nil, types.ErrIntOverflowAggregate
+		return nil, fmt.Errorf("no data available for query id %s", hex.EncodeToString(queryId))
 	}
 	found, index := FindTimestampBefore(availableTimestamps.Timestamps, timestamp)
 	if found {
@@ -67,7 +68,7 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 		k.cdc.MustUnmarshal(bz, &report)
 		return &report, nil
 	}
-	return nil, types.ErrIntOverflowAggregate
+	return nil, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
 }
 
 func (k Keeper) GetAvailableTimestampsByQueryId(ctx sdk.Context, queryId []byte) types.AvailableTimestamps {

@@ -366,7 +366,7 @@ func local_request_Query_GetUserTipTotal_0(ctx context.Context, marshaler runtim
 }
 
 func request_Query_GetAggregatedReport_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryGetAggregatedReportRequest
+	var protoReq QueryGetCurrentAggregatedReportRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -393,7 +393,7 @@ func request_Query_GetAggregatedReport_0(ctx context.Context, marshaler runtime.
 }
 
 func local_request_Query_GetAggregatedReport_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryGetAggregatedReportRequest
+	var protoReq QueryGetCurrentAggregatedReportRequest
 	var metadata runtime.ServerMetadata
 
 	var (

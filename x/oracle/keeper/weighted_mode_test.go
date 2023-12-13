@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	}
 
 	s.oracleKeeper.WeightedMode(s.ctx, reports)
-	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: qId})
+	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
 	require.Equal(res.Report.QueryId, qId, "query id is not correct")
 	require.Equal(res.Report.AggregateReporter, "reporter4", "aggregate reporter is not correct")
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	}
 
 	s.oracleKeeper.WeightedMode(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetAggregatedReportRequest{QueryId: qId2})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId2})
 	require.Nil(err)
 	require.Equal(res.Report.QueryId, qId2, "query id is not correct")
 	require.Equal(res.Report.AggregateReporter, "reporter7", "aggregate reporter is not correct")
