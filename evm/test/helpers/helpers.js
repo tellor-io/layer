@@ -57,72 +57,24 @@ getMultistore = async (height) => {
     }
 }
 
-// struct BlockDetail {
-//   bytes32 oracleHash;
-//   uint64 timeSecond;
-//   uint32 timeNanoSecondFraction;
-// }
+calculateValCheckpoint = (valSet, powers, nonce, threshold) => {
+  structArray = []
+  for (i = 0; i < valSet.length; i++) {
+    structArray[i] = {
+      addr: valSet[i],
+      power: powers[i]
+    }
+  }
+  // encode the array of Validator struct objects into bytes so they can be hashed
+  enc = abiCoder.encode(["tuple(address addr, uint256 power)[]"], [structArray])
+  // hash the encoded bytes
+  valHash = hash(enc)
 
-// enum ResolveStatus {
-//   RESOLVE_STATUS_OPEN_UNSPECIFIED,
-//   RESOLVE_STATUS_SUCCESS,
-//   RESOLVE_STATUS_FAILURE,
-//   RESOLVE_STATUS_EXPIRED
-// }
-
-// struct Value {
-//   string clientID;
-//   uint64 oracleScriptID;
-//   bytes params;
-//   uint64 askCount;
-//   uint64 minCount;
-//   uint64 requestID;
-//   uint64 ansCount;
-//   uint64 requestTime;
-//   uint64 resolveTime;
-//   ResolveStatus resolveStatus;
-//   bytes result;
-// }
-
-// struct MultistoreData {
-//   bytes32 oracleIAVLStateHash; // [C]
-//   bytes32 paramsStoreMerkleHash; // [D]
-//   bytes32 slashingToStakingStoresMerkleHash; // [I7]
-//   bytes32 govToMintStoresMerkleHash; // [I10]
-//   bytes32 authToFeegrantStoresMerkleHash; // [I12]
-//   bytes32 transferToUpgradeStoresMerkleHash; // [I15]
-// }
-
-// struct BlockHeaderMerkleParts {
-//   bytes32 versionAndChainIdHash; // [1A]
-//   uint64 height; // [2]
-//   uint64 timeSecond; // [3]
-//   uint32 timeNanoSecondFraction; // between 0 to 10^9 [3]
-//   bytes32 lastBlockIdAndOther; // [2B]
-//   bytes32 nextValidatorHashAndConsensusHash; // [1E]
-//   bytes32 lastResultsHash; // [B]
-//   bytes32 evidenceAndProposerHash; // [2D]
-// }
-
-// struct CommonEncodedVotePartData {
-//   bytes signedDataPrefix;
-//   bytes signedDataSuffix;
-// }
-
-// struct TMSignatureData {
-//   bytes32 r;
-//   bytes32 s;
-//   uint8 v;
-//   bytes encodedTimestamp;
-// }
-
-// struct IAVLMerklePath {
-//   bool isDataOnRight;
-//   uint8 subtreeHeight;
-//   uint256 subtreeSize;
-//   uint256 subtreeVersion;
-//   bytes32 siblingHash;
-// }
+  domainSeparator = "0x636865636b706f696e7400000000000000000000000000000000000000000000"
+  enc = abiCoder.encode(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, nonce, threshold, valHash])
+  valCheckpoint = hash(enc)
+  return valCheckpoint
+}
 
 getBlockHeaderMerkleParts = async (height) => {
   url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?height=" + height
@@ -300,4 +252,5 @@ module.exports = {
   getBlockHeaderMerkleParts,
   getCommonEncodedVoteParts,
   getTmSig,
+  calculateValCheckpoint
 };

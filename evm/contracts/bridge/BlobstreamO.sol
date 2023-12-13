@@ -4,7 +4,6 @@ pragma solidity ^0.8.22;
 import "./ECDSA.sol";
 import "./Constants.sol";
 import "./DataRootTuple.sol";
-import "./IDAOracle.sol";
 import "./lib/tree/binary/BinaryMerkleProof.sol";
 import "./lib/tree/binary/BinaryMerkleTree.sol";
 
@@ -19,12 +18,27 @@ struct Signature {
     bytes32 s;
 }
 
+struct ReportData {
+    bytes value;
+    uint256 timestamp;
+    uint256 consensusThreshold;
+}
+
+struct OracleAttestationData {
+    bytes32 queryId;
+    ReportData report;
+    uint256 validatorNonce;
+    uint256 powerThreshold;
+    bytes32 validatorSetHash;
+    uint256 blockTimestamp;
+}
+
 /// @title BlobstreamO: Tellor Layer -> EVM, Oracle relay.
 /// @dev The relay relies on a set of signers to attest to some event on
 /// Tellor Layer. These signers are the validator set, who sign over every
 /// block. At least 2/3 of the voting power of the current
-/// view of the validator set must sign off on new relayed events. 
-contract BlobstreamO is IDAOracle, ECDSA{
+/// view of the validator set must sign off on new relayed events.
+contract BlobstreamO is ECDSA {
     /*Storage*/
     bytes32 public lastValidatorSetCheckpoint;///Domain-separated commitment to the latest validator set.
     uint256 public powerThreshold;/// Voting power required to submit a new update.
@@ -41,6 +55,7 @@ contract BlobstreamO is IDAOracle, ECDSA{
     error InvalidSignature();
     error InsufficientVotingPower();
     error SuppliedValidatorSetInvalid();
+    error InvalidValidatorSetNonce();
 
     /*Functions*/
     /// @param _nonce Initial event nonce.
@@ -74,18 +89,6 @@ contract BlobstreamO is IDAOracle, ECDSA{
         returns (bytes32)
     {
         return keccak256(abi.encode(VALIDATOR_SET_HASH_DOMAIN_SEPARATOR, _nonce, _powerThreshold, _validatorSetHash));
-    }
-
-    /// @dev A hash of all relevant information about a data root tuple root.
-    /// @param _nonce Event nonce.
-    /// @param _blockHeight height of block
-    /// @param _dataRootTupleRoot Data root tuple root.
-    function domainSeparateDataRootTupleRoot(uint256 _nonce, uint256 _blockHeight, bytes32 _dataRootTupleRoot)
-        private
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(DATA_ROOT_TUPLE_ROOT_DOMAIN_SEPARATOR, _nonce, _blockHeight, _dataRootTupleRoot));
     }
 
     /// @dev Checks that enough voting power signed over a digest.
@@ -154,23 +157,14 @@ contract BlobstreamO is IDAOracle, ECDSA{
         emit ValidatorSetUpdated(validatorNonce, _newPowerThreshold, _newValidatorSetHash);
     }
 
-    /// @notice Relays an oracle root tuples to an EVM chain. 
-    /// The oracle root is the Merkle root of the binary Merkle tree of oracle data
-    /// @param _oracleRoot The Merkle root of data root tuples.
-    /// @param _blockHeight height of block to make sure we're moving forward in time
-    /// @param _currentValidatorSet The current validator set.
-    /// @param _sigs Signatures.
-    function submitOracleRoot(
-        bytes32 _oracleRoot,
-        uint256 _blockHeight,
+    function verifyOracleData(
+        OracleAttestationData calldata _attest, 
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
-    ) external {
+    ) public view returns (bool) {
         if (_currentValidatorSet.length != _sigs.length) {
             revert MalformedCurrentValidatorSet();
         }
-        require(_blockHeight > currentRelayedBlockHeight);
-        currentRelayedBlockHeight = _blockHeight;
         bytes32 _currentValidatorSetHash = computeValidatorSetHash(_currentValidatorSet);
         if (
             domainSeparateValidatorSetHash(validatorNonce, powerThreshold, _currentValidatorSetHash)
@@ -178,24 +172,30 @@ contract BlobstreamO is IDAOracle, ECDSA{
         ) {
             revert SuppliedValidatorSetInvalid();
         }
-        // Check that enough current validators have signed off on the data
-        bytes32 c = domainSeparateDataRootTupleRoot(validatorNonce, _blockHeight, _oracleRoot);
-        checkValidatorSignatures(_currentValidatorSet, _sigs, c, powerThreshold);
-        isOracleRoot[_oracleRoot] = true;
-        oracleRoots[_blockHeight] = _oracleRoot;
-        emit NewOracleRoot(_oracleRoot);
+
+        if (_attest.validatorNonce != validatorNonce) {
+            revert InvalidValidatorSetNonce();
+        }
+        
+        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
+        checkValidatorSignatures(_currentValidatorSet, _sigs, _dataDigest, powerThreshold);
+        return true;
     }
 
-    /// @dev see "./IDAOracle.sol"
-    function verifyAttestation(bytes32 _oracleRoot, DataRootTuple memory _tuple, BinaryMerkleProof memory _proof)
-        external
-        view
-        override
-        returns (bool)
-    {
-        // Load the tuple root at the given index from storage.
-        require(isOracleRoot[_oracleRoot]);
-        //see that you can verify stuff in old oracle roots too...so be careful to check timestamps
-        return BinaryMerkleTree.verify(_oracleRoot, _proof, abi.encode(_tuple));
+    function _domainSeparateOracleAttestationData(OracleAttestationData calldata _attest) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, 
+                _attest.queryId, 
+                _attest.report.value, 
+                _attest.report.timestamp, 
+                _attest.report.consensusThreshold, 
+                _attest.validatorNonce, 
+                _attest.powerThreshold, 
+                _attest.validatorSetHash, 
+                _attest.blockTimestamp
+            )
+        );
     }
+
 }
