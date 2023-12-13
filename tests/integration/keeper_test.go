@@ -232,6 +232,7 @@ func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, strateg
 
 	return testAddrs
 }
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }

@@ -33,6 +33,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	//oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
@@ -49,6 +51,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/oracle"
@@ -68,7 +71,13 @@ const (
 	btcQueryData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 )
 
-type IntegrationTestSuite struct {
+var (
+	PrivKey cryptotypes.PrivKey
+	PubKey  cryptotypes.PubKey
+	Addr    sdk.AccAddress
+)
+
+type E2ETestSuite struct {
 	suite.Suite
 
 	oraclekeeper   oraclekeeper.Keeper
@@ -91,7 +100,7 @@ type IntegrationTestSuite struct {
 	app   *runtime.App
 }
 
-func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
+func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 	maccPerms := map[string][]string{}
 	for _, permission := range suite.authConfig.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -132,7 +141,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	)
 }
 
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *E2ETestSuite) SetupTest() {
 	registry.AppWiringSetup()
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
@@ -172,36 +181,38 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.app = app
 }
 
-func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
+func (s *E2ETestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
 	ctx := s.ctx
 	s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
 	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(amount)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(amount)))
 }
 
-func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
+func (s *E2ETestSuite) newKeysWithTokens() (sdk.AccAddress, cryptotypes.PrivKey, cryptotypes.PubKey) {
 	PrivKey := secp256k1.GenPrivKey()
 	PubKey := PrivKey.PubKey()
 	Addr := sdk.AccAddress(PubKey.Address())
 	s.mintTokens(Addr, sdk.NewCoin(s.denom, sdk.NewInt(1000000)))
-	return Addr
+	return Addr, PrivKey, PubKey
 }
 
-func (s *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
+func (s *E2ETestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
 	val := s.stakingKeeper.GetAllValidators(s.ctx)[0]
 	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
 	s.Require().NoError(err)
+	// try and grab private key ?
+	// pk := PrivKey
 	return disputetypes.MicroReport{
 		Reporter:  sdk.AccAddress(valAddr).String(),
 		Power:     val.GetConsensusPower(val.GetBondedTokens()),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
-	}, valAddr
+	}, valAddr //, pk
 
 }
 
-func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func (s *E2ETestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	ctx := s.ctx
 	acctNum := len(powers)
 	addrs := s.addTestAddrs(acctNum, sdk.NewInt(30000000), simtestutil.CreateIncrementalAccounts)
@@ -222,7 +233,7 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	return addrs, valAddrs
 }
 
-func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
+func (s *E2ETestSuite) addTestAddrs(accNum int, accAmt math.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 	initCoins := sdk.NewCoin(s.denom, accAmt)
 	for _, addr := range testAddrs {
@@ -232,6 +243,7 @@ func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, strateg
 
 	return testAddrs
 }
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+
+func TestE2ETestSuite(t *testing.T) {
+	suite.Run(t, new(E2ETestSuite))
 }
