@@ -19,10 +19,6 @@ message Aggregate {
   int64 nonce = 8;
 }
 
-message AggregateNonce {
-  uint64 nonce = 1;
-}
-
 message AvailableTimestamps {
   repeated google.protobuf.Timestamp  timestamps = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
 }
