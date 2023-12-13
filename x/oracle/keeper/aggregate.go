@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	rk "github.com/tellor-io/layer/x/registry/keeper"
 )
 
 func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
@@ -34,6 +35,9 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
+	if rk.Has0xPrefix(report.QueryId) {
+		report.QueryId = report.QueryId[2:]
+	}
 	queryId, err := hex.DecodeString(report.QueryId)
 	if err != nil {
 		panic(err)
