@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"encoding/hex"
 	"math/big"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
@@ -60,6 +62,8 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	bigmath "github.com/ethereum/go-ethereum/common/math"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/tests/integration"
 )
@@ -207,7 +211,8 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	acctNum := len(powers)
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
 	amount := new(big.Int).Mul(big.NewInt(1000), base)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), simtestutil.CreateIncrementalAccounts)
+	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
+	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
@@ -225,8 +230,7 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	return addrs, valAddrs
 }
 
-func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
-	testAddrs := strategy(accNum)
+func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
 	initCoins := sdk.NewCoin(s.denom, accAmt)
 	for _, addr := range testAddrs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
@@ -247,6 +251,71 @@ func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
 		dispute: s.accountKeeper.GetModuleAccount(s.ctx, "dispute"),
 	}
 }
+
+func CreateRandomPrivateKeys(accNum int) []secp256k1.PrivKey {
+	testAddrs := make([]secp256k1.PrivKey, accNum)
+	for i := 0; i < accNum; i++ {
+		pk := secp256k1.GenPrivKey()
+		testAddrs[i] = *pk
+	}
+	return testAddrs
+}
+
+func (s *IntegrationTestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []sdk.AccAddress {
+	testAddrs := make([]sdk.AccAddress, len(priv))
+	for i, pk := range priv {
+		testAddrs[i] = sdk.AccAddress(pk.PubKey().Address())
+	}
+	return testAddrs
+}
+
+func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []secp256k1.PrivKey) {
+	ctx := s.ctx
+	acctNum := len(powers)
+	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
+	amount := new(big.Int).Mul(big.NewInt(1000), base)
+	privKeys := CreateRandomPrivateKeys(acctNum)
+	testAddrs := s.convertToAccAddress(privKeys)
+	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+
+	for i, pk := range privKeys {
+		account := authtypes.BaseAccount{
+			Address: testAddrs[i].String(),
+			PubKey:  codectypes.UnsafePackAny(pk.PubKey()),
+		}
+		s.accountKeeper.SetAccount(s.ctx, &account)
+		val, err := stakingtypes.NewValidator(valAddrs[i], pk.PubKey(), stakingtypes.Description{})
+		s.NoError(err)
+		s.stakingKeeper.SetValidator(ctx, val)
+		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
+		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+	}
+
+	_ = staking.EndBlocker(ctx, s.stakingKeeper)
+
+	return addrs, valAddrs, privKeys
+}
+
+// helper to encode spots to hex string similar to evm tellor. works only with two decimal places ie 123.45
+func encodeValue(number *big.Int) string {
+	bigNumber := bigmath.BigPow(10, 18).Mul(number, big.NewInt(10_000_000_000_000_000)) // cover the two decimal places
+	// Define the ABI type for uint256
+	uint256ABIType, _ := abi.NewType("uint256", "uint256", nil)
+
+	// Create an ABI Argument for the uint256 type
+	arg := abi.Argument{
+		Type: uint256ABIType,
+	}
+
+	// Pack the scaled integer using the ABI Argument
+	encodedBytes, _ := abi.Arguments{arg}.Pack(bigNumber)
+	// Convert the encoded bytes to a hex string
+	encodedString := hex.EncodeToString(encodedBytes)
+	return encodedString
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
 }
