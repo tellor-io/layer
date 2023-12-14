@@ -76,6 +76,65 @@ calculateValCheckpoint = (valSet, powers, nonce, threshold) => {
   return valCheckpoint
 }
 
+calculateValHash = (valSet, powers) => {
+  structArray = []
+  for (i = 0; i < valSet.length; i++) {
+    structArray[i] = {
+      addr: valSet[i],
+      power: powers[i]
+    }
+  }
+  // encode the array of Validator struct objects into bytes so they can be hashed
+  enc = abiCoder.encode(["tuple(address addr, uint256 power)[]"], [structArray])
+  // hash the encoded bytes
+  valHash = hash(enc)
+  return valHash
+}
+
+getEthSignedMessageHash = (messageHash) => {
+  const prefix = "\x19Ethereum Signed Message:\n32";
+  const messageHashBytes = ethers.utils.arrayify(messageHash);
+  const prefixBytes = ethers.utils.toUtf8Bytes(prefix);
+  const combined = ethers.utils.concat([prefixBytes, messageHashBytes]);
+  const digest = ethers.utils.keccak256(combined);
+  return digest;
+}
+
+// getValSetStructArray = (valAddrs, powers) => {
+//   structArray = []
+//   for (i = 0; i < valAddrs.length; i++) {
+//     structArray[i] = {
+//       addr: abiCoder.encode(["address"], [valAddrs[i]]),
+//       power: abiCoder.encode(["uint256"], [powers[i]])
+//     }
+//   }
+//   return structArray
+// }
+
+getValSetStructArray = (valAddrs, powers) => {
+  structArray = []
+  for (i = 0; i < valAddrs.length; i++) {
+    structArray[i] = {
+      addr: valAddrs[i],
+      power: powers[i]
+    }
+  }
+  return structArray
+}
+
+getSigStructArray = (sigs) => {
+  structArray = []
+  for (i = 0; i < sigs.length; i++) {
+    let { v, r, s } = ethers.utils.splitSignature(sigs[i])
+    structArray[i] = {
+      v: abiCoder.encode(["uint8"], [v]),
+      r: abiCoder.encode(["bytes32"], [r]),
+      s: abiCoder.encode(["bytes32"], [s])
+    }
+  }
+  return structArray
+}
+
 getBlockHeaderMerkleParts = async (height) => {
   url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?height=" + height
   try {
@@ -252,5 +311,9 @@ module.exports = {
   getBlockHeaderMerkleParts,
   getCommonEncodedVoteParts,
   getTmSig,
-  calculateValCheckpoint
+  calculateValCheckpoint,
+  calculateValHash,
+  getEthSignedMessageHash,
+  getValSetStructArray,
+  getSigStructArray
 };

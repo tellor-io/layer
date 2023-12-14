@@ -6,6 +6,7 @@ import "./Constants.sol";
 import "./DataRootTuple.sol";
 import "./lib/tree/binary/BinaryMerkleProof.sol";
 import "./lib/tree/binary/BinaryMerkleTree.sol";
+import "hardhat/console.sol";
 
 struct Validator {
     address addr;
@@ -150,11 +151,16 @@ contract BlobstreamO is ECDSA {
         }
 
         bytes32 newCheckpoint = domainSeparateValidatorSetHash(validatorNonce, _newPowerThreshold, _newValidatorSetHash);
+        console.logBytes32(newCheckpoint);
         checkValidatorSignatures(_currentValidatorSet, _sigs, newCheckpoint, powerThreshold);
         lastValidatorSetCheckpoint = newCheckpoint;
         powerThreshold = _newPowerThreshold;
         validatorNonce++;
         emit ValidatorSetUpdated(validatorNonce, _newPowerThreshold, _newValidatorSetHash);
+    }
+
+    function deleteThisInputValSet(Validator[] calldata _currentValidatorSet) external pure returns(address) {
+        return _currentValidatorSet[0].addr;
     }
 
     function verifyOracleData(
@@ -196,6 +202,14 @@ contract BlobstreamO is ECDSA {
                 _attest.blockTimestamp
             )
         );
+    }
+
+    function toEthSignedMessageHashPublic(bytes32 _hash) public pure returns (bytes32) {
+        return ECDSA.toEthSignedMessageHash(_hash);
+    }
+
+    function tryRecoverPublic(bytes32 _hash, bytes memory signature) public pure returns (address, ECDSA.RecoverError, bytes32) {
+        return ECDSA.tryRecover(_hash, signature);
     }
 
 }

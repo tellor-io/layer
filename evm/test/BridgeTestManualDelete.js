@@ -7,31 +7,25 @@ const { prependOnceListener } = require("process");
 const BN = ethers.BigNumber.from
 const abiCoder = new ethers.utils.AbiCoder();
 
-describe("BlobstreamO Manual Delete - Function Tests", function () {
+describe("BlobstreamO Manual - Function Tests", function () {
 
-    let bridge, validatorHash, valPower, accounts, validators, powers;
-    let startHeight = 0;
+    let bridge, valPower, accounts, validators, powers, initialValAddrs, initialPowers, nonce, threshold, valCheckpoint;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
-    const CHAIN_ID = "layer"
 
     beforeEach(async function () {
-        // const Bridge = await ethers.getContractFactory("BlobstreamO");
-        // if(startHeight == 0) {
-        //     startHeight = await h.getLatestBlockNumber()
-        //     valsResponse = await h.getValidatorSet(startHeight)
-        //     validators = valsResponse[0]
-        //     powers = valsResponse[1]
-        // }
-        // for(i = 0; i< powers.length; i++){
-        //     valPower += powers[i]
-        // }
-        // let enc = ethers.utils.defaultAbiCoder.encode(["address[]"], validators)
-        // let validatorHash = web3.utils.keccak256(enc);
-        // bridge = await Bridge.deploy(startHeight,valPower * 2/3,validatorHash) ;
         accounts = await ethers.getSigners();
+        initialValAddrs = [accounts[1].address, accounts[2].address]
+        initialPowers = [1, 2]
+        nonce = 1
+        threshold = 2
+        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold)
+
+        const Bridge = await ethers.getContractFactory("BlobstreamO");
+        bridge = await Bridge.deploy(nonce, threshold, valCheckpoint);
+        await bridge.deployed();
     });
 
-    it.only("init test", async function () {
+    it("init test", async function () {
         valSet = [accounts[0].address, accounts[1].address]
         powers = [1, 2]
         nonce = 1
@@ -40,112 +34,59 @@ describe("BlobstreamO Manual Delete - Function Tests", function () {
         console.log("valCheckpoint: ", valCheckpoint)
     })
 
-    it("Should be able to set the bridge address", async function () {
-        assert.equal(1, 1)
-        height = await h.getLatestBlockNumber()
-        console.log("height: " + height)
-        let [vals, powers] = await h.getValidatorSet(height)
-        console.log("vals: " + vals)
-        console.log("powers: " + powers)
-        // await bridge.setBridgeAddress(accounts[0].address);
-        // expect(await bridge.bridgeAddress()).to.equal(accounts[0].address);
+    it.only("updateValidatorSet", async function() {
+        newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
+        newPowers = [1, 2, 3]
+        newNonce = 2
+        newThreshold = 4
+        newValHash = await h.calculateValHash(newValAddrs, newPowers)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, nonce, newThreshold)
+        newDigest = await h.getEthSignedMessageHash(newValCheckpoint)
+        valSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
+        sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        console.log("sig1: ", sig1)
+        console.log("sig2: ", sig2)
+        // resp = await bridge.deleteThisInputValSet([{addr: accounts[1].address, power: 1}, {addr: accounts[2].address, power: 2}])
+        tryRecoverResp = await bridge.tryRecoverPublic(newDigest, sig1)
+        console.log("tryRecoverResp: ", tryRecoverResp)
+        console.log("addr1: ", accounts[1].address)
+        console.log("testNewCheckpoint: ", newValCheckpoint)
+        await bridge.updateValidatorSet(newValHash, newThreshold, valSetArray, sigStructArray);
     })
 
-    it("test verifyBlockHeader", async function() {
-        multistoreData = await h.getMultistore()
-        console.log("muultistore: ", multistoreData)
-        merkleParts = await h.getBlockHeaderMerkleParts(startHeight)
-        console.log("merkleParts: ", merkleParts)
-        commonParts = await h.getCommonEncodedVoteParts(startHeight)
-        console.log("commonParts: ", commonParts)
-        tmSig = await h.getTmSig(startHeight)
-        console.log("tmSig: ", tmSig)
-        // result = await bridge.verifyBlockHeader(multistoreData, merkleParts, commonParts, tmSig)
-        // result = await bridge.readMultistoreData(multistoreData)
-        a = BigInt("100")
-        b = BigInt("200")
-        // encode as struct 
-        // struct FakeStruct {
-        //     uint a;
-        //     uint b;
-        // }
-        // fakeEnc = abiCoder.encode(["tuple(uint256, uint256)"], [[a, b]])
-        // fakeEnc = abiCoder.encode(["uint256", "uint256"], [a, b])
-        // result = await bridge.readFakeStruct(fakeEnc)
+    it("sigs", async function() {
+        const signer = accounts[1]
+        message0 = 'Hello, world!'
+        messageHash0 = ethers.utils.hashMessage(message0)
+        mysig = await signer.signMessage(message0)
+        console.log("mysig: ", mysig)
+        tryRecoverResp = await bridge.tryRecoverPublic(messageHash0, mysig)
+        console.log("tryRecoverResp: ", tryRecoverResp)
+        console.log("addr1: ", accounts[1].address)
 
-        // try web3 for encoding fake struct 
-        // web3.eth.abi.encodeParameter(
-        //     {
-        //         "ParentStruct": {
-        //             "propertyOne": 'uint256',
-        //             "propertyTwo": 'uint256',
-        //             "childStruct": {
-        //                 "propertyOne": 'uint256',
-        //                 "propertyTwo": 'uint256'
-        //             }
-        //         }
-        //     },
-        //     {
-        //         "propertyOne": 42,
-        //         "propertyTwo": 56,
-        //         "childStruct": {
-        //             "propertyOne": 45,
-        //             "propertyTwo": 78
-        //         }
-        //     }
-        // );
-        fakeEnc = web3.eth.abi.encodeParameter(
-            {
-                "FakeStruct": {
-                    "a": 'uint256',
-                    "b": 'uint256'
-                }
-            },
-            {
-                "a": a,
-                "b": b
-            }
-        );
-        // result = await bridge.readFakeStruct(fakeEnc)
-        // dec = ethers.utils.defaultAbiCoder.decode(["uint256", "uint256"], fakeEnc)
+        console.log("\n\nBREAK\n\n")
+        const message = 'Hello, world!';
+        const messageHash = ethers.utils.hashMessage(message);
+        console.log("messageHash: ", messageHash)
+        console.log("message type: ", typeof(message))
+        console.log("messageHash type: ", typeof(messageHash))
+        const signature = await signer.signMessage(message);
+        console.log("sig type: ", typeof(signature))
+        console.log("signature: ", signature)
 
-        types = ["uint256", "uint256"]
-        vals = [a, b]
-        fakeEnc = ethers.utils.defaultAbiCoder.encode(types, vals)
-        // fakeEnc = ethers.utils.defaultAbiCoder.encode(["uint256", "uint256"], [[a, b]])
-        // result = await bridge.readFakeStructBytes(fakeEnc)
+        // Pass the hashed message and signature to tryRecover
+        const recoveredAddress = await bridge.tryRecoverPublic(messageHash, signature);
 
-        // bridge.FakeStruct()
+        console.log('Original address:', signer.address);
+        console.log('Recovered address:', recoveredAddress);
 
-        aEnc = abiCoder.encode(["uint256"], [a])
-        bEnc = abiCoder.encode(["uint256"], [b])
-        fakeEnc = {
-            a: aEnc,
-            b: bEnc
-        }
-
-        result = await bridge.readFakeStruct(fakeEnc)
-
-        multistoreData = await h.getMultistore()
-        console.log("multistoreData: ", multistoreData)
-        result = await bridge.readMultistoreData(multistoreData)
-        console.log("result: ", result)
-
+        
     })
 
-    it("test verifyBlockHeader", async function() {
-        multistoreData = await h.getMultistore(startHeight)
-        merklePartsData = await h.getBlockHeaderMerkleParts(startHeight)
-        commonPartsData = await h.getCommonEncodedVoteParts(startHeight)
-        tmSigData = await h.getTmSig(startHeight)
-        result = await bridge.verifyBlockHeader(multistoreData, merklePartsData, commonPartsData, tmSigData)
+    
 
-        console.log("multistore: ", multistoreData)
-        console.log("merkleParts: ", merklePartsData)
-        console.log("commonParts: ", commonPartsData)
-        console.log("tmSig: ", tmSigData)
-
-        assert.equal(result, true)
-    })
+   
     
 })
