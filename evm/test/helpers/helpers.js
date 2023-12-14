@@ -100,16 +100,21 @@ getEthSignedMessageHash = (messageHash) => {
   return digest;
 }
 
-// getValSetStructArray = (valAddrs, powers) => {
-//   structArray = []
-//   for (i = 0; i < valAddrs.length; i++) {
-//     structArray[i] = {
-//       addr: abiCoder.encode(["address"], [valAddrs[i]]),
-//       power: abiCoder.encode(["uint256"], [powers[i]])
-//     }
-//   }
-//   return structArray
-// }
+getDataDigest = (queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp) => {
+  const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
+  console.log("DOMAIN_SEPARATOR: ", DOMAIN_SEPARATOR)
+  console.log("queryId: ", queryId)
+  console.log("value: ", value)
+  console.log("timestamp: ", timestamp)
+  console.log("consensusThreshold: ", consensusThreshold)
+  console.log("validatorNonce: ", validatorNonce)
+  console.log("powerThreshold: ", powerThreshold)
+  console.log("validatorSetHash: ", validatorSetHash)
+  console.log("blockTimestamp: ", blockTimestamp)
+  enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"], 
+  [DOMAIN_SEPARATOR, queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp])
+  return hash(enc)
+}
 
 getValSetStructArray = (valAddrs, powers) => {
   structArray = []
@@ -135,63 +140,18 @@ getSigStructArray = (sigs) => {
   return structArray
 }
 
-getBlockHeaderMerkleParts = async (height) => {
-  url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?height=" + height
-  try {
-      const response = await axios.get(url)
-      headerParts = response.data.blockheaderMerkleEvm
-      enc = {
-        versionAndChainIdHash: abiCoder.encode(["bytes32"], [headerParts.versionChainidHash]),
-        height: abiCoder.encode(["uint64"], [headerParts.height]),
-        timeSecond: abiCoder.encode(["uint64"], [headerParts.timeSecond]),
-        timeNanoSecondFraction: abiCoder.encode(["uint32"], [headerParts.timeNanosecond]),
-        lastBlockIdAndOther: abiCoder.encode(["bytes32"], [headerParts.lastblockidCommitHash]),
-        nextValidatorHashAndConsensusHash: abiCoder.encode(["bytes32"], [headerParts.nextvalidatorConsensusHash]),
-        lastResultsHash: abiCoder.encode(["bytes32"], [headerParts.lastresultsHash]),
-        evidenceAndProposerHash: abiCoder.encode(["bytes32"], [headerParts.evidenceProposerHash])
-      }
-      return enc
-  } catch (error) {
-      console.log(error)
-  }
-} 
-
-getCommonEncodedVoteParts = async (height) => {
-  url = "http://localhost:1317/layer/bridge/tmsig?height=" + height
-  try {
-      const response = await axios.get(url)
-      common = response.data.common
-      // convert Base64 common parts to hex
-      prefix = "0x" + Buffer.from(common.SignedDataPrefix, 'base64').toString('hex')
-      suffix = "0x" + Buffer.from(common.SignedDataSuffix, 'base64').toString('hex')
-      notenc = {
-        signedDataPrefix: prefix,
-        signedDataSuffix: suffix
-      }
-      return notenc
-  } catch (error) {
-      console.log(error)
-  }
-}
-
-getTmSig = async (height) => {
-  url = "http://localhost:1317/layer/bridge/tmsig?height=" + height
-  try {
-      const response = await axios.get(url)
-      tmSig = response.data.tmSig
-      tmSigEnc = []
-      for (i = 0; i < tmSig.length; i++) {
-          tmSigEnc.push({
-            r: abiCoder.encode(["bytes32"], [tmSig[i].R]),
-            s: abiCoder.encode(["bytes32"], [tmSig[i].S]),
-            v: abiCoder.encode(["uint8"], [tmSig[i].V]),
-            // encodedTimestamp: abiCoder.encode(["bytes"], [tmSig[i].EncodedTimestamp])
-            encodedTimestamp: removeLeadingZeros(tmSig[i].EncodedTimestamp)
-          })
-      }
-      return tmSigEnc
-  } catch (error) {
-      console.log(error)
+getOracleDataStruct = (queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp) => {
+  return {
+    queryId: queryId,
+    report: {
+      value: value,
+      timestamp: timestamp,
+      consensusThreshold: consensusThreshold
+    },
+    validatorNonce: validatorNonce,
+    powerThreshold: powerThreshold,
+    validatorSetHash: validatorSetHash,
+    blockTimestamp: blockTimestamp
   }
 }
 
@@ -307,13 +267,11 @@ module.exports = {
   expectThrow,
   getLatestBlockNumber,
   getValidatorSet,
-  getMultistore,
-  getBlockHeaderMerkleParts,
-  getCommonEncodedVoteParts,
-  getTmSig,
   calculateValCheckpoint,
   calculateValHash,
   getEthSignedMessageHash,
   getValSetStructArray,
-  getSigStructArray
+  getSigStructArray,
+  getOracleDataStruct,
+  getDataDigest
 };

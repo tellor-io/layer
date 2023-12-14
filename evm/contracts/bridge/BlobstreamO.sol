@@ -179,6 +179,7 @@ contract BlobstreamO is ECDSA {
             revert SuppliedValidatorSetInvalid();
         }
 
+        // possibly no nonce input needed here, 
         if (_attest.validatorNonce != validatorNonce) {
             revert InvalidValidatorSetNonce();
         }
