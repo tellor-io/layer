@@ -6,21 +6,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 var _ = strconv.Itoa(0)
-
-const (
-	FlagBlockNumber = "block-number"
-)
-
-func FlagSetBlockNumber() *flag.FlagSet {
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.String(FlagBlockNumber, "", "The block number to query the report for.")
-	return fs
-}
 
 func CmdGetAggregatedReport() *cobra.Command {
 	cmd := &cobra.Command{
@@ -39,7 +28,7 @@ func CmdGetAggregatedReport() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetAggregatedReportRequest{
+			params := &types.QueryGetCurrentAggregatedReportRequest{
 
 				QueryId: reqQueryId,
 			}
@@ -53,7 +42,6 @@ func CmdGetAggregatedReport() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().AddFlagSet(FlagSetBlockNumber())
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

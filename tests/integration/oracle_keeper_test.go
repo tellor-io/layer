@@ -1,10 +1,16 @@
 package integration_test
 
 import (
+	"encoding/hex"
+	"fmt"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *IntegrationTestSuite) oracleKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
@@ -127,5 +133,38 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 	modBalanceAfter := s.bankKeeper.GetBalance(s.ctx, authtypes.NewModuleAddress(types.ModuleName), s.denom)
 	s.Equal(accBalanceBefore.Amount.Sub(tip.Amount), accBalanceAfter.Amount)
 	s.Equal(modBalanceBefore.Amount.Add(tip.Amount).Sub(twoPercent.Amount), modBalanceAfter.Amount)
+}
 
+func (s *IntegrationTestSuite) TestMedianReports() {
+	_, msgServer := s.oracleKeeper()
+	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300})
+	reporterIndex := 0
+	value := encodeValue(big.NewInt(162926))
+	fmt.Println("encoded value: ", value)
+
+	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
+	s.Nil(err)
+	signature, err := privKeys[reporterIndex].Sign(valueDecoded) // sign value
+	s.Nil(err)
+
+	commit, reveal := report(accs[reporterIndex].String(), hex.EncodeToString(signature), value)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.Nil(err)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = msgServer.SubmitValue(s.ctx, &reveal)
+	s.Nil(err)
+}
+
+func report(creator string, signature string, value string) (oracletypes.MsgCommitReport, oracletypes.MsgSubmitValue) {
+	commit := oracletypes.MsgCommitReport{
+		Creator:   creator,
+		QueryData: ethQueryData,
+		Signature: signature,
+	}
+	reveal := oracletypes.MsgSubmitValue{
+		Creator:   creator,
+		QueryData: ethQueryData,
+		Value:     value,
+	}
+	return commit, reveal
 }
