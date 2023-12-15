@@ -35,7 +35,7 @@ func (s *IntegrationTestSuite) TestTipping() {
 	s.NoError(err)
 	store := s.oraclekeeper.TipStore(s.ctx)
 	tips, _ := s.oraclekeeper.GetQueryTips(s.ctx, store, ethQueryData)
-	s.Equal(tips.QueryData, ethQueryData)
+	s.Equal(tips.QueryData, ethQueryData[2:])
 	s.Equal(tip.Sub(twoPercent), tips.Amount)
 	s.Equal(tips.TotalTips, tips.Amount)
 	userTips := s.oraclekeeper.GetUserQueryTips(s.ctx, addr.String(), ethQueryData)
@@ -49,7 +49,7 @@ func (s *IntegrationTestSuite) TestTipping() {
 	_, err = msgServer.Tip(s.ctx, &msg)
 	s.NoError(err)
 	tips, _ = s.oraclekeeper.GetQueryTips(s.ctx, store, ethQueryData)
-	s.Equal(tips.QueryData, ethQueryData)
+	s.Equal(tips.QueryData, ethQueryData[2:])
 	// tips should be 2x
 	s.Equal(tip.Sub(twoPercent).Amount.Mul(sdk.NewInt(2)), tips.Amount.Amount)
 	s.Equal(tips.TotalTips, tips.Amount)
@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestTipping() {
 	_, err = msgServer.Tip(s.ctx, &types.MsgTip{QueryData: btcQueryData, Tipper: addr.String(), Amount: tip})
 	s.NoError(err)
 	tips, _ = s.oraclekeeper.GetQueryTips(s.ctx, store, btcQueryData)
-	s.Equal(tips.QueryData, btcQueryData)
+	s.Equal(tips.QueryData, btcQueryData[2:])
 	s.Equal(tip.Sub(twoPercent), tips.Amount)
 	s.Equal(tips.TotalTips, tips.Amount)
 	userTips = s.oraclekeeper.GetUserQueryTips(s.ctx, addr.String(), btcQueryData)
@@ -89,7 +89,7 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 	// Get current tip
 	resp, err := s.oraclekeeper.GetCurrentTip(s.ctx, &types.QueryGetCurrentTipRequest{QueryData: ethQueryData})
 	s.NoError(err)
-	s.Equal(resp.Tips, &types.Tips{QueryData: ethQueryData, Amount: tip.Sub(twoPercent), TotalTips: tip.Sub(twoPercent)})
+	s.Equal(resp.Tips, &types.Tips{QueryData: ethQueryData[2:], Amount: tip.Sub(twoPercent), TotalTips: tip.Sub(twoPercent)})
 }
 
 func (s *IntegrationTestSuite) TestGetUserTipTotal() {
