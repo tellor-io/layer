@@ -110,6 +110,7 @@ import (
 	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
 
+	"github.com/tellor-io/layer/x/oracle"
 	oraclemodule "github.com/tellor-io/layer/x/oracle"
 	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oraclemoduletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -533,7 +534,8 @@ func New(
 		AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper))
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(oraclemoduletypes.RouterKey, oracle.NewSupportedQueryChangeProposalHandler(app.OracleKeeper))
 	govKeeper.SetLegacyRouter(govRouter)
 
 	app.GovKeeper = *govKeeper.SetHooks(

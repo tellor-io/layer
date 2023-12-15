@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/depinject"
 	abci "github.com/cometbft/cometbft/abci/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -188,6 +189,7 @@ type OracleOutputs struct {
 
 	OracleKeeper keeper.Keeper
 	Module       appmodule.AppModule
+	GovHandler   govv1beta1.HandlerRoute
 }
 
 func ProvideModule(in OracleInputs) OracleOutputs {
@@ -208,6 +210,6 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 	)
-
-	return OracleOutputs{OracleKeeper: *k, Module: m}
+	govHandler := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSupportedQueryChangeProposalHandler(*k)}
+	return OracleOutputs{OracleKeeper: *k, Module: m, GovHandler: govHandler}
 }

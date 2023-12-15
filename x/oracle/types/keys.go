@@ -31,6 +31,8 @@ const (
 	ReporterStoreKey = "reporter_store"
 
 	AggregateStoreKey = "aggergate_store"
+
+	SupportedQueriesStoreKey = "supported_queries_store"
 )
 
 func KeyPrefix(p string) []byte {
@@ -51,4 +53,12 @@ func MaxNonceKey(queryId []byte) []byte {
 
 func AggregateKey(queryId []byte, timestamp time.Time) []byte {
 	return []byte(fmt.Sprintf("%s:%s:%v", "aggregate", queryId, timestamp))
+}
+
+func SupportedQueriesKey() []byte {
+	return KeyPrefix(SupportedQueriesStoreKey)
+}
+
+func CurrentIndexKey() []byte {
+	return KeyPrefix("currentIndex")
 }

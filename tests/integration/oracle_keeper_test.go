@@ -2,12 +2,12 @@ package integration_test
 
 import (
 	"encoding/hex"
-	"fmt"
-	"math/big"
 
+	"testing"
+
+	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -137,25 +137,64 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 
 func (s *IntegrationTestSuite) TestMedianReports() {
 	_, msgServer := s.oracleKeeper()
-	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300})
-	reporterIndex := 0
-	value := encodeValue(big.NewInt(162926))
-	fmt.Println("encoded value: ", value)
-
-	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
-	s.Nil(err)
-	signature, err := privKeys[reporterIndex].Sign(valueDecoded) // sign value
-	s.Nil(err)
-
-	commit, reveal := report(accs[reporterIndex].String(), hex.EncodeToString(signature), value)
-	_, err = msgServer.CommitReport(s.ctx, &commit)
-	s.Nil(err)
+	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	reporters := []struct {
+		name          string
+		reporterIndex int
+		value         string
+	}{
+		{
+			name:          "reporter 1",
+			reporterIndex: 0,
+			value:         encodeValue(162926),
+		},
+		{
+			name:          "reporter 2",
+			reporterIndex: 1,
+			value:         encodeValue(362926),
+		},
+		{
+			name:          "reporter 3",
+			reporterIndex: 2,
+			value:         encodeValue(262926),
+		},
+		{
+			name:          "reporter 4",
+			reporterIndex: 3,
+			value:         encodeValue(562926),
+		},
+		{
+			name:          "reporter 5",
+			reporterIndex: 4,
+			value:         encodeValue(462926),
+		},
+	}
+	for _, r := range reporters {
+		s.T().Run(r.name, func(t *testing.T) {
+			valueDecoded, err := hex.DecodeString(r.value) // convert hex value to bytes
+			s.Nil(err)
+			signature, err := privKeys[r.reporterIndex].Sign(valueDecoded) // sign value
+			s.Nil(err)
+			commit, reveal := report(accs[r.reporterIndex].String(), hex.EncodeToString(signature), r.value, ethQueryData)
+			_, err = msgServer.CommitReport(s.ctx, &commit)
+			s.Nil(err)
+			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
+			s.Nil(err)
+		})
+	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_, err = msgServer.SubmitValue(s.ctx, &reveal)
+	s.app.EndBlocker(s.ctx, abci.RequestEndBlock{Height: s.ctx.BlockHeight()})
+	// check median
+	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	s.Nil(err)
+	expectedMedianReporterIndex := 4
+	expectedMedianReporter := accs[expectedMedianReporterIndex].String()
+	s.Equal(expectedMedianReporter, res.Report.AggregateReporter)
+	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
 }
 
-func report(creator string, signature string, value string) (oracletypes.MsgCommitReport, oracletypes.MsgSubmitValue) {
+func report(creator, signature, value, qdata string) (oracletypes.MsgCommitReport, oracletypes.MsgSubmitValue) {
 	commit := oracletypes.MsgCommitReport{
 		Creator:   creator,
 		QueryData: ethQueryData,
@@ -167,4 +206,15 @@ func report(creator string, signature string, value string) (oracletypes.MsgComm
 		Value:     value,
 	}
 	return commit, reveal
+}
+
+func (s *IntegrationTestSuite) TestGetSupportedQueries() {
+	s.oracleKeeper()
+	// Get supported queries
+	resp := s.oraclekeeper.GetSupportedQueries(s.ctx)
+	s.Equal(resp.QueryData, []*types.QueryChange{
+		{QueryData: ethQueryData},
+		{QueryData: btcQueryData},
+		{QueryData: trbQueryData},
+	})
 }
