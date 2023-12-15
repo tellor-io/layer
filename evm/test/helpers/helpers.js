@@ -38,26 +38,7 @@ getValidatorSet = async (height) => {
     }
 }
 
-getMultistore = async (height) => {
-    url = "http://localhost:1317/layer/bridge/multistore?height=" + height
-    try {
-        const response = await axios.get(url)
-        multistoreResp = response.data.MutiStoreTree
-        enc = {
-          oracleIAVLStateHash: abiCoder.encode(["bytes32"], ["0x" + multistoreResp.oracle_iavl_state_hash]),
-          paramsStoreMerkleHash: abiCoder.encode(["bytes32"], ["0x" + multistoreResp.mint_store_merkle_hash]),
-          slashingToStakingStoresMerkleHash: abiCoder.encode(["bytes32"], ["0x" + multistoreResp.icacontroller_to_icahost_merkle_hash]),
-          govToMintStoresMerkleHash: abiCoder.encode(["bytes32"], ["0x" + multistoreResp.feegrant_to_ibc_merkle_hash]),
-          authToFeegrantStoresMerkleHash: abiCoder.encode(["bytes32"], ["0x" + multistoreResp.acc_to_evidence_merkle_hash]),
-          transferToUpgradeStoresMerkleHash: abiCoder.encode(["bytes32"], ["0x" + multistoreResp.params_to_vesting_merkle_hash])
-        }
-        return enc
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-calculateValCheckpoint = (valSet, powers, nonce, threshold) => {
+calculateValCheckpoint = (valSet, powers, nonce, threshold, valTimestamp) => {
   structArray = []
   for (i = 0; i < valSet.length; i++) {
     structArray[i] = {
@@ -71,7 +52,7 @@ calculateValCheckpoint = (valSet, powers, nonce, threshold) => {
   valHash = hash(enc)
 
   domainSeparator = "0x636865636b706f696e7400000000000000000000000000000000000000000000"
-  enc = abiCoder.encode(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, nonce, threshold, valHash])
+  enc = abiCoder.encode(["bytes32", "uint256", "uint256", "uint256", "bytes32"], [domainSeparator, nonce, threshold, valTimestamp, valHash])
   valCheckpoint = hash(enc)
   return valCheckpoint
 }
@@ -102,15 +83,6 @@ getEthSignedMessageHash = (messageHash) => {
 
 getDataDigest = (queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp) => {
   const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-  console.log("DOMAIN_SEPARATOR: ", DOMAIN_SEPARATOR)
-  console.log("queryId: ", queryId)
-  console.log("value: ", value)
-  console.log("timestamp: ", timestamp)
-  console.log("consensusThreshold: ", consensusThreshold)
-  console.log("validatorNonce: ", validatorNonce)
-  console.log("powerThreshold: ", powerThreshold)
-  console.log("validatorSetHash: ", validatorSetHash)
-  console.log("blockTimestamp: ", blockTimestamp)
   enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"], 
   [DOMAIN_SEPARATOR, queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp])
   return hash(enc)

@@ -7,9 +7,10 @@ const { prependOnceListener } = require("process");
 const BN = ethers.BigNumber.from
 const abiCoder = new ethers.utils.AbiCoder();
 
-describe("BlobstreamO Manual - Function Tests", function () {
+describe("BlobstreamO - Function Tests Manual", function () {
 
-    let bridge, valPower, accounts, validators, powers, initialValAddrs, initialPowers, nonce, threshold, valCheckpoint;
+    let bridge, valPower, accounts, validators, powers, initialValAddrs, 
+        initialPowers, nonce, threshold, valCheckpoint, valTimestamp;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
 
     beforeEach(async function () {
@@ -18,20 +19,17 @@ describe("BlobstreamO Manual - Function Tests", function () {
         initialPowers = [1, 2]
         nonce = 1
         threshold = 2
-        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold)
+        blocky = await h.getBlock()
+        valTimestamp = blocky.timestamp - 2
+        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold, valTimestamp)
 
         const Bridge = await ethers.getContractFactory("BlobstreamO");
-        bridge = await Bridge.deploy(nonce, threshold, valCheckpoint);
+        bridge = await Bridge.deploy(nonce, threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint);
         await bridge.deployed();
     });
 
     it("constructor", async function () {
-        valSet = [accounts[0].address, accounts[1].address]
-        powers = [1, 2]
-        nonce = 1
-        threshold = 1
-        valCheckpoint = h.calculateValCheckpoint(valSet, powers, nonce, threshold)
-        console.log("valCheckpoint: ", valCheckpoint)
+        
     })
 
     it("updateValidatorSet", async function() {
@@ -39,13 +37,17 @@ describe("BlobstreamO Manual - Function Tests", function () {
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, nonce, newThreshold)
+        blocky = await h.getBlock()
+        newValTimestamp = blocky.timestamp - 1
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, nonce, newThreshold, newValTimestamp)
         newDigest = await h.getEthSignedMessageHash(newValCheckpoint)
         valSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sigStructArray = await h.getSigStructArray([sig1, sig2])
-        await bridge.updateValidatorSet(newValHash, newThreshold, valSetArray, sigStructArray);
+        await bridge.updateValidatorSet(newValHash, newThreshold, newValTimestamp, valSetArray, sigStructArray);
+
+
     })
 
     it("verifyOracleData", async function() {

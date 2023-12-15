@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.22;
+pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
-import "./DataRootTuple.sol";
-import "./lib/tree/binary/BinaryMerkleProof.sol";
-import "./lib/tree/binary/BinaryMerkleTree.sol";
 import "hardhat/console.sol";
 
 struct Validator {
@@ -38,103 +35,87 @@ struct OracleAttestationData {
 /// @dev The relay relies on a set of signers to attest to some event on
 /// Tellor Layer. These signers are the validator set, who sign over every
 /// block. At least 2/3 of the voting power of the current
-/// view of the validator set must sign off on new relayed events.
+/// view of the validator set must sign off on new relayed events. 
 contract BlobstreamO is ECDSA {
     /*Storage*/
-    bytes32 public lastValidatorSetCheckpoint;///Domain-separated commitment to the latest validator set.
-    uint256 public powerThreshold;/// Voting power required to submit a new update.
-    uint256 public validatorNonce;/// Nonce for bridge events. Must be incremented sequentially.
-    uint256 public currentRelayedBlockHeight;
-    mapping(uint256 => bytes32) public oracleRoots;/// Mapping of data root tuple root nonces to data root tuple roots.
-    mapping(bytes32 => bool) public isOracleRoot;
+    bytes32 public lastValidatorSetCheckpoint; ///Domain-separated commitment to the latest validator set.
+    uint256 public powerThreshold; /// Voting power required to submit a new update.
+    uint256 public validatorNonce; /// Nonce for bridge events. Must be incremented sequentially.
+    uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
+    uint256 public unbondingPeriod; /// Time period after which a validator can withdraw their stake.
+    address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
     /*Events*/
-    event NewOracleRoot(bytes32 _oracleRoot);
-    event ValidatorSetUpdated(uint256 indexed _nonce, uint256 _powerThreshold, bytes32 _validatorSetHash);
+    event ValidatorSetUpdated(
+        uint256 indexed _nonce,
+        uint256 _powerThreshold,
+        bytes32 _validatorSetHash
+    );
 
     /*Errors*/
-    error MalformedCurrentValidatorSet();
-    error InvalidSignature();
     error InsufficientVotingPower();
-    error SuppliedValidatorSetInvalid();
+    error InvalidSignature();
     error InvalidValidatorSetNonce();
+    error MalformedCurrentValidatorSet();
+    error NotGuardian();
+    error StaleValidatorSet();
+    error SuppliedValidatorSetInvalid();
+    error ValidatorSetNotStale();
 
     /*Functions*/
     /// @param _nonce Initial event nonce.
     /// @param _powerThreshold Initial voting power that is needed to approve operations
-    /// @param _validatorSetCheckpoint Initial checkpoint of the validator set. 
-    constructor(uint256 _nonce, uint256 _powerThreshold, bytes32 _validatorSetCheckpoint){
+    /// @param _validatorTimestamp Timestamp of the block where validator set is updated.
+    /// @param _unbondingPeriod Time period after which a validator can withdraw their stake.
+    /// @param _validatorSetCheckpoint Initial checkpoint of the validator set.
+    constructor(
+        uint256 _nonce,
+        uint256 _powerThreshold,
+        uint256 _validatorTimestamp,
+        uint256 _unbondingPeriod,
+        bytes32 _validatorSetCheckpoint
+    ) {
         validatorNonce = _nonce;
-        lastValidatorSetCheckpoint = _validatorSetCheckpoint;
         powerThreshold = _powerThreshold;
+        validatorTimestamp = _validatorTimestamp;
+        unbondingPeriod = _unbondingPeriod;
+        lastValidatorSetCheckpoint = _validatorSetCheckpoint;
     }
 
-    /// @notice Utility function to verify EIP-191 signatures.
-    function verifySig(address _signer, bytes32 _digest, Signature calldata _sig) private pure returns (bool) {
-        bytes32 digest_eip191 = ECDSA.toEthSignedMessageHash(_digest);
-        return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
-    }
-
-    /// @dev Computes the hash of a validator set.
-    /// @param _validators The validator set to hash.
-    function computeValidatorSetHash(Validator[] calldata _validators) private pure returns (bytes32) {
-        return keccak256(abi.encode(_validators));
-    }
-
-    /// @dev A hash of all relevant information about the validator set.
+    /// @notice This function is called by the guardian to reset the validator set
+    /// only if it becomes stale.
     /// @param _nonce Nonce.
-    /// @param _powerThreshold The voting power threshold.
-    /// @param _validatorSetHash Validator set hash.
-    function domainSeparateValidatorSetHash(uint256 _nonce, uint256 _powerThreshold, bytes32 _validatorSetHash)
-        private
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encode(VALIDATOR_SET_HASH_DOMAIN_SEPARATOR, _nonce, _powerThreshold, _validatorSetHash));
-    }
-
-    /// @dev Checks that enough voting power signed over a digest.
-    /// It expects the signatures to be in the same order as the _currentValidators.
-    /// @param _currentValidators The current validators.
-    /// @param _sigs The current validators' signatures.
-    /// @param _digest This is what we are checking they have signed.
-    /// @param _powerThreshold At least this much power must have signed.
-    function checkValidatorSignatures(
-        // The current validator set and their powers
-        Validator[] calldata _currentValidators,
-        Signature[] calldata _sigs,
-        bytes32 _digest,
-        uint256 _powerThreshold
-    ) private pure {
-        uint256 cumulativePower = 0;
-        for (uint256 i = 0; i < _currentValidators.length; i++) {
-            // If the signature is nil, then it's not present so continue.
-            if (_sigs[i].r == 0 && _sigs[i].s == 0 && _sigs[i].v == 0) {
-                continue;
-            }
-            // Check that the current validator has signed off on the hash.
-            if (!verifySig(_currentValidators[i].addr, _digest, _sigs[i])) {
-                revert InvalidSignature();
-            }
-            cumulativePower += _currentValidators[i].power;
-            // Break early to avoid wasting gas.
-            if (cumulativePower >= _powerThreshold) {
-                break;
-            }
+    /// @param _powerThreshold Amount of voting power needed to approve operations.
+    /// @param _validatorTimestamp The timestamp of the block where validator set is updated.
+    /// @param _validatorSetCheckpoint The hash of the validator set.
+    function guardianResetValidatorSet(
+        uint256 _nonce,
+        uint256 _powerThreshold,
+        uint256 _validatorTimestamp,
+        bytes32 _validatorSetCheckpoint
+    ) external {
+        if (msg.sender != guardian) {
+            revert NotGuardian();
         }
-        if (cumulativePower < _powerThreshold) {
-            revert InsufficientVotingPower();
+        if (block.timestamp - validatorTimestamp < unbondingPeriod) {
+            revert ValidatorSetNotStale();
         }
+        validatorNonce = _nonce;
+        powerThreshold = _powerThreshold;
+        validatorTimestamp = _validatorTimestamp;
+        lastValidatorSetCheckpoint = _validatorSetCheckpoint;
     }
 
     /// @notice This updates the validator set by checking that the validators
     /// in the current validator set have signed off on the new validator set.
-    /// @param _newPowerThreshold At least this much power must have signed.
     /// @param _newValidatorSetHash The hash of the new validator set.
+    /// @param _newPowerThreshold At least this much power must have signed.
+    /// @param _newValidatorTimestamp The timestamp of the block where validator set is updated.
     /// @param _currentValidatorSet The current validator set.
     /// @param _sigs Signatures.
     function updateValidatorSet(
         bytes32 _newValidatorSetHash,
         uint64 _newPowerThreshold,
+        uint256 _newValidatorTimestamp,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
     ) external {
@@ -142,75 +123,185 @@ contract BlobstreamO is ECDSA {
             revert MalformedCurrentValidatorSet();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 currentValidatorSetHash = computeValidatorSetHash(_currentValidatorSet);
+        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
+            _currentValidatorSet
+        );
         if (
-            domainSeparateValidatorSetHash(validatorNonce, powerThreshold, currentValidatorSetHash)
-                != lastValidatorSetCheckpoint
+            _domainSeparateValidatorSetHash(
+                validatorNonce,
+                powerThreshold,
+                validatorTimestamp,
+                _currentValidatorSetHash
+            ) != lastValidatorSetCheckpoint
         ) {
             revert SuppliedValidatorSetInvalid();
         }
 
-        bytes32 newCheckpoint = domainSeparateValidatorSetHash(validatorNonce, _newPowerThreshold, _newValidatorSetHash);
-        console.logBytes32(newCheckpoint);
-        checkValidatorSignatures(_currentValidatorSet, _sigs, newCheckpoint, powerThreshold);
-        lastValidatorSetCheckpoint = newCheckpoint;
+        bytes32 _newCheckpoint = _domainSeparateValidatorSetHash(
+            validatorNonce,
+            _newPowerThreshold,
+            _newValidatorTimestamp,
+            _newValidatorSetHash
+        );
+        _checkValidatorSignatures(
+            _currentValidatorSet,
+            _sigs,
+            _newCheckpoint,
+            powerThreshold
+        );
+        lastValidatorSetCheckpoint = _newCheckpoint;
         powerThreshold = _newPowerThreshold;
         validatorNonce++;
-        emit ValidatorSetUpdated(validatorNonce, _newPowerThreshold, _newValidatorSetHash);
-    }
-
-    function deleteThisInputValSet(Validator[] calldata _currentValidatorSet) external pure returns(address) {
-        return _currentValidatorSet[0].addr;
-    }
-
-    function verifyOracleData(
-        OracleAttestationData calldata _attest, 
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) public view returns (bool) {
-        if (_currentValidatorSet.length != _sigs.length) {
-            revert MalformedCurrentValidatorSet();
-        }
-        bytes32 _currentValidatorSetHash = computeValidatorSetHash(_currentValidatorSet);
-        if (
-            domainSeparateValidatorSetHash(validatorNonce, powerThreshold, _currentValidatorSetHash)
-                != lastValidatorSetCheckpoint
-        ) {
-            revert SuppliedValidatorSetInvalid();
-        }
-
-        // possibly no nonce input needed here, 
-        if (_attest.validatorNonce != validatorNonce) {
-            revert InvalidValidatorSetNonce();
-        }
-        
-        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
-        checkValidatorSignatures(_currentValidatorSet, _sigs, _dataDigest, powerThreshold);
-        return true;
-    }
-
-    function _domainSeparateOracleAttestationData(OracleAttestationData calldata _attest) internal pure returns (bytes32) {
-        return keccak256(
-            abi.encode(
-                NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, 
-                _attest.queryId, 
-                _attest.report.value, 
-                _attest.report.timestamp, 
-                _attest.report.consensusThreshold, 
-                _attest.validatorNonce, 
-                _attest.powerThreshold, 
-                _attest.validatorSetHash, 
-                _attest.blockTimestamp
-            )
+        emit ValidatorSetUpdated(
+            validatorNonce,
+            _newPowerThreshold,
+            _newValidatorSetHash
         );
     }
 
-    function toEthSignedMessageHashPublic(bytes32 _hash) public pure returns (bytes32) {
-        return ECDSA.toEthSignedMessageHash(_hash);
+    /*Getter functions*/
+    /// @notice Used for verifying oracle data attestations
+    function verifyOracleData(
+        OracleAttestationData calldata _attest,
+        Validator[] calldata _currentValidatorSet,
+        Signature[] calldata _sigs
+    ) external view returns (bool) {
+        if (_currentValidatorSet.length != _sigs.length) {
+            revert MalformedCurrentValidatorSet();
+        }
+        // Check that the supplied current validator set matches the saved checkpoint.
+        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
+            _currentValidatorSet
+        );
+        if (
+            _domainSeparateValidatorSetHash(
+                validatorNonce,
+                powerThreshold,
+                validatorTimestamp,
+                _currentValidatorSetHash
+            ) != lastValidatorSetCheckpoint
+        ) {
+            revert SuppliedValidatorSetInvalid();
+        }
+
+        // possibly no nonce input needed here,
+        if (_attest.validatorNonce != validatorNonce) {
+            revert InvalidValidatorSetNonce();
+        }
+
+        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
+        _checkValidatorSignatures(
+            _currentValidatorSet,
+            _sigs,
+            _dataDigest,
+            powerThreshold
+        );
+        return true;
     }
 
-    function tryRecoverPublic(bytes32 _hash, bytes memory signature) public pure returns (address, ECDSA.RecoverError, bytes32) {
-        return ECDSA.tryRecover(_hash, signature);
+    /*Internal functions*/
+    /// @dev Checks that enough voting power signed over a digest.
+    /// It expects the signatures to be in the same order as the _currentValidators.
+    /// @param _currentValidators The current validators.
+    /// @param _sigs The current validators' signatures.
+    /// @param _digest This is what we are checking they have signed.
+    /// @param _powerThreshold At least this much power must have signed.
+    function _checkValidatorSignatures(
+        // The current validator set and their powers
+        Validator[] calldata _currentValidators,
+        Signature[] calldata _sigs,
+        bytes32 _digest,
+        uint256 _powerThreshold
+    ) internal view {
+        if (block.timestamp - validatorTimestamp > unbondingPeriod) {
+            revert StaleValidatorSet();
+        }
+        uint256 _cumulativePower = 0;
+        for (uint256 i = 0; i < _currentValidators.length; i++) {
+            // If the signature is nil, then it's not present so continue.
+            if (_sigs[i].r == 0 && _sigs[i].s == 0 && _sigs[i].v == 0) {
+                continue;
+            }
+            // Check that the current validator has signed off on the hash.
+            if (!_verifySig(_currentValidators[i].addr, _digest, _sigs[i])) {
+                revert InvalidSignature();
+            }
+            _cumulativePower += _currentValidators[i].power;
+            // Break early to avoid wasting gas.
+            if (_cumulativePower >= _powerThreshold) {
+                break;
+            }
+        }
+        if (_cumulativePower < _powerThreshold) {
+            revert InsufficientVotingPower();
+        }
     }
 
+    /// @dev Computes the hash of a validator set.
+    /// @param _validators The validator set to hash.
+    /// @return The hash of the validator set.
+    function _computeValidatorSetHash(
+        Validator[] calldata _validators
+    ) internal pure returns (bytes32) {
+        return keccak256(abi.encode(_validators));
+    }
+
+    /// @dev A hash of all relevant information about the oracle attestation.
+    /// @param _attest The oracle attestation.
+    /// @return The domain separated hash of the oracle attestation.
+    function _domainSeparateOracleAttestationData(
+        OracleAttestationData calldata _attest
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR,
+                    _attest.queryId,
+                    _attest.report.value,
+                    _attest.report.timestamp,
+                    _attest.report.consensusThreshold,
+                    _attest.validatorNonce,
+                    _attest.powerThreshold,
+                    _attest.validatorSetHash,
+                    _attest.blockTimestamp
+                )
+            );
+    }
+
+    /// @dev A hash of all relevant information about the validator set.
+    /// @param _nonce Nonce.
+    /// @param _powerThreshold Amount of voting power needed to approve operations. (2/3 of total)
+    /// @param _validatorSetHash Validator set hash.
+    /// @return The domain separated hash of the validator set.
+    function _domainSeparateValidatorSetHash(
+        uint256 _nonce,
+        uint256 _powerThreshold,
+        uint256 _validatorTimestamp,
+        bytes32 _validatorSetHash
+    ) private pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    VALIDATOR_SET_HASH_DOMAIN_SEPARATOR,
+                    _nonce,
+                    _powerThreshold,
+                    _validatorTimestamp,
+                    _validatorSetHash
+                )
+            );
+    }
+
+    /// @notice Utility function to verify EIP-191 signatures.
+    /// @param _signer The address that signed the message.
+    /// @param _digest The digest that was signed.
+    /// @param _sig The signature.
+    /// @return bool True if the signature is valid.
+    function _verifySig(
+        address _signer,
+        bytes32 _digest,
+        Signature calldata _sig
+    ) internal pure returns (bool) {
+        bytes32 digest_eip191 = ECDSA.toEthSignedMessageHash(_digest);
+        return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
+    }
 }
