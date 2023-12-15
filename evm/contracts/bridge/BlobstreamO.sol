@@ -48,6 +48,7 @@ contract BlobstreamO is ECDSA {
     event ValidatorSetUpdated(
         uint256 indexed _nonce,
         uint256 _powerThreshold,
+        uint256 _validatorTimestamp,
         bytes32 _validatorSetHash
     );
 
@@ -138,7 +139,7 @@ contract BlobstreamO is ECDSA {
         }
 
         bytes32 _newCheckpoint = _domainSeparateValidatorSetHash(
-            validatorNonce,
+            validatorNonce + 1,
             _newPowerThreshold,
             _newValidatorTimestamp,
             _newValidatorSetHash
@@ -151,10 +152,12 @@ contract BlobstreamO is ECDSA {
         );
         lastValidatorSetCheckpoint = _newCheckpoint;
         powerThreshold = _newPowerThreshold;
+        validatorTimestamp = _newValidatorTimestamp;
         validatorNonce++;
         emit ValidatorSetUpdated(
             validatorNonce,
             _newPowerThreshold,
+            _newValidatorTimestamp,
             _newValidatorSetHash
         );
     }
