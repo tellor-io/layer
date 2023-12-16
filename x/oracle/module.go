@@ -21,6 +21,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	"github.com/tellor-io/layer/x/oracle/client/cli"
 	"github.com/tellor-io/layer/x/oracle/keeper"
@@ -64,6 +65,9 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers a module's interface types and their concrete implementations as proto.Message
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
+	reg.RegisterImplementations((*govtypes.Content)(nil),
+		&types.SupportedQueryChangeProposal{},
+	)
 }
 
 // DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default GenesisState need to be defined by the module developer and is primarily used for testing

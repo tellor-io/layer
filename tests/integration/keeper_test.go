@@ -31,6 +31,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -49,6 +50,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
@@ -86,6 +88,7 @@ type IntegrationTestSuite struct {
 	bankKeeper     bankkeeper.BaseKeeper
 	slashingKeeper slashingkeeper.Keeper
 	stakingKeeper  *stakingkeeper.Keeper
+	govKeeper      *govkeeper.Keeper
 	ctx            sdk.Context
 	appCodec       codec.Codec
 	authConfig     *authmodulev1.Module
@@ -163,11 +166,12 @@ func (s *IntegrationTestSuite) SetupTest() {
 			configurator.ConsensusModule(),
 			integration.OracleModule(),
 			integration.DisputeModule(),
-			integration.RegistryModule()),
+			integration.RegistryModule(),
+			configurator.GovModule()),
 		integration.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
-		&s.disputekeeper, &s.registrykeeper)
+		&s.disputekeeper, &s.registrykeeper, &s.govKeeper)
 
 	s.NoError(err)
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()}))

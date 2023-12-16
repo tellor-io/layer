@@ -2,12 +2,19 @@ package integration_test
 
 import (
 	"encoding/hex"
+	"time"
 
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/x/gov"
+
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -210,6 +217,7 @@ func report(creator, signature, value, qdata string) (oracletypes.MsgCommitRepor
 
 func (s *IntegrationTestSuite) TestGetSupportedQueries() {
 	s.oracleKeeper()
+	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
 	resp := s.oraclekeeper.GetSupportedQueries(s.ctx)
 	s.Equal(resp.QueryData, []*types.QueryChange{
@@ -217,4 +225,37 @@ func (s *IntegrationTestSuite) TestGetSupportedQueries() {
 		{QueryData: btcQueryData},
 		{QueryData: trbQueryData},
 	})
+	fakeQueryData := "0x000001"
+	p := oracletypes.SupportedQueryChangeProposal{
+		Title:       "Test",
+		Description: "test description",
+		Changes: []oracletypes.QueryChange{
+			{QueryData: fakeQueryData},
+		},
+	}
+	msgContent, err := v1.NewLegacyContent(&p, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	s.NoError(err)
+	proposal1, err := s.govKeeper.SubmitProposal(s.ctx, []sdk.Msg{msgContent}, "", "test", "description", accs[0])
+	s.NoError(err)
+
+	votingStarted, err := s.govKeeper.AddDeposit(s.ctx, proposal1.Id, accs[0], s.govKeeper.GetParams(s.ctx).MinDeposit)
+	s.NoError(err)
+	s.True(votingStarted)
+	proposal1, ok := s.govKeeper.GetProposal(s.ctx, proposal1.Id)
+	s.True(ok)
+	s.True(proposal1.Status == v1.StatusVotingPeriod)
+	err = s.govKeeper.AddVote(s.ctx, proposal1.Id, accs[0], v1.NewNonSplitVoteOption(v1.OptionYes), "")
+	s.NoError(err)
+	err = s.govKeeper.AddVote(s.ctx, proposal1.Id, accs[1], v1.NewNonSplitVoteOption(v1.OptionYes), "")
+	s.NoError(err)
+	err = s.govKeeper.AddVote(s.ctx, proposal1.Id, accs[2], v1.NewNonSplitVoteOption(v1.OptionYes), "")
+	s.NoError(err)
+	proposal1, ok = s.govKeeper.GetProposal(s.ctx, proposal1.Id)
+	s.True(ok)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24 * 2))
+	gov.EndBlocker(s.ctx, s.govKeeper)
+	proposal1, _ = s.govKeeper.GetProposal(s.ctx, proposal1.Id)
+	s.True(proposal1.Status == v1.StatusPassed)
+	resp = s.oraclekeeper.GetSupportedQueries(s.ctx)
+	s.Equal(resp.QueryData, []*types.QueryChange{{QueryData: fakeQueryData}})
 }
