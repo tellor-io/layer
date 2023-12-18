@@ -43,25 +43,25 @@ func (s *E2ETestSuite) registryKeeper() (queryClient registrytypes.QueryClient, 
 	return
 }
 
-func (s *E2ETestSuite) TestRegisterSubmitDispute() {
+func (s *E2ETestSuite) TestRegisterCommitSubmit() {
 	require := s.Require()
 
 	// set up keepers and msg servers
-	kOracle, msgServerOracle := s.oracleKeeper()
+	oraclekeeper, msgServerOracle := s.oracleKeeper()
 	require.NotNil(s.T(), msgServerOracle)
-	require.NotNil(s.T(), kOracle)
-	kDispute, msgServerDispute := s.disputeKeeper()
+	require.NotNil(s.T(), oraclekeeper)
+	disputekeeper, msgServerDispute := s.disputeKeeper()
 	require.NotNil(s.T(), msgServerDispute)
-	require.NotNil(s.T(), kDispute)
-	kRegistry, msgServerRegistry := s.registryKeeper()
+	require.NotNil(s.T(), disputekeeper)
+	registrykeeper, msgServerRegistry := s.registryKeeper()
 	require.NotNil(s.T(), msgServerRegistry)
-	require.NotNil(s.T(), kRegistry)
+	require.NotNil(s.T(), registrykeeper)
 
 	// register a spec spec1
-	spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ValueType: "uint256"}
+	spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ValueType: "uint256", AggregationMethod: "weighted-median"}
 	specInput := &registrytypes.MsgRegisterSpec{
 		Creator:   "creator1",
-		QueryType: "queryType1",
+		QueryType: "NewQueryType",
 		Spec:      spec1,
 	}
 	registerSpecResult, err := msgServerRegistry.RegisterSpec(s.ctx, specInput)
@@ -71,7 +71,7 @@ func (s *E2ETestSuite) TestRegisterSubmitDispute() {
 	// register query for spec1
 	queryInput := &types.MsgRegisterQuery{
 		Creator:    "creator1",
-		QueryType:  "queryType1",
+		QueryType:  "NewQueryType",
 		DataTypes:  []string{"uint256", "uint256"},
 		DataFields: []string{"1", "2"},
 	}
@@ -79,15 +79,11 @@ func (s *E2ETestSuite) TestRegisterSubmitDispute() {
 	require.NoError(err)
 	require.NotNil(s.T(), registerQueryResult)
 	unwrappedCtx := sdk.UnwrapSDKContext(s.ctx)
-	queryData, err := kRegistry.GetQueryData(unwrappedCtx, &types.QueryGetQueryDataRequest{QueryId: registerQueryResult.QueryId})
+	queryData, err := registrykeeper.GetQueryData(unwrappedCtx, &types.QueryGetQueryDataRequest{QueryId: registerQueryResult.QueryId})
 	require.NoError(err)
 	require.NotNil(s.T(), queryData)
 
-	// use create validators
-
-	// use one of the accounts it gives
-
-	// get account with tokens
+	// create account that will become validator
 	accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
 	account := authtypes.BaseAccount{
 		Address: accAddr.String(),
@@ -95,7 +91,8 @@ func (s *E2ETestSuite) TestRegisterSubmitDispute() {
 	}
 	s.accountKeeper.SetAccount(s.ctx, &account)
 	valAddr := sdk.ValAddress(accAddr)
-	// stake tokens
+
+	// stake the validator
 	val, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.Description{})
 	require.NoError(err)
 	s.stakingKeeper.SetValidator(s.ctx, val)
@@ -103,45 +100,79 @@ func (s *E2ETestSuite) TestRegisterSubmitDispute() {
 	s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
 	_, err = s.stakingKeeper.Delegate(s.ctx, accAddr, sdk.NewInt(1000000), stakingtypes.Unbonded, val, true)
 	require.NoError(err)
-	_ = staking.EndBlocker(s.ctx, s.stakingKeeper) // updates
-
-	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
-	status := s.stakingKeeper.Validator(ctx, valAddr).GetStatus()
-	fmt.Println("val after: ", status)
+	_ = staking.EndBlocker(s.ctx, s.stakingKeeper) // updates validator set
+	status := s.stakingKeeper.Validator(s.ctx, valAddr).GetStatus()
+	require.Equal(stakingtypes.Bonded.String(), status.String())
 
 	// create commit contents
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq oracletypes.MsgCommitReport
-	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
+	valueDecoded, err := hex.DecodeString(value)
 	require.Nil(err)
-	signature, err := valPrivKey.Sign(valueDecoded) // sign value
+	signature, err := valPrivKey.Sign(valueDecoded)
 	require.Nil(err)
 	require.NotNil(s.T(), signature)
 
 	// set commit contents
-	commitreq.Creator = accAddr.String()                // set creator to val2 address
-	commitreq.QueryData = queryData.QueryData           // set query data to query data from query1
-	commitreq.Signature = hex.EncodeToString(signature) // set commit signature
-	// commit data
+	commitreq.Creator = accAddr.String()
+	commitreq.QueryData = queryData.QueryData
+	commitreq.Signature = hex.EncodeToString(signature)
+
+	// commit report
 	_, err = msgServerOracle.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
 	require.Nil(err)
 	_hexxy, _ := hex.DecodeString(queryData.QueryData)
-	// get signature from commit
+
+	// get commit value
 	commitValue, err := s.oraclekeeper.GetSignature(s.ctx, sdk.AccAddress(valAddr), keeper.HashQueryData(_hexxy))
 	fmt.Println("commitValue: ", commitValue)
 	require.Nil(err)
 	require.NotNil(s.T(), commitValue)
-	// verify report signature
-	require.Equal(true, s.oraclekeeper.VerifySignature(s.ctx, sdk.AccAddress(valAddr).String(), value, commitValue.Report.Signature))
 
-	fmt.Println("sdk.AccAddress(val2).String(): ", sdk.AccAddress(valAddr).String())
-	fmt.Println("commitValue.Report.Signature: ", commitValue.Report.Signature)
-	require.Equal(commitValue.Report.Creator, sdk.AccAddress(valAddr).String())
+	// verify commit
+	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+	require.Equal(true, s.oraclekeeper.VerifySignature(s.ctx, accAddr.String(), value, commitValue.Report.Signature))
+	require.Equal(commitValue.Report.Creator, accAddr.String())
 
-	// //forward block
-	// ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
-	// fmt.Println("ctx: ", ctx)
+	reportFromQiD, err := s.oraclekeeper.GetReportsbyQid(ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
+	require.Nil(err)
+	fmt.Println("reportFromQiD: ", reportFromQiD) // empty right now ?
 
-	// // dispute that value
+	var submitreq oracletypes.MsgSubmitValue
+	var submitres oracletypes.MsgSubmitValueResponse
+	// forward block by 1 and reveal value
+	height := s.ctx.BlockHeight() + 1
+	s.ctx = s.ctx.WithBlockHeight(height)
+	// Submit value transaction with value revealed, this checks if the value is correctly signed
+	submitreq.Creator = accAddr.String()
+	submitreq.QueryData = queryData.QueryData
+	submitreq.Value = value
+	res, err := msgServerOracle.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
+	require.Equal(&submitres, res)
+	require.Nil(err)
+	report, err := oraclekeeper.GetReportsbyQid(s.ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
+	require.Nil(err)
+	fmt.Println("report: ", report)
+	expectedPower := sdk.TokensToConsensusPower(sdk.NewInt(1000000), sdk.DefaultPowerReduction)
+
+	microReport := oracletypes.MicroReport{
+		Reporter:        accAddr.String(),
+		Power:           expectedPower,
+		QueryType:       "NewQueryType",
+		QueryId:         registerQueryResult.QueryId,
+		AggregateMethod: "weighted-median",
+		Value:           value,
+		BlockNumber:     s.ctx.BlockHeight(),
+		Timestamp:       s.ctx.BlockTime(),
+	}
+	expectedReport := oracletypes.QueryGetReportsbyQidResponse{
+		Reports: oracletypes.Reports{
+			MicroReports: []*oracletypes.MicroReport{&microReport},
+		},
+	}
+	require.Equal(&expectedReport, report)
+
+	// create dispute
+	var disputeReq disputetypes.MsgDispute
 
 }
