@@ -31,13 +31,13 @@ func (cp CycleListChangeProposal) String() string {
 	fmt.Fprintf(&b, `Parameter Change Proposal:
   Title:       %s
   Description: %s
-  Changes:
+  NewList:
 `, cp.Title, cp.Description)
 
-	for _, q := range cp.Changes {
+	for _, queryData := range cp.NewList {
 		fmt.Fprintf(&b, `    Supported queries Change:
       Query data: %s
-`, q.QueryData)
+`, queryData)
 	}
 
 	return b.String()
@@ -49,10 +49,10 @@ func (cp *CycleListChangeProposal) ValidateBasic() error {
 		return err
 	}
 
-	return ValidateChanges(cp.Changes)
+	return ValidateChanges(cp.NewList)
 }
 
-func ValidateChanges(queryData []CycleListQuery) error {
+func ValidateChanges(queryData []string) error {
 	if len(queryData) == 0 {
 		return fmt.Errorf("submitted query data list is empty")
 	}

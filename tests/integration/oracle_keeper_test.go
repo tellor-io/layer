@@ -220,18 +220,12 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
 	resp := s.oraclekeeper.GetCyclList(s.ctx)
-	s.Equal(resp.QueryData, []*types.CycleListQuery{
-		{QueryData: ethQueryData},
-		{QueryData: btcQueryData},
-		{QueryData: trbQueryData},
-	})
+	s.Equal(resp.QueryData, []string{ethQueryData, btcQueryData, trbQueryData})
 	fakeQueryData := "0x000001"
 	p := oracletypes.CycleListChangeProposal{
 		Title:       "Test",
 		Description: "test description",
-		Changes: []oracletypes.CycleListQuery{
-			{QueryData: fakeQueryData},
-		},
+		NewList:     []string{fakeQueryData},
 	}
 	msgContent, err := v1.NewLegacyContent(&p, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.NoError(err)
@@ -257,5 +251,5 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	proposal1, _ = s.govKeeper.GetProposal(s.ctx, proposal1.Id)
 	s.True(proposal1.Status == v1.StatusPassed)
 	resp = s.oraclekeeper.GetCyclList(s.ctx)
-	s.Equal(resp.QueryData, []*types.CycleListQuery{{QueryData: fakeQueryData}})
+	s.Equal(resp.QueryData, []string{fakeQueryData})
 }

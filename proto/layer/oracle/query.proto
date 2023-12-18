@@ -11,6 +11,7 @@ import "layer/oracle/micro_report.proto";
 import "layer/oracle/tips.proto";
 import "layer/oracle/user_tip.proto";
 import "layer/oracle/aggregate.proto";
+import "layer/oracle/cycle_list.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -54,9 +55,16 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{queryId}";
   
   }
-   // Queries a list of GetAggregatedReport items.
-   rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
+  
+  // Queries a list of GetAggregatedReport items.
+  rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{queryId}/{timestamp}";
+  
+  }
+  
+  // Queries a list of GetCycleList items.
+  rpc GetCycleList (QueryGetCycleListRequest) returns (QueryGetCycleListResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_cycle_list";
   
   }
 }
@@ -109,7 +117,7 @@ message QueryGetUserTipTotalResponse {
 }
 
 message QueryGetCurrentAggregatedReportRequest {
-  string queryId     = 1;
+  string queryId = 1;
 }
 
 message QueryGetAggregatedReportResponse {
@@ -117,6 +125,13 @@ message QueryGetAggregatedReportResponse {
 }
 
 message QueryGetDataBeforeRequest {
-  string queryId     = 1;
-  int64 timestamp = 2;
+  string queryId   = 1;
+  int64  timestamp = 2;
 }
+
+message QueryGetCycleListRequest {}
+
+message QueryGetCycleListResponse {
+  CycleList cycleList = 1;
+}
+

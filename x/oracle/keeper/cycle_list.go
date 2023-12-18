@@ -6,11 +6,11 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) SetCycleList(ctx sdk.Context, queries []types.CycleListQuery) {
+func (k Keeper) SetCycleList(ctx sdk.Context, queries []string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
-	var list = make([]*types.CycleListQuery, len(queries))
+	var list = make([]string, len(queries))
 	for i := range queries {
-		list[i] = &queries[i]
+		list[i] = queries[i]
 	}
 
 	bz := k.cdc.MustMarshal(&types.CycleList{QueryData: list})
@@ -35,7 +35,7 @@ func (k Keeper) RotateQueries(ctx sdk.Context) string {
 	}
 
 	k.SetCurrentIndex(ctx, (currentIndex+1)%int64(len(queries.QueryData)))
-	return queries.QueryData[currentIndex].QueryData
+	return queries.QueryData[currentIndex]
 }
 
 func (k Keeper) SetCurrentIndex(ctx sdk.Context, index int64) {

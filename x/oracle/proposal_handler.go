@@ -26,9 +26,9 @@ func NewCycleListChangeProposalHandler(k keeper.Keeper) govtypes.Handler {
 func handleCycleListChangeProposal(ctx sdk.Context, k keeper.Keeper, p *types.CycleListChangeProposal) error {
 
 	k.Logger(ctx).Info(
-		fmt.Sprintf("attempt to set new supported query; query: %s", p.Changes),
+		fmt.Sprintf("attempt to set new cycle list: %s", p.NewList),
 	)
-	k.SetCycleList(ctx, p.Changes)
+	k.SetCycleList(ctx, p.NewList)
 
 	return nil
 }

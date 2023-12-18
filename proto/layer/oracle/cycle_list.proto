@@ -15,15 +15,10 @@ message CycleListChangeProposal {
 
     string               title       = 1;
     string               description = 2;
-    repeated CycleListQuery changes     = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-}
-  
-message CycleListQuery {
-    
-    string queryData = 1;
+    repeated string      newList     = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 message CycleList {
 
-    repeated CycleListQuery queryData = 1;
+    repeated string queryData = 1;
 }
