@@ -8,24 +8,24 @@ import (
 )
 
 const (
-	SupportedQueryChange = "SupportedQueryChange"
+	CycleListChange = "CycleListChange"
 )
 
-var _ govtypes.Content = &SupportedQueryChangeProposal{}
+var _ govtypes.Content = &CycleListChangeProposal{}
 
 func init() {
-	govtypes.RegisterProposalType(SupportedQueryChange)
+	govtypes.RegisterProposalType(CycleListChange)
 }
 
-func (cp *SupportedQueryChangeProposal) GetTitle() string { return cp.Title }
+func (cp *CycleListChangeProposal) GetTitle() string { return cp.Title }
 
-func (cp *SupportedQueryChangeProposal) GetDescription() string { return cp.Description }
+func (cp *CycleListChangeProposal) GetDescription() string { return cp.Description }
 
-func (cp *SupportedQueryChangeProposal) ProposalRoute() string { return RouterKey }
+func (cp *CycleListChangeProposal) ProposalRoute() string { return RouterKey }
 
-func (cp *SupportedQueryChangeProposal) ProposalType() string { return SupportedQueryChange }
+func (cp *CycleListChangeProposal) ProposalType() string { return CycleListChange }
 
-func (cp SupportedQueryChangeProposal) String() string {
+func (cp CycleListChangeProposal) String() string {
 	var b strings.Builder
 
 	fmt.Fprintf(&b, `Parameter Change Proposal:
@@ -43,7 +43,7 @@ func (cp SupportedQueryChangeProposal) String() string {
 	return b.String()
 }
 
-func (cp *SupportedQueryChangeProposal) ValidateBasic() error {
+func (cp *CycleListChangeProposal) ValidateBasic() error {
 	err := govtypes.ValidateAbstract(cp)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (cp *SupportedQueryChangeProposal) ValidateBasic() error {
 	return ValidateChanges(cp.Changes)
 }
 
-func ValidateChanges(queryData []QueryChange) error {
+func ValidateChanges(queryData []CycleListQuery) error {
 	if len(queryData) == 0 {
 		return fmt.Errorf("submitted query data list is empty")
 	}

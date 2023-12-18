@@ -32,7 +32,7 @@ const (
 
 	AggregateStoreKey = "aggergate_store"
 
-	SupportedQueriesStoreKey = "supported_queries_store"
+	CycleListStoreKey = "cycle_list_store"
 )
 
 func KeyPrefix(p string) []byte {
@@ -55,8 +55,8 @@ func AggregateKey(queryId []byte, timestamp time.Time) []byte {
 	return []byte(fmt.Sprintf("%s:%s:%v", "aggregate", queryId, timestamp))
 }
 
-func SupportedQueriesKey() []byte {
-	return KeyPrefix(SupportedQueriesStoreKey)
+func CycleListKey() []byte {
+	return KeyPrefix(CycleListStoreKey)
 }
 
 func CurrentIndexKey() []byte {

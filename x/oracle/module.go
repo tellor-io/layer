@@ -66,7 +66,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 	reg.RegisterImplementations((*govtypes.Content)(nil),
-		&types.SupportedQueryChangeProposal{},
+		&types.CycleListChangeProposal{},
 	)
 }
 
@@ -214,6 +214,6 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 	)
-	govHandler := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewSupportedQueryChangeProposalHandler(*k)}
+	govHandler := govv1beta1.HandlerRoute{RouteKey: types.RouterKey, Handler: NewCycleListChangeProposalHandler(*k)}
 	return OracleOutputs{OracleKeeper: *k, Module: m, GovHandler: govHandler}
 }

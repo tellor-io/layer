@@ -215,21 +215,21 @@ func report(creator, signature, value, qdata string) (oracletypes.MsgCommitRepor
 	return commit, reveal
 }
 
-func (s *IntegrationTestSuite) TestGetSupportedQueries() {
+func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	s.oracleKeeper()
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
-	resp := s.oraclekeeper.GetSupportedQueries(s.ctx)
-	s.Equal(resp.QueryData, []*types.QueryChange{
+	resp := s.oraclekeeper.GetCyclList(s.ctx)
+	s.Equal(resp.QueryData, []*types.CycleListQuery{
 		{QueryData: ethQueryData},
 		{QueryData: btcQueryData},
 		{QueryData: trbQueryData},
 	})
 	fakeQueryData := "0x000001"
-	p := oracletypes.SupportedQueryChangeProposal{
+	p := oracletypes.CycleListChangeProposal{
 		Title:       "Test",
 		Description: "test description",
-		Changes: []oracletypes.QueryChange{
+		Changes: []oracletypes.CycleListQuery{
 			{QueryData: fakeQueryData},
 		},
 	}
@@ -256,6 +256,6 @@ func (s *IntegrationTestSuite) TestGetSupportedQueries() {
 	gov.EndBlocker(s.ctx, s.govKeeper)
 	proposal1, _ = s.govKeeper.GetProposal(s.ctx, proposal1.Id)
 	s.True(proposal1.Status == v1.StatusPassed)
-	resp = s.oraclekeeper.GetSupportedQueries(s.ctx)
-	s.Equal(resp.QueryData, []*types.QueryChange{{QueryData: fakeQueryData}})
+	resp = s.oraclekeeper.GetCyclList(s.ctx)
+	s.Equal(resp.QueryData, []*types.CycleListQuery{{QueryData: fakeQueryData}})
 }

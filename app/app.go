@@ -535,7 +535,7 @@ func New(
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(oraclemoduletypes.RouterKey, oracle.NewSupportedQueryChangeProposalHandler(app.OracleKeeper))
+		AddRoute(oraclemoduletypes.RouterKey, oracle.NewCycleListChangeProposalHandler(app.OracleKeeper))
 	govKeeper.SetLegacyRouter(govRouter)
 
 	app.GovKeeper = *govKeeper.SetHooks(

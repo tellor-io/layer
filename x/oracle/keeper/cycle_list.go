@@ -6,28 +6,28 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) SetSupportedQueries(ctx sdk.Context, queries []types.QueryChange) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.SupportedQueriesKey())
-	var list = make([]*types.QueryChange, len(queries))
+func (k Keeper) SetCycleList(ctx sdk.Context, queries []types.CycleListQuery) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
+	var list = make([]*types.CycleListQuery, len(queries))
 	for i := range queries {
 		list[i] = &queries[i]
 	}
 
-	bz := k.cdc.MustMarshal(&types.SupportedQueries{QueryData: list})
-	store.Set(types.SupportedQueriesKey(), bz)
+	bz := k.cdc.MustMarshal(&types.CycleList{QueryData: list})
+	store.Set(types.CycleListKey(), bz)
 }
 
-func (k Keeper) GetSupportedQueries(ctx sdk.Context) types.SupportedQueries {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.SupportedQueriesKey())
-	bz := store.Get(types.SupportedQueriesKey())
-	var d types.SupportedQueries
+func (k Keeper) GetCyclList(ctx sdk.Context) types.CycleList {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
+	bz := store.Get(types.CycleListKey())
+	var d types.CycleList
 	k.cdc.MustUnmarshal(bz, &d)
 	return d
 }
 
 // rotation what query is next
 func (k Keeper) RotateQueries(ctx sdk.Context) string {
-	queries := k.GetSupportedQueries(ctx)
+	queries := k.GetCyclList(ctx)
 
 	currentIndex := k.GetCurrentIndex(ctx)
 	if currentIndex >= int64(len(queries.QueryData)) {
@@ -39,12 +39,12 @@ func (k Keeper) RotateQueries(ctx sdk.Context) string {
 }
 
 func (k Keeper) SetCurrentIndex(ctx sdk.Context, index int64) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.SupportedQueriesKey())
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
 	store.Set(types.CurrentIndexKey(), types.NumKey(index))
 }
 
 func (k Keeper) GetCurrentIndex(ctx sdk.Context) int64 {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.SupportedQueriesKey())
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
 	bz := store.Get(types.CurrentIndexKey())
 	return int64(sdk.BigEndianToUint64(bz))
 }
