@@ -12,7 +12,12 @@
 
 For more in-depth information about Layer, checkout the [TellorLayer - tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf).
 
-## Setting Up and Testing 
+## Tests
+To run all tests:
+`go test -v ./...`
+
+## Starting the Chain
+
 To start the chain locally without Ignite CLI:
 `layerd start`
 
