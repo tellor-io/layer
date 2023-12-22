@@ -1,212 +1,194 @@
 package keeper_test
 
 import (
+	"crypto/rand"
+	"fmt"
 	"math"
 
+	cosmosmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
+func GenerateRandomAddress() sdk.AccAddress {
+	randBytes := make([]byte, 20)
+	rand.Read(randBytes)
+	return sdk.AccAddress(randBytes)
+}
+
+func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []types.MicroReport {
+	var reports []types.MicroReport
+	for i, reporter := range reporters {
+		reports = append(reports, types.MicroReport{
+			Reporter: reporter.String(),
+			Value:    values[i],
+			Power:    powers[i],
+			QueryId:  qId,
+		})
+	}
+	return reports
+}
+
+func SumArray(arr []int64) int64 {
+	sum := int64(0)
+	for _, value := range arr {
+		sum += value
+	}
+	return sum
+}
+
+func CalculateWeightedMean(values []int, powers []int64) float64 {
+	var totalWeight, weightedSum float64
+	for i, value := range values {
+		weightedSum += float64(value) * float64(powers[i])
+		totalWeight += float64(powers[i])
+	}
+	return weightedSum / totalWeight
+}
+
+func CalculateStandardDeviation(values []int, powers []int64, mean float64) float64 {
+	var sum float64
+	totalWeight := float64(SumArray(powers))
+
+	for i, value := range values {
+		deviation := float64(value) - mean
+		sum += float64(powers[i]) * deviation * deviation
+	}
+
+	return math.Sqrt(sum / totalWeight)
+}
+
+func IntToHex(values []int) []string {
+	var hexValues []string
+	for _, value := range values {
+		hexValues = append(hexValues, fmt.Sprintf("%x", value))
+	}
+	return hexValues
+}
 func (s *KeeperTestSuite) TestWeightedMedian() {
 	require := s.Require()
 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
-	// normal scenario - 5 reporters various weights
-	reports := []types.MicroReport{
-		{
-			Reporter: "reporter1",
-			Value:    "a", // Hex value for 10
-			Power:    10,
-			QueryId:  qId,
-		},
-		{
-			Reporter: "reporter2",
-			Value:    "14", // Hex value for 20
-			Power:    4,
-			QueryId:  qId,
-		},
-		{
-			Reporter: "reporter3",
-			Value:    "1e", // Hex value for 30
-			Power:    2,
-			QueryId:  qId,
-		},
-		{
-			Reporter: "reporter4",
-			Value:    "28", // Hex value for 40
-			Power:    20,
-			QueryId:  qId,
-		},
-		{
-			Reporter: "reporter5",
-			Value:    "32", // Hex value for 50
-			Power:    8,
-			QueryId:  qId,
-		},
+	reporters := make([]sdk.AccAddress, 18)
+	for i := 0; i < 18; i++ {
+		reporters[i] = GenerateRandomAddress()
 	}
+	// normal scenario - 5 reporters various weights
+	// list of addresses
+	valuesInt := []int{10, 20, 30, 40, 50}
+	values := IntToHex(valuesInt)
+	powers := []int64{10, 4, 2, 20, 8}
+	expectedIndex := 3
+	expectedValue := values[expectedIndex]
+	expectedReporter := reporters[expectedIndex].String()
+	expectedPower := powers[expectedIndex]
+	totalPowers := SumArray(powers)
+	currentReporters := reporters[:5]
+	reports := GenerateReports(currentReporters, values, powers, qId)
+	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(cosmosmath.NewInt(totalPowers))
+	s.distrKeeper.On("GetFeePoolCommunityCoins", mock.Anything).Return(sdk.DecCoins{sdk.NewDecCoinFromDec("loya", sdk.NewDec(100))})
+	s.distrKeeper.On("AllocateTokensToValidator", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.distrKeeper.On("GetFeePool", mock.Anything).Return(distrtypes.FeePool{CommunityPool: sdk.DecCoins{sdk.NewDecCoinFromDec("loya", sdk.NewDec(1000))}})
+	s.distrKeeper.On("SetFeePool", mock.Anything, mock.Anything).Return(nil)
 
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
-	//fmt.Println("REPORT 1: ", res.Report)
 	require.Equal(res.Report.QueryId, qId, "query id is not correct")
-	require.Equal(res.Report.AggregateReporter, "reporter4", "aggregate reporter is not correct")
-	require.Equal(res.Report.AggregateValue, "28", "aggregate value is not correct")
-	require.Equal(res.Report.ReporterPower, int64(20), "reporter power is not correct")
+	require.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
+	require.Equal(res.Report.AggregateValue, expectedValue, "aggregate value is not correct")
+	require.Equal(res.Report.ReporterPower, expectedPower, "reporter power is not correct")
 	//  check list of reporters in the aggregate report
-	require.Equal(res.Report.Reporters[0].Reporter, "reporter1", "reporter is not correct")
-	require.Equal(res.Report.Reporters[1].Reporter, "reporter2", "reporter is not correct")
-	require.Equal(res.Report.Reporters[2].Reporter, "reporter3", "reporter is not correct")
-	require.Equal(res.Report.Reporters[3].Reporter, "reporter4", "reporter is not correct")
-	require.Equal(res.Report.Reporters[4].Reporter, "reporter5", "reporter is not correct")
-
-	weightedMean := float64((10*10)+(20*4)+(30*2)+(40*20)+(50*8)) / (10 + 4 + 2 + 20 + 8)
-	sum := ((10 * math.Pow(10-weightedMean, 2)) + (4 * math.Pow(20-weightedMean, 2)) + (2 * math.Pow(30-weightedMean, 2)) + (20 * math.Pow(40-weightedMean, 2)) + (8 * math.Pow(50-weightedMean, 2))) / (10 + 4 + 2 + 20 + 8)
-	require.Equal(res.Report.StandardDeviation, math.Sqrt(sum), "std deviation is not correct")
-
-	// special case A -- lower weighted median and upper weighted median are equal, powers are equal
-	// calculates lower median
-	qId2 := "a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac"
-	reports = []types.MicroReport{
-		{
-			Reporter: "reporter6",
-			Value:    "a", // Hex value for 10
-			Power:    1,
-			QueryId:  qId2,
-		},
-		{
-			Reporter: "reporter7",
-			Value:    "a", // Hex value for 10
-			Power:    1,
-			QueryId:  qId2,
-		},
-		{
-			Reporter: "reporter8",
-			Value:    "14", // Hex value for 20
-			Power:    1,
-			QueryId:  qId2,
-		},
-		{
-			Reporter: "reporter9",
-			Value:    "14", // Hex value for 20
-			Power:    1,
-			QueryId:  qId2,
-		},
+	for i, reporter := range currentReporters {
+		require.Equal(res.Report.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
-	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId2})
-	require.Nil(err)
-	//fmt.Println("REPORT 2: ", res.Report)
-	require.Equal(res.Report.QueryId, qId2, "query id is not correct")
-	require.Equal(res.Report.AggregateReporter, "reporter7", "aggregate reporter is not correct")
-	require.Equal(res.Report.AggregateValue, "a", "aggregate value is not correct")
-	require.Equal(res.Report.ReporterPower, int64(1), "reporter power is not correct")
-	//  check list of reporters in the aggregate report
-	require.Equal(res.Report.Reporters[0].Reporter, "reporter6", "reporter is not correct")
-	require.Equal(res.Report.Reporters[1].Reporter, "reporter7", "reporter is not correct")
-	require.Equal(res.Report.Reporters[2].Reporter, "reporter8", "reporter is not correct")
-	require.Equal(res.Report.Reporters[3].Reporter, "reporter9", "reporter is not correct")
+	weightedMean := CalculateWeightedMean(valuesInt, powers)
+	require.Equal(res.Report.StandardDeviation, CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
 
-	weightedMean = float64((10*1)+(10*1)+(20*1)+(20*1)) / (1 + 1 + 1 + 1)
-	sum = ((1 * math.Pow(10-weightedMean, 2)) + (1 * math.Pow(10-weightedMean, 2)) + (1 * math.Pow(20-weightedMean, 2)) + (1 * math.Pow(20-weightedMean, 2))) / (1 + 1 + 1 + 1)
-	require.Equal(res.Report.StandardDeviation, math.Sqrt(sum), "std deviation is not correct")
+	// // special case A -- lower weighted median and upper weighted median are equal, powers are equal
+	// // calculates lower median
+	qId = "a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac"
+	currentReporters = reporters[5:9]
+	valuesInt = []int{10, 10, 20, 20}
+	values = IntToHex(valuesInt)
+	powers = []int64{1, 1, 1, 1}
+	totalPowers = SumArray(powers)
+	expectedIndex = 1
+	expectedReporter = currentReporters[expectedIndex].String()
+	expectedValue = values[expectedIndex]
+	expectedPower = 1
+	reports = GenerateReports(currentReporters, values, powers, qId)
+	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(cosmosmath.NewInt(totalPowers))
+	s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	require.Nil(err)
+	require.Nil(err)
+	require.Equal(res.Report.QueryId, qId, "query id is not correct")
+	require.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
+	require.Equal(res.Report.AggregateValue, expectedValue, "aggregate value is not correct")
+	require.Equal(res.Report.ReporterPower, expectedPower, "reporter power is not correct")
+	// //  check list of reporters in the aggregate report
+	for i, reporter := range currentReporters {
+		require.Equal(res.Report.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+	}
+	weightedMean = CalculateWeightedMean(valuesInt, powers)
+	require.Equal(res.Report.StandardDeviation, CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
 
 	// special case B -- lower weighted median and upper weighted median are equal, powers are not all equal
 	// calculates lower median
-	qId3 := "48e9e2c732ba278de6ac88a3a57a5c5ba13d3d8370e709b3b98333a57876ca95"
-	reports = []types.MicroReport{
-		{
-			Reporter: "reporter10",
-			Value:    "a", // Hex value for 10
-			Power:    1,
-			QueryId:  qId3,
-		},
-		{
-			Reporter: "reporter11",
-			Value:    "a", // Hex value for 10
-			Power:    2,
-			QueryId:  qId3,
-		},
-		{
-			Reporter: "reporter12",
-			Value:    "14", // Hex value for 20
-			Power:    1,
-			QueryId:  qId3,
-		},
-		{
-			Reporter: "reporter13",
-			Value:    "14", // Hex value for 20
-			Power:    2,
-			QueryId:  qId3,
-		},
-	}
+	qId = "48e9e2c732ba278de6ac88a3a57a5c5ba13d3d8370e709b3b98333a57876ca95"
+	currentReporters = reporters[9:13]
+	valuesInt = []int{10, 10, 20, 20}
+	values = IntToHex(valuesInt)
+	powers = []int64{1, 2, 1, 2}
+	totalPowers = SumArray(powers)
+	expectedIndex = 1
+	expectedReporter = currentReporters[expectedIndex].String()
+	expectedValue = values[expectedIndex]
+	expectedPower = powers[expectedIndex]
+	reports = GenerateReports(currentReporters, values, powers, qId)
+	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(cosmosmath.NewInt(totalPowers))
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId3})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
-	//fmt.Println("REPORT 3: ", res.Report)
-	require.Equal(res.Report.QueryId, qId3, "query id is not correct")
-	require.Equal(res.Report.AggregateReporter, "reporter11", "aggregate reporter is not correct")
-	require.Equal(res.Report.AggregateValue, "a", "aggregate value is not correct")
-	require.Equal(res.Report.ReporterPower, int64(2), "reporter power is not correct")
-	//  check list of reporters in the aggregate report
-	require.Equal(res.Report.Reporters[0].Reporter, "reporter10", "reporter is not correct")
-	require.Equal(res.Report.Reporters[1].Reporter, "reporter11", "reporter is not correct")
-	require.Equal(res.Report.Reporters[2].Reporter, "reporter12", "reporter is not correct")
-	require.Equal(res.Report.Reporters[3].Reporter, "reporter13", "reporter is not correct")
-
-	weightedMean = float64((10*1)+(10*2)+(20*1)+(20*2)) / (1 + 2 + 1 + 2)
-	sum = ((1 * math.Pow(10-weightedMean, 2)) + (2 * math.Pow(10-weightedMean, 2)) + (1 * math.Pow(20-weightedMean, 2)) + (2 * math.Pow(20-weightedMean, 2))) / (1 + 2 + 1 + 2)
-	require.Equal(res.Report.StandardDeviation, math.Sqrt(sum), "std deviation is not correct")
-
-	// 5 reporters with even weights, should be equal to normal median
-	qId4 := "907154958baee4fb0ce2bbe50728141ac76eb2dc1731b3d40f0890746dd07e62"
-	reports = []types.MicroReport{
-		{
-			Reporter: "reporter14",
-			Value:    "a", // Hex value for 10
-			Power:    5,
-			QueryId:  qId4,
-		},
-		{
-			Reporter: "reporter15",
-			Value:    "14", // Hex value for 20
-			Power:    5,
-			QueryId:  qId4,
-		},
-		{
-			Reporter: "reporter16",
-			Value:    "1e", // Hex value for 30
-			Power:    5,
-			QueryId:  qId4,
-		},
-		{
-			Reporter: "reporter17",
-			Value:    "28", // Hex value for 40
-			Power:    5,
-			QueryId:  qId4,
-		},
-		{
-			Reporter: "reporter18",
-			Value:    "32", // Hex value for 50
-			Power:    5,
-			QueryId:  qId4,
-		},
+	require.Nil(err)
+	require.Equal(res.Report.QueryId, qId, "query id is not correct")
+	require.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
+	require.Equal(res.Report.AggregateValue, expectedValue, "aggregate value is not correct")
+	require.Equal(res.Report.ReporterPower, expectedPower, "reporter power is not correct")
+	// //  check list of reporters in the aggregate report
+	for i, reporter := range currentReporters {
+		require.Equal(res.Report.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
+	weightedMean = CalculateWeightedMean(valuesInt, powers)
+	require.Equal(res.Report.StandardDeviation, CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
+
+	// // 5 reporters with even weights, should be equal to normal median
+	qId = "907154958baee4fb0ce2bbe50728141ac76eb2dc1731b3d40f0890746dd07e62"
+	currentReporters = reporters[13:18]
+	valuesInt = []int{10, 20, 30, 40, 50}
+	values = IntToHex(valuesInt)
+	powers = []int64{5, 5, 5, 5, 5}
+	totalPowers = SumArray(powers)
+	expectedIndex = 2
+	expectedReporter = currentReporters[expectedIndex].String()
+	expectedValue = values[expectedIndex]
+	expectedPower = powers[expectedIndex]
+	reports = GenerateReports(currentReporters, values, powers, qId)
+	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(cosmosmath.NewInt(totalPowers))
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId4})
+	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
-	//fmt.Println("REPORT 4: ", res.Report)
-	require.Equal(res.Report.QueryId, qId4, "query id is not correct")
-	require.Equal(res.Report.AggregateReporter, "reporter16", "aggregate reporter is not correct")
-	require.Equal(res.Report.AggregateValue, "1e", "aggregate value is not correct")
-	require.Equal(res.Report.ReporterPower, int64(5), "reporter power is not correct")
-	//  check list of reporters in the aggregate report
-	require.Equal(res.Report.Reporters[0].Reporter, "reporter14", "reporter is not correct")
-	require.Equal(res.Report.Reporters[1].Reporter, "reporter15", "reporter is not correct")
-	require.Equal(res.Report.Reporters[2].Reporter, "reporter16", "reporter is not correct")
-	require.Equal(res.Report.Reporters[3].Reporter, "reporter17", "reporter is not correct")
-	require.Equal(res.Report.Reporters[4].Reporter, "reporter18", "reporter is not correct")
-
-	weightedMean = float64((10*5)+(20*5)+(30*5)+(40*5)+(50*5)) / (5 + 5 + 5 + 5 + 5)
-	sum = ((5 * math.Pow(10-weightedMean, 2)) + (5 * math.Pow(20-weightedMean, 2)) + (5 * math.Pow(30-weightedMean, 2)) + (5 * math.Pow(40-weightedMean, 2)) + (5 * math.Pow(50-weightedMean, 2))) / (5 + 5 + 5 + 5 + 5)
-	require.Equal(res.Report.StandardDeviation, math.Sqrt(sum), "std deviation is not correct")
-
+	require.Nil(err)
+	require.Equal(res.Report.QueryId, qId, "query id is not correct")
+	require.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
+	require.Equal(res.Report.AggregateValue, expectedValue, "aggregate value is not correct")
+	require.Equal(res.Report.ReporterPower, expectedPower, "reporter power is not correct")
+	// //  check list of reporters in the aggregate report
+	for i, reporter := range currentReporters {
+		require.Equal(res.Report.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+	}
+	weightedMean = CalculateWeightedMean(valuesInt, powers)
+	require.Equal(res.Report.StandardDeviation, CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
 }

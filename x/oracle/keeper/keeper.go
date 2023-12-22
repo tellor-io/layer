@@ -56,6 +56,7 @@ func NewKeeper(
 		distrKeeper:    distrKeeper,
 		stakingKeeper:  stakingKeeper,
 		registryKeeper: registryKeeper,
+		authority:      authority,
 	}
 }
 
