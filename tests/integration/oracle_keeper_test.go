@@ -17,7 +17,6 @@ import (
 
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *IntegrationTestSuite) oracleKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
@@ -201,13 +200,13 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
 }
 
-func report(creator, signature, value, qdata string) (oracletypes.MsgCommitReport, oracletypes.MsgSubmitValue) {
-	commit := oracletypes.MsgCommitReport{
+func report(creator, signature, value, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
+	commit := types.MsgCommitReport{
 		Creator:   creator,
 		QueryData: ethQueryData,
 		Signature: signature,
 	}
-	reveal := oracletypes.MsgSubmitValue{
+	reveal := types.MsgSubmitValue{
 		Creator:   creator,
 		QueryData: ethQueryData,
 		Value:     value,
@@ -219,16 +218,13 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	s.oracleKeeper()
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
-	resp := s.oraclekeeper.GetCyclList(s.ctx)
-	s.Equal(resp.QueryData, []string{ethQueryData, btcQueryData, trbQueryData})
+	resp := s.oraclekeeper.GetCycleList(s.ctx)
+	s.Equal(resp, []string{ethQueryData, btcQueryData, trbQueryData})
 	fakeQueryData := "0x000001"
-	p := oracletypes.CycleListChangeProposal{
-		Title:       "Test",
-		Description: "test description",
-		NewList:     []string{fakeQueryData},
+	msgContent := &types.MsgUpdateParams{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Params:    types.Params{CycleList: []string{fakeQueryData}},
 	}
-	msgContent, err := v1.NewLegacyContent(&p, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	s.NoError(err)
 	proposal1, err := s.govKeeper.SubmitProposal(s.ctx, []sdk.Msg{msgContent}, "", "test", "description", accs[0])
 	s.NoError(err)
 
@@ -250,6 +246,6 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	gov.EndBlocker(s.ctx, s.govKeeper)
 	proposal1, _ = s.govKeeper.GetProposal(s.ctx, proposal1.Id)
 	s.True(proposal1.Status == v1.StatusPassed)
-	resp = s.oraclekeeper.GetCyclList(s.ctx)
-	s.Equal(resp.QueryData, []string{fakeQueryData})
+	resp = s.oraclekeeper.GetCycleList(s.ctx)
+	s.Equal(resp, []string{fakeQueryData})
 }

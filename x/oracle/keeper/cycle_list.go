@@ -6,36 +6,21 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) SetCycleList(ctx sdk.Context, queries []string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
-	var list = make([]string, len(queries))
-	for i := range queries {
-		list[i] = queries[i]
-	}
-
-	bz := k.cdc.MustMarshal(&types.CycleList{QueryData: list})
-	store.Set(types.CycleListKey(), bz)
-}
-
-func (k Keeper) GetCyclList(ctx sdk.Context) types.CycleList {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
-	bz := store.Get(types.CycleListKey())
-	var d types.CycleList
-	k.cdc.MustUnmarshal(bz, &d)
-	return d
+func (k Keeper) GetCycleList(ctx sdk.Context) []string {
+	return k.GetParams(ctx).CycleList
 }
 
 // rotation what query is next
 func (k Keeper) RotateQueries(ctx sdk.Context) string {
-	queries := k.GetCyclList(ctx)
+	queries := k.GetCycleList(ctx)
 
 	currentIndex := k.GetCurrentIndex(ctx)
-	if currentIndex >= int64(len(queries.QueryData)) {
+	if currentIndex >= int64(len(queries)) {
 		currentIndex = 0
 	}
 
-	k.SetCurrentIndex(ctx, (currentIndex+1)%int64(len(queries.QueryData)))
-	return queries.QueryData[currentIndex]
+	k.SetCurrentIndex(ctx, (currentIndex+1)%int64(len(queries)))
+	return queries[currentIndex]
 }
 
 func (k Keeper) SetCurrentIndex(ctx sdk.Context, index int64) {

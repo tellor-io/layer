@@ -31,15 +31,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
@@ -59,6 +60,7 @@ import (
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/oracle"
+
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/registry"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -86,6 +88,7 @@ type IntegrationTestSuite struct {
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
+	distrKeeper    distrkeeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
 	stakingKeeper  *stakingkeeper.Keeper
 	govKeeper      *govkeeper.Keeper
@@ -133,8 +136,11 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 		appCodec, suite.fetchStoreKey(registrytypes.StoreKey), suite.fetchStoreKey(registrytypes.StoreKey), paramtypes.Subspace{},
 	)
 
+	suite.distrKeeper = distrkeeper.NewKeeper(
+		appCodec, suite.fetchStoreKey(distrtypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	suite.oraclekeeper = *oraclekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, suite.registrykeeper,
+		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.disputekeeper = *disputekeeper.NewKeeper(
@@ -164,6 +170,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 			configurator.SlashingModule(),
 			configurator.ParamsModule(),
 			configurator.ConsensusModule(),
+			configurator.DistributionModule(),
 			integration.OracleModule(),
 			integration.DisputeModule(),
 			integration.RegistryModule(),

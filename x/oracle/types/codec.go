@@ -5,13 +5,13 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSubmitValue{}, "oracle/SubmitValue", nil)
 	cdc.RegisterConcrete(&MsgCommitReport{}, "oracle/CommitReport", nil)
 	cdc.RegisterConcrete(&MsgTip{}, "oracle/Tip", nil)
+	cdc.RegisterConcrete(&MsgUpdateParams{}, "oracle/UpdateParams", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -25,8 +25,8 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgTip{},
 	)
-	registry.RegisterImplementations((*govtypes.Content)(nil),
-		&CycleListChangeProposal{},
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdateParams{},
 	)
 	// this line is used by starport scaffolding # 3
 
