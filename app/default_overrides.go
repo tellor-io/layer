@@ -3,11 +3,15 @@ package app
 import (
 	"encoding/json"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
+	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -69,6 +73,18 @@ type mintModule struct {
 func (mintModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := minttypes.DefaultGenesisState()
 	genState.Params.MintDenom = BondDenom
+
+	return cdc.MustMarshalJSON(genState)
+}
+
+type distrModule struct {
+	distribution.AppModuleBasic
+}
+
+// DefaultGenesis returns custom x/distribution module genesis state.
+func (distrModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	genState := distrtypes.DefaultGenesisState()
+	genState.Params.CommunityTax = math.LegacyNewDec(1) // 100% community tax
 
 	return cdc.MustMarshalJSON(genState)
 }

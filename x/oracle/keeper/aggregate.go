@@ -52,6 +52,7 @@ func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
 	key := types.AggregateKey(queryId, currentTimestamp)
 	store := k.AggregateStore(ctx)
 	store.Set(key, k.cdc.MustMarshal(report))
+	k.AllocateTimeBasedRewards(ctx, report)
 }
 
 func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {

@@ -21,6 +21,7 @@ type (
 
 		accountKeeper  types.AccountKeeper
 		bankKeeper     types.BankKeeper
+		distrKeeper    types.DistrKeeper
 		stakingKeeper  types.StakingKeeper
 		registryKeeper types.RegistryKeeper
 		// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -36,6 +37,7 @@ func NewKeeper(
 
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	distrKeeper types.DistrKeeper,
 	stakingKeeper types.StakingKeeper,
 	registryKeeper types.RegistryKeeper,
 	authority string,
@@ -51,9 +53,9 @@ func NewKeeper(
 
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
+		distrKeeper:    distrKeeper,
 		stakingKeeper:  stakingKeeper,
 		registryKeeper: registryKeeper,
-		authority:      authority,
 	}
 }
 

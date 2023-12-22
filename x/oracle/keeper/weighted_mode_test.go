@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
+	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -41,7 +43,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 			QueryId:  qId,
 		},
 	}
-
+	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(math.NewInt(1))
 	s.oracleKeeper.WeightedMode(s.ctx, reports)
 	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
