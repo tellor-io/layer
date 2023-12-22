@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	rStoreKey := sdk.NewKVStoreKey(registrytypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db)
 
@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		nil,
 		s.stakingKeeper,
 		s.registryKeeper,
-		authority.String(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	s.oracleKeeper = *k
 	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
