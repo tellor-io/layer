@@ -20,6 +20,9 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_oracle"
 
+	// ParamsKey
+	ParamsKey = "oracle_params"
+
 	ReportsKey = "Reports-value-"
 
 	// TipStoreKey defines the tip store key
@@ -37,6 +40,10 @@ const (
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
+}
+
+func ParamsKeyPrefix() []byte {
+	return KeyPrefix(ParamsKey)
 }
 
 func NumKey(num int64) []byte {
