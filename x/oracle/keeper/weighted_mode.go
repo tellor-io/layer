@@ -35,22 +35,25 @@ func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) {
 	}
 
 	// set mode report from most powerful reporter who submitted mode value
-	for _, r := range reports {
+	var modeReportIndex int64
+	for i, r := range reports {
 		if mode == r.Value {
 			if r.Power > maxWeight {
 				maxWeight = r.Power
 				modeReport = r
+				modeReportIndex = int64(i)
 			}
 		}
 
 	}
 
 	aggregateReport := types.Aggregate{
-		QueryId:           modeReport.QueryId,
-		AggregateValue:    modeReport.Value,
-		AggregateReporter: modeReport.Reporter,
-		ReporterPower:     modeReport.Power,
-		Reporters:         modeReporters,
+		QueryId:              modeReport.QueryId,
+		AggregateValue:       modeReport.Value,
+		AggregateReporter:    modeReport.Reporter,
+		ReporterPower:        modeReport.Power,
+		Reporters:            modeReporters,
+		AggregateReportIndex: modeReportIndex,
 	}
 
 	k.SetAggregate(ctx, &aggregateReport)

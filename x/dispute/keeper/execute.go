@@ -59,10 +59,10 @@ func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.
 	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
 	for voter, share := range tokenDistribution {
-		reward := sdk.NewCoins(sdk.NewCoin(Denom, share))
+		reward := sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, share))
 		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(voter), reward))
 	}
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(Denom, totalAmount)))}
+	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, totalAmount)))}
 	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }

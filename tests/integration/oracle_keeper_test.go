@@ -15,6 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -248,4 +249,30 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	s.True(proposal1.Status == v1.StatusPassed)
 	resp = s.oraclekeeper.GetCycleList(s.ctx)
 	s.Equal(resp, []string{fakeQueryData})
+}
+
+func (s *IntegrationTestSuite) TestTimeBasedRewards() {
+	powers := []int64{100, 200, 300, 400, 500, 600, 700, 800, 900, 1000}
+	accs, vals, _ := s.createValidatorAccs(powers)
+	// add tokens to community pool
+	pool := s.distrKeeper.GetFeePool(s.ctx)
+	pool.CommunityPool = sdk.DecCoins{sdk.NewDecCoinFromDec(s.denom, sdk.NewDec(100))}
+	s.distrKeeper.SetFeePool(s.ctx, pool)
+	// transfer tokens to distribution module
+	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], "distribution", sdk.NewCoins(sdk.NewCoin(s.denom, sdk.NewInt(100))))
+	s.NoError(err)
+	// report bypass commit/reveal
+	values := []string{"000001", "000002", "000003", "000004", "000005", "000006", "000007", "000008", "000009", "00000a"}
+	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
+	// single reporter reporting a queryId ie 1% of validators
+	bal1 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
+	s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
+	s.NoError(err)
+	s.Equal(res.Report.AggregateReportIndex, int64(0))
+	// advance height
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[0], vals[0])
+	bal2 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
+	s.Equal(bal2.Amount.Sub(bal1.Amount), sdk.NewInt(1)) // 1% of 100
 }

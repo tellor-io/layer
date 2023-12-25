@@ -97,7 +97,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 
 	bondedTokensBefore := val.GetBondedTokens()
 	onePercent := bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))
-	disputeFee := sdk.NewCoin("stake", onePercent)
+	disputeFee := sdk.NewCoin(s.denom, onePercent)
 	slashAmount := disputeFee.Amount
 	_, err := msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
 		Creator:         sdk.AccAddress(valAddr).String(),

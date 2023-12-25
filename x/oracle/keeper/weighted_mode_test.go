@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -12,7 +13,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	require := s.Require()
 	reporters := make([]sdk.AccAddress, 18)
 	for i := 0; i < 10; i++ {
-		reporters[i] = GenerateRandomAddress()
+		reporters[i] = testutil.GenerateRandomAddress()
 	}
 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
 	// normal scenario
@@ -68,6 +69,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	require.Equal(res.Report.Reporters[2].Reporter, reporters[2].String(), "reporter is not correct")
 	require.Equal(res.Report.Reporters[3].Reporter, expectedReporter, "reporter is not correct")
 	require.Equal(res.Report.Reporters[4].Reporter, reporters[4].String(), "reporter is not correct")
+	require.Equal(res.Report.AggregateReportIndex, int64(3), "report index is not correct")
 
 	// scenario where mode is not decided by most powerful reporter
 	qId2 := "a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac"
@@ -118,5 +120,6 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	require.Equal(res.Report.Reporters[2].Reporter, reporters[7].String(), "reporter is not correct")
 	require.Equal(res.Report.Reporters[3].Reporter, reporters[8].String(), "reporter is not correct")
 	require.Equal(res.Report.Reporters[4].Reporter, reporters[9].String(), "reporter is not correct")
+	require.Equal(res.Report.AggregateReportIndex, int64(1), "report index is not correct")
 
 }
