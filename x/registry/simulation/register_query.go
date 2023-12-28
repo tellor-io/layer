@@ -17,10 +17,17 @@ func SimulateMsgRegisterQuery(
 ) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		simAccount, _ := simtypes.RandomAcc(r, accs)
+		// select a random acct
+		simAccount, _ := simtypes.RandomAcc(r, accs) 
+		// create a new RegisterQuery message
 		msg := &types.MsgRegisterQuery{
 			Creator: simAccount.Address.String(),
+			QueryType: "testQueryType",
+			DataTypes: []string{"testDataType"},
+			DataFields: []string{"testDataField"},
 		}
+		// 
+
 
 		// TODO: Handling the RegisterQuery simulation
 
