@@ -19,16 +19,15 @@ struct Signature {
 struct ReportData {
     bytes value;
     uint256 timestamp;
-    uint256 consensusThreshold;
+    uint256 aggregatePower;
+    uint256 previousTimestamp;
+    uint256 nextTimestamp;
 }
 
 struct OracleAttestationData {
     bytes32 queryId;
     ReportData report;
-    uint256 validatorNonce;
-    uint256 powerThreshold;
-    bytes32 validatorSetHash;
-    uint256 blockTimestamp;
+    uint256 attestTimestamp;
 }
 
 /// @title BlobstreamO: Tellor Layer -> EVM, Oracle relay.
@@ -61,6 +60,7 @@ contract BlobstreamO is ECDSA {
     error StaleValidatorSet();
     error SuppliedValidatorSetInvalid();
     error ValidatorSetNotStale();
+    error NotConsensusValue();
 
     /*Functions*/
     /// @param _nonce Initial event nonce.
@@ -164,11 +164,11 @@ contract BlobstreamO is ECDSA {
 
     /*Getter functions*/
     /// @notice Used for verifying oracle data attestations
-    function verifyOracleData(
+    function _verifyOracleData(
         OracleAttestationData calldata _attest,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
-    ) external view returns (bool) {
+    ) internal view returns (bool) {
         if (_currentValidatorSet.length != _sigs.length) {
             revert MalformedCurrentValidatorSet();
         }
@@ -186,12 +186,6 @@ contract BlobstreamO is ECDSA {
         ) {
             revert SuppliedValidatorSetInvalid();
         }
-
-        // possibly no nonce input needed here,
-        if (_attest.validatorNonce != validatorNonce) {
-            revert InvalidValidatorSetNonce();
-        }
-
         bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
         _checkValidatorSignatures(
             _currentValidatorSet,
@@ -201,6 +195,25 @@ contract BlobstreamO is ECDSA {
         );
         return true;
     }
+
+    function verifyOracleData(
+        OracleAttestationData calldata _attest,
+        Validator[] calldata _currentValidatorSet,
+        Signature[] calldata _sigs
+    ) external view returns (bool) {
+        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
+    }
+
+    // function verifyConsensusOracleData(
+    //     OracleAttestationData calldata _attest,
+    //     Validator[] calldata _currentValidatorSet,
+    //     Signature[] calldata _sigs
+    // ) external view returns (bool) {
+    //     if (_attest.report.aggregatePower < powerThreshold) {
+    //         revert NotConsensusValue();
+    //     }
+    //     return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
+    // }
 
     /*Internal functions*/
     /// @dev Checks that enough voting power signed over a digest.
@@ -254,7 +267,7 @@ contract BlobstreamO is ECDSA {
     /// @return The domain separated hash of the oracle attestation.
     function _domainSeparateOracleAttestationData(
         OracleAttestationData calldata _attest
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -262,11 +275,11 @@ contract BlobstreamO is ECDSA {
                     _attest.queryId,
                     _attest.report.value,
                     _attest.report.timestamp,
-                    _attest.report.consensusThreshold,
-                    _attest.validatorNonce,
-                    _attest.powerThreshold,
-                    _attest.validatorSetHash,
-                    _attest.blockTimestamp
+                    _attest.report.aggregatePower,
+                    _attest.report.previousTimestamp,
+                    _attest.report.nextTimestamp,
+                    lastValidatorSetCheckpoint,
+                    _attest.attestTimestamp
                 )
             );
     }

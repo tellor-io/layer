@@ -81,10 +81,10 @@ getEthSignedMessageHash = (messageHash) => {
   return digest;
 }
 
-getDataDigest = (queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp) => {
+getDataDigest = (queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, blockTimestamp) => {
   const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
   enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"], 
-  [DOMAIN_SEPARATOR, queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp])
+  [DOMAIN_SEPARATOR, queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, blockTimestamp])
   return hash(enc)
 }
 
@@ -112,18 +112,17 @@ getSigStructArray = (sigs) => {
   return structArray
 }
 
-getOracleDataStruct = (queryId, value, timestamp, consensusThreshold, validatorNonce, powerThreshold, validatorSetHash, blockTimestamp) => {
+getOracleDataStruct = (queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, attestTimestamp) => {
   return {
     queryId: queryId,
     report: {
       value: value,
       timestamp: timestamp,
-      consensusThreshold: consensusThreshold
+      aggregatePower: aggregatePower,
+      previousTimestamp: previousTimestamp,
+      nextTimestamp: nextTimestamp
     },
-    validatorNonce: validatorNonce,
-    powerThreshold: powerThreshold,
-    validatorSetHash: validatorSetHash,
-    blockTimestamp: blockTimestamp
+    attestTimestamp: attestTimestamp
   }
 }
 
