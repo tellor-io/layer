@@ -29,7 +29,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
-type KeeperTestSuite struct {
+type SimulationTestSuite struct {
 	suite.Suite
 
 	ctx sdk.Context
@@ -41,7 +41,7 @@ type KeeperTestSuite struct {
 	msgServer     types.MsgServer
 }
 
-func (s *KeeperTestSuite) SetupTest() {
+func (s *SimulationTestSuite) SetupTest() {
 	require := s.Require()
 	config := sdk.GetConfig()
 	// set up account ? not needed ?
@@ -114,6 +114,6 @@ func SimulateMsgRegisterSpec(
 	}
 }
 
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(KeeperTestSuite))
+func TestSimulationTestSuite(t *testing.T) {
+	suite.Run(t, new(SimulationTestSuite))
 }
