@@ -11,7 +11,8 @@ import (
 	"cosmossdk.io/depinject"
 	abci "github.com/cometbft/cometbft/abci/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -179,6 +180,7 @@ type OracleInputs struct {
 
 	AccountKeeper  types.AccountKeeper
 	BankKeeper     types.BankKeeper
+	Distr          types.DistrKeeper
 	StakingKeeper  types.StakingKeeper
 	RegistryKeeper types.RegistryKeeper
 }
@@ -191,16 +193,20 @@ type OracleOutputs struct {
 }
 
 func ProvideModule(in OracleInputs) OracleOutputs {
-
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.KvStoreKey,
 		in.MemStoreKey,
-		paramtypes.Subspace{},
 		in.AccountKeeper,
 		in.BankKeeper,
+		in.Distr,
 		in.StakingKeeper,
 		in.RegistryKeeper,
+		authority.String(),
 	)
 	m := NewAppModule(
 		in.Cdc,
@@ -208,6 +214,5 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 	)
-
 	return OracleOutputs{OracleKeeper: *k, Module: m}
 }

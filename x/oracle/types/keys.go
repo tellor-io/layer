@@ -20,6 +20,9 @@ const (
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_oracle"
 
+	// ParamsKey
+	ParamsKey = "oracle_params"
+
 	ReportsKey = "Reports-value-"
 
 	// TipStoreKey defines the tip store key
@@ -31,10 +34,16 @@ const (
 	ReporterStoreKey = "reporter_store"
 
 	AggregateStoreKey = "aggergate_store"
+
+	CycleListStoreKey = "cycle_list_store"
 )
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
+}
+
+func ParamsKeyPrefix() []byte {
+	return KeyPrefix(ParamsKey)
 }
 
 func NumKey(num int64) []byte {
@@ -51,4 +60,12 @@ func MaxNonceKey(queryId []byte) []byte {
 
 func AggregateKey(queryId []byte, timestamp time.Time) []byte {
 	return []byte(fmt.Sprintf("%s:%s:%v", "aggregate", queryId, timestamp))
+}
+
+func CycleListKey() []byte {
+	return KeyPrefix(CycleListStoreKey)
+}
+
+func CurrentIndexKey() []byte {
+	return KeyPrefix("currentIndex")
 }

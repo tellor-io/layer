@@ -554,12 +554,13 @@ func New(
 		appCodec,
 		keys[oraclemoduletypes.StoreKey],
 		keys[oraclemoduletypes.MemStoreKey],
-		app.GetSubspace(oraclemoduletypes.ModuleName),
 
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.DistrKeeper,
 		app.StakingKeeper,
 		app.RegistryKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper)
 

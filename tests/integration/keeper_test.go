@@ -2,7 +2,9 @@ package integration_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -29,14 +31,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
@@ -47,6 +51,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
+	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
@@ -55,6 +60,7 @@ import (
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/oracle"
+
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/registry"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -63,14 +69,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	bigmath "github.com/ethereum/go-ethereum/common/math"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/tests/integration"
 )
 
 const (
-	ethQueryData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	btcQueryData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	ethQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	btcQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	trbQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 )
 
 type IntegrationTestSuite struct {
@@ -82,8 +88,10 @@ type IntegrationTestSuite struct {
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
+	distrKeeper    distrkeeper.Keeper
 	slashingKeeper slashingkeeper.Keeper
 	stakingKeeper  *stakingkeeper.Keeper
+	govKeeper      *govkeeper.Keeper
 	ctx            sdk.Context
 	appCodec       codec.Codec
 	authConfig     *authmodulev1.Module
@@ -128,8 +136,11 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 		appCodec, suite.fetchStoreKey(registrytypes.StoreKey), suite.fetchStoreKey(registrytypes.StoreKey), paramtypes.Subspace{},
 	)
 
+	suite.distrKeeper = distrkeeper.NewKeeper(
+		appCodec, suite.fetchStoreKey(distrtypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	suite.oraclekeeper = *oraclekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, suite.registrykeeper,
+		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.disputekeeper = *disputekeeper.NewKeeper(
@@ -159,13 +170,15 @@ func (s *IntegrationTestSuite) SetupTest() {
 			configurator.SlashingModule(),
 			configurator.ParamsModule(),
 			configurator.ConsensusModule(),
+			configurator.DistributionModule(),
 			integration.OracleModule(),
 			integration.DisputeModule(),
-			integration.RegistryModule()),
+			integration.RegistryModule(),
+			configurator.GovModule()),
 		integration.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
-		&s.disputekeeper, &s.registrykeeper)
+		&s.disputekeeper, &s.registrykeeper, &s.govKeeper)
 
 	s.NoError(err)
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()}))
@@ -298,20 +311,24 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	return addrs, valAddrs, privKeys
 }
 
-// helper to encode spots to hex string similar to evm tellor. works only with two decimal places ie 123.45
-func encodeValue(number *big.Int) string {
-	bigNumber := bigmath.BigPow(10, 18).Mul(number, big.NewInt(10_000_000_000_000_000)) // cover the two decimal places
-	// Define the ABI type for uint256
-	uint256ABIType, _ := abi.NewType("uint256", "uint256", nil)
+// inspired by telliot python code
+func encodeValue(number float64) string {
+	strNumber := fmt.Sprintf("%.18f", number)
 
-	// Create an ABI Argument for the uint256 type
-	arg := abi.Argument{
-		Type: uint256ABIType,
+	parts := strings.Split(strNumber, ".")
+	if len(parts[1]) > 18 {
+		parts[1] = parts[1][:18]
 	}
+	truncatedStr := parts[0] + parts[1]
 
-	// Pack the scaled integer using the ABI Argument
-	encodedBytes, _ := abi.Arguments{arg}.Pack(bigNumber)
-	// Convert the encoded bytes to a hex string
+	bigIntNumber := new(big.Int)
+	bigIntNumber.SetString(truncatedStr, 10)
+
+	uint256ABIType, _ := abi.NewType("uint256", "", nil)
+
+	arguments := abi.Arguments{{Type: uint256ABIType}}
+	encodedBytes, _ := arguments.Pack(bigIntNumber)
+
 	encodedString := hex.EncodeToString(encodedBytes)
 	return encodedString
 }

@@ -54,8 +54,9 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{queryId}";
   
   }
-   // Queries a list of GetAggregatedReport items.
-   rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
+  
+  // Queries a list of GetAggregatedReport items.
+  rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{queryId}/{timestamp}";
   
   }
@@ -109,7 +110,7 @@ message QueryGetUserTipTotalResponse {
 }
 
 message QueryGetCurrentAggregatedReportRequest {
-  string queryId     = 1;
+  string queryId = 1;
 }
 
 message QueryGetAggregatedReportResponse {
@@ -117,6 +118,7 @@ message QueryGetAggregatedReportResponse {
 }
 
 message QueryGetDataBeforeRequest {
-  string queryId     = 1;
-  int64 timestamp = 2;
+  string queryId   = 1;
+  int64  timestamp = 2;
 }
+
