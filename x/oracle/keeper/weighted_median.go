@@ -9,7 +9,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
+func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) *types.Aggregate {
 	var medianReport types.Aggregate
 	values := make(map[string]*big.Int)
 
@@ -17,7 +17,7 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 		val, ok := new(big.Int).SetString(r.Value, 16)
 		if !ok {
 			ctx.Logger().Error("WeightedMedian", "error", "failed to parse value")
-			return
+			return nil
 		}
 		values[r.Reporter] = val
 	}
@@ -66,4 +66,5 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 	medianReport.StandardDeviation = weightedStdDev
 
 	k.SetAggregate(ctx, &medianReport)
+	return &medianReport
 }

@@ -5,9 +5,9 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) {
+func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) *types.Aggregate {
 	if len(reports) == 0 {
-		return
+		return nil
 	}
 
 	var modeReport types.MicroReport
@@ -57,5 +57,5 @@ func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) {
 	}
 
 	k.SetAggregate(ctx, &aggregateReport)
-
+	return &aggregateReport
 }

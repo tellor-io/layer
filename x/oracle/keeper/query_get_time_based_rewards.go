@@ -16,7 +16,7 @@ func (k Keeper) GetTimeBasedRewards(goCtx context.Context, req *types.QueryGetTi
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	rewards := k.distrKeeper.GetFeePoolCommunityCoins(ctx)
+	rewards := k.getTimeBasedRewards(ctx)
 
 	return &types.QueryGetTimeBasedRewardsResponse{Reward: rewards}, nil
 }

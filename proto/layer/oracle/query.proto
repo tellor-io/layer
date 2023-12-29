@@ -133,8 +133,8 @@ message QueryGetDataBeforeRequest {
 message QueryGetTimeBasedRewardsRequest {}
 
 message QueryGetTimeBasedRewardsResponse {
-  repeated cosmos.base.v1beta1.DecCoin reward = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    cosmos.base.v1beta1.Coin reward = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];

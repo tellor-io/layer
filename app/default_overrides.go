@@ -9,10 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/mint"
+
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -65,18 +64,6 @@ func (stakingModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	})
 }
 
-type mintModule struct {
-	mint.AppModuleBasic
-}
-
-// DefaultGenesis returns custom x/mint module genesis state.
-func (mintModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	genState := minttypes.DefaultGenesisState()
-	genState.Params.MintDenom = BondDenom
-
-	return cdc.MustMarshalJSON(genState)
-}
-
 type distrModule struct {
 	distribution.AppModuleBasic
 }
@@ -84,7 +71,7 @@ type distrModule struct {
 // DefaultGenesis returns custom x/distribution module genesis state.
 func (distrModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := distrtypes.DefaultGenesisState()
-	genState.Params.CommunityTax = math.LegacyNewDec(1) // 100% community tax
+	genState.Params.CommunityTax = math.LegacyZeroDec() // 0% community tax on gas fees, inflation is minted to timeBasedRewards for reporters
 
 	return cdc.MustMarshalJSON(genState)
 }
