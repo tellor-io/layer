@@ -14,7 +14,7 @@ type ValidatorReportCount struct {
 	Reports int
 }
 
-func (k Keeper) AllocateTimeBasedRewards(ctx sdk.Context, reporters []*types.AggregateReporter) {
+func (k Keeper) AllocateTips(ctx sdk.Context, reporters []*types.AggregateReporter, tip sdk.Coin) {
 	totalPower := int64(0)
 	reportCounts := make(map[string]ValidatorReportCount)
 
@@ -29,11 +29,10 @@ func (k Keeper) AllocateTimeBasedRewards(ctx sdk.Context, reporters []*types.Agg
 		totalPower += r.Power
 	}
 
-	tbr := k.getTimeBasedRewards(ctx)
 	rewards := make(map[string]sdk.DecCoins)
 	for r, c := range reportCounts {
-		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, tbr.Amount)
-		rewards[r] = sdk.NewDecCoins(sdk.NewDecCoin(tbr.Denom, amount))
+		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, tip.Amount)
+		rewards[r] = sdk.NewDecCoins(sdk.NewDecCoin(tip.Denom, amount))
 	}
 	toDistr := sdk.NewCoins()
 	// allocate rewards

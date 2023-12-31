@@ -11,3 +11,5 @@ message Tips {
   cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false]; 
   cosmos.base.v1beta1.Coin totalTips = 3 [(gogoproto.nullable) = false]; 
 }
+
+message BlockTips { map<string, bool> tips = 1;}

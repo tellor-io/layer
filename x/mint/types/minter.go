@@ -45,7 +45,7 @@ func (m Minter) CalculateBlockProvision(current time.Time, previous time.Time) (
 		return sdk.Coin{}, fmt.Errorf("current time %v cannot be before previous time %v", current, previous)
 	}
 	timeElapsed := current.Sub(previous).Nanoseconds()
-	mintAmount := DailyMintRate * timeElapsed / NanosecondsInDay
+	mintAmount := (DailyMintRate * timeElapsed) / NanosecondsInDay
 
 	return sdk.NewCoin(DefaultBondDenom, cosmosmath.NewInt(mintAmount)), nil
 }

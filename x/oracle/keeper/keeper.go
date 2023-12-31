@@ -89,6 +89,10 @@ func (k Keeper) TipStore(ctx sdk.Context) storetypes.KVStore {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.TipStoreKey))
 }
 
+func (k Keeper) BlockTipsStore(ctx sdk.Context) storetypes.KVStore {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix("block_tips_store"))
+}
+
 func HashQueryData(queryData []byte) []byte {
 	return crypto.Keccak256(queryData)
 }

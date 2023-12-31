@@ -27,14 +27,25 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 	reportersToPay := make([]*types.AggregateReporter, 0)
 	for _, reports := range reportMapping {
 		if reports[0].AggregateMethod == "weighted-median" {
-			reportersToPay = append(reportersToPay, k.WeightedMedian(ctx, reports).Reporters...)
+			report := k.WeightedMedian(ctx, reports)
+			tip := k.GetQueryTip(ctx, report.QueryId)
+			if !tip.Amount.IsZero() {
+				k.AllocateTips(ctx, report.Reporters, tip)
+			}
+			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
 		if reports[0].AggregateMethod == "weighted-mode" {
-			reportersToPay = append(reportersToPay, k.WeightedMode(ctx, reports).Reporters...)
+			report := k.WeightedMode(ctx, reports)
+			tip := k.GetQueryTip(ctx, report.QueryId)
+			if !tip.Amount.IsZero() {
+				k.AllocateTips(ctx, report.Reporters, tip)
+			}
+			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
 	}
 	// pay reporters, time based rewards
-	k.AllocateTimeBasedRewards(ctx, reportersToPay)
+	tbr := k.getTimeBasedRewards(ctx)
+	k.AllocateTips(ctx, reportersToPay, tbr)
 
 }
 

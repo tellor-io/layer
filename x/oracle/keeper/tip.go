@@ -29,6 +29,12 @@ func (k Keeper) SetTip(ctx sdk.Context, tipper sdk.AccAddress, queryData string,
 	k.SetQueryTips(ctx, tipStore, queryData, tip)
 	k.SetTipperTipsForQuery(ctx, tipStore, tipper.String(), queryData, tip)
 	k.SetTipperTotalTips(ctx, tipStore, tipper, tip)
+
+	// update block tips
+	blockHeight := ctx.BlockHeight()
+	blockTips := k.GetBlockTips(ctx, blockHeight)
+	blockTips.Tips[queryData] = true
+	k.SetBlockTips(ctx, blockHeight, blockTips)
 }
 
 func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, queryData string, tip sdk.Coin) {
@@ -70,13 +76,25 @@ func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData st
 	if bz == nil {
 		return types.Tips{
 			QueryData: queryData,
-			Amount:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
-			TotalTips: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			Amount:    sdk.NewCoin(types.DefaultBondDenom, sdk.ZeroInt()),
+			TotalTips: sdk.NewCoin(types.DefaultBondDenom, sdk.ZeroInt()),
 		}, queryId
 	}
 	var tips types.Tips
 	k.cdc.Unmarshal(bz, &tips)
 	return tips, queryId
+}
+
+func (k Keeper) GetQueryTip(ctx sdk.Context, queryId string) sdk.Coin {
+	tipStore := k.TipStore(ctx)
+	qId, _ := hex.DecodeString(queryId)
+	bz := tipStore.Get(qId)
+	if bz == nil {
+		return sdk.NewCoin(types.DefaultBondDenom, sdk.ZeroInt())
+	}
+	var tips types.Tips
+	k.cdc.Unmarshal(bz, &tips)
+	return tips.Amount
 }
 
 func (k Keeper) GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) types.UserTipTotal {
@@ -85,7 +103,7 @@ func (k Keeper) GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) types.UserTi
 	if bz == nil {
 		return types.UserTipTotal{
 			Address: tipper.String(),
-			Total:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			Total:   sdk.NewCoin(types.DefaultBondDenom, sdk.ZeroInt()),
 		}
 	}
 	var tips types.UserTipTotal
@@ -102,7 +120,7 @@ func (k Keeper) GetUserQueryTips(ctx sdk.Context, tipper, queryData string) (tip
 	if bz == nil {
 		return types.UserTipTotal{
 			Address: tipper,
-			Total:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			Total:   sdk.NewCoin(types.DefaultBondDenom, sdk.ZeroInt()),
 		}
 	}
 	k.cdc.Unmarshal(bz, &tips)
@@ -117,9 +135,32 @@ func (k Keeper) GetTotalTips(ctx sdk.Context) sdk.Coin {
 	tipStore := k.TipStore(ctx)
 	bz := tipStore.Get([]byte("totaltips"))
 	if bz == nil {
-		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())
+		return sdk.NewCoin(types.DefaultBondDenom, sdk.ZeroInt())
 	}
 	var total sdk.Coin
 	k.cdc.MustUnmarshal(bz, &total)
 	return total
+}
+
+func (k Keeper) SetBlockTips(ctx sdk.Context, blockHeight int64, bt types.BlockTips) {
+	store := k.BlockTipsStore(ctx)
+	bz := k.cdc.MustMarshal(&bt)
+	store.Set(types.NumKey(blockHeight), bz)
+}
+
+func (k Keeper) DeletePreviousBlockTips(ctx sdk.Context, blockHeight int64) {
+	store := k.BlockTipsStore(ctx)
+	store.Delete(types.NumKey(blockHeight))
+}
+
+func (k Keeper) GetBlockTips(ctx sdk.Context, blockHeight int64) (queryDataList types.BlockTips) {
+	store := k.BlockTipsStore(ctx)
+	bz := store.Get(types.NumKey(blockHeight))
+	if bz == nil {
+		return types.BlockTips{
+			Tips: map[string]bool{},
+		}
+	}
+	k.cdc.Unmarshal(bz, &queryDataList)
+	return
 }
