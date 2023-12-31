@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/x/oracle"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -21,6 +22,8 @@ func (s *KeeperTestSuite) TestCommitValue() {
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
 	commitreq.Signature = hex.EncodeToString(signature)
+	// set a query data to the store
+	oracle.BeginBlocker(s.ctx, s.oracleKeeper)
 	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
 	require.Nil(err)
 	_hexxy, _ := hex.DecodeString(queryData)

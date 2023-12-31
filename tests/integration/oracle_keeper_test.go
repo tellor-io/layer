@@ -178,6 +178,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			value:         encodeValue(462926),
 		},
 	}
+	msgServer.Tip(s.ctx, &types.MsgTip{Tipper: accs[0].String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, sdk.NewInt(1000))})
 	for _, r := range reporters {
 		s.T().Run(r.name, func(t *testing.T) {
 			valueDecoded, err := hex.DecodeString(r.value) // convert hex value to bytes
@@ -222,8 +223,8 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
 	resp := s.oraclekeeper.GetCycleList(s.ctx)
-	s.Equal(resp, []string{ethQueryData, btcQueryData, trbQueryData})
-	fakeQueryData := "0x000001"
+	s.Equal(resp, []string{ethQueryData[2:], btcQueryData[2:], trbQueryData[2:]})
+	fakeQueryData := "000001"
 	msgContent := &types.MsgUpdateParams{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		Params:    types.Params{CycleList: []string{fakeQueryData}},
@@ -269,7 +270,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
 	s.NoError(err)
 	s.Equal(res.Report.AggregateReportIndex, int64(0))
-	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.oraclekeeper.AllocateTips(s.ctx, res.Report.Reporters, tbr.Reward)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[0], vals[0])
@@ -307,7 +309,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:2])
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
-	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.oraclekeeper.AllocateTips(s.ctx, res.Report.Reporters, tbr.Reward)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
@@ -357,7 +360,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
-	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.oraclekeeper.AllocateTips(s.ctx, res.Report.Reporters, tbr.Reward)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	for _, tc := range testCases {
