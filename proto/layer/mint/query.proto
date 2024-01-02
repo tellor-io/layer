@@ -1,0 +1,8 @@
+syntax = "proto3";
+package layer.mint;
+
+
+option go_package = "github.com/tellor-io/layer/x/mint/types";
+
+// Query defines the gRPC querier service.
+service Query {}

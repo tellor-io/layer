@@ -17,6 +17,7 @@ message Aggregate {
   repeated AggregateReporter reporters = 6; 
   bool flagged = 7;
   int64 nonce = 8;
+  int64 aggregateReportIndex = 9;
 }
 
 message AvailableTimestamps {

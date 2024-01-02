@@ -24,15 +24,18 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 	for _, s := range revealedReports.MicroReports {
 		reportMapping[s.QueryId] = append(reportMapping[s.QueryId], *s)
 	}
-
+	reportersToPay := make([]*types.AggregateReporter, 0)
 	for _, reports := range reportMapping {
 		if reports[0].AggregateMethod == "weighted-median" {
-			k.WeightedMedian(ctx, reports)
+			reportersToPay = append(reportersToPay, k.WeightedMedian(ctx, reports).Reporters...)
 		}
 		if reports[0].AggregateMethod == "weighted-mode" {
-			k.WeightedMode(ctx, reports)
+			reportersToPay = append(reportersToPay, k.WeightedMode(ctx, reports).Reporters...)
 		}
 	}
+	// pay reporters, time based rewards
+	k.AllocateTimeBasedRewards(ctx, reportersToPay)
+
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {

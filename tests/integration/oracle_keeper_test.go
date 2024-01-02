@@ -6,6 +6,7 @@ import (
 
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -14,7 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -248,4 +251,124 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	s.True(proposal1.Status == v1.StatusPassed)
 	resp = s.oraclekeeper.GetCycleList(s.ctx)
 	s.Equal(resp, []string{fakeQueryData})
+}
+
+func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
+	powers := []int64{100, 200, 300, 400}
+	accs, vals, _ := s.createValidatorAccs(powers)
+	// transfer tokens to distribution module
+	reward := sdk.NewInt(100)
+	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
+	s.NoError(err)
+	// report bypass commit/reveal
+	values := []string{"000001", "000002", "000003", "000004"}
+	// case 1: 1 reporter 1 report
+	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
+	bal1 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
+	s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
+	s.NoError(err)
+	s.Equal(res.Report.AggregateReportIndex, int64(0))
+	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	// advance height
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[0], vals[0])
+	bal2 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
+	s.Equal(bal1.Amount.Add(reward), bal2.Amount)
+}
+
+func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
+	powers := []int64{100, 200, 300, 400}
+	values := []string{"000001", "000002", "000003", "000004"}
+	accs, vals, _ := s.createValidatorAccs(powers)
+	reward := int64(100)
+	// transfer tokens to distribution module
+	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(reward))))
+	// generate 4 reports for ethQueryData
+	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
+	testCases := []struct {
+		name                 string
+		reporterIndex        int
+		beforeBalance        sdk.Coin
+		afterBalanceIncrease math.Int
+	}{
+		{
+			name:                 "reporter with 100 voting power",
+			reporterIndex:        0,
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[0], 1, powers[0]+powers[1], sdk.NewInt(reward)),
+		},
+		{
+			name:                 "reporter with 200 voting power",
+			reporterIndex:        1,
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[1], s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[1], 1, powers[0]+powers[1], sdk.NewInt(reward)),
+		},
+	}
+	s.oraclekeeper.WeightedMedian(s.ctx, reports[:2])
+	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
+	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	// advance height
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[tc.reporterIndex], vals[tc.reporterIndex])
+			afterBalance := s.bankKeeper.GetBalance(s.ctx, accs[tc.reporterIndex], s.denom)
+			s.Equal(tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease), afterBalance.Amount)
+
+		})
+	}
+}
+
+func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
+	powers := []int64{100, 200, 300, 400}
+	values := []string{"000001", "000002", "000003", "000004"}
+	accs, vals, _ := s.createValidatorAccs(powers)
+	reward := int64(100)
+	// transfer tokens to distribution module
+	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(reward))))
+	// generate 4 reports for ethQueryData
+	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
+	testCases := []struct {
+		name                 string
+		reporterIndex        int
+		beforeBalance        sdk.Coin
+		afterBalanceIncrease math.Int
+	}{
+		{
+			name:                 "reporter with 100 voting power",
+			reporterIndex:        0,
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[0], 1, powers[0]+powers[1]+powers[2], sdk.NewInt(reward)),
+		},
+		{
+			name:                 "reporter with 200 voting power",
+			reporterIndex:        1,
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[1], s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[1], 1, powers[0]+powers[1]+powers[2], sdk.NewInt(reward)),
+		},
+		{
+			name:                 "reporter with 300 voting power",
+			reporterIndex:        2,
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[2], s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[2], 1, powers[0]+powers[1]+powers[2], sdk.NewInt(reward)),
+		},
+	}
+	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
+	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
+	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	// advance height
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	for _, tc := range testCases {
+		s.T().Run(tc.name, func(t *testing.T) {
+			s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[tc.reporterIndex], vals[tc.reporterIndex])
+			afterBalance := s.bankKeeper.GetBalance(s.ctx, accs[tc.reporterIndex], s.denom)
+			expectedAfterBalance := tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease)
+			tolerance := expectedAfterBalance.SubRaw(1) //due to rounding int
+			withinTolerance := expectedAfterBalance.Equal(afterBalance.Amount) || tolerance.Equal(afterBalance.Amount)
+			s.True(withinTolerance)
+
+		})
+	}
 }

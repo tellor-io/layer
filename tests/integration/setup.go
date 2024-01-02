@@ -19,11 +19,12 @@ func AuthModule() configurator.ModuleOption {
 		config.ModuleConfigs["auth"] = &appv1alpha1.ModuleConfig{
 			Name: "auth",
 			Config: appconfig.WrapAny(&authmodulev1.Module{
-				Bech32Prefix: "cosmos",
+				Bech32Prefix: "tellor",
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
 					{Account: "fee_collector"},
 					{Account: "distribution"},
 					{Account: "oracle", Permissions: []string{"burner"}},
+					{Account: "time_based_rewards"},
 					{Account: "dispute", Permissions: []string{"burner"}},
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},

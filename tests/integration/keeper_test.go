@@ -152,6 +152,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 	registry.AppWiringSetup()
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
+	sdk.DefaultBondDenom = "loya"
 	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
 	validatorAddressPrefix := app.AccountAddressPrefix + "valoper"
 	validatorPubKeyPrefix := app.AccountAddressPrefix + "valoperpub"
@@ -304,6 +305,10 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
 		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
 		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+		// call hooks for distribution init
+		err = s.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		err = s.distrKeeper.Hooks().BeforeDelegationCreated(ctx, addrs[i], val.GetOperator())
+		err = s.distrKeeper.Hooks().AfterDelegationModified(ctx, addrs[i], val.GetOperator())
 	}
 
 	_ = staking.EndBlocker(ctx, s.stakingKeeper)

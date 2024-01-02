@@ -42,6 +42,7 @@ type KeeperTestSuite struct {
 	registryKeeper registryk.Keeper
 	stakingKeeper  *mocks.StakingKeeper
 	accountKeeper  *mocks.AccountKeeper
+	distrKeeper    *mocks.DistrKeeper
 	queryClient    types.QueryClient
 	msgServer      types.MsgServer
 }
@@ -69,6 +70,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.stakingKeeper = new(mocks.StakingKeeper)
 	s.accountKeeper = new(mocks.AccountKeeper)
+	s.distrKeeper = new(mocks.DistrKeeper)
 	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
 	rparamsSubspace := typesparams.NewSubspace(cdc,
 		types.Amino,
@@ -89,7 +91,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		memStoreKey,
 		s.accountKeeper,
 		nil,
-		nil,
+		s.distrKeeper,
 		s.stakingKeeper,
 		s.registryKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

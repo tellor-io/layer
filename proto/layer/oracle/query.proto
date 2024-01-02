@@ -11,6 +11,8 @@ import "layer/oracle/micro_report.proto";
 import "layer/oracle/tips.proto";
 import "layer/oracle/user_tip.proto";
 import "layer/oracle/aggregate.proto";
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -58,6 +60,12 @@ service Query {
   // Queries a list of GetAggregatedReport items.
   rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{queryId}/{timestamp}";
+  
+  }
+  
+  // Queries a list of GetTimeBasedRewards items.
+  rpc GetTimeBasedRewards (QueryGetTimeBasedRewardsRequest) returns (QueryGetTimeBasedRewardsResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_time_based_rewards";
   
   }
 }
@@ -120,5 +128,15 @@ message QueryGetAggregatedReportResponse {
 message QueryGetDataBeforeRequest {
   string queryId   = 1;
   int64  timestamp = 2;
+}
+
+message QueryGetTimeBasedRewardsRequest {}
+
+message QueryGetTimeBasedRewardsResponse {
+    cosmos.base.v1beta1.Coin reward = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true
+  ];
 }
 

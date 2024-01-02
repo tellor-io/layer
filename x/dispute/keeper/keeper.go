@@ -20,8 +20,6 @@ const (
 	THREE_DAYS = 3 * 24 * time.Hour
 )
 
-var Denom = sdk.DefaultBondDenom
-
 type (
 	Keeper struct {
 		cdc        codec.BinaryCodec
