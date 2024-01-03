@@ -3,7 +3,6 @@ pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
-import "hardhat/console.sol";
 
 struct Validator {
     address addr;
@@ -68,18 +67,21 @@ contract BlobstreamO is ECDSA {
     /// @param _validatorTimestamp Timestamp of the block where validator set is updated.
     /// @param _unbondingPeriod Time period after which a validator can withdraw their stake.
     /// @param _validatorSetCheckpoint Initial checkpoint of the validator set.
+    /// @param _guardian Guardian address.
     constructor(
         uint256 _nonce,
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         uint256 _unbondingPeriod,
-        bytes32 _validatorSetCheckpoint
+        bytes32 _validatorSetCheckpoint,
+        address _guardian
     ) {
         validatorNonce = _nonce;
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         unbondingPeriod = _unbondingPeriod;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
+        guardian = _guardian;
     }
 
     /// @notice This function is called by the guardian to reset the validator set
@@ -163,39 +165,6 @@ contract BlobstreamO is ECDSA {
     }
 
     /*Getter functions*/
-    /// @notice Used for verifying oracle data attestations
-    function _verifyOracleData(
-        OracleAttestationData calldata _attest,
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) internal view returns (bool) {
-        if (_currentValidatorSet.length != _sigs.length) {
-            revert MalformedCurrentValidatorSet();
-        }
-        // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
-            _currentValidatorSet
-        );
-        if (
-            _domainSeparateValidatorSetHash(
-                validatorNonce,
-                powerThreshold,
-                validatorTimestamp,
-                _currentValidatorSetHash
-            ) != lastValidatorSetCheckpoint
-        ) {
-            revert SuppliedValidatorSetInvalid();
-        }
-        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
-        _checkValidatorSignatures(
-            _currentValidatorSet,
-            _sigs,
-            _dataDigest,
-            powerThreshold
-        );
-        return true;
-    }
-
     function verifyOracleData(
         OracleAttestationData calldata _attest,
         Validator[] calldata _currentValidatorSet,
@@ -204,16 +173,16 @@ contract BlobstreamO is ECDSA {
         return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
     }
 
-    // function verifyConsensusOracleData(
-    //     OracleAttestationData calldata _attest,
-    //     Validator[] calldata _currentValidatorSet,
-    //     Signature[] calldata _sigs
-    // ) external view returns (bool) {
-    //     if (_attest.report.aggregatePower < powerThreshold) {
-    //         revert NotConsensusValue();
-    //     }
-    //     return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
-    // }
+    function verifyConsensusOracleData(
+        OracleAttestationData calldata _attest,
+        Validator[] calldata _currentValidatorSet,
+        Signature[] calldata _sigs
+    ) external view returns (bool) {
+        if (_attest.report.aggregatePower < powerThreshold) {
+            revert NotConsensusValue();
+        }
+        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
+    }
 
     /*Internal functions*/
     /// @dev Checks that enough voting power signed over a digest.
@@ -287,6 +256,7 @@ contract BlobstreamO is ECDSA {
     /// @dev A hash of all relevant information about the validator set.
     /// @param _nonce Nonce.
     /// @param _powerThreshold Amount of voting power needed to approve operations. (2/3 of total)
+    /// @param _validatorTimestamp The timestamp of the block where validator set is updated.
     /// @param _validatorSetHash Validator set hash.
     /// @return The domain separated hash of the validator set.
     function _domainSeparateValidatorSetHash(
@@ -294,7 +264,7 @@ contract BlobstreamO is ECDSA {
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         bytes32 _validatorSetHash
-    ) private pure returns (bytes32) {
+    ) internal pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -305,6 +275,39 @@ contract BlobstreamO is ECDSA {
                     _validatorSetHash
                 )
             );
+    }
+
+    /// @notice Used for verifying oracle data attestations
+    function _verifyOracleData(
+        OracleAttestationData calldata _attest,
+        Validator[] calldata _currentValidatorSet,
+        Signature[] calldata _sigs
+    ) internal view returns (bool) {
+        if (_currentValidatorSet.length != _sigs.length) {
+            revert MalformedCurrentValidatorSet();
+        }
+        // Check that the supplied current validator set matches the saved checkpoint.
+        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
+            _currentValidatorSet
+        );
+        if (
+            _domainSeparateValidatorSetHash(
+                validatorNonce,
+                powerThreshold,
+                validatorTimestamp,
+                _currentValidatorSetHash
+            ) != lastValidatorSetCheckpoint
+        ) {
+            revert SuppliedValidatorSetInvalid();
+        }
+        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
+        _checkValidatorSignatures(
+            _currentValidatorSet,
+            _sigs,
+            _dataDigest,
+            powerThreshold
+        );
+        return true;
     }
 
     /// @notice Utility function to verify EIP-191 signatures.

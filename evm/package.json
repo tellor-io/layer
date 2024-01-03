@@ -20,7 +20,8 @@
     "ethereum-waffle": "^4.0.10",
     "ethers": "^5.7.2",
     "hardhat": "^2.19.0",
-    "web3": "^4.2.2"
+    "web3": "^4.2.2",
+    "hardhat-gas-reporter": "^1.0.4"
   },
   "mocha": {
   }

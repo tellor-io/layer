@@ -1,5 +1,5 @@
 const web3 = require('web3');
-const { ethers } = require("hardhat");
+const { ethers, network } = require("hardhat");
 const BigNumber = ethers.BigNumber
 const BN = web3.utils.BN;
 const axios = require('axios')
