@@ -418,7 +418,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         )
     })
 
-    it("update validator set to 100 validators", async function() {
+    it("update validator set to 100+ validators", async function() {
         nVals = 158
         let wallets = []
         for (i = 0; i < nVals; i++) {
@@ -493,7 +493,6 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
             sigStructArray1
         )
 
-        console.log("nVals: ", nVals)
     })
         
 

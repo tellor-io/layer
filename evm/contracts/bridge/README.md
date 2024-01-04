@@ -39,3 +39,5 @@ On the Layer side, there are two distinct concepts of validator sets: the actual
 In addition to validator set changes, validators also provide their attestations to reports. This happens not just for new reports but also for past ones, particularly beneficial for optimistic oracle applications.
 
 It's important to note that once a value is contested, validators cease their attestations for these values. This means that post-dispute, users cannot request or execute attestation proofs for the contested value.
+
+The official bridge validator set list should be sorted by validator power in descending order. This should limit gas costs of running attestation proofs in the bridge contract, as signatures only have to be checked up until 2/3 of total validator power is reached. This sorting should be enforced on the Layer side. 
