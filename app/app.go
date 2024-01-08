@@ -121,6 +121,9 @@ import (
 	disputemodulekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputemoduletypes "github.com/tellor-io/layer/x/dispute/types"
 
+	bridgemodule "github.com/tellor-io/layer/x/bridge"
+	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
+	bridgemoduletypes "github.com/tellor-io/layer/x/bridge/types"
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	appparams "github.com/tellor-io/layer/app/params"
@@ -189,6 +192,7 @@ var (
 		oraclemodule.AppModuleBasic{},
 		registrymodule.AppModuleBasic{},
 		disputemodule.AppModuleBasic{},
+		bridgemodule.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
 	)
 
@@ -273,6 +277,8 @@ type App struct {
 	RegistryKeeper registrymodulekeeper.Keeper
 
 	DisputeKeeper disputemodulekeeper.Keeper
+
+	BridgeKeeper bridgemodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -322,6 +328,7 @@ func New(
 		oraclemoduletypes.StoreKey,
 		registrymoduletypes.StoreKey,
 		disputemoduletypes.StoreKey,
+		bridgemoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
@@ -577,6 +584,17 @@ func New(
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
 
+	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
+		appCodec,
+		keys[bridgemoduletypes.StoreKey],
+		keys[bridgemoduletypes.MemStoreKey],
+		app.GetSubspace(bridgemoduletypes.ModuleName),
+
+		app.StakingKeeper,
+		app.SlashingKeeper,
+	)
+	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	/**** IBC Routing ****/
@@ -641,6 +659,7 @@ func New(
 		oracleModule,
 		registryModule,
 		disputeModule,
+		bridgeModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
@@ -676,6 +695,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -704,6 +724,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
 
@@ -737,6 +758,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 	app.mm.SetOrderInitGenesis(genesisModuleOrder...)
@@ -966,6 +988,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(oraclemoduletypes.ModuleName)
 	paramsKeeper.Subspace(registrymoduletypes.ModuleName)
 	paramsKeeper.Subspace(disputemoduletypes.ModuleName)
+	paramsKeeper.Subspace(bridgemoduletypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 
 	return paramsKeeper

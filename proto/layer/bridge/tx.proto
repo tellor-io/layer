@@ -1,0 +1,7 @@
+syntax = "proto3";
+package layer.bridge;
+
+option go_package = "github.com/tellor-io/layer/x/bridge/types";
+
+// Msg defines the Msg service.
+service Msg {}
