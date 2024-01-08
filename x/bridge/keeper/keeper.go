@@ -8,7 +8,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -52,3 +52,9 @@ func NewKeeper(
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
+
+func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]stakingtypes.Validator, error) {
+	validators, _ := k.stakingKeeper.GetValidators(ctx, uint32(100))
+	return validators, nil
+  }
+
