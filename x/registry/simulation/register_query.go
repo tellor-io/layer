@@ -26,8 +26,6 @@ func SimulateMsgRegisterQuery(
 			DataTypes: []string{"testDataType"},
 			DataFields: []string{"testDataField"},
 		}
-		// 
-
 
 		// TODO: Handling the RegisterQuery simulation
 

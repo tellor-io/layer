@@ -129,6 +129,7 @@ func BenchmarkSimulation(b *testing.B) {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
+	simcli.FlagEnabledValue = true
 	if !simcli.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
@@ -201,6 +202,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			if config.Commit {
 				simtestutil.PrintStats(db)
+				fmt.Println(simtestutil.)
 			}
 
 			appHash := bApp.LastCommitID().Hash
@@ -217,6 +219,7 @@ func TestAppStateDeterminism(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
+	simcli.FlagEnabledValue = true
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = "mars-simapp-import"
 

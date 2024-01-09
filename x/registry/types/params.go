@@ -17,7 +17,7 @@ func NewParams() Params {
 	return Params{}
 }
 
-// DefaultParams returns a default set of parameters
+// DefaultParams returns the default registry module parameters
 func DefaultParams() Params {
 	return NewParams()
 }

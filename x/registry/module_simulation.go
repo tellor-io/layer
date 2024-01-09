@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"fmt"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -76,6 +77,11 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 			weightMsgRegisterSpec = defaultWeightMsgRegisterSpec
 		},
 	)
+	fmt.Println("am.accountKeeper: ", am.accountKeeper)
+	fmt.Println("am.bankKeeper: ", am.bankKeeper)
+	fmt.Println("am.keeper: ", am.keeper)
+	// fmt.Println("am.WeightedOperations(simState):", am.WeightedOperations(simState))
+
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgRegisterSpec,
 		registrysimulation.SimulateMsgRegisterSpec(am.accountKeeper, am.bankKeeper, am.keeper),
