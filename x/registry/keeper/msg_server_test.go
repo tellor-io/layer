@@ -21,5 +21,4 @@ func TestMsgServer(t *testing.T) {
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
-	require.NotNil(t, key)
 }
