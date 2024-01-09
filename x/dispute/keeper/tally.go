@@ -194,7 +194,7 @@ func (k Keeper) GetAccountBalance(ctx sdk.Context, voter string) math.Int {
 	if err != nil {
 		panic(err)
 	}
-	return k.bankKeeper.GetBalance(ctx, addr, sdk.DefaultBondDenom).Amount
+	return k.bankKeeper.GetBalance(ctx, addr, types.DefaultBondDenom).Amount
 }
 
 func (k Keeper) GetUserTips(ctx sdk.Context, voter string) math.Int {
@@ -211,7 +211,7 @@ func (k Keeper) IsTeamAddress(ctx sdk.Context, voter string) math.Int {
 
 // Get total trb supply
 func (k Keeper) GetTotalSupply(ctx sdk.Context) math.Int {
-	return k.bankKeeper.GetSupply(ctx, sdk.DefaultBondDenom).Amount
+	return k.bankKeeper.GetSupply(ctx, types.DefaultBondDenom).Amount
 }
 
 // Get total validator power

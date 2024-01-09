@@ -12,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 
+	coretypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -74,4 +75,26 @@ func (distrModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState.Params.CommunityTax = math.LegacyZeroDec() // 0% community tax on gas fees, inflation is minted to timeBasedRewards for reporters
 
 	return cdc.MustMarshalJSON(genState)
+}
+
+// DefaultConsensusParams returns a ConsensusParams with a MaxBytes
+// determined using a goal square size.
+func DefaultConsensusParams() *coretypes.ConsensusParams {
+	return &coretypes.ConsensusParams{
+		Block:     DefaultBlockParams(),
+		Evidence:  coretypes.DefaultEvidenceParams(),
+		Validator: coretypes.DefaultValidatorParams(),
+		Version: coretypes.VersionParams{
+			App: 1,
+		},
+	}
+}
+
+// DefaultBlockParams returns a default BlockParams with a MaxBytes determined
+// using a goal square size.
+func DefaultBlockParams() coretypes.BlockParams {
+	return coretypes.BlockParams{
+		MaxBytes: 1974272,
+		MaxGas:   -1,
+	}
 }

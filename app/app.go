@@ -222,6 +222,19 @@ func init() {
 	}
 
 	DefaultNodeHome = filepath.Join(userHomeDir, "."+Name)
+	sdk.DefaultBondDenom = BondDenom
+	accountPubKeyPrefix := AccountAddressPrefix + "pub"
+	validatorAddressPrefix := AccountAddressPrefix + "valoper"
+	validatorPubKeyPrefix := AccountAddressPrefix + "valoperpub"
+	consNodeAddressPrefix := AccountAddressPrefix + "valcons"
+	consNodePubKeyPrefix := AccountAddressPrefix + "valconspub"
+
+	// Set and seal config
+	config := sdk.GetConfig()
+	config.SetBech32PrefixForAccount(AccountAddressPrefix, accountPubKeyPrefix)
+	config.SetBech32PrefixForValidator(validatorAddressPrefix, validatorPubKeyPrefix)
+	config.SetBech32PrefixForConsensusNode(consNodeAddressPrefix, consNodePubKeyPrefix)
+	config.Seal()
 }
 
 // App extends an ABCI application, but with most of its parameters exported.
