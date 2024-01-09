@@ -6,7 +6,9 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/query"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -525,23 +527,24 @@ func (m *QueryGetUserTipTotalResponse) GetTotalTips() *UserTipTotal {
 	return nil
 }
 
-type QueryGetAggregatedReportRequest struct {
-	QueryId     string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
-	BlockNumber int64  `protobuf:"varint,2,opt,name=blockNumber,proto3" json:"blockNumber,omitempty"`
+type QueryGetCurrentAggregatedReportRequest struct {
+	QueryId string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
 }
 
-func (m *QueryGetAggregatedReportRequest) Reset()         { *m = QueryGetAggregatedReportRequest{} }
-func (m *QueryGetAggregatedReportRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetAggregatedReportRequest) ProtoMessage()    {}
-func (*QueryGetAggregatedReportRequest) Descriptor() ([]byte, []int) {
+func (m *QueryGetCurrentAggregatedReportRequest) Reset() {
+	*m = QueryGetCurrentAggregatedReportRequest{}
+}
+func (m *QueryGetCurrentAggregatedReportRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetCurrentAggregatedReportRequest) ProtoMessage()    {}
+func (*QueryGetCurrentAggregatedReportRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bb27caa9d264c5c4, []int{11}
 }
-func (m *QueryGetAggregatedReportRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryGetCurrentAggregatedReportRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryGetAggregatedReportRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryGetCurrentAggregatedReportRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryGetAggregatedReportRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryGetCurrentAggregatedReportRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -551,30 +554,23 @@ func (m *QueryGetAggregatedReportRequest) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *QueryGetAggregatedReportRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetAggregatedReportRequest.Merge(m, src)
+func (m *QueryGetCurrentAggregatedReportRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetCurrentAggregatedReportRequest.Merge(m, src)
 }
-func (m *QueryGetAggregatedReportRequest) XXX_Size() int {
+func (m *QueryGetCurrentAggregatedReportRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryGetAggregatedReportRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetAggregatedReportRequest.DiscardUnknown(m)
+func (m *QueryGetCurrentAggregatedReportRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetCurrentAggregatedReportRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryGetAggregatedReportRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryGetCurrentAggregatedReportRequest proto.InternalMessageInfo
 
-func (m *QueryGetAggregatedReportRequest) GetQueryId() string {
+func (m *QueryGetCurrentAggregatedReportRequest) GetQueryId() string {
 	if m != nil {
 		return m.QueryId
 	}
 	return ""
-}
-
-func (m *QueryGetAggregatedReportRequest) GetBlockNumber() int64 {
-	if m != nil {
-		return m.BlockNumber
-	}
-	return 0
 }
 
 type QueryGetAggregatedReportResponse struct {
@@ -621,6 +617,138 @@ func (m *QueryGetAggregatedReportResponse) GetReport() *Aggregate {
 	return nil
 }
 
+type QueryGetDataBeforeRequest struct {
+	QueryId   string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
+	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (m *QueryGetDataBeforeRequest) Reset()         { *m = QueryGetDataBeforeRequest{} }
+func (m *QueryGetDataBeforeRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetDataBeforeRequest) ProtoMessage()    {}
+func (*QueryGetDataBeforeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{13}
+}
+func (m *QueryGetDataBeforeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetDataBeforeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetDataBeforeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetDataBeforeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetDataBeforeRequest.Merge(m, src)
+}
+func (m *QueryGetDataBeforeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetDataBeforeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetDataBeforeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetDataBeforeRequest proto.InternalMessageInfo
+
+func (m *QueryGetDataBeforeRequest) GetQueryId() string {
+	if m != nil {
+		return m.QueryId
+	}
+	return ""
+}
+
+func (m *QueryGetDataBeforeRequest) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+type QueryGetTimeBasedRewardsRequest struct {
+}
+
+func (m *QueryGetTimeBasedRewardsRequest) Reset()         { *m = QueryGetTimeBasedRewardsRequest{} }
+func (m *QueryGetTimeBasedRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetTimeBasedRewardsRequest) ProtoMessage()    {}
+func (*QueryGetTimeBasedRewardsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{14}
+}
+func (m *QueryGetTimeBasedRewardsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetTimeBasedRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetTimeBasedRewardsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetTimeBasedRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetTimeBasedRewardsRequest.Merge(m, src)
+}
+func (m *QueryGetTimeBasedRewardsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetTimeBasedRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetTimeBasedRewardsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetTimeBasedRewardsRequest proto.InternalMessageInfo
+
+type QueryGetTimeBasedRewardsResponse struct {
+	Reward types.Coin `protobuf:"bytes,1,opt,name=reward,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coin" json:"reward"`
+}
+
+func (m *QueryGetTimeBasedRewardsResponse) Reset()         { *m = QueryGetTimeBasedRewardsResponse{} }
+func (m *QueryGetTimeBasedRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetTimeBasedRewardsResponse) ProtoMessage()    {}
+func (*QueryGetTimeBasedRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bb27caa9d264c5c4, []int{15}
+}
+func (m *QueryGetTimeBasedRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetTimeBasedRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetTimeBasedRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetTimeBasedRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetTimeBasedRewardsResponse.Merge(m, src)
+}
+func (m *QueryGetTimeBasedRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetTimeBasedRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetTimeBasedRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetTimeBasedRewardsResponse proto.InternalMessageInfo
+
+func (m *QueryGetTimeBasedRewardsResponse) GetReward() types.Coin {
+	if m != nil {
+		return m.Reward
+	}
+	return types.Coin{}
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.oracle.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.oracle.QueryParamsResponse")
@@ -633,68 +761,82 @@ func init() {
 	proto.RegisterType((*QueryGetCurrentTipResponse)(nil), "layer.oracle.QueryGetCurrentTipResponse")
 	proto.RegisterType((*QueryGetUserTipTotalRequest)(nil), "layer.oracle.QueryGetUserTipTotalRequest")
 	proto.RegisterType((*QueryGetUserTipTotalResponse)(nil), "layer.oracle.QueryGetUserTipTotalResponse")
-	proto.RegisterType((*QueryGetAggregatedReportRequest)(nil), "layer.oracle.QueryGetAggregatedReportRequest")
+	proto.RegisterType((*QueryGetCurrentAggregatedReportRequest)(nil), "layer.oracle.QueryGetCurrentAggregatedReportRequest")
 	proto.RegisterType((*QueryGetAggregatedReportResponse)(nil), "layer.oracle.QueryGetAggregatedReportResponse")
+	proto.RegisterType((*QueryGetDataBeforeRequest)(nil), "layer.oracle.QueryGetDataBeforeRequest")
+	proto.RegisterType((*QueryGetTimeBasedRewardsRequest)(nil), "layer.oracle.QueryGetTimeBasedRewardsRequest")
+	proto.RegisterType((*QueryGetTimeBasedRewardsResponse)(nil), "layer.oracle.QueryGetTimeBasedRewardsResponse")
 }
 
 func init() { proto.RegisterFile("layer/oracle/query.proto", fileDescriptor_bb27caa9d264c5c4) }
 
 var fileDescriptor_bb27caa9d264c5c4 = []byte{
-	// 861 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x96, 0xcd, 0x4e, 0xdb, 0x4a,
-	0x14, 0xc7, 0x63, 0xe0, 0x86, 0x9b, 0x81, 0xab, 0x2b, 0x0d, 0xb9, 0x7c, 0x98, 0x28, 0x04, 0x5f,
-	0xa9, 0x05, 0x2a, 0x32, 0x4a, 0x10, 0xa2, 0x55, 0xd5, 0x22, 0xbe, 0x84, 0x58, 0x50, 0x15, 0x13,
-	0xa4, 0xaa, 0x55, 0x15, 0xd9, 0xc9, 0xc8, 0x58, 0x24, 0x19, 0x33, 0x9e, 0x54, 0x8d, 0xa2, 0x6c,
-	0xfa, 0x04, 0x95, 0xba, 0xec, 0xa2, 0x8b, 0xbe, 0x40, 0xfb, 0x04, 0x5d, 0x74, 0xc3, 0x12, 0xa9,
-	0x9b, 0xae, 0xaa, 0x0a, 0xfa, 0x20, 0x55, 0x66, 0xc6, 0x71, 0x86, 0x38, 0x21, 0xea, 0xce, 0x9e,
-	0xf3, 0x3f, 0x67, 0x7e, 0x73, 0xe6, 0x9c, 0x63, 0x83, 0xd9, 0x8a, 0xd5, 0xc0, 0x14, 0x11, 0x6a,
-	0x95, 0x2a, 0x18, 0x9d, 0xd7, 0x31, 0x6d, 0x64, 0x3d, 0x4a, 0x18, 0x81, 0x93, 0xdc, 0x92, 0x15,
-	0x16, 0x3d, 0xe9, 0x10, 0x87, 0x70, 0x03, 0x6a, 0x3f, 0x09, 0x8d, 0x9e, 0x72, 0x08, 0x71, 0x2a,
-	0x18, 0x59, 0x9e, 0x8b, 0xac, 0x5a, 0x8d, 0x30, 0x8b, 0xb9, 0xa4, 0xe6, 0x4b, 0xeb, 0x4a, 0x89,
-	0xf8, 0x55, 0xe2, 0x23, 0xdb, 0xf2, 0x65, 0x68, 0xf4, 0x2a, 0x67, 0x63, 0x66, 0xe5, 0x90, 0x67,
-	0x39, 0x6e, 0x8d, 0x8b, 0xa5, 0x76, 0x4e, 0xe1, 0xf0, 0x2c, 0x6a, 0x55, 0x83, 0x30, 0xba, 0x62,
-	0xa2, 0xd8, 0x23, 0x94, 0x05, 0xb6, 0x05, 0xc5, 0x56, 0x75, 0x4b, 0x94, 0x14, 0x85, 0x42, 0x0a,
-	0x66, 0x14, 0x01, 0x73, 0xbd, 0xc0, 0x73, 0x5e, 0x31, 0xd4, 0x7d, 0x4c, 0x8b, 0xcc, 0xf5, 0x82,
-	0x73, 0x29, 0x46, 0xcb, 0x71, 0x28, 0x76, 0x2c, 0x86, 0x85, 0xd5, 0x48, 0x02, 0x78, 0xd4, 0x3e,
-	0xcd, 0x53, 0x4e, 0x69, 0xe2, 0xf3, 0x3a, 0xf6, 0x99, 0x71, 0x00, 0xa6, 0x94, 0x55, 0xdf, 0x23,
-	0x35, 0x1f, 0xc3, 0x3c, 0x88, 0x8b, 0xd3, 0xcc, 0x6a, 0x19, 0x6d, 0x69, 0x22, 0x9f, 0xcc, 0x76,
-	0xe7, 0x35, 0x2b, 0xd4, 0xdb, 0x63, 0x17, 0x3f, 0x16, 0x62, 0xa6, 0x54, 0x1a, 0x1b, 0x60, 0x9e,
-	0x87, 0xda, 0xc7, 0xcc, 0x14, 0xc7, 0xb5, 0x1b, 0x47, 0x6e, 0x59, 0xee, 0x04, 0x67, 0xc1, 0x38,
-	0xcf, 0xe6, 0x41, 0x99, 0xc7, 0x4c, 0x98, 0xc1, 0xab, 0x71, 0x02, 0x52, 0xd1, 0x8e, 0x12, 0x66,
-	0x1d, 0x8c, 0xcb, 0xfc, 0x49, 0x9a, 0xff, 0x54, 0x1a, 0xe9, 0x24, 0x71, 0x02, 0xad, 0xf1, 0x18,
-	0x64, 0x7a, 0xc2, 0x8a, 0x07, 0x4c, 0x03, 0x28, 0x1d, 0xfc, 0x4d, 0xe5, 0x92, 0xa4, 0xea, 0xbc,
-	0x1b, 0xa7, 0x60, 0x71, 0x80, 0xbf, 0x64, 0xdb, 0x01, 0x93, 0xfc, 0xfe, 0xcc, 0x0e, 0xe0, 0xe8,
-	0xd2, 0x44, 0x7e, 0x4e, 0x05, 0x3c, 0x0c, 0x15, 0x12, 0x52, 0x71, 0x32, 0x5e, 0x80, 0xff, 0xfb,
-	0xee, 0xd4, 0x95, 0xc1, 0x01, 0xb0, 0xdd, 0xd9, 0x1d, 0x51, 0xb3, 0xfb, 0x00, 0xcc, 0x05, 0xc1,
-	0x77, 0xea, 0x94, 0xe2, 0x1a, 0x2b, 0xb8, 0x5e, 0x10, 0x32, 0x05, 0x12, 0x5c, 0xb7, 0x6b, 0x31,
-	0x4b, 0xc6, 0x0c, 0x17, 0x8c, 0x5d, 0xa0, 0x47, 0xb9, 0xca, 0xa3, 0xdf, 0x01, 0x63, 0xed, 0xca,
-	0x94, 0x77, 0x02, 0xd5, 0x23, 0x17, 0x5c, 0xcf, 0x37, 0xb9, 0xdd, 0x38, 0x0e, 0xeb, 0xe2, 0xc4,
-	0xc7, 0xb4, 0xe0, 0x7a, 0x05, 0xc2, 0xac, 0x4a, 0x80, 0x30, 0x0d, 0xe2, 0xcc, 0xf5, 0xbc, 0xce,
-	0x99, 0xe4, 0x9b, 0x8a, 0x36, 0x72, 0x13, 0xed, 0x59, 0x58, 0x33, 0x6a, 0x50, 0x09, 0x77, 0x1f,
-	0x24, 0x58, 0x7b, 0xa1, 0x10, 0x12, 0xea, 0x2a, 0xa1, 0xe2, 0x16, 0x8a, 0x8d, 0x97, 0x60, 0x21,
-	0x88, 0xbc, 0x15, 0xb4, 0x50, 0x59, 0xdc, 0xc6, 0xad, 0xa5, 0x0c, 0x33, 0x60, 0xc2, 0xae, 0x90,
-	0xd2, 0xd9, 0x93, 0x7a, 0xd5, 0xc6, 0x94, 0x63, 0x8f, 0x9a, 0xdd, 0x4b, 0xc6, 0x71, 0x58, 0x95,
-	0xbd, 0xe1, 0x25, 0x3c, 0x02, 0x71, 0x71, 0xb1, 0x92, 0x7c, 0x46, 0x25, 0xef, 0xf8, 0x99, 0x52,
-	0x96, 0xff, 0x98, 0x00, 0x7f, 0xf1, 0xa8, 0xf0, 0x0c, 0xc4, 0x45, 0x73, 0xc2, 0x8c, 0xea, 0xd4,
-	0xdb, 0xfb, 0xfa, 0xe2, 0x00, 0x85, 0x20, 0x31, 0x52, 0x6f, 0xbe, 0xfd, 0x7a, 0x37, 0x32, 0x0d,
-	0x93, 0x28, 0x62, 0xd2, 0xc1, 0xf7, 0x1a, 0xf8, 0xf7, 0x46, 0xd3, 0xc2, 0xe5, 0x88, 0xa0, 0xd1,
-	0x13, 0x41, 0x5f, 0x19, 0x46, 0x2a, 0x41, 0x72, 0x1c, 0xe4, 0x1e, 0x5c, 0x56, 0x41, 0x1c, 0xcc,
-	0xe4, 0xe4, 0xf4, 0xed, 0x46, 0xf1, 0xdc, 0x2d, 0xa3, 0xa6, 0xbc, 0x8a, 0x16, 0xfc, 0xa4, 0x81,
-	0x64, 0x54, 0x47, 0xc1, 0xec, 0x2d, 0xfb, 0xde, 0x18, 0x12, 0x3a, 0x1a, 0x5a, 0x2f, 0x61, 0x37,
-	0x38, 0x6c, 0x0e, 0xa2, 0x41, 0xb0, 0x41, 0xeb, 0xa2, 0x66, 0xf0, 0xd4, 0x82, 0x5f, 0x34, 0x30,
-	0xd3, 0x67, 0x08, 0xc0, 0xdc, 0x90, 0x14, 0x7f, 0x98, 0xe0, 0x3d, 0xce, 0xbc, 0x09, 0x1f, 0x0d,
-	0xc3, 0x2c, 0x32, 0xdd, 0xe1, 0xee, 0x4a, 0xfa, 0x07, 0x0d, 0xfc, 0xa3, 0x8c, 0x0b, 0x78, 0x37,
-	0x1a, 0xa2, 0x67, 0x16, 0xe9, 0x4b, 0xb7, 0x0b, 0x25, 0xeb, 0x43, 0xce, 0xba, 0x0e, 0xd7, 0x10,
-	0xc3, 0x95, 0x0a, 0xa1, 0xab, 0x2e, 0xe9, 0xa5, 0x2e, 0x09, 0xbf, 0xf6, 0xf7, 0x51, 0xf2, 0xb5,
-	0x07, 0x47, 0x0b, 0x7e, 0x16, 0x45, 0xdb, 0xdd, 0xfe, 0xfd, 0x8a, 0x36, 0x62, 0x5c, 0xf5, 0xcb,
-	0x69, 0xd4, 0x10, 0x32, 0xf6, 0x39, 0xe7, 0x16, 0xdc, 0x1c, 0xc4, 0x19, 0x7c, 0xc4, 0x8b, 0x7c,
-	0x04, 0xa1, 0xa6, 0x18, 0x7f, 0x2d, 0x85, 0xf9, 0xab, 0x06, 0xa6, 0x22, 0x06, 0x06, 0x5c, 0x8d,
-	0x86, 0xe9, 0x33, 0xb7, 0xf4, 0xec, 0xb0, 0x72, 0xc9, 0x7f, 0xc8, 0xf9, 0xf7, 0xe1, 0xde, 0x20,
-	0xfe, 0xce, 0x7f, 0x46, 0x59, 0x96, 0x47, 0x58, 0x0d, 0xa8, 0xd9, 0x35, 0xf9, 0x5a, 0xdb, 0x3b,
-	0x17, 0x57, 0x69, 0xed, 0xf2, 0x2a, 0xad, 0xfd, 0xbc, 0x4a, 0x6b, 0x6f, 0xaf, 0xd3, 0xb1, 0xcb,
-	0xeb, 0x74, 0xec, 0xfb, 0x75, 0x3a, 0xf6, 0x7c, 0xd9, 0x71, 0xd9, 0x69, 0xdd, 0xce, 0x96, 0x48,
-	0xb5, 0x67, 0xab, 0xd7, 0x9d, 0xdf, 0xa0, 0x86, 0x87, 0x7d, 0x3b, 0xce, 0xff, 0x66, 0xd6, 0x7e,
-	0x07, 0x00, 0x00, 0xff, 0xff, 0x6d, 0x30, 0xeb, 0x8e, 0x03, 0x0a, 0x00, 0x00,
+	// 1036 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x96, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xc7, 0xb3, 0x69, 0x71, 0xc9, 0xa4, 0x08, 0x31, 0x35, 0x4d, 0xb2, 0x8d, 0x9c, 0x64, 0x91,
+	0xda, 0x24, 0x28, 0x3b, 0x38, 0x6d, 0x09, 0x55, 0x55, 0xa2, 0xda, 0x45, 0x55, 0x0f, 0x48, 0xd4,
+	0x71, 0x25, 0x04, 0x07, 0x6b, 0x6c, 0x0f, 0xdb, 0x51, 0x6d, 0xcf, 0x66, 0x77, 0x0c, 0x58, 0x91,
+	0x2f, 0x5c, 0xb9, 0x20, 0x71, 0xe4, 0xc0, 0x15, 0x21, 0x90, 0xca, 0x1d, 0x89, 0x6b, 0x8f, 0x91,
+	0xb8, 0x70, 0x02, 0x94, 0x20, 0xf1, 0x47, 0x70, 0x41, 0x33, 0xf3, 0xd6, 0xeb, 0xb1, 0x77, 0x9d,
+	0xc0, 0x25, 0xd9, 0x9d, 0xf7, 0x63, 0x3f, 0xef, 0xcd, 0xf3, 0x77, 0x06, 0x2d, 0x77, 0xe8, 0x80,
+	0x45, 0x44, 0x44, 0xb4, 0xd5, 0x61, 0xe4, 0xb0, 0xcf, 0xa2, 0x81, 0x1f, 0x46, 0x42, 0x0a, 0x7c,
+	0x59, 0x5b, 0x7c, 0x63, 0x71, 0x8b, 0x81, 0x08, 0x84, 0x36, 0x10, 0xf5, 0x64, 0x7c, 0xdc, 0xd5,
+	0x40, 0x88, 0xa0, 0xc3, 0x08, 0x0d, 0x39, 0xa1, 0xbd, 0x9e, 0x90, 0x54, 0x72, 0xd1, 0x8b, 0xc1,
+	0xba, 0xdd, 0x12, 0x71, 0x57, 0xc4, 0xa4, 0x49, 0x63, 0x48, 0x4d, 0x3e, 0x2d, 0x37, 0x99, 0xa4,
+	0x65, 0x12, 0xd2, 0x80, 0xf7, 0xb4, 0x33, 0xf8, 0xae, 0x58, 0x1c, 0x21, 0x8d, 0x68, 0x37, 0x49,
+	0xe3, 0x5a, 0xa6, 0x88, 0x85, 0x22, 0x92, 0x89, 0x6d, 0xcd, 0xb2, 0x75, 0x79, 0x2b, 0x12, 0x0d,
+	0xe3, 0x01, 0x0e, 0x4b, 0x96, 0x83, 0xe4, 0x61, 0x12, 0x79, 0xcd, 0x32, 0xf4, 0x63, 0x16, 0x35,
+	0x24, 0x0f, 0x93, 0xba, 0x2c, 0x23, 0x0d, 0x82, 0x88, 0x05, 0x54, 0x32, 0xb0, 0xbe, 0x46, 0xbb,
+	0xbc, 0x27, 0x88, 0xfe, 0x0b, 0x4b, 0xa5, 0xf1, 0x52, 0x93, 0x22, 0x5b, 0x82, 0x43, 0x79, 0x5e,
+	0x11, 0xe1, 0xc7, 0xaa, 0x01, 0x1f, 0xe8, 0xc2, 0x6a, 0xec, 0xb0, 0xcf, 0x62, 0xe9, 0x3d, 0x42,
+	0x57, 0xac, 0xd5, 0x38, 0x14, 0xbd, 0x98, 0xe1, 0x5d, 0x54, 0x30, 0x0d, 0x58, 0x76, 0xd6, 0x9d,
+	0xcd, 0xc5, 0xdd, 0xa2, 0x3f, 0xbe, 0x15, 0xbe, 0xf1, 0xae, 0x5c, 0x7c, 0xf1, 0xfb, 0xda, 0x5c,
+	0x0d, 0x3c, 0xbd, 0x3d, 0x74, 0x4d, 0xa7, 0x7a, 0xc8, 0x64, 0xcd, 0x74, 0xa8, 0x39, 0x78, 0xcc,
+	0xdb, 0xf0, 0x25, 0xbc, 0x8c, 0x2e, 0xe9, 0x0d, 0x78, 0xd4, 0xd6, 0x39, 0x17, 0x6a, 0xc9, 0xab,
+	0xf7, 0x04, 0xad, 0x66, 0x07, 0x02, 0xcc, 0x6d, 0x74, 0x09, 0x5a, 0x0e, 0x34, 0xaf, 0xdb, 0x34,
+	0x10, 0x04, 0x38, 0x89, 0xaf, 0xf7, 0x2e, 0x5a, 0x9f, 0x4a, 0x6b, 0x1e, 0x58, 0x94, 0x40, 0xb9,
+	0xe8, 0xe5, 0x08, 0x96, 0x80, 0x6a, 0xf4, 0xee, 0x3d, 0x45, 0x1b, 0x33, 0xe2, 0x81, 0xad, 0x8a,
+	0x2e, 0xeb, 0x2d, 0xaf, 0x8d, 0x00, 0x2f, 0x6c, 0x2e, 0xee, 0xae, 0xd8, 0x80, 0xef, 0xa7, 0x1e,
+	0x00, 0x69, 0x05, 0x79, 0x1f, 0xa3, 0x37, 0x72, 0xbf, 0x34, 0xd6, 0xc1, 0x19, 0xb0, 0xe3, 0xdd,
+	0x9d, 0xb7, 0xbb, 0x7b, 0x07, 0xad, 0x24, 0xc9, 0xab, 0xfd, 0x28, 0x62, 0x3d, 0x59, 0xe7, 0x61,
+	0x92, 0x72, 0x15, 0x2d, 0x68, 0xbf, 0x07, 0x54, 0x52, 0xc8, 0x99, 0x2e, 0x78, 0x0f, 0x90, 0x9b,
+	0x15, 0x0a, 0xa5, 0x5f, 0x47, 0x17, 0xd5, 0x30, 0xc3, 0x9e, 0x60, 0xbb, 0xe4, 0x3a, 0x0f, 0xe3,
+	0x9a, 0xb6, 0x7b, 0x07, 0xe9, 0x5c, 0x3c, 0x89, 0x59, 0x54, 0xe7, 0x61, 0x5d, 0x48, 0xda, 0x49,
+	0x10, 0xae, 0xa2, 0x82, 0xe4, 0x61, 0x38, 0xaa, 0x09, 0xde, 0x6c, 0xb4, 0xf9, 0x49, 0xb4, 0x0f,
+	0xd3, 0x99, 0xb1, 0x93, 0x02, 0xdc, 0x3b, 0x68, 0x41, 0xaa, 0x85, 0x7a, 0x4a, 0xe8, 0xda, 0x84,
+	0x56, 0x58, 0xea, 0xec, 0x55, 0xd0, 0xf5, 0x89, 0xa2, 0xef, 0x27, 0x3f, 0xbe, 0xb6, 0xd9, 0x94,
+	0xb3, 0x27, 0xfa, 0x20, 0x1d, 0xbd, 0xe9, 0x60, 0x20, 0x24, 0xa8, 0x60, 0x76, 0x0f, 0xf0, 0x96,
+	0x6c, 0xbc, 0x51, 0x5c, 0x0d, 0xdc, 0xbc, 0x83, 0x74, 0x23, 0x55, 0x0b, 0x2a, 0xec, 0x13, 0x11,
+	0xb1, 0x33, 0x59, 0x54, 0x1f, 0x25, 0xef, 0xb2, 0x58, 0xd2, 0x6e, 0xa8, 0xfb, 0x78, 0xa1, 0x96,
+	0x2e, 0x78, 0x1b, 0x68, 0x2d, 0x49, 0x5a, 0xe7, 0x5d, 0x56, 0xa1, 0xb1, 0x02, 0xfd, 0x8c, 0x46,
+	0xed, 0x91, 0x44, 0x7c, 0xe9, 0xa4, 0xd5, 0x4c, 0xfb, 0x40, 0x35, 0x81, 0xaa, 0x46, 0x2d, 0x41,
+	0x35, 0x2b, 0xbe, 0x91, 0x23, 0x5f, 0xc9, 0x91, 0x0f, 0x72, 0xe4, 0x57, 0x05, 0xef, 0x55, 0x6e,
+	0xa9, 0x5f, 0xc0, 0xf7, 0x7f, 0xac, 0xdd, 0x08, 0xb8, 0x7c, 0xda, 0x6f, 0xfa, 0x2d, 0xd1, 0x25,
+	0xa0, 0x5d, 0xe6, 0xdf, 0x4e, 0xdc, 0x7e, 0x46, 0xe4, 0x20, 0x64, 0xb1, 0x0e, 0xf8, 0xee, 0xef,
+	0xe7, 0xdb, 0x4e, 0x0d, 0xd2, 0xef, 0xfe, 0xb3, 0x88, 0x5e, 0xd2, 0x34, 0xf8, 0x19, 0x2a, 0x18,
+	0x1d, 0xc2, 0xeb, 0x76, 0xeb, 0xa6, 0x65, 0xce, 0xdd, 0x98, 0xe1, 0x61, 0x2a, 0xf0, 0x56, 0xbf,
+	0xf8, 0xf5, 0xaf, 0xaf, 0xe7, 0xaf, 0xe2, 0x22, 0xc9, 0x38, 0x07, 0xf0, 0x37, 0x0e, 0x7a, 0x75,
+	0x42, 0x9f, 0xf0, 0x56, 0x46, 0xd2, 0x6c, 0xf1, 0x73, 0xb7, 0xcf, 0xe3, 0x0a, 0x20, 0x65, 0x0d,
+	0xf2, 0x26, 0xde, 0xb2, 0x41, 0x02, 0x26, 0xe1, 0x5c, 0x89, 0x9b, 0x83, 0xc6, 0x21, 0x6f, 0x93,
+	0x23, 0xd8, 0xe2, 0x21, 0x7e, 0xee, 0xa0, 0x62, 0x96, 0x78, 0x60, 0xff, 0x8c, 0xef, 0x4e, 0xe8,
+	0xa1, 0x4b, 0xce, 0xed, 0x0f, 0xb0, 0x7b, 0x1a, 0xb6, 0x8c, 0xc9, 0x2c, 0xd8, 0x44, 0xa5, 0xc8,
+	0x51, 0xf2, 0x34, 0xc4, 0xbf, 0x38, 0x68, 0x29, 0x47, 0xef, 0x70, 0xf9, 0x9c, 0x14, 0xff, 0xb3,
+	0xc1, 0xef, 0x69, 0xe6, 0x7d, 0x7c, 0xef, 0x3c, 0xcc, 0xa6, 0xd3, 0x23, 0xee, 0xb1, 0xa6, 0x7f,
+	0xeb, 0xa0, 0x57, 0x2c, 0x65, 0xc4, 0x37, 0xb2, 0x21, 0xa6, 0x64, 0xd7, 0xdd, 0x3c, 0xdb, 0x11,
+	0x58, 0xef, 0x6a, 0xd6, 0xdb, 0xf8, 0x26, 0x91, 0xac, 0xd3, 0x11, 0xd1, 0x0e, 0x17, 0xd3, 0xd4,
+	0x2d, 0x13, 0xa7, 0x6e, 0x0f, 0xc0, 0xa7, 0x04, 0x62, 0x88, 0x7f, 0x32, 0x43, 0x3b, 0xae, 0x74,
+	0x79, 0x43, 0x9b, 0xa1, 0xcc, 0x79, 0x3d, 0xcd, 0xd2, 0x5b, 0xef, 0xa1, 0xe6, 0xbc, 0x8f, 0xf7,
+	0x67, 0x71, 0x26, 0x57, 0x9c, 0x86, 0x56, 0x5b, 0x72, 0x64, 0x94, 0x7e, 0x68, 0x31, 0xff, 0xec,
+	0xa0, 0x2b, 0x19, 0xb2, 0x89, 0x6f, 0xcd, 0x6c, 0x59, 0x8e, 0x44, 0xbb, 0x39, 0xf3, 0x9f, 0x27,
+	0xca, 0xde, 0xbe, 0x2e, 0xe3, 0x0e, 0xde, 0x9b, 0x55, 0xc6, 0xe8, 0x32, 0xd6, 0x86, 0x29, 0x19,
+	0x1b, 0x8a, 0x1f, 0xcd, 0x50, 0xa4, 0x02, 0x9d, 0x37, 0x14, 0x53, 0x12, 0xfe, 0x9f, 0x59, 0xab,
+	0x9a, 0xf5, 0x1e, 0xbe, 0x9b, 0xc7, 0x6a, 0x7d, 0x25, 0x65, 0x54, 0x7d, 0x07, 0xf9, 0x1f, 0xe2,
+	0x1f, 0x4c, 0xbb, 0x27, 0x75, 0x1d, 0xef, 0x64, 0xc3, 0xe4, 0x9c, 0x11, 0x79, 0xec, 0x79, 0xc7,
+	0x85, 0xf7, 0xb6, 0x66, 0x7f, 0x0b, 0xfb, 0xb3, 0xfa, 0xac, 0x30, 0x1b, 0xea, 0xfc, 0x50, 0x7d,
+	0xd6, 0xf1, 0x95, 0xea, 0x8b, 0x93, 0x92, 0x73, 0x7c, 0x52, 0x72, 0xfe, 0x3c, 0x29, 0x39, 0x5f,
+	0x9d, 0x96, 0xe6, 0x8e, 0x4f, 0x4b, 0x73, 0xbf, 0x9d, 0x96, 0xe6, 0x3e, 0xda, 0x1a, 0x3b, 0x4d,
+	0x26, 0x73, 0x7e, 0x3e, 0xba, 0x7c, 0xab, 0x43, 0xa5, 0x59, 0xd0, 0x17, 0xe2, 0x9b, 0xff, 0x06,
+	0x00, 0x00, 0xff, 0xff, 0x8c, 0xe6, 0x8a, 0x07, 0x79, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -720,7 +862,11 @@ type QueryClient interface {
 	// Queries a list of GetUserTipTotal items.
 	GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTotalRequest, opts ...grpc.CallOption) (*QueryGetUserTipTotalResponse, error)
 	// Queries a list of GetAggregatedReport items.
-	GetAggregatedReport(ctx context.Context, in *QueryGetAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
+	GetAggregatedReport(ctx context.Context, in *QueryGetCurrentAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
+	// Queries a list of GetAggregatedReport items.
+	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
+	// Queries a list of GetTimeBasedRewards items.
+	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
 }
 
 type queryClient struct {
@@ -785,9 +931,27 @@ func (c *queryClient) GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTo
 	return out, nil
 }
 
-func (c *queryClient) GetAggregatedReport(ctx context.Context, in *QueryGetAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error) {
+func (c *queryClient) GetAggregatedReport(ctx context.Context, in *QueryGetCurrentAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error) {
 	out := new(QueryGetAggregatedReportResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetAggregatedReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error) {
+	out := new(QueryGetAggregatedReportResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetDataBefore", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error) {
+	out := new(QueryGetTimeBasedRewardsResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetTimeBasedRewards", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -807,7 +971,11 @@ type QueryServer interface {
 	// Queries a list of GetUserTipTotal items.
 	GetUserTipTotal(context.Context, *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error)
 	// Queries a list of GetAggregatedReport items.
-	GetAggregatedReport(context.Context, *QueryGetAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error)
+	GetAggregatedReport(context.Context, *QueryGetCurrentAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error)
+	// Queries a list of GetAggregatedReport items.
+	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetAggregatedReportResponse, error)
+	// Queries a list of GetTimeBasedRewards items.
+	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -832,8 +1000,14 @@ func (*UnimplementedQueryServer) GetCurrentTip(ctx context.Context, req *QueryGe
 func (*UnimplementedQueryServer) GetUserTipTotal(ctx context.Context, req *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserTipTotal not implemented")
 }
-func (*UnimplementedQueryServer) GetAggregatedReport(ctx context.Context, req *QueryGetAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error) {
+func (*UnimplementedQueryServer) GetAggregatedReport(ctx context.Context, req *QueryGetCurrentAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAggregatedReport not implemented")
+}
+func (*UnimplementedQueryServer) GetDataBefore(ctx context.Context, req *QueryGetDataBeforeRequest) (*QueryGetAggregatedReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDataBefore not implemented")
+}
+func (*UnimplementedQueryServer) GetTimeBasedRewards(ctx context.Context, req *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTimeBasedRewards not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -949,7 +1123,7 @@ func _Query_GetUserTipTotal_Handler(srv interface{}, ctx context.Context, dec fu
 }
 
 func _Query_GetAggregatedReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetAggregatedReportRequest)
+	in := new(QueryGetCurrentAggregatedReportRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -961,7 +1135,43 @@ func _Query_GetAggregatedReport_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/layer.oracle.Query/GetAggregatedReport",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetAggregatedReport(ctx, req.(*QueryGetAggregatedReportRequest))
+		return srv.(QueryServer).GetAggregatedReport(ctx, req.(*QueryGetCurrentAggregatedReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetDataBefore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetDataBeforeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetDataBefore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetDataBefore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetDataBefore(ctx, req.(*QueryGetDataBeforeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetTimeBasedRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetTimeBasedRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTimeBasedRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetTimeBasedRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTimeBasedRewards(ctx, req.(*QueryGetTimeBasedRewardsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -997,6 +1207,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAggregatedReport",
 			Handler:    _Query_GetAggregatedReport_Handler,
+		},
+		{
+			MethodName: "GetDataBefore",
+			Handler:    _Query_GetDataBefore_Handler,
+		},
+		{
+			MethodName: "GetTimeBasedRewards",
+			Handler:    _Query_GetTimeBasedRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1363,7 +1581,7 @@ func (m *QueryGetUserTipTotalResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryGetAggregatedReportRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryGetCurrentAggregatedReportRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1373,21 +1591,16 @@ func (m *QueryGetAggregatedReportRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryGetAggregatedReportRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryGetCurrentAggregatedReportRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryGetAggregatedReportRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryGetCurrentAggregatedReportRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.BlockNumber != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.BlockNumber))
-		i--
-		dAtA[i] = 0x10
-	}
 	if len(m.QueryId) > 0 {
 		i -= len(m.QueryId)
 		copy(dAtA[i:], m.QueryId)
@@ -1430,6 +1643,97 @@ func (m *QueryGetAggregatedReportResponse) MarshalToSizedBuffer(dAtA []byte) (in
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetDataBeforeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetDataBeforeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetDataBeforeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.QueryId) > 0 {
+		i -= len(m.QueryId)
+		copy(dAtA[i:], m.QueryId)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.QueryId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetTimeBasedRewardsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetTimeBasedRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetTimeBasedRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetTimeBasedRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetTimeBasedRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetTimeBasedRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Reward.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -1589,7 +1893,7 @@ func (m *QueryGetUserTipTotalResponse) Size() (n int) {
 	return n
 }
 
-func (m *QueryGetAggregatedReportRequest) Size() (n int) {
+func (m *QueryGetCurrentAggregatedReportRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1598,9 +1902,6 @@ func (m *QueryGetAggregatedReportRequest) Size() (n int) {
 	l = len(m.QueryId)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
-	}
-	if m.BlockNumber != 0 {
-		n += 1 + sovQuery(uint64(m.BlockNumber))
 	}
 	return n
 }
@@ -1615,6 +1916,42 @@ func (m *QueryGetAggregatedReportResponse) Size() (n int) {
 		l = m.Report.Size()
 		n += 1 + l + sovQuery(uint64(l))
 	}
+	return n
+}
+
+func (m *QueryGetDataBeforeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.QueryId)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Timestamp != 0 {
+		n += 1 + sovQuery(uint64(m.Timestamp))
+	}
+	return n
+}
+
+func (m *QueryGetTimeBasedRewardsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetTimeBasedRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Reward.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -2570,7 +2907,7 @@ func (m *QueryGetUserTipTotalResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryGetAggregatedReportRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryGetCurrentAggregatedReportRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2593,10 +2930,10 @@ func (m *QueryGetAggregatedReportRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetAggregatedReportRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryGetCurrentAggregatedReportRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetAggregatedReportRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryGetCurrentAggregatedReportRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2631,25 +2968,6 @@ func (m *QueryGetAggregatedReportRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.QueryId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
-			}
-			m.BlockNumber = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.BlockNumber |= int64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
@@ -2733,6 +3051,240 @@ func (m *QueryGetAggregatedReportResponse) Unmarshal(dAtA []byte) error {
 				m.Report = &Aggregate{}
 			}
 			if err := m.Report.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetDataBeforeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetDataBeforeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetDataBeforeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetTimeBasedRewardsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetTimeBasedRewardsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetTimeBasedRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetTimeBasedRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetTimeBasedRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetTimeBasedRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reward", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Reward.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/mocks"
@@ -42,12 +44,6 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	paramsSubspace := typesparams.NewSubspace(cdc,
-		types.Amino,
-		storeKey,
-		memStoreKey,
-		"OracleParams",
-	)
 	sk := new(mocks.StakingKeeper)
 	ak := new(mocks.AccountKeeper)
 	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
@@ -68,11 +64,12 @@ func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.Ac
 		cdc,
 		storeKey,
 		memStoreKey,
-		paramsSubspace,
 		ak,
+		nil,
 		nil,
 		sk,
 		rk,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

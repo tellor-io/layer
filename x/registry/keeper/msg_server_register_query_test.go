@@ -9,7 +9,7 @@ import (
 )
 // all tests start with Test and take in a *testing.T object
 func TestRegisterQuery(t *testing.T) {
-	ms, ctx, k, _ := setupMsgServer(t)
+	ms, ctx, k := setupMsgServer(t)
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)

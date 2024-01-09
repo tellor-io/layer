@@ -7,6 +7,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	rk "github.com/tellor-io/layer/x/registry/keeper"
 )
 
 func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {
@@ -56,6 +57,9 @@ func (k Keeper) SetTotalTips(ctx sdk.Context, tipStore sdk.KVStore, tip sdk.Coin
 }
 
 func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData string) (types.Tips, []byte) {
+	if rk.Has0xPrefix(queryData) {
+		queryData = queryData[2:]
+	}
 	// decode query data hex string to bytes
 	queryDataBytes, err := hex.DecodeString(queryData)
 	if err != nil {
@@ -91,6 +95,9 @@ func (k Keeper) GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) types.UserTi
 
 func (k Keeper) GetUserQueryTips(ctx sdk.Context, tipper, queryData string) (tips types.UserTipTotal) {
 	tipStore := k.TipStore(ctx)
+	if rk.Has0xPrefix(queryData) {
+		queryData = queryData[2:]
+	}
 	bz := tipStore.Get(k.TipperKey(tipper, queryData))
 	if bz == nil {
 		return types.UserTipTotal{

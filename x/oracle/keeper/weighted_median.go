@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math"
 	"math/big"
 	"sort"
@@ -10,7 +9,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
+func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) *types.Aggregate {
 	var medianReport types.Aggregate
 	values := make(map[string]*big.Int)
 
@@ -18,7 +17,7 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 		val, ok := new(big.Int).SetString(r.Value, 16)
 		if !ok {
 			ctx.Logger().Error("WeightedMedian", "error", "failed to parse value")
-			return
+			return nil
 		}
 		values[r.Reporter] = val
 	}
@@ -39,13 +38,14 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 	cumulativePower := new(big.Int)
 
 	// Find the weighted median
-	for _, s := range reports {
+	for i, s := range reports {
 		cumulativePower.Add(cumulativePower, big.NewInt(s.Power))
 		if cumulativePower.Cmp(halfTotalPower) >= 0 {
 			medianReport.ReporterPower = s.Power
 			medianReport.AggregateReporter = s.Reporter
 			medianReport.AggregateValue = s.Value
 			medianReport.QueryId = s.QueryId
+			medianReport.AggregateReportIndex = int64(i)
 			break
 		}
 	}
@@ -65,9 +65,6 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) {
 	weightedStdDev := math.Sqrt(sumWeightedSquaredDiffs / float64(totalReporterPower.Int64()))
 	medianReport.StandardDeviation = weightedStdDev
 
-	store := k.AggregateStore(ctx)
-	key := []byte(fmt.Sprintf("%s-%d", medianReport.QueryId, ctx.BlockHeight()))
-	store.Set(key, k.cdc.MustMarshal(&medianReport))
-	ctx.Logger().Error("WeightedMedian", "medianReport", medianReport)
-
+	k.SetAggregate(ctx, &medianReport)
+	return &medianReport
 }

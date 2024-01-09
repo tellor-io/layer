@@ -17,7 +17,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
-func RegistryKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, storetypes.KVStoreKey) {
+func RegistryKeeper(t testing.TB) (*keeper.Keeper, sdk.Context) {
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -48,5 +48,5 @@ func RegistryKeeper(t testing.TB) (*keeper.Keeper, sdk.Context, storetypes.KVSto
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx, *storeKey
+	return k, ctx
 }

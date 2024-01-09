@@ -14,6 +14,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
@@ -41,6 +42,7 @@ type KeeperTestSuite struct {
 	registryKeeper registryk.Keeper
 	stakingKeeper  *mocks.StakingKeeper
 	accountKeeper  *mocks.AccountKeeper
+	distrKeeper    *mocks.DistrKeeper
 	queryClient    types.QueryClient
 	msgServer      types.MsgServer
 }
@@ -66,14 +68,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	paramsSubspace := typesparams.NewSubspace(cdc,
-		types.Amino,
-		storeKey,
-		memStoreKey,
-		"OracleParams",
-	)
 	s.stakingKeeper = new(mocks.StakingKeeper)
 	s.accountKeeper = new(mocks.AccountKeeper)
+	s.distrKeeper = new(mocks.DistrKeeper)
 	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
 	rparamsSubspace := typesparams.NewSubspace(cdc,
 		types.Amino,
@@ -92,11 +89,12 @@ func (s *KeeperTestSuite) SetupTest() {
 		cdc,
 		storeKey,
 		memStoreKey,
-		paramsSubspace,
 		s.accountKeeper,
 		nil,
+		s.distrKeeper,
 		s.stakingKeeper,
 		s.registryKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	s.oracleKeeper = *k
 	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

@@ -3,16 +3,40 @@ syntax = "proto3";
 package layer.oracle;
 
 import "gogoproto/gogo.proto";
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "layer/oracle/params.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Msg defines the Msg service.
 service Msg {
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
   rpc SubmitValue  (MsgSubmitValue ) returns (MsgSubmitValueResponse );
   rpc CommitReport (MsgCommitReport) returns (MsgCommitReportResponse);
   rpc Tip          (MsgTip         ) returns (MsgTipResponse         );
 }
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/oracle/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+message MsgUpdateParamsResponse {}
 message MsgSubmitValue {
   string creator   = 1;
   string queryData = 2;

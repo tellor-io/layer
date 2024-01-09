@@ -29,6 +29,9 @@ const (
 
 	// VotesKey defines the votes key
 	VotesKey = "votes"
+
+	// Voter Power key
+	VoterPowerKey = "voter-power"
 )
 
 func KeyPrefix(p string) []byte {
@@ -59,4 +62,8 @@ func VoterKeyPrefix(voter string, id uint64) []byte {
 
 func TallyKeyPrefix(id uint64) []byte {
 	return KeyPrefix(fmt.Sprintf("%s:%d", "VoteTally", id))
+}
+
+func VoterPowerKeyPrefix() []byte {
+	return KeyPrefix(VoterPowerKey)
 }

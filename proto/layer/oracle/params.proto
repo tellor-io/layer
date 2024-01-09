@@ -8,5 +8,6 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
+  repeated string cycle_list = 1 [(gogoproto.nullable) = false];
   
 }

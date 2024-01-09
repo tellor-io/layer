@@ -16,6 +16,7 @@ func initSDKConfig() {
 
 	// Set and seal config
 	config := sdk.GetConfig()
+	sdk.DefaultBondDenom = "loya"
 	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
 	config.SetBech32PrefixForValidator(validatorAddressPrefix, validatorPubKeyPrefix)
 	config.SetBech32PrefixForConsensusNode(consNodeAddressPrefix, consNodePubKeyPrefix)

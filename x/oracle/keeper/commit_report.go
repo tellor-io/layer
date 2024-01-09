@@ -11,7 +11,7 @@ func (k Keeper) SetCommitReport(ctx sdk.Context, reporter sdk.AccAddress, commit
 	store.Set(append(reporter, commit.Report.QueryId...), k.cdc.MustMarshal(commit))
 
 	// Append commit report to reports for current block
-	blockKey := types.BlockKey(commit.Block)
+	blockKey := types.NumKey(commit.Block)
 	bz := store.Get(blockKey)
 	var blockReports types.CommitsByHeight
 	k.cdc.MustUnmarshal(bz, &blockReports)
@@ -19,5 +19,5 @@ func (k Keeper) SetCommitReport(ctx sdk.Context, reporter sdk.AccAddress, commit
 	store.Set(blockKey, k.cdc.MustMarshal(&blockReports))
 
 	// Delete last blocks reports
-	store.Delete(types.BlockKey(commit.Block - 1))
+	store.Delete(types.NumKey(commit.Block - 1))
 }
