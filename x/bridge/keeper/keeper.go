@@ -54,7 +54,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]stakingtypes.Validator, error) {
-	validators, _ := k.stakingKeeper.GetValidators(ctx, uint32(100))
+	validators := k.stakingKeeper.GetValidators(ctx, uint32(100))
+	// print validators to log
+	for _, validator := range validators {
+		k.Logger(ctx).Info("validator", "validator", validator)
+	}
+	
 	return validators, nil
   }
 
