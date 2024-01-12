@@ -9,6 +9,8 @@ import (
 type StakingKeeper interface {
 	// Methods imported from staking should be defined here
 	GetValidators(ctx sdk.Context, maxRetrieve uint32) []stakingtypes.Validator
+	// GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
+	GetAllValidators(ctx sdk.Context) []stakingtypes.Validator
 }
 
 type SlashingKeeper interface {

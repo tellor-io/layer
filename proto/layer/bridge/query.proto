@@ -1,4 +1,5 @@
 syntax = "proto3";
+
 package layer.bridge;
 
 import "gogoproto/gogo.proto";
@@ -10,24 +11,34 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
 // Query defines the gRPC querier service.
 service Query {
+  
   // Parameters queries the parameters of the module.
-  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/tellor-io/layer/bridge/params";
+  
   }
+
   // // BridgeValidators queries the bridge validator set and their powers
   // rpc BridgeValidators(QueryBridgeValidatorsRequest) returns (QueryBridgeValidatorsResponse) {
   //   option (google.api.http).get = "/tellor-io/layer/bridge/validators";
   // }
+  
+  // Queries a list of GetEvmValidators items.
+  rpc GetEvmValidators (QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
+    option (google.api.http).get = "/tellor-io/layer/bridge/get_evm_validators";
+  
+  }
 }
-
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
+  
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
+
 
 // message QueryBridgeValidatorsRequest {}
 
@@ -35,3 +46,9 @@ message QueryParamsResponse {
 //   repeated BridgeValidator bridge_validators = 1;
 //   pagination.PageResponse page_response = 2;
 // }
+message QueryGetEvmValidatorsRequest {}
+
+message QueryGetEvmValidatorsResponse {
+  repeated string ethAddress = 1;
+}
+
