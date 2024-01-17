@@ -15,7 +15,7 @@ message Dispute {
   DisputeCategory disputeCategory = 3; 
   string disputeFee = 4 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ]; 
   DisputeStatus disputeStatus = 5; 
@@ -25,19 +25,19 @@ message Dispute {
   uint64 disputeRound = 9; 
   string slashAmount = 10 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ];
   string burnAmount = 11 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ]; 
   MicroReport reportEvidence = 12 [(gogoproto.nullable) = false];
   repeated PayerInfo feePayers = 13 [(gogoproto.nullable) = false]; 
   string feeTotal = 14 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false
   ]; 
   repeated uint64 prevDisputeIds = 15; 

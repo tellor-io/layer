@@ -22,9 +22,9 @@ type StakingKeeper interface {
 	// Methods imported from staking should be defined here
 	AddValidatorTokensAndShares(ctx sdk.Context, validator stakingtypes.Validator,
 		tokensToAdd math.Int,
-	) (valOut stakingtypes.Validator, addedShares sdk.Dec)
+	) (valOut stakingtypes.Validator, addedShares math.LegacyDec)
 	Delegate(ctx sdk.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool,
-	) (newShares sdk.Dec, err error)
+	) (newShares math.LegacyDec, err error)
 	DeleteValidatorByPowerIndex(ctx sdk.Context, validator stakingtypes.Validator)
 	GetLastTotalPower(ctx sdk.Context) math.Int
 	GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation stakingtypes.Delegation, found bool)
@@ -34,7 +34,7 @@ type StakingKeeper interface {
 	Jail(ctx sdk.Context, consAddr sdk.ConsAddress)
 	RemoveDelegation(ctx sdk.Context, delegation stakingtypes.Delegation) error
 	RemoveValidatorTokens(ctx sdk.Context, validator stakingtypes.Validator, tokensToRemove math.Int) stakingtypes.Validator
-	RemoveValidatorTokensAndShares(ctx sdk.Context, validator stakingtypes.Validator, sharesToRemove sdk.Dec) (valOut stakingtypes.Validator, removedTokens math.Int)
+	RemoveValidatorTokensAndShares(ctx sdk.Context, validator stakingtypes.Validator, sharesToRemove math.LegacyDec) (valOut stakingtypes.Validator, removedTokens math.Int)
 	SetDelegation(ctx sdk.Context, delegation stakingtypes.Delegation)
 	SetValidator(ctx sdk.Context, validator stakingtypes.Validator)
 	SetValidatorByPowerIndex(ctx sdk.Context, validator stakingtypes.Validator)

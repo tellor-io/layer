@@ -20,7 +20,8 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	// get delegation info
 	validator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(reporter))
 	// check if msg sender is validator
-	if !reporter.Equals(validator.GetOperator()) {
+
+	if msg.Creator != validator.GetOperator() {
 		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
 	}
 

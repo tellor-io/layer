@@ -8,7 +8,7 @@ import (
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
