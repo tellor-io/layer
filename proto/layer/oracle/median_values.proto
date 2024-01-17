@@ -1,0 +1,10 @@
+syntax = "proto3";
+package layer.oracle;
+
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
+
+message MedianValues {
+  
+  uint32 marketId = 1; 
+  uint64 price = 2; 
+}

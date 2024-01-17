@@ -13,6 +13,7 @@ import "layer/oracle/user_tip.proto";
 import "layer/oracle/aggregate.proto";
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "layer/oracle/median_values.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -66,6 +67,12 @@ service Query {
   // Queries a list of GetTimeBasedRewards items.
   rpc GetTimeBasedRewards (QueryGetTimeBasedRewardsRequest) returns (QueryGetTimeBasedRewardsResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_time_based_rewards";
+  
+  }
+  
+  // Queries a list of GetMedianValues items.
+  rpc GetMedianValues (QueryGetMedianValuesRequest) returns (QueryGetMedianValuesResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_median_values";
   
   }
 }
@@ -133,10 +140,12 @@ message QueryGetDataBeforeRequest {
 message QueryGetTimeBasedRewardsRequest {}
 
 message QueryGetTimeBasedRewardsResponse {
-    cosmos.base.v1beta1.Coin reward = 1 [
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin",
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true
-  ];
+  cosmos.base.v1beta1.Coin reward = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+message QueryGetMedianValuesRequest {}
+
+message QueryGetMedianValuesResponse {
+  repeated MedianValues medianValues = 1;
 }
 

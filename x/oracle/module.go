@@ -201,6 +201,8 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 		in.Cdc,
 		in.KvStoreKey,
 		in.MemStoreKey,
+		nil,
+		nil,
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.Distr,

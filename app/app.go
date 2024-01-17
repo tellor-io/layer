@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -109,6 +110,7 @@ import (
 	"github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+	"google.golang.org/grpc"
 
 	oraclemodule "github.com/tellor-io/layer/x/oracle"
 	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
@@ -125,6 +127,16 @@ import (
 
 	appparams "github.com/tellor-io/layer/app/params"
 	"github.com/tellor-io/layer/docs"
+
+	"github.com/tellor-io/layer/app/flags"
+	"github.com/tellor-io/layer/daemons/configs"
+	"github.com/tellor-io/layer/daemons/constants"
+	daemonflags "github.com/tellor-io/layer/daemons/flags"
+	daemonserver "github.com/tellor-io/layer/daemons/server"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
+
+	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
+	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
 const (
@@ -166,9 +178,9 @@ var (
 		auth.AppModuleBasic{},
 		authzmodule.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-		bankModule{},
+		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
-		stakingModule{},
+		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(getGovProposalHandlers()),
@@ -281,6 +293,10 @@ type App struct {
 	// sm is the simulation manager
 	sm           *module.SimulationManager
 	configurator module.Configurator
+
+	Server          *daemonserver.Server
+	startDaemons    func()
+	PriceFeedClient *pricefeedclient.Client
 }
 
 // New returns a reference to an initialized blockchain app
@@ -548,12 +564,51 @@ func New(
 		app.GetSubspace(registrymoduletypes.ModuleName),
 	)
 	registryModule := registrymodule.NewAppModule(appCodec, app.RegistryKeeper, app.AccountKeeper, app.BankKeeper)
+	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
+
+	// this line is used by starport scaffolding # stargate/app/keeperDefinition
+	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed App flags", "Flags", appFlags)
+	// Panic if this is not a full node and gRPC is disabled.
+	if err := appFlags.Validate(); err != nil {
+		panic(err)
+	}
+
+	// Get Daemon Flags.
+	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
+	// Create server that will ingest gRPC messages from daemon clients.
+	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
+	// accept new connections.
+	app.Server = daemonserver.NewServer(
+		logger,
+		grpc.NewServer(),
+		&daemontypes.FileHandlerImpl{},
+		daemonFlags.Shared.SocketAddress,
+	)
+	app.Server.WithPriceFeedMarketToExchangePrices(indexPriceCache)
+
+	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
+	// service is started because daemons depend on the gRPC service being available. If a node is initialized
+	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
+	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
+	// monitoring service will panic.
+	app.startDaemons = func() {
+		// Start server for handling gRPC messages from daemons.
+		go app.Server.Start()
+
+	}
+	// Non-validating full-nodes have no need to run the price daemon.
+	// if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+	exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
+	marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
 
 	app.OracleKeeper = *oraclemodulekeeper.NewKeeper(
 		appCodec,
 		keys[oraclemoduletypes.StoreKey],
 		keys[oraclemoduletypes.MemStoreKey],
-
+		marketParamsConfig,
+		indexPriceCache,
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.DistrKeeper,
@@ -576,9 +631,23 @@ func New(
 		app.StakingKeeper,
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
-
-	// this line is used by starport scaffolding # stargate/app/keeperDefinition
-
+	// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
+	// are retrieved via third-party APIs like Binance and then are encoded in-memory and
+	// periodically sent via gRPC to a shared socket with the server.
+	app.PriceFeedClient = pricefeedclient.StartNewClient(
+		// The client will use `context.Background` so that it can have a different context from
+		// the main application.
+		context.Background(),
+		daemonFlags,
+		appFlags,
+		logger,
+		&daemontypes.GrpcClientImpl{},
+		marketParamsConfig,
+		exchangeQueryConfig,
+		constants.StaticExchangeDetails,
+		&pricefeedclient.SubTaskRunnerImpl{},
+	)
+	// }
 	/**** IBC Routing ****/
 
 	// Sealing prevents other modules from creating scoped sub-keepers
@@ -926,6 +995,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	docs.RegisterOpenAPIService(Name, apiSvr.Router)
+	app.startDaemons()
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
@@ -946,6 +1016,7 @@ func (app *App) RegisterTendermintService(clientCtx client.Context) {
 // RegisterNodeService implements the Application.RegisterNodeService method.
 func (app *App) RegisterNodeService(clientCtx client.Context) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+
 }
 
 // initParamsKeeper init params keeper and its subspaces

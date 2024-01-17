@@ -9,21 +9,23 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-
+	daemontypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
-		memKey   storetypes.StoreKey
-
-		accountKeeper  types.AccountKeeper
-		bankKeeper     types.BankKeeper
-		distrKeeper    types.DistrKeeper
-		stakingKeeper  types.StakingKeeper
-		registryKeeper types.RegistryKeeper
+		cdc               codec.BinaryCodec
+		storeKey          storetypes.StoreKey
+		memKey            storetypes.StoreKey
+		marketParamConfig []daemontypes.MarketParam
+		indexPriceCache   *pricefeedtypes.MarketToExchangePrices
+		accountKeeper     types.AccountKeeper
+		bankKeeper        types.BankKeeper
+		distrKeeper       types.DistrKeeper
+		stakingKeeper     types.StakingKeeper
+		registryKeeper    types.RegistryKeeper
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
@@ -34,7 +36,8 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey storetypes.StoreKey,
-
+	marketParamConfig []daemontypes.MarketParam,
+	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
@@ -47,16 +50,17 @@ func NewKeeper(
 	}
 
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		memKey:   memKey,
-
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
-		distrKeeper:    distrKeeper,
-		stakingKeeper:  stakingKeeper,
-		registryKeeper: registryKeeper,
-		authority:      authority,
+		cdc:               cdc,
+		storeKey:          storeKey,
+		memKey:            memKey,
+		marketParamConfig: marketParamConfig,
+		indexPriceCache:   indexPriceCache,
+		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		distrKeeper:       distrKeeper,
+		stakingKeeper:     stakingKeeper,
+		registryKeeper:    registryKeeper,
+		authority:         authority,
 	}
 }
 

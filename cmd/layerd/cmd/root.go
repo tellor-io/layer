@@ -44,7 +44,9 @@ import (
 )
 
 // NewRootCmd creates a new root command for a Cosmos SDK application
-func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
+func NewRootCmd(
+	option *RootCmdOption,
+) (*cobra.Command, appparams.EncodingConfig) {
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -84,7 +86,7 @@ func NewRootCmd() (*cobra.Command, appparams.EncodingConfig) {
 		},
 	}
 
-	initRootCmd(rootCmd, encodingConfig)
+	initRootCmd(rootCmd, option, encodingConfig)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagChainID:        strings.ReplaceAll(app.Name, "-", ""),
 		flags.FlagKeyringBackend: "test",
@@ -102,6 +104,7 @@ func initTendermintConfig() *tmcfg.Config {
 
 func initRootCmd(
 	rootCmd *cobra.Command,
+	option *RootCmdOption,
 	encodingConfig appparams.EncodingConfig,
 ) {
 	// Set config
@@ -136,7 +139,13 @@ func initRootCmd(
 		app.DefaultNodeHome,
 		a.newApp,
 		a.appExport,
-		addModuleInitFlags,
+		func(cmd *cobra.Command) {
+			addModuleInitFlags(cmd)
+
+			if option.startCmdCustomizer != nil {
+				option.startCmdCustomizer(cmd)
+			}
+		},
 	)
 
 	// add keybase, auxiliary RPC, query, and tx child commands
