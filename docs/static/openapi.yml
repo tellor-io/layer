@@ -46910,47 +46910,6 @@ paths:
           type: string
       tags:
         - Query
-  /tellor-io/layer/oracle/get_median_values:
-    get:
-      summary: Queries a list of GetMedianValues items.
-      operationId: LayerOracleGetMedianValues
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              medianValues:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    marketId:
-                      type: integer
-                      format: int64
-                    price:
-                      type: string
-                      format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
   /tellor-io/layer/oracle/get_time_based_rewards:
     get:
       summary: Queries a list of GetTimeBasedRewards items.
@@ -76003,15 +75962,6 @@ definitions:
       power:
         type: string
         format: int64
-  layer.oracle.MedianValues:
-    type: object
-    properties:
-      marketId:
-        type: integer
-        format: int64
-      price:
-        type: string
-        format: uint64
   layer.oracle.MicroReport:
     type: object
     properties:
@@ -76124,20 +76074,6 @@ definitions:
               method
 
               signatures required by gogoproto.
-  layer.oracle.QueryGetMedianValuesResponse:
-    type: object
-    properties:
-      medianValues:
-        type: array
-        items:
-          type: object
-          properties:
-            marketId:
-              type: integer
-              format: int64
-            price:
-              type: string
-              format: uint64
   layer.oracle.QueryGetReportsbyQidResponse:
     type: object
     properties:

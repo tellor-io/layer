@@ -1,12 +1,13 @@
 package cli
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"github.com/tellor-io/layer/x/oracle/types"
+	mediantypes "github.com/tellor-io/layer/daemons/server/types"
 )
 
 var _ = strconv.Itoa(0)
@@ -22,10 +23,11 @@ func CmdGetMedianValues() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			fmt.Println(clientCtx.Height)
 
-			queryClient := types.NewQueryClient(clientCtx)
+			queryClient := mediantypes.NewMedianValuesServiceClient(clientCtx)
 
-			params := &types.QueryGetMedianValuesRequest{}
+			params := &mediantypes.GetMedianValuesRequest{}
 
 			res, err := queryClient.GetMedianValues(cmd.Context(), params)
 			if err != nil {

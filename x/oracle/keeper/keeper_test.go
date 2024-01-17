@@ -89,8 +89,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		cdc,
 		storeKey,
 		memStoreKey,
-		nil,
-		nil,
 		s.accountKeeper,
 		nil,
 		s.distrKeeper,

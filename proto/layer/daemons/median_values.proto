@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package layer.daemons;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/tellor-io/layer/daemons/server/types";
+
+// MedianValuesService is the service that provides median values for markets
+service MedianValuesService {
+  // GetMedianValues returns the median values for all markets
+  rpc GetMedianValues(GetMedianValuesRequest) returns (GetMedianValuesResponse) {
+    option (google.api.http).get = "/layer/api/get_median_values";
+  }
+}
+// MedianValues is the median value for a market
+message MedianValues {
+  // marketId is the market id for a pair
+  uint32 market_id = 1;
+  uint64 price = 2;
+}
+// GetMedianValuesRequest is the request for the GetMedianValues rpc
+message GetMedianValuesRequest {}
+// GetMedianValuesResponse is the response for the GetMedianValues rpc
+message GetMedianValuesResponse {
+  repeated MedianValues median_values = 1;
+}
