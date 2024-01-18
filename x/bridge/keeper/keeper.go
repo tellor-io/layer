@@ -56,22 +56,44 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]gethcommon.Address, error) {
-	singleVal := k.stakingKeeper.GetValidators(ctx, uint32(1))
-	k.Logger(ctx).Info("Single Validator: ", singleVal)
-	singleVal2 := k.stakingKeeper.GetAllValidators(ctx)[0]
-	k.Logger(ctx).Info("Single Validator 2: ", singleVal2)
+	// val := validators[0]
+	// valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
+	// k.Logger(ctx).Info("GetAllValidators", "valAddr", valAddr)
+
 	validators := k.stakingKeeper.GetAllValidators(ctx)
-	valAddr, _ := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
-	k.Logger(ctx).Info("OperatorAddress: ", validators[0].OperatorAddress)
-	k.Logger(ctx).Info("ValAddr: ", valAddr)
-	k.Logger(ctx).Info("Validators: ", validators)
+	val := validators[0]
+	valAddr, _ := sdk.ValAddressFromBech32(val.OperatorAddress)
+	k.Logger(ctx).Info("GetAllValidators", "valAddr", valAddr)
+
+	// valAddr, _ := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
+	// k.Logger(ctx).Info("OperatorAddress: ", validators[0].OperatorAddress)
+	// k.Logger(ctx).Info("ValAddr: ", valAddr)
+
+	// singleVal := k.stakingKeeper.GetValidators(ctx, uint32(1))
+	// k.Logger(ctx).Info("Single Validator: ", singleVal)
+	// singleVal2 := k.stakingKeeper.GetAllValidators(ctx)[0]
+	// k.Logger(ctx).Info("Single Validator 2: ", singleVal2)
+	// validators := k.stakingKeeper.GetAllValidators(ctx)
+	// valAddr, _ := sdk.ValAddressFromBech32(validators[0].OperatorAddress)
+	// k.Logger(ctx).Info("OperatorAddress: ", validators[0].OperatorAddress)
+	// k.Logger(ctx).Info("ValAddr: ", valAddr)
+	// k.Logger(ctx).Info("Validators: ", validators)
 	// create list of ethereum versions of these validator addresses using DefaultEVMAddress from eth_address.go
 	ethAddresses := make([]gethcommon.Address, len(validators))
 	for i, validator := range validators {
 		ethAddresses[i] = DefaultEVMAddress(validator.GetOperator())
+		k.Logger(ctx).Info("building eth addrs", i)
 	}
 
-	k.Logger(ctx).Info("Ethereum Addresses: ", ethAddresses)
+	// get len of eth addrs
+	ethAddressesLen := len(ethAddresses)
+	// ethAddresses[0].String()
+	k.Logger(ctx).Info("Ethereum Addresses Length: ", "ethAddressesLen", ethAddressesLen)
+
+	if ethAddressesLen > 0 {
+		k.Logger(ctx).Info("Ethereum Address: ", "ethAddr0", ethAddresses[0].String())
+	}
+	// k.Logger(ctx).Info("Ethereum Addresses: ", "ethAddr1", ethAddressesStr[0])
 
 	return ethAddresses, nil
 }
