@@ -70,7 +70,7 @@ func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {
 	// Read file for exchange query configurations.
 	tomlFile, err := os.ReadFile(getMarketParamsConfigFilePath(homeDir))
 	if err != nil {
-		panic(fmt.Errorf("failed to read exchange query config file: %v, %v", tomlFile, err))
+		panic(err)
 	}
 
 	params := map[string][]types.MarketParam{}

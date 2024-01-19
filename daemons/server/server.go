@@ -28,8 +28,6 @@ type Server struct {
 }
 
 // NewServer creates a single gRPC server that's shared across multiple daemons for communication.
-// uniqueTestIdentifier is a string that can be used to identify services spawned by a particular test case,
-// so that they can be cleaned up after the test case is complete.
 func NewServer(
 	logger log.Logger,
 	grpcServer daemontypes.GrpcServer,
@@ -47,10 +45,6 @@ func NewServer(
 // Stop stops the daemon server's gRPC service.
 func (server *Server) Stop() {
 	server.gsrv.Stop()
-}
-
-func (server *Server) ser() *Server {
-	return server
 }
 
 // reportValidResponse reports a valid request/response from a daemon service for metrics collection purposes.

@@ -76,7 +76,7 @@ func ReadExchangeQueryConfigFile(homeDir string) map[types.ExchangeId]*types.Exc
 	// Read file for exchange query configurations.
 	tomlFile, err := os.ReadFile(getConfigFilePath(homeDir))
 	if err != nil {
-		panic(fmt.Errorf("failed to read exchange query config file: %v, %v", tomlFile, err))
+		panic(err)
 	}
 
 	// Unmarshal `tomlFile` into `exchanges` for `exchangeStartupConfigMap`.

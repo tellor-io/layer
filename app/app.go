@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -132,8 +133,12 @@ import (
 	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
+	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
 	daemonserver "github.com/tellor-io/layer/daemons/server"
+	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
+
+	"runtime/debug"
 
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
 	medianserver "github.com/tellor-io/layer/daemons/server/median"
@@ -295,9 +300,10 @@ type App struct {
 	sm           *module.SimulationManager
 	configurator module.Configurator
 
-	Server          *daemonserver.Server
-	startDaemons    func(client.Context, *api.Server)
-	PriceFeedClient *pricefeedclient.Client
+	Server              *daemonserver.Server
+	startDaemons        func(client.Context, *api.Server)
+	PriceFeedClient     *pricefeedclient.Client
+	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 }
 
 // New returns a reference to an initialized blockchain app
@@ -615,12 +621,19 @@ func New(
 		daemonFlags.Shared.SocketAddress,
 	)
 	app.Server.WithPriceFeedMarketToExchangePrices(indexPriceCache)
+	app.DaemonHealthMonitor = daemonservertypes.NewHealthMonitor(
+		daemonservertypes.DaemonStartupGracePeriod,
+		daemonservertypes.HealthCheckPollFrequency,
+		app.Logger(),
+		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
+	)
 	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
 	app.startDaemons = func(cltx client.Context, apiSvr *api.Server) {
+		maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 		// Start server for handling gRPC messages from daemons.
 		go app.Server.Start()
 
@@ -645,8 +658,35 @@ func New(
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
 			medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
+			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 		}
+		// Start the Metrics Daemon.
+		// The metrics daemon is purely used for observability. It should never bring the app down.
+		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
+		// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
+		// for this service. The task loop does not produce any errors because the telemetry calls themselves are
+		// not error-returning, so in effect this daemon would never become unhealthy.
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error(
+						"Metrics Daemon exited unexpectedly with a panic.",
+						"panic",
+						r,
+						"stack",
+						string(debug.Stack()),
+					)
+				}
+			}()
+			metricsclient.Start(
+				// The client will use `context.Background` so that it can have a different context from
+				// the main application.
+				context.Background(),
+				logger,
+			)
+		}()
 	}
+
 	/**** IBC Routing ****/
 
 	// Sealing prevents other modules from creating scoped sub-keepers
@@ -1049,4 +1089,24 @@ func (app *App) SimulationManager() *module.SimulationManager {
 // ModuleManager returns the app ModuleManager
 func (app *App) ModuleManager() *module.Manager {
 	return app.mm
+}
+
+// RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
+// the health of the daemon. If the daemon does not register, the method will panic.
+func (app *App) RegisterDaemonWithHealthMonitor(
+	healthCheckableDaemon daemontypes.HealthCheckable,
+	maxDaemonUnhealthyDuration time.Duration,
+) {
+	if err := app.DaemonHealthMonitor.RegisterService(healthCheckableDaemon, maxDaemonUnhealthyDuration); err != nil {
+		app.Logger().Error(
+			"Failed to register daemon service with update monitor",
+			"error",
+			err,
+			"service",
+			healthCheckableDaemon.ServiceName(),
+			"maxDaemonUnhealthyDuration",
+			maxDaemonUnhealthyDuration,
+		)
+		panic(err)
+	}
 }

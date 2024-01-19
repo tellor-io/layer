@@ -112,7 +112,7 @@ func (c *Client) Stop() {
 // A) periodically queries prices from external data sources and saves the retrieved prices in an
 // in-memory datastore
 // B) periodically sends the most recent prices to a gRPC server
-// C) periodically queries the prices module for the latest market/exchange configuration and then updates
+// C) periodically queries the prices module for the latest market/exchange configuration and then updates. !!!!NOTE: this is not implemented!!!!
 // the shared, in-memory datastore with the latest configuration.
 // The exchangeIdToQueryConfig map dictates which exchanges the pricefeed client queries against.
 // For all exchanges included in this map, the pricefeed client expects an exchangeQueryDetails and an
@@ -125,7 +125,7 @@ func (c *Client) Stop() {
 //  3. Initialize synchronized, in-memory shared daemon configuration.
 //  4. Start PriceEncoder and PriceFetcher per exchange. Each price fetcher adds itself to the shared
 //     daemon config.
-//  5. Start MarketUpdater subtask to periodically update the market configs.
+//  5. Start MarketUpdater subtask to periodically update the market configs.!!!!NOTE: this is not implemented!!!! THE MARKETPARAMS TYPE IS INJECTED SIMILAR TO
 //  6. Start PriceUpdater to begin broadcasting prices.
 func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
@@ -230,7 +230,7 @@ func (c *Client) start(ctx context.Context,
 			)
 		}()
 	}
-	_, _ = priceFeedMutableMarketConfigs.UpdateMarkets(marketParams)
+	// _, _ = priceFeedMutableMarketConfigs.UpdateMarkets(marketParams)
 	priceUpdaterTicker, priceUpdaterStop := c.newTickerWithStop(int(daemonFlags.Price.LoopDelayMs))
 	// Now that all persistent subtasks have been started and all tickers and stop channels are created,
 	// signal that the startup process is complete. This needs to be called before entering the
