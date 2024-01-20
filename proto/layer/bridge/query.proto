@@ -49,6 +49,15 @@ message QueryParamsResponse {
 message QueryGetEvmValidatorsRequest {}
 
 message QueryGetEvmValidatorsResponse {
-  repeated string ethAddress = 1;
+  repeated BridgeValidator bridgeValidatorSet = 1;
+}
+
+message BridgeValidator {
+  string ethereumAddress = 1;
+  uint64 power = 2;
+}
+
+message BridgeValidatorSet {
+  repeated BridgeValidator bridgeValidatorSet = 1;
 }
 

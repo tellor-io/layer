@@ -18,9 +18,9 @@ func (k Keeper) GetEvmValidators(goCtx context.Context, req *types.QueryGetEvmVa
 
 	ethAddresses, _ := k.GetBridgeValidators(ctx)
 	ethAddressesStr := make([]string, len(ethAddresses))
-	for i, ethAddress := range ethAddresses {
-		ethAddressesStr[i] = ethAddress.Hex()
+	for i, ethAddresses := range ethAddresses {
+		ethAddressesStr[i] = ethAddresses.EthereumAddress
 	}
 
-	return &types.QueryGetEvmValidatorsResponse{EthAddress: ethAddressesStr}, nil
+	return &types.QueryGetEvmValidatorsResponse{BridgeValidatorSet: ethAddresses}, nil
 }
