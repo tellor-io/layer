@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -23,7 +22,6 @@ func CmdGetMedianValues() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(clientCtx.Height)
 
 			queryClient := mediantypes.NewMedianValuesServiceClient(clientCtx)
 
