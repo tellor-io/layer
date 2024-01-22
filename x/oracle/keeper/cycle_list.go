@@ -33,3 +33,9 @@ func (k Keeper) GetCurrentIndex(ctx sdk.Context) int64 {
 	bz := store.Get(types.CurrentIndexKey())
 	return int64(sdk.BigEndianToUint64(bz))
 }
+
+func (k Keeper) GetCurrentQueryInCycleList(ctx sdk.Context) string {
+	queries := k.GetCycleList(ctx)
+	currentIndex := k.GetCurrentIndex(ctx)
+	return queries[currentIndex]
+}

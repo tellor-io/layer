@@ -14,9 +14,13 @@ import (
 
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	if rk.Has0xPrefix(msg.QueryData) {
+		msg.QueryData = msg.QueryData[2:]
+	}
 	tip, _ := k.GetQueryTips(ctx, k.TipStore(ctx), msg.QueryData)
-	if !k.Keeper.GetBlockTips(ctx, ctx.BlockHeight()-1).Tips[msg.QueryData] && tip.Amount.IsZero() {
-		return nil, status.Error(codes.Unavailable, "query data does not have tips/in cycle")
+	currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
+	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
+		return nil, status.Error(codes.Unavailable, "query data does not have tips/not in cycle")
 	}
 	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
 
@@ -25,10 +29,6 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	// check if msg sender is validator
 	if !reporter.Equals(validator.GetOperator()) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
-	}
-
-	if rk.Has0xPrefix(msg.QueryData) {
-		msg.QueryData = msg.QueryData[2:]
 	}
 	queryData, err := hex.DecodeString(msg.QueryData)
 	if err != nil {

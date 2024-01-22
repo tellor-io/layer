@@ -29,12 +29,6 @@ func (k Keeper) SetTip(ctx sdk.Context, tipper sdk.AccAddress, queryData string,
 	k.SetQueryTips(ctx, tipStore, queryData, tip)
 	k.SetTipperTipsForQuery(ctx, tipStore, tipper.String(), queryData, tip)
 	k.SetTipperTotalTips(ctx, tipStore, tipper, tip)
-
-	// update block tips
-	blockHeight := ctx.BlockHeight()
-	blockTips := k.GetBlockTips(ctx, blockHeight)
-	blockTips.Tips[queryData] = true
-	k.SetBlockTips(ctx, blockHeight, blockTips)
 }
 
 func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, queryData string, tip sdk.Coin) {
@@ -140,27 +134,4 @@ func (k Keeper) GetTotalTips(ctx sdk.Context) sdk.Coin {
 	var total sdk.Coin
 	k.cdc.MustUnmarshal(bz, &total)
 	return total
-}
-
-func (k Keeper) SetBlockTips(ctx sdk.Context, blockHeight int64, bt types.BlockTips) {
-	store := k.BlockTipsStore(ctx)
-	bz := k.cdc.MustMarshal(&bt)
-	store.Set(types.NumKey(blockHeight), bz)
-}
-
-func (k Keeper) DeletePreviousBlockTips(ctx sdk.Context, blockHeight int64) {
-	store := k.BlockTipsStore(ctx)
-	store.Delete(types.NumKey(blockHeight))
-}
-
-func (k Keeper) GetBlockTips(ctx sdk.Context, blockHeight int64) (queryDataList types.BlockTips) {
-	store := k.BlockTipsStore(ctx)
-	bz := store.Get(types.NumKey(blockHeight))
-	if bz == nil {
-		return types.BlockTips{
-			Tips: map[string]bool{},
-		}
-	}
-	k.cdc.Unmarshal(bz, &queryDataList)
-	return
 }
