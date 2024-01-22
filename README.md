@@ -16,10 +16,26 @@ For more in-depth information about Layer, checkout the [TellorLayer - tech pape
 To run all tests:
 `go test -v ./...`
 
-## Starting the Chain
+## Starting the Chain (Without Ignite):
 
-To start the chain locally without Ignite CLI:
+1) Remove old test chains (if present):
+`rm -rf ~/.layer`
+2) Go build layerd:
+`go build ./cmd/layerd`
+3) Initialize the chain:
+`./layerd init layer  --chain-id layer-test-1`
+4) Add a validator account:
+`./layerd keys add alice`
+5) Create a tx to Give the alice loyas to stake:
+`./layerd add-genesis-account tellor15sck900lsktpq9enm4v7kspmykg0e0fu7jcr9n 10000000000000loya`
+6) Create a tx to Stake some loyas for alice:
+`./layerd gentx alice 1000000000000loya  --chain-id layer-test-1`
+7) Add the transactions to the genesis block:
+`./layerd collect-gentxs`
+8) Start the chain:
 `layerd start`
+
+## Starting the Chain With Ignite CLI:
 
 To start the chain locally with Ignite CLI:
 `ignite chain serve`
