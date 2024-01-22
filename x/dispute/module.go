@@ -151,15 +151,12 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	ids := am.keeper.CheckPrevoteDisputesForExpiration(ctx)
-	am.keeper.Tally(ctx, ids)
-	am.keeper.ExecuteVotes(ctx, ids)
-}
-
-// EndBlock contains the logic that is automatically triggered at the end of each block
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	return []abci.ValidatorUpdate{}
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	ids := am.keeper.CheckPrevoteDisputesForExpiration(sdkCtx)
+	am.keeper.Tally(sdkCtx, ids)
+	am.keeper.ExecuteVotes(sdkCtx, ids)
+	return nil
 }
 
 // ----------------------------------------------------------------------------
@@ -209,10 +206,10 @@ func ProvideModule(in DisputeInputs) DisputeOutputs {
 	)
 	m := NewAppModule(
 		in.Cdc,
-		*k,
+		k,
 		in.AccountKeeper,
 		in.BankKeeper,
 	)
 
-	return DisputeOutputs{DisputeKeeper: *k, Module: m}
+	return DisputeOutputs{DisputeKeeper: k, Module: m}
 }

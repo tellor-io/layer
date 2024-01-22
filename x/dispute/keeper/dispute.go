@@ -184,11 +184,11 @@ func (k Keeper) SetOpenDisputeIds(ctx sdk.Context, ids types.OpenDisputes) {
 func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.LegacyDec {
 	switch category {
 	case types.Warning:
-		return sdk.NewDecWithPrec(1, 2) // 1%
+		return math.LegacyNewDecWithPrec(1, 2) // 1%
 	case types.Minor:
-		return sdk.NewDecWithPrec(5, 2) // 5%
+		return math.LegacyNewDecWithPrec(5, 2) // 5%
 	case types.Major:
-		return sdk.NewDecWithPrec(1, 0) // 100%
+		return math.LegacyNewDecWithPrec(1, 0) // 100%
 	default:
 		panic("invalid dispute category")
 	}
@@ -198,8 +198,8 @@ func (k Keeper) GetSlashPercentage(category types.DisputeCategory) math.LegacyDe
 func (k Keeper) GetDisputeFee(ctx sdk.Context, reporter string, category types.DisputeCategory) math.Int {
 	reporterAddr := sdk.MustAccAddressFromBech32(reporter)
 
-	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(reporterAddr))
-	if !found {
+	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(reporterAddr))
+	if err != nil {
 		panic(fmt.Errorf("validator %s not found", reporter))
 	}
 	stake := validator.GetBondedTokens()

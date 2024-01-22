@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/spf13/cobra"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -32,7 +33,7 @@ func CmdCommitReport() *cobra.Command {
 			}
 			// leaving this here for convenience to input value thru cli
 			// then is signed by the keys here
-			data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded)
+			data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded, signing.SignMode_SIGN_MODE_DIRECT)
 			if err != nil {
 				return err
 			}

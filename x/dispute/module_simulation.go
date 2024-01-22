@@ -52,7 +52,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RegisterStoreDecoder registers a decoder.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
@@ -64,7 +64,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgProposeDispute int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgProposeDispute, &weightMsgProposeDispute, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgProposeDispute, &weightMsgProposeDispute, nil,
 		func(_ *rand.Rand) {
 			weightMsgProposeDispute = defaultWeightMsgProposeDispute
 		},
@@ -75,7 +75,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgAddFeeToDispute int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgAddFeeToDispute, &weightMsgAddFeeToDispute, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgAddFeeToDispute, &weightMsgAddFeeToDispute, nil,
 		func(_ *rand.Rand) {
 			weightMsgAddFeeToDispute = defaultWeightMsgAddFeeToDispute
 		},
@@ -86,7 +86,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgVote int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgVote, &weightMsgVote, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgVote, &weightMsgVote, nil,
 		func(_ *rand.Rand) {
 			weightMsgVote = defaultWeightMsgVote
 		},

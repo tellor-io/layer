@@ -18,7 +18,10 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
 
 	// get delegation info
-	validator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(reporter))
+	validator, err := k.stakingKeeper.Validator(ctx, sdk.ValAddress(reporter))
+	if err != nil {
+		return nil, err
+	}
 	// check if msg sender is validator
 
 	if msg.Creator != validator.GetOperator() {

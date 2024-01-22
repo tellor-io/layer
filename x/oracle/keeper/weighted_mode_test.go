@@ -52,9 +52,9 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 		},
 	}
 	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(math.NewInt(1000))
-	s.distrKeeper.On("GetFeePoolCommunityCoins", mock.Anything).Return(sdk.DecCoins{sdk.NewDecCoinFromDec("loya", sdk.NewDec(100))})
+	s.distrKeeper.On("GetFeePoolCommunityCoins", mock.Anything).Return(sdk.DecCoins{sdk.NewDecCoinFromDec("loya", math.LegacyNewDec(100))})
 	s.distrKeeper.On("AllocateTokensToValidator", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	s.distrKeeper.On("GetFeePool", mock.Anything).Return(distrtypes.FeePool{CommunityPool: sdk.DecCoins{sdk.NewDecCoinFromDec("loya", sdk.NewDec(1000))}})
+	s.distrKeeper.On("GetFeePool", mock.Anything).Return(distrtypes.FeePool{CommunityPool: sdk.DecCoins{sdk.NewDecCoinFromDec("loya", math.LegacyNewDec(1000))}})
 	s.distrKeeper.On("SetFeePool", mock.Anything, mock.Anything).Return(nil)
 	s.oracleKeeper.WeightedMode(s.ctx, reports)
 	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})

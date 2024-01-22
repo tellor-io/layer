@@ -4,10 +4,12 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -19,9 +21,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"github.com/tellor-io/layer/app"
-	"github.com/tellor-io/layer/mocks"
+	"github.com/tellor-io/layer/app/config"
 	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/mocks"
 	"github.com/tellor-io/layer/x/oracle/types"
 	r "github.com/tellor-io/layer/x/registry"
 	registryk "github.com/tellor-io/layer/x/registry/keeper"
@@ -49,16 +51,13 @@ type KeeperTestSuite struct {
 
 func (s *KeeperTestSuite) SetupTest() {
 	require := s.Require()
-	config := sdk.GetConfig()
-	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
-	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
-
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	rStoreKey := sdk.NewKVStoreKey(registrytypes.StoreKey)
+	config.SetupConfig()
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+	rStoreKey := storetypes.NewKVStoreKey(registrytypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(rStoreKey, storetypes.StoreTypeIAVL, db)
@@ -85,7 +84,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		rparamsSubspace,
 	)
 
-	k := keeper.NewKeeper(
+	s.oracleKeeper = keeper.NewKeeper(
 		cdc,
 		storeKey,
 		memStoreKey,
@@ -96,22 +95,21 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.registryKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	s.oracleKeeper = *k
+
 	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	genesisState := registrytypes.GenesisState{
 		Params: registrytypes.DefaultParams(),
 	}
 	r.InitGenesis(s.ctx, s.registryKeeper, genesisState)
 	// Initialize params
-	k.SetParams(s.ctx, types.DefaultParams())
-	s.msgServer = keeper.NewMsgServerImpl(*k)
+	s.oracleKeeper.SetParams(s.ctx, types.DefaultParams())
+	s.msgServer = keeper.NewMsgServerImpl(s.oracleKeeper)
 	KeyTestPubAddr()
-	addy, _ := sdk.AccAddressFromBech32(Addr.String())
-	val, _ := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
+	val, _ := stakingtypes.NewValidator(Addr.String(), PubKey, stakingtypes.Description{Moniker: "test"})
 	val.Jailed = false
 	val.Status = stakingtypes.Bonded
-	val.Tokens = sdk.NewInt(1000000000000000000)
-	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, true)
+	val.Tokens = math.NewInt(1000000000000000000)
+	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, nil)
 	account := authtypes.NewBaseAccount(Addr, PubKey, 0, 0)
 	s.accountKeeper.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
 }

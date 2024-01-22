@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -21,7 +19,7 @@ func (s *KeeperTestSuite) TestSubmitValue() {
 	submitreq.Creator = Addr.String()
 	submitreq.QueryData = queryData
 	submitreq.Value = value
-	res, err := s.msgServer.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
+	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.Equal(&submitres, res)
 	require.Nil(err)
 	report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})

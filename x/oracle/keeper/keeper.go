@@ -41,12 +41,20 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	registryKeeper types.RegistryKeeper,
 	authority string,
-) *Keeper {
+) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
-	return &Keeper{
+	if storeKey == nil {
+		panic("storeKey cannot be nil")
+	}
+
+	if memKey == nil {
+		panic("memKey cannot be nil")
+	}
+
+	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,

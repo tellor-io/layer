@@ -3,15 +3,16 @@ package keeper
 import (
 	"testing"
 
-	"github.com/tellor-io/layer/app"
+	"github.com/tellor-io/layer/app/config"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,23 +20,20 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/mocks"
+	"github.com/tellor-io/layer/x/oracle/mocks"
 	r "github.com/tellor-io/layer/x/registry"
 	rkeeper "github.com/tellor-io/layer/x/registry/keeper"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-func OracleKeeper(t testing.TB) (*keeper.Keeper, *mocks.StakingKeeper, *mocks.AccountKeeper, sdk.Context) {
-	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
-
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	rStoreKey := sdk.NewKVStoreKey(registrytypes.StoreKey)
+func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.AccountKeeper, sdk.Context) {
+	config.SetupConfig()
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+	rStoreKey := storetypes.NewKVStoreKey(registrytypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(rStoreKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)

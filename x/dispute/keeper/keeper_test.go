@@ -7,9 +7,10 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	tmdb "github.com/cometbft/cometbft-db"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -17,9 +18,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/tellor-io/layer/app"
-	"github.com/tellor-io/layer/mocks"
+	"github.com/tellor-io/layer/app/config"
 	"github.com/tellor-io/layer/x/dispute/keeper"
+	"github.com/tellor-io/layer/x/dispute/mocks"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -47,12 +48,13 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) SetupTest() {
+	config.SetupConfig()
 	require := s.Require()
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	db := tmdb.NewMemDB()
-	stateStore := store.NewCommitMultiStore(db)
+	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(stateStore.LoadLatestVersion())
@@ -72,7 +74,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.slashingKeeper = mocks.NewSlashingKeeper(s.T())
 	s.stakingKeeper = mocks.NewStakingKeeper(s.T())
 
-	s.disputeKeeper = *keeper.NewKeeper(
+	s.disputeKeeper = keeper.NewKeeper(
 		cdc,
 		storeKey,
 		memStoreKey,
@@ -89,9 +91,6 @@ func (s *KeeperTestSuite) SetupTest() {
 	// Initialize params
 	s.disputeKeeper.SetParams(s.ctx, types.DefaultParams())
 
-	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
 	s.msgServer = keeper.NewMsgServerImpl(s.disputeKeeper)
 	KeyTestPubAddr()
 }

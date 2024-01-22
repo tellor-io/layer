@@ -46,13 +46,13 @@ func NewKeeper(
 	oracleKeeper types.OracleKeeper,
 	slashingKeeper types.SlashingKeeper,
 	stakingKeeper types.StakingKeeper,
-) *Keeper {
+) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{
+	return Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		memKey:     memKey,

@@ -10,7 +10,7 @@ import (
 	rk "github.com/tellor-io/layer/x/registry/keeper"
 )
 
-func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
+func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 	reportsStore := k.ReportsStore(ctx)
 	currentHeight := ctx.BlockHeight()
 
@@ -35,7 +35,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 	}
 	// pay reporters, time based rewards
 	k.AllocateTimeBasedRewards(ctx, reportersToPay)
-
+	return nil
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {

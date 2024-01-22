@@ -52,7 +52,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RegisterStoreDecoder registers a decoder.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
@@ -64,7 +64,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgSubmitValue int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgSubmitValue, &weightMsgSubmitValue, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgSubmitValue, &weightMsgSubmitValue, nil,
 		func(_ *rand.Rand) {
 			weightMsgSubmitValue = defaultWeightMsgSubmitValue
 		},
@@ -75,7 +75,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgCommitReport int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCommitReport, &weightMsgCommitReport, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgCommitReport, &weightMsgCommitReport, nil,
 		func(_ *rand.Rand) {
 			weightMsgCommitReport = defaultWeightMsgCommitReport
 		},
@@ -86,7 +86,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgTip int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgTip, &weightMsgTip, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgTip, &weightMsgTip, nil,
 		func(_ *rand.Rand) {
 			weightMsgTip = defaultWeightMsgTip
 		},

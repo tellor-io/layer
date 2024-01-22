@@ -18,10 +18,12 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 
 	// Amount of slashing = slash slashFactor * power at time of infraction
 	amount := k.stakingKeeper.TokensFromConsensusPower(ctx, power)
-	slashAmountDec := sdk.NewDecFromInt(amount).Mul(slashFactor)
+
+	slashAmountDec := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
 	slashAmount := slashAmountDec.TruncateInt()
-	validator, found := k.stakingKeeper.GetValidator(ctx, opAddr)
-	if !found {
+	validator, error := k.stakingKeeper.GetValidator(ctx, opAddr)
+	// TODO: return error instead of panic
+	if error != nil {
 		// If not found, the validator must have been overslashed and removed - so we don't need to do anything
 		// NOTE:  Correctness dependent on invariant that unbonding delegations / redelegations must also have been completely
 		//        slashed in this case - which we don't explicitly check, but should be true.
@@ -39,12 +41,16 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 	}
 
 	// cannot decrease balance below zero
-	tokensToBurn := sdk.MinInt(slashAmount, validator.Tokens)
-	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
+	tokensToBurn := math.MinInt(slashAmount, validator.Tokens)
+	tokensToBurn = math.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
-	validator = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+	validator, err := k.stakingKeeper.RemoveValidatorTokens(ctx, validator, tokensToBurn)
+	if err != nil {
+		// TODO: return error instead of panic
+		panic(err)
+	}
 
 	switch validator.GetStatus() {
 	case stakingtypes.Bonded:
@@ -61,7 +67,7 @@ func (k Keeper) Slash(ctx sdk.Context, opAddr sdk.ValAddress, power int64, slash
 
 	logger.Info(
 		"validator slashed by slash factor",
-		"validator", validator.GetOperator().String(),
+		"validator", validator.GetOperator(),
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
