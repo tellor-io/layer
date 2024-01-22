@@ -10,43 +10,69 @@ import (
 	rk "github.com/tellor-io/layer/x/registry/keeper"
 )
 
+// SetAggregatedReport calculates and allocates rewards to reporters based on aggregated reports.
+// at a specific blockchain height (to be ran in begin-blocker)
+// It retrieves the revealed reports from the reports store, sorts them by query ID, and then
+// calculates the aggregate report for each query using either the weighted-median or weighted-mode method.
+// TODO: Add support for other aggregation methods.
+// Rewards are allocated to the reporters based on the query tip amount, and time-based rewards are also
+// allocated to the reporters.
 func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
+	// Access the store that holds reports.
 	reportsStore := k.ReportsStore(ctx)
+	// Get the current block height of the blockchain.
 	currentHeight := ctx.BlockHeight()
 
+	// Retrieve the stored reports for the current block height.
 	bz := reportsStore.Get(types.NumKey(currentHeight))
 	var revealedReports types.Reports
 	k.cdc.Unmarshal(bz, &revealedReports)
 
+	// Initialize a map to organize reports by their query ID.
 	reportMapping := make(map[string][]types.MicroReport)
 
-	// sort by query id
+	// Sort the micro reports by their query ID.
 	for _, s := range revealedReports.MicroReports {
 		reportMapping[s.QueryId] = append(reportMapping[s.QueryId], *s)
 	}
+
+	// Prepare a list to keep track of reporters who are eligible for tbr.
 	reportersToPay := make([]*types.AggregateReporter, 0)
+
+	// Process each set of reports based on their aggregation method.
 	for _, reports := range reportMapping {
+		// Handle weighted-median aggregation method.
 		if reports[0].AggregateMethod == "weighted-median" {
+			// Calculate the aggregated report.
 			report := k.WeightedMedian(ctx, reports)
+			// Get the tip for this query.
 			tip := k.GetQueryTip(ctx, report.QueryId)
+			// Allocate rewards if there is a tip.
 			if !tip.Amount.IsZero() {
 				k.AllocateRewards(ctx, report.Reporters, tip)
 			}
+			// Add reporters to the tbr payment list.
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
+		// Handle weighted-mode aggregation method.
 		if reports[0].AggregateMethod == "weighted-mode" {
+			// Calculate the aggregated report.
 			report := k.WeightedMode(ctx, reports)
+			// Get the tip for this query.
 			tip := k.GetQueryTip(ctx, report.QueryId)
+			// Allocate rewards if there is a tip.
 			if !tip.Amount.IsZero() {
 				k.AllocateRewards(ctx, report.Reporters, tip)
 			}
+			// Add reporters to the tbr payment list.
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
 	}
-	// pay reporters, time based rewards
-	tbr := k.getTimeBasedRewards(ctx)
-	k.AllocateRewards(ctx, reportersToPay, tbr)
 
+	// Process time-based rewards for reporters.
+	tbr := k.getTimeBasedRewards(ctx)
+	// Allocate time-based rewards to all eligible reporters.
+	k.AllocateRewards(ctx, reportersToPay, tbr)
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
