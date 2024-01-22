@@ -30,7 +30,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 			report := k.WeightedMedian(ctx, reports)
 			tip := k.GetQueryTip(ctx, report.QueryId)
 			if !tip.Amount.IsZero() {
-				k.AllocateTips(ctx, report.Reporters, tip)
+				k.AllocateRewards(ctx, report.Reporters, tip)
 			}
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
@@ -38,14 +38,14 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 			report := k.WeightedMode(ctx, reports)
 			tip := k.GetQueryTip(ctx, report.QueryId)
 			if !tip.Amount.IsZero() {
-				k.AllocateTips(ctx, report.Reporters, tip)
+				k.AllocateRewards(ctx, report.Reporters, tip)
 			}
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
 	}
 	// pay reporters, time based rewards
 	tbr := k.getTimeBasedRewards(ctx)
-	k.AllocateTips(ctx, reportersToPay, tbr)
+	k.AllocateRewards(ctx, reportersToPay, tbr)
 
 }
 
