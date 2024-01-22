@@ -637,8 +637,7 @@ func New(
 		// Start server for handling gRPC messages from daemons.
 		go app.Server.Start()
 
-		// Non-validating full-nodes have no need to run the price daemon.
-		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
+		if daemonFlags.Price.Enabled {
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices

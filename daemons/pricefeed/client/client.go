@@ -230,7 +230,10 @@ func (c *Client) start(ctx context.Context,
 			)
 		}()
 	}
-	// _, _ = priceFeedMutableMarketConfigs.UpdateMarkets(marketParams)
+	_, err = priceFeedMutableMarketConfigs.UpdateMarkets(marketParams)
+	if err != nil {
+		panic(err)
+	}
 	priceUpdaterTicker, priceUpdaterStop := c.newTickerWithStop(int(daemonFlags.Price.LoopDelayMs))
 	// Now that all persistent subtasks have been started and all tickers and stop channels are created,
 	// signal that the startup process is complete. This needs to be called before entering the

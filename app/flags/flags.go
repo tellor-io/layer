@@ -49,8 +49,7 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		NonValidatingFullNodeFlag,
 		DefaultNonValidatingFullNode,
 		"Whether to run in non-validating full-node mode. "+
-			"This disables the pricing daemon and enables the full-node ProcessProposal logic. "+
-			"Validators should _never_ use this mode.",
+			"This disables the pricing daemon.",
 	)
 	cmd.Flags().String(
 		DdAgentHost,

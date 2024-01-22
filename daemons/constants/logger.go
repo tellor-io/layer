@@ -28,6 +28,9 @@ const (
 	// in starting the prices query service.
 	// If the protocol is not started within this grace period, the daemon will report these errors as true errors.
 	PriceDaemonStartupErrorGracePeriod = 120 * time.Second
+
+	// Error messages
+	UnexpectedResponseStatusMessage = "Unexpected response status code of:"
 )
 
 var (

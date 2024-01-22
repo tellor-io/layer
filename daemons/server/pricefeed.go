@@ -65,7 +65,7 @@ func (s *Server) UpdateMarketPrices(
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.PricefeedDaemonServiceName)
 
-	return &types.UpdateMarketPricesResponse{MarketPriceUpdates: req.MarketPriceUpdates}, nil
+	return &types.UpdateMarketPricesResponse{}, nil
 }
 
 // validateMarketPricesUpdatesMessage validates a `UpdateMarketPricesRequest`.
