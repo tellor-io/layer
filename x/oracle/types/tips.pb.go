@@ -24,10 +24,14 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Tips is a struct that contains the query data and the amount it was tipped
 type Tips struct {
-	QueryData string     `protobuf:"bytes,1,opt,name=queryData,proto3" json:"queryData,omitempty"`
-	Amount    types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
-	TotalTips types.Coin `protobuf:"bytes,3,opt,name=totalTips,proto3" json:"totalTips"`
+	// queryData is the query data that was tipped
+	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	// amount is the amount that was tipped
+	Amount types.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount"`
+	// totalTips is the total amount of tips for this query data so far
+	TotalTips types.Coin `protobuf:"bytes,3,opt,name=total_tips,json=totalTips,proto3" json:"total_tips"`
 }
 
 func (m *Tips) Reset()         { *m = Tips{} }
@@ -84,81 +88,31 @@ func (m *Tips) GetTotalTips() types.Coin {
 	return types.Coin{}
 }
 
-type BlockTips struct {
-	Tips map[string]bool `protobuf:"bytes,1,rep,name=tips,proto3" json:"tips,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
-}
-
-func (m *BlockTips) Reset()         { *m = BlockTips{} }
-func (m *BlockTips) String() string { return proto.CompactTextString(m) }
-func (*BlockTips) ProtoMessage()    {}
-func (*BlockTips) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1dd649bc410cbcce, []int{1}
-}
-func (m *BlockTips) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *BlockTips) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_BlockTips.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *BlockTips) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BlockTips.Merge(m, src)
-}
-func (m *BlockTips) XXX_Size() int {
-	return m.Size()
-}
-func (m *BlockTips) XXX_DiscardUnknown() {
-	xxx_messageInfo_BlockTips.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_BlockTips proto.InternalMessageInfo
-
-func (m *BlockTips) GetTips() map[string]bool {
-	if m != nil {
-		return m.Tips
-	}
-	return nil
-}
-
 func init() {
 	proto.RegisterType((*Tips)(nil), "layer.oracle.Tips")
-	proto.RegisterType((*BlockTips)(nil), "layer.oracle.BlockTips")
-	proto.RegisterMapType((map[string]bool)(nil), "layer.oracle.BlockTips.TipsEntry")
 }
 
 func init() { proto.RegisterFile("layer/oracle/tips.proto", fileDescriptor_1dd649bc410cbcce) }
 
 var fileDescriptor_1dd649bc410cbcce = []byte{
-	// 323 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x51, 0x41, 0x4e, 0x02, 0x31,
-	0x14, 0x9d, 0x02, 0x12, 0xa7, 0xb8, 0x30, 0x13, 0x12, 0x47, 0x62, 0x2a, 0xb2, 0xc2, 0x85, 0x6d,
-	0xc0, 0x18, 0x8c, 0x89, 0x1b, 0xd0, 0x0b, 0x4c, 0x5c, 0xb9, 0xeb, 0x4c, 0x1a, 0x9c, 0x50, 0xe6,
-	0x8f, 0xd3, 0x0e, 0x71, 0xe2, 0x25, 0x3c, 0x80, 0x07, 0x62, 0xc9, 0xd2, 0x95, 0x31, 0x70, 0x11,
-	0xd3, 0x96, 0x80, 0x4b, 0x37, 0xcd, 0xef, 0x7f, 0xef, 0xbf, 0xf6, 0xfd, 0x87, 0x4f, 0x24, 0xaf,
-	0x44, 0xc1, 0xa0, 0xe0, 0x89, 0x14, 0x4c, 0xa7, 0xb9, 0xa2, 0x79, 0x01, 0x1a, 0x82, 0x23, 0x0b,
-	0x50, 0x07, 0x74, 0xda, 0x53, 0x98, 0x82, 0x05, 0x98, 0xa9, 0x1c, 0xa7, 0x43, 0x12, 0x50, 0x73,
-	0x50, 0x2c, 0xe6, 0x4a, 0xb0, 0xc5, 0x20, 0x16, 0x9a, 0x0f, 0x58, 0x02, 0x69, 0xe6, 0xf0, 0xde,
-	0x27, 0xc2, 0x8d, 0xa7, 0x34, 0x57, 0xc1, 0x19, 0xf6, 0x5f, 0x4b, 0x51, 0x54, 0x0f, 0x5c, 0xf3,
-	0x10, 0x75, 0x51, 0xdf, 0x8f, 0xf6, 0x8d, 0x60, 0x84, 0x9b, 0x7c, 0x0e, 0x65, 0xa6, 0xc3, 0x5a,
-	0x17, 0xf5, 0x5b, 0xc3, 0x53, 0xea, 0x74, 0xa9, 0xd1, 0xa5, 0x5b, 0x5d, 0x3a, 0x81, 0x34, 0x1b,
-	0x37, 0x96, 0xdf, 0xe7, 0x5e, 0xb4, 0xa5, 0x07, 0xf7, 0xd8, 0xd7, 0xa0, 0xb9, 0x34, 0x6f, 0x84,
-	0xf5, 0xff, 0xcd, 0xee, 0x27, 0x7a, 0xef, 0xd8, 0x1f, 0x4b, 0x48, 0x66, 0xf6, 0x8b, 0x37, 0xb8,
-	0x61, 0xdc, 0x87, 0xa8, 0x5b, 0xef, 0xb7, 0x86, 0x17, 0xf4, 0xaf, 0x7d, 0xba, 0xa3, 0x51, 0x73,
-	0x3c, 0x66, 0xba, 0xa8, 0x22, 0x4b, 0xef, 0x8c, 0xb0, 0xbf, 0x6b, 0x05, 0xc7, 0xb8, 0x3e, 0x13,
-	0xd5, 0xd6, 0xa0, 0x29, 0x83, 0x36, 0x3e, 0x58, 0x70, 0x59, 0x0a, 0xeb, 0xec, 0x30, 0x72, 0x97,
-	0xbb, 0xda, 0x2d, 0x1a, 0x4f, 0x96, 0x6b, 0x82, 0x56, 0x6b, 0x82, 0x7e, 0xd6, 0x04, 0x7d, 0x6c,
-	0x88, 0xb7, 0xda, 0x10, 0xef, 0x6b, 0x43, 0xbc, 0xe7, 0xcb, 0x69, 0xaa, 0x5f, 0xca, 0x98, 0x26,
-	0x30, 0x67, 0x5a, 0x48, 0x09, 0xc5, 0x55, 0x0a, 0xcc, 0xe5, 0xf4, 0xb6, 0x4b, 0xaa, 0xca, 0x85,
-	0x8a, 0x9b, 0x76, 0xcf, 0xd7, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x56, 0x1f, 0xa3, 0x6a, 0xc6,
-	0x01, 0x00, 0x00,
+	// 260 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x50, 0x3d, 0x4e, 0xc3, 0x30,
+	0x14, 0x8e, 0xa1, 0xaa, 0x54, 0xc3, 0x14, 0x21, 0x11, 0x2a, 0x61, 0x2a, 0xa6, 0x32, 0x60, 0xab,
+	0x30, 0xb0, 0x31, 0xb4, 0x9c, 0xa0, 0x62, 0x62, 0xa9, 0x5e, 0x82, 0x15, 0x2c, 0x25, 0x79, 0xc1,
+	0x7e, 0x41, 0xe4, 0x16, 0x9c, 0x80, 0xf3, 0x74, 0xec, 0xc8, 0x84, 0x50, 0x72, 0x11, 0x14, 0xbb,
+	0x62, 0x66, 0x7b, 0xfa, 0x7e, 0xf4, 0x7d, 0xef, 0xe3, 0xa7, 0x05, 0xb4, 0xda, 0x2a, 0xb4, 0x90,
+	0x15, 0x5a, 0x91, 0xa9, 0x9d, 0xac, 0x2d, 0x12, 0xc6, 0xc7, 0x9e, 0x90, 0x81, 0x98, 0x8a, 0x0c,
+	0x5d, 0x89, 0x4e, 0xa5, 0xe0, 0xb4, 0x7a, 0x5b, 0xa4, 0x9a, 0x60, 0xa1, 0x32, 0x34, 0x55, 0x50,
+	0x4f, 0x4f, 0x72, 0xcc, 0xd1, 0x9f, 0x6a, 0xb8, 0x02, 0x7a, 0xf9, 0xc9, 0xf8, 0xe8, 0xd1, 0xd4,
+	0x2e, 0x3e, 0xe7, 0xfc, 0xb5, 0xd1, 0xb6, 0xdd, 0x3c, 0x03, 0x41, 0xc2, 0x66, 0x6c, 0x3e, 0x59,
+	0x4f, 0x3c, 0xf2, 0x00, 0x04, 0xf1, 0x1d, 0x1f, 0x43, 0x89, 0x4d, 0x45, 0xc9, 0xc1, 0x8c, 0xcd,
+	0x8f, 0x6e, 0xce, 0x64, 0x88, 0x93, 0x43, 0x9c, 0xdc, 0xc7, 0xc9, 0x15, 0x9a, 0x6a, 0x39, 0xda,
+	0x7e, 0x5f, 0x44, 0xeb, 0xbd, 0x3c, 0xbe, 0xe7, 0x9c, 0x90, 0xa0, 0xd8, 0x0c, 0xc5, 0x93, 0xc3,
+	0xff, 0x99, 0x27, 0xde, 0x32, 0xf4, 0x5a, 0xae, 0xb6, 0x9d, 0x60, 0xbb, 0x4e, 0xb0, 0x9f, 0x4e,
+	0xb0, 0x8f, 0x5e, 0x44, 0xbb, 0x5e, 0x44, 0x5f, 0xbd, 0x88, 0x9e, 0xae, 0x72, 0x43, 0x2f, 0x4d,
+	0x2a, 0x33, 0x2c, 0x15, 0xe9, 0xa2, 0x40, 0x7b, 0x6d, 0x50, 0x85, 0xb1, 0xde, 0xff, 0xe6, 0x6a,
+	0x6b, 0xed, 0xd2, 0xb1, 0x7f, 0xf6, 0xf6, 0x37, 0x00, 0x00, 0xff, 0xff, 0x13, 0x36, 0xc1, 0xaf,
+	0x4b, 0x01, 0x00, 0x00,
 }
 
 func (m *Tips) Marshal() (dAtA []byte, err error) {
@@ -211,51 +165,6 @@ func (m *Tips) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *BlockTips) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *BlockTips) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *BlockTips) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Tips) > 0 {
-		for k := range m.Tips {
-			v := m.Tips[k]
-			baseI := i
-			i--
-			if v {
-				dAtA[i] = 1
-			} else {
-				dAtA[i] = 0
-			}
-			i--
-			dAtA[i] = 0x10
-			i -= len(k)
-			copy(dAtA[i:], k)
-			i = encodeVarintTips(dAtA, i, uint64(len(k)))
-			i--
-			dAtA[i] = 0xa
-			i = encodeVarintTips(dAtA, i, uint64(baseI-i))
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTips(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTips(v)
 	base := offset
@@ -281,23 +190,6 @@ func (m *Tips) Size() (n int) {
 	n += 1 + l + sovTips(uint64(l))
 	l = m.TotalTips.Size()
 	n += 1 + l + sovTips(uint64(l))
-	return n
-}
-
-func (m *BlockTips) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Tips) > 0 {
-		for k, v := range m.Tips {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovTips(uint64(len(k))) + 1 + 1
-			n += mapEntrySize + 1 + sovTips(uint64(mapEntrySize))
-		}
-	}
 	return n
 }
 
@@ -433,171 +325,6 @@ func (m *Tips) Unmarshal(dAtA []byte) error {
 			if err := m.TotalTips.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTips(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTips
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *BlockTips) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTips
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: BlockTips: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: BlockTips: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tips", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTips
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTips
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTips
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Tips == nil {
-				m.Tips = make(map[string]bool)
-			}
-			var mapkey string
-			var mapvalue bool
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowTips
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowTips
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= uint64(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthTips
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey < 0 {
-						return ErrInvalidLengthTips
-					}
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var mapvaluetemp int
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowTips
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						mapvaluetemp |= int(b&0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					mapvalue = bool(mapvaluetemp != 0)
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipTips(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if (skippy < 0) || (iNdEx+skippy) < 0 {
-						return ErrInvalidLengthTips
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Tips[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
