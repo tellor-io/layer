@@ -14,8 +14,14 @@ import (
 
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	// Check if query data begins with 0x and remove it
 	if rk.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
+	}
+	// Try to decode query data from hex string
+	queryData, err := hex.DecodeString(msg.QueryData)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
 	tip, _ := k.GetQueryTips(ctx, k.TipStore(ctx), msg.QueryData)
 	currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
@@ -29,10 +35,6 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	// check if msg sender is validator
 	if !reporter.Equals(validator.GetOperator()) {
 		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
-	}
-	queryData, err := hex.DecodeString(msg.QueryData)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
 	queryId := HashQueryData(queryData)
 	report := types.CommitReport{

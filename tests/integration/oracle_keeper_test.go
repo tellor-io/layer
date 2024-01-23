@@ -207,12 +207,12 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 func report(creator, signature, value, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
 		Creator:   creator,
-		QueryData: ethQueryData,
+		QueryData: qdata,
 		Signature: signature,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
-		QueryData: ethQueryData,
+		QueryData: qdata,
 		Value:     value,
 	}
 	return commit, reveal
@@ -375,4 +375,37 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestCommitQueryMixed() {
+	_, msgServer := s.oracleKeeper()
+	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	tip := sdk.NewCoin(s.denom, sdk.NewInt(1000))
+	queryData1 := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryData3 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	msg := types.MsgTip{
+		Tipper:    accs[0].String(),
+		QueryData: queryData2,
+		Amount:    tip,
+	}
+	_, err := msgServer.Tip(s.ctx, &msg)
+	s.Nil(err)
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	valueDecoded, err := hex.DecodeString(value)
+	s.Nil(err)
+	signature, err := privKeys[0].Sign(valueDecoded) // sign value
+	s.Nil(err)
+	// commit report with query data in cycle list
+	commit, _ := report(accs[0].String(), hex.EncodeToString(signature), value, queryData1)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.Nil(err)
+	// commit report with query data not in cycle list but has a tip
+	commit, _ = report(accs[0].String(), hex.EncodeToString(signature), value, queryData2)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.Nil(err)
+	// commit report with query data not in cycle list and has no tip
+	commit, _ = report(accs[0].String(), hex.EncodeToString(signature), value, queryData3)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.ErrorContains(err, "query data does not have tips/not in cycle")
 }

@@ -46,3 +46,20 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
 	require.ErrorContains(err, "query data does not have tips/not in cycle")
 }
+
+func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
+	queryData1 := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	var commitreq types.MsgCommitReport
+	// Commit report transaction
+	valueDecoded, err := hex.DecodeString(value)
+	s.Nil(err)
+	signature, err := PrivKey.Sign(valueDecoded)
+	s.Nil(err)
+	commitreq.Creator = Addr.String()
+	commitreq.QueryData = queryData1
+	commitreq.Signature = hex.EncodeToString(signature)
+	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
+	s.Nil(err)
+
+}
