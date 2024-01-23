@@ -4,21 +4,23 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/math"
+	"cosmossdk.io/store"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	rk "github.com/tellor-io/layer/x/registry/keeper"
 )
 
 func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {
-	twoPercent := tip.Amount.Mul(sdk.NewInt(2)).Quo(sdk.NewInt(100))
+	twoPercent := tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	burnCoin := sdk.NewCoin(tip.Denom, twoPercent)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, tipper, types.ModuleName, sdk.NewCoins(tip)); err != nil {
-		return sdk.NewCoin(tip.Denom, sdk.ZeroInt()), err
+		return sdk.NewCoin(tip.Denom, math.ZeroInt()), err
 	}
 	// burn 2% of tip
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(burnCoin)); err != nil {
-		return sdk.NewCoin(tip.Denom, sdk.ZeroInt()), err
+		return sdk.NewCoin(tip.Denom, math.ZeroInt()), err
 	}
 	return tip.Sub(burnCoin), nil
 }
@@ -38,25 +40,25 @@ func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, query
 	tipStore.Set(queryId, k.cdc.MustMarshal(&tips))
 }
 
-func (k Keeper) SetTipperTipsForQuery(ctx sdk.Context, tipStore sdk.KVStore, tipper, queryData string, tip sdk.Coin) {
+func (k Keeper) SetTipperTipsForQuery(ctx sdk.Context, tipStore store.KVStore, tipper, queryData string, tip sdk.Coin) {
 	tips := k.GetUserQueryTips(ctx, tipper, queryData)
 	tips.Total = tips.Total.Add(tip)
 	tipStore.Set(k.TipperKey(tipper, queryData), k.cdc.MustMarshal(&tips))
 }
 
-func (k Keeper) SetTipperTotalTips(ctx sdk.Context, tipStore sdk.KVStore, tipper sdk.AccAddress, tip sdk.Coin) {
+func (k Keeper) SetTipperTotalTips(ctx sdk.Context, tipStore store.KVStore, tipper sdk.AccAddress, tip sdk.Coin) {
 	tips := k.GetUserTips(ctx, tipper)
 	tips.Total = tips.Total.Add(tip)
 	tipStore.Set(tipper, k.cdc.MustMarshal(&tips))
 }
 
-func (k Keeper) SetTotalTips(ctx sdk.Context, tipStore sdk.KVStore, tip sdk.Coin) {
+func (k Keeper) SetTotalTips(ctx sdk.Context, tipStore store.KVStore, tip sdk.Coin) {
 	total := k.GetTotalTips(ctx)
 	totals := total.Add(tip)
 	tipStore.Set([]byte("totaltips"), k.cdc.MustMarshal(&totals))
 }
 
-func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData string) (types.Tips, []byte) {
+func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore store.KVStore, queryData string) (types.Tips, []byte) {
 	if rk.Has0xPrefix(queryData) {
 		queryData = queryData[2:]
 	}
@@ -70,8 +72,8 @@ func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore sdk.KVStore, queryData st
 	if bz == nil {
 		return types.Tips{
 			QueryData: queryData,
-			Amount:    sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
-			TotalTips: sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			Amount:    sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
+			TotalTips: sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 		}, queryId
 	}
 	var tips types.Tips
@@ -85,7 +87,7 @@ func (k Keeper) GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) types.UserTi
 	if bz == nil {
 		return types.UserTipTotal{
 			Address: tipper.String(),
-			Total:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			Total:   sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 		}
 	}
 	var tips types.UserTipTotal
@@ -102,7 +104,7 @@ func (k Keeper) GetUserQueryTips(ctx sdk.Context, tipper, queryData string) (tip
 	if bz == nil {
 		return types.UserTipTotal{
 			Address: tipper,
-			Total:   sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()),
+			Total:   sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()),
 		}
 	}
 	k.cdc.Unmarshal(bz, &tips)
@@ -117,7 +119,7 @@ func (k Keeper) GetTotalTips(ctx sdk.Context) sdk.Coin {
 	tipStore := k.TipStore(ctx)
 	bz := tipStore.Get([]byte("totaltips"))
 	if bz == nil {
-		return sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt())
+		return sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt())
 	}
 	var total sdk.Coin
 	k.cdc.MustUnmarshal(bz, &total)

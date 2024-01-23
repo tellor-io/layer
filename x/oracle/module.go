@@ -9,8 +9,8 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -151,13 +151,10 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion is a sequence number for state-breaking change of the module. It should be incremented on each consensus-breaking change introduced by the module. To avoid wrong/empty versions, the initial version should be set to 1
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock contains the logic that is automatically triggered at the beginning of each block
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
 // EndBlock contains the logic that is automatically triggered at the end of each block
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	am.keeper.SetAggregatedReport(ctx)
-	return []abci.ValidatorUpdate{}
+func (am AppModule) EndBlock(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return am.keeper.SetAggregatedReport(sdkCtx)
 }
 
 // ----------------------------------------------------------------------------
@@ -210,9 +207,9 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 	)
 	m := NewAppModule(
 		in.Cdc,
-		*k,
+		k,
 		in.AccountKeeper,
 		in.BankKeeper,
 	)
-	return OracleOutputs{OracleKeeper: *k, Module: m}
+	return OracleOutputs{OracleKeeper: k, Module: m}
 }

@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -41,7 +42,7 @@ func (msg *MsgTip) GetSignBytes() []byte {
 func (msg *MsgTip) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Tipper)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tipper address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tipper address (%s)", err)
 	}
 	return nil
 }

@@ -19,7 +19,6 @@ func (k Keeper) SortPayerInfo(feePayers []types.PayerInfo) (fromAcc, fromBond []
 }
 
 func (k Keeper) RefundDisputeFeeToAccount(ctx sdk.Context, fromAcc []types.PayerInfo) error {
-	var inputs []banktypes.Input
 	var outputs []banktypes.Output
 
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
@@ -34,7 +33,7 @@ func (k Keeper) RefundDisputeFeeToAccount(ctx sdk.Context, fromAcc []types.Payer
 	}
 
 	// Prepare input
-	inputs = []banktypes.Input{banktypes.NewInput(moduleAddress, totalAmount)}
+	inputs := banktypes.NewInput(moduleAddress, totalAmount)
 
 	// Perform the InputOutputCoins operation
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
@@ -63,6 +62,6 @@ func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.
 		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(voter), reward))
 	}
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := []banktypes.Input{banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, totalAmount)))}
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, totalAmount)))
 	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }

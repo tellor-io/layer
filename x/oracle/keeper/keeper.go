@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 
@@ -41,12 +41,20 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	registryKeeper types.RegistryKeeper,
 	authority string,
-) *Keeper {
+) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
-	return &Keeper{
+	if storeKey == nil {
+		panic("storeKey cannot be nil")
+	}
+
+	if memKey == nil {
+		panic("memKey cannot be nil")
+	}
+
+	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 		memKey:   memKey,

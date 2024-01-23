@@ -7,14 +7,16 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -25,6 +27,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -41,6 +44,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/tellor-io/layer/app/config"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
@@ -69,7 +73,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/tests/integration"
 )
 
@@ -117,33 +120,56 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
 
 	suite.accountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, suite.fetchStoreKey(banktypes.StoreKey), authtypes.ProtoBaseAccount,
-		maccPerms, sdk.Bech32MainPrefix, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		runtime.NewKVStoreService(suite.fetchStoreKey(banktypes.StoreKey).(*storetypes.KVStoreKey)),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+
 	suite.bankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, suite.fetchStoreKey(banktypes.StoreKey), suite.accountKeeper, blockedAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		runtime.NewKVStoreService(suite.fetchStoreKey(banktypes.StoreKey).(*storetypes.KVStoreKey)),
+		suite.accountKeeper,
+		blockedAddrs,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		log.NewNopLogger(),
 	)
 
 	suite.stakingKeeper = stakingkeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(stakingtypes.StoreKey), suite.accountKeeper, suite.bankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		runtime.NewKVStoreService(suite.fetchStoreKey(stakingtypes.StoreKey).(*storetypes.KVStoreKey)),
+		suite.accountKeeper,
+		suite.bankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
 
 	suite.slashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, cdc, suite.fetchStoreKey(banktypes.StoreKey), suite.stakingKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec,
+		cdc,
+		runtime.NewKVStoreService(suite.fetchStoreKey(banktypes.StoreKey).(*storetypes.KVStoreKey)),
+		suite.stakingKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.registrykeeper = *registrykeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(registrytypes.StoreKey), suite.fetchStoreKey(registrytypes.StoreKey), paramtypes.Subspace{},
+		appCodec,
+		suite.fetchStoreKey(registrytypes.StoreKey),
+		suite.fetchStoreKey(registrytypes.StoreKey),
+		paramtypes.Subspace{},
 	)
 
 	suite.distrKeeper = distrkeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(distrtypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	suite.oraclekeeper = *oraclekeeper.NewKeeper(
+	suite.oraclekeeper = oraclekeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	suite.disputekeeper = *disputekeeper.NewKeeper(
+	suite.disputekeeper = disputekeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.slashingKeeper, suite.stakingKeeper,
 	)
 }
@@ -153,36 +179,32 @@ func (s *IntegrationTestSuite) SetupTest() {
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
 	sdk.DefaultBondDenom = "loya"
-	accountPubKeyPrefix := app.AccountAddressPrefix + "pub"
-	validatorAddressPrefix := app.AccountAddressPrefix + "valoper"
-	validatorPubKeyPrefix := app.AccountAddressPrefix + "valoperpub"
-	consNodeAddressPrefix := app.AccountAddressPrefix + "valcons"
-	consNodePubKeyPrefix := app.AccountAddressPrefix + "valconspub"
-	config := sdk.GetConfig()
-	config.SetBech32PrefixForAccount(app.AccountAddressPrefix, accountPubKeyPrefix)
-	config.SetBech32PrefixForValidator(validatorAddressPrefix, validatorPubKeyPrefix)
-	config.SetBech32PrefixForConsensusNode(consNodeAddressPrefix, consNodePubKeyPrefix)
+	config.SetupConfig()
 
 	app, err := sims.SetupWithConfiguration(
-		configurator.NewAppConfig(
-			integration.AuthModule(),
-			configurator.BankModule(),
-			configurator.StakingModule(),
-			configurator.SlashingModule(),
-			configurator.ParamsModule(),
-			configurator.ConsensusModule(),
-			configurator.DistributionModule(),
-			integration.OracleModule(),
-			integration.DisputeModule(),
-			integration.RegistryModule(),
-			configurator.GovModule()),
+		depinject.Configs(
+			configurator.NewAppConfig(
+				integration.AuthModule(),
+				configurator.BankModule(),
+				configurator.StakingModule(),
+				configurator.SlashingModule(),
+				configurator.ParamsModule(),
+				configurator.ConsensusModule(),
+				configurator.DistributionModule(),
+				integration.OracleModule(),
+				integration.DisputeModule(),
+				integration.RegistryModule(),
+				configurator.GovModule(),
+			),
+			depinject.Supply(log.NewNopLogger()),
+		),
 		integration.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
 		&s.disputekeeper, &s.registrykeeper, &s.govKeeper)
 
 	s.NoError(err)
-	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContext(false, tmproto.Header{Time: time.Now()}))
+	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
 	s.fetchStoreKey = app.UnsafeFindStoreKey
 
 	s.queryHelper = baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceRegistry)
@@ -193,7 +215,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 
 func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
 	ctx := s.ctx
-	s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
+	// s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
 	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(amount)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(amount)))
 }
@@ -202,17 +224,18 @@ func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
 	PrivKey := secp256k1.GenPrivKey()
 	PubKey := PrivKey.PubKey()
 	Addr := sdk.AccAddress(PubKey.Address())
-	s.mintTokens(Addr, sdk.NewCoin(s.denom, sdk.NewInt(1000000)))
+	s.mintTokens(Addr, sdk.NewCoin(s.denom, math.NewInt(1000000)))
 	return Addr
 }
 
 func (s *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
-	val := s.stakingKeeper.GetAllValidators(s.ctx)[0]
-	valAddr, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	vals, err := s.stakingKeeper.GetAllValidators(s.ctx)
+	s.Require().NoError(err)
+	valAddr, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
 	s.Require().NoError(err)
 	return disputetypes.MicroReport{
 		Reporter:  sdk.AccAddress(valAddr).String(),
-		Power:     val.GetConsensusPower(val.GetBondedTokens()),
+		Power:     vals[0].GetConsensusPower(vals[0].GetBondedTokens()),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: 1696516597,
@@ -231,7 +254,16 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
 	for i, pk := range pks {
-		val, err := stakingtypes.NewValidator(valAddrs[i], pk, stakingtypes.Description{})
+		// account := authtypes.BaseAccount{
+		// 	Address:       testAddrs[i].String(),
+		// 	PubKey:        codectypes.UnsafePackAny(pk),
+		// 	AccountNumber: s.accountKeeper.NextAccountNumber(ctx),
+		// }
+		// s.accountKeeper.NewAccount(s.ctx, &account)
+
+		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
+
+		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
 		s.NoError(err)
 		s.stakingKeeper.SetValidator(ctx, val)
 		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
@@ -239,7 +271,8 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
 	}
 
-	_ = staking.EndBlocker(ctx, s.stakingKeeper)
+	_, err := s.stakingKeeper.EndBlocker(ctx)
+	s.NoError(err)
 
 	return addrs, valAddrs
 }
@@ -294,24 +327,24 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	for i, pk := range privKeys {
-		account := authtypes.BaseAccount{
-			Address: testAddrs[i].String(),
-			PubKey:  codectypes.UnsafePackAny(pk.PubKey()),
-		}
-		s.accountKeeper.SetAccount(s.ctx, &account)
-		val, err := stakingtypes.NewValidator(valAddrs[i], pk.PubKey(), stakingtypes.Description{})
+		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk.PubKey(), stakingtypes.Description{})
 		s.NoError(err)
 		s.stakingKeeper.SetValidator(ctx, val)
 		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
 		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
 		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
 		// call hooks for distribution init
-		err = s.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
-		err = s.distrKeeper.Hooks().BeforeDelegationCreated(ctx, addrs[i], val.GetOperator())
-		err = s.distrKeeper.Hooks().AfterDelegationModified(ctx, addrs[i], val.GetOperator())
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		err = s.distrKeeper.Hooks().AfterValidatorCreated(ctx, valBz)
+		err = s.distrKeeper.Hooks().BeforeDelegationCreated(ctx, addrs[i], valBz)
+		err = s.distrKeeper.Hooks().AfterDelegationModified(ctx, addrs[i], valBz)
 	}
 
-	_ = staking.EndBlocker(ctx, s.stakingKeeper)
+	_, err := s.stakingKeeper.EndBlocker(ctx)
+	s.NoError(err)
 
 	return addrs, valAddrs, privKeys
 }

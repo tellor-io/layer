@@ -18,8 +18,8 @@ func TestGenesis(t *testing.T) {
 	}
 
 	k, ctx := keepertest.DisputeKeeper(t)
-	dispute.InitGenesis(ctx, *k, genesisState)
-	got := dispute.ExportGenesis(ctx, *k)
+	dispute.InitGenesis(ctx, k, genesisState)
+	got := dispute.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState)

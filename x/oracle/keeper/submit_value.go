@@ -92,7 +92,11 @@ func (k Keeper) AppendReport(ctx sdk.Context, report *types.MicroReport) {
 
 func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int64, bool) {
 
-	validator := k.stakingKeeper.Validator(ctx, reporter)
+	validator, err := k.stakingKeeper.Validator(ctx, reporter)
+	if err != nil {
+		// TODO: return errors
+		panic(err)
+	}
 	if validator == nil {
 		return 0, false
 	}
