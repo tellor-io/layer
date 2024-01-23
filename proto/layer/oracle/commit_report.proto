@@ -8,7 +8,7 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 message Commit {
   string creator     = 1;
   bytes queryId     = 2;
-  string signature = 3; //signature of value in submit value
+  string salted_value = 3; 
 }
 
 message CommitReport {
