@@ -14,10 +14,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -70,18 +71,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper = new(mocks.StakingKeeper)
 	s.accountKeeper = new(mocks.AccountKeeper)
 	s.distrKeeper = new(mocks.DistrKeeper)
-	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
-	rparamsSubspace := typesparams.NewSubspace(cdc,
-		types.Amino,
-		storeKey,
-		memStoreKey,
-		"RegistryParams",
-	)
-	s.registryKeeper = *registryk.NewKeeper(
+
+	s.registryKeeper = registryk.NewKeeper(
 		cdc,
-		rStoreKey,
-		rmemStoreKey,
-		rparamsSubspace,
+		runtime.NewKVStoreService(rStoreKey),
 	)
 
 	s.oracleKeeper = keeper.NewKeeper(

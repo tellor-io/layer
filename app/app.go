@@ -508,11 +508,9 @@ func New(
 		),
 	)
 
-	app.RegistryKeeper = *registrymodulekeeper.NewKeeper(
+	app.RegistryKeeper = registrymodulekeeper.NewKeeper(
 		appCodec,
-		keys[registrymoduletypes.StoreKey],
-		keys[registrymoduletypes.MemStoreKey],
-		paramstypes.Subspace{}, //TODO: remove this!
+		runtime.NewKVStoreService(keys[registrymoduletypes.StoreKey]),
 	)
 	registryModule := registrymodule.NewAppModule(appCodec, app.RegistryKeeper, app.AccountKeeper, app.BankKeeper)
 

@@ -15,10 +15,11 @@ import (
 	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/oracle/mocks"
 	r "github.com/tellor-io/layer/x/registry"
@@ -44,18 +45,10 @@ func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.Acc
 
 	sk := new(mocks.StakingKeeper)
 	ak := new(mocks.AccountKeeper)
-	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
-	rparamsSubspace := typesparams.NewSubspace(cdc,
-		types.Amino,
-		storeKey,
-		memStoreKey,
-		"RegistryParams",
-	)
+
 	rk := rkeeper.NewKeeper(
 		cdc,
-		rStoreKey,
-		rmemStoreKey,
-		rparamsSubspace,
+		runtime.NewKVStoreService(rStoreKey),
 	)
 
 	k := keeper.NewKeeper(
@@ -74,7 +67,7 @@ func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.Acc
 	genesisState := registrytypes.GenesisState{
 		Params: registrytypes.DefaultParams(),
 	}
-	r.InitGenesis(ctx, *rk, genesisState)
+	r.InitGenesis(ctx, rk, genesisState)
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 

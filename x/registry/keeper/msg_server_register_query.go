@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -19,11 +20,11 @@ import (
 
 func (k msgServer) RegisterQuery(goCtx context.Context, msg *types.MsgRegisterQuery) (*types.MsgRegisterQueryResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	storeKey := ctx.KVStore(k.storeKey)
+	storeKey := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	// check if queryType is registered
-	specStore := prefix.NewStore(storeKey, types.KeyPrefix(types.SpecRegistryKey))
-	if !specStore.Has([]byte(msg.QueryType)) {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("query type not registered: %s", msg.QueryType))
+	specExists, _ := k.SpecRegistry.Has(ctx, msg.QueryType)
+	if !specExists {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("data spec not registered for type: %s", msg.QueryType))
 	}
 	// encode query data params
 	encodedData, err := EncodeArguments(msg.DataTypes, msg.DataFields)
@@ -38,7 +39,7 @@ func (k msgServer) RegisterQuery(goCtx context.Context, msg *types.MsgRegisterQu
 	// hash query data
 	queryId := crypto.Keccak256(queryData)
 	queryIdHex := hex.EncodeToString(queryId)
-	store := prefix.NewStore(storeKey, types.KeyPrefix(types.QueryRegistryKey))
+	store := prefix.NewStore(storeKey, types.QueryRegistryKey)
 	if store.Has(queryId) {
 		return nil, fmt.Errorf("query ID %s already exists", queryIdHex)
 	}

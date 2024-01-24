@@ -7,10 +7,9 @@ import (
 
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
@@ -123,7 +122,7 @@ func NewAppModule(
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
@@ -161,10 +160,9 @@ func AppWiringSetup() {
 type RegistryInputs struct {
 	depinject.In
 
-	KvStoreKey  *storetypes.KVStoreKey
-	MemStoreKey *storetypes.MemoryStoreKey
-	Cdc         codec.Codec
-	Config      *registrymodulev1.Module
+	KvStoreKey store.KVStoreService
+	Cdc        codec.Codec
+	Config     *registrymodulev1.Module
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
@@ -182,15 +180,13 @@ func ProvideModule(in RegistryInputs) RegistryOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.KvStoreKey,
-		in.MemStoreKey,
-		paramtypes.Subspace{},
 	)
 	m := NewAppModule(
 		in.Cdc,
-		*k,
+		k,
 		in.AccountKeeper,
 		in.BankKeeper,
 	)
 
-	return RegistryOutputs{RegistryKeeper: *k, Module: m}
+	return RegistryOutputs{RegistryKeeper: k, Module: m}
 }

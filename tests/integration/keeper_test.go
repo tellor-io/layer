@@ -155,11 +155,9 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	suite.registrykeeper = *registrykeeper.NewKeeper(
+	suite.registrykeeper = registrykeeper.NewKeeper(
 		appCodec,
-		suite.fetchStoreKey(registrytypes.StoreKey),
-		suite.fetchStoreKey(registrytypes.StoreKey),
-		paramtypes.Subspace{},
+		runtime.NewKVStoreService(suite.fetchStoreKey(registrytypes.StoreKey).(*storetypes.KVStoreKey)),
 	)
 
 	suite.distrKeeper = distrkeeper.NewKeeper(
@@ -254,13 +252,6 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
 	for i, pk := range pks {
-		// account := authtypes.BaseAccount{
-		// 	Address:       testAddrs[i].String(),
-		// 	PubKey:        codectypes.UnsafePackAny(pk),
-		// 	AccountNumber: s.accountKeeper.NextAccountNumber(ctx),
-		// }
-		// s.accountKeeper.NewAccount(s.ctx, &account)
-
 		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
 
 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})

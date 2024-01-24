@@ -6,7 +6,6 @@ import (
 
 	"github.com/tellor-io/layer/x/registry/types"
 
-	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,15 +13,16 @@ import (
 
 func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpec) (*types.MsgRegisterSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
-	if store.Has([]byte(msg.QueryType)) {
+	specExists, _ := k.SpecRegistry.Has(ctx, msg.QueryType)
+	if specExists {
 		return nil, status.Error(codes.AlreadyExists, "spec already exists")
 	}
 	if !SupportedType(msg.Spec.ValueType) {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("value type not supported: %s", msg.Spec.ValueType))
 	}
-	store.Set([]byte(msg.QueryType), k.cdc.MustMarshal(&msg.Spec))
+	if err := k.SpecRegistry.Set(ctx, msg.QueryType, msg.Spec); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgRegisterSpecResponse{}, nil
 }

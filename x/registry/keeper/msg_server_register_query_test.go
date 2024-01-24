@@ -46,7 +46,7 @@ func TestRegisterQuery(t *testing.T) {
 		DataFields: []string{"1", "2"},
 	}
 	registerQueryResult, err = ms.RegisterQuery(ctx, queryInput)
-	require.ErrorContains(t, err, "query type not registered")
+	require.ErrorContains(t, err, "data spec not registered for type")
 	require.Nil(t, registerQueryResult)
 
 	// register mismatched datatype and datafields -- test all 256 combinations of data types now ?

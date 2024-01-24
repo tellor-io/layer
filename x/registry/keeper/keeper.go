@@ -3,45 +3,64 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		memKey     storetypes.StoreKey
-		paramstore paramtypes.Subspace
+		cdc          codec.BinaryCodec
+		storeService store.KVStoreService
+		// Params key: ParamsKeyPrefix | value: Params
+		Params       collections.Item[types.Params]
+		SpecRegistry collections.Map[string, types.DataSpec]
+		Schema       collections.Schema
 	}
 )
 
+func DataspecCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.DataSpec] {
+	return collcodec.NewAltValueCodec(codec.CollValue[types.DataSpec](cdc), func(b []byte) (types.DataSpec, error) {
+		historicalinfo := types.DataSpec{} //nolint: staticcheck // HistoricalInfo is deprecated
+		err := historicalinfo.Unmarshal(b)
+		if err != nil {
+			return types.DataSpec{}, err
+		}
+
+		return types.DataSpec{
+			DocumentHash:      historicalinfo.DocumentHash,
+			ValueType:         historicalinfo.ValueType,
+			AggregationMethod: historicalinfo.AggregationMethod,
+		}, nil
+	})
+}
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey storetypes.StoreKey,
-	ps paramtypes.Subspace,
+	storeService store.KVStoreService,
 
-) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
+) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
+		cdc:          cdc,
+		storeService: storeService,
 
-	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
+		Params:       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		SpecRegistry: collections.NewMap(sb, types.SpecRegistryKey, "specRegistry", collections.StringKey, codec.CollValue[types.DataSpec](cdc)),
 	}
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -53,21 +72,22 @@ func (k Keeper) SetGenesisSpec(ctx sdk.Context) {
 	dataSpec.DocumentHash = ""
 	dataSpec.ValueType = "uint256"
 	dataSpec.AggregationMethod = "weighted-median"
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
-	store.Set([]byte("SpotPrice"), k.cdc.MustMarshal(&dataSpec))
+	k.SpecRegistry.Set(ctx, "SpotPrice", dataSpec)
 
 }
 
 func (k Keeper) GetGenesisSpec(ctx sdk.Context) types.DataSpec {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
-	spec := store.Get([]byte("SpotPrice"))
-	var dataSpec types.DataSpec
-	k.cdc.Unmarshal(spec, &dataSpec)
+	dataSpec, err := k.SpecRegistry.Get(ctx, "SpotPrice")
+	if err != nil {
+		panic(err)
+	}
 	return dataSpec
 }
 
+// TODO: remove query registration
 func (k Keeper) SetGenesisQuery(ctx sdk.Context) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.QueryRegistryKey))
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.QueryRegistryKey)
 	ethQueryData := SpotQueryData("eth", "usd")
 	store.Set(crypto.Keccak256(ethQueryData), ethQueryData)
 	btcQueryData := SpotQueryData("btc", "usd")
@@ -85,7 +105,8 @@ func SpotQueryData(symbolA, symbolB string) []byte {
 }
 
 func (k Keeper) GetGenesisQuery(ctx sdk.Context) (string, string, string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.QueryRegistryKey))
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.QueryRegistryKey)
 	trbQueryData := SpotQueryData("trb", "usd")
 	bzTRB := store.Get(crypto.Keccak256(trbQueryData))
 	trbHexData := (bytes.HexBytes(bzTRB).String())

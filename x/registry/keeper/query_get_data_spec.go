@@ -6,6 +6,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,8 +26,8 @@ func (k Keeper) GetDataSpec(goCtx context.Context, req *types.QueryGetDataSpecRe
 }
 
 func (k Keeper) Spec(ctx sdk.Context, queryType string) []byte {
-
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.SpecRegistryKey)
 
 	return store.Get([]byte(queryType))
 }

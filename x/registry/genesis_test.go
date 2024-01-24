@@ -18,8 +18,8 @@ func TestGenesis(t *testing.T) {
 	}
 
 	k, ctx := keepertest.RegistryKeeper(t)
-	registry.InitGenesis(ctx, *k, genesisState)
-	got := registry.ExportGenesis(ctx, *k)
+	registry.InitGenesis(ctx, k, genesisState)
+	got := registry.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState)

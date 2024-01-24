@@ -9,6 +9,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/common"
 	"google.golang.org/grpc/codes"
@@ -33,7 +34,8 @@ func (k Keeper) QueryData(ctx sdk.Context, queryId string) ([]byte, error) {
 	if !IsQueryIdValid(queryId) {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query id: %s", queryId))
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.QueryRegistryKey))
+	storeAdapter := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	store := prefix.NewStore(storeAdapter, types.QueryRegistryKey)
 	qIdBytes := common.HexToHash(queryId).Bytes()
 
 	queryData := store.Get(qIdBytes)
