@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	gometrics "github.com/armon/go-metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	"github.com/tellor-io/layer/lib/metrics"
 )

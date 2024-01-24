@@ -13,7 +13,7 @@ import (
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/lib/metrics"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"

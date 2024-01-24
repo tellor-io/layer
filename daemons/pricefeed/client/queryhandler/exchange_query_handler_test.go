@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	pf_constants "github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pft "github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/mocks"
 	"github.com/tellor-io/layer/testutil/constants"
 	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
 )

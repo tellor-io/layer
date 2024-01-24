@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/tellor-io/layer/mocks"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"google.golang.org/grpc"
 )
 

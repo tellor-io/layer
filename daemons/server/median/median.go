@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	gogogrpc "github.com/gogo/protobuf/grpc"
+	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	"github.com/tellor-io/layer/daemons/server/types"

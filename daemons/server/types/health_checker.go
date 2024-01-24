@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/tellor-io/layer/daemons/types"
 	libtime "github.com/tellor-io/layer/lib/time"
 )

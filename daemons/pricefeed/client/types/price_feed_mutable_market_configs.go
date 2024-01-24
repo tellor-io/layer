@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/lib/metrics"
 )
 

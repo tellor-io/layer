@@ -27,12 +27,12 @@ import (
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	"google.golang.org/grpc"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/mocks"
 
 	"github.com/tellor-io/layer/testutil/client"
 	"github.com/tellor-io/layer/testutil/constants"

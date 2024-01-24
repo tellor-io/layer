@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	pf_constants "github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pft "github.com/tellor-io/layer/daemons/pricefeed/types"
 	"github.com/tellor-io/layer/lib/metrics"
-	"github.com/tellor-io/layer/mocks"
 	"github.com/tellor-io/layer/testutil/constants"
 )
 
@@ -47,7 +47,7 @@ func genNewPriceEncoder(t *testing.T) *PriceEncoderImpl {
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
 		etmp,
-		log.TestingLogger(),
+		log.NewTestLogger(t),
 		bCh,
 	)
 	require.NoError(t, err)
@@ -262,7 +262,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 				tc.mutableExchangeConfig,
 				tc.mutableMarketConfigs,
 				&emtp,
-				log.TestingLogger(),
+				log.NewTestLogger(t),
 				nil,
 			)
 			require.NoError(t, err)

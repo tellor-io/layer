@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/lib/metrics"
 	big_testutil "github.com/tellor-io/layer/testutil/big"
 

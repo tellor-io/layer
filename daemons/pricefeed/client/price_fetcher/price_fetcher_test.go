@@ -10,12 +10,12 @@ import (
 	pricefeed_cosntants "github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	"github.com/tellor-io/layer/lib"
-	"github.com/tellor-io/layer/mocks"
 	"github.com/tellor-io/layer/testutil/constants"
 )
 

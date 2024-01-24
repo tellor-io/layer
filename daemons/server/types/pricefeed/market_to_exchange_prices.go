@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"

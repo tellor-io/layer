@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"

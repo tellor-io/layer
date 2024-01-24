@@ -242,9 +242,9 @@ func RegisterMedianValuesServiceHandlerClient(ctx context.Context, mux *runtime.
 }
 
 var (
-	pattern_MedianValuesService_GetAllMedianValues_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "api", "get_all_median_values"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_MedianValuesService_GetAllMedianValues_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "api", "get_all_median_values"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_MedianValuesService_GetMedianValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "api", "get_median_value", "query_data"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_MedianValuesService_GetMedianValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "api", "get_median_value", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

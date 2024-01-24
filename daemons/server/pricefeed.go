@@ -7,8 +7,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 

@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/spf13/cobra"
 	mediantypes "github.com/tellor-io/layer/daemons/server/types"
 	"github.com/tellor-io/layer/lib/prices"
@@ -53,7 +54,7 @@ func CmdCommitSubmitReport() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded)
+			data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded, signing.SignMode_SIGN_MODE_DIRECT)
 			if err != nil {
 				return err
 			}

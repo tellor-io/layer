@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/flags"
-	"github.com/tellor-io/layer/mocks"
+	"github.com/tellor-io/layer/daemons/mocks"
 )
 
 func TestAddDaemonFlagsToCmd(t *testing.T) {

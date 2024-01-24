@@ -1,6 +1,6 @@
 package grpc
 
-import "github.com/tellor-io/layer/mocks"
+import "github.com/tellor-io/layer/daemons/mocks"
 
 var (
 	TcpEndpoint = "localhost:9090"

@@ -4,9 +4,9 @@ import (
 	"net"
 
 	// "syscall"
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"

@@ -3,10 +3,10 @@ package price_fetcher
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	"github.com/tellor-io/layer/mocks"
 	"github.com/tellor-io/layer/testutil/constants"
 )
 
@@ -17,7 +17,7 @@ func TestGetNextNMarkets(t *testing.T) {
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
 		&mocks.ExchangeQueryHandler{},
-		log.NewNopLogger(),
+		log.NewTestLogger(t),
 		newTestPriceFetcherBufferedChannel(),
 	)
 	require.NoError(t, err)

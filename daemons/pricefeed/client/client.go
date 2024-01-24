@@ -10,8 +10,7 @@ import (
 	appflags "github.com/tellor-io/layer/app/flags"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 
-	sdklog "cosmossdk.io/log"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/flags"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
@@ -59,7 +58,7 @@ type Client struct {
 var _ daemontypes.HealthCheckable = (*Client)(nil)
 
 func newClient(logger log.Logger) *Client {
-	logger = logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName)
+	logger = logger.With(log.ModuleKey, constants.PricefeedDaemonModuleName)
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},
