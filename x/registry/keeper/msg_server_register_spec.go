@@ -15,7 +15,7 @@ func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	specExists, _ := k.SpecRegistry.Has(ctx, msg.QueryType)
 	if specExists {
-		return nil, status.Error(codes.AlreadyExists, "spec already exists")
+		return nil, status.Error(codes.AlreadyExists, "data spec previously registered")
 	}
 	if !SupportedType(msg.Spec.ValueType) {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("value type not supported: %s", msg.Spec.ValueType))

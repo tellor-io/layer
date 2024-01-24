@@ -31,7 +31,7 @@ func TestRegisterSpec(t *testing.T) {
 		Spec:      spec1,
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
-	require.ErrorContains(t, err, "spec already exists")
+	require.ErrorContains(t, err, "data spec previously registered")
 	require.Nil(t, registerSpecResult)
 
 	// register invalid value type

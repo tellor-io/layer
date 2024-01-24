@@ -12,10 +12,10 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 }
 
 // GetParams sets the x/registry module parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+func (k Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
-		panic(err)
+		return types.Params{}, err
 	}
-	return params
+	return params, nil
 }

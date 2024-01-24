@@ -56,7 +56,9 @@ func (k Keeper) SetGenesisSpec(ctx sdk.Context) {
 	dataSpec.DocumentHash = ""
 	dataSpec.ValueType = "uint256"
 	dataSpec.AggregationMethod = "weighted-median"
-	k.SpecRegistry.Set(ctx, "SpotPrice", dataSpec)
+	if err := k.SpecRegistry.Set(ctx, "SpotPrice", dataSpec); err != nil {
+		panic(err)
+	}
 
 }
 
