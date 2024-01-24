@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
@@ -27,21 +26,6 @@ type (
 	}
 )
 
-func DataspecCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.DataSpec] {
-	return collcodec.NewAltValueCodec(codec.CollValue[types.DataSpec](cdc), func(b []byte) (types.DataSpec, error) {
-		historicalinfo := types.DataSpec{} //nolint: staticcheck // HistoricalInfo is deprecated
-		err := historicalinfo.Unmarshal(b)
-		if err != nil {
-			return types.DataSpec{}, err
-		}
-
-		return types.DataSpec{
-			DocumentHash:      historicalinfo.DocumentHash,
-			ValueType:         historicalinfo.ValueType,
-			AggregationMethod: historicalinfo.AggregationMethod,
-		}, nil
-	})
-}
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService store.KVStoreService,
