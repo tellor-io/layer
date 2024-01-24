@@ -12,10 +12,10 @@ func (s *KeeperTestSuite) TestVote() {
 	require := s.Require()
 	// Add dispute
 	s.TestMsgProposeDisputeFromAccount()
-	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)))
+	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)), nil)
 	s.oracleKeeper.On("GetUserTips", mock.Anything, mock.Anything).Return(oracletypes.UserTipTotal{Address: "", Total: sdk.NewCoin("trb", math.NewInt(1))})
-	s.stakingKeeper.On("GetLastTotalPower", mock.Anything).Return(sdk.NewInt(1))
-	s.bankKeeper.On("GetSupply", mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)))
+	s.stakingKeeper.On("GetLastTotalPower", mock.Anything).Return(math.NewInt(1), nil)
+	s.bankKeeper.On("GetSupply", mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)), nil)
 	s.oracleKeeper.On("GetTotalTips", mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)))
 	voteMsg := types.MsgVote{
 		Voter: Addr.String(),

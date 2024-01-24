@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -29,9 +30,9 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	currentReporters := reporters[:5]
 	reports := testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.stakingKeeper.On("GetLastTotalPower", mock.Anything, mock.Anything).Return(cosmosmath.NewInt(totalPowers))
-	s.distrKeeper.On("GetFeePoolCommunityCoins", mock.Anything).Return(sdk.DecCoins{sdk.NewDecCoinFromDec("loya", sdk.NewDec(100))})
+	s.distrKeeper.On("GetFeePoolCommunityCoins", mock.Anything).Return(sdk.DecCoins{sdk.NewDecCoinFromDec("loya", math.LegacyNewDec(100))})
 	s.distrKeeper.On("AllocateTokensToValidator", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	s.distrKeeper.On("GetFeePool", mock.Anything).Return(distrtypes.FeePool{CommunityPool: sdk.DecCoins{sdk.NewDecCoinFromDec("loya", sdk.NewDec(1000))}})
+	s.distrKeeper.On("GetFeePool", mock.Anything).Return(distrtypes.FeePool{CommunityPool: sdk.DecCoins{sdk.NewDecCoinFromDec("loya", math.LegacyNewDec(1000))}})
 	s.distrKeeper.On("SetFeePool", mock.Anything, mock.Anything).Return(nil)
 
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)

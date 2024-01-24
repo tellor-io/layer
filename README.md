@@ -27,13 +27,13 @@ To run all tests:
 4) Add a validator account:
 `./layerd keys add alice`
 5) Create a tx to Give the alice loyas to stake:
-`./layerd add-genesis-account tellor15sck900lsktpq9enm4v7kspmykg0e0fu7jcr9n 10000000000000loya`
+`./layerd genesis add-genesis-account alice 10000000000000loya`
 6) Create a tx to Stake some loyas for alice:
-`./layerd gentx alice 1000000000000loya  --chain-id layer-test-1`
+`./layerd genesis gentx alice 1000000000000loya  --chain-id layer-test-1`
 7) Add the transactions to the genesis block:
-`./layerd collect-gentxs`
+`./layerd genesis collect-gentxs`
 8) Start the chain:
-`layerd start`
+`./layerd start`
 
 ## Starting the Chain With Ignite CLI:
 

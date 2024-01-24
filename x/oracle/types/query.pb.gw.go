@@ -951,23 +951,23 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "oracle", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "oracle", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetReportsbyQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_qid", "queryId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetReportsbyQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_qid", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetReportsbyReporter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_reporter", "reporter"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetReportsbyReporter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_reporter", "reporter"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetReportsbyReporterQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "oracle", "get_reportsby_reporter_qid", "reporter", "queryId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetReportsbyReporterQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "oracle", "get_reportsby_reporter_qid", "reporter", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetCurrentTip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_current_tip", "queryData"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetCurrentTip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_current_tip", "queryData"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetUserTipTotal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_user_tip_total", "tipper", "queryData"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetUserTipTotal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_user_tip_total", "tipper", "queryData"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetAggregatedReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_aggregated_report", "queryId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetAggregatedReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_aggregated_report", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "GetDataBefore", "queryId", "timestamp"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "GetDataBefore", "queryId", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetTimeBasedRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "get_time_based_rewards"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetTimeBasedRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "get_time_based_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -46,13 +46,13 @@ func NewKeeper(
 	oracleKeeper types.OracleKeeper,
 	slashingKeeper types.SlashingKeeper,
 	stakingKeeper types.StakingKeeper,
-) *Keeper {
+) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return &Keeper{
+	return Keeper{
 		cdc:        cdc,
 		storeKey:   storeKey,
 		memKey:     memKey,

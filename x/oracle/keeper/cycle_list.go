@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -32,4 +32,10 @@ func (k Keeper) GetCurrentIndex(ctx sdk.Context) int64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.CycleListKey())
 	bz := store.Get(types.CurrentIndexKey())
 	return int64(sdk.BigEndianToUint64(bz))
+}
+
+func (k Keeper) GetCurrentQueryInCycleList(ctx sdk.Context) string {
+	queries := k.GetCycleList(ctx)
+	currentIndex := k.GetCurrentIndex(ctx)
+	return queries[currentIndex]
 }

@@ -4,6 +4,8 @@ import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/math"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -77,10 +79,11 @@ func RegistryModule() configurator.ModuleOption {
 func DefaultStartUpConfig() sims.StartupConfig {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
-	ga := sims.GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.ZeroInt()))}
+	ga := sims.GenesisAccount{GenesisAccount: ba, Coins: sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.ZeroInt()))}
 	return sims.StartupConfig{
 		ValidatorSet:    sims.CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []sims.GenesisAccount{ga},
+		DB:              dbm.NewMemDB(),
 	}
 }
