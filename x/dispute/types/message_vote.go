@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -41,7 +42,7 @@ func (msg *MsgVote) GetSignBytes() []byte {
 func (msg *MsgVote) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Voter)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid voter address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid voter address (%s)", err)
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -48,7 +49,11 @@ func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateRep
 	toDistr := sdk.NewCoins()
 	// Allocate calculated rewards to the corresponding validators.
 	for reporter, reward := range rewards {
-		validator := k.stakingKeeper.Validator(ctx, sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter)))
+		validator, err := k.stakingKeeper.Validator(ctx, sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter)))
+		// TODO: return error instead of panic
+		if err != nil {
+			panic(err)
+		}
 		k.distrKeeper.AllocateTokensToValidator(ctx, validator, reward)
 		coin, _ := reward.TruncateDecimal()
 		toDistr = toDistr.Add(coin...)
@@ -70,7 +75,7 @@ func (k Keeper) getTimeBasedRewardsAccount(ctx sdk.Context) authtypes.ModuleAcco
 }
 
 func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward cosmosmath.Int) cosmosmath.Int {
-	power := sdk.NewDec(reporterPower * reportsCount)
-	amount := power.Quo(sdk.NewDec(totalPower)).MulTruncate(sdk.NewDecFromBigInt(reward.BigInt()))
+	power := math.LegacyNewDec(reporterPower * reportsCount)
+	amount := power.Quo(math.LegacyNewDec(totalPower)).MulTruncate(math.LegacyNewDecFromBigInt(reward.BigInt()))
 	return amount.RoundInt()
 }

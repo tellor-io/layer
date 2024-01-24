@@ -17,7 +17,7 @@ import (
 // TODO: Add support for other aggregation methods.
 // Rewards are allocated to the reporters based on the query tip amount, and time-based rewards are also
 // allocated to the reporters.
-func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
+func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 	// Access the store that holds reports.
 	reportsStore := k.ReportsStore(ctx)
 	// Get the current block height of the blockchain.
@@ -73,6 +73,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) {
 	tbr := k.getTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
 	k.AllocateRewards(ctx, reportersToPay, tbr)
+	return nil
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {

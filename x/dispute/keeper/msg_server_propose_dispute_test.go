@@ -28,8 +28,9 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 		Fee:             fee,
 		PayFromBond:     false,
 	}
-	addy, _ := sdk.AccAddressFromBech32(Addr.String())
-	val, _ := stakingtypes.NewValidator(sdk.ValAddress(addy), PubKey, stakingtypes.Description{Moniker: "test"})
+	// addy, _ := sdk.AccAddressFromBech32(Addr.String())
+	//sdk.ValAddress(addy)
+	val, _ := stakingtypes.NewValidator(Addr.String(), PubKey, stakingtypes.Description{Moniker: "test"})
 	val.Jailed = false
 	val.Status = stakingtypes.Bonded
 	val.Tokens = math.NewInt(1000000000)
@@ -39,13 +40,13 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() {
 	s.bankKeeper.On("SendCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.stakingKeeper.On("TokensFromConsensusPower", mock.Anything, mock.Anything).Return(math.NewInt(100))
-	s.slashingKeeper.On("GetValidatorSigningInfo", mock.Anything, mock.Anything).Return(slashingtypes.ValidatorSigningInfo{}, false)
-	s.slashingKeeper.On("SetValidatorSigningInfo", mock.Anything, mock.Anything, mock.Anything).Return()
-	s.stakingKeeper.On("Jail", mock.Anything, mock.Anything).Return()
-	s.stakingKeeper.On("RemoveValidatorTokens", mock.Anything, mock.Anything, mock.Anything).Return(val)
-	s.stakingKeeper.On("GetValidator", mock.Anything, mock.Anything).Return(val, true)
+	s.slashingKeeper.On("GetValidatorSigningInfo", mock.Anything, mock.Anything).Return(slashingtypes.ValidatorSigningInfo{}, nil)
+	s.slashingKeeper.On("SetValidatorSigningInfo", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.stakingKeeper.On("Jail", mock.Anything, mock.Anything).Return(nil)
+	s.stakingKeeper.On("RemoveValidatorTokens", mock.Anything, mock.Anything, mock.Anything).Return(val, nil)
+	s.stakingKeeper.On("GetValidator", mock.Anything, mock.Anything).Return(val, nil)
 	msgRes, err := s.msgServer.ProposeDispute(s.goCtx, &msg)
-	require.Nil(err)
+	require.NoError(err)
 	require.NotNil(msgRes)
 	openDisputesRes := s.disputeKeeper.GetOpenDisputeIds(s.ctx)
 	require.NotNil(openDisputesRes)

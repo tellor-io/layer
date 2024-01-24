@@ -7,7 +7,8 @@ import (
 
 	"github.com/tellor-io/layer/x/oracle/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,7 +40,7 @@ func (k Keeper) GetReportsbyReporter(goCtx context.Context, req *types.QueryGetR
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
 	reporterKey := []byte(req.Reporter + ":")
-	iterator := sdk.KVStorePrefixIterator(store, reporterKey)
+	iterator := storetypes.KVStorePrefixIterator(store, reporterKey)
 
 	var finalReportsList []types.MicroReport
 	// Iterate and fetch all reports for the reporter

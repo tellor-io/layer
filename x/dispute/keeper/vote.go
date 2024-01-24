@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
@@ -44,10 +45,10 @@ func (k Keeper) AppendVoters(ctx sdk.Context, id uint64, voter string) {
 
 func (k Keeper) initVoterClasses() *types.VoterClasses {
 	return &types.VoterClasses{
-		Validators:   sdk.ZeroInt(),
-		TokenHolders: sdk.ZeroInt(),
-		Users:        sdk.ZeroInt(),
-		Team:         sdk.ZeroInt(),
+		Validators:   math.ZeroInt(),
+		TokenHolders: math.ZeroInt(),
+		Users:        math.ZeroInt(),
+		Team:         math.ZeroInt(),
 	}
 }
 

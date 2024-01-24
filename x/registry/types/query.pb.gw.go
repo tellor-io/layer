@@ -339,11 +339,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "registry", "params"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "registry", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetQueryData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "get_query_data", "queryId"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetQueryData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "get_query_data", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetDataSpec_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "get_data_spec", "queryType"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_GetDataSpec_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "get_data_spec", "queryType"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

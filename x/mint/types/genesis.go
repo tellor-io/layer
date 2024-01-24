@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -10,7 +11,7 @@ import (
 func NewGenesisState(bondDenom string) *GenesisState {
 	return &GenesisState{
 		BondDenom:   bondDenom,
-		InitialMint: sdk.NewCoins(sdk.NewCoin(bondDenom, sdk.NewInt(InitialMint))),
+		InitialMint: sdk.NewCoins(sdk.NewCoin(bondDenom, math.NewInt(InitialMint))),
 	}
 }
 

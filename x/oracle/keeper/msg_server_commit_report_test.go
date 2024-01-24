@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"encoding/hex"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -21,10 +20,11 @@ func (s *KeeperTestSuite) TestCommitValue() {
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
 	commitreq.Signature = hex.EncodeToString(signature)
-	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
-	require.Nil(err)
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	s.NoError(err)
 	_hexxy, _ := hex.DecodeString(queryData)
 	commitValue, err := s.oracleKeeper.GetSignature(s.ctx, Addr, keeper.HashQueryData(_hexxy))
+	s.NoError(err)
 
 	require.Equal(true, s.oracleKeeper.VerifySignature(s.ctx, Addr.String(), value, commitValue.Report.Signature))
 	require.Equal(commitValue.Report.Creator, Addr.String())

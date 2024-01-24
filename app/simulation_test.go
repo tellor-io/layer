@@ -10,23 +10,21 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -34,6 +32,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/tellor-io/layer/app"
@@ -92,10 +91,6 @@ func BenchmarkSimulation(b *testing.B) {
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
 		appOptions,
 		baseapp.SetChainID(config.ChainID),
 	)
@@ -109,7 +104,7 @@ func BenchmarkSimulation(b *testing.B) {
 		simtestutil.AppStateFn(
 			bApp.AppCodec(),
 			bApp.SimulationManager(),
-			app.NewDefaultGenesisState(bApp.AppCodec()),
+			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 		),
 		simulationtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
@@ -155,7 +150,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
 			if simcli.FlagVerboseValue {
-				logger = log.TestingLogger()
+				logger = log.NewTestLogger(t)
 			} else {
 				logger = log.NewNopLogger()
 			}
@@ -168,10 +163,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				db,
 				nil,
 				true,
-				map[int64]bool{},
-				app.DefaultNodeHome,
-				simcli.FlagPeriodValue,
-				app.MakeEncodingConfig(),
 				appOptions,
 				fauxMerkleModeOpt,
 				baseapp.SetChainID(chainID),
@@ -189,7 +180,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				simtestutil.AppStateFn(
 					bApp.AppCodec(),
 					bApp.SimulationManager(),
-					app.NewDefaultGenesisState(bApp.AppCodec()),
+					bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 				),
 				simulationtypes.RandomAccounts,
 				simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
@@ -246,10 +237,6 @@ func TestAppImportExport(t *testing.T) {
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
 		appOptions,
 		baseapp.SetChainID(config.ChainID),
 	)
@@ -263,7 +250,7 @@ func TestAppImportExport(t *testing.T) {
 		simtestutil.AppStateFn(
 			bApp.AppCodec(),
 			bApp.SimulationManager(),
-			app.NewDefaultGenesisState(bApp.AppCodec()),
+			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 		),
 		simulationtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
@@ -307,10 +294,6 @@ func TestAppImportExport(t *testing.T) {
 		newDB,
 		nil,
 		true,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
 		appOptions,
 		baseapp.SetChainID(config.ChainID),
 	)
@@ -331,8 +314,8 @@ func TestAppImportExport(t *testing.T) {
 		}
 	}()
 
-	ctxA := bApp.NewContext(true, tmproto.Header{Height: bApp.LastBlockHeight()})
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: bApp.LastBlockHeight()})
+	ctxA := bApp.NewContextLegacy(true, tmproto.Header{Height: bApp.LastBlockHeight()})
+	ctxB := newApp.NewContextLegacy(true, tmproto.Header{Height: bApp.LastBlockHeight()})
 	newApp.ModuleManager().InitGenesis(ctxB, bApp.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
@@ -362,7 +345,7 @@ func TestAppImportExport(t *testing.T) {
 		storeA := ctxA.KVStore(skp.A)
 		storeB := ctxB.KVStore(skp.B)
 
-		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
+		failedKVAs, failedKVBs := simtestutil.DiffKVStores(storeA, storeB, skp.Prefixes)
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		fmt.Printf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
@@ -400,10 +383,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		db,
 		nil,
 		true,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
 		appOptions,
 		fauxMerkleModeOpt,
 		baseapp.SetChainID(config.ChainID),
@@ -418,7 +397,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		simtestutil.AppStateFn(
 			bApp.AppCodec(),
 			bApp.SimulationManager(),
-			app.NewDefaultGenesisState(bApp.AppCodec()),
+			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 		),
 		simulationtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
@@ -467,17 +446,13 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		newDB,
 		nil,
 		true,
-		map[int64]bool{},
-		app.DefaultNodeHome,
-		0,
-		app.MakeEncodingConfig(),
 		appOptions,
 		fauxMerkleModeOpt,
 		baseapp.SetChainID(config.ChainID),
 	)
 	require.Equal(t, app.Name, bApp.Name())
 
-	newApp.InitChain(abci.RequestInitChain{
+	newApp.InitChain(&abci.RequestInitChain{
 		ChainId:       config.ChainID,
 		AppStateBytes: exported.AppState,
 	})
@@ -489,7 +464,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		simtestutil.AppStateFn(
 			bApp.AppCodec(),
 			bApp.SimulationManager(),
-			app.NewDefaultGenesisState(bApp.AppCodec()),
+			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 		),
 		simulationtypes.RandomAccounts,
 		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),

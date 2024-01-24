@@ -1,14 +1,15 @@
 package mint
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -141,8 +142,9 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns the begin blocker for the mint module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
-	BeginBlocker(ctx, am.keeper)
+func (am AppModule) BeginBlock(ctx context.Context) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	BeginBlocker(sdkCtx, am.keeper)
 }
 
 type MintInputs struct {
