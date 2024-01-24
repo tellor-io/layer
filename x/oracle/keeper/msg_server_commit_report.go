@@ -23,14 +23,20 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		return nil, err
 	}
 	// check if msg sender is validator
-
 	if msg.Creator != validator.GetOperator() {
 		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
 	}
+	// check if validator is bonded
+	_, isBonded := k.IsReporterStaked(ctx, sdk.ValAddress(reporter))
+	if !isBonded {
+		return nil, types.ErrValidatorNotBonded
+	}
 
+	// check if querydata has prefix 0x
 	if rk.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
 	}
+	// decode query data hex string to bytes
 	queryData, err := hex.DecodeString(msg.QueryData)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
@@ -38,9 +44,9 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	queryId := HashQueryData(queryData)
 	report := types.CommitReport{
 		Report: &types.Commit{
-			Creator:   msg.Creator,
-			QueryId:   queryId,
-			Signature: msg.Signature,
+			Creator:     msg.Creator,
+			QueryId:     queryId,
+			SaltedValue: msg.SaltedValue,
 		},
 		Block: ctx.BlockHeight(),
 	}

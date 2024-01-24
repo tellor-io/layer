@@ -10,11 +10,11 @@ const TypeMsgCommitReport = "commit_report"
 
 var _ sdk.Msg = &MsgCommitReport{}
 
-func NewMsgCommitReport(creator string, queryData string, signature string) *MsgCommitReport {
+func NewMsgCommitReport(creator string, queryData string, value string) *MsgCommitReport {
 	return &MsgCommitReport{
-		Creator:   creator,
-		QueryData: queryData,
-		Signature: signature,
+		Creator:     creator,
+		QueryData:   queryData,
+		SaltedValue: value,
 	}
 }
 
