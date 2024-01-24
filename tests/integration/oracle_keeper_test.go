@@ -1,11 +1,13 @@
 package integration_test
 
 import (
+	"encoding/hex"
 	"time"
 
 	"testing"
 
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/x/gov"
 
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -142,76 +144,76 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 	s.Equal(modBalanceBefore.Amount.Add(tip.Amount).Sub(twoPercent.Amount), modBalanceAfter.Amount)
 }
 
-// TODO: re-add later
-// func (s *IntegrationTestSuite) TestMedianReports() {
-// 	_, msgServer := s.oracleKeeper()
-// 	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
-// 	reporters := []struct {
-// 		name          string
-// 		reporterIndex int
-// 		value         string
-// 	}{
-// 		{
-// 			name:          "reporter 1",
-// 			reporterIndex: 0,
-// 			value:         encodeValue(162926),
-// 		},
-// 		{
-// 			name:          "reporter 2",
-// 			reporterIndex: 1,
-// 			value:         encodeValue(362926),
-// 		},
-// 		{
-// 			name:          "reporter 3",
-// 			reporterIndex: 2,
-// 			value:         encodeValue(262926),
-// 		},
-// 		{
-// 			name:          "reporter 4",
-// 			reporterIndex: 3,
-// 			value:         encodeValue(562926),
-// 		},
-// 		{
-// 			name:          "reporter 5",
-// 			reporterIndex: 4,
-// 			value:         encodeValue(462926),
-// 		},
-// 	}
-// 	for _, r := range reporters {
-// 		s.T().Run(r.name, func(t *testing.T) {
-// 			valueDecoded, err := hex.DecodeString(r.value) // convert hex value to bytes
-// 			s.NoError(err)
-// 			signature, err := privKeys[r.reporterIndex].Sign(valueDecoded) // sign value
-// 			s.NoError(err)
-// 			commit, reveal := report(accs[r.reporterIndex].String(), hex.EncodeToString(signature), r.value, ethQueryData)
-// 			_, err = msgServer.CommitReport(s.ctx, &commit)
-// 			s.NoError(err)
-// 			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
-// 			s.NoError(err)
-// 		})
-// 	}
-// 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-// 	_, err := s.app.EndBlocker(s.ctx)
-// 	s.NoError(err)
-// 	// check median
-// 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
-// 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
-// 	s.NoError(err)
-// 	expectedMedianReporterIndex := 4
-// 	expectedMedianReporter := accs[expectedMedianReporterIndex].String()
-// 	s.Equal(expectedMedianReporter, res.Report.AggregateReporter)
-// 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
-// }
+func (s *IntegrationTestSuite) TestMedianReports() {
+	_, msgServer := s.oracleKeeper()
+	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	s.ctx = s.ctx.WithBlockHeight(2)
+	reporters := []struct {
+		name          string
+		reporterIndex int
+		value         string
+	}{
+		{
+			name:          "reporter 1",
+			reporterIndex: 0,
+			value:         encodeValue(162926),
+		},
+		{
+			name:          "reporter 2",
+			reporterIndex: 1,
+			value:         encodeValue(362926),
+		},
+		{
+			name:          "reporter 3",
+			reporterIndex: 2,
+			value:         encodeValue(262926),
+		},
+		{
+			name:          "reporter 4",
+			reporterIndex: 3,
+			value:         encodeValue(562926),
+		},
+		{
+			name:          "reporter 5",
+			reporterIndex: 4,
+			value:         encodeValue(462926),
+		},
+	}
+	msgServer.Tip(s.ctx, &types.MsgTip{Tipper: accs[0].String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
+	for _, r := range reporters {
+		s.T().Run(r.name, func(t *testing.T) {
+			valueDecoded, err := hex.DecodeString(r.value) // convert hex value to bytes
+			s.Nil(err)
+			signature, err := privKeys[r.reporterIndex].Sign(valueDecoded) // sign value
+			s.Nil(err)
+			commit, reveal := report(accs[r.reporterIndex].String(), hex.EncodeToString(signature), r.value, ethQueryData)
+			_, err = msgServer.CommitReport(s.ctx, &commit)
+			s.Nil(err)
+			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
+			s.Nil(err)
+		})
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.app.EndBlocker(s.ctx)
+	// check median
+	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	s.Nil(err)
+	expectedMedianReporterIndex := 4
+	expectedMedianReporter := accs[expectedMedianReporterIndex].String()
+	s.Equal(expectedMedianReporter, res.Report.AggregateReporter)
+	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
+}
 
 func report(creator, signature, value, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
 		Creator:   creator,
-		QueryData: ethQueryData,
+		QueryData: qdata,
 		Signature: signature,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
-		QueryData: ethQueryData,
+		QueryData: qdata,
 		Value:     value,
 	}
 	return commit, reveal
@@ -222,8 +224,8 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
 	resp := s.oraclekeeper.GetCycleList(s.ctx)
-	s.Equal(resp, []string{ethQueryData, btcQueryData, trbQueryData})
-	fakeQueryData := "0x000001"
+	s.Equal(resp, []string{ethQueryData[2:], btcQueryData[2:], trbQueryData[2:]})
+	fakeQueryData := "000001"
 	msgContent := &types.MsgUpdateParams{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		Params:    types.Params{CycleList: []string{fakeQueryData}},
@@ -272,7 +274,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
 	s.NoError(err)
 	s.Equal(res.Report.AggregateReportIndex, int64(0))
-	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[0], vals[0])
@@ -310,7 +313,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:2])
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
-	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
@@ -360,7 +364,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: ethQueryData})
-	s.oraclekeeper.AllocateTimeBasedRewards(s.ctx, res.Report.Reporters)
+	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	for _, tc := range testCases {
@@ -374,4 +379,37 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) TestCommitQueryMixed() {
+	_, msgServer := s.oracleKeeper()
+	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
+	queryData1 := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryData3 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	msg := types.MsgTip{
+		Tipper:    accs[0].String(),
+		QueryData: queryData2,
+		Amount:    tip,
+	}
+	_, err := msgServer.Tip(s.ctx, &msg)
+	s.Nil(err)
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	valueDecoded, err := hex.DecodeString(value)
+	s.Nil(err)
+	signature, err := privKeys[0].Sign(valueDecoded) // sign value
+	s.Nil(err)
+	// commit report with query data in cycle list
+	commit, _ := report(accs[0].String(), hex.EncodeToString(signature), value, queryData1)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.Nil(err)
+	// commit report with query data not in cycle list but has a tip
+	commit, _ = report(accs[0].String(), hex.EncodeToString(signature), value, queryData2)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.Nil(err)
+	// commit report with query data not in cycle list and has no tip
+	commit, _ = report(accs[0].String(), hex.EncodeToString(signature), value, queryData3)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.ErrorContains(err, "query data does not have tips/not in cycle")
 }

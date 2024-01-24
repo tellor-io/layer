@@ -12,7 +12,7 @@ import (
 func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.Amount.Denom != sdk.DefaultBondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
+	if msg.Amount.Denom != types.DefaultBondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 	if rk.Has0xPrefix(msg.QueryData) {
