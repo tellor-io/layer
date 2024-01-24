@@ -1,7 +1,12 @@
 package prices
 
 import (
+	"encoding/hex"
+	"fmt"
 	"math/big"
+	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	"github.com/shopspring/decimal"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
@@ -98,4 +103,38 @@ func PriceToFloat32ForLogging(price uint64, exponent types.Exponent) float32 {
 	// We're not concerned about truncation here.
 	priceFloat32, _ := decimal.NewFromBigInt(new(big.Int).SetUint64(price), exponent).BigFloat().Float32()
 	return priceFloat32
+}
+
+func EncodePrice(number float64, exponent int32) (string, error) {
+	newExponent := 18 + exponent
+	strExponent := fmt.Sprintf("%d", newExponent)
+
+	formatString := "%." + strExponent + "f"
+	strNumber := fmt.Sprintf(formatString, number)
+
+	parts := strings.Split(strNumber, ".")
+	if len(parts[1]) > int(newExponent) {
+		parts[1] = parts[1][:newExponent]
+	}
+	truncatedStr := parts[0] + parts[1]
+
+	bigIntNumber := new(big.Int)
+	_, ok := bigIntNumber.SetString(truncatedStr, 10)
+	if !ok {
+		return "", fmt.Errorf("error converting string to big int")
+	}
+
+	uint256ABIType, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return "", fmt.Errorf("error creating uint256 abi type, %v", err)
+	}
+
+	arguments := abi.Arguments{{Type: uint256ABIType}}
+	encodedBytes, err := arguments.Pack(bigIntNumber)
+	if err != nil {
+		return "", fmt.Errorf("error packing arguments, %v", err)
+	}
+
+	encodedString := hex.EncodeToString(encodedBytes)
+	return encodedString, nil
 }

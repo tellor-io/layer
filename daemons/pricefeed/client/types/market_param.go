@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 )
@@ -28,6 +29,8 @@ type MarketParam struct {
 	// A string of json that encodes the configuration for resolving the price
 	// of this market on various exchanges.
 	ExchangeConfigJson string
+	// query data representation of the market for layer
+	QueryData string
 }
 
 // Validate checks that the MarketParam is valid.
@@ -54,6 +57,15 @@ func (mp *MarketParam) Validate() error {
 			err,
 			mp.ExchangeConfigJson,
 		)
+	}
+
+	if mp.QueryData == "" {
+		return fmt.Errorf("Invalid input: QueryData cannot be empty")
+	}
+	// try to decode query data from hex to bytes if this fails then return error
+	_, err := hex.DecodeString(mp.QueryData)
+	if err != nil {
+		return fmt.Errorf("Invalid input: QueryData is not valid hex: %v", err)
 	}
 
 	return nil

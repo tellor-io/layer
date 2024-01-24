@@ -1,5 +1,7 @@
 # Daemon gRPC Server
 
+**Note:** Daemon services code was adopted from dydx [](https://github.com/dydxprotocol/v4-chain/tree/main/protocol/daemons) and reconfigured.
+
 ## Overview
 
 Implements a gRPC server for daemon processes using Unix Domain Sockets (UDS) for communication.
@@ -43,19 +45,22 @@ MaxQueries = 1  // Max number of calls in a loop.
 
 Defaults for exchange information can be found [here](./configs/default_pricefeed_exchange_config.go)
 
-## Market Pair defauls
+## Market Pair defaults
+
+Defaults for market pair can be found [here](./configs/default_market_param_config.go)
+
+example:
 
 ```go
 [[market_params]]
-ExchangeConfigJson = "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ETHBTC\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tETHBTC\",\"adjustByMarket\":\"BTC-USD\"}]}"
+ExchangeConfigJson = "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"ETHBTC\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tETHBTC\",\"adjustByMarket\":\"BTC-USD\"}]}" // this is just an example to show how to use adjustByMarket.  you can use ETH-USD without adjustbymarket
 Exponent = -6
 Id = 2
 MinExchanges = 1
 MinPriceChangePpm = 1000
 Pair = "ETH-BTC"
+QueryData = "0000.."
 ```
-
-Defaults for market pair can be found [here](./configs/default_market_param_config.go)
 
 ```go
 type MarketParam struct {
@@ -77,8 +82,20 @@ type MarketParam struct {
     // A string of json that encodes the configuration for resolving the price
     // of this market on various exchanges.
     ExchangeConfigJson string
+    // Query data is the market pair represention in layer
+    QueryData string
 }
 ```
 
-Note: Price Daemon is enabled by default to disable set `--price-daemon-enabled=false`
-TODO: Add mapping of queryData to Id
+**Note:** Price Daemon is enabled by default; to disable set `--price-daemon-enabled=false`
+A price is valid by default up to 30 seconds; to change this to a different default edit the `constants.MaxPriceAge`
+
+**Also:** Config files are written to homedir/.layer/config/.
+To change/add exchange details or market pairs edit the files `pricefeed_exchange_config.toml` or `market_params.toml` respectively.
+
+### Median Server
+
+Median server was added for a way to query median values that were from an endpoint or cli. See usage [here](../x/oracle/client/cli/query_all_get_median.go).
+All median values or median value given query data using the following commands respectively.
+`layerd query oracle get-all-median-values`
+`layerd query oracle get-median-value <querydata>`

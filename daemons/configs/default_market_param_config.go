@@ -29,9 +29,12 @@ const (
 	#
 	# Exponent - The exponent of the price.
 	#
-	# Pair - The human-readable name of the market pair (e.g. "BTC-USD").{{ range $exchangeId, $element := .}}
+	# Pair - The human-readable name of the market pair (e.g. "BTC-USD").
+	#
+	# QueryData - Layer representation of the market pair.{{ range $exchangeId, $element := .}}
 	[[market_params]]
 	ExchangeConfigJson = "{{$element.ExchangeConfigJson}}"
+	QueryData = {{$element.QueryData}}
 	Exponent = {{$element.Exponent}}
 	Id = {{$element.Id}}
 	MinExchanges = {{$element.MinExchanges}}
@@ -75,6 +78,7 @@ func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {
 
 	params := map[string][]types.MarketParam{}
 	if err = toml.Unmarshal(tomlFile, &params); err != nil {
+		fmt.Println("Error unmarshalling toml file", err.Error())
 		panic(err)
 	}
 
@@ -82,7 +86,8 @@ func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {
 	for _, param := range params["market_params"] {
 		if param.Exponent == 0 ||
 			param.MinExchanges == 0 ||
-			param.MinPriceChangePpm == 0 {
+			param.MinPriceChangePpm == 0 ||
+			param.QueryData == "" {
 			panic(
 				fmt.Errorf(
 					"One or more config values are unset or are set to zero for pair with id: '%v'",
@@ -99,6 +104,7 @@ func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {
 			MinExchanges:       param.MinExchanges,
 			MinPriceChangePpm:  param.MinPriceChangePpm,
 			Pair:               param.Pair,
+			QueryData:          param.QueryData,
 		}
 	}
 	marketParams := make([]types.MarketParam, 0, len(paramStartupConfigMap))

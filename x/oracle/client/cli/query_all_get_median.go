@@ -11,13 +11,12 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdGetMedianValue() *cobra.Command {
+func CmdGetAllMedianValues() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-median-value",
-		Short: "Query getMedianValue",
-		Args:  cobra.ExactArgs(1),
+		Use:   "get-all-median-values",
+		Short: "Query getAllMedianValues",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argQueryData := args[0]
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -26,9 +25,9 @@ func CmdGetMedianValue() *cobra.Command {
 
 			queryClient := mediantypes.NewMedianValuesServiceClient(clientCtx)
 
-			params := &mediantypes.GetMedianValueRequest{QueryData: argQueryData}
+			params := &mediantypes.GetAllMedianValuesRequest{}
 
-			res, err := queryClient.GetMedianValue(cmd.Context(), params)
+			res, err := queryClient.GetAllMedianValues(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

@@ -34,6 +34,7 @@ type MedianValues struct {
 	// marketId is the market id for a pair
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 	Price    uint64 `protobuf:"varint,2,opt,name=price,proto3" json:"price,omitempty"`
+	Exponent int32  `protobuf:"varint,3,opt,name=exponent,proto3" json:"exponent,omitempty"`
 }
 
 func (m *MedianValues) Reset()         { *m = MedianValues{} }
@@ -83,22 +84,29 @@ func (m *MedianValues) GetPrice() uint64 {
 	return 0
 }
 
-// GetMedianValuesRequest is the request for the GetMedianValues rpc
-type GetMedianValuesRequest struct {
+func (m *MedianValues) GetExponent() int32 {
+	if m != nil {
+		return m.Exponent
+	}
+	return 0
 }
 
-func (m *GetMedianValuesRequest) Reset()         { *m = GetMedianValuesRequest{} }
-func (m *GetMedianValuesRequest) String() string { return proto.CompactTextString(m) }
-func (*GetMedianValuesRequest) ProtoMessage()    {}
-func (*GetMedianValuesRequest) Descriptor() ([]byte, []int) {
+// GetAllMedianValuesRequest is the request for the GetAllMedianValues rpc
+type GetAllMedianValuesRequest struct {
+}
+
+func (m *GetAllMedianValuesRequest) Reset()         { *m = GetAllMedianValuesRequest{} }
+func (m *GetAllMedianValuesRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAllMedianValuesRequest) ProtoMessage()    {}
+func (*GetAllMedianValuesRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_9b64c378347d9f4f, []int{1}
 }
-func (m *GetMedianValuesRequest) XXX_Unmarshal(b []byte) error {
+func (m *GetAllMedianValuesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetMedianValuesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GetAllMedianValuesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetMedianValuesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GetAllMedianValuesRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -108,35 +116,35 @@ func (m *GetMedianValuesRequest) XXX_Marshal(b []byte, deterministic bool) ([]by
 		return b[:n], nil
 	}
 }
-func (m *GetMedianValuesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetMedianValuesRequest.Merge(m, src)
+func (m *GetAllMedianValuesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAllMedianValuesRequest.Merge(m, src)
 }
-func (m *GetMedianValuesRequest) XXX_Size() int {
+func (m *GetAllMedianValuesRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetMedianValuesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetMedianValuesRequest.DiscardUnknown(m)
+func (m *GetAllMedianValuesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAllMedianValuesRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetMedianValuesRequest proto.InternalMessageInfo
+var xxx_messageInfo_GetAllMedianValuesRequest proto.InternalMessageInfo
 
-// GetMedianValuesResponse is the response for the GetMedianValues rpc
-type GetMedianValuesResponse struct {
+// GetAllMedianValuesResponse is the response for the GetAllMedianValues rpc
+type GetAllMedianValuesResponse struct {
 	MedianValues []*MedianValues `protobuf:"bytes,1,rep,name=median_values,json=medianValues,proto3" json:"median_values,omitempty"`
 }
 
-func (m *GetMedianValuesResponse) Reset()         { *m = GetMedianValuesResponse{} }
-func (m *GetMedianValuesResponse) String() string { return proto.CompactTextString(m) }
-func (*GetMedianValuesResponse) ProtoMessage()    {}
-func (*GetMedianValuesResponse) Descriptor() ([]byte, []int) {
+func (m *GetAllMedianValuesResponse) Reset()         { *m = GetAllMedianValuesResponse{} }
+func (m *GetAllMedianValuesResponse) String() string { return proto.CompactTextString(m) }
+func (*GetAllMedianValuesResponse) ProtoMessage()    {}
+func (*GetAllMedianValuesResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_9b64c378347d9f4f, []int{2}
 }
-func (m *GetMedianValuesResponse) XXX_Unmarshal(b []byte) error {
+func (m *GetAllMedianValuesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *GetMedianValuesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *GetAllMedianValuesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_GetMedianValuesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_GetAllMedianValuesResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -146,19 +154,110 @@ func (m *GetMedianValuesResponse) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *GetMedianValuesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetMedianValuesResponse.Merge(m, src)
+func (m *GetAllMedianValuesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAllMedianValuesResponse.Merge(m, src)
 }
-func (m *GetMedianValuesResponse) XXX_Size() int {
+func (m *GetAllMedianValuesResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *GetMedianValuesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetMedianValuesResponse.DiscardUnknown(m)
+func (m *GetAllMedianValuesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAllMedianValuesResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetMedianValuesResponse proto.InternalMessageInfo
+var xxx_messageInfo_GetAllMedianValuesResponse proto.InternalMessageInfo
 
-func (m *GetMedianValuesResponse) GetMedianValues() []*MedianValues {
+func (m *GetAllMedianValuesResponse) GetMedianValues() []*MedianValues {
+	if m != nil {
+		return m.MedianValues
+	}
+	return nil
+}
+
+// GetMedianValuesRequest is the request for the GetMedianValues rpc
+type GetMedianValueRequest struct {
+	// query data to fetch prices for
+	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+}
+
+func (m *GetMedianValueRequest) Reset()         { *m = GetMedianValueRequest{} }
+func (m *GetMedianValueRequest) String() string { return proto.CompactTextString(m) }
+func (*GetMedianValueRequest) ProtoMessage()    {}
+func (*GetMedianValueRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9b64c378347d9f4f, []int{3}
+}
+func (m *GetMedianValueRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetMedianValueRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetMedianValueRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetMedianValueRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetMedianValueRequest.Merge(m, src)
+}
+func (m *GetMedianValueRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetMedianValueRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetMedianValueRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetMedianValueRequest proto.InternalMessageInfo
+
+func (m *GetMedianValueRequest) GetQueryData() string {
+	if m != nil {
+		return m.QueryData
+	}
+	return ""
+}
+
+// GetMedianValueResponse is the response for the GetMedianValue rpc
+type GetMedianValueResponse struct {
+	MedianValues *MedianValues `protobuf:"bytes,1,opt,name=median_values,json=medianValues,proto3" json:"median_values,omitempty"`
+}
+
+func (m *GetMedianValueResponse) Reset()         { *m = GetMedianValueResponse{} }
+func (m *GetMedianValueResponse) String() string { return proto.CompactTextString(m) }
+func (*GetMedianValueResponse) ProtoMessage()    {}
+func (*GetMedianValueResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_9b64c378347d9f4f, []int{4}
+}
+func (m *GetMedianValueResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetMedianValueResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetMedianValueResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetMedianValueResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetMedianValueResponse.Merge(m, src)
+}
+func (m *GetMedianValueResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetMedianValueResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetMedianValueResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetMedianValueResponse proto.InternalMessageInfo
+
+func (m *GetMedianValueResponse) GetMedianValues() *MedianValues {
 	if m != nil {
 		return m.MedianValues
 	}
@@ -167,35 +266,44 @@ func (m *GetMedianValuesResponse) GetMedianValues() []*MedianValues {
 
 func init() {
 	proto.RegisterType((*MedianValues)(nil), "layer.daemons.MedianValues")
-	proto.RegisterType((*GetMedianValuesRequest)(nil), "layer.daemons.GetMedianValuesRequest")
-	proto.RegisterType((*GetMedianValuesResponse)(nil), "layer.daemons.GetMedianValuesResponse")
+	proto.RegisterType((*GetAllMedianValuesRequest)(nil), "layer.daemons.GetAllMedianValuesRequest")
+	proto.RegisterType((*GetAllMedianValuesResponse)(nil), "layer.daemons.GetAllMedianValuesResponse")
+	proto.RegisterType((*GetMedianValueRequest)(nil), "layer.daemons.GetMedianValueRequest")
+	proto.RegisterType((*GetMedianValueResponse)(nil), "layer.daemons.GetMedianValueResponse")
 }
 
 func init() { proto.RegisterFile("layer/daemons/median_values.proto", fileDescriptor_9b64c378347d9f4f) }
 
 var fileDescriptor_9b64c378347d9f4f = []byte{
-	// 335 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x91, 0x31, 0x4b, 0xfb, 0x40,
-	0x18, 0xc6, 0x7b, 0xfd, 0xff, 0x15, 0x3d, 0x5b, 0x84, 0xb3, 0x68, 0x68, 0xcb, 0x51, 0x83, 0x4a,
-	0x17, 0x73, 0x50, 0xbf, 0x80, 0xba, 0x48, 0x07, 0x97, 0x0a, 0x0e, 0x3a, 0x94, 0x6b, 0xf3, 0x12,
-	0x0f, 0x93, 0xbc, 0xf1, 0xee, 0x5a, 0xe8, 0xea, 0xe0, 0x2c, 0xb8, 0xfb, 0x79, 0x1c, 0x0b, 0x2e,
-	0x8e, 0xd2, 0xfa, 0x41, 0xa4, 0x49, 0x87, 0xa4, 0x0a, 0x6e, 0x79, 0xf3, 0x3c, 0xf7, 0xbb, 0xf7,
-	0xb9, 0x87, 0xee, 0x87, 0x72, 0x02, 0x5a, 0xf8, 0x12, 0x22, 0x8c, 0x8d, 0x88, 0xc0, 0x57, 0x32,
-	0xee, 0x8f, 0x65, 0x38, 0x02, 0xe3, 0x25, 0x1a, 0x2d, 0xb2, 0x6a, 0x6a, 0xf1, 0x96, 0x96, 0x7a,
-	0x2d, 0xc0, 0x00, 0x53, 0x45, 0x2c, 0xbe, 0x32, 0x53, 0xbd, 0x19, 0x20, 0x06, 0x21, 0x08, 0x99,
-	0x28, 0x21, 0xe3, 0x18, 0xad, 0xb4, 0x0a, 0xe3, 0x25, 0xc2, 0x3d, 0xa3, 0x95, 0xcb, 0x94, 0x7c,
-	0x9d, 0x82, 0x59, 0x83, 0x6e, 0x46, 0x52, 0xdf, 0x83, 0xed, 0x2b, 0xdf, 0x21, 0x2d, 0xd2, 0xae,
-	0xf6, 0x36, 0xb2, 0x1f, 0x5d, 0x9f, 0xd5, 0xe8, 0x5a, 0xa2, 0xd5, 0x10, 0x9c, 0x72, 0x8b, 0xb4,
-	0xff, 0xf7, 0xb2, 0xc1, 0x75, 0xe8, 0xee, 0x05, 0xd8, 0x3c, 0xa5, 0x07, 0x0f, 0x23, 0x30, 0xd6,
-	0xbd, 0xa5, 0x7b, 0x3f, 0x14, 0x93, 0x60, 0x6c, 0x80, 0x9d, 0xd2, 0x6a, 0x21, 0x91, 0x43, 0x5a,
-	0xff, 0xda, 0x5b, 0x9d, 0x86, 0x57, 0x88, 0xe4, 0x15, 0xce, 0x56, 0xa2, 0xdc, 0xd4, 0x79, 0x25,
-	0x74, 0x27, 0x2f, 0x5f, 0x81, 0x1e, 0xab, 0x21, 0xb0, 0x27, 0x42, 0xb7, 0x57, 0x6e, 0x65, 0x87,
-	0x2b, 0xd8, 0xdf, 0xf7, 0xad, 0x1f, 0xfd, 0x65, 0xcb, 0x96, 0x77, 0x0f, 0x1e, 0xdf, 0xbf, 0x5e,
-	0xca, 0x9c, 0x35, 0x45, 0xd6, 0xd1, 0xe2, 0x69, 0x03, 0xb0, 0xfd, 0x42, 0xa2, 0xf3, 0xee, 0xdb,
-	0x8c, 0x93, 0xe9, 0x8c, 0x93, 0xcf, 0x19, 0x27, 0xcf, 0x73, 0x5e, 0x9a, 0xce, 0x79, 0xe9, 0x63,
-	0xce, 0x4b, 0x37, 0x22, 0x50, 0xf6, 0x6e, 0x34, 0xf0, 0x86, 0x18, 0x09, 0x0b, 0x61, 0x88, 0xfa,
-	0x58, 0xa1, 0x28, 0xf6, 0x6d, 0x40, 0x8f, 0x41, 0x0b, 0x3b, 0x49, 0xc0, 0x0c, 0xd6, 0xd3, 0xb2,
-	0x4e, 0xbe, 0x03, 0x00, 0x00, 0xff, 0xff, 0x00, 0x52, 0x3d, 0xbd, 0x14, 0x02, 0x00, 0x00,
+	// 437 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x41, 0x8b, 0xd3, 0x40,
+	0x14, 0xee, 0x74, 0x5d, 0xd9, 0x8e, 0x5b, 0x0f, 0xe3, 0x2a, 0x31, 0xd5, 0x10, 0x83, 0x42, 0x14,
+	0xcc, 0xc8, 0x0a, 0x9e, 0x55, 0x84, 0xa5, 0x07, 0x2f, 0x11, 0x3c, 0x14, 0x34, 0x4c, 0x9b, 0x47,
+	0x0c, 0x4e, 0x66, 0xd2, 0xc9, 0xa4, 0x58, 0xc4, 0x8b, 0x7f, 0x40, 0xa1, 0xbf, 0xc7, 0xbb, 0xc7,
+	0x82, 0x17, 0x8f, 0xd2, 0xfa, 0x43, 0xa4, 0x93, 0xa0, 0x49, 0x6b, 0xd1, 0xbd, 0xe5, 0xcd, 0xfb,
+	0xe6, 0x7b, 0xdf, 0xf7, 0x65, 0x1e, 0xbe, 0xc5, 0xd9, 0x1c, 0x14, 0x8d, 0x19, 0x64, 0x52, 0x14,
+	0x34, 0x83, 0x38, 0x65, 0x22, 0x9a, 0x31, 0x5e, 0x42, 0x11, 0xe4, 0x4a, 0x6a, 0x49, 0xfa, 0x06,
+	0x12, 0xd4, 0x10, 0xfb, 0x24, 0x91, 0x89, 0x34, 0x1d, 0xba, 0xf9, 0xaa, 0x40, 0xf6, 0x8d, 0x44,
+	0xca, 0x84, 0x03, 0x65, 0x79, 0x4a, 0x99, 0x10, 0x52, 0x33, 0x9d, 0x4a, 0x51, 0x53, 0x78, 0xaf,
+	0xf0, 0xf1, 0x73, 0xc3, 0xfc, 0xd2, 0x10, 0x93, 0x01, 0xee, 0x65, 0x4c, 0xbd, 0x05, 0x1d, 0xa5,
+	0xb1, 0x85, 0x5c, 0xe4, 0xf7, 0xc3, 0xa3, 0xea, 0x60, 0x18, 0x93, 0x13, 0x7c, 0x98, 0xab, 0x74,
+	0x02, 0x56, 0xd7, 0x45, 0xfe, 0x85, 0xb0, 0x2a, 0x88, 0x8d, 0x8f, 0xe0, 0x5d, 0x2e, 0x05, 0x08,
+	0x6d, 0x1d, 0xb8, 0xc8, 0x3f, 0x0c, 0x7f, 0xd7, 0xde, 0x00, 0x5f, 0x3f, 0x03, 0xfd, 0x84, 0xf3,
+	0xe6, 0x90, 0x10, 0xa6, 0x25, 0x14, 0xda, 0x7b, 0x8d, 0xed, 0xbf, 0x35, 0x8b, 0x5c, 0x8a, 0x02,
+	0xc8, 0x63, 0xdc, 0x6f, 0x79, 0xb6, 0x90, 0x7b, 0xe0, 0x5f, 0x3a, 0x1d, 0x04, 0x2d, 0xd3, 0x41,
+	0xeb, 0xee, 0x71, 0xd6, 0xa8, 0xbc, 0x47, 0xf8, 0xea, 0x19, 0xe8, 0x06, 0xa0, 0x1e, 0x4c, 0x6e,
+	0x62, 0x3c, 0x2d, 0x41, 0xcd, 0xa3, 0x98, 0x69, 0x66, 0x5c, 0xf6, 0xc2, 0x9e, 0x39, 0x79, 0xc6,
+	0x34, 0xf3, 0x46, 0xf8, 0xda, 0xf6, 0xbd, 0xfd, 0x9a, 0xd0, 0xb9, 0x34, 0x9d, 0x7e, 0xe9, 0xe2,
+	0x2b, 0xcd, 0xf6, 0x0b, 0x50, 0xb3, 0x4d, 0x88, 0x0b, 0x84, 0xc9, 0x6e, 0x18, 0xc4, 0xdf, 0x62,
+	0xde, 0x1b, 0xa6, 0x7d, 0xf7, 0x3f, 0x90, 0x95, 0x0b, 0xcf, 0xff, 0xf8, 0xed, 0xe7, 0xa2, 0xeb,
+	0x11, 0x97, 0x56, 0x4f, 0x6c, 0xf3, 0x32, 0x12, 0xd0, 0x11, 0xe3, 0x3c, 0x6a, 0xd9, 0x23, 0x9f,
+	0x10, 0xbe, 0xdc, 0x8e, 0x82, 0xdc, 0xde, 0x9d, 0xb3, 0x9b, 0xb0, 0x7d, 0xe7, 0x1f, 0xa8, 0x5a,
+	0xc9, 0x03, 0xa3, 0xe4, 0x1e, 0xf1, 0xb7, 0x94, 0x34, 0x55, 0xd0, 0xf7, 0x7f, 0xfe, 0xd5, 0x87,
+	0xa7, 0xc3, 0xaf, 0x2b, 0x07, 0x2d, 0x57, 0x0e, 0xfa, 0xb1, 0x72, 0xd0, 0xe7, 0xb5, 0xd3, 0x59,
+	0xae, 0x9d, 0xce, 0xf7, 0xb5, 0xd3, 0x19, 0xd1, 0x24, 0xd5, 0x6f, 0xca, 0x71, 0x30, 0x91, 0x19,
+	0xd5, 0xc0, 0xb9, 0x54, 0xf7, 0x53, 0x49, 0xdb, 0x4b, 0x54, 0x80, 0x9a, 0x81, 0xa2, 0x7a, 0x9e,
+	0x43, 0x31, 0xbe, 0x68, 0x36, 0xe0, 0xe1, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xd8, 0xe9, 0xa4,
+	0xbf, 0x69, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -210,8 +318,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MedianValuesServiceClient interface {
-	// GetMedianValues returns the median values for all markets
-	GetMedianValues(ctx context.Context, in *GetMedianValuesRequest, opts ...grpc.CallOption) (*GetMedianValuesResponse, error)
+	// GetAllMedianValues returns the median values for all markets
+	GetAllMedianValues(ctx context.Context, in *GetAllMedianValuesRequest, opts ...grpc.CallOption) (*GetAllMedianValuesResponse, error)
+	// GetMedianValue returns the median value for a market given a query data that a market is associated with
+	GetMedianValue(ctx context.Context, in *GetMedianValueRequest, opts ...grpc.CallOption) (*GetMedianValueResponse, error)
 }
 
 type medianValuesServiceClient struct {
@@ -222,9 +332,18 @@ func NewMedianValuesServiceClient(cc grpc1.ClientConn) MedianValuesServiceClient
 	return &medianValuesServiceClient{cc}
 }
 
-func (c *medianValuesServiceClient) GetMedianValues(ctx context.Context, in *GetMedianValuesRequest, opts ...grpc.CallOption) (*GetMedianValuesResponse, error) {
-	out := new(GetMedianValuesResponse)
-	err := c.cc.Invoke(ctx, "/layer.daemons.MedianValuesService/GetMedianValues", in, out, opts...)
+func (c *medianValuesServiceClient) GetAllMedianValues(ctx context.Context, in *GetAllMedianValuesRequest, opts ...grpc.CallOption) (*GetAllMedianValuesResponse, error) {
+	out := new(GetAllMedianValuesResponse)
+	err := c.cc.Invoke(ctx, "/layer.daemons.MedianValuesService/GetAllMedianValues", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *medianValuesServiceClient) GetMedianValue(ctx context.Context, in *GetMedianValueRequest, opts ...grpc.CallOption) (*GetMedianValueResponse, error) {
+	out := new(GetMedianValueResponse)
+	err := c.cc.Invoke(ctx, "/layer.daemons.MedianValuesService/GetMedianValue", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -233,36 +352,59 @@ func (c *medianValuesServiceClient) GetMedianValues(ctx context.Context, in *Get
 
 // MedianValuesServiceServer is the server API for MedianValuesService service.
 type MedianValuesServiceServer interface {
-	// GetMedianValues returns the median values for all markets
-	GetMedianValues(context.Context, *GetMedianValuesRequest) (*GetMedianValuesResponse, error)
+	// GetAllMedianValues returns the median values for all markets
+	GetAllMedianValues(context.Context, *GetAllMedianValuesRequest) (*GetAllMedianValuesResponse, error)
+	// GetMedianValue returns the median value for a market given a query data that a market is associated with
+	GetMedianValue(context.Context, *GetMedianValueRequest) (*GetMedianValueResponse, error)
 }
 
 // UnimplementedMedianValuesServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedMedianValuesServiceServer struct {
 }
 
-func (*UnimplementedMedianValuesServiceServer) GetMedianValues(ctx context.Context, req *GetMedianValuesRequest) (*GetMedianValuesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetMedianValues not implemented")
+func (*UnimplementedMedianValuesServiceServer) GetAllMedianValues(ctx context.Context, req *GetAllMedianValuesRequest) (*GetAllMedianValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllMedianValues not implemented")
+}
+func (*UnimplementedMedianValuesServiceServer) GetMedianValue(ctx context.Context, req *GetMedianValueRequest) (*GetMedianValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMedianValue not implemented")
 }
 
 func RegisterMedianValuesServiceServer(s grpc1.Server, srv MedianValuesServiceServer) {
 	s.RegisterService(&_MedianValuesService_serviceDesc, srv)
 }
 
-func _MedianValuesService_GetMedianValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetMedianValuesRequest)
+func _MedianValuesService_GetAllMedianValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllMedianValuesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MedianValuesServiceServer).GetMedianValues(ctx, in)
+		return srv.(MedianValuesServiceServer).GetAllMedianValues(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.daemons.MedianValuesService/GetMedianValues",
+		FullMethod: "/layer.daemons.MedianValuesService/GetAllMedianValues",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MedianValuesServiceServer).GetMedianValues(ctx, req.(*GetMedianValuesRequest))
+		return srv.(MedianValuesServiceServer).GetAllMedianValues(ctx, req.(*GetAllMedianValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MedianValuesService_GetMedianValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetMedianValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MedianValuesServiceServer).GetMedianValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.daemons.MedianValuesService/GetMedianValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MedianValuesServiceServer).GetMedianValue(ctx, req.(*GetMedianValueRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -272,8 +414,12 @@ var _MedianValuesService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MedianValuesServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetMedianValues",
-			Handler:    _MedianValuesService_GetMedianValues_Handler,
+			MethodName: "GetAllMedianValues",
+			Handler:    _MedianValuesService_GetAllMedianValues_Handler,
+		},
+		{
+			MethodName: "GetMedianValue",
+			Handler:    _MedianValuesService_GetMedianValue_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -300,6 +446,11 @@ func (m *MedianValues) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Exponent != 0 {
+		i = encodeVarintMedianValues(dAtA, i, uint64(m.Exponent))
+		i--
+		dAtA[i] = 0x18
+	}
 	if m.Price != 0 {
 		i = encodeVarintMedianValues(dAtA, i, uint64(m.Price))
 		i--
@@ -313,7 +464,7 @@ func (m *MedianValues) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *GetMedianValuesRequest) Marshal() (dAtA []byte, err error) {
+func (m *GetAllMedianValuesRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -323,12 +474,12 @@ func (m *GetMedianValuesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetMedianValuesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetAllMedianValuesRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetMedianValuesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GetAllMedianValuesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -336,7 +487,7 @@ func (m *GetMedianValuesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *GetMedianValuesResponse) Marshal() (dAtA []byte, err error) {
+func (m *GetAllMedianValuesResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -346,12 +497,12 @@ func (m *GetMedianValuesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *GetMedianValuesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetAllMedianValuesResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *GetMedianValuesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *GetAllMedianValuesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -369,6 +520,71 @@ func (m *GetMedianValuesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetMedianValueRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetMedianValueRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetMedianValueRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.QueryData) > 0 {
+		i -= len(m.QueryData)
+		copy(dAtA[i:], m.QueryData)
+		i = encodeVarintMedianValues(dAtA, i, uint64(len(m.QueryData)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetMedianValueResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetMedianValueResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetMedianValueResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MedianValues != nil {
+		{
+			size, err := m.MedianValues.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintMedianValues(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -396,10 +612,13 @@ func (m *MedianValues) Size() (n int) {
 	if m.Price != 0 {
 		n += 1 + sovMedianValues(uint64(m.Price))
 	}
+	if m.Exponent != 0 {
+		n += 1 + sovMedianValues(uint64(m.Exponent))
+	}
 	return n
 }
 
-func (m *GetMedianValuesRequest) Size() (n int) {
+func (m *GetAllMedianValuesRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -408,7 +627,7 @@ func (m *GetMedianValuesRequest) Size() (n int) {
 	return n
 }
 
-func (m *GetMedianValuesResponse) Size() (n int) {
+func (m *GetAllMedianValuesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -419,6 +638,32 @@ func (m *GetMedianValuesResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovMedianValues(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *GetMedianValueRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.QueryData)
+	if l > 0 {
+		n += 1 + l + sovMedianValues(uint64(l))
+	}
+	return n
+}
+
+func (m *GetMedianValueResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.MedianValues != nil {
+		l = m.MedianValues.Size()
+		n += 1 + l + sovMedianValues(uint64(l))
 	}
 	return n
 }
@@ -496,6 +741,25 @@ func (m *MedianValues) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Exponent", wireType)
+			}
+			m.Exponent = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMedianValues
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Exponent |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMedianValues(dAtA[iNdEx:])
@@ -517,7 +781,7 @@ func (m *MedianValues) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetMedianValuesRequest) Unmarshal(dAtA []byte) error {
+func (m *GetAllMedianValuesRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -540,10 +804,10 @@ func (m *GetMedianValuesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetMedianValuesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetAllMedianValuesRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetMedianValuesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetAllMedianValuesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -567,7 +831,7 @@ func (m *GetMedianValuesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *GetMedianValuesResponse) Unmarshal(dAtA []byte) error {
+func (m *GetAllMedianValuesResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -590,10 +854,10 @@ func (m *GetMedianValuesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: GetMedianValuesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetAllMedianValuesResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: GetMedianValuesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetAllMedianValuesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -627,6 +891,174 @@ func (m *GetMedianValuesResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.MedianValues = append(m.MedianValues, &MedianValues{})
 			if err := m.MedianValues[len(m.MedianValues)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMedianValues(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMedianValues
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetMedianValueRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMedianValues
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetMedianValueRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetMedianValueRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMedianValues
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMedianValues
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMedianValues
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryData = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMedianValues(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMedianValues
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetMedianValueResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMedianValues
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetMedianValueResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetMedianValueResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MedianValues", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMedianValues
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthMedianValues
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthMedianValues
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MedianValues == nil {
+				m.MedianValues = &MedianValues{}
+			}
+			if err := m.MedianValues.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

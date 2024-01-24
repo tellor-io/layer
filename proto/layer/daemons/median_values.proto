@@ -9,20 +9,39 @@ option go_package = "github.com/tellor-io/layer/daemons/server/types";
 
 // MedianValuesService is the service that provides median values for markets
 service MedianValuesService {
-  // GetMedianValues returns the median values for all markets
-  rpc GetMedianValues(GetMedianValuesRequest) returns (GetMedianValuesResponse) {
-    option (google.api.http).get = "/layer/api/get_median_values";
+  // GetAllMedianValues returns the median values for all markets
+  rpc GetAllMedianValues(GetAllMedianValuesRequest) returns (GetAllMedianValuesResponse) {
+    option (google.api.http).get = "/layer/api/get_all_median_values";
+  }
+  // GetMedianValue returns the median value for a market given a query data that a market is associated with
+  rpc GetMedianValue(GetMedianValueRequest) returns (GetMedianValueResponse) {
+    option (google.api.http).get = "/layer/api/get_median_value/{query_data}";
   }
 }
+
 // MedianValues is the median value for a market
 message MedianValues {
   // marketId is the market id for a pair
   uint32 market_id = 1;
   uint64 price = 2;
+  int32 exponent = 3;
 }
-// GetMedianValuesRequest is the request for the GetMedianValues rpc
-message GetMedianValuesRequest {}
-// GetMedianValuesResponse is the response for the GetMedianValues rpc
-message GetMedianValuesResponse {
+
+// GetAllMedianValuesRequest is the request for the GetAllMedianValues rpc
+message GetAllMedianValuesRequest {}
+
+// GetAllMedianValuesResponse is the response for the GetAllMedianValues rpc
+message GetAllMedianValuesResponse {
   repeated MedianValues median_values = 1;
+}
+
+// GetMedianValuesRequest is the request for the GetMedianValues rpc
+message GetMedianValueRequest {
+  // query data to fetch prices for
+  string query_data = 1;
+}
+
+// GetMedianValueResponse is the response for the GetMedianValue rpc
+message GetMedianValueResponse {
+  MedianValues median_values = 1;
 }

@@ -627,17 +627,18 @@ func New(
 		app.Logger(),
 		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
 	)
-	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
+	// Create a closure for starting pricefeed daemon and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
 	app.startDaemons = func(cltx client.Context, apiSvr *api.Server) {
-		maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
-		// Start server for handling gRPC messages from daemons.
-		go app.Server.Start()
-
+		// enabled by default, set flag `--price-daemon-enabled=false` to false to disable
 		if daemonFlags.Price.Enabled {
+			maxDaemonUnhealthyDuration := time.Second
+			// Start server for handling gRPC messages from daemons.
+			go app.Server.Start()
+
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
@@ -661,7 +662,6 @@ func New(
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
-		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
 		// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
 		// for this service. The task loop does not produce any errors because the telemetry calls themselves are
 		// not error-returning, so in effect this daemon would never become unhealthy.

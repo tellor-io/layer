@@ -163,6 +163,7 @@ func (c *Client) start(ctx context.Context,
 
 	// 2. Validate daemon configuration.
 	if err := validateDaemonConfiguration(
+		marketParams,
 		exchangeIdToQueryConfig,
 		exchangeIdToExchangeDetails,
 	); err != nil {
@@ -304,6 +305,7 @@ func StartNewClient(
 // 1) The exchangeIdToExchangeDetails map has an entry for each exchange.
 // 2) The static exchange names map has an entry for each exchange, and each name is unique.
 func validateDaemonConfiguration(
+	marketParams []types.MarketParam,
 	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 ) (
@@ -327,6 +329,12 @@ func validateDaemonConfiguration(
 	// Validate that there is at least 1 exchange.
 	if len(exchangeIds) == 0 {
 		return errors.New("exchangeIds must not be empty")
+	}
+
+	for mp := range marketParams {
+		if err := marketParams[mp].Validate(); err != nil {
+			return err
+		}
 	}
 
 	return nil

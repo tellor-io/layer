@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	appflags "github.com/tellor-io/layer/app/flags"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
 )
 
@@ -25,8 +24,6 @@ func (o *RootCmdOption) setCustomizeStartCmd(f func(startCmd *cobra.Command)) {
 func GetOptionWithCustomStartCmd() *RootCmdOption {
 	option := newRootCmdOption()
 	f := func(cmd *cobra.Command) {
-		// Add app flags.
-		appflags.AddFlagsToCmd(cmd)
 
 		// Add daemon flags.
 		daemonflags.AddDaemonFlagsToCmd(cmd)
