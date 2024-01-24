@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
 	commitreq.Signature = hex.EncodeToString(signature)
-	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "query data does not have tips/not in cycle")
 }
 
@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData1
 	commitreq.Signature = hex.EncodeToString(signature)
-	_, err = s.msgServer.CommitReport(sdk.WrapSDKContext(s.ctx), &commitreq)
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
 }

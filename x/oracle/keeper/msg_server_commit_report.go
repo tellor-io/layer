@@ -35,10 +35,8 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if err != nil {
 		return nil, err
 	}
-	// check if msg sender is validator
-
-	if msg.Creator != validator.GetOperator() {
-		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
+	if !validator.IsBonded() {
+		return nil, status.Error(codes.Unavailable, "validator is not bonded")
 	}
 	queryId := HashQueryData(queryData)
 	report := types.CommitReport{

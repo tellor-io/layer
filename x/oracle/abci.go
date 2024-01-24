@@ -5,7 +5,8 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 )
 
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	// Rotate through the cycle list and set the current query index
 	k.RotateQueries(ctx)
+	return nil
 }
