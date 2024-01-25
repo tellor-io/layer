@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"crypto/rand"
 	"encoding/hex"
 	"strconv"
 
@@ -39,7 +38,7 @@ func CmdCommitReport() *cobra.Command {
 			// 	return err
 			// }
 
-			salt, err := salt(32)
+			salt, err := utils.Salt(32)
 			if err != nil {
 				return err
 			}
@@ -55,7 +54,7 @@ func CmdCommitReport() *cobra.Command {
 				return err
 			}
 
-			cmd.Println("Copy your salt for the reveal stage:", salt) // ?
+			cmd.Println("Copy your salt for the reveal stage:", salt) //
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -64,12 +63,4 @@ func CmdCommitReport() *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
-}
-
-func salt(n int) (string, error) {
-	bytes := make([]byte, n)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(bytes), nil
 }

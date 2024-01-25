@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -131,6 +132,17 @@ func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signatu
 		return false
 	}
 	return true
+}
+
+func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, saltedValue string) bool {
+	valueDecoded, err := hex.DecodeString(value)
+	if err != nil {
+		panic(err)
+	}
+	// calculate commitment
+	calculatedCommit := utils.CalculateCommitment(string(valueDecoded), salt)
+	// compare calculated commitment with the one stored
+	return calculatedCommit == saltedValue
 }
 
 func decodeQueryType(data []byte) (string, error) {
