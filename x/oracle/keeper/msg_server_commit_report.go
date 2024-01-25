@@ -14,7 +14,20 @@ import (
 
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
+	// Check if query data begins with 0x and remove it
+	if rk.Has0xPrefix(msg.QueryData) {
+		msg.QueryData = msg.QueryData[2:]
+	}
+	// Try to decode query data from hex string
+	queryData, err := hex.DecodeString(msg.QueryData)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
+	}
+	tip, _ := k.GetQueryTips(ctx, k.TipStore(ctx), msg.QueryData)
+	currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
+	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
+		return nil, status.Error(codes.Unavailable, "query data does not have tips/not in cycle")
+	}
 	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
 
 	// get delegation info
@@ -22,24 +35,8 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if err != nil {
 		return nil, err
 	}
-	// check if msg sender is validator
-	if msg.Creator != validator.GetOperator() {
-		return nil, status.Error(codes.Unauthenticated, "sender is not validator")
-	}
-	// check if validator is bonded
-	_, isBonded := k.IsReporterStaked(ctx, sdk.ValAddress(reporter))
-	if !isBonded {
-		return nil, types.ErrValidatorNotBonded
-	}
-
-	// check if querydata has prefix 0x
-	if rk.Has0xPrefix(msg.QueryData) {
-		msg.QueryData = msg.QueryData[2:]
-	}
-	// decode query data hex string to bytes
-	queryData, err := hex.DecodeString(msg.QueryData)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
+	if !validator.IsBonded() {
+		return nil, status.Error(codes.Unavailable, "validator is not bonded")
 	}
 	queryId := HashQueryData(queryData)
 	report := types.CommitReport{
