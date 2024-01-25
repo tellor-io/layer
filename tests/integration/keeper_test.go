@@ -318,6 +318,12 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	for i, pk := range privKeys {
+		account := authtypes.BaseAccount{
+			Address:       testAddrs[i].String(),
+			PubKey:        codectypes.UnsafePackAny(pk.PubKey()),
+			AccountNumber: uint64(i + 1),
+		}
+		s.accountKeeper.SetAccount(s.ctx, &account)
 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk.PubKey(), stakingtypes.Description{})
 		s.NoError(err)
 		s.stakingKeeper.SetValidator(ctx, val)
