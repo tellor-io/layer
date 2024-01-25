@@ -34,7 +34,9 @@ import (
 )
 
 // NewRootCmd creates a new root command for a Cosmos SDK application
-func NewRootCmd() *cobra.Command {
+func NewRootCmd(
+	option *RootCmdOption,
+) *cobra.Command {
 	// Set config
 	// initSDKConfig()
 
@@ -79,7 +81,7 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, tempApp.TxConfig(), tempApp.BasicModuleManager)
+	initRootCmd(rootCmd, option, tempApp.TxConfig(), tempApp.BasicModuleManager)
 	overwriteFlagDefaults(rootCmd, map[string]string{
 		flags.FlagKeyringBackend: "test",
 	})
@@ -103,6 +105,7 @@ func initTendermintConfig() *tmcfg.Config {
 
 func initRootCmd(
 	rootCmd *cobra.Command,
+	option *RootCmdOption,
 	txConfig client.TxConfig,
 	basicManager module.BasicManager,
 ) {

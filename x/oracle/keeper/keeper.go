@@ -9,16 +9,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
-		memKey   storetypes.StoreKey
-
+		cdc            codec.BinaryCodec
+		storeKey       storetypes.StoreKey
+		memKey         storetypes.StoreKey
 		accountKeeper  types.AccountKeeper
 		bankKeeper     types.BankKeeper
 		distrKeeper    types.DistrKeeper
@@ -34,7 +32,6 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey,
 	memKey storetypes.StoreKey,
-
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	distrKeeper types.DistrKeeper,
