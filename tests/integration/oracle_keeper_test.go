@@ -209,7 +209,7 @@ func report(creator, signature, value, qdata string) (types.MsgCommitReport, typ
 	commit := types.MsgCommitReport{
 		Creator:   creator,
 		QueryData: qdata,
-		Signature: signature,
+		SaltedValue: signature,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,

@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 )
 
-func CalculateCommitment(move, salt string) string {
-	h := sha256.Sum256([]byte(move + ":" + salt))
+func CalculateCommitment(value, salt string) string {
+	h := sha256.Sum256([]byte(value + ":" + salt))
 	return hex.EncodeToString(h[:])
 }
 

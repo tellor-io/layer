@@ -9,18 +9,21 @@ import (
 	utils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() {
+func (s *KeeperTestSuite) TestCommitValue() string {
 	require := s.Require()
 	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
 	// Commit report transaction
 	valueDecoded, err := hex.DecodeString(value)
+	fmt.Println("valueDecoded", valueDecoded)
 	require.Nil(err)
 	salt, err := utils.Salt(32)
-	fmt.Println("salt", salt)
+	// fmt.Println("salt", salt)
 	require.Nil(err)
 	// signature, err := PrivKey.Sign(valueDecoded)
+	saltedUndecodedValue := utils.CalculateCommitment(value, salt)
+	fmt.Println("saltedUndecodedValue", saltedUndecodedValue)
 	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
 	fmt.Println("saltedValue", saltedValue)
 	require.Nil(err)
@@ -37,6 +40,9 @@ func (s *KeeperTestSuite) TestCommitValue() {
 
 	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, saltedValue))
 	require.Equal(commitValue.Report.Creator, Addr.String())
+	return salt
+
+	//check every way to fail
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
