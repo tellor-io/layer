@@ -17767,6 +17767,50 @@ paths:
               parameters.
       tags:
         - Msg
+  /layer/registry/decode_querydata/{querydata}:
+    get:
+      summary: Queries a list of DecodeQuerydata items.
+      operationId: LayerRegistryDecodeQuerydata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              spec:
+                type: string
+                description: >-
+                  spec is the decoded json represention of the query data hex
+                  string.
+            description: >-
+              QueryDecodeQuerydataResponse is response type for the
+              Query/DecodeQuerydata RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: querydata
+          description: querydata is the query data hex string to be decoded.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /layer/registry/get_data_spec/{query_type}:
     get:
       summary: Queries a list of GetDataSpec items.
@@ -17787,6 +17831,13 @@ paths:
                   value_type:
                     type: string
                     title: the value's datatype for decoding the value
+                  query_parameter_types:
+                    type: array
+                    items:
+                      type: string
+                    title: >-
+                      query parameter types for decoding parameters, should be
+                      in order of query parameters
                   aggregation_method:
                     type: string
                     title: >-
@@ -25086,6 +25137,13 @@ definitions:
       value_type:
         type: string
         title: the value's datatype for decoding the value
+      query_parameter_types:
+        type: array
+        items:
+          type: string
+        title: >-
+          query parameter types for decoding parameters, should be in order of
+          query parameters
       aggregation_method:
         type: string
         title: >-
@@ -25114,14 +25172,18 @@ definitions:
           extensions: treat as a golang time.duration, don't allow nil values,
           don't omit empty values
     title: DataSpec is a specification for how to interpret and aggregate data
-  layer.registry.MsgRegisterSpecResponse:
-    type: object
-    description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
-  layer.registry.MsgUpdateDataSpecResponse:
-    type: object
   layer.registry.Params:
     type: object
     description: Params defines the parameters for the module.
+  layer.registry.QueryDecodeQuerydataResponse:
+    type: object
+    properties:
+      spec:
+        type: string
+        description: spec is the decoded json represention of the query data hex string.
+    description: >-
+      QueryDecodeQuerydataResponse is response type for the
+      Query/DecodeQuerydata RPC method.
   layer.registry.QueryGetDataSpecResponse:
     type: object
     properties:
@@ -25135,6 +25197,13 @@ definitions:
           value_type:
             type: string
             title: the value's datatype for decoding the value
+          query_parameter_types:
+            type: array
+            items:
+              type: string
+            title: >-
+              query parameter types for decoding parameters, should be in order
+              of query parameters
           aggregation_method:
             type: string
             title: >-
@@ -25173,3 +25242,8 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.registry.MsgRegisterSpecResponse:
+    type: object
+    description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
+  layer.registry.MsgUpdateDataSpecResponse:
+    type: object

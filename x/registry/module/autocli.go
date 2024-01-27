@@ -23,6 +23,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Shows the data spec for the given query type",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}},
 				},
+				{
+					RpcMethod:      "DecodeQuerydata",
+					Use:            "decode-querydata [querydata]",
+					Short:          "Decode the query data into human readable format",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querydata"}},
+				},
+
+				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

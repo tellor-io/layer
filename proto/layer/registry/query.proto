@@ -20,6 +20,11 @@ service Query {
   rpc GetDataSpec(QueryGetDataSpecRequest) returns (QueryGetDataSpecResponse) {
     option (google.api.http).get = "/layer/registry/get_data_spec/{query_type}";
   }
+
+  // Queries a list of DecodeQuerydata items.
+  rpc DecodeQuerydata(QueryDecodeQuerydataRequest) returns (QueryDecodeQuerydataResponse) {
+    option (google.api.http).get = "/layer/registry/decode_querydata/{querydata}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -41,4 +46,16 @@ message QueryGetDataSpecRequest {
 message QueryGetDataSpecResponse {
   // spec is the data spec corresponding to the query type.
   DataSpec spec = 1;
+}
+
+// QueryDecodeQuerydataRequest is request type for the Query/DecodeQuerydata RPC method.
+message QueryDecodeQuerydataRequest {
+  // querydata is the query data hex string to be decoded.
+  string querydata = 1;
+}
+
+// QueryDecodeQuerydataResponse is response type for the Query/DecodeQuerydata RPC method.
+message QueryDecodeQuerydataResponse {
+  // spec is the decoded json represention of the query data hex string.
+  string spec = 1;
 }

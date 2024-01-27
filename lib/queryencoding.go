@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -124,4 +125,73 @@ func IsQueryId64chars(queryId string) bool {
 		return false
 	}
 	return true
+}
+
+func RemoveHexPrefix(hexString string) string {
+	if Has0xPrefix(hexString) {
+		hexString = hexString[2:]
+	}
+	return hexString
+}
+
+// Decodes query data bytes to query type and data fields
+func DecodeQueryType(data []byte) (string, []byte, error) {
+	// Create an ABI arguments object based on the types
+	strArg, err := abi.NewType("string", "string", nil)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create new ABI type when decoding query type: %v", err)
+	}
+	bytesArg, err := abi.NewType("bytes", "bytes", nil)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create new ABI type when decoding query type: %v", err)
+	}
+	args := abi.Arguments{
+		abi.Argument{Type: strArg},
+		abi.Argument{Type: bytesArg},
+	}
+	result, err := args.UnpackValues(data)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to unpack query type: %v", err)
+	}
+	return result[0].(string), result[1].([]byte), nil
+}
+
+// Decodes query data bytes to query type and data fields
+func DecodeParamtypes(data []byte, types []string) (string, error) {
+	var args abi.Arguments
+	for _, t := range types {
+		argType, err := abi.NewType(t, t, nil)
+		if err != nil {
+			return "", fmt.Errorf("failed to create new ABI type: %v", err)
+		}
+		args = append(args, abi.Argument{Type: argType})
+	}
+
+	result, err := args.UnpackValues(data)
+	if err != nil {
+		return "", fmt.Errorf("failed to unpack query type: %v", err)
+	}
+
+	return convertToJSON(result, types)
+}
+
+// convertToJSON converts a slice of interfaces into a JSON string.
+func convertToJSON(slice []interface{}, types []string) (string, error) {
+	var items []map[string]interface{}
+	for i, item := range slice {
+		itemType := types[i]
+
+		itemMap := map[string]interface{}{
+			"type":  itemType,
+			"value": item,
+		}
+		items = append(items, itemMap)
+	}
+
+	jsonResult, err := json.Marshal(items)
+	if err != nil {
+		return "", err
+	}
+
+	return string(jsonResult), nil
 }

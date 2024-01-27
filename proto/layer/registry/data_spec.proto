@@ -14,17 +14,19 @@ message DataSpec {
   string document_hash = 1;
   // the value's datatype for decoding the value
   string value_type = 2;
+  // query parameter types for decoding parameters, should be in order of query parameters
+  repeated string query_parameter_types = 3;
   // how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
-  string aggregation_method = 3;
+  string aggregation_method = 4;
   // address that originally registered the data spec
-  string registrar = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string registrar = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // report_buffer_window specifies the duration of the time window following an initial report
   // during which additional reports can be submitted. This duration acts as a buffer, allowing
   // a collection of related reports in a defined time frame. The window ensures that all
   // pertinent reports are aggregated together before arriving at a final value. This defaults
   // to 0s if not specified.
   // extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-  google.protobuf.Duration report_buffer_window = 5 [
+  google.protobuf.Duration report_buffer_window = 6 [
     (gogoproto.stdduration) = true,
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
