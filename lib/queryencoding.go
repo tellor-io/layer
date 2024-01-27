@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"google.golang.org/grpc/codes"
@@ -45,9 +46,21 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 	case "bool":
 		return strconv.ParseBool(dataField)
 	case "address":
-		// TODO: Validate address, maybe?
-		return dataField, nil
+		if !strings.HasPrefix(dataField, "0x") {
+			return nil, fmt.Errorf("invalid address format")
+		}
+		addrBytes, err := hex.DecodeString(dataField[2:])
+		if err != nil {
+			return nil, err
+		}
+		if len(addrBytes) != 20 {
+			return nil, fmt.Errorf("invalid address length")
+		}
+		var addr [20]byte
+		copy(addr[:], addrBytes)
+		return addr, nil
 	case "bytes":
+		// TODO: decode bytes properly
 		return []byte(dataField), nil
 	case "int8", "int16", "int32", "int64", "int128", "int256", "uint8", "uint16", "uint32", "uint64", "uint128", "uint256":
 		// https://docs.soliditylang.org/en/latest/types.html#integers
@@ -62,52 +75,23 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 	}
 }
 
-func VerifyDataTypeFields(queryType string, datafields map[string]string) error {
+func VerifyDataTypeFields(querytype string, datatypes, datafields []string) error {
 	// check if data fields is empty
 	if len(datafields) == 0 {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("data field mapping is empty"))
 	}
 	// encode query data params
-	encodedDatafields, err := EncodeData(datafields)
+	encodedDatafields, err := EncodeArguments(datatypes, datafields)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to encode data field mapping, data_type_to_field_name: %v", err))
 	}
-	querydata := map[string]string{
-		"string": queryType,
-		"bytes":  string(encodedDatafields),
-	}
 	// encode query data with query type
-	_, err = EncodeData(querydata)
+	_, err = EncodeArguments([]string{"string", "bytes"}, []string{querytype, string(encodedDatafields)})
+
 	if err != nil {
 		return fmt.Errorf("failed to encode query data: %v", err)
 	}
 	return nil
-}
-
-func EncodeData(data map[string]string) ([]byte, error) {
-	var arguments abi.Arguments
-	i := 0
-	interfaceFields := make([]interface{}, len(data))
-	for datatype, datafield := range data {
-		argType, err := abi.NewType(datatype, datatype, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create new ABI type: %v", err)
-		}
-
-		interfaceFields[i], err = ConvertStringToType(datatype, datafield)
-		if err != nil {
-			return nil, err
-		}
-
-		arguments = append(arguments, abi.Argument{
-			Name:    "",
-			Type:    argType,
-			Indexed: false,
-		})
-		i++
-	}
-
-	return arguments.Pack(interfaceFields...)
 }
 
 // has0xPrefix validates str begins with '0x' or '0X'.
@@ -213,4 +197,26 @@ func GenerateQuerydata(querytype string, parameters []string, queryParameterType
 		return "", fmt.Errorf("failed to encode query data: %v", err)
 	}
 	return hex.EncodeToString(encodedQuerydata), nil
+}
+
+func IsValueDecodable(value, datatype string) error {
+	argType, err := abi.NewType(datatype, datatype, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create new ABI type when decoding value: %v", err)
+	}
+	arg := abi.Argument{
+		Type: argType,
+	}
+	args := abi.Arguments{arg}
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value string: %v", err))
+	}
+	var result []interface{}
+	result, err = args.Unpack(valueBytes)
+	if err != nil {
+		return fmt.Errorf("failed to unpack value: %v", err)
+	}
+	fmt.Println("Decoded value: ", result[0])
+	return nil
 }

@@ -16,3 +16,7 @@ func GenesisDataSpec() DataSpec {
 func (d DataSpec) GenerateQuerydata(querytype string, parameters []string) (string, error) {
 	return lib.GenerateQuerydata(querytype, parameters, d.QueryParameterTypes)
 }
+
+func (d DataSpec) ValidateValue(value string) error {
+	return lib.IsValueDecodable(value, d.ValueType)
+}

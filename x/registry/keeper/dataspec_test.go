@@ -38,3 +38,28 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 	require.Equal(t, specReturn, spec1)
 
 }
+func TestSetDataSpec(t *testing.T) {
+	ms, ctx, k := setupMsgServer(t)
+	require.NotNil(t, ms)
+	require.NotNil(t, ctx)
+	require.NotNil(t, k)
+
+	// Define test data
+	queryType := "queryType1"
+	dataSpec := types.DataSpec{
+		DocumentHash:      "hash1",
+		ValueType:         "uint256",
+		AggregationMethod: "weighted-median",
+		Registrar:         "creator1",
+	}
+
+	// Call the function
+	err := k.SetDataSpec(sdk.UnwrapSDKContext(ctx), queryType, dataSpec)
+	require.NoError(t, err)
+
+	// Retrieve the data spec
+	unwrappedCtx := sdk.UnwrapSDKContext(ctx)
+	specReturn, err := k.GetSpec(unwrappedCtx, queryType)
+	require.NoError(t, err)
+	require.Equal(t, specReturn, dataSpec)
+}
