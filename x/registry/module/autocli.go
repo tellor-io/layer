@@ -19,7 +19,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "GetDataSpec",
-					Use:            "get-data-spec [query-type]",
+					Use:            "data-spec [query-type]",
 					Short:          "Shows the data spec for the given query type",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}},
 				},

@@ -26,8 +26,8 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/mocks"
 	"github.com/tellor-io/layer/x/oracle/types"
-	r "github.com/tellor-io/layer/x/registry"
 	registryk "github.com/tellor-io/layer/x/registry/keeper"
+	r "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 

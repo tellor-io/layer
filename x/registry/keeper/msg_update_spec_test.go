@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
@@ -38,7 +39,7 @@ func TestUpdateDataSpec(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if spec is updated
-	getSpec, err := k.SpecRegistry.Get(ctx, queryType)
+	getSpec, err := k.GetSpec(sdk.UnwrapSDKContext(ctx), queryType)
 	require.NoError(t, err)
 	require.Equal(t, "uint128", getSpec.ValueType)
 

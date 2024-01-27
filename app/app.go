@@ -111,8 +111,8 @@ import (
 	oraclemodule "github.com/tellor-io/layer/x/oracle"
 	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oraclemoduletypes "github.com/tellor-io/layer/x/oracle/types"
-	registrymodule "github.com/tellor-io/layer/x/registry"
 	registrymodulekeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registrymodule "github.com/tellor-io/layer/x/registry/module"
 	registrymoduletypes "github.com/tellor-io/layer/x/registry/types"
 
 	disputemodule "github.com/tellor-io/layer/x/dispute"

@@ -22,8 +22,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/oracle/mocks"
-	r "github.com/tellor-io/layer/x/registry"
 	rkeeper "github.com/tellor-io/layer/x/registry/keeper"
+	r "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 

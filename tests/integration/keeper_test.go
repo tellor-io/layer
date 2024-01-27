@@ -61,7 +61,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
-	_ "github.com/tellor-io/layer/x/registry"
+	_ "github.com/tellor-io/layer/x/registry/module"
 
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"

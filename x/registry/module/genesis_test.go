@@ -6,7 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/nullify"
-	"github.com/tellor-io/layer/x/registry"
+
+	registry "github.com/tellor-io/layer/x/registry/module"
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
