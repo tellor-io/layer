@@ -2,29 +2,37 @@
 package registry
 
 import (
+	_ "cosmossdk.io/api/amino"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
 )
 
 var (
-	md_DataSpec                   protoreflect.MessageDescriptor
-	fd_DataSpec_documentHash      protoreflect.FieldDescriptor
-	fd_DataSpec_valueType         protoreflect.FieldDescriptor
-	fd_DataSpec_aggregationMethod protoreflect.FieldDescriptor
+	md_DataSpec                      protoreflect.MessageDescriptor
+	fd_DataSpec_document_hash        protoreflect.FieldDescriptor
+	fd_DataSpec_value_type           protoreflect.FieldDescriptor
+	fd_DataSpec_aggregation_method   protoreflect.FieldDescriptor
+	fd_DataSpec_registrar            protoreflect.FieldDescriptor
+	fd_DataSpec_report_buffer_window protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_registry_data_spec_proto_init()
 	md_DataSpec = File_layer_registry_data_spec_proto.Messages().ByName("DataSpec")
-	fd_DataSpec_documentHash = md_DataSpec.Fields().ByName("documentHash")
-	fd_DataSpec_valueType = md_DataSpec.Fields().ByName("valueType")
-	fd_DataSpec_aggregationMethod = md_DataSpec.Fields().ByName("aggregationMethod")
+	fd_DataSpec_document_hash = md_DataSpec.Fields().ByName("document_hash")
+	fd_DataSpec_value_type = md_DataSpec.Fields().ByName("value_type")
+	fd_DataSpec_aggregation_method = md_DataSpec.Fields().ByName("aggregation_method")
+	fd_DataSpec_registrar = md_DataSpec.Fields().ByName("registrar")
+	fd_DataSpec_report_buffer_window = md_DataSpec.Fields().ByName("report_buffer_window")
 }
 
 var _ protoreflect.Message = (*fastReflection_DataSpec)(nil)
@@ -94,19 +102,31 @@ func (x *fastReflection_DataSpec) Interface() protoreflect.ProtoMessage {
 func (x *fastReflection_DataSpec) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.DocumentHash != "" {
 		value := protoreflect.ValueOfString(x.DocumentHash)
-		if !f(fd_DataSpec_documentHash, value) {
+		if !f(fd_DataSpec_document_hash, value) {
 			return
 		}
 	}
 	if x.ValueType != "" {
 		value := protoreflect.ValueOfString(x.ValueType)
-		if !f(fd_DataSpec_valueType, value) {
+		if !f(fd_DataSpec_value_type, value) {
 			return
 		}
 	}
 	if x.AggregationMethod != "" {
 		value := protoreflect.ValueOfString(x.AggregationMethod)
-		if !f(fd_DataSpec_aggregationMethod, value) {
+		if !f(fd_DataSpec_aggregation_method, value) {
+			return
+		}
+	}
+	if x.Registrar != "" {
+		value := protoreflect.ValueOfString(x.Registrar)
+		if !f(fd_DataSpec_registrar, value) {
+			return
+		}
+	}
+	if x.ReportBufferWindow != nil {
+		value := protoreflect.ValueOfMessage(x.ReportBufferWindow.ProtoReflect())
+		if !f(fd_DataSpec_report_buffer_window, value) {
 			return
 		}
 	}
@@ -125,12 +145,16 @@ func (x *fastReflection_DataSpec) Range(f func(protoreflect.FieldDescriptor, pro
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_DataSpec) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.registry.DataSpec.documentHash":
+	case "layer.registry.DataSpec.document_hash":
 		return x.DocumentHash != ""
-	case "layer.registry.DataSpec.valueType":
+	case "layer.registry.DataSpec.value_type":
 		return x.ValueType != ""
-	case "layer.registry.DataSpec.aggregationMethod":
+	case "layer.registry.DataSpec.aggregation_method":
 		return x.AggregationMethod != ""
+	case "layer.registry.DataSpec.registrar":
+		return x.Registrar != ""
+	case "layer.registry.DataSpec.report_buffer_window":
+		return x.ReportBufferWindow != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.DataSpec"))
@@ -147,12 +171,16 @@ func (x *fastReflection_DataSpec) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_DataSpec) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.registry.DataSpec.documentHash":
+	case "layer.registry.DataSpec.document_hash":
 		x.DocumentHash = ""
-	case "layer.registry.DataSpec.valueType":
+	case "layer.registry.DataSpec.value_type":
 		x.ValueType = ""
-	case "layer.registry.DataSpec.aggregationMethod":
+	case "layer.registry.DataSpec.aggregation_method":
 		x.AggregationMethod = ""
+	case "layer.registry.DataSpec.registrar":
+		x.Registrar = ""
+	case "layer.registry.DataSpec.report_buffer_window":
+		x.ReportBufferWindow = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.DataSpec"))
@@ -169,15 +197,21 @@ func (x *fastReflection_DataSpec) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_DataSpec) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.registry.DataSpec.documentHash":
+	case "layer.registry.DataSpec.document_hash":
 		value := x.DocumentHash
 		return protoreflect.ValueOfString(value)
-	case "layer.registry.DataSpec.valueType":
+	case "layer.registry.DataSpec.value_type":
 		value := x.ValueType
 		return protoreflect.ValueOfString(value)
-	case "layer.registry.DataSpec.aggregationMethod":
+	case "layer.registry.DataSpec.aggregation_method":
 		value := x.AggregationMethod
 		return protoreflect.ValueOfString(value)
+	case "layer.registry.DataSpec.registrar":
+		value := x.Registrar
+		return protoreflect.ValueOfString(value)
+	case "layer.registry.DataSpec.report_buffer_window":
+		value := x.ReportBufferWindow
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.DataSpec"))
@@ -198,12 +232,16 @@ func (x *fastReflection_DataSpec) Get(descriptor protoreflect.FieldDescriptor) p
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_DataSpec) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.registry.DataSpec.documentHash":
+	case "layer.registry.DataSpec.document_hash":
 		x.DocumentHash = value.Interface().(string)
-	case "layer.registry.DataSpec.valueType":
+	case "layer.registry.DataSpec.value_type":
 		x.ValueType = value.Interface().(string)
-	case "layer.registry.DataSpec.aggregationMethod":
+	case "layer.registry.DataSpec.aggregation_method":
 		x.AggregationMethod = value.Interface().(string)
+	case "layer.registry.DataSpec.registrar":
+		x.Registrar = value.Interface().(string)
+	case "layer.registry.DataSpec.report_buffer_window":
+		x.ReportBufferWindow = value.Message().Interface().(*durationpb.Duration)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.DataSpec"))
@@ -224,12 +262,19 @@ func (x *fastReflection_DataSpec) Set(fd protoreflect.FieldDescriptor, value pro
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_DataSpec) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.DataSpec.documentHash":
-		panic(fmt.Errorf("field documentHash of message layer.registry.DataSpec is not mutable"))
-	case "layer.registry.DataSpec.valueType":
-		panic(fmt.Errorf("field valueType of message layer.registry.DataSpec is not mutable"))
-	case "layer.registry.DataSpec.aggregationMethod":
-		panic(fmt.Errorf("field aggregationMethod of message layer.registry.DataSpec is not mutable"))
+	case "layer.registry.DataSpec.report_buffer_window":
+		if x.ReportBufferWindow == nil {
+			x.ReportBufferWindow = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.ReportBufferWindow.ProtoReflect())
+	case "layer.registry.DataSpec.document_hash":
+		panic(fmt.Errorf("field document_hash of message layer.registry.DataSpec is not mutable"))
+	case "layer.registry.DataSpec.value_type":
+		panic(fmt.Errorf("field value_type of message layer.registry.DataSpec is not mutable"))
+	case "layer.registry.DataSpec.aggregation_method":
+		panic(fmt.Errorf("field aggregation_method of message layer.registry.DataSpec is not mutable"))
+	case "layer.registry.DataSpec.registrar":
+		panic(fmt.Errorf("field registrar of message layer.registry.DataSpec is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.DataSpec"))
@@ -243,12 +288,17 @@ func (x *fastReflection_DataSpec) Mutable(fd protoreflect.FieldDescriptor) proto
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_DataSpec) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.DataSpec.documentHash":
+	case "layer.registry.DataSpec.document_hash":
 		return protoreflect.ValueOfString("")
-	case "layer.registry.DataSpec.valueType":
+	case "layer.registry.DataSpec.value_type":
 		return protoreflect.ValueOfString("")
-	case "layer.registry.DataSpec.aggregationMethod":
+	case "layer.registry.DataSpec.aggregation_method":
 		return protoreflect.ValueOfString("")
+	case "layer.registry.DataSpec.registrar":
+		return protoreflect.ValueOfString("")
+	case "layer.registry.DataSpec.report_buffer_window":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.DataSpec"))
@@ -330,6 +380,14 @@ func (x *fastReflection_DataSpec) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.Registrar)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.ReportBufferWindow != nil {
+			l = options.Size(x.ReportBufferWindow)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -358,6 +416,27 @@ func (x *fastReflection_DataSpec) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.ReportBufferWindow != nil {
+			encoded, err := options.Marshal(x.ReportBufferWindow)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.Registrar) > 0 {
+			i -= len(x.Registrar)
+			copy(dAtA[i:], x.Registrar)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Registrar)))
+			i--
+			dAtA[i] = 0x22
 		}
 		if len(x.AggregationMethod) > 0 {
 			i -= len(x.AggregationMethod)
@@ -525,6 +604,74 @@ func (x *fastReflection_DataSpec) ProtoMethods() *protoiface.Methods {
 				}
 				x.AggregationMethod = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Registrar", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Registrar = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ReportBufferWindow", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.ReportBufferWindow == nil {
+					x.ReportBufferWindow = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ReportBufferWindow); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -573,14 +720,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// DataSpec is a specification for how to interpret and aggregate data
 type DataSpec struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	DocumentHash      string `protobuf:"bytes,1,opt,name=documentHash,proto3" json:"documentHash,omitempty"`
-	ValueType         string `protobuf:"bytes,2,opt,name=valueType,proto3" json:"valueType,omitempty"`
-	AggregationMethod string `protobuf:"bytes,3,opt,name=aggregationMethod,proto3" json:"aggregationMethod,omitempty"`
+	// ipfs hash of the data spec
+	DocumentHash string `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
+	// the value's datatype for decoding the value
+	ValueType string `protobuf:"bytes,2,opt,name=value_type,json=valueType,proto3" json:"value_type,omitempty"`
+	// how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
+	AggregationMethod string `protobuf:"bytes,3,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
+	// address that originally registered the data spec
+	Registrar string `protobuf:"bytes,4,opt,name=registrar,proto3" json:"registrar,omitempty"`
+	// report_buffer_window specifies the duration of the time window following an initial report
+	// during which additional reports can be submitted. This duration acts as a buffer, allowing
+	// a collection of related reports in a defined time frame. The window ensures that all
+	// pertinent reports are aggregated together before arriving at a final value. This defaults
+	// to 0s if not specified.
+	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
+	ReportBufferWindow *durationpb.Duration `protobuf:"bytes,5,opt,name=report_buffer_window,json=reportBufferWindow,proto3" json:"report_buffer_window,omitempty"`
 }
 
 func (x *DataSpec) Reset() {
@@ -624,31 +784,60 @@ func (x *DataSpec) GetAggregationMethod() string {
 	return ""
 }
 
+func (x *DataSpec) GetRegistrar() string {
+	if x != nil {
+		return x.Registrar
+	}
+	return ""
+}
+
+func (x *DataSpec) GetReportBufferWindow() *durationpb.Duration {
+	if x != nil {
+		return x.ReportBufferWindow
+	}
+	return nil
+}
+
 var File_layer_registry_data_spec_proto protoreflect.FileDescriptor
 
 var file_layer_registry_data_spec_proto_rawDesc = []byte{
 	0x0a, 0x1e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79,
 	0x2f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x73, 0x70, 0x65, 0x63, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x12, 0x0e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79,
-	0x22, 0x7a, 0x0a, 0x08, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63, 0x12, 0x22, 0x0a, 0x0c,
-	0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0c, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x48, 0x61, 0x73, 0x68,
-	0x12, 0x1c, 0x0a, 0x09, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x2c,
-	0x0a, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74,
-	0x68, 0x6f, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65,
-	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x42, 0x9d, 0x01, 0x0a,
-	0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73,
-	0x74, 0x72, 0x79, 0x42, 0x0d, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x1f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
-	0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67,
-	0x69, 0x73, 0x74, 0x72, 0x79, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xca, 0x02, 0x0e, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xe2, 0x02, 0x1a,
-	0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x5c, 0x47,
-	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14,
+	0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x91, 0x02, 0x0a, 0x08, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65,
+	0x63, 0x12, 0x23, 0x0a, 0x0d, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x68, 0x61,
+	0x73, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x64, 0x6f, 0x63, 0x75, 0x6d, 0x65,
+	0x6e, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1d, 0x0a, 0x0a, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x5f,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x76, 0x61, 0x6c, 0x75,
+	0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x2d, 0x0a, 0x12, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x4d, 0x65,
+	0x74, 0x68, 0x6f, 0x64, 0x12, 0x36, 0x0a, 0x09, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x61,
+	0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x09, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x61, 0x72, 0x12, 0x5a, 0x0a, 0x14,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x5f, 0x62, 0x75, 0x66, 0x66, 0x65, 0x72, 0x5f, 0x77, 0x69,
+	0x6e, 0x64, 0x6f, 0x77, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x44, 0x75, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x0d, 0xc8, 0xde, 0x1f, 0x00, 0x98, 0xdf, 0x1f, 0x01, 0xa8,
+	0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x12, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x42, 0x75, 0x66, 0x66,
+	0x65, 0x72, 0x57, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x42, 0x9d, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x42,
+	0x0d, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x1f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65,
+	0x72, 0x5c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a,
+	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -665,14 +854,16 @@ func file_layer_registry_data_spec_proto_rawDescGZIP() []byte {
 
 var file_layer_registry_data_spec_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_layer_registry_data_spec_proto_goTypes = []interface{}{
-	(*DataSpec)(nil), // 0: layer.registry.DataSpec
+	(*DataSpec)(nil),            // 0: layer.registry.DataSpec
+	(*durationpb.Duration)(nil), // 1: google.protobuf.Duration
 }
 var file_layer_registry_data_spec_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: layer.registry.DataSpec.report_buffer_window:type_name -> google.protobuf.Duration
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_layer_registry_data_spec_proto_init() }

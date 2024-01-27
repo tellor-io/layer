@@ -75,6 +75,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.registryKeeper = registryk.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(rStoreKey),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	s.oracleKeeper = keeper.NewKeeper(
@@ -91,7 +92,8 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	genesisState := registrytypes.GenesisState{
-		Params: registrytypes.DefaultParams(),
+		Params:   registrytypes.DefaultParams(),
+		Dataspec: registrytypes.GenesisDataSpec(),
 	}
 	r.InitGenesis(s.ctx, s.registryKeeper, genesisState)
 	// Initialize params

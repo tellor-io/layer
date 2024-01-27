@@ -3,8 +3,8 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
 )
 
 // SetParams sets the x/oracle module parameters.
@@ -13,7 +13,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 		return err
 	}
 	for i, query := range params.CycleList {
-		if rk.Has0xPrefix(query) {
+		if lib.Has0xPrefix(query) {
 			query = query[2:]
 		}
 		params.CycleList[i] = query

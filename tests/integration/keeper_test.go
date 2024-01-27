@@ -61,12 +61,13 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
+	_ "github.com/tellor-io/layer/x/registry"
+
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/oracle"
 
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/registry"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"testing"
@@ -158,6 +159,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	suite.registrykeeper = registrykeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(suite.fetchStoreKey(registrytypes.StoreKey).(*storetypes.KVStoreKey)),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.distrKeeper = distrkeeper.NewKeeper(
@@ -173,7 +175,6 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	registry.AppWiringSetup()
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
 	sdk.DefaultBondDenom = "loya"

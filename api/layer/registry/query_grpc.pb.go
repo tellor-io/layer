@@ -20,8 +20,6 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Queries a list of GetQueryData items.
-	GetQueryData(ctx context.Context, in *QueryGetQueryDataRequest, opts ...grpc.CallOption) (*QueryGetQueryDataResponse, error)
 	// Queries a list of GetDataSpec items.
 	GetDataSpec(ctx context.Context, in *QueryGetDataSpecRequest, opts ...grpc.CallOption) (*QueryGetDataSpecResponse, error)
 }
@@ -43,15 +41,6 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) GetQueryData(ctx context.Context, in *QueryGetQueryDataRequest, opts ...grpc.CallOption) (*QueryGetQueryDataResponse, error) {
-	out := new(QueryGetQueryDataResponse)
-	err := c.cc.Invoke(ctx, "/layer.registry.Query/GetQueryData", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) GetDataSpec(ctx context.Context, in *QueryGetDataSpecRequest, opts ...grpc.CallOption) (*QueryGetDataSpecResponse, error) {
 	out := new(QueryGetDataSpecResponse)
 	err := c.cc.Invoke(ctx, "/layer.registry.Query/GetDataSpec", in, out, opts...)
@@ -67,8 +56,6 @@ func (c *queryClient) GetDataSpec(ctx context.Context, in *QueryGetDataSpecReque
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Queries a list of GetQueryData items.
-	GetQueryData(context.Context, *QueryGetQueryDataRequest) (*QueryGetQueryDataResponse, error)
 	// Queries a list of GetDataSpec items.
 	GetDataSpec(context.Context, *QueryGetDataSpecRequest) (*QueryGetDataSpecResponse, error)
 	mustEmbedUnimplementedQueryServer()
@@ -80,9 +67,6 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
-}
-func (UnimplementedQueryServer) GetQueryData(context.Context, *QueryGetQueryDataRequest) (*QueryGetQueryDataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetQueryData not implemented")
 }
 func (UnimplementedQueryServer) GetDataSpec(context.Context, *QueryGetDataSpecRequest) (*QueryGetDataSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataSpec not implemented")
@@ -118,24 +102,6 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetQueryData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetQueryDataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetQueryData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.registry.Query/GetQueryData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetQueryData(ctx, req.(*QueryGetQueryDataRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_GetDataSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetDataSpecRequest)
 	if err := dec(in); err != nil {
@@ -164,10 +130,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
-		},
-		{
-			MethodName: "GetQueryData",
-			Handler:    _Query_GetQueryData_Handler,
 		},
 		{
 			MethodName: "GetDataSpec",

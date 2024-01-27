@@ -4,8 +4,8 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -17,7 +17,7 @@ func (k Keeper) GetCurrentTip(goCtx context.Context, req *types.QueryGetCurrentT
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	store := k.TipStore(ctx)
-	if rk.Has0xPrefix(req.QueryData) {
+	if lib.Has0xPrefix(req.QueryData) {
 		req.QueryData = req.QueryData[2:]
 	}
 	tips, _ := k.GetQueryTips(ctx, store, req.QueryData)

@@ -49,8 +49,8 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, q
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
-	dataSpec := k.GetValueType(ctx, queryType)
-	if dataSpec == nil {
+	dataSpec, err := k.GetDataSpec(ctx, queryType)
+	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
 	// decode value using value type from data spec and check if decodes successfully
@@ -176,13 +176,11 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	return result, nil
 }
 
-func (k Keeper) GetValueType(ctx sdk.Context, queryType string) *regTypes.DataSpec {
+func (k Keeper) GetDataSpec(ctx sdk.Context, queryType string) (regTypes.DataSpec, error) {
 	// get data spec from registry by query type to validate value
-	dataSpecBytes := k.registryKeeper.Spec(ctx, queryType)
-	if dataSpecBytes == nil {
-		return nil
+	dataSpec, err := k.registryKeeper.GetSpec(ctx, queryType)
+	if err != nil {
+		return regTypes.DataSpec{}, err
 	}
-	var dataSpec regTypes.DataSpec
-	k.cdc.Unmarshal(dataSpecBytes, &dataSpec)
-	return &dataSpec
+	return dataSpec, nil
 }

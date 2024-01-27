@@ -10,9 +10,9 @@ const TypeMsgRegisterSpec = "register_spec"
 
 var _ sdk.Msg = &MsgRegisterSpec{}
 
-func NewMsgRegisterSpec(creator string, queryType string, spec *DataSpec) *MsgRegisterSpec {
+func NewMsgRegisterSpec(registrar string, queryType string, spec *DataSpec) *MsgRegisterSpec {
 	return &MsgRegisterSpec{
-		Creator:   creator,
+		Registrar: registrar,
 		QueryType: queryType,
 		Spec:      *spec,
 	}
@@ -27,20 +27,15 @@ func (msg *MsgRegisterSpec) Type() string {
 }
 
 func (msg *MsgRegisterSpec) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Creator)
+	creator, err := sdk.AccAddressFromBech32(msg.Registrar)
 	if err != nil {
 		panic(err)
 	}
 	return []sdk.AccAddress{creator}
 }
 
-func (msg *MsgRegisterSpec) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
 func (msg *MsgRegisterSpec) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	_, err := sdk.AccAddressFromBech32(msg.Registrar)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}

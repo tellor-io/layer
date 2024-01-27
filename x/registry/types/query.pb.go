@@ -6,7 +6,6 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -113,103 +112,17 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-type QueryGetQueryDataRequest struct {
-	QueryId string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
-}
-
-func (m *QueryGetQueryDataRequest) Reset()         { *m = QueryGetQueryDataRequest{} }
-func (m *QueryGetQueryDataRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryGetQueryDataRequest) ProtoMessage()    {}
-func (*QueryGetQueryDataRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6ea550dd9a444afe, []int{2}
-}
-func (m *QueryGetQueryDataRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetQueryDataRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetQueryDataRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetQueryDataRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetQueryDataRequest.Merge(m, src)
-}
-func (m *QueryGetQueryDataRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetQueryDataRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetQueryDataRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetQueryDataRequest proto.InternalMessageInfo
-
-func (m *QueryGetQueryDataRequest) GetQueryId() string {
-	if m != nil {
-		return m.QueryId
-	}
-	return ""
-}
-
-type QueryGetQueryDataResponse struct {
-	QueryData string `protobuf:"bytes,1,opt,name=queryData,proto3" json:"queryData,omitempty"`
-}
-
-func (m *QueryGetQueryDataResponse) Reset()         { *m = QueryGetQueryDataResponse{} }
-func (m *QueryGetQueryDataResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryGetQueryDataResponse) ProtoMessage()    {}
-func (*QueryGetQueryDataResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6ea550dd9a444afe, []int{3}
-}
-func (m *QueryGetQueryDataResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *QueryGetQueryDataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_QueryGetQueryDataResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *QueryGetQueryDataResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryGetQueryDataResponse.Merge(m, src)
-}
-func (m *QueryGetQueryDataResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *QueryGetQueryDataResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryGetQueryDataResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_QueryGetQueryDataResponse proto.InternalMessageInfo
-
-func (m *QueryGetQueryDataResponse) GetQueryData() string {
-	if m != nil {
-		return m.QueryData
-	}
-	return ""
-}
-
+// QueryGetDataSpecRequest is request type for the Query/GetDataSpec RPC method.
 type QueryGetDataSpecRequest struct {
-	QueryType string `protobuf:"bytes,1,opt,name=queryType,proto3" json:"queryType,omitempty"`
+	// queryType is the key to fetch a the corresponding data spec.
+	QueryType string `protobuf:"bytes,1,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
 
 func (m *QueryGetDataSpecRequest) Reset()         { *m = QueryGetDataSpecRequest{} }
 func (m *QueryGetDataSpecRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryGetDataSpecRequest) ProtoMessage()    {}
 func (*QueryGetDataSpecRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6ea550dd9a444afe, []int{4}
+	return fileDescriptor_6ea550dd9a444afe, []int{2}
 }
 func (m *QueryGetDataSpecRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -245,7 +158,9 @@ func (m *QueryGetDataSpecRequest) GetQueryType() string {
 	return ""
 }
 
+// QueryGetDataSpecResponse is response type for the Query/GetDataSpec RPC method.
 type QueryGetDataSpecResponse struct {
+	// spec is the data spec corresponding to the query type.
 	Spec *DataSpec `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
 }
 
@@ -253,7 +168,7 @@ func (m *QueryGetDataSpecResponse) Reset()         { *m = QueryGetDataSpecRespon
 func (m *QueryGetDataSpecResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryGetDataSpecResponse) ProtoMessage()    {}
 func (*QueryGetDataSpecResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6ea550dd9a444afe, []int{5}
+	return fileDescriptor_6ea550dd9a444afe, []int{3}
 }
 func (m *QueryGetDataSpecResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -292,8 +207,6 @@ func (m *QueryGetDataSpecResponse) GetSpec() *DataSpec {
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.registry.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.registry.QueryParamsResponse")
-	proto.RegisterType((*QueryGetQueryDataRequest)(nil), "layer.registry.QueryGetQueryDataRequest")
-	proto.RegisterType((*QueryGetQueryDataResponse)(nil), "layer.registry.QueryGetQueryDataResponse")
 	proto.RegisterType((*QueryGetDataSpecRequest)(nil), "layer.registry.QueryGetDataSpecRequest")
 	proto.RegisterType((*QueryGetDataSpecResponse)(nil), "layer.registry.QueryGetDataSpecResponse")
 }
@@ -301,38 +214,31 @@ func init() {
 func init() { proto.RegisterFile("layer/registry/query.proto", fileDescriptor_6ea550dd9a444afe) }
 
 var fileDescriptor_6ea550dd9a444afe = []byte{
-	// 484 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xcd, 0x6e, 0xd4, 0x30,
-	0x10, 0xde, 0x40, 0x59, 0x54, 0x17, 0x71, 0x30, 0x55, 0x09, 0xa1, 0x32, 0xc8, 0x1c, 0xd8, 0xb6,
-	0x10, 0xb3, 0xa5, 0x12, 0xe2, 0x5a, 0x81, 0x00, 0x71, 0x81, 0x85, 0x13, 0x97, 0x95, 0x37, 0x1d,
-	0x99, 0x48, 0xd9, 0xd8, 0x89, 0xbd, 0x88, 0x08, 0xf5, 0xc2, 0x13, 0x20, 0x55, 0xbc, 0x03, 0x8f,
-	0xd2, 0x63, 0x25, 0x2e, 0x9c, 0x10, 0xda, 0xe5, 0x41, 0x50, 0x1c, 0xa7, 0xe9, 0x86, 0xf0, 0x73,
-	0x4a, 0x3c, 0xf3, 0x7d, 0xdf, 0x7c, 0x33, 0x63, 0xa3, 0x20, 0xe1, 0x05, 0xe4, 0x2c, 0x07, 0x11,
-	0x6b, 0x93, 0x17, 0x2c, 0x9b, 0x41, 0x5e, 0x84, 0x2a, 0x97, 0x46, 0xe2, 0xcb, 0x36, 0x17, 0xd6,
-	0xb9, 0x60, 0x5d, 0x48, 0x21, 0x6d, 0x8a, 0x95, 0x7f, 0x15, 0x2a, 0xd8, 0x14, 0x52, 0x8a, 0x04,
-	0x18, 0x57, 0x31, 0xe3, 0x69, 0x2a, 0x0d, 0x37, 0xb1, 0x4c, 0xb5, 0xcb, 0x6e, 0x47, 0x52, 0x4f,
-	0xa5, 0x66, 0x13, 0xae, 0xa1, 0x12, 0x67, 0xef, 0x86, 0x13, 0x30, 0x7c, 0xc8, 0x14, 0x17, 0x71,
-	0x6a, 0xc1, 0x0e, 0x7b, 0xbd, 0xe5, 0x45, 0xf1, 0x9c, 0x4f, 0x6b, 0x21, 0xd2, 0x4a, 0x1e, 0x70,
-	0xc3, 0xc7, 0x5a, 0x41, 0x54, 0xe5, 0xe9, 0x3a, 0xc2, 0x2f, 0x4b, 0xf9, 0x17, 0x96, 0x34, 0x82,
-	0x6c, 0x06, 0xda, 0xd0, 0xe7, 0xe8, 0xca, 0x52, 0x54, 0x2b, 0x99, 0x6a, 0xc0, 0x7b, 0xa8, 0x5f,
-	0x89, 0xfb, 0xde, 0x4d, 0x6f, 0xb0, 0xb6, 0xbb, 0x11, 0x2e, 0xb7, 0x1a, 0x56, 0xf8, 0xfd, 0x95,
-	0xe3, 0xef, 0x37, 0x7a, 0x23, 0x87, 0xa5, 0x7b, 0xc8, 0xb7, 0x62, 0x4f, 0xc0, 0xd8, 0xef, 0x23,
-	0x6e, 0xb8, 0x2b, 0x84, 0x7d, 0x74, 0xd1, 0x76, 0xf7, 0xec, 0xc0, 0x4a, 0xae, 0x8e, 0xea, 0x23,
-	0x7d, 0x88, 0xae, 0x75, 0xb0, 0x9c, 0x91, 0x4d, 0xb4, 0x9a, 0xd5, 0x41, 0x47, 0x6c, 0x02, 0xf4,
-	0x01, 0xba, 0x5a, 0x53, 0xcb, 0xf3, 0x2b, 0x05, 0x51, 0x5d, 0xaf, 0x26, 0xbe, 0x2e, 0x14, 0x2c,
-	0x11, 0xcb, 0x00, 0x7d, 0xda, 0x38, 0x6d, 0x88, 0xae, 0xe4, 0x1d, 0xb4, 0x52, 0x8e, 0xcd, 0x75,
-	0xee, 0xb7, 0x3b, 0x3f, 0xc5, 0x5b, 0xd4, 0xee, 0x97, 0xf3, 0xe8, 0x82, 0x95, 0xc2, 0x19, 0xea,
-	0x57, 0x53, 0xc1, 0xb4, 0xcd, 0xf9, 0x7d, 0xf0, 0xc1, 0xad, 0xbf, 0x62, 0x2a, 0x2b, 0x94, 0x7c,
-	0xfc, 0xfa, 0xf3, 0xe8, 0x9c, 0x8f, 0x37, 0x58, 0xe7, 0xe6, 0xf1, 0x67, 0x0f, 0x5d, 0x3a, 0x3b,
-	0x36, 0x3c, 0xe8, 0x54, 0xed, 0xd8, 0x47, 0xb0, 0xf5, 0x1f, 0x48, 0xe7, 0xe2, 0x9e, 0x75, 0xb1,
-	0x8d, 0x07, 0x6d, 0x17, 0x02, 0xcc, 0xd8, 0xce, 0x74, 0x5c, 0x5e, 0x36, 0xf6, 0xc1, 0x6d, 0xf4,
-	0x10, 0x1f, 0x79, 0x68, 0xed, 0xcc, 0x68, 0xf1, 0xed, 0x3f, 0x15, 0x6b, 0x6d, 0x2d, 0x18, 0xfc,
-	0x1b, 0xe8, 0x4c, 0x0d, 0xad, 0xa9, 0x1d, 0xbc, 0xd5, 0x65, 0xea, 0xf4, 0xee, 0x3b, 0x4f, 0xe5,
-	0xce, 0x0f, 0xf7, 0x1f, 0x1f, 0xcf, 0x89, 0x77, 0x32, 0x27, 0xde, 0x8f, 0x39, 0xf1, 0x3e, 0x2d,
-	0x48, 0xef, 0x64, 0x41, 0x7a, 0xdf, 0x16, 0xa4, 0xf7, 0x66, 0x47, 0xc4, 0xe6, 0xed, 0x6c, 0x12,
-	0x46, 0x72, 0xca, 0x0c, 0x24, 0x89, 0xcc, 0xef, 0xc6, 0xd2, 0x09, 0xbf, 0x6f, 0xa4, 0x4d, 0xa1,
-	0x40, 0x4f, 0xfa, 0xf6, 0x3d, 0xdd, 0xff, 0x15, 0x00, 0x00, 0xff, 0xff, 0x7b, 0xf6, 0xb3, 0x6d,
-	0x1a, 0x04, 0x00, 0x00,
+	// 383 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x92, 0x41, 0x4b, 0xfb, 0x30,
+	0x18, 0xc6, 0xdb, 0xb1, 0xff, 0x60, 0x19, 0xfc, 0x0f, 0x71, 0xcc, 0x52, 0x35, 0x4a, 0x3d, 0x38,
+	0x74, 0x36, 0x30, 0x3d, 0x78, 0x1e, 0x8a, 0x82, 0x17, 0x9d, 0x9e, 0xbc, 0x8c, 0x6c, 0x86, 0x5a,
+	0xe8, 0x9a, 0xac, 0xc9, 0xc0, 0x22, 0x5e, 0xfc, 0x04, 0x8a, 0x7e, 0xa8, 0x1d, 0x07, 0x5e, 0x3c,
+	0x89, 0x6c, 0x7e, 0x10, 0x69, 0x1a, 0x37, 0xd7, 0x0d, 0xbd, 0x95, 0xf7, 0x79, 0xde, 0xa7, 0xbf,
+	0x3c, 0xbc, 0xc0, 0x0e, 0x48, 0x4c, 0x23, 0x1c, 0x51, 0xcf, 0x17, 0x32, 0x8a, 0x71, 0xaf, 0x4f,
+	0xa3, 0xd8, 0xe5, 0x11, 0x93, 0x0c, 0xfe, 0x57, 0x9a, 0xfb, 0xad, 0xd9, 0x65, 0x8f, 0x79, 0x4c,
+	0x49, 0x38, 0xf9, 0x4a, 0x5d, 0xf6, 0xaa, 0xc7, 0x98, 0x17, 0x50, 0x4c, 0xb8, 0x8f, 0x49, 0x18,
+	0x32, 0x49, 0xa4, 0xcf, 0x42, 0xa1, 0x55, 0x94, 0xc9, 0xbf, 0x26, 0x92, 0xb4, 0x04, 0xa7, 0x1d,
+	0xad, 0xaf, 0x64, 0x74, 0x4e, 0x22, 0xd2, 0xd5, 0xcb, 0x4e, 0x19, 0xc0, 0xf3, 0x84, 0xe7, 0x4c,
+	0x0d, 0x9b, 0xb4, 0xd7, 0xa7, 0x42, 0x3a, 0xa7, 0x60, 0x69, 0x66, 0x2a, 0x38, 0x0b, 0x05, 0x85,
+	0xfb, 0xa0, 0x90, 0x2e, 0x5b, 0xe6, 0x86, 0x59, 0x2d, 0xd5, 0x2b, 0xee, 0x2c, 0xbe, 0x9b, 0xfa,
+	0x1b, 0xf9, 0xc1, 0xfb, 0xba, 0xd1, 0xd4, 0x5e, 0xe7, 0x00, 0x2c, 0xab, 0xb0, 0x63, 0x2a, 0x0f,
+	0x89, 0x24, 0x17, 0x9c, 0x76, 0xf4, 0x7f, 0xe0, 0x1a, 0x00, 0xaa, 0x8d, 0x96, 0x8c, 0x39, 0x55,
+	0xa1, 0xc5, 0x66, 0x51, 0x4d, 0x2e, 0x63, 0x4e, 0x9d, 0x13, 0x60, 0xcd, 0x6f, 0x6a, 0x96, 0x1a,
+	0xc8, 0x27, 0x6f, 0xd4, 0x24, 0x56, 0x96, 0x64, 0xe2, 0x57, 0xae, 0xfa, 0x53, 0x0e, 0xfc, 0x53,
+	0x51, 0xb0, 0x07, 0x0a, 0x29, 0x25, 0x74, 0xb2, 0x3b, 0xf3, 0x45, 0xd8, 0x9b, 0xbf, 0x7a, 0x52,
+	0x14, 0x07, 0x3d, 0xbc, 0x7e, 0x3e, 0xe7, 0x2c, 0x58, 0xc1, 0x0b, 0x9b, 0x86, 0x2f, 0x26, 0x28,
+	0xfd, 0x78, 0x02, 0xdc, 0x5a, 0x18, 0x3a, 0x5f, 0x8f, 0x5d, 0xfd, 0xdb, 0xa8, 0x11, 0xea, 0x0a,
+	0xa1, 0x06, 0xb7, 0xb3, 0x08, 0x1e, 0x95, 0xad, 0xc9, 0x41, 0xe0, 0xbb, 0x69, 0xdb, 0xf7, 0x8d,
+	0xa3, 0xc1, 0x08, 0x99, 0xc3, 0x11, 0x32, 0x3f, 0x46, 0xc8, 0x7c, 0x1c, 0x23, 0x63, 0x38, 0x46,
+	0xc6, 0xdb, 0x18, 0x19, 0x57, 0x3b, 0x9e, 0x2f, 0x6f, 0xfa, 0x6d, 0xb7, 0xc3, 0xba, 0x58, 0xd2,
+	0x20, 0x60, 0xd1, 0xae, 0xcf, 0x74, 0xf2, 0xed, 0x34, 0x3b, 0x89, 0x11, 0xed, 0x82, 0x3a, 0xa4,
+	0xbd, 0xaf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x69, 0x57, 0x22, 0xc1, 0xe7, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -349,8 +255,6 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Queries a list of GetQueryData items.
-	GetQueryData(ctx context.Context, in *QueryGetQueryDataRequest, opts ...grpc.CallOption) (*QueryGetQueryDataResponse, error)
 	// Queries a list of GetDataSpec items.
 	GetDataSpec(ctx context.Context, in *QueryGetDataSpecRequest, opts ...grpc.CallOption) (*QueryGetDataSpecResponse, error)
 }
@@ -372,15 +276,6 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) GetQueryData(ctx context.Context, in *QueryGetQueryDataRequest, opts ...grpc.CallOption) (*QueryGetQueryDataResponse, error) {
-	out := new(QueryGetQueryDataResponse)
-	err := c.cc.Invoke(ctx, "/layer.registry.Query/GetQueryData", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) GetDataSpec(ctx context.Context, in *QueryGetDataSpecRequest, opts ...grpc.CallOption) (*QueryGetDataSpecResponse, error) {
 	out := new(QueryGetDataSpecResponse)
 	err := c.cc.Invoke(ctx, "/layer.registry.Query/GetDataSpec", in, out, opts...)
@@ -394,8 +289,6 @@ func (c *queryClient) GetDataSpec(ctx context.Context, in *QueryGetDataSpecReque
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Queries a list of GetQueryData items.
-	GetQueryData(context.Context, *QueryGetQueryDataRequest) (*QueryGetQueryDataResponse, error)
 	// Queries a list of GetDataSpec items.
 	GetDataSpec(context.Context, *QueryGetDataSpecRequest) (*QueryGetDataSpecResponse, error)
 }
@@ -406,9 +299,6 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
-}
-func (*UnimplementedQueryServer) GetQueryData(ctx context.Context, req *QueryGetQueryDataRequest) (*QueryGetQueryDataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetQueryData not implemented")
 }
 func (*UnimplementedQueryServer) GetDataSpec(ctx context.Context, req *QueryGetDataSpecRequest) (*QueryGetDataSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataSpec not implemented")
@@ -432,24 +322,6 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_GetQueryData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetQueryDataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetQueryData(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.registry.Query/GetQueryData",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetQueryData(ctx, req.(*QueryGetQueryDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -479,10 +351,6 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
-		},
-		{
-			MethodName: "GetQueryData",
-			Handler:    _Query_GetQueryData_Handler,
 		},
 		{
 			MethodName: "GetDataSpec",
@@ -546,66 +414,6 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetQueryDataRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetQueryDataRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetQueryDataRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.QueryId) > 0 {
-		i -= len(m.QueryId)
-		copy(dAtA[i:], m.QueryId)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.QueryId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *QueryGetQueryDataResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *QueryGetQueryDataResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *QueryGetQueryDataResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.QueryData) > 0 {
-		i -= len(m.QueryData)
-		copy(dAtA[i:], m.QueryData)
-		i = encodeVarintQuery(dAtA, i, uint64(len(m.QueryData)))
-		i--
-		dAtA[i] = 0xa
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -702,32 +510,6 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
-	return n
-}
-
-func (m *QueryGetQueryDataRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.QueryId)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
-	return n
-}
-
-func (m *QueryGetQueryDataResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.QueryData)
-	if l > 0 {
-		n += 1 + l + sovQuery(uint64(l))
-	}
 	return n
 }
 
@@ -874,170 +656,6 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetQueryDataRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetQueryDataRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetQueryDataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.QueryId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipQuery(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *QueryGetQueryDataResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowQuery
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: QueryGetQueryDataResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryGetQueryDataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowQuery
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthQuery
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthQuery
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.QueryData = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

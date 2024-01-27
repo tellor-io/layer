@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -15,7 +15,7 @@ import (
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Check if query data begins with 0x and remove it
-	if rk.Has0xPrefix(msg.QueryData) {
+	if lib.Has0xPrefix(msg.QueryData) {
 		msg.QueryData = msg.QueryData[2:]
 	}
 	// Try to decode query data from hex string

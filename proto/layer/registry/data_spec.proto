@@ -1,11 +1,32 @@
 syntax = "proto3";
 package layer.registry;
 
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+
 option go_package = "github.com/tellor-io/layer/x/registry/types";
 
+// DataSpec is a specification for how to interpret and aggregate data
 message DataSpec {
-  
-  string documentHash = 1; 
-  string valueType = 2; 
-  string aggregationMethod = 3;
+  // ipfs hash of the data spec
+  string document_hash = 1;
+  // the value's datatype for decoding the value
+  string value_type = 2;
+  // how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
+  string aggregation_method = 3;
+  // address that originally registered the data spec
+  string registrar = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // report_buffer_window specifies the duration of the time window following an initial report
+  // during which additional reports can be submitted. This duration acts as a buffer, allowing
+  // a collection of related reports in a defined time frame. The window ensures that all
+  // pertinent reports are aggregated together before arriving at a final value. This defaults
+  // to 0s if not specified.
+  // extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
+  google.protobuf.Duration report_buffer_window = 5 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }

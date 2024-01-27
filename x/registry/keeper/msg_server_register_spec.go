@@ -3,39 +3,36 @@ package keeper
 import (
 	"context"
 	"fmt"
-
-	"github.com/tellor-io/layer/x/registry/types"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpec) (*types.MsgRegisterSpecResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	specExists, _ := k.SpecRegistry.Has(ctx, msg.QueryType)
+	specExists, _ := k.Keeper.HasSpec(ctx, msg.QueryType)
 	if specExists {
 		return nil, status.Error(codes.AlreadyExists, "data spec previously registered")
 	}
-	if !SupportedType(msg.Spec.ValueType) {
+	msg.Spec.ValueType = strings.ToLower(msg.Spec.ValueType)
+	msg.Spec.AggregationMethod = strings.ToLower(msg.Spec.AggregationMethod)
+	msg.Spec.Registrar = msg.Registrar
+
+	if !types.SupportedType(msg.Spec.ValueType) {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("value type not supported: %s", msg.Spec.ValueType))
 	}
-	if err := k.SpecRegistry.Set(ctx, msg.QueryType, msg.Spec); err != nil {
+	// TODO: assert the aggregation can be handled
+	if !types.SupportedAggregationMethod[msg.Spec.AggregationMethod] {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregation method not supported: %s", msg.Spec.AggregationMethod))
+	}
+
+	if err := k.Keeper.SetDataSpec(ctx, msg.QueryType, msg.Spec); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgRegisterSpecResponse{}, nil
-}
-
-func SupportedType(dataType string) bool {
-	switch dataType {
-	case "string", "bool", "address", "bytes":
-		return true
-	case "int8", "int16", "int32", "int64", "int128", "int256":
-		return true
-	case "uint8", "uint16", "uint32", "uint64", "uint128", "uint256":
-		return true
-	default:
-		return false
-	}
 }

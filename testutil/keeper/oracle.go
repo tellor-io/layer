@@ -49,6 +49,7 @@ func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.Acc
 	rk := rkeeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(rStoreKey),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	k := keeper.NewKeeper(
@@ -65,7 +66,8 @@ func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.Acc
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	genesisState := registrytypes.GenesisState{
-		Params: registrytypes.DefaultParams(),
+		Params:   registrytypes.DefaultParams(),
+		Dataspec: registrytypes.GenesisDataSpec(),
 	}
 	r.InitGenesis(ctx, rk, genesisState)
 	// Initialize params

@@ -18,8 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	RegisterQuery(ctx context.Context, in *MsgRegisterQuery, opts ...grpc.CallOption) (*MsgRegisterQueryResponse, error)
+	// RegisterSpec defines a method for registering a new data specification.
 	RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts ...grpc.CallOption) (*MsgRegisterSpecResponse, error)
+	// UpdateDataSpec defines a method for updating an existing data specification.
+	UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, opts ...grpc.CallOption) (*MsgUpdateDataSpecResponse, error)
 }
 
 type msgClient struct {
@@ -28,15 +30,6 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
-}
-
-func (c *msgClient) RegisterQuery(ctx context.Context, in *MsgRegisterQuery, opts ...grpc.CallOption) (*MsgRegisterQueryResponse, error) {
-	out := new(MsgRegisterQueryResponse)
-	err := c.cc.Invoke(ctx, "/layer.registry.Msg/RegisterQuery", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *msgClient) RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts ...grpc.CallOption) (*MsgRegisterSpecResponse, error) {
@@ -48,12 +41,23 @@ func (c *msgClient) RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts 
 	return out, nil
 }
 
+func (c *msgClient) UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, opts ...grpc.CallOption) (*MsgUpdateDataSpecResponse, error) {
+	out := new(MsgUpdateDataSpecResponse)
+	err := c.cc.Invoke(ctx, "/layer.registry.Msg/UpdateDataSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	RegisterQuery(context.Context, *MsgRegisterQuery) (*MsgRegisterQueryResponse, error)
+	// RegisterSpec defines a method for registering a new data specification.
 	RegisterSpec(context.Context, *MsgRegisterSpec) (*MsgRegisterSpecResponse, error)
+	// UpdateDataSpec defines a method for updating an existing data specification.
+	UpdateDataSpec(context.Context, *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -61,11 +65,11 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (UnimplementedMsgServer) RegisterQuery(context.Context, *MsgRegisterQuery) (*MsgRegisterQueryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RegisterQuery not implemented")
-}
 func (UnimplementedMsgServer) RegisterSpec(context.Context, *MsgRegisterSpec) (*MsgRegisterSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterSpec not implemented")
+}
+func (UnimplementedMsgServer) UpdateDataSpec(context.Context, *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDataSpec not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -78,24 +82,6 @@ type UnsafeMsgServer interface {
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 	s.RegisterService(&Msg_ServiceDesc, srv)
-}
-
-func _Msg_RegisterQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRegisterQuery)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).RegisterQuery(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.registry.Msg/RegisterQuery",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RegisterQuery(ctx, req.(*MsgRegisterQuery))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_RegisterSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -116,6 +102,24 @@ func _Msg_RegisterSpec_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateDataSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDataSpec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDataSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.registry.Msg/UpdateDataSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDataSpec(ctx, req.(*MsgUpdateDataSpec))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -124,12 +128,12 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RegisterQuery",
-			Handler:    _Msg_RegisterQuery_Handler,
-		},
-		{
 			MethodName: "RegisterSpec",
 			Handler:    _Msg_RegisterSpec_Handler,
+		},
+		{
+			MethodName: "UpdateDataSpec",
+			Handler:    _Msg_UpdateDataSpec_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
