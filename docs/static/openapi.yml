@@ -17811,6 +17811,57 @@ paths:
           type: string
       tags:
         - Query
+  /layer/registry/generate_querydata/{querytype}/{parameters}:
+    get:
+      summary: Queries a list of GenerateQuerydata items.
+      operationId: LayerRegistryGenerateQuerydata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              querydata:
+                type: string
+                description: querydata is the generated querydata hex string.
+            description: >-
+              QueryGenerateQuerydataResponse is response type for the
+              Query/GenerateQuerydata RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: querytype
+          description: querytype for which querydata is to be generated.
+          in: path
+          required: true
+          type: string
+        - name: parameters
+          description: parameters for which querydata is to be generated.
+          in: path
+          required: true
+          type: array
+          items:
+            type: string
+          collectionFormat: csv
+          minItems: 1
+      tags:
+        - Query
   /layer/registry/get_data_spec/{query_type}:
     get:
       summary: Queries a list of GetDataSpec items.
@@ -25172,6 +25223,11 @@ definitions:
           extensions: treat as a golang time.duration, don't allow nil values,
           don't omit empty values
     title: DataSpec is a specification for how to interpret and aggregate data
+  layer.registry.MsgRegisterSpecResponse:
+    type: object
+    description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
+  layer.registry.MsgUpdateDataSpecResponse:
+    type: object
   layer.registry.Params:
     type: object
     description: Params defines the parameters for the module.
@@ -25184,6 +25240,15 @@ definitions:
     description: >-
       QueryDecodeQuerydataResponse is response type for the
       Query/DecodeQuerydata RPC method.
+  layer.registry.QueryGenerateQuerydataResponse:
+    type: object
+    properties:
+      querydata:
+        type: string
+        description: querydata is the generated querydata hex string.
+    description: >-
+      QueryGenerateQuerydataResponse is response type for the
+      Query/GenerateQuerydata RPC method.
   layer.registry.QueryGetDataSpecResponse:
     type: object
     properties:
@@ -25242,8 +25307,3 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  layer.registry.MsgRegisterSpecResponse:
-    type: object
-    description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
-  layer.registry.MsgUpdateDataSpecResponse:
-    type: object

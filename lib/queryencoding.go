@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/big"
@@ -194,4 +195,22 @@ func convertToJSON(slice []interface{}, types []string) (string, error) {
 	}
 
 	return string(jsonResult), nil
+}
+
+func GenerateQuerydata(querytype string, parameters []string, queryParameterTypes []string) (string, error) {
+	if len(parameters) == 0 {
+		return "", status.Error(codes.InvalidArgument, fmt.Sprintf("data field mapping is empty"))
+	}
+	// encode query data params
+	encodedDatafields, err := EncodeArguments(queryParameterTypes, parameters)
+	if err != nil {
+		return "", status.Error(codes.InvalidArgument, fmt.Sprintf("failed to encode data field mapping, data_type_to_field_name: %v", err))
+	}
+
+	// encode query data with query type
+	encodedQuerydata, err := EncodeArguments([]string{"string", "bytes"}, []string{querytype, string(encodedDatafields)})
+	if err != nil {
+		return "", fmt.Errorf("failed to encode query data: %v", err)
+	}
+	return hex.EncodeToString(encodedQuerydata), nil
 }

@@ -30,6 +30,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querydata"}},
 				},
 
+				{
+					RpcMethod:      "GenerateQuerydata",
+					Use:            "generate-querydata [querytype] [parameters]",
+					Short:          "Encode query data hex given query type and parameters",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querytype"}, {ProtoField: "parameters"}},
+				},
+
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

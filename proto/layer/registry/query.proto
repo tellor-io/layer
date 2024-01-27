@@ -25,6 +25,11 @@ service Query {
   rpc DecodeQuerydata(QueryDecodeQuerydataRequest) returns (QueryDecodeQuerydataResponse) {
     option (google.api.http).get = "/layer/registry/decode_querydata/{querydata}";
   }
+
+  // Queries a list of GenerateQuerydata items.
+  rpc GenerateQuerydata(QueryGenerateQuerydataRequest) returns (QueryGenerateQuerydataResponse) {
+    option (google.api.http).get = "/layer/registry/generate_querydata/{querytype}/{parameters}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -58,4 +63,18 @@ message QueryDecodeQuerydataRequest {
 message QueryDecodeQuerydataResponse {
   // spec is the decoded json represention of the query data hex string.
   string spec = 1;
+}
+
+// QueryGenerateQuerydataRequest is request type for the Query/GenerateQuerydata RPC method.
+message QueryGenerateQuerydataRequest {
+  // querytype for which querydata is to be generated.
+  string querytype = 1;
+  // parameters for which querydata is to be generated.
+  repeated string parameters = 2;
+}
+
+// QueryGenerateQuerydataResponse is response type for the Query/GenerateQuerydata RPC method.
+message QueryGenerateQuerydataResponse {
+  // querydata is the generated querydata hex string.
+  string querydata = 1;
 }
