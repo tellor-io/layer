@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	utils "github.com/tellor-io/layer/x/oracle/utils"
@@ -16,16 +18,10 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	var commitreq types.MsgCommitReport
 	// Commit report transaction
 	valueDecoded, err := hex.DecodeString(value)
-	fmt.Println("valueDecoded", valueDecoded)
 	require.Nil(err)
 	salt, err := utils.Salt(32)
-	// fmt.Println("salt", salt)
 	require.Nil(err)
-	// signature, err := PrivKey.Sign(valueDecoded)
-	saltedUndecodedValue := utils.CalculateCommitment(value, salt)
-	fmt.Println("saltedUndecodedValue", saltedUndecodedValue)
 	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
-	fmt.Println("saltedValue", saltedValue)
 	require.Nil(err)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
@@ -41,8 +37,6 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, saltedValue))
 	require.Equal(commitValue.Report.Creator, Addr.String())
 	return salt
-
-	//check every way to fail
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
@@ -53,7 +47,6 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 	// Commit report transaction
 	valueDecoded, err := hex.DecodeString(value)
 	require.Nil(err)
-	// signature, err := PrivKey.Sign(valueDecoded)
 	salt, err := utils.Salt(32)
 	require.Nil(err)
 	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
@@ -65,13 +58,13 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 }
 
 func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
+	// commit query in cycle list
 	queryData1 := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
 	// Commit report transaction
 	valueDecoded, err := hex.DecodeString(value)
 	s.Nil(err)
-	// signature, err := PrivKey.Sign(valueDecoded)
 	salt, err := utils.Salt(32)
 	s.Nil(err)
 	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
@@ -81,4 +74,47 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
+	// commit query that was tipped
+
+}
+
+func (s *KeeperTestSuite) TestBadCommits() {
+	// try to commit bad query data
+	require := s.Require()
+	queryData := "stupidQueryData"
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	var commitreq types.MsgCommitReport
+	valueDecoded, err := hex.DecodeString(value)
+	require.Nil(err)
+	salt, err := utils.Salt(32)
+	require.Nil(err)
+	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+	commitreq.Creator = Addr.String()
+	commitreq.QueryData = queryData
+	commitreq.SaltedValue = saltedValue
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	require.ErrorContains(err, "invalid query data")
+
+	// try to commit from random account
+	randomPrivKey := secp256k1.GenPrivKey()
+	randomPubKey := randomPrivKey.PubKey()
+	randomAddr := sdk.AccAddress(randomPubKey.Address())
+	fmt.Println("randomAddr:", randomAddr)
+	fmt.Println("Addr:", Addr)
+
+	randomValidator, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(randomAddr)) // how do i get a random address thats not a validator ?
+	require.Nil(err)
+	fmt.Println("randomValidator:", randomValidator)
+
+	validator, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(Addr))
+	require.Nil(err)
+	fmt.Println("validator:", validator)
+
+	queryData = s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	commitreq.Creator = randomAddr.String()
+	commitreq.QueryData = queryData
+	commitreq.SaltedValue = saltedValue
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	fmt.Println("err:", err)
+	require.Error(err)
 }
