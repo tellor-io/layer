@@ -18,8 +18,8 @@ func TestGenesis(t *testing.T) {
 	}
 
 	k, ctx := keepertest.BridgeKeeper(t)
-	bridge.InitGenesis(ctx, *k, genesisState)
-	got := bridge.ExportGenesis(ctx, *k)
+	bridge.InitGenesis(ctx, k, genesisState)
+	got := bridge.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState)

@@ -4,4 +4,12 @@ import (
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-var _ types.QueryServer = Keeper{}
+type Querier struct {
+	Keeper
+}
+
+func NewQuerier(keeper Keeper) Querier {
+	return Querier{Keeper: keeper}
+}
+
+var _ types.QueryServer = Querier{}

@@ -1,16 +1,16 @@
 package types
 
 import (
+	context "context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type StakingKeeper interface {
 	// Methods imported from staking should be defined here
-	GetValidators(ctx sdk.Context, maxRetrieve uint32) []stakingtypes.Validator
-	// GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
-	GetAllValidators(ctx sdk.Context) []stakingtypes.Validator
+	GetValidators(ctx context.Context, maxRetrieve uint32) ([]stakingtypes.Validator, error)
+	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 }
 
 type SlashingKeeper interface {
@@ -19,12 +19,12 @@ type SlashingKeeper interface {
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	// Methods imported from account should be defined here
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
 }
