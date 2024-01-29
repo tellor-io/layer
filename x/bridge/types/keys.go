@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "bridge"
@@ -14,6 +16,7 @@ const (
 	MemStoreKey = "mem_bridge"
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
+var (
+	ParamsKey       = collections.NewPrefix(0) // Prefix for params key
+	BridgeValsetKey = collections.NewPrefix(1) // Prefix for bridge_valset key
+)

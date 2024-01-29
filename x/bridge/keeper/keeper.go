@@ -2,31 +2,33 @@ package keeper
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	gomath "math"
 
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	// stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"sort"
 
-	"cosmossdk.io/store/prefix"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		memKey     storetypes.StoreKey
-		paramstore paramtypes.Subspace
+		cdc          codec.BinaryCodec
+		storeService storetypes.KVStoreService
+
+		Schema       collections.Schema
+		Params       collections.Item[types.Params]
+		BridgeValset collections.Item[types.BridgeValidatorSet]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -35,35 +37,39 @@ type (
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey storetypes.StoreKey,
-	ps paramtypes.Subspace,
+	storeService storetypes.KVStoreService,
 
 	stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
-) *Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
-	return &Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
-
+) Keeper {
+	sb := collections.NewSchemaBuilder(storeService)
+	k := Keeper{
+		cdc:            cdc,
+		storeService:   storeService,
+		Params:         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		BridgeValset:   collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 	}
+
+	schema, err := sb.Build()
+	if err != nil {
+		panic(err)
+	}
+	k.Schema = schema
+	return k
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, error) {
-	validators := k.stakingKeeper.GetAllValidators(ctx)
+	validators, err := k.stakingKeeper.GetAllValidators(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	bridgeValset := make([]*types.BridgeValidator, len(validators))
 
@@ -125,48 +131,30 @@ func (k Keeper) GetBridgeValidatorSet(ctx sdk.Context) (*types.BridgeValidatorSe
 	return &types.BridgeValidatorSet{BridgeValidatorSet: bridgeValset}, nil
 }
 
-func (k Keeper) SetBridgeValidators(ctx sdk.Context, bridgeValidators *types.BridgeValidatorSet) {
-	store := k.BridgeValidatorsStore(ctx) // You need to create this method
-	bz := k.cdc.MustMarshal(bridgeValidators)
-	store.Set([]byte("BridgeValidators"), bz)
-}
-
-func (k Keeper) BridgeValidatorsStore(ctx sdk.Context) storetypes.KVStore {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix("BridgeValidatorsKey"))
-}
-
-// function for loading last saved bridge validator set
-func (k Keeper) GetLastSavedBridgeValidators(ctx sdk.Context) (*types.BridgeValidatorSet, error) {
-	store := k.BridgeValidatorsStore(ctx)
-	bz := store.Get([]byte("BridgeValidators"))
-	if bz == nil {
-		return nil, fmt.Errorf("no bridge validator set found")
-	}
-	var bridgeValidators types.BridgeValidatorSet
-	k.cdc.MustUnmarshal(bz, &bridgeValidators)
-	return &bridgeValidators, nil
-}
-
 // function for loading last saved bridge validator set and comparing it to current set
 func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
+	// TODO: double-check this, as it's currently getting the stored valset
 	currentBridgeValidators, err := k.GetBridgeValidatorSet(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No current bridge validator set found")
 		return false, err
 	}
-	lastSavedBridgeValidators, err := k.GetLastSavedBridgeValidators(ctx)
+	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No saved bridge validator set found")
-		k.SetBridgeValidators(ctx, currentBridgeValidators)
+		k.BridgeValset.Set(ctx, *currentBridgeValidators)
 		return false, err
 	}
-	if bytes.Equal(k.cdc.MustMarshal(lastSavedBridgeValidators), k.cdc.MustMarshal(currentBridgeValidators)) {
+	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentBridgeValidators)) {
 		return true, nil
-	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, currentBridgeValidators) < 0.05 {
+	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentBridgeValidators) < 0.05 {
 		k.Logger(ctx).Info("Power diff is less than 5%")
 		return false, nil
 	} else {
-		k.SetBridgeValidators(ctx, currentBridgeValidators)
+		err := k.BridgeValset.Set(ctx, *currentBridgeValidators)
+		if err != nil {
+			return false, err
+		}
 		k.Logger(ctx).Info("Bridge validator set updated")
 		for i, validator := range lastSavedBridgeValidators.BridgeValidatorSet {
 			k.Logger(ctx).Info("Last saved bridge validator ", "savedVal", validator.EthereumAddress)
@@ -179,7 +167,7 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 	}
 }
 
-func (k Keeper) PowerDiff(ctx sdk.Context, b *types.BridgeValidatorSet, c *types.BridgeValidatorSet) float64 {
+func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
 	powers := map[string]int64{}
 	for _, bv := range b.BridgeValidatorSet {
 		powers[bv.EthereumAddress] = int64(bv.GetPower())

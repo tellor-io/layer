@@ -573,12 +573,9 @@ func New(
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
 
-	app.BridgeKeeper = *bridgemodulekeeper.NewKeeper(
+	app.BridgeKeeper = bridgemodulekeeper.NewKeeper(
 		appCodec,
-		keys[bridgemoduletypes.StoreKey],
-		keys[bridgemoduletypes.MemStoreKey],
-		app.GetSubspace(bridgemoduletypes.ModuleName),
-
+		runtime.NewKVStoreService(keys[bridgemoduletypes.StoreKey]),
 		app.StakingKeeper,
 		app.SlashingKeeper,
 	)
