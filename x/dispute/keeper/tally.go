@@ -44,29 +44,29 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 	}
 
 	// Convert to Dec for precision
-	tokenHolderVoteSumDec := sdk.NewDecFromInt(tokenHolderVoteSum)
-	validatorVoteSumDec := sdk.NewDecFromInt(validatorVoteSum)
-	userVoteSumDec := sdk.NewDecFromInt(userVoteSum)
-	teamVoteSumDec := sdk.NewDecFromInt(teamVoteSum)
+	tokenHolderVoteSumDec := math.LegacyNewDecFromInt(tokenHolderVoteSum)
+	validatorVoteSumDec := math.LegacyNewDecFromInt(validatorVoteSum)
+	userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
+	teamVoteSumDec := math.LegacyNewDecFromInt(teamVoteSum)
 
 	// Normalize the votes for each group
-	forTokenHolders := sdk.NewDecFromInt(tally.ForVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
-	forValidators := sdk.NewDecFromInt(tally.ForVotes.Validators).Quo(validatorVoteSumDec)
-	forUsers := sdk.NewDecFromInt(tally.ForVotes.Users).Quo(userVoteSumDec)
-	forTeam := sdk.NewDecFromInt(tally.ForVotes.Team).Quo(teamVoteSumDec)
+	forTokenHolders := math.LegacyNewDecFromInt(tally.ForVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
+	forValidators := math.LegacyNewDecFromInt(tally.ForVotes.Validators).Quo(validatorVoteSumDec)
+	forUsers := math.LegacyNewDecFromInt(tally.ForVotes.Users).Quo(userVoteSumDec)
+	forTeam := math.LegacyNewDecFromInt(tally.ForVotes.Team).Quo(teamVoteSumDec)
 
-	againstTokenHolders := sdk.NewDecFromInt(tally.AgainstVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
-	againstValidators := sdk.NewDecFromInt(tally.AgainstVotes.Validators).Quo(validatorVoteSumDec)
-	againstUsers := sdk.NewDecFromInt(tally.AgainstVotes.Users).Quo(userVoteSumDec)
-	againstTeam := sdk.NewDecFromInt(tally.AgainstVotes.Team).Quo(teamVoteSumDec)
+	againstTokenHolders := math.LegacyNewDecFromInt(tally.AgainstVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
+	againstValidators := math.LegacyNewDecFromInt(tally.AgainstVotes.Validators).Quo(validatorVoteSumDec)
+	againstUsers := math.LegacyNewDecFromInt(tally.AgainstVotes.Users).Quo(userVoteSumDec)
+	againstTeam := math.LegacyNewDecFromInt(tally.AgainstVotes.Team).Quo(teamVoteSumDec)
 
-	invalidTokenHolders := sdk.NewDecFromInt(tally.Invalid.TokenHolders).Quo(tokenHolderVoteSumDec)
-	invalidValidators := sdk.NewDecFromInt(tally.Invalid.Validators).Quo(validatorVoteSumDec)
-	invalidUsers := sdk.NewDecFromInt(tally.Invalid.Users).Quo(userVoteSumDec)
-	invalidTeam := sdk.NewDecFromInt(tally.Invalid.Team).Quo(teamVoteSumDec)
+	invalidTokenHolders := math.LegacyNewDecFromInt(tally.Invalid.TokenHolders).Quo(tokenHolderVoteSumDec)
+	invalidValidators := math.LegacyNewDecFromInt(tally.Invalid.Validators).Quo(validatorVoteSumDec)
+	invalidUsers := math.LegacyNewDecFromInt(tally.Invalid.Users).Quo(userVoteSumDec)
+	invalidTeam := math.LegacyNewDecFromInt(tally.Invalid.Team).Quo(teamVoteSumDec)
 
 	// Sum the normalized votes and divide by number of groups to scale between 0 and 1
-	numGroups := sdk.NewDec(4)
+	numGroups := math.LegacyNewDec(4)
 	scaledSupport := (forTokenHolders.Add(forValidators).Add(forUsers).Add(forTeam)).Quo(numGroups)
 	scaledAgainst := (againstTokenHolders.Add(againstValidators).Add(againstUsers).Add(againstTeam)).Quo(numGroups)
 	scaledInvalid := (invalidTokenHolders.Add(invalidValidators).Add(invalidUsers).Add(invalidTeam)).Quo(numGroups)
@@ -79,7 +79,7 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) {
 
 	if vote.VoteResult == types.VoteResult_NO_TALLY {
 		// quorum reached case
-		if totalRatio.GTE(sdk.NewDec(51)) {
+		if totalRatio.GTE(math.LegacyNewDec(51)) {
 			fmt.Println("quorum reached")
 			switch {
 			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
@@ -181,9 +181,9 @@ func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, vot
 
 func (k Keeper) GetValidatorPower(ctx sdk.Context, voter string) math.Int {
 	addr := sdk.MustAccAddressFromBech32(voter)
-	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
-	if !found {
-		return sdk.ZeroInt()
+	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(addr))
+	if err != nil { // TODO: return error instead of panic
+		return math.ZeroInt()
 	}
 	power := validator.GetConsensusPower(sdk.DefaultPowerReduction)
 	return math.NewInt(power)
@@ -217,7 +217,11 @@ func (k Keeper) GetTotalSupply(ctx sdk.Context) math.Int {
 // Get total validator power
 // TODO: this changes with every block, so we need to store it somewhere?
 func (k Keeper) GetTotalValidatorPower(ctx sdk.Context) math.Int {
-	return k.stakingKeeper.GetLastTotalPower(ctx)
+	p, err := k.stakingKeeper.GetLastTotalPower(ctx)
+	if err != nil {
+		panic(err) // TODO: return error instead of panic
+	}
+	return p
 }
 
 // Get total number of tips
@@ -249,7 +253,7 @@ func ratio(total, part math.Int) math.LegacyDec {
 		return math.LegacyZeroDec()
 	}
 	total = total.MulRaw(4)
-	ratio := sdk.NewDecFromInt(part).Quo(sdk.NewDecFromInt(total))
+	ratio := math.LegacyNewDecFromInt(part).Quo(math.LegacyNewDecFromInt(total))
 	return ratio.MulInt64(100)
 }
 

@@ -21,8 +21,8 @@ func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coi
 
 // Pay fee from validator's bond can only be called by the validator itself
 func (k Keeper) PayFromBond(ctx sdk.Context, delAddr sdk.AccAddress, fee sdk.Coin) error {
-	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
-	if !found {
+	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
+	if err != nil {
 		return stakingtypes.ErrNoValidatorFound
 	}
 
@@ -32,7 +32,10 @@ func (k Keeper) PayFromBond(ctx sdk.Context, delAddr sdk.AccAddress, fee sdk.Coi
 	}
 
 	// Deduct tokens from validator
-	validator = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, fee.Amount)
+	validator, err = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, fee.Amount)
+	if err != nil {
+		return err
+	}
 
 	// Send fee to module account
 	var poolName string
@@ -57,11 +60,14 @@ func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) err
 	// k.GetLastRefundBlockTime(ctx, delAddr)
 	// k.SetLastRefundBlockTime(ctx, delAddr, currentBlock)
 	delAddr := sdk.MustAccAddressFromBech32(refundTo)
-	validator, found := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
-	if !found {
+	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
+	if err != nil {
 		return stakingtypes.ErrNoValidatorFound
 	}
-	validator, _ = k.stakingKeeper.AddValidatorTokensAndShares(ctx, validator, fee.Amount)
+	validator, _, err = k.stakingKeeper.AddValidatorTokensAndShares(ctx, validator, fee.Amount)
+	if err != nil {
+		return err
+	}
 
 	if validator.IsBonded() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee)); err != nil {

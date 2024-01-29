@@ -18,8 +18,8 @@ func TestGenesis(t *testing.T) {
 	}
 
 	k, _, _, ctx := keepertest.OracleKeeper(t)
-	oracle.InitGenesis(ctx, *k, genesisState)
-	got := oracle.ExportGenesis(ctx, *k)
+	oracle.InitGenesis(ctx, k, genesisState)
+	got := oracle.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState)

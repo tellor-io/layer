@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
@@ -32,7 +33,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
 	voterReward := halfBurnAmount
 	if len(voters) == 0 {
 		halfBurnAmount = dispute.BurnAmount
-		voterReward = sdk.ZeroInt()
+		voterReward = math.ZeroInt()
 	}
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:

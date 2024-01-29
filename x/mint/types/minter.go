@@ -9,10 +9,10 @@ import (
 )
 
 const (
-	DailyMintRate    = 146940000 // loya per day
-	DefaultBondDenom = "loya"
-	NanosecondsInDay = 24 * 60 * 60 * 1e9
-	InitialMint      = 300 * 1e6 // 300k loya
+	DailyMintRate     = 146940000 // loya per day
+	DefaultBondDenom  = "loya"
+	MillisecondsInDay = 24 * 60 * 60 * 1000
+	InitialMint       = 300 * 1e6 // 300k loya
 )
 
 // NewMinter returns a new Minter object.
@@ -44,8 +44,7 @@ func (m Minter) CalculateBlockProvision(current time.Time, previous time.Time) (
 	if current.Before(previous) {
 		return sdk.Coin{}, fmt.Errorf("current time %v cannot be before previous time %v", current, previous)
 	}
-	timeElapsed := current.Sub(previous).Nanoseconds()
-	mintAmount := DailyMintRate * timeElapsed / NanosecondsInDay
-
+	timeElapsed := current.Sub(previous).Milliseconds()
+	mintAmount := DailyMintRate * timeElapsed / MillisecondsInDay
 	return sdk.NewCoin(DefaultBondDenom, cosmosmath.NewInt(mintAmount)), nil
 }

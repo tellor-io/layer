@@ -48,7 +48,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RegisterStoreDecoder registers a decoder.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
@@ -60,7 +60,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgRegisterQuery int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgRegisterQuery, &weightMsgRegisterQuery, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgRegisterQuery, &weightMsgRegisterQuery, nil,
 		func(_ *rand.Rand) {
 			weightMsgRegisterQuery = defaultWeightMsgRegisterQuery
 		},
@@ -71,7 +71,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgRegisterSpec int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgRegisterSpec, &weightMsgRegisterSpec, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgRegisterSpec, &weightMsgRegisterSpec, nil,
 		func(_ *rand.Rand) {
 			weightMsgRegisterSpec = defaultWeightMsgRegisterSpec
 		},

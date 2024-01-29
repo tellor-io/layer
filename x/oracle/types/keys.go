@@ -11,9 +11,6 @@ const (
 	// ModuleName defines the module name
 	ModuleName = "oracle"
 
-	// TimeBasedRewards account name
-	TimeBasedRewards = "time_based_rewards"
-
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
