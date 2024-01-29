@@ -4,8 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	utils "github.com/tellor-io/layer/x/oracle/utils"
@@ -95,30 +98,43 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "invalid query data")
 
-	// try to commit from random account
+	// try to commit from unbonded validator
 	randomPrivKey := secp256k1.GenPrivKey()
-	fmt.Println("randomPrivKey:", randomPrivKey)
 	randomPubKey := randomPrivKey.PubKey()
-	fmt.Println("randomPubKey:", randomPubKey)
 	randomAddr := sdk.AccAddress(randomPubKey.Address())
-	fmt.Println("randomAddr:", randomAddr)
-	fmt.Println("PrivKey: ", PrivKey)
-	fmt.Println("PubKey: ", PubKey)
-	fmt.Println("Addr:", Addr)
-
-	randomValidator, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(randomAddr)) // how do i get a random address thats not a validator ?
-	require.Nil(err)
-	fmt.Println("randomValidator:", randomValidator)
-
-	validator, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(Addr))
-	require.Nil(err)
-	fmt.Println("validator:", validator)
-
+	badValidator, _ := stakingtypes.NewValidator(randomAddr.String(), randomPubKey, stakingtypes.Description{Moniker: "unbonded badguy"})
+	badValidator.Jailed = false
+	badValidator.Status = stakingtypes.Unbonded
+	badValidator.Tokens = math.NewInt(1000000000000000000)
+	require.Equal(false, badValidator.IsBonded())
+	require.Equal(false, badValidator.IsJailed())
+	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(badValidator, nil)
+	s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(randomAddr))
 	queryData = s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
-	commitreq.Creator = randomAddr.String()
+	commitreq.Creator = badValidator.OperatorAddress
 	commitreq.QueryData = queryData
 	commitreq.SaltedValue = saltedValue
+	fmt.Println("&commitreq:", &commitreq)
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	require.ErrorContains(err, "validator is not bonded")
+
+	// try to commit from jailed validator
+	randomPrivKey2 := secp256k1.GenPrivKey()
+	randomPubKey2 := randomPrivKey2.PubKey()
+	randomAddr2 := sdk.AccAddress(randomPubKey2.Address())
+	badValidator, _ = stakingtypes.NewValidator(randomAddr2.String(), randomPubKey2, stakingtypes.Description{Moniker: "jailed badguy"})
+	badValidator.Jailed = true
+	badValidator.Status = stakingtypes.Bonded
+	badValidator.Tokens = math.NewInt(10000000000000000)
+	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(badValidator, nil)
+	s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(badValidator.OperatorAddress))
+	require.Equal(true, badValidator.IsJailed())
+	require.Equal(true, badValidator.IsBonded())
+	commitreq.Creator = badValidator.OperatorAddress
+	commitreq.QueryData = queryData
+	commitreq.SaltedValue = saltedValue
+	fmt.Println("&commitreq:", &commitreq)
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	fmt.Println("err:", err)
-	require.Error(err)
+	require.ErrorContains(err, "validator is jailed") // fails bc err is "validator is not bonded" ?
 }

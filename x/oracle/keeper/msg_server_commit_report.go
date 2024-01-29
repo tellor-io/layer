@@ -35,6 +35,9 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if err != nil {
 		return nil, err
 	}
+	if validator.IsJailed() {
+		return nil, status.Error(codes.Unavailable, "validator is jailed")
+	}
 	if !validator.IsBonded() {
 		return nil, status.Error(codes.Unavailable, "validator is not bonded")
 	}

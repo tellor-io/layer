@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	val.Jailed = false
 	val.Status = stakingtypes.Bonded
 	val.Tokens = math.NewInt(1000000000000000000)
-	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, nil)
+	// s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, nil)
 	account := authtypes.NewBaseAccount(Addr, PubKey, 0, 0)
 	s.accountKeeper.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
 }
