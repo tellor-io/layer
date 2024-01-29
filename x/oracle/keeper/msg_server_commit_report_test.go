@@ -97,9 +97,13 @@ func (s *KeeperTestSuite) TestBadCommits() {
 
 	// try to commit from random account
 	randomPrivKey := secp256k1.GenPrivKey()
+	fmt.Println("randomPrivKey:", randomPrivKey)
 	randomPubKey := randomPrivKey.PubKey()
+	fmt.Println("randomPubKey:", randomPubKey)
 	randomAddr := sdk.AccAddress(randomPubKey.Address())
 	fmt.Println("randomAddr:", randomAddr)
+	fmt.Println("PrivKey: ", PrivKey)
+	fmt.Println("PubKey: ", PubKey)
 	fmt.Println("Addr:", Addr)
 
 	randomValidator, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(randomAddr)) // how do i get a random address thats not a validator ?
