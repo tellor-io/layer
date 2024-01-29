@@ -6,10 +6,10 @@ import (
 
 	gomath "math"
 
+	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/libs/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
@@ -17,7 +17,7 @@ import (
 
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -71,8 +71,12 @@ func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, 
 	for i, validator := range validators {
 		// ethAddresses[i] = DefaultEVMAddress(validator.GetOperator())
 		// k.Logger(ctx).Info("building eth addrs", i)
+		valAddress, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		if err != nil {
+			return nil, err
+		}
 		bridgeValset[i] = &types.BridgeValidator{
-			EthereumAddress: DefaultEVMAddress(validator.GetOperator()).String(),
+			EthereumAddress: DefaultEVMAddress(valAddress).String(),
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
 		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator ", "test", bridgeValset[i].EthereumAddress)
