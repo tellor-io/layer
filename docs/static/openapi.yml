@@ -17767,6 +17767,108 @@ paths:
               parameters.
       tags:
         - Msg
+  /layer/api/get_all_median_values:
+    get:
+      summary: GetAllMedianValues returns the median values for all markets
+      operationId: LayerDaemonsGetAllMedianValues
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              median_values:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    market_id:
+                      type: integer
+                      format: int64
+                      title: marketId is the market id for a pair
+                    price:
+                      type: string
+                      format: uint64
+                    exponent:
+                      type: integer
+                      format: int32
+                  title: MedianValues is the median value for a market
+            title: >-
+              GetAllMedianValuesResponse is the response for the
+              GetAllMedianValues rpc
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - MedianValuesService
+  /layer/api/get_median_value/{query_data}:
+    get:
+      summary: >-
+        GetMedianValue returns the median value for a market given a query data
+        that a market is associated with
+      operationId: LayerDaemonsGetMedianValue
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              median_values:
+                type: object
+                properties:
+                  market_id:
+                    type: integer
+                    format: int64
+                    title: marketId is the market id for a pair
+                  price:
+                    type: string
+                    format: uint64
+                  exponent:
+                    type: integer
+                    format: int32
+                title: MedianValues is the median value for a market
+            title: GetMedianValueResponse is the response for the GetMedianValue rpc
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_data
+          description: query data to fetch prices for
+          in: path
+          required: true
+          type: string
+      tags:
+        - MedianValuesService
   /layer/oracle/get_reportsby_qid/{queryId}:
     get:
       summary: Queries a list of GetReportsbyQid items.
@@ -25511,6 +25613,96 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  layer.daemons.GetAllMedianValuesResponse:
+    type: object
+    properties:
+      median_values:
+        type: array
+        items:
+          type: object
+          properties:
+            market_id:
+              type: integer
+              format: int64
+              title: marketId is the market id for a pair
+            price:
+              type: string
+              format: uint64
+            exponent:
+              type: integer
+              format: int32
+          title: MedianValues is the median value for a market
+    title: GetAllMedianValuesResponse is the response for the GetAllMedianValues rpc
+  layer.daemons.GetMedianValueResponse:
+    type: object
+    properties:
+      median_values:
+        type: object
+        properties:
+          market_id:
+            type: integer
+            format: int64
+            title: marketId is the market id for a pair
+          price:
+            type: string
+            format: uint64
+          exponent:
+            type: integer
+            format: int32
+        title: MedianValues is the median value for a market
+    title: GetMedianValueResponse is the response for the GetMedianValue rpc
+  layer.daemons.MedianValues:
+    type: object
+    properties:
+      market_id:
+        type: integer
+        format: int64
+        title: marketId is the market id for a pair
+      price:
+        type: string
+        format: uint64
+      exponent:
+        type: integer
+        format: int32
+    title: MedianValues is the median value for a market
+  layer.daemons.ExchangePrice:
+    type: object
+    properties:
+      exchange_id:
+        type: string
+      price:
+        type: string
+        format: uint64
+      last_update_time:
+        type: string
+        format: date-time
+    title: ExchangePrice represents a specific exchange's market price
+  layer.daemons.MarketPriceUpdate:
+    type: object
+    properties:
+      market_id:
+        type: integer
+        format: int64
+      exchange_prices:
+        type: array
+        items:
+          type: object
+          properties:
+            exchange_id:
+              type: string
+            price:
+              type: string
+              format: uint64
+            last_update_time:
+              type: string
+              format: date-time
+          title: ExchangePrice represents a specific exchange's market price
+    title: MarketPriceUpdate represents an update to a single market
+  layer.daemons.UpdateMarketPricesResponse:
+    type: object
+    description: >-
+      UpdateMarketPricesResponse is a response message for updating market
+      prices.
   layer.oracle.Aggregate:
     type: object
     properties:
