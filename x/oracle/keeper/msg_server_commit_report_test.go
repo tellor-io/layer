@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -34,9 +33,6 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	_hexxy, _ := hex.DecodeString(queryData)
 	commitValue, err := s.oracleKeeper.GetSignature(s.ctx, Addr, keeper.HashQueryData(_hexxy))
 	s.NoError(err)
-	fmt.Println("commitValue:", commitValue)
-	fmt.Println("verify commit: ", s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, saltedValue))
-
 	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, saltedValue))
 	require.Equal(commitValue.Report.Creator, Addr.String())
 	return salt
@@ -77,7 +73,21 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
-	// commit query that was tipped
+	// commit for query that was tipped
+	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	tip := sdk.NewCoin("loya", math.NewInt(1000))
+	msg := types.MsgTip{
+		Tipper:    Addr.String(),
+		QueryData: queryData2,
+		Amount:    tip,
+	}
+	_, err = s.msgServer.Tip(s.ctx, &msg)
+	s.NoError(err)
+	commitreq.Creator = Addr.String()
+	commitreq.QueryData = queryData2
+	commitreq.SaltedValue = saltedValue
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	s.Nil(err)
 
 }
 
@@ -108,13 +118,13 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	badValidator.Tokens = math.NewInt(1000000000000000000)
 	require.Equal(false, badValidator.IsBonded())
 	require.Equal(false, badValidator.IsJailed())
+	s.stakingKeeper.ExpectedCalls = []*mock.Call{}
 	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(badValidator, nil)
 	s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(randomAddr))
 	queryData = s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
-	commitreq.Creator = badValidator.OperatorAddress
+	commitreq.Creator = randomAddr.String()
 	commitreq.QueryData = queryData
 	commitreq.SaltedValue = saltedValue
-	fmt.Println("&commitreq:", &commitreq)
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "validator is not bonded")
 
@@ -125,16 +135,16 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	badValidator, _ = stakingtypes.NewValidator(randomAddr2.String(), randomPubKey2, stakingtypes.Description{Moniker: "jailed badguy"})
 	badValidator.Jailed = true
 	badValidator.Status = stakingtypes.Bonded
-	badValidator.Tokens = math.NewInt(10000000000000000)
+	badValidator.Tokens = math.NewInt(1000000000000000000)
+	s.stakingKeeper.ExpectedCalls = []*mock.Call{}
 	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(badValidator, nil)
 	s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(badValidator.OperatorAddress))
 	require.Equal(true, badValidator.IsJailed())
 	require.Equal(true, badValidator.IsBonded())
-	commitreq.Creator = badValidator.OperatorAddress
+	commitreq.Creator = randomAddr2.String()
 	commitreq.QueryData = queryData
 	commitreq.SaltedValue = saltedValue
-	fmt.Println("&commitreq:", &commitreq)
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	fmt.Println("err:", err)
-	require.ErrorContains(err, "validator is jailed") // fails bc err is "validator is not bonded" ?
+	require.ErrorContains(err, "validator is jailed")
+
 }
