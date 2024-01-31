@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.NoError(err)
 	_hexxy, _ := hex.DecodeString(queryData)
-	commitValue, err := s.oracleKeeper.GetSignature(s.ctx, Addr, keeper.HashQueryData(_hexxy))
+	commitValue, err := s.oracleKeeper.GetCommit(s.ctx, Addr, keeper.HashQueryData(_hexxy))
 	s.NoError(err)
 	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, saltedValue))
 	require.Equal(commitValue.Report.Creator, Addr.String())

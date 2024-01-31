@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetSignature(ctx sdk.Context, reporter sdk.AccAddress, queryId []byte) (*types.CommitReport, error) {
+func (k Keeper) GetCommit(ctx sdk.Context, reporter sdk.AccAddress, queryId []byte) (*types.CommitReport, error) {
 	commitStore := k.CommitStore(ctx)
 	commit := commitStore.Get(append(reporter, queryId...))
 	if commit == nil {

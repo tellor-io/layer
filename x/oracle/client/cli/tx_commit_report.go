@@ -15,7 +15,7 @@ var _ = strconv.Itoa(0)
 
 func CmdCommitReport() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "commit-report [query-id] [signature]",
+		Use:   "commit-report [query-id] [salted-value]",
 		Short: "Broadcast message commitReport",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {

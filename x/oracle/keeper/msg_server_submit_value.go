@@ -33,7 +33,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.GetSignature(ctx, reporter, HashQueryData(qDataBytes))
+	commitValue, err := k.GetCommit(ctx, reporter, HashQueryData(qDataBytes))
 	if err != nil {
 		return nil, err
 	}
