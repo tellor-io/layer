@@ -31,12 +31,9 @@ import (
 )
 
 var (
-	PrivKey  cryptotypes.PrivKey
-	PubKey   cryptotypes.PubKey
-	Addr     sdk.AccAddress
-	PrivKey2 cryptotypes.PrivKey
-	PubKey2  cryptotypes.PubKey
-	Addr2    sdk.AccAddress
+	PrivKey cryptotypes.PrivKey
+	PubKey  cryptotypes.PubKey
+	Addr    sdk.AccAddress
 )
 
 type KeeperTestSuite struct {
@@ -122,14 +119,10 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.bankKeeper.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 }
 
-func KeyTestPubAddr() (sdk.AccAddress, sdk.AccAddress) {
+func KeyTestPubAddr() {
 	PrivKey = secp256k1.GenPrivKey()
 	PubKey = PrivKey.PubKey()
 	Addr = sdk.AccAddress(PubKey.Address())
-	PrivKey2 = secp256k1.GenPrivKey()
-	PubKey2 = PrivKey2.PubKey()
-	Addr2 = sdk.AccAddress(PubKey2.Address())
-	return Addr, Addr2
 }
 
 func TestKeeperTestSuite(t *testing.T) {
