@@ -49,9 +49,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	// if !k.VerifySignature(ctx, msg.Creator, msg.Value, commitValue.Report.Signature) {
 	// 	return nil, types.ErrSignatureVerificationFailed
 	// }
-	fmt.Println("msg.Value:", msg.Value)
-	fmt.Println("msg.Salt:", msg.Salt)
-	fmt.Println("commitValue.Report.SaltedValue:", commitValue.Report.SaltedValue)
+
 	// calculate the move's commitment, must match the one stored
 	valueDecoded, err := hex.DecodeString(msg.Value)
 	if err != nil {
