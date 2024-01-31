@@ -49,7 +49,7 @@ message MsgSubmitValueResponse {}
 message MsgCommitReport {
   string creator   = 1;
   string queryData = 2;
-  string salted_value = 3; // hex encoded sha256 of "salt:value"
+  string hash = 3; // hex encoded sha256 of "salt:value"
 }
 
 message MsgCommitReportResponse {}

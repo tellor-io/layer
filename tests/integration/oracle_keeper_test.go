@@ -187,9 +187,9 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			s.Nil(err)
 			salt, err := utils.Salt(32)
 			s.Nil(err)
-			saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+			hash := utils.CalculateCommitment(string(valueDecoded), salt)
 			s.Nil(err)
-			commit, reveal := report(accs[r.reporterIndex].String(), r.value, salt, saltedValue, ethQueryData)
+			commit, reveal := report(accs[r.reporterIndex].String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.CommitReport(s.ctx, &commit)
 			s.Nil(err)
 			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
@@ -208,11 +208,11 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
 }
 
-func report(creator, value, salt, saltedValue, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
+func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
 		Creator:     creator,
 		QueryData:   qdata,
-		SaltedValue: saltedValue,
+		Hash: hash,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
@@ -404,18 +404,18 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	s.Nil(err)
 	salt, err := utils.Salt(32)
 	s.Nil(err)
-	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	s.Nil(err)
 	// commit report with query data in cycle list
-	commit, _ := report(accs[0].String(), value, salt, saltedValue, queryData1)
+	commit, _ := report(accs[0].String(), value, salt, hash, queryData1)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list but has a tip
-	commit, _ = report(accs[0].String(), value, salt, saltedValue, queryData2)
+	commit, _ = report(accs[0].String(), value, salt, hash, queryData2)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list and has no tip
-	commit, _ = report(accs[0].String(), value, salt, saltedValue, queryData3)
+	commit, _ = report(accs[0].String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.ErrorContains(err, "query data does not have tips/not in cycle")
 }

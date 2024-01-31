@@ -23,17 +23,17 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	require.Nil(err)
 	salt, err := utils.Salt(32)
 	require.Nil(err)
-	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	require.Nil(err)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.NoError(err)
 	_hexxy, _ := hex.DecodeString(queryData)
 	commitValue, err := s.oracleKeeper.GetCommit(s.ctx, Addr, keeper.HashQueryData(_hexxy))
 	s.NoError(err)
-	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, saltedValue))
+	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, hash))
 	require.Equal(commitValue.Report.Creator, Addr.String())
 	return salt
 }
@@ -48,10 +48,10 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 	require.Nil(err)
 	salt, err := utils.Salt(32)
 	require.Nil(err)
-	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "query data does not have tips/not in cycle")
 }
@@ -66,10 +66,10 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	s.Nil(err)
 	salt, err := utils.Salt(32)
 	s.Nil(err)
-	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData1
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	s.NoError(err)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData2
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
@@ -101,10 +101,10 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	require.Nil(err)
 	salt, err := utils.Salt(32)
 	require.Nil(err)
-	saltedValue := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "invalid query data")
 
@@ -124,7 +124,7 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	queryData = s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	commitreq.Creator = randomAddr.String()
 	commitreq.QueryData = queryData
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "validator is not bonded")
 
@@ -143,7 +143,7 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	require.Equal(true, badValidator.IsBonded())
 	commitreq.Creator = randomAddr2.String()
 	commitreq.QueryData = queryData
-	commitreq.SaltedValue = saltedValue
+	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "validator is jailed")
 

@@ -15,7 +15,7 @@ func (s *KeeperTestSuite) TestSubmitValue() {
 	// forward block by 1 and reveal value
 	height := s.ctx.BlockHeight() + 1
 	s.ctx = s.ctx.WithBlockHeight(height)
-	// Submit value transaction with value revealed, this checks if the value is correctly salted
+	// Submit value transaction with value revealed, this checks if the value is correctly hashed
 	submitreq.Creator = Addr.String()
 	submitreq.QueryData = queryData
 	submitreq.Value = value

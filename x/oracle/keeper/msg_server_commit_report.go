@@ -44,9 +44,9 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	queryId := HashQueryData(queryData)
 	report := types.CommitReport{
 		Report: &types.Commit{
-			Creator:     msg.Creator,
-			QueryId:     queryId,
-			SaltedValue: msg.SaltedValue,
+			Creator: msg.Creator,
+			QueryId: queryId,
+			Hash:    msg.Hash,
 		},
 		Block: ctx.BlockHeight(),
 	}

@@ -58,7 +58,7 @@ func CmdCommitSubmitReport() *cobra.Command {
 			// if err != nil {
 			// 	return err
 			// }
-			// get salted value
+			// get hash
 			salt, err := utils.Salt(32)
 			if err != nil {
 				return err

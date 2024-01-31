@@ -134,7 +134,7 @@ func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signatu
 	return true
 }
 
-func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, saltedValue string) bool {
+func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {
 	valueDecoded, err := hex.DecodeString(value)
 	if err != nil {
 		panic(err)
@@ -142,7 +142,7 @@ func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, salt
 	// calculate commitment
 	calculatedCommit := utils.CalculateCommitment(string(valueDecoded), salt)
 	// compare calculated commitment with the one stored
-	return calculatedCommit == saltedValue
+	return calculatedCommit == hash
 }
 
 func decodeQueryType(data []byte) (string, error) {
