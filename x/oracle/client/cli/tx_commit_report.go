@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -26,10 +27,10 @@ func CmdCommitReport() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// valueDecoded, err := hex.DecodeString(argValue)
-			// if err != nil {
-			// 	return err
-			// }
+			valueDecoded, err := hex.DecodeString(argValue)
+			if err != nil {
+				return err
+			}
 			// leaving this here for convenience to input value thru cli
 			// then is signed by the keys here
 			// data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded, signing.SignMode_SIGN_MODE_DIRECT)
@@ -42,7 +43,7 @@ func CmdCommitReport() *cobra.Command {
 				return err
 			}
 
-			commit := utils.CalculateCommitment(argValue, salt)
+			commit := utils.CalculateCommitment(string(valueDecoded), salt)
 
 			msg := types.NewMsgCommitReport(
 				clientCtx.GetFromAddress().String(),
