@@ -2500,52 +2500,6 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) ProtoMethods() *protoiface
 	}
 }
 
-var _ protoreflect.List = (*_QueryGenerateQuerydataRequest_2_list)(nil)
-
-type _QueryGenerateQuerydataRequest_2_list struct {
-	list *[]string
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message QueryGenerateQuerydataRequest at list field Parameters as it is not of Message kind"))
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
-}
-
-func (x *_QueryGenerateQuerydataRequest_2_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
 	md_QueryGenerateQuerydataRequest            protoreflect.MessageDescriptor
 	fd_QueryGenerateQuerydataRequest_querytype  protoreflect.FieldDescriptor
@@ -2630,8 +2584,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Range(f func(protoreflect
 			return
 		}
 	}
-	if len(x.Parameters) != 0 {
-		value := protoreflect.ValueOfList(&_QueryGenerateQuerydataRequest_2_list{list: &x.Parameters})
+	if x.Parameters != "" {
+		value := protoreflect.ValueOfString(x.Parameters)
 		if !f(fd_QueryGenerateQuerydataRequest_parameters, value) {
 			return
 		}
@@ -2654,7 +2608,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Has(fd protoreflect.Field
 	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
 		return x.Querytype != ""
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
-		return len(x.Parameters) != 0
+		return x.Parameters != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataRequest"))
@@ -2674,7 +2628,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Clear(fd protoreflect.Fie
 	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
 		x.Querytype = ""
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
-		x.Parameters = nil
+		x.Parameters = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataRequest"))
@@ -2695,11 +2649,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Get(descriptor protorefle
 		value := x.Querytype
 		return protoreflect.ValueOfString(value)
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
-		if len(x.Parameters) == 0 {
-			return protoreflect.ValueOfList(&_QueryGenerateQuerydataRequest_2_list{})
-		}
-		listValue := &_QueryGenerateQuerydataRequest_2_list{list: &x.Parameters}
-		return protoreflect.ValueOfList(listValue)
+		value := x.Parameters
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataRequest"))
@@ -2723,9 +2674,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Set(fd protoreflect.Field
 	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
 		x.Querytype = value.Interface().(string)
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
-		lv := value.List()
-		clv := lv.(*_QueryGenerateQuerydataRequest_2_list)
-		x.Parameters = *clv.list
+		x.Parameters = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataRequest"))
@@ -2746,14 +2695,10 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Set(fd protoreflect.Field
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
-		if x.Parameters == nil {
-			x.Parameters = []string{}
-		}
-		value := &_QueryGenerateQuerydataRequest_2_list{list: &x.Parameters}
-		return protoreflect.ValueOfList(value)
 	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
 		panic(fmt.Errorf("field querytype of message layer.registry.QueryGenerateQuerydataRequest is not mutable"))
+	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
+		panic(fmt.Errorf("field parameters of message layer.registry.QueryGenerateQuerydataRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataRequest"))
@@ -2770,8 +2715,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) NewField(fd protoreflect.
 	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
 		return protoreflect.ValueOfString("")
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
-		list := []string{}
-		return protoreflect.ValueOfList(&_QueryGenerateQuerydataRequest_2_list{list: &list})
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataRequest"))
@@ -2845,11 +2789,9 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if len(x.Parameters) > 0 {
-			for _, s := range x.Parameters {
-				l = len(s)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
+		l = len(x.Parameters)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2881,13 +2823,11 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 			copy(dAtA[i:], x.unknownFields)
 		}
 		if len(x.Parameters) > 0 {
-			for iNdEx := len(x.Parameters) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.Parameters[iNdEx])
-				copy(dAtA[i:], x.Parameters[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Parameters[iNdEx])))
-				i--
-				dAtA[i] = 0x12
-			}
+			i -= len(x.Parameters)
+			copy(dAtA[i:], x.Parameters)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Parameters)))
+			i--
+			dAtA[i] = 0x12
 		}
 		if len(x.Querytype) > 0 {
 			i -= len(x.Querytype)
@@ -3007,7 +2947,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Parameters = append(x.Parameters, string(dAtA[iNdEx:postIndex]))
+				x.Parameters = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3698,7 +3638,7 @@ type QueryGenerateQuerydataRequest struct {
 	// querytype for which querydata is to be generated.
 	Querytype string `protobuf:"bytes,1,opt,name=querytype,proto3" json:"querytype,omitempty"`
 	// parameters for which querydata is to be generated.
-	Parameters []string `protobuf:"bytes,2,rep,name=parameters,proto3" json:"parameters,omitempty"`
+	Parameters string `protobuf:"bytes,2,opt,name=parameters,proto3" json:"parameters,omitempty"`
 }
 
 func (x *QueryGenerateQuerydataRequest) Reset() {
@@ -3728,11 +3668,11 @@ func (x *QueryGenerateQuerydataRequest) GetQuerytype() string {
 	return ""
 }
 
-func (x *QueryGenerateQuerydataRequest) GetParameters() []string {
+func (x *QueryGenerateQuerydataRequest) GetParameters() string {
 	if x != nil {
 		return x.Parameters
 	}
-	return nil
+	return ""
 }
 
 // QueryGenerateQuerydataResponse is response type for the Query/GenerateQuerydata RPC method.
@@ -3811,7 +3751,7 @@ var file_layer_registry_query_proto_rawDesc = []byte{
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x74,
 	0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79,
 	0x74, 0x79, 0x70, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65,
-	0x72, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65,
+	0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65,
 	0x74, 0x65, 0x72, 0x73, 0x22, 0x3e, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x6e,
 	0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x64,

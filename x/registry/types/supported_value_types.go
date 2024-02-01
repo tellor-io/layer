@@ -1,7 +1,6 @@
 package types
 
 var SupportedValueTypes = map[string]bool{
-	"int":       true,
 	"int8":      true,
 	"int16":     true,
 	"int32":     true,
@@ -15,7 +14,6 @@ var SupportedValueTypes = map[string]bool{
 	"int64[]":   true,
 	"int128[]":  true,
 	"int256[]":  true,
-	"uint":      true,
 	"uint8":     true,
 	"uint16":    true,
 	"uint32":    true,

@@ -25,11 +25,11 @@ func (k Keeper) GenerateQuerydata(goCtx context.Context, req *types.QueryGenerat
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get data spec: %v", err))
 	}
-	// TODO: handle camelCase
-	queryData, err := dataSpec.GenerateQuerydata(req.Querytype, req.Parameters)
+
+	querydata, err := dataSpec.EncodeData(req.Querytype, req.Parameters)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to generate query data: %v", err))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to encode query data: %v", err))
 	}
 
-	return &types.QueryGenerateQuerydataResponse{Querydata: queryData}, nil
+	return &types.QueryGenerateQuerydataResponse{Querydata: querydata}, nil
 }

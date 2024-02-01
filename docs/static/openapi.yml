@@ -17855,11 +17855,7 @@ paths:
           description: parameters for which querydata is to be generated.
           in: path
           required: true
-          type: array
-          items:
-            type: string
-          collectionFormat: csv
-          minItems: 1
+          type: string
       tags:
         - Query
   /layer/registry/get_data_spec/{query_type}:
@@ -17870,58 +17866,7 @@ paths:
         '200':
           description: A successful response.
           schema:
-            type: object
-            properties:
-              spec:
-                description: spec is the data spec corresponding to the query type.
-                type: object
-                properties:
-                  document_hash:
-                    type: string
-                    title: ipfs hash of the data spec
-                  value_type:
-                    type: string
-                    title: the value's datatype for decoding the value
-                  query_parameter_types:
-                    type: array
-                    items:
-                      type: string
-                    title: >-
-                      query parameter types for decoding parameters, should be
-                      in order of query parameters
-                  aggregation_method:
-                    type: string
-                    title: >-
-                      how to aggregate the data (ie. average, median, mode, etc)
-                      for aggregating reports and arriving at final value
-                  registrar:
-                    type: string
-                    title: address that originally registered the data spec
-                  report_buffer_window:
-                    type: string
-                    title: >-
-                      report_buffer_window specifies the duration of the time
-                      window following an initial report
-
-                      during which additional reports can be submitted. This
-                      duration acts as a buffer, allowing
-
-                      a collection of related reports in a defined time frame.
-                      The window ensures that all
-
-                      pertinent reports are aggregated together before arriving
-                      at a final value. This defaults
-
-                      to 0s if not specified.
-
-                      extensions: treat as a golang time.duration, don't allow
-                      nil values, don't omit empty values
-                title: >-
-                  DataSpec is a specification for how to interpret and aggregate
-                  data
-            description: >-
-              QueryGetDataSpecResponse is response type for the
-              Query/GetDataSpec RPC method.
+            $ref: '#/definitions/layer.registry.QueryGetDataSpecResponse'
         default:
           description: An unexpected error response.
           schema:
@@ -25179,6 +25124,22 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  layer.registry.ABIComponent:
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      type:
+        type: string
+        title: type
+      nested_component:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/layer.registry.ABIComponent'
+        title: consider taking this recursion out and make it once only
+    title: ABIComponent is a specification for how to interpret abi_components
   layer.registry.DataSpec:
     type: object
     properties:
@@ -25188,13 +25149,12 @@ definitions:
       value_type:
         type: string
         title: the value's datatype for decoding the value
-      query_parameter_types:
+      abi_components:
         type: array
         items:
-          type: string
-        title: >-
-          query parameter types for decoding parameters, should be in order of
-          query parameters
+          type: object
+          $ref: '#/definitions/layer.registry.ABIComponent'
+        title: the abi components for decoding
       aggregation_method:
         type: string
         title: >-
@@ -25253,50 +25213,8 @@ definitions:
     type: object
     properties:
       spec:
+        $ref: '#/definitions/layer.registry.DataSpec'
         description: spec is the data spec corresponding to the query type.
-        type: object
-        properties:
-          document_hash:
-            type: string
-            title: ipfs hash of the data spec
-          value_type:
-            type: string
-            title: the value's datatype for decoding the value
-          query_parameter_types:
-            type: array
-            items:
-              type: string
-            title: >-
-              query parameter types for decoding parameters, should be in order
-              of query parameters
-          aggregation_method:
-            type: string
-            title: >-
-              how to aggregate the data (ie. average, median, mode, etc) for
-              aggregating reports and arriving at final value
-          registrar:
-            type: string
-            title: address that originally registered the data spec
-          report_buffer_window:
-            type: string
-            title: >-
-              report_buffer_window specifies the duration of the time window
-              following an initial report
-
-              during which additional reports can be submitted. This duration
-              acts as a buffer, allowing
-
-              a collection of related reports in a defined time frame. The
-              window ensures that all
-
-              pertinent reports are aggregated together before arriving at a
-              final value. This defaults
-
-              to 0s if not specified.
-
-              extensions: treat as a golang time.duration, don't allow nil
-              values, don't omit empty values
-        title: DataSpec is a specification for how to interpret and aggregate data
     description: >-
       QueryGetDataSpecResponse is response type for the Query/GetDataSpec RPC
       method.

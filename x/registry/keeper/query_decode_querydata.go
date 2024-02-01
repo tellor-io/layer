@@ -9,8 +9,6 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/tellor-io/layer/lib"
 )
 
 func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQuerydataRequest) (*types.QueryDecodeQuerydataResponse, error) {
@@ -19,13 +17,13 @@ func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQu
 	}
 
 	// remove 0x from hex string if present
-	req.Querydata = lib.RemoveHexPrefix(req.Querydata)
+	req.Querydata = types.RemoveHexPrefix(req.Querydata)
 	// decode query data hex to bytes
 	queryDataBytes, err := hex.DecodeString(req.Querydata)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
-	queryType, fieldBytes, err := lib.DecodeQueryType(queryDataBytes)
+	queryType, fieldBytes, err := types.DecodeQueryType(queryDataBytes)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data: %v", err))
 	}
@@ -40,7 +38,10 @@ func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQu
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get data spec: %v", err))
 	}
 	// convert field bytes to string
-	fields, err := lib.DecodeParamtypes(fieldBytes, dataSpec.QueryParameterTypes)
+	fields, err := types.DecodeParamtypes(fieldBytes, dataSpec.AbiComponents)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data fields: %v", err))
+	}
 
 	return &types.QueryDecodeQuerydataResponse{Spec: fmt.Sprintf("%s: %s", queryType, fields)}, nil
 }

@@ -70,7 +70,7 @@ message QueryGenerateQuerydataRequest {
   // querytype for which querydata is to be generated.
   string querytype = 1;
   // parameters for which querydata is to be generated.
-  repeated string parameters = 2;
+  string parameters = 2;
 }
 
 // QueryGenerateQuerydataResponse is response type for the Query/GenerateQuerydata RPC method.

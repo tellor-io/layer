@@ -8,14 +8,24 @@ import "google/protobuf/duration.proto";
 
 option go_package = "github.com/tellor-io/layer/x/registry/types";
 
+// ABIComponent is a specification for how to interpret abi_components
+message ABIComponent {
+  // name
+  string name = 1;
+  // type
+  string type = 2;
+  // consider taking this recursion out and make it once only
+  repeated ABIComponent nested_component = 3;
+}
+
 // DataSpec is a specification for how to interpret and aggregate data
 message DataSpec {
   // ipfs hash of the data spec
   string document_hash = 1;
   // the value's datatype for decoding the value
   string value_type = 2;
-  // query parameter types for decoding parameters, should be in order of query parameters
-  repeated string query_parameter_types = 3;
+  // the abi components for decoding
+  repeated ABIComponent abi_components = 3;
   // how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
   string aggregation_method = 4;
   // address that originally registered the data spec
