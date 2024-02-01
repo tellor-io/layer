@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -15,6 +16,7 @@ import (
 
 func (s *KeeperTestSuite) TestCommitValue() string {
 	require := s.Require()
+
 	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
@@ -40,6 +42,7 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 	require := s.Require()
+
 	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
@@ -57,6 +60,7 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 }
 
 func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
+
 	// commit query in cycle list
 	queryData1 := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
@@ -91,9 +95,10 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 
 }
 
-func (s *KeeperTestSuite) TestBadCommits() {
-	// try to commit bad query data
+func (s *KeeperTestSuite) TestCommitWithBadQueryData() {
 	require := s.Require()
+
+	// try to commit bad query data
 	queryData := "stupidQueryData"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
@@ -107,8 +112,20 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "invalid query data")
+}
+
+func (s *KeeperTestSuite) TestCommitWithUnbondedValidator() {
+	require := s.Require()
 
 	// try to commit from unbonded validator
+	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	var commitreq types.MsgCommitReport
+	valueDecoded, err := hex.DecodeString(value)
+	require.Nil(err)
+	salt, err := utils.Salt(32)
+	require.Nil(err)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	randomPrivKey := secp256k1.GenPrivKey()
 	randomPubKey := randomPrivKey.PubKey()
 	randomAddr := sdk.AccAddress(randomPubKey.Address())
@@ -121,18 +138,29 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	s.stakingKeeper.ExpectedCalls = []*mock.Call{}
 	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(badValidator, nil)
 	s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(randomAddr))
-	queryData = s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	commitreq.Creator = randomAddr.String()
 	commitreq.QueryData = queryData
 	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "validator is not bonded")
+}
+
+func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
+	require := s.Require()
 
 	// try to commit from jailed validator
-	randomPrivKey2 := secp256k1.GenPrivKey()
-	randomPubKey2 := randomPrivKey2.PubKey()
-	randomAddr2 := sdk.AccAddress(randomPubKey2.Address())
-	badValidator, _ = stakingtypes.NewValidator(randomAddr2.String(), randomPubKey2, stakingtypes.Description{Moniker: "jailed badguy"})
+	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	var commitreq types.MsgCommitReport
+	valueDecoded, err := hex.DecodeString(value)
+	require.Nil(err)
+	salt, err := utils.Salt(32)
+	require.Nil(err)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	randomPrivKey := secp256k1.GenPrivKey()
+	randomPubKey := randomPrivKey.PubKey()
+	randomAddr := sdk.AccAddress(randomPubKey.Address())
+	badValidator, _ := stakingtypes.NewValidator(randomAddr.String(), randomPubKey, stakingtypes.Description{Moniker: "jailed badguy"})
 	badValidator.Jailed = true
 	badValidator.Status = stakingtypes.Bonded
 	badValidator.Tokens = math.NewInt(1000000000000000000)
@@ -141,10 +169,61 @@ func (s *KeeperTestSuite) TestBadCommits() {
 	s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(badValidator.OperatorAddress))
 	require.Equal(true, badValidator.IsJailed())
 	require.Equal(true, badValidator.IsBonded())
-	commitreq.Creator = randomAddr2.String()
+	commitreq.Creator = randomAddr.String()
 	commitreq.QueryData = queryData
 	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	require.ErrorContains(err, "validator is jailed")
 
 }
+
+func (s *KeeperTestSuite) TestCommitWithMissingCreator() {
+	require := s.Require()
+
+	// commit with no creator
+	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	var commitreq types.MsgCommitReport
+	valueDecoded, err := hex.DecodeString(value)
+	require.Nil(err)
+	salt, err := utils.Salt(32)
+	require.Nil(err)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	require.Nil(err)
+	commitreq.QueryData = queryData
+	commitreq.Hash = hash
+	require.Panics(func() { s.msgServer.CommitReport(s.ctx, &commitreq) }, "empty address string is not allowed")
+}
+
+// Should ppl be allowed to commit with no query data and/or no hash ?
+func (s *KeeperTestSuite) TestCommitWithMissingQueryData() {
+	require := s.Require()
+
+	// commit with no query data
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	var commitreq types.MsgCommitReport
+	valueDecoded, err := hex.DecodeString(value)
+	require.Nil(err)
+	salt, err := utils.Salt(32)
+	require.Nil(err)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	require.Nil(err)
+	commitreq.Creator = Addr.String()
+	commitreq.Hash = hash
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq) // no error
+	fmt.Println(err)
+
+}
+
+func (s *KeeperTestSuite) TestCommitWithMissingHash() {
+
+	// commit with no hash
+	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	var commitreq types.MsgCommitReport
+	commitreq.QueryData = queryData
+	commitreq.Creator = Addr.String()
+	_, err := s.msgServer.CommitReport(s.ctx, &commitreq) // no error
+	fmt.Println(err)
+}
+
+// todo: check emitted events

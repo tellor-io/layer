@@ -45,10 +45,6 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	// if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
 	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
 	// }
-	// verify value signature
-	// if !k.VerifySignature(ctx, msg.Creator, msg.Value, commitValue.Report.Signature) {
-	// 	return nil, types.ErrSignatureVerificationFailed
-	// }
 
 	// calculate the move's commitment, must match the one stored
 	valueDecoded, err := hex.DecodeString(msg.Value)
@@ -58,7 +54,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	commit := utils.CalculateCommitment(string(valueDecoded), msg.Salt)
 	fmt.Println("commit:", commit)
 	if commit != commitValue.Report.Hash {
-		return nil, errors.New("move doesn't match commitment, are you a cheater?")
+		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
 	}
 
 	// set value
