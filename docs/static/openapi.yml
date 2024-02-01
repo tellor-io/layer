@@ -17811,6 +17811,53 @@ paths:
           type: string
       tags:
         - Query
+  /layer/registry/decode_value/{queryType}/{value}:
+    get:
+      summary: Queries a list of DecodeValue items.
+      operationId: LayerRegistryDecodeValue
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              decodedValue:
+                type: string
+                description: decodedValue is the decoded value of the hex string.
+            description: >-
+              QueryDecodeValueResponse is response type for the
+              Query/DecodeValue RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryType
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+        - name: value
+          description: value is the value hex string to be decoded.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /layer/registry/generate_querydata/{querytype}/{parameters}:
     get:
       summary: Queries a list of GenerateQuerydata items.
@@ -25200,6 +25247,15 @@ definitions:
     description: >-
       QueryDecodeQuerydataResponse is response type for the
       Query/DecodeQuerydata RPC method.
+  layer.registry.QueryDecodeValueResponse:
+    type: object
+    properties:
+      decodedValue:
+        type: string
+        description: decodedValue is the decoded value of the hex string.
+    description: >-
+      QueryDecodeValueResponse is response type for the Query/DecodeValue RPC
+      method.
   layer.registry.QueryGenerateQuerydataResponse:
     type: object
     properties:

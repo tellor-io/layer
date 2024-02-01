@@ -26,6 +26,8 @@ type QueryClient interface {
 	DecodeQuerydata(ctx context.Context, in *QueryDecodeQuerydataRequest, opts ...grpc.CallOption) (*QueryDecodeQuerydataResponse, error)
 	// Queries a list of GenerateQuerydata items.
 	GenerateQuerydata(ctx context.Context, in *QueryGenerateQuerydataRequest, opts ...grpc.CallOption) (*QueryGenerateQuerydataResponse, error)
+	// Queries a list of DecodeValue items.
+	DecodeValue(ctx context.Context, in *QueryDecodeValueRequest, opts ...grpc.CallOption) (*QueryDecodeValueResponse, error)
 }
 
 type queryClient struct {
@@ -72,6 +74,15 @@ func (c *queryClient) GenerateQuerydata(ctx context.Context, in *QueryGenerateQu
 	return out, nil
 }
 
+func (c *queryClient) DecodeValue(ctx context.Context, in *QueryDecodeValueRequest, opts ...grpc.CallOption) (*QueryDecodeValueResponse, error) {
+	out := new(QueryDecodeValueResponse)
+	err := c.cc.Invoke(ctx, "/layer.registry.Query/DecodeValue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -84,6 +95,8 @@ type QueryServer interface {
 	DecodeQuerydata(context.Context, *QueryDecodeQuerydataRequest) (*QueryDecodeQuerydataResponse, error)
 	// Queries a list of GenerateQuerydata items.
 	GenerateQuerydata(context.Context, *QueryGenerateQuerydataRequest) (*QueryGenerateQuerydataResponse, error)
+	// Queries a list of DecodeValue items.
+	DecodeValue(context.Context, *QueryDecodeValueRequest) (*QueryDecodeValueResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -102,6 +115,9 @@ func (UnimplementedQueryServer) DecodeQuerydata(context.Context, *QueryDecodeQue
 }
 func (UnimplementedQueryServer) GenerateQuerydata(context.Context, *QueryGenerateQuerydataRequest) (*QueryGenerateQuerydataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateQuerydata not implemented")
+}
+func (UnimplementedQueryServer) DecodeValue(context.Context, *QueryDecodeValueRequest) (*QueryDecodeValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecodeValue not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -188,6 +204,24 @@ func _Query_GenerateQuerydata_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DecodeValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDecodeValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DecodeValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.registry.Query/DecodeValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DecodeValue(ctx, req.(*QueryDecodeValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -210,6 +244,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GenerateQuerydata",
 			Handler:    _Query_GenerateQuerydata_Handler,
+		},
+		{
+			MethodName: "DecodeValue",
+			Handler:    _Query_DecodeValue_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -37,6 +37,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querytype"}, {ProtoField: "parameters"}},
 				},
 
+				{
+					RpcMethod:      "DecodeValue",
+					Use:            "decode-value [query-type] [value]",
+					Short:          "Decode the value given query type",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "queryType"}, {ProtoField: "value"}},
+				},
+
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
