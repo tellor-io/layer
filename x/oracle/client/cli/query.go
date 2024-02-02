@@ -37,6 +37,10 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdGetTimeBasedRewards())
 
+	cmd.AddCommand(CmdGetAllMedianValues())
+
+	cmd.AddCommand(CmdGetMedianValue())
+
 	// this line is used by starport scaffolding # 1
 
 	return cmd
