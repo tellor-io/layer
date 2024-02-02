@@ -17,7 +17,7 @@ func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQu
 	}
 
 	// remove 0x from hex string if present
-	req.Querydata = types.RemoveHexPrefix(req.Querydata)
+	req.Querydata = types.Remove0xPrefix(req.Querydata)
 	// decode query data hex to bytes
 	queryDataBytes, err := hex.DecodeString(req.Querydata)
 	if err != nil {

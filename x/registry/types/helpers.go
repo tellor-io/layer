@@ -19,6 +19,36 @@ func IsValueDecodable(value, datatype string) error {
 }
 
 func DecodeValue(value, datatype string) ([]interface{}, error) {
+	value = Remove0xPrefix(value)
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode value string: %v", err)
+	}
+
+	comp := []abi.ArgumentMarshaling{}
+	if strings.Contains(datatype, "(") && strings.Contains(datatype, ")") {
+		untrimmed := datatype
+		if strings.HasSuffix(datatype, "[]") {
+			datatype = "tuple[]"
+			untrimmed = untrimmed[:len(untrimmed)-2]
+		} else {
+			datatype = "tuple"
+		}
+		types := strings.Split(strings.Trim(untrimmed, "()"), ",")
+
+		_comp := abi.ArgumentMarshaling{Type: datatype, Name: "Main"}
+
+		for i, element := range types {
+			_comp.Components = append(_comp.Components, abi.ArgumentMarshaling{
+				Type: element, Name: "Value" + fmt.Sprintf("%d", i),
+			})
+		}
+		comp = append(comp, _comp)
+		args := MakeArguments(comp)
+
+		return args.Unpack(valueBytes)
+	}
+
 	argType, err := abi.NewType(datatype, datatype, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new ABI type when decoding value: %v", err)
@@ -26,18 +56,13 @@ func DecodeValue(value, datatype string) ([]interface{}, error) {
 	arg := abi.Argument{
 		Type: argType,
 	}
+
 	args := abi.Arguments{arg}
-	if strings.HasPrefix(value, "0x") {
-		value = value[2:]
-	}
-	valueBytes, err := hex.DecodeString(value)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode value string: %v", err)
-	}
+
 	return args.Unpack(valueBytes)
 }
 
-func RemoveHexPrefix(hexString string) string {
+func Remove0xPrefix(hexString string) string {
 	if Has0xPrefix(hexString) {
 		hexString = hexString[2:]
 	}

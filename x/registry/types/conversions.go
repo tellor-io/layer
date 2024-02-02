@@ -132,8 +132,7 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 		return addressSlice, nil
 	case "bytes", "bytes[]":
 		if strings.HasPrefix(dataField, "0x") {
-			dataField = dataField[2:]
-			return hex.DecodeString(dataField)
+			return hex.DecodeString(Remove0xPrefix(dataField))
 		}
 		return []byte(dataField), nil
 	case "bytes32", "bytes32[]":
