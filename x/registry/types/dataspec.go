@@ -27,7 +27,7 @@ func GenesisDataSpec() DataSpec {
 func (d DataSpec) EncodeData(querytype, datafields string) (string, error) {
 	argMarshller := d.MakeArgMarshaller()
 	args := MakeArguments(argMarshller)
-	interfacefields := Makedata(datafields, argMarshller)
+	interfacefields := MakePackdata(datafields, argMarshller)
 	encodedBytes, err := args.Pack(interfacefields...)
 	if err != nil {
 		return "", fmt.Errorf("Failed to pack arguments: %v", err)
@@ -43,6 +43,18 @@ func (d DataSpec) EncodeData(querytype, datafields string) (string, error) {
 
 func (d DataSpec) ValidateValue(value string) error {
 	return IsValueDecodable(value, d.ValueType)
+}
+
+func (d DataSpec) DecodeValue(value string) (string, error) {
+	valueInterface, err := DecodeValue(value, d.ValueType)
+	if err != nil {
+		return "", fmt.Errorf("Failed to decode value: %v", err)
+	}
+	valueBytes, err := convertToJSON(valueInterface)
+	if err != nil {
+		return "", fmt.Errorf("Failed to convert to JSON: %v", err)
+	}
+	return string(valueBytes), nil
 }
 
 func (d DataSpec) MakeArgMarshaller() []abi.ArgumentMarshaling {
@@ -82,7 +94,7 @@ func MakeArguments(argMrsh []abi.ArgumentMarshaling) abi.Arguments {
 	return arguments
 }
 
-func Makedata(fields string, argMrsh []abi.ArgumentMarshaling) []interface{} {
+func MakePackdata(fields string, argMrsh []abi.ArgumentMarshaling) []interface{} {
 	var data interface{}
 	err := json.Unmarshal([]byte(fields), &data)
 	if err != nil {
@@ -105,14 +117,13 @@ func Makedata(fields string, argMrsh []abi.ArgumentMarshaling) []interface{} {
 			}
 			interfaceFields = append(interfaceFields, interfaceField)
 		} else {
-			// fields here should be a slice of strings
-			// MakeStruct takes a list of strings and components which is a list
+			// crete structs and populate
 			if item.Type == "tuple" {
-				interfaceField := MakeNewStruct(list[i].([]interface{}), item.Components)
+				interfaceField := createAndPopulateStruct(list[i].([]interface{}), item.Components)
 				interfaceFields = append(interfaceFields, interfaceField.Interface())
 			}
 			if item.Type == "tuple[]" {
-				interfaceField := MakeStructs(list[i], item.Components)
+				interfaceField := createAndPopulateStructSlice(list[i], item.Components)
 				interfaceFields = append(interfaceFields, interfaceField.Interface())
 
 			}
@@ -121,92 +132,52 @@ func Makedata(fields string, argMrsh []abi.ArgumentMarshaling) []interface{} {
 	return interfaceFields
 }
 
-func MakeNewStruct(fields interface{}, component []abi.ArgumentMarshaling) reflect.Value {
-	structFields := make([]reflect.StructField, len(component))
-	// convert component names to title case
-	for i, c := range component {
-		component[i].Name = strings.Title(c.Name)
-		fieldType, err := ConvertABIToReflectType(c.Type)
+// createAndPopulateStructSlice creates a slice of structs from interface fields and ABI components.
+func createAndPopulateStructSlice(interfaceFields interface{}, components []abi.ArgumentMarshaling) reflect.Value {
+	nestedInterface := interfaceFields.([]interface{})
+	structType := reflect.TypeOf(createAndPopulateStruct([]interface{}{}, components).Interface())
+	structSlice := reflect.MakeSlice(reflect.SliceOf(structType), 0, len(nestedInterface))
+
+	for _, instanceFields := range nestedInterface {
+		newStruct := createAndPopulateStruct(instanceFields.([]interface{}), components)
+		structSlice = reflect.Append(structSlice, newStruct)
+	}
+
+	return structSlice
+}
+
+// Convert component names to title case and create a single struct populated with field values.
+func createAndPopulateStruct(fields []interface{}, components []abi.ArgumentMarshaling) reflect.Value {
+	structFields := make([]reflect.StructField, len(components))
+	for i, c := range components {
+		// Ensure component names are in title case
+		compName := strings.Title(c.Name)
+		fieldType, err := ConvertTypeToReflectType(c.Type)
 		if err != nil {
 			panic(fmt.Errorf("Failed to create new ABI type: %v", err))
 		}
 		structFields[i] = reflect.StructField{
-			Name: strings.Title(c.Name),
+			Name: compName,
 			Type: fieldType,
 		}
 	}
 	structType := reflect.StructOf(structFields)
 	newStruct := reflect.New(structType).Elem()
 
-	for i, fieldValue := range fields.([]interface{}) {
-		fieldValue, err := ConvertStringToType(component[i].Type, fieldValue.(string))
+	for i, fieldValue := range fields {
+		fieldValue, err := ConvertStringToType(components[i].Type, fieldValue.(string))
 		if err != nil {
-			panic(fmt.Errorf("Failed to create new ABI type: %v", err))
+			panic(fmt.Errorf("Failed to convert string to type: %v", err))
 		}
 		fieldVal := newStruct.Field(i)
-
 		if !fieldVal.IsValid() {
-			panic(fmt.Errorf("No such field at index: %d", i))
+			panic(fmt.Errorf("No such field: %s", components[i].Name))
 		}
-
 		val := reflect.ValueOf(fieldValue)
 		if !val.Type().AssignableTo(fieldVal.Type()) {
-			panic(fmt.Errorf("Type mismatch for field at index %d", i))
+			panic(fmt.Errorf("Type mismatch for field: %s", components[i].Name))
 		}
-
 		fieldVal.Set(val)
 	}
 	return newStruct
-}
-
-func MakeStructs(interfaceFields interface{}, components []abi.ArgumentMarshaling) reflect.Value {
-	// Define the struct fields based on the ABI components
-	structFields := make([]reflect.StructField, len(components))
-	for i, comp := range components {
-		fieldType, err := ConvertABIToReflectType(comp.Type)
-		if err != nil {
-			panic(fmt.Errorf("Failed to convert ABI type to reflect.Type: %v", err))
-		}
-
-		structFields[i] = reflect.StructField{
-			Name: strings.Title(comp.Name),
-			Type: fieldType,
-		}
-	}
-
-	// Create the struct type
-	structType := reflect.StructOf(structFields)
-	nestedInterface := interfaceFields.([]interface{})
-	// Create a slice to hold the structs
-	structSlice := reflect.MakeSlice(reflect.SliceOf(structType), 0, len(nestedInterface))
-
-	// Iterate over the interface fields and populate the struct slice
-	for _, instanceFields := range nestedInterface {
-		if len(instanceFields.([]interface{})) != len(components) {
-			panic(fmt.Errorf("The number of instance fields must match the number of components"))
-		}
-		newStruct := reflect.New(structType).Elem()
-		for i, fieldValue := range instanceFields.([]interface{}) {
-			fieldValue, err := ConvertStringToType(components[i].Type, fieldValue.(string))
-			if err != nil {
-				panic(fmt.Errorf("Failed to create new ABI type: %v", err))
-			}
-			fieldVal := newStruct.Field(i)
-			if !fieldVal.IsValid() {
-				panic(fmt.Errorf("No such field at index: %d", i))
-			}
-
-			val := reflect.ValueOf(fieldValue)
-
-			if !val.Type().AssignableTo(fieldVal.Type()) {
-				panic(fmt.Errorf("Type mismatch for field at index %d", i))
-			}
-
-			fieldVal.Set(val)
-		}
-
-		structSlice = reflect.Append(structSlice, newStruct)
-	}
-
-	return structSlice
 }

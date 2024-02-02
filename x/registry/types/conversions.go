@@ -13,15 +13,31 @@ import (
 )
 
 // ConvertABIToReflectType converts ABI type strings to reflect.Type
-func ConvertABIToReflectType(abiType string) (reflect.Type, error) {
-	// Regular expression for parsing array types
+func ConvertTypeToReflectType(abiType string) (reflect.Type, error) {
+	// Regular expression for parsing array types ...[size]
 	reArray := regexp.MustCompile(`(.+)\[(\d*)\]$`)
-	// Regular expression for parsing integer types
+	// Regular expression for parsing integer types, e.g. uint256,int8
 	reInt := regexp.MustCompile(`(u?)int(\d*)`)
-	fmt.Println("abiType", abiType)
+
+	// Handling arrays
+	if matches := reArray.FindStringSubmatch(abiType); matches != nil {
+		elemType, err := ConvertTypeToReflectType(matches[1])
+		if err != nil {
+			return nil, err
+		}
+		if matches[2] == "" {
+			return reflect.SliceOf(elemType), nil
+		} else {
+			size, err := strconv.Atoi(matches[2])
+			if err != nil {
+				return nil, fmt.Errorf("invalid array size: %s", abiType)
+			}
+
+			return reflect.ArrayOf(size, elemType), nil
+		}
+	}
 	// Handling integer types
 	if matches := reInt.FindStringSubmatch(abiType); matches != nil {
-		fmt.Println("matches ", matches)
 		size := 256 // default size
 		if matches[2] != "" {
 			var err error
@@ -58,22 +74,6 @@ func ConvertABIToReflectType(abiType string) (reflect.Type, error) {
 		}
 	}
 
-	// Handling arrays
-	if matches := reArray.FindStringSubmatch(abiType); matches != nil {
-		elemType, err := ConvertABIToReflectType(matches[1])
-		if err != nil {
-			return nil, err
-		}
-		if matches[2] == "" { // dynamic array
-			return reflect.SliceOf(elemType), nil
-		} else { // fixed-size array
-			size, err := strconv.Atoi(matches[2])
-			if err != nil {
-				return nil, fmt.Errorf("invalid array size: %s", abiType)
-			}
-			return reflect.ArrayOf(size, elemType), nil
-		}
-	}
 	switch abiType {
 	case "string":
 		return reflect.TypeOf(""), nil
@@ -89,90 +89,136 @@ func ConvertABIToReflectType(abiType string) (reflect.Type, error) {
 }
 
 func ConvertStringToType(dataType, dataField string) (interface{}, error) {
-	// TODO: make more robust and handle multidimensional arrays
-	if strings.Contains(dataType, "int") {
-		if strings.HasSuffix(dataType, "[]") {
-			dataType = "int[]"
+	// handle array types
+	reArray := regexp.MustCompile(`(.+)\[(\d*)\]$`)
+	if matches := reArray.FindStringSubmatch(dataType); matches != nil {
+		arrayType := matches[1]
+		arraySize := matches[2]
+		dataField = strings.Trim(dataField, "[]")
+		fieldlist := strings.Split(dataField, ",")
+		var arraySizeInt int
+		if arraySize != "" {
+			var err error
+			arraySizeInt, err = strconv.Atoi(arraySize)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert string to integer for array size: %s", err)
+			}
+			if len(fieldlist) != arraySizeInt {
+				return nil, fmt.Errorf("array size mismatch: expected %d, got %d", arraySizeInt, len(fieldlist))
+			}
 		} else {
-			dataType = "int"
+			arraySizeInt = len(fieldlist)
 		}
+
+		reflectype, err := ConvertTypeToReflectType(arrayType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert ABI type to reflect type: %s", err)
+		}
+		slice := reflect.MakeSlice(reflect.SliceOf(reflectype), 0, arraySizeInt)
+
+		for _, field := range fieldlist {
+			value, err := ConvertStringToType(arrayType, field)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert string to type: %s", err)
+			}
+			slice = reflect.Append(slice, reflect.ValueOf(value))
+		}
+
+		return slice.Interface(), nil
+	}
+	reInt := regexp.MustCompile(`(u?)int(\d*)$`)
+	// Handling integer types
+	if matches := reInt.FindStringSubmatch(dataType); matches != nil {
+		value, err := intValue(matches, dataField)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert string to integer, err: %v", err)
+		}
+		return value, nil
 	}
 
 	switch dataType {
 	case "string":
 		return dataField, nil
-	case "string[]":
-		dataField = strings.Trim(dataField, "[]")
-		return []string{dataField}, nil
 	case "bool":
 		return strconv.ParseBool(dataField)
-	case "bool[]":
-		dataField = strings.Trim(dataField, "[]")
-		// Bool
-		boolStrings := strings.Split(dataField, ",")
-		boolSlice := make([]bool, 0, len(boolStrings))
-		for _, boolStr := range boolStrings {
-			boolVal, err := strconv.ParseBool(boolStr)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse bool string %s", boolStr)
-			}
-			boolSlice = append(boolSlice, boolVal)
-		}
-		return boolSlice, nil
 	case "address":
-		return common.HexToAddress(dataField), nil
-	case "address[]":
-		dataField = strings.Trim(dataField, "[]")
-		// Address
-		addressStrings := strings.Split(dataField, ",")
-		addressSlice := make([]common.Address, 0, len(addressStrings))
-		for _, addressStr := range addressStrings {
-			addressSlice = append(addressSlice, common.HexToAddress(addressStr))
+		if !common.IsHexAddress(dataField) {
+			return nil, fmt.Errorf("invalid address: %s", dataField)
 		}
-		return addressSlice, nil
-	case "bytes", "bytes[]":
+		return common.HexToAddress(dataField), nil
+	case "bytes":
 		if strings.HasPrefix(dataField, "0x") {
 			return hex.DecodeString(Remove0xPrefix(dataField))
 		}
 		return []byte(dataField), nil
-	case "bytes32", "bytes32[]":
-		var b [32]byte
-		if dataType == "bytes32" {
-			byt := []byte(dataField)
-			copy(b[:], byt)
-			return b, nil
-		} else {
-			copy(b[:], []byte(dataField))
-			return [][32]byte{b}, nil
-		}
-	case "int":
-		// https://docs.soliditylang.org/en/latest/types.html#integers
-		value := new(big.Int)
-		value, success := value.SetString(dataField, 10)
-		if !success {
-			return nil, fmt.Errorf("could not set string to big.Int for value %s", dataField)
-		}
-		return value, nil
-	case "int[]":
-		// Remove the brackets
-		dataField = strings.Trim(dataField, "[]")
-
-		// Split the string by commas
-		numberStrings := strings.Split(dataField, ",")
-
-		// Convert each string number to a big.Int
-		bigIntSlice := make([]*big.Int, 0, len(numberStrings))
-		for _, numberStr := range numberStrings {
-			numberStr = strings.TrimSpace(numberStr) // Remove any whitespace
-			num := new(big.Int)
-			_, success := num.SetString(numberStr, 10) // Base 10 for decimal
-			if !success {
-				return nil, fmt.Errorf("Error converting '%s' to big.Int\n", numberStr)
-			}
-			bigIntSlice = append(bigIntSlice, num)
-		}
-		return bigIntSlice, nil
 	default:
 		return nil, fmt.Errorf("unsupported data type: %s", dataType)
 	}
+}
+
+func sizeOfType(match string) (int, error) {
+	if match == "" {
+		return 256, nil
+	}
+	num, err := strconv.Atoi(match)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert string to integer for data type: %s", err)
+	}
+
+	return num, nil
+}
+
+func intValue(matches []string, fieldValue string) (interface{}, error) {
+	size, err := sizeOfType(matches[2])
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert string to integer, err: %v", err)
+	}
+	fieldValue = strings.TrimSpace(fieldValue)
+	Uint := matches[1] == "u"
+	switch size {
+	case 8, 16, 32, 64:
+		if Uint {
+			// Use ParseUint for unsigned types
+			value, err := strconv.ParseUint(fieldValue, 10, size)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert data field string to unsigned integer, err: %v", err)
+			}
+			switch size {
+			case 8:
+				return uint8(value), nil
+			case 16:
+				return uint16(value), nil
+			case 32:
+				return uint32(value), nil
+			case 64:
+				return uint64(value), nil
+			}
+		} else {
+			// Use ParseInt for signed types
+			value, err := strconv.ParseInt(fieldValue, 10, size)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert data field string to integer, err: %v", err)
+			}
+			switch size {
+			case 8:
+				return int8(value), nil
+			case 16:
+				return int16(value), nil
+			case 32:
+				return int32(value), nil
+			case 64:
+				return int64(value), nil
+			}
+		}
+	default:
+		// Handle as big.Int for sizes not matching 8, 16, 32, or 64
+		value := new(big.Int)
+		value, success := value.SetString(fieldValue, 10)
+		if !success {
+			return nil, fmt.Errorf("could not set string to big.Int for value %s", fieldValue)
+		}
+		return value, nil
+	}
+	// This line is unreachable but included for completeness
+	return nil, fmt.Errorf("unsupported data type size: %s", matches[2])
 }

@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/registry/types"
@@ -20,14 +19,11 @@ func (k Keeper) DecodeValue(goCtx context.Context, req *types.QueryDecodeValueRe
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "data spec not found")
 	}
-	decodedValue, err := types.DecodeValue(req.Value, spec.ValueType)
+
+	value, err := spec.DecodeValue(req.Value)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to decode value")
 	}
-	// convert interface to json
-	decodedValueJSON, err := json.Marshal(decodedValue)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to marshal decoded value")
-	}
-	return &types.QueryDecodeValueResponse{DecodedValue: string(decodedValueJSON)}, nil
+
+	return &types.QueryDecodeValueResponse{DecodedValue: value}, nil
 }

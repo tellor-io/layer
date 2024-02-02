@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/x/oracle/types"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
@@ -22,9 +22,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, types.ErrValidatorNotBonded
 	}
 	// check if querydata has prefix 0x
-	if lib.Has0xPrefix(msg.QueryData) {
-		msg.QueryData = msg.QueryData[2:]
-	}
+	msg.QueryData = regtypes.Remove0xPrefix(msg.QueryData)
 	// decode query data hex string to bytes
 	qDataBytes, err := hex.DecodeString(msg.QueryData)
 	if err != nil {

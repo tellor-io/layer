@@ -6,8 +6,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/x/oracle/types"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // SetAggregatedReport calculates and allocates rewards to reporters based on aggregated reports.
@@ -77,9 +77,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
-	if lib.Has0xPrefix(report.QueryId) {
-		report.QueryId = report.QueryId[2:]
-	}
+	report.QueryId = regtypes.Remove0xPrefix(report.QueryId)
 	queryId, err := hex.DecodeString(report.QueryId)
 	if err != nil {
 		panic(err)
