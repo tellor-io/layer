@@ -38,7 +38,6 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService storetypes.KVStoreService,
-
 	stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
 ) Keeper {
@@ -73,10 +72,7 @@ func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, 
 
 	bridgeValset := make([]*types.BridgeValidator, len(validators))
 
-	// ethAddresses := make([]gethcommon.Address, len(validators))
 	for i, validator := range validators {
-		// ethAddresses[i] = DefaultEVMAddress(validator.GetOperator())
-		// k.Logger(ctx).Info("building eth addrs", i)
 		valAddress, err := sdk.ValAddressFromBech32(validator.GetOperator())
 		if err != nil {
 			return nil, err
@@ -85,7 +81,7 @@ func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, 
 			EthereumAddress: DefaultEVMAddress(valAddress).String(),
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
-		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator ", "test", bridgeValset[i].EthereumAddress)
+		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator DDDD", "test", bridgeValset[i].EthereumAddress)
 	}
 
 	// Sort the validators
@@ -102,26 +98,6 @@ func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, 
 }
 
 func (k Keeper) GetBridgeValidatorSet(ctx sdk.Context) (*types.BridgeValidatorSet, error) {
-	// validators := k.stakingKeeper.GetAllValidators(ctx)
-	// bridgeValset := make([]*types.BridgeValidator, len(validators))
-	// for i, validator := range validators {
-	// 	bridgeValset[i] = &types.BridgeValidator{
-	// 		EthereumAddress: DefaultEVMAddress(validator.GetOperator()).String(),
-	// 		Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
-	// 	}
-	// 	k.Logger(ctx).Info("@GetBridgeValidatorSet - bridge validator ", "test", bridgeValset[i].EthereumAddress)
-	// }
-
-	// // Sort the validators
-	// sort.Slice(bridgeValset, func(i, j int) bool {
-	// 	if bridgeValset[i].Power == bridgeValset[j].Power {
-	// 		// If power is equal, sort alphabetically
-	// 		return bridgeValset[i].EthereumAddress < bridgeValset[j].EthereumAddress
-	// 	}
-	// 	// Otherwise, sort by power in descending order
-	// 	return bridgeValset[i].Power > bridgeValset[j].Power
-	// })
-
 	// use GetBridgeValidators to get the current bridge validator set
 	bridgeValset, err := k.GetBridgeValidators(ctx)
 	if err != nil {
@@ -134,6 +110,13 @@ func (k Keeper) GetBridgeValidatorSet(ctx sdk.Context) (*types.BridgeValidatorSe
 // function for loading last saved bridge validator set and comparing it to current set
 func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 	// TODO: double-check this, as it's currently getting the stored valset
+	k.Logger(ctx).Info("@@V CCCC")
+	k.Logger(ctx).Info("Trying bridge sig...")
+	// sig, err := k.trySig(ctx)
+	// if err != nil {
+	// 	return false, err
+	// }
+	// k.Logger(ctx).Info("Bridge sig: ", "sig", sig)
 	currentBridgeValidators, err := k.GetBridgeValidatorSet(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No current bridge validator set found")
@@ -141,6 +124,7 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 	}
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {
+
 		k.Logger(ctx).Info("No saved bridge validator set found")
 		k.BridgeValset.Set(ctx, *currentBridgeValidators)
 		return false, err
@@ -188,3 +172,46 @@ func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.B
 
 	return gomath.Abs(delta / float64(gomath.MaxUint32))
 }
+
+// func (k Keeper) SignMessage(ctx sdk.Context, msg []byte, name string) ([]byte, error) {
+// 	// Get the info of the keypair
+// 	info, err := k.keyring.Key(name)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	// Get the public key
+// 	pubKey, err := info.GetPubKey()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	// Sign the message
+// 	k.Logger(ctx).Info("Signing message...")
+// 	// sig, _, err := k.keyring.Sign(name, msg, 1)
+// 	// convert pubKey to type sdk.Address
+// 	pubKeyAddrStr := pubKey.Address().String()
+// 	pubKeyAddr, err := sdk.AccAddressFromBech32(pubKeyAddrStr)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	sig, _, err := k.keyring.SignByAddress(pubKeyAddr, msg, 1)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	k.Logger(ctx).Info("Signed message...")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return sig, nil
+// }
+
+// func (k Keeper) trySig(ctx sdk.Context) (string, error) {
+// 	msg := []byte("test")
+// 	name := "alice"
+// 	sig, err := k.SignMessage(ctx, msg, name)
+// 	if err != nil {
+// 		k.Logger(ctx).Info("Error: ", err)
+// 	}
+// 	k.Logger(ctx).Info("Signature: ", "sig", sig)
+// 	return hex.EncodeToString(sig), nil
+// }
