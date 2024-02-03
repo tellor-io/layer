@@ -16,7 +16,7 @@ func TestQueryGetDataSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// register a spec
-	spec1 := types.DataSpec{DocumentHash: "hash1", ValueType: "uint256", AggregationMethod: "weighted-median"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
 	specInput := &types.MsgRegisterSpec{
 		Registrar: "creator1",
 		QueryType: "queryType1",
@@ -30,7 +30,7 @@ func TestQueryGetDataSpec(t *testing.T) {
 	getSpec, err := querier.GetDataSpec(ctx, &types.QueryGetDataSpecRequest{QueryType: "queryType1"})
 	require.NoError(t, err)
 	require.Equal(t, getSpec.Spec.DocumentHash, "hash1")
-	require.Equal(t, getSpec.Spec.ValueType, "uint256")
+	require.Equal(t, getSpec.Spec.ResponseValueType, "uint256")
 
 	// get unregistered spec
 	getSpec, err = querier.GetDataSpec(ctx, &types.QueryGetDataSpecRequest{QueryType: "badQueryType"})

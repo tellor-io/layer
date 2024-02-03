@@ -16,7 +16,7 @@ func TestGenerateQueryData(t *testing.T) {
 		Registrar: "creator1",
 		QueryType: querytype,
 		Spec: types.DataSpec{
-			ValueType: "uint256",
+			ResponseValueType: "uint256",
 			AbiComponents: []*types.ABIComponent{
 				{Name: "test", Type: "string"},
 			},

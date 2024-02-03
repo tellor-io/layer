@@ -18,12 +18,12 @@ func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpe
 	if specExists {
 		return nil, status.Error(codes.AlreadyExists, "data spec previously registered")
 	}
-	msg.Spec.ValueType = strings.ToLower(msg.Spec.ValueType)
+	msg.Spec.ResponseValueType = strings.ToLower(msg.Spec.ResponseValueType)
 	msg.Spec.AggregationMethod = strings.ToLower(msg.Spec.AggregationMethod)
 	msg.Spec.Registrar = msg.Registrar
 
-	if !types.SupportedType(msg.Spec.ValueType) {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("value type not supported: %s", msg.Spec.ValueType))
+	if !types.SupportedType(msg.Spec.ResponseValueType) {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("value type not supported: %s", msg.Spec.ResponseValueType))
 	}
 	// TODO: assert the aggregation can be handled
 	if !types.SupportedAggregationMethod[msg.Spec.AggregationMethod] {

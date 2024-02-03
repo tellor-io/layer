@@ -10,8 +10,8 @@ import (
 func TestTupleListEncoding(t *testing.T) {
 	t.Parallel()
 	var dataSpec = DataSpec{
-		DocumentHash: "",
-		ValueType:    "uint256",
+		DocumentHash:      "",
+		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "metric", Type: "string"},
 			{Name: "currency", Type: "string"},
@@ -62,8 +62,8 @@ func TestTupleListEncoding(t *testing.T) {
 func TestTupleDataSpecEncoding(t *testing.T) {
 	t.Parallel()
 	var dataspec = DataSpec{
-		DocumentHash: "",
-		ValueType:    "uint256",
+		DocumentHash:      "",
+		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "tupletest", Type: "tuple",
 				NestedComponent: []*ABIComponent{
@@ -102,7 +102,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case eth/usd",
 			DataSpec{
-				ValueType: "uint256",
+				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
 					{Name: "asset", Type: "string"},
 					{Name: "currency", Type: "string"},
@@ -117,7 +117,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case btc/usd",
 			DataSpec{
-				ValueType: "uint256",
+				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
 					{Name: "asset", Type: "string"},
 					{Name: "currency", Type: "string"},
@@ -132,7 +132,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case trb/usd",
 			DataSpec{
-				ValueType: "uint256",
+				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
 					{Name: "asset", Type: "string"},
 					{Name: "currency", Type: "string"},
@@ -147,7 +147,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case BTCbalance",
 			DataSpec{
-				ValueType: "uint256",
+				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
 					{Name: "address", Type: "string"},
 					{Name: "timestamp", Type: "uint256"},
@@ -162,7 +162,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case CrossChainBalance",
 			DataSpec{
-				ValueType: "uint256",
+				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
 					{Name: "chainId", Type: "uint256"},
 					{Name: "contractAddress", Type: "address"},
@@ -178,7 +178,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case AmpleforthCustomSpotPrice",
 			DataSpec{
-				ValueType: "uint256",
+				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
 					{Name: "phantom", Type: "bytes"},
 				},
@@ -192,7 +192,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case ChatGPTResponse",
 			DataSpec{
-				ValueType: "string",
+				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
 					{Name: "", Type: "bytes"},
 				},
@@ -206,7 +206,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case EVMHeaderslist",
 			DataSpec{
-				ValueType: "string",
+				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
 					{Name: "", Type: "uint256"},
 					{Name: "", Type: "uint256[]"},
@@ -221,7 +221,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case Info",
 			DataSpec{
-				ValueType: "string",
+				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
 					{Name: "", Type: "string"},
 					{Name: "", Type: "string[]"},
@@ -236,7 +236,7 @@ func TestMixedEncoding(t *testing.T) {
 		{
 			"Test case EVMCall",
 			DataSpec{
-				ValueType: "string",
+				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
 					{Name: "", Type: "uint256"},
 					{Name: "", Type: "address"},

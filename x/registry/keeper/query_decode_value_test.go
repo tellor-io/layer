@@ -17,7 +17,7 @@ func TestDecodeValueQuery(t *testing.T) {
 		QueryType: querytype,
 		Spec: types.DataSpec{
 			AggregationMethod: "weighted-median",
-			ValueType:         "uint256",
+			ResponseValueType: "uint256",
 			AbiComponents: []*types.ABIComponent{
 				{Name: "test", Type: "string"},
 			},

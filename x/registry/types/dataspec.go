@@ -13,8 +13,8 @@ import (
 // genesis spot price data spec
 func GenesisDataSpec() DataSpec {
 	return DataSpec{
-		DocumentHash: "",
-		ValueType:    "uint256",
+		DocumentHash:      "",
+		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "asset", Type: "string"},
 			{Name: "currency", Type: "string"},
@@ -42,11 +42,11 @@ func (d DataSpec) EncodeData(querytype, datafields string) (string, error) {
 }
 
 func (d DataSpec) ValidateValue(value string) error {
-	return IsValueDecodable(value, d.ValueType)
+	return IsValueDecodable(value, d.ResponseValueType)
 }
 
 func (d DataSpec) DecodeValue(value string) (string, error) {
-	valueInterface, err := DecodeValue(value, d.ValueType)
+	valueInterface, err := DecodeValue(value, d.ResponseValueType)
 	if err != nil {
 		return "", fmt.Errorf("Failed to decode value: %v", err)
 	}

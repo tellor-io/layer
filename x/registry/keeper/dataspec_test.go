@@ -22,7 +22,7 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 	require.Equal(t, specReturn, types.DataSpec{})
 
 	// register a spec and check Spec() returns correct bytes
-	spec1 := types.DataSpec{DocumentHash: "hash1", ValueType: "uint256", AggregationMethod: "weighted-median", Registrar: "creator1"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", Registrar: "creator1"}
 	specInput := &types.MsgRegisterSpec{
 		Registrar: spec1.Registrar,
 		QueryType: "queryType1",
@@ -48,7 +48,7 @@ func TestSetDataSpec(t *testing.T) {
 	queryType := "queryType1"
 	dataSpec := types.DataSpec{
 		DocumentHash:      "hash1",
-		ValueType:         "uint256",
+		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		Registrar:         "creator1",
 	}

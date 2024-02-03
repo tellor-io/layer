@@ -16,7 +16,7 @@ func TestUpdateDataSpec(t *testing.T) {
 	queryType := "testQueryType"
 	spec := types.DataSpec{
 		DocumentHash:      "testHash",
-		ValueType:         "uint256",
+		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 	}
 
@@ -29,7 +29,7 @@ func TestUpdateDataSpec(t *testing.T) {
 	_, err := ms.RegisterSpec(ctx, registerSpecInput)
 	require.NoError(t, err)
 	// Update spec
-	spec.ValueType = "uint128"
+	spec.ResponseValueType = "uint128"
 	updateSpecInput := &types.MsgUpdateDataSpec{
 		Authority: authority,
 		QueryType: queryType,
@@ -41,12 +41,12 @@ func TestUpdateDataSpec(t *testing.T) {
 	// Check if spec is updated
 	getSpec, err := k.GetSpec(sdk.UnwrapSDKContext(ctx), queryType)
 	require.NoError(t, err)
-	require.Equal(t, "uint128", getSpec.ValueType)
+	require.Equal(t, "uint128", getSpec.ResponseValueType)
 
 	// Update spec with invalid authority
 	authority = "invalidAuthority"
 	// update spec
-	spec.ValueType = "int256"
+	spec.ResponseValueType = "int256"
 	updateSpecInput = &types.MsgUpdateDataSpec{
 		Authority: authority,
 		QueryType: queryType,

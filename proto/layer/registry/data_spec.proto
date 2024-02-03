@@ -23,7 +23,7 @@ message DataSpec {
   // ipfs hash of the data spec
   string document_hash = 1;
   // the value's datatype for decoding the value
-  string value_type = 2;
+  string response_value_type = 2;
   // the abi components for decoding
   repeated ABIComponent abi_components = 3;
   // how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
