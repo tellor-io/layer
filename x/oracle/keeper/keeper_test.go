@@ -42,6 +42,7 @@ type KeeperTestSuite struct {
 	ctx            sdk.Context
 	oracleKeeper   keeper.Keeper
 	registryKeeper registryk.Keeper
+	bankKeeper     *mocks.BankKeeper
 	stakingKeeper  *mocks.StakingKeeper
 	accountKeeper  *mocks.AccountKeeper
 	distrKeeper    *mocks.DistrKeeper
@@ -55,6 +56,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	rStoreKey := storetypes.NewKVStoreKey(registrytypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+	// sdk.DefaultBondDenom = "loya"
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
@@ -70,6 +72,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper = new(mocks.StakingKeeper)
 	s.accountKeeper = new(mocks.AccountKeeper)
 	s.distrKeeper = new(mocks.DistrKeeper)
+	s.bankKeeper = new(mocks.BankKeeper)
 	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
 	rparamsSubspace := typesparams.NewSubspace(cdc,
 		types.Amino,
@@ -89,7 +92,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		storeKey,
 		memStoreKey,
 		s.accountKeeper,
-		nil,
+		s.bankKeeper,
 		s.distrKeeper,
 		s.stakingKeeper,
 		s.registryKeeper,
@@ -104,6 +107,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	// Initialize params
 	s.oracleKeeper.SetParams(s.ctx, types.DefaultParams())
 	s.msgServer = keeper.NewMsgServerImpl(s.oracleKeeper)
+	s.bankKeeper.On("SendCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	KeyTestPubAddr()
 	val, _ := stakingtypes.NewValidator(Addr.String(), PubKey, stakingtypes.Description{Moniker: "test"})
 	val.Jailed = false
@@ -112,6 +116,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper.On("Validator", mock.Anything, mock.Anything).Return(val, nil)
 	account := authtypes.NewBaseAccount(Addr, PubKey, 0, 0)
 	s.accountKeeper.On("GetAccount", mock.Anything, mock.Anything).Return(account, nil)
+	s.bankKeeper.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 }
 
 func KeyTestPubAddr() {

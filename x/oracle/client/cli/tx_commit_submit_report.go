@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/spf13/cobra"
 	mediantypes "github.com/tellor-io/layer/daemons/server/types"
 	"github.com/tellor-io/layer/lib/prices"
 	"github.com/tellor-io/layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/utils"
 )
 
 var _ = strconv.Itoa(0)
@@ -54,15 +54,22 @@ func CmdCommitSubmitReport() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded, signing.SignMode_SIGN_MODE_DIRECT)
+			// data, _, err := clientCtx.Keyring.SignByAddress(clientCtx.GetFromAddress(), valueDecoded, signing.SignMode_SIGN_MODE_DIRECT)
+			// if err != nil {
+			// 	return err
+			// }
+			// get hash
+			salt, err := utils.Salt(32)
 			if err != nil {
 				return err
 			}
 
+			commit := utils.CalculateCommitment(string(valueDecoded), salt)
+
 			msg := types.NewMsgCommitReport(
 				clientCtx.GetFromAddress().String(),
 				argQueryData,
-				hex.EncodeToString(data),
+				commit,
 			)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
@@ -75,6 +82,7 @@ func CmdCommitSubmitReport() *cobra.Command {
 				clientCtx.GetFromAddress().String(),
 				argQueryData,
 				hexValue,
+				salt,
 			)
 			if err := msgSubmit.ValidateBasic(); err != nil {
 				return err
