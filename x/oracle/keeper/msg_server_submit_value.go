@@ -52,7 +52,6 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
 	}
 	commit := utils.CalculateCommitment(string(valueDecoded), msg.Salt)
-	fmt.Println("commit:", commit)
 	if commit != commitValue.Report.Hash {
 		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
 	}

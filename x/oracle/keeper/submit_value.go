@@ -184,7 +184,6 @@ func decodeValue(value, dataType string) ([]interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to unpack value: %v", err)
 	}
-	fmt.Println("Decoded value: ", result[0])
 	return result, nil
 }
 
