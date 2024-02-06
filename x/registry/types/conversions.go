@@ -12,13 +12,15 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+var (
+	// Regular expression for parsing array types ...[size]
+	reArray = regexp.MustCompile(`(.+)\[(\d*)\]$`)
+	// Regular expression for parsing integer types, e.g. uint256,int8
+	reInt = regexp.MustCompile(`(u?)int(\d*)`)
+)
+
 // ConvertABIToReflectType converts ABI type strings to reflect.Type
 func ConvertTypeToReflectType(abiType string) (reflect.Type, error) {
-	// Regular expression for parsing array types ...[size]
-	reArray := regexp.MustCompile(`(.+)\[(\d*)\]$`)
-	// Regular expression for parsing integer types, e.g. uint256,int8
-	reInt := regexp.MustCompile(`(u?)int(\d*)`)
-
 	// Handling arrays
 	if matches := reArray.FindStringSubmatch(abiType); matches != nil {
 		elemType, err := ConvertTypeToReflectType(matches[1])
@@ -90,7 +92,6 @@ func ConvertTypeToReflectType(abiType string) (reflect.Type, error) {
 
 func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 	// handle array types
-	reArray := regexp.MustCompile(`(.+)\[(\d*)\]$`)
 	if matches := reArray.FindStringSubmatch(dataType); matches != nil {
 		arrayType := matches[1]
 		arraySize := matches[2]
@@ -126,7 +127,7 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 
 		return slice.Interface(), nil
 	}
-	reInt := regexp.MustCompile(`(u?)int(\d*)$`)
+
 	// Handling integer types
 	if matches := reInt.FindStringSubmatch(dataType); matches != nil {
 		value, err := intValue(matches, dataField)
