@@ -20,6 +20,10 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			id:                             exchange_config.MARKET_BTC_USD,
 			expectedExchangeConfigJsonFile: "btc_exchange_config.json",
 		},
+		"TRB exchange config": {
+			id:                             exchange_config.MARKET_TRB_USD,
+			expectedExchangeConfigJsonFile: "trb_exchange_config.json",
+		},
 		"ETH exchange config": {
 			id:                             exchange_config.MARKET_ETH_USD,
 			expectedExchangeConfigJsonFile: "eth_exchange_config.json",

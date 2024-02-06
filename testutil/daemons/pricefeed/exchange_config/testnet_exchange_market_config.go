@@ -146,6 +146,10 @@ var (
 					Ticker:         "XRPUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
+				MARKET_TRB_USD: {
+					Ticker:         "TRBUSDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_USDT_USD: {
 					Ticker: "USDCUSDT",
 					Invert: true,
@@ -248,6 +252,10 @@ var (
 				},
 				MARKET_CRV_USD: {
 					Ticker:         "CRV_USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
+				MARKET_TRB_USD: {
+					Ticker:         "TRB_USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_ADA_USD: {
@@ -373,6 +381,10 @@ var (
 				},
 				MARKET_ATOM_USD: {
 					Ticker:         "ATOMUSDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
+				MARKET_TRB_USD: {
+					Ticker:         "TRBUSDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_UNI_USD: {
@@ -554,6 +566,10 @@ var (
 					Ticker:         "LINK-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
+				MARKET_TRB_USD: {
+					Ticker:         "TRB-USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 				MARKET_MATIC_USD: {
 					Ticker:         "MATIC-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
@@ -690,6 +706,10 @@ var (
 				},
 				MARKET_BTC_USD: {
 					Ticker:         "BTC-USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
+				MARKET_TRB_USD: {
+					Ticker:         "TRB-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_ETH_USD: {
@@ -962,6 +982,9 @@ var (
 				},
 				MARKET_ETH_USD: {
 					Ticker: "ETH-USD",
+				},
+				MARKET_TRB_USD: {
+					Ticker: "TRB-USD",
 				},
 				MARKET_LINK_USD: {
 					Ticker: "LINK-USD",
