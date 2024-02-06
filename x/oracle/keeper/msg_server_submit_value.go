@@ -3,9 +3,11 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/utils"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +31,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.GetSignature(ctx, reporter, HashQueryData(qDataBytes))
+	commitValue, err := k.GetCommit(ctx, reporter, HashQueryData(qDataBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +43,18 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	// if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
 	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
 	// }
-	// verify value signature
-	if !k.VerifySignature(ctx, msg.Creator, msg.Value, commitValue.Report.Signature) {
-		return nil, types.ErrSignatureVerificationFailed
+
+	// calculate the move's commitment, must match the one stored
+	valueDecoded, err := hex.DecodeString(msg.Value)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
 	}
+	commit := utils.CalculateCommitment(string(valueDecoded), msg.Salt)
+	fmt.Println("commit:", commit)
+	if commit != commitValue.Report.Hash {
+		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
+	}
+
 	// set value
 	if err := k.setValue(ctx, reporter, msg.Value, qDataBytes, votingPower, currentBlock); err != nil {
 		return nil, err
