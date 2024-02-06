@@ -34,6 +34,8 @@ type QueryClient interface {
 	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
+	// Queries a list of CurrentCyclelistQuery items.
+	CurrentCyclelistQuery(ctx context.Context, in *QueryCurrentCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryCurrentCyclelistQueryResponse, error)
 }
 
 type queryClient struct {
@@ -125,6 +127,15 @@ func (c *queryClient) GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeB
 	return out, nil
 }
 
+func (c *queryClient) CurrentCyclelistQuery(ctx context.Context, in *QueryCurrentCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryCurrentCyclelistQueryResponse, error) {
+	out := new(QueryCurrentCyclelistQueryResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/CurrentCyclelistQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -145,6 +156,8 @@ type QueryServer interface {
 	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetAggregatedReportResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)
+	// Queries a list of CurrentCyclelistQuery items.
+	CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -178,6 +191,9 @@ func (UnimplementedQueryServer) GetDataBefore(context.Context, *QueryGetDataBefo
 }
 func (UnimplementedQueryServer) GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTimeBasedRewards not implemented")
+}
+func (UnimplementedQueryServer) CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CurrentCyclelistQuery not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -354,6 +370,24 @@ func _Query_GetTimeBasedRewards_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_CurrentCyclelistQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryCurrentCyclelistQueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).CurrentCyclelistQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/CurrentCyclelistQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).CurrentCyclelistQuery(ctx, req.(*QueryCurrentCyclelistQueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -396,6 +430,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTimeBasedRewards",
 			Handler:    _Query_GetTimeBasedRewards_Handler,
+		},
+		{
+			MethodName: "CurrentCyclelistQuery",
+			Handler:    _Query_CurrentCyclelistQuery_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -13,13 +13,13 @@ func (k Keeper) GetCycleList(ctx sdk.Context) []string {
 // rotation what query is next
 func (k Keeper) RotateQueries(ctx sdk.Context) string {
 	queries := k.GetCycleList(ctx)
-
 	currentIndex := k.GetCurrentIndex(ctx)
-	if currentIndex >= int64(len(queries)) {
-		currentIndex = 0
-	}
 
-	k.SetCurrentIndex(ctx, (currentIndex+1)%int64(len(queries)))
+	// Increment currentIndex first, then adjust if it exceeds bounds
+	currentIndex = (currentIndex + 1) % int64(len(queries))
+	// After incrementing, update the stored currentIndex for the next rotation
+	k.SetCurrentIndex(ctx, currentIndex)
+	// Return the query at the updated currentIndex
 	return queries[currentIndex]
 }
 

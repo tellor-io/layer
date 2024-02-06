@@ -138,6 +138,7 @@ import (
 	"runtime/debug"
 
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
+	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
 	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
@@ -259,8 +260,9 @@ type App struct {
 	configurator module.Configurator
 
 	Server              *daemonserver.Server
-	startDaemons        func(client.Context, *api.Server)
+	startDaemons        func(*api.Server)
 	PriceFeedClient     *pricefeedclient.Client
+	ReporterClient      *reporterclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 }
 
@@ -599,7 +601,8 @@ func New(
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
-	app.startDaemons = func(cltx client.Context, apiSvr *api.Server) {
+	app.startDaemons = func(apiSvr *api.Server) {
+		cltx := apiSvr.ClientCtx
 		// enabled by default, set flag `--price-daemon-enabled=false` to false to disable
 		if daemonFlags.Price.Enabled {
 			maxDaemonUnhealthyDuration := time.Second
@@ -624,8 +627,22 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
+			go medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+
+			go func() {
+				app.ReporterClient = reporterclient.NewClient(cltx, logger)
+				if err := app.ReporterClient.Start(
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					&daemontypes.GrpcClientImpl{},
+					marketParamsConfig,
+					indexPriceCache,
+				); err != nil {
+					panic(err)
+				}
+			}()
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
@@ -1014,7 +1031,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	docs.RegisterOpenAPIService(Name, apiSvr.Router)
-	app.startDaemons(clientCtx, apiSvr)
+	app.startDaemons(apiSvr)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
