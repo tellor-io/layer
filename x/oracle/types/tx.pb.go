@@ -129,6 +129,7 @@ type MsgSubmitValue struct {
 	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
 	QueryData string `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	Value     string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Salt      string `protobuf:"bytes,4,opt,name=salt,proto3" json:"salt,omitempty"`
 }
 
 func (m *MsgSubmitValue) Reset()         { *m = MsgSubmitValue{} }
@@ -181,6 +182,13 @@ func (m *MsgSubmitValue) GetQueryData() string {
 func (m *MsgSubmitValue) GetValue() string {
 	if m != nil {
 		return m.Value
+	}
+	return ""
+}
+
+func (m *MsgSubmitValue) GetSalt() string {
+	if m != nil {
+		return m.Salt
 	}
 	return ""
 }
@@ -274,9 +282,9 @@ func (m *MsgCommitReport) GetQueryData() string {
 	return ""
 }
 
-func (m *MsgCommitReport) GetSignature() string {
+func (m *MsgCommitReport) GetHash() string {
 	if m != nil {
-		return m.Signature
+		return m.Hash
 	}
 	return ""
 }
@@ -742,6 +750,13 @@ func (m *MsgSubmitValue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.Salt) > 0 {
+		i -= len(m.Salt)
+		copy(dAtA[i:], m.Salt)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Salt)))
+		i--
+		dAtA[i] = 0x22
+	}
 	if len(m.Value) > 0 {
 		i -= len(m.Value)
 		copy(dAtA[i:], m.Value)
@@ -809,10 +824,10 @@ func (m *MsgCommitReport) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.Signature) > 0 {
-		i -= len(m.Signature)
-		copy(dAtA[i:], m.Signature)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Signature)))
+	if len(m.Hash) > 0 {
+		i -= len(m.Hash)
+		copy(dAtA[i:], m.Hash)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Hash)))
 		i--
 		dAtA[i] = 0x1a
 	}
@@ -979,6 +994,10 @@ func (m *MsgSubmitValue) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
+	l = len(m.Salt)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
 	return n
 }
 
@@ -1005,7 +1024,7 @@ func (m *MsgCommitReport) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = len(m.Signature)
+	l = len(m.Hash)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1345,6 +1364,38 @@ func (m *MsgSubmitValue) Unmarshal(dAtA []byte) error {
 			}
 			m.Value = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Salt", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Salt = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1511,7 +1562,7 @@ func (m *MsgCommitReport) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Hash", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1539,7 +1590,7 @@ func (m *MsgCommitReport) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Signature = string(dAtA[iNdEx:postIndex])
+			m.Hash = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

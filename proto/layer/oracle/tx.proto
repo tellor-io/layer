@@ -43,6 +43,7 @@ message MsgSubmitValue {
   string creator = 1;
   string query_data = 2;
   string value = 3;
+  string salt = 4; // hex encoded 32 bytes salt
 }
 
 message MsgSubmitValueResponse {}
@@ -51,7 +52,7 @@ message MsgCommitReport {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string query_data = 2;
-  string signature = 3; //signature of value in submit value
+  string hash = 3; // hex encoded sha256 of "salt:value"
 }
 
 message MsgCommitReportResponse {}
