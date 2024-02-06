@@ -152,7 +152,7 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	msgCommit := &oracletypes.MsgCommitReport{
 		Creator:   accAddr.String(),
 		QueryData: response.Querydata,
-		Signature: hex.EncodeToString(sigbytes),
+		Hash:      hex.EncodeToString(sigbytes),
 	}
 	txf := newFactory(c.cosmosCtx)
 
