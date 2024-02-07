@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -23,9 +22,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	queryDataBytes, err := hex.DecodeString(queryData[2:])
 	require.Nil(err)
 	queryIdBytes := crypto.Keccak256(queryDataBytes)
-	fmt.Println("queryIdBytes: ", queryIdBytes)
 	queryId := hex.EncodeToString(queryIdBytes)
-	fmt.Println("queryId: ", queryId)
 	// submit and set aggregated report
 	s.TestSubmitValue()
 	// todo: use proper variables instead of mock.Anything
@@ -63,5 +60,36 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.Equal(expectedAggregate.Flagged, aggregate.Report.Flagged)
 	require.Equal(expectedAggregate.Nonce, aggregate.Report.Nonce)
 	require.Equal(expectedAggregate.AggregateReportIndex, aggregate.Report.AggregateReportIndex)
+
+}
+
+func (s *KeeperTestSuite) TestQueryGetAggregatedReportNilRequest() {
+	require := s.Require()
+
+	_, err := s.oracleKeeper.GetAggregatedReport(s.ctx, nil)
+	require.ErrorContains(err, "invalid request")
+}
+
+func (s *KeeperTestSuite) TestQueryGetAggregatedReportInvalidQueryId() {
+	require := s.Require()
+	require.Panics(func() {
+		s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: "invalidQueryID"})
+	}, "invalid queryID")
+}
+
+func (s *KeeperTestSuite) TestQueryGetAggregatedReportNoAvailableTimestamps() {
+	require := s.Require()
+
+	// get queryID
+	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryDataBytes, err := hex.DecodeString(queryData[2:])
+	require.Nil(err)
+	queryIdBytes := crypto.Keccak256(queryDataBytes)
+	queryId := hex.EncodeToString(queryIdBytes)
+	// submit without setting aggregate report
+	s.TestSubmitValue()
+
+	_, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: queryId})
+	require.ErrorContains(err, "no available timestamps")
 
 }

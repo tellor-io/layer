@@ -72,7 +72,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	require := s.Require()
 
 	// submit value with bad query data
-	badQueryData := "stupidQueryData"
+	badQueryData := "invalidQueryData"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	salt := s.TestCommitValue()
 	var submitreq types.MsgSubmitValue
