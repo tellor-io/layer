@@ -1,25 +1,26 @@
-package main
+package client
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"cosmossdk.io/log"
+	"github.com/cometbft/cometbft/libs/bytes"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/tellor-io/layer/app"
 )
 
 func main() {
+	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
+
 	// define keyring backend and the path to the keystore dir
-	krBackend := keyring.BackendFile
+	krBackend := keyring.BackendTest
 	krDir := os.ExpandEnv("$HOME/.layer")
 	fmt.Println("Keyring dir:", krDir)
 
-	// create a new keyring instance
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-
-	kr, err := keyring.New("cosmos", krBackend, krDir, os.Stdin, cdc)
+	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, tempApp.AppCodec())
 	if err != nil {
 		fmt.Printf("Failed to create keyring: %v\n", err)
 		return
@@ -36,13 +37,8 @@ func main() {
 		fmt.Println("name: ", k.Name)
 	}
 
-	// bob, _, err := kr.NewMnemonic("Bob", keyring.English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, sec)
-
-	// kr.
-
 	// Fetch the operator key from the keyring.
-	// Replace "operatorKeyName" with the actual name of your operator key.
-	info, err := kr.Key("dan")
+	info, err := kr.Key("frank")
 	if err != nil {
 		fmt.Printf("Failed to get operator key: %v\n", err)
 		return
@@ -51,4 +47,22 @@ func main() {
 	key, _ := info.GetPubKey()
 	keyAddrStr := key.Address().String()
 	fmt.Println("Operator Public Key:", keyAddrStr)
+
+	// sign message
+	tempmsg := []byte("hello")
+	sig, pubKeyReturned, err := kr.Sign("frank", tempmsg, 1)
+	if err != nil {
+		fmt.Printf("Failed to sign message: %v\n", err)
+		return
+	}
+	fmt.Println("Signature:", bytes.HexBytes(sig).String())
+	fmt.Println("Public Key:", pubKeyReturned.Address().String())
+}
+
+func tempDir() string {
+	dir, err := os.MkdirTemp("", "layer")
+	if err != nil {
+		fmt.Printf("Failed to create temp dir: %v", err)
+	}
+	return dir
 }

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -131,19 +130,15 @@ import (
 	"github.com/tellor-io/layer/docs"
 
 	appflags "github.com/tellor-io/layer/app/flags"
-	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
-	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
 	daemonserver "github.com/tellor-io/layer/daemons/server"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 
-	"runtime/debug"
-
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
-	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+	// bridgesignerclient "github.com/tellor-io/layer/daemons/bridge/client"
 )
 
 const (
@@ -268,6 +263,7 @@ type App struct {
 	startDaemons        func(client.Context, *api.Server)
 	PriceFeedClient     *pricefeedclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+	// BridgeSignerClient  *bridgesignerclient.Client
 }
 
 // New returns a reference to an initialized blockchain app
@@ -615,57 +611,58 @@ func New(
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
 	app.startDaemons = func(cltx client.Context, apiSvr *api.Server) {
-		// enabled by default, set flag `--price-daemon-enabled=false` to false to disable
-		if daemonFlags.Price.Enabled {
-			maxDaemonUnhealthyDuration := time.Second
-			// Start server for handling gRPC messages from daemons.
-			go app.Server.Start()
+		// // enabled by default, set flag `--price-daemon-enabled=false` to false to disable
+		// if daemonFlags.Price.Enabled {
+		// 	maxDaemonUnhealthyDuration := time.Second
+		// 	// Start server for handling gRPC messages from daemons.
+		// 	go app.Server.Start()
 
-			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
-			marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
-			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
-			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
-			// periodically sent via gRPC to a shared socket with the server.
-			app.PriceFeedClient = pricefeedclient.StartNewClient(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				daemonFlags,
-				appFlags,
-				logger,
-				&daemontypes.GrpcClientImpl{},
-				marketParamsConfig,
-				exchangeQueryConfig,
-				constants.StaticExchangeDetails,
-				&pricefeedclient.SubTaskRunnerImpl{},
-			)
-			medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
-			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
-		}
-		// Start the Metrics Daemon.
-		// The metrics daemon is purely used for observability. It should never bring the app down.
-		// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
-		// for this service. The task loop does not produce any errors because the telemetry calls themselves are
-		// not error-returning, so in effect this daemon would never become unhealthy.
-		go func() {
-			defer func() {
-				if r := recover(); r != nil {
-					logger.Error(
-						"Metrics Daemon exited unexpectedly with a panic.",
-						"panic",
-						r,
-						"stack",
-						string(debug.Stack()),
-					)
-				}
-			}()
-			metricsclient.Start(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				logger,
-			)
-		}()
+		// 	exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
+		// 	marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
+		// 	// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
+		// 	// are retrieved via third-party APIs like Binance and then are encoded in-memory and
+		// 	// periodically sent via gRPC to a shared socket with the server.
+		// 	app.PriceFeedClient = pricefeedclient.StartNewClient(
+		// 		// The client will use `context.Background` so that it can have a different context from
+		// 		// the main application.
+		// 		context.Background(),
+		// 		daemonFlags,
+		// 		appFlags,
+		// 		logger,
+		// 		&daemontypes.GrpcClientImpl{},
+		// 		marketParamsConfig,
+		// 		exchangeQueryConfig,
+		// 		constants.StaticExchangeDetails,
+		// 		&pricefeedclient.SubTaskRunnerImpl{},
+		// 	)
+		// 	medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
+		// 	app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+		// }
+		// // Start the Metrics Daemon.
+		// // The metrics daemon is purely used for observability. It should never bring the app down.
+		// // Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
+		// // for this service. The task loop does not produce any errors because the telemetry calls themselves are
+		// // not error-returning, so in effect this daemon would never become unhealthy.
+		// go func() {
+		// 	defer func() {
+		// 		if r := recover(); r != nil {
+		// 			logger.Error(
+		// 				"Metrics Daemon exited unexpectedly with a panic.",
+		// 				"panic",
+		// 				r,
+		// 				"stack",
+		// 				string(debug.Stack()),
+		// 			)
+		// 		}
+		// 	}()
+		// 	metricsclient.Start(
+		// 		// The client will use `context.Background` so that it can have a different context from
+		// 		// the main application.
+		// 		context.Background(),
+		// 		logger,
+		// 	)
+		// }()
+
 	}
 
 	/**** IBC Routing ****/

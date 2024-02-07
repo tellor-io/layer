@@ -61,3 +61,17 @@ message BridgeValidatorSet {
   repeated BridgeValidator bridgeValidatorSet = 1;
 }
 
+message BridgeValidatorSetParams {
+  BridgeValidatorSet bridgeValidatorSet = 1;
+  int64 validatorTimestamp = 2;
+  int64 validatorPowerThreshold = 3;
+  bytes validatorSetHash = 4;
+  bytes validatorCheckpoint = 5;
+}
+
+message BridgeValidatorSetCheckpointParams {
+  int64 validatorTimestamp = 1;
+  int64 validatorPowerThreshold = 2;
+  bytes validatorSetHash = 3;
+}
+
