@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "registry"
@@ -12,14 +14,15 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_registry"
-
-	// RegistryKey
-	QueryRegistryKey = "query_registry_key"
-
-	// SpecRegistryKey
-	SpecRegistryKey = "spec_registry_key"
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
+var (
+	// ParamsKey
+	ParamsKey = collections.NewPrefix(11)
+
+	// RegistryKey
+	QueryRegistryKey = collections.NewPrefix(12)
+
+	// SpecRegistryKey
+	SpecRegistryKey = collections.NewPrefix(13)
+)

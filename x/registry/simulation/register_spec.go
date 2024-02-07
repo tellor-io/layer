@@ -19,7 +19,7 @@ func SimulateMsgRegisterSpec(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgRegisterSpec{
-			Creator: simAccount.Address.String(),
+			Registrar: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the RegisterSpec simulation
