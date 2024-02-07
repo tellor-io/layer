@@ -22,9 +22,12 @@ import (
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	helper "github.com/tellor-io/layer/lib/prices"
+	"github.com/tellor-io/layer/x/oracle/utils"
 )
 
 const addressPrefix = "tellor"
+
+var gas = uint64(300000)
 
 type Client struct {
 	// Query clients
@@ -125,74 +128,71 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("error getting address from keyring: %v", err))
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	accAddr := c.cosmosCtx.GetFromAddress()
-	c.logger.Info("SubmitReport", "AccountAddress", accAddr.String())
+	c.logger.Info("SubmitReport", "Account address to sign messages", accAddr.String())
 
-	query := &oracletypes.QueryCurrentCyclelistQueryRequest{}
-	response, err := c.OracleQueryClient.CurrentCyclelistQuery(ctx, query)
+	response, err := c.OracleQueryClient.CurrentCyclelistQuery(ctx, &oracletypes.QueryCurrentCyclelistQueryRequest{})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error calling 'CurrentCyclelistQuery': %v", err)
 	}
-	c.logger.Info("GetNextCycleQuery", "response", response)
-
+	c.logger.Info("SubmitReport", "next query in cycle list", response)
+	time.Sleep(2 * time.Second)
 	value, err := c.median(ctx, response.Querydata)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting median from median client': %v", err)
 	}
-	valueDecoded, err := hex.DecodeString(value)
-	sigbytes, _, _ := c.cosmosCtx.Keyring.SignByAddress(accAddr, valueDecoded, signing.SignMode_SIGN_MODE_DIRECT)
+	c.logger.Info("SubmitReport", "Median value", value)
+	// Salt and hash the value
+	salt, err := utils.Salt(32)
+	hash := utils.CalculateCommitment(value, salt)
 	//
 	//
 	// MsgCommitReport
-	c.logger.Info("SubmitReport", "MedianValueHex", value)
-
 	msgCommit := &oracletypes.MsgCommitReport{
 		Creator:   accAddr.String(),
 		QueryData: response.Querydata,
-		Hash:      hex.EncodeToString(sigbytes),
+		Hash:      hash,
 	}
 	txf := newFactory(c.cosmosCtx)
 
 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting account number sequence for 'MsgCommitReport': %v", err)
 	}
-	c.logger.Info("AccountSequence", "SequenceCommitReport", seq)
-
 	txf = txf.WithSequence(seq)
 	txf, err = txf.Prepare(c.cosmosCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error preparing transaction during 'MsgCommitReport': %v", err)
 	}
-	_, adjusted, err := tx.CalculateGas(c.cosmosCtx, txf, msgCommit)
-	if err != nil {
-		return err
-	}
-	// adjusted += 20000
-	txf = txf.WithGas(adjusted)
+	// _, adjusted, err := tx.CalculateGas(c.cosmosCtx, txf, msgCommit)
+	// if err != nil {
+	// 	return fmt.Errorf("Error calculating commit report transaction gas: %v", err)
+	// }
+	gas += 10000
+	txf = txf.WithGas(gas)
 
 	txn, err := txf.BuildUnsignedTx(msgCommit)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error building 'MsgCommitReport' unsigned transaction: %v", err)
 	}
 	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-		return err
+		return fmt.Errorf("Error when signing 'MsgCommitReport' transaction: %v", err)
 	}
 
 	txBytes, err := c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
 	if err != nil {
-		return err
+		return fmt.Errorf("Error encoding 'MsgCommitReport' transaction: %v", err)
 	}
 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
-		return err
+		return fmt.Errorf("Error broadcasting 'MsgCommitReport' transaction after 'handleBroadcastResult': %v", err)
 	}
 	txnResult, err := c.WaitForTx(ctx, res.TxHash)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error waiting for 'MsgCommitReport' transaction: %v", err)
 	}
 	c.logger.Info("CommitReportTxResult", "TxResult", txnResult)
 	//
@@ -202,62 +202,53 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 		Creator:   accAddr.String(),
 		QueryData: response.Querydata,
 		Value:     value,
+		Salt:      salt,
 	}
 
-	c.logger.Info("msgSubmit", "Broadcasting commit report message", "msg", msgSubmit)
-
-	_, seq, err = c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
-	if err != nil {
-		return err
-	}
-	c.logger.Info("AccountSequence", "SequenceSubmitValue", seq)
+	// _, seq, err = c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
+	// if err != nil {
+	// 	return fmt.Errorf("Error getting account number sequence for 'MsgSubmitValue': %v", err)
+	// }
+	seq += 1
 	txf = txf.WithSequence(seq)
 	txf, err = txf.Prepare(c.cosmosCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error preparing transaction during 'MsgCommitReport': %v", err)
 	}
-	_, adjusted, err = tx.CalculateGas(c.cosmosCtx, txf, msgSubmit)
-	if err != nil {
-		return err
-	}
-	// adjusted += 20000
-	txf = txf.WithGas(adjusted)
+	// _, adjusted, err = tx.CalculateGas(c.cosmosCtx, txf, msgSubmit)
+	// if err != nil {
+	// 	return fmt.Errorf("Error calculating submit value transaction gas: %v", err)
+	// }
+	txf = txf.WithGas(gas)
 	txn, err = txf.BuildUnsignedTx(msgSubmit)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error building 'MsgSubmitValue' unsigned transaction: %v", err)
 	}
 	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-		return err
+		return fmt.Errorf("Error when signing 'MsgSubmitValue' transaction: %v", err)
 	}
-
 	txBytes, err = c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
 	if err != nil {
-		return err
+		return fmt.Errorf("Error encoding 'MsgSubmitValue' transaction: %v", err)
 	}
-
 	// broadcast to a CometBFT node
 	res, err = c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
-		return err
+		return fmt.Errorf("Error broadcasting 'MsgSubmitValue' transaction after 'handleBroadcastResult': %v", err)
 	}
 	txnResult, err = c.WaitForTx(ctx, res.TxHash)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error waiting for 'MsgSubmitValue' transaction: %v", err)
 	}
 	c.logger.Info("SubmitValueTxResult", "TxResult", txnResult)
 	return nil
 }
 
-const (
-	defaultGasAdjustment = 1.1
-	defaultGasLimit      = 1000000
-)
-
 func newFactory(clientCtx client.Context) tx.Factory {
 	return tx.Factory{}.
 		WithChainID(clientCtx.ChainID).
 		WithKeybase(clientCtx.Keyring).
-		WithGasAdjustment(defaultGasAdjustment).
+		WithGasAdjustment(1.1).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
 		WithAccountRetriever(clientCtx.AccountRetriever).
 		WithTxConfig(clientCtx.TxConfig)

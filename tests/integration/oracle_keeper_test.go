@@ -1,7 +1,6 @@
 package integration_test
 
 import (
-	"encoding/hex"
 	"time"
 
 	"testing"
@@ -183,11 +182,9 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	msgServer.Tip(s.ctx, &types.MsgTip{Tipper: accs[0].String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
 	for _, r := range reporters {
 		s.T().Run(r.name, func(t *testing.T) {
-			valueDecoded, err := hex.DecodeString(r.value) // convert hex value to bytes
-			s.Nil(err)
 			salt, err := utils.Salt(32)
 			s.Nil(err)
-			hash := utils.CalculateCommitment(string(valueDecoded), salt)
+			hash := utils.CalculateCommitment(r.value, salt)
 			s.Nil(err)
 			commit, reveal := report(accs[r.reporterIndex].String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.CommitReport(s.ctx, &commit)
@@ -210,9 +207,9 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 
 func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
-		Creator:     creator,
-		QueryData:   qdata,
-		Hash: hash,
+		Creator:   creator,
+		QueryData: qdata,
+		Hash:      hash,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
@@ -400,11 +397,9 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	_, err := msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
-	s.Nil(err)
 	salt, err := utils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(value, salt)
 	s.Nil(err)
 	// commit report with query data in cycle list
 	commit, _ := report(accs[0].String(), value, salt, hash, queryData1)
