@@ -6,6 +6,9 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -28,129 +31,21 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-type MsgRegisterQuery struct {
-	Creator    string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	QueryType  string   `protobuf:"bytes,2,opt,name=queryType,proto3" json:"queryType,omitempty"`
-	DataTypes  []string `protobuf:"bytes,3,rep,name=dataTypes,proto3" json:"dataTypes,omitempty"`
-	DataFields []string `protobuf:"bytes,4,rep,name=dataFields,proto3" json:"dataFields,omitempty"`
-}
-
-func (m *MsgRegisterQuery) Reset()         { *m = MsgRegisterQuery{} }
-func (m *MsgRegisterQuery) String() string { return proto.CompactTextString(m) }
-func (*MsgRegisterQuery) ProtoMessage()    {}
-func (*MsgRegisterQuery) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6dfd681be11a64dd, []int{0}
-}
-func (m *MsgRegisterQuery) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgRegisterQuery) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgRegisterQuery.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgRegisterQuery) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRegisterQuery.Merge(m, src)
-}
-func (m *MsgRegisterQuery) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgRegisterQuery) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRegisterQuery.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgRegisterQuery proto.InternalMessageInfo
-
-func (m *MsgRegisterQuery) GetCreator() string {
-	if m != nil {
-		return m.Creator
-	}
-	return ""
-}
-
-func (m *MsgRegisterQuery) GetQueryType() string {
-	if m != nil {
-		return m.QueryType
-	}
-	return ""
-}
-
-func (m *MsgRegisterQuery) GetDataTypes() []string {
-	if m != nil {
-		return m.DataTypes
-	}
-	return nil
-}
-
-func (m *MsgRegisterQuery) GetDataFields() []string {
-	if m != nil {
-		return m.DataFields
-	}
-	return nil
-}
-
-type MsgRegisterQueryResponse struct {
-	QueryId string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
-}
-
-func (m *MsgRegisterQueryResponse) Reset()         { *m = MsgRegisterQueryResponse{} }
-func (m *MsgRegisterQueryResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgRegisterQueryResponse) ProtoMessage()    {}
-func (*MsgRegisterQueryResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6dfd681be11a64dd, []int{1}
-}
-func (m *MsgRegisterQueryResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgRegisterQueryResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgRegisterQueryResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgRegisterQueryResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRegisterQueryResponse.Merge(m, src)
-}
-func (m *MsgRegisterQueryResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgRegisterQueryResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRegisterQueryResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgRegisterQueryResponse proto.InternalMessageInfo
-
-func (m *MsgRegisterQueryResponse) GetQueryId() string {
-	if m != nil {
-		return m.QueryId
-	}
-	return ""
-}
-
+// MsgRegisterSpec defines the Msg/RegisterSpec request type.
 type MsgRegisterSpec struct {
-	Creator   string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	QueryType string   `protobuf:"bytes,2,opt,name=queryType,proto3" json:"queryType,omitempty"`
-	Spec      DataSpec `protobuf:"bytes,3,opt,name=spec,proto3" json:"spec"`
+	// address that registers the data spec
+	Registrar string `protobuf:"bytes,1,opt,name=registrar,proto3" json:"registrar,omitempty"`
+	// name of the query type (ie. "SpotPrice")
+	QueryType string `protobuf:"bytes,2,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
+	// data spec
+	Spec DataSpec `protobuf:"bytes,3,opt,name=spec,proto3" json:"spec"`
 }
 
 func (m *MsgRegisterSpec) Reset()         { *m = MsgRegisterSpec{} }
 func (m *MsgRegisterSpec) String() string { return proto.CompactTextString(m) }
 func (*MsgRegisterSpec) ProtoMessage()    {}
 func (*MsgRegisterSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6dfd681be11a64dd, []int{2}
+	return fileDescriptor_6dfd681be11a64dd, []int{0}
 }
 func (m *MsgRegisterSpec) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -179,9 +74,9 @@ func (m *MsgRegisterSpec) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterSpec proto.InternalMessageInfo
 
-func (m *MsgRegisterSpec) GetCreator() string {
+func (m *MsgRegisterSpec) GetRegistrar() string {
 	if m != nil {
-		return m.Creator
+		return m.Registrar
 	}
 	return ""
 }
@@ -200,6 +95,7 @@ func (m *MsgRegisterSpec) GetSpec() DataSpec {
 	return DataSpec{}
 }
 
+// MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
 type MsgRegisterSpecResponse struct {
 }
 
@@ -207,7 +103,7 @@ func (m *MsgRegisterSpecResponse) Reset()         { *m = MsgRegisterSpecResponse
 func (m *MsgRegisterSpecResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRegisterSpecResponse) ProtoMessage()    {}
 func (*MsgRegisterSpecResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6dfd681be11a64dd, []int{3}
+	return fileDescriptor_6dfd681be11a64dd, []int{1}
 }
 func (m *MsgRegisterSpecResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -236,40 +132,144 @@ func (m *MsgRegisterSpecResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgRegisterSpecResponse proto.InternalMessageInfo
 
+// MsgUpdateDataSpec is the Msg/UpdateDataSpec request type.
+type MsgUpdateDataSpec struct {
+	// authority is the address that is allowed calling this msg.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// query type to update
+	QueryType string `protobuf:"bytes,2,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
+	// data spec update
+	Spec DataSpec `protobuf:"bytes,3,opt,name=spec,proto3" json:"spec"`
+}
+
+func (m *MsgUpdateDataSpec) Reset()         { *m = MsgUpdateDataSpec{} }
+func (m *MsgUpdateDataSpec) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDataSpec) ProtoMessage()    {}
+func (*MsgUpdateDataSpec) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6dfd681be11a64dd, []int{2}
+}
+func (m *MsgUpdateDataSpec) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDataSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDataSpec.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDataSpec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDataSpec.Merge(m, src)
+}
+func (m *MsgUpdateDataSpec) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDataSpec) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDataSpec.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDataSpec proto.InternalMessageInfo
+
+func (m *MsgUpdateDataSpec) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateDataSpec) GetQueryType() string {
+	if m != nil {
+		return m.QueryType
+	}
+	return ""
+}
+
+func (m *MsgUpdateDataSpec) GetSpec() DataSpec {
+	if m != nil {
+		return m.Spec
+	}
+	return DataSpec{}
+}
+
+type MsgUpdateDataSpecResponse struct {
+}
+
+func (m *MsgUpdateDataSpecResponse) Reset()         { *m = MsgUpdateDataSpecResponse{} }
+func (m *MsgUpdateDataSpecResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateDataSpecResponse) ProtoMessage()    {}
+func (*MsgUpdateDataSpecResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6dfd681be11a64dd, []int{3}
+}
+func (m *MsgUpdateDataSpecResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateDataSpecResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateDataSpecResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateDataSpecResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateDataSpecResponse.Merge(m, src)
+}
+func (m *MsgUpdateDataSpecResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateDataSpecResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateDataSpecResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateDataSpecResponse proto.InternalMessageInfo
+
 func init() {
-	proto.RegisterType((*MsgRegisterQuery)(nil), "layer.registry.MsgRegisterQuery")
-	proto.RegisterType((*MsgRegisterQueryResponse)(nil), "layer.registry.MsgRegisterQueryResponse")
 	proto.RegisterType((*MsgRegisterSpec)(nil), "layer.registry.MsgRegisterSpec")
 	proto.RegisterType((*MsgRegisterSpecResponse)(nil), "layer.registry.MsgRegisterSpecResponse")
+	proto.RegisterType((*MsgUpdateDataSpec)(nil), "layer.registry.MsgUpdateDataSpec")
+	proto.RegisterType((*MsgUpdateDataSpecResponse)(nil), "layer.registry.MsgUpdateDataSpecResponse")
 }
 
 func init() { proto.RegisterFile("layer/registry/tx.proto", fileDescriptor_6dfd681be11a64dd) }
 
 var fileDescriptor_6dfd681be11a64dd = []byte{
-	// 356 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0xcf, 0x4a, 0xc3, 0x40,
-	0x10, 0xc6, 0xb3, 0xa6, 0x28, 0x1d, 0xff, 0x12, 0x84, 0xae, 0x41, 0xb6, 0x21, 0x17, 0x0b, 0x62,
-	0x02, 0xd5, 0x27, 0x28, 0x2a, 0x78, 0xe8, 0xc1, 0xe8, 0x41, 0xf4, 0x20, 0x69, 0xba, 0xc4, 0x40,
-	0x74, 0xe3, 0xee, 0x16, 0x9a, 0x83, 0x77, 0x8f, 0x3e, 0x90, 0x0f, 0xd0, 0x63, 0x8f, 0x9e, 0x44,
-	0xda, 0x17, 0x91, 0xdd, 0x9a, 0xda, 0xe4, 0x60, 0xc1, 0xdb, 0xce, 0xfc, 0xbe, 0x99, 0xfd, 0x76,
-	0x76, 0xa0, 0x91, 0x86, 0x39, 0xe5, 0x3e, 0xa7, 0x71, 0x22, 0x24, 0xcf, 0x7d, 0x39, 0xf4, 0x32,
-	0xce, 0x24, 0xb3, 0xb6, 0x34, 0xf0, 0x0a, 0x60, 0xef, 0xc6, 0x2c, 0x66, 0x1a, 0xf9, 0xea, 0x34,
-	0x53, 0xd9, 0xa4, 0x52, 0xde, 0x0f, 0x65, 0x78, 0x2f, 0x32, 0x1a, 0xcd, 0xb8, 0xfb, 0x8a, 0x60,
-	0xa7, 0x2b, 0xe2, 0x40, 0x73, 0xca, 0x2f, 0x07, 0x94, 0xe7, 0x16, 0x86, 0xb5, 0x88, 0xd3, 0x50,
-	0x32, 0x8e, 0x91, 0x83, 0x5a, 0xf5, 0xa0, 0x08, 0xad, 0x7d, 0xa8, 0x3f, 0x2b, 0xc9, 0x75, 0x9e,
-	0x51, 0xbc, 0xa2, 0xd9, 0x6f, 0x42, 0x51, 0xd5, 0x5f, 0x9d, 0x05, 0x36, 0x1d, 0x53, 0xd1, 0x79,
-	0xc2, 0x22, 0x00, 0x2a, 0x38, 0x4f, 0x68, 0xda, 0x17, 0xb8, 0xa6, 0xf1, 0x42, 0xc6, 0x3d, 0x01,
-	0x5c, 0x75, 0x12, 0x50, 0x91, 0xb1, 0x27, 0x41, 0x95, 0x23, 0x7d, 0xcd, 0x45, 0xbf, 0x70, 0xf4,
-	0x13, 0xba, 0x2f, 0xb0, 0xbd, 0x50, 0x75, 0x95, 0xd1, 0xe8, 0xdf, 0xf6, 0xdb, 0x50, 0x53, 0x93,
-	0xc1, 0xa6, 0x83, 0x5a, 0xeb, 0x6d, 0xec, 0x95, 0x07, 0xec, 0x9d, 0x86, 0x32, 0x54, 0xfd, 0x3b,
-	0xb5, 0xd1, 0x67, 0xd3, 0x08, 0xb4, 0xd6, 0xdd, 0x83, 0x46, 0xe5, 0xfa, 0xc2, 0x73, 0xfb, 0x1d,
-	0x81, 0xd9, 0x15, 0xb1, 0x75, 0x07, 0x9b, 0xe5, 0xf1, 0x3a, 0xd5, 0xce, 0xd5, 0x67, 0xdb, 0xad,
-	0x65, 0x8a, 0xf9, 0x60, 0x6e, 0x60, 0xa3, 0xf4, 0xf6, 0xe6, 0x1f, 0x95, 0x4a, 0x60, 0x1f, 0x2c,
-	0x11, 0x14, 0x9d, 0x3b, 0x67, 0xa3, 0x09, 0x41, 0xe3, 0x09, 0x41, 0x5f, 0x13, 0x82, 0xde, 0xa6,
-	0xc4, 0x18, 0x4f, 0x89, 0xf1, 0x31, 0x25, 0xc6, 0xed, 0x61, 0x9c, 0xc8, 0x87, 0x41, 0xcf, 0x8b,
-	0xd8, 0xa3, 0x2f, 0x69, 0x9a, 0x32, 0x7e, 0x94, 0x30, 0x7f, 0xb6, 0x68, 0xc3, 0x85, 0x4d, 0x55,
-	0xbf, 0xde, 0x5b, 0xd5, 0x7b, 0x76, 0xfc, 0x1d, 0x00, 0x00, 0xff, 0xff, 0xac, 0xf4, 0x28, 0x5e,
-	0xc8, 0x02, 0x00, 0x00,
+	// 426 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x52, 0x31, 0xcf, 0xd2, 0x40,
+	0x18, 0xee, 0x09, 0x31, 0xe1, 0x34, 0x18, 0x1a, 0x12, 0x4a, 0x8d, 0x05, 0xbb, 0x88, 0x18, 0x7a,
+	0x11, 0xa3, 0x83, 0x9b, 0x44, 0x47, 0x96, 0xa2, 0x89, 0x71, 0x90, 0x1c, 0xed, 0xe5, 0x68, 0x42,
+	0xb9, 0x7a, 0x77, 0x18, 0xba, 0x3a, 0x3a, 0xf9, 0x43, 0x1c, 0x18, 0xdc, 0x5d, 0x19, 0x89, 0x89,
+	0x89, 0x93, 0xf9, 0x02, 0x03, 0x7f, 0xe3, 0x4b, 0xaf, 0x2d, 0x84, 0xf2, 0x25, 0x4c, 0xdf, 0xd2,
+	0xf6, 0xde, 0xe7, 0xb9, 0xf7, 0x79, 0x9f, 0xf7, 0x29, 0x6c, 0xcc, 0x70, 0x4c, 0x38, 0xe2, 0x84,
+	0x06, 0x42, 0xf2, 0x18, 0xc9, 0xa5, 0x13, 0x71, 0x26, 0x99, 0x5e, 0x55, 0x80, 0x93, 0x03, 0x66,
+	0x0d, 0x87, 0xc1, 0x9c, 0x21, 0xf5, 0x4c, 0x29, 0x66, 0xc3, 0x63, 0x22, 0x64, 0x02, 0x85, 0x82,
+	0xa2, 0xaf, 0xcf, 0x93, 0x57, 0x06, 0x34, 0x53, 0x60, 0xac, 0x4e, 0x28, 0x3d, 0x64, 0x50, 0x9d,
+	0x32, 0xca, 0xd2, 0x7a, 0xf2, 0x95, 0x55, 0xad, 0xc2, 0x14, 0x3e, 0x96, 0x78, 0x2c, 0x22, 0xe2,
+	0xa5, 0xb8, 0xfd, 0x13, 0xc0, 0x07, 0x43, 0x41, 0x5d, 0x85, 0x13, 0x3e, 0x8a, 0x88, 0xa7, 0xbf,
+	0x82, 0x95, 0x8c, 0x8f, 0xb9, 0x01, 0xda, 0xa0, 0x53, 0x19, 0x18, 0x7f, 0x7e, 0xf5, 0xea, 0x99,
+	0xdc, 0x1b, 0xdf, 0xe7, 0x44, 0x88, 0x91, 0xe4, 0xc1, 0x9c, 0xba, 0x47, 0xaa, 0xfe, 0x08, 0xc2,
+	0x2f, 0x0b, 0xc2, 0xe3, 0xb1, 0x8c, 0x23, 0x62, 0xdc, 0x49, 0x2e, 0xba, 0x15, 0x55, 0x79, 0x1f,
+	0x47, 0x44, 0xef, 0xc3, 0x72, 0x22, 0x6c, 0x94, 0xda, 0xa0, 0x73, 0xaf, 0x6f, 0x38, 0xa7, 0x6b,
+	0x70, 0xde, 0x62, 0x89, 0x13, 0xf9, 0x41, 0x79, 0xfd, 0xbf, 0xa5, 0xb9, 0x8a, 0xfb, 0xba, 0xfa,
+	0x6d, 0xbf, 0xea, 0x1e, 0x25, 0xec, 0x26, 0x6c, 0x14, 0xa6, 0x75, 0x89, 0x88, 0xd8, 0x5c, 0x10,
+	0xfb, 0x2f, 0x80, 0xb5, 0xa1, 0xa0, 0x1f, 0x22, 0x1f, 0x4b, 0x92, 0x37, 0x4b, 0xbc, 0xe0, 0x85,
+	0x9c, 0x32, 0x1e, 0xc8, 0xf8, 0xb2, 0x97, 0x03, 0xf5, 0x36, 0xbc, 0xbc, 0x54, 0x5e, 0x0e, 0x12,
+	0xdf, 0xf7, 0xab, 0xae, 0x9d, 0xa6, 0xb3, 0x3c, 0xe6, 0x73, 0xe6, 0xc0, 0x7e, 0x08, 0x9b, 0x67,
+	0xc5, 0xdc, 0x74, 0xff, 0x37, 0x80, 0xa5, 0xa1, 0xa0, 0xfa, 0x47, 0x78, 0xff, 0x24, 0xc2, 0x56,
+	0x71, 0xa2, 0xc2, 0xd6, 0xcc, 0x27, 0x17, 0x08, 0xb9, 0x82, 0xfe, 0x19, 0x56, 0x0b, 0x2b, 0x7d,
+	0x7c, 0xc3, 0xd5, 0x53, 0x8a, 0xf9, 0xf4, 0x22, 0x25, 0xef, 0x3f, 0x78, 0xb7, 0xde, 0x5a, 0x60,
+	0xb3, 0xb5, 0xc0, 0xd5, 0xd6, 0x02, 0x3f, 0x76, 0x96, 0xb6, 0xd9, 0x59, 0xda, 0xbf, 0x9d, 0xa5,
+	0x7d, 0x7a, 0x46, 0x03, 0x39, 0x5d, 0x4c, 0x1c, 0x8f, 0x85, 0x48, 0x92, 0xd9, 0x8c, 0xf1, 0x5e,
+	0xc0, 0xd0, 0xd9, 0xc6, 0x92, 0x80, 0xc4, 0xe4, 0xae, 0xfa, 0x9d, 0x5f, 0x5c, 0x07, 0x00, 0x00,
+	0xff, 0xff, 0x24, 0xda, 0xce, 0x04, 0x76, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -284,8 +284,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	RegisterQuery(ctx context.Context, in *MsgRegisterQuery, opts ...grpc.CallOption) (*MsgRegisterQueryResponse, error)
+	// RegisterSpec defines a method for registering a new data specification.
 	RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts ...grpc.CallOption) (*MsgRegisterSpecResponse, error)
+	// UpdateDataSpec defines a method for updating an existing data specification.
+	UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, opts ...grpc.CallOption) (*MsgUpdateDataSpecResponse, error)
 }
 
 type msgClient struct {
@@ -294,15 +296,6 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
-}
-
-func (c *msgClient) RegisterQuery(ctx context.Context, in *MsgRegisterQuery, opts ...grpc.CallOption) (*MsgRegisterQueryResponse, error) {
-	out := new(MsgRegisterQueryResponse)
-	err := c.cc.Invoke(ctx, "/layer.registry.Msg/RegisterQuery", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *msgClient) RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts ...grpc.CallOption) (*MsgRegisterSpecResponse, error) {
@@ -314,43 +307,36 @@ func (c *msgClient) RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts 
 	return out, nil
 }
 
+func (c *msgClient) UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, opts ...grpc.CallOption) (*MsgUpdateDataSpecResponse, error) {
+	out := new(MsgUpdateDataSpecResponse)
+	err := c.cc.Invoke(ctx, "/layer.registry.Msg/UpdateDataSpec", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	RegisterQuery(context.Context, *MsgRegisterQuery) (*MsgRegisterQueryResponse, error)
+	// RegisterSpec defines a method for registering a new data specification.
 	RegisterSpec(context.Context, *MsgRegisterSpec) (*MsgRegisterSpecResponse, error)
+	// UpdateDataSpec defines a method for updating an existing data specification.
+	UpdateDataSpec(context.Context, *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) RegisterQuery(ctx context.Context, req *MsgRegisterQuery) (*MsgRegisterQueryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RegisterQuery not implemented")
-}
 func (*UnimplementedMsgServer) RegisterSpec(ctx context.Context, req *MsgRegisterSpec) (*MsgRegisterSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterSpec not implemented")
+}
+func (*UnimplementedMsgServer) UpdateDataSpec(ctx context.Context, req *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateDataSpec not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_RegisterQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRegisterQuery)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).RegisterQuery(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.registry.Msg/RegisterQuery",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RegisterQuery(ctx, req.(*MsgRegisterQuery))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_RegisterSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -371,106 +357,39 @@ func _Msg_RegisterSpec_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateDataSpec_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateDataSpec)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateDataSpec(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.registry.Msg/UpdateDataSpec",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateDataSpec(ctx, req.(*MsgUpdateDataSpec))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.registry.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RegisterQuery",
-			Handler:    _Msg_RegisterQuery_Handler,
-		},
-		{
 			MethodName: "RegisterSpec",
 			Handler:    _Msg_RegisterSpec_Handler,
+		},
+		{
+			MethodName: "UpdateDataSpec",
+			Handler:    _Msg_UpdateDataSpec_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "layer/registry/tx.proto",
-}
-
-func (m *MsgRegisterQuery) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgRegisterQuery) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgRegisterQuery) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.DataFields) > 0 {
-		for iNdEx := len(m.DataFields) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.DataFields[iNdEx])
-			copy(dAtA[i:], m.DataFields[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.DataFields[iNdEx])))
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	if len(m.DataTypes) > 0 {
-		for iNdEx := len(m.DataTypes) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.DataTypes[iNdEx])
-			copy(dAtA[i:], m.DataTypes[iNdEx])
-			i = encodeVarintTx(dAtA, i, uint64(len(m.DataTypes[iNdEx])))
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if len(m.QueryType) > 0 {
-		i -= len(m.QueryType)
-		copy(dAtA[i:], m.QueryType)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.QueryType)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Creator) > 0 {
-		i -= len(m.Creator)
-		copy(dAtA[i:], m.Creator)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgRegisterQueryResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgRegisterQueryResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgRegisterQueryResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.QueryId) > 0 {
-		i -= len(m.QueryId)
-		copy(dAtA[i:], m.QueryId)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.QueryId)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *MsgRegisterSpec) Marshal() (dAtA []byte, err error) {
@@ -510,10 +429,10 @@ func (m *MsgRegisterSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Creator) > 0 {
-		i -= len(m.Creator)
-		copy(dAtA[i:], m.Creator)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+	if len(m.Registrar) > 0 {
+		i -= len(m.Registrar)
+		copy(dAtA[i:], m.Registrar)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Registrar)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -543,6 +462,76 @@ func (m *MsgRegisterSpecResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpdateDataSpec) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDataSpec) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDataSpec) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Spec.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.QueryType) > 0 {
+		i -= len(m.QueryType)
+		copy(dAtA[i:], m.QueryType)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.QueryType)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateDataSpecResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateDataSpecResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateDataSpecResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -554,55 +543,13 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgRegisterQuery) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Creator)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.QueryType)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if len(m.DataTypes) > 0 {
-		for _, s := range m.DataTypes {
-			l = len(s)
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	if len(m.DataFields) > 0 {
-		for _, s := range m.DataFields {
-			l = len(s)
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgRegisterQueryResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.QueryId)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
 func (m *MsgRegisterSpec) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.Creator)
+	l = len(m.Registrar)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -624,271 +571,39 @@ func (m *MsgRegisterSpecResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgUpdateDataSpec) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.QueryType)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Spec.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateDataSpecResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MsgRegisterQuery) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRegisterQuery: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRegisterQuery: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Creator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueryType", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.QueryType = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DataTypes", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DataTypes = append(m.DataTypes, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DataFields", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DataFields = append(m.DataFields, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgRegisterQueryResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRegisterQueryResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRegisterQueryResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.QueryId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *MsgRegisterSpec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -921,7 +636,7 @@ func (m *MsgRegisterSpec) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Registrar", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -949,7 +664,7 @@ func (m *MsgRegisterSpec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Creator = string(dAtA[iNdEx:postIndex])
+			m.Registrar = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1064,6 +779,203 @@ func (m *MsgRegisterSpecResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgRegisterSpecResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDataSpec) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDataSpec: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDataSpec: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Spec", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Spec.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateDataSpecResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateDataSpecResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateDataSpecResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

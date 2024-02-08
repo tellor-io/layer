@@ -2,14 +2,15 @@ syntax = "proto3";
 package layer.registry;
 
 import "gogoproto/gogo.proto";
-import "layer/registry/params.proto";
 import "layer/registry/data_spec.proto";
+import "layer/registry/params.proto";
 
 option go_package = "github.com/tellor-io/layer/x/registry/types";
 
 // GenesisState defines the registry module's genesis state.
 message GenesisState {
+  // params defines all the paramaters of the registry module.
   Params params = 1 [(gogoproto.nullable) = false];
+  // Initial data specs
   DataSpec dataspec = 2 [(gogoproto.nullable) = false];
-  string queryData = 3;
 }

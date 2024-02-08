@@ -20,6 +20,7 @@ import (
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/utils"
 )
 
 func (s *IntegrationTestSuite) oracleKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
@@ -146,7 +147,7 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 
 func (s *IntegrationTestSuite) TestMedianReports() {
 	_, msgServer := s.oracleKeeper()
-	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	s.ctx = s.ctx.WithBlockHeight(2)
 	reporters := []struct {
 		name          string
@@ -184,9 +185,11 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 		s.T().Run(r.name, func(t *testing.T) {
 			valueDecoded, err := hex.DecodeString(r.value) // convert hex value to bytes
 			s.Nil(err)
-			signature, err := privKeys[r.reporterIndex].Sign(valueDecoded) // sign value
+			salt, err := utils.Salt(32)
 			s.Nil(err)
-			commit, reveal := report(accs[r.reporterIndex].String(), hex.EncodeToString(signature), r.value, ethQueryData)
+			hash := utils.CalculateCommitment(string(valueDecoded), salt)
+			s.Nil(err)
+			commit, reveal := report(accs[r.reporterIndex].String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.CommitReport(s.ctx, &commit)
 			s.Nil(err)
 			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
@@ -205,16 +208,17 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
 }
 
-func report(creator, signature, value, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
+func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
-		Creator:   creator,
-		QueryData: qdata,
-		Signature: signature,
+		Creator:     creator,
+		QueryData:   qdata,
+		Hash: hash,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
 		QueryData: qdata,
 		Value:     value,
+		Salt:      salt,
 	}
 	return commit, reveal
 }
@@ -383,7 +387,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	_, msgServer := s.oracleKeeper()
-	accs, _, privKeys := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
 	queryData1 := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
@@ -396,20 +400,22 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	_, err := msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	valueDecoded, err := hex.DecodeString(value)
+	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
 	s.Nil(err)
-	signature, err := privKeys[0].Sign(valueDecoded) // sign value
+	salt, err := utils.Salt(32)
+	s.Nil(err)
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
 	s.Nil(err)
 	// commit report with query data in cycle list
-	commit, _ := report(accs[0].String(), hex.EncodeToString(signature), value, queryData1)
+	commit, _ := report(accs[0].String(), value, salt, hash, queryData1)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list but has a tip
-	commit, _ = report(accs[0].String(), hex.EncodeToString(signature), value, queryData2)
+	commit, _ = report(accs[0].String(), value, salt, hash, queryData2)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list and has no tip
-	commit, _ = report(accs[0].String(), hex.EncodeToString(signature), value, queryData3)
+	commit, _ = report(accs[0].String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.ErrorContains(err, "query data does not have tips/not in cycle")
 }

@@ -59,17 +59,6 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	operations := make([]simtypes.WeightedOperation, 0)
 
-	var weightMsgRegisterQuery int
-	simState.AppParams.GetOrGenerate(opWeightMsgRegisterQuery, &weightMsgRegisterQuery, nil,
-		func(_ *rand.Rand) {
-			weightMsgRegisterQuery = defaultWeightMsgRegisterQuery
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgRegisterQuery,
-		registrysimulation.SimulateMsgRegisterQuery(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
 	var weightMsgRegisterSpec int
 	simState.AppParams.GetOrGenerate(opWeightMsgRegisterSpec, &weightMsgRegisterSpec, nil,
 		func(_ *rand.Rand) {
@@ -89,14 +78,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // ProposalMsgs returns msgs used for governance proposals for simulations.
 func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
 	return []simtypes.WeightedProposalMsg{
-		simulation.NewWeightedProposalMsg(
-			opWeightMsgRegisterQuery,
-			defaultWeightMsgRegisterQuery,
-			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				registrysimulation.SimulateMsgRegisterQuery(am.accountKeeper, am.bankKeeper, am.keeper)
-				return nil
-			},
-		),
 		simulation.NewWeightedProposalMsg(
 			opWeightMsgRegisterSpec,
 			defaultWeightMsgRegisterSpec,

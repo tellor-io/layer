@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -15,9 +15,7 @@ import (
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Check if query data begins with 0x and remove it
-	if rk.Has0xPrefix(msg.QueryData) {
-		msg.QueryData = msg.QueryData[2:]
-	}
+	msg.QueryData = regtypes.Remove0xPrefix(msg.QueryData)
 	// Try to decode query data from hex string
 	queryData, err := hex.DecodeString(msg.QueryData)
 	if err != nil {
@@ -35,15 +33,18 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if err != nil {
 		return nil, err
 	}
+	if validator.IsJailed() {
+		return nil, status.Error(codes.Unavailable, "validator is jailed")
+	}
 	if !validator.IsBonded() {
 		return nil, status.Error(codes.Unavailable, "validator is not bonded")
 	}
 	queryId := HashQueryData(queryData)
 	report := types.CommitReport{
 		Report: &types.Commit{
-			Creator:   msg.Creator,
-			QueryId:   queryId,
-			Signature: msg.Signature,
+			Creator: msg.Creator,
+			QueryId: queryId,
+			Hash:    msg.Hash,
 		},
 		Block: ctx.BlockHeight(),
 	}

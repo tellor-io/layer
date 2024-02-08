@@ -61,12 +61,13 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
+	_ "github.com/tellor-io/layer/x/registry/module"
+
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/oracle"
 
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/registry"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"testing"
@@ -155,11 +156,10 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	suite.registrykeeper = *registrykeeper.NewKeeper(
+	suite.registrykeeper = registrykeeper.NewKeeper(
 		appCodec,
-		suite.fetchStoreKey(registrytypes.StoreKey),
-		suite.fetchStoreKey(registrytypes.StoreKey),
-		paramtypes.Subspace{},
+		runtime.NewKVStoreService(suite.fetchStoreKey(registrytypes.StoreKey).(*storetypes.KVStoreKey)),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.distrKeeper = distrkeeper.NewKeeper(
@@ -175,7 +175,6 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	registry.AppWiringSetup()
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
 	sdk.DefaultBondDenom = "loya"
@@ -254,13 +253,6 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
 	for i, pk := range pks {
-		// account := authtypes.BaseAccount{
-		// 	Address:       testAddrs[i].String(),
-		// 	PubKey:        codectypes.UnsafePackAny(pk),
-		// 	AccountNumber: s.accountKeeper.NextAccountNumber(ctx),
-		// }
-		// s.accountKeeper.NewAccount(s.ctx, &account)
-
 		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
 
 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})

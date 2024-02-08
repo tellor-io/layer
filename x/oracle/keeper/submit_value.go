@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetSignature(ctx sdk.Context, reporter sdk.AccAddress, queryId []byte) (*types.CommitReport, error) {
+func (k Keeper) GetCommit(ctx sdk.Context, reporter sdk.AccAddress, queryId []byte) (*types.CommitReport, error) {
 	commitStore := k.CommitStore(ctx)
 	commit := commitStore.Get(append(reporter, queryId...))
 	if commit == nil {
@@ -49,16 +50,15 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, q
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
-	dataSpec := k.GetValueType(ctx, queryType)
-	if dataSpec == nil {
+	dataSpec, err := k.GetDataSpec(ctx, queryType)
+	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
 	// decode value using value type from data spec and check if decodes successfully
 	// value is not used, only used to check if it decodes successfully
-	if _, err := decodeValue(val, dataSpec.ValueType); err != nil {
-		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
+	if err := dataSpec.ValidateValue(val); err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to validate value: %v", err))
 	}
-
 	queryId := HashQueryData(queryData)
 	report := &types.MicroReport{
 		Reporter:        reporter.String(),
@@ -133,6 +133,17 @@ func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signatu
 	return true
 }
 
+func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {
+	valueDecoded, err := hex.DecodeString(value)
+	if err != nil {
+		panic(err)
+	}
+	// calculate commitment
+	calculatedCommit := utils.CalculateCommitment(string(valueDecoded), salt)
+	// compare calculated commitment with the one stored
+	return calculatedCommit == hash
+}
+
 func decodeQueryType(data []byte) (string, error) {
 	// Create an ABI arguments object based on the types
 	strArg, err := abi.NewType("string", "string", nil)
@@ -154,35 +165,11 @@ func decodeQueryType(data []byte) (string, error) {
 	return result[0].(string), nil
 }
 
-func decodeValue(value, dataType string) ([]interface{}, error) {
-	argType, err := abi.NewType(dataType, dataType, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new ABI type when decoding value: %v", err)
-	}
-	arg := abi.Argument{
-		Type: argType,
-	}
-	args := abi.Arguments{arg}
-	valueBytes, err := hex.DecodeString(value)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value string: %v", err))
-	}
-	var result []interface{}
-	result, err = args.Unpack(valueBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unpack value: %v", err)
-	}
-	fmt.Println("Decoded value: ", result[0])
-	return result, nil
-}
-
-func (k Keeper) GetValueType(ctx sdk.Context, queryType string) *regTypes.DataSpec {
+func (k Keeper) GetDataSpec(ctx sdk.Context, queryType string) (regTypes.DataSpec, error) {
 	// get data spec from registry by query type to validate value
-	dataSpecBytes := k.registryKeeper.Spec(ctx, queryType)
-	if dataSpecBytes == nil {
-		return nil
+	dataSpec, err := k.registryKeeper.GetSpec(ctx, queryType)
+	if err != nil {
+		return regTypes.DataSpec{}, err
 	}
-	var dataSpec regTypes.DataSpec
-	k.cdc.Unmarshal(dataSpecBytes, &dataSpec)
-	return &dataSpec
+	return dataSpec, nil
 }
