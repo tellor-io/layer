@@ -116,15 +116,21 @@ func (k Keeper) GetBridgeValidatorSet(ctx sdk.Context) (*types.BridgeValidatorSe
 
 // function for loading last saved bridge validator set and comparing it to current set
 func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
+	k.Logger(ctx).Info("@CompareBridgeValidators", "msg", "comparing bridge validators")
 	currentBridgeValidators, err := k.GetBridgeValidatorSet(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No current bridge validator set found")
 		return false, err
 	}
-	k.EncodeAndHashValidatorSet(ctx, currentBridgeValidators)
+	// k.EncodeAndHashValidatorSet(ctx, currentBridgeValidators)
+	k.Logger(ctx).Info("@COMPARE", "msg", "setting bridge validator params")
+	error := k.SetBridgeValidatorParams(ctx, currentBridgeValidators)
+	if error != nil {
+		k.Logger(ctx).Info("Error setting bridge validator params: ", "error", error)
+		return false, error
+	}
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {
-
 		k.Logger(ctx).Info("No saved bridge validator set found")
 		k.BridgeValset.Set(ctx, *currentBridgeValidators)
 		return false, err
@@ -151,16 +157,37 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 	}
 }
 
-// func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) error {
-// 	var totalPower uint64
-// 	for _, validator := range currentBridgeValidators.BridgeValidatorSet {
-// 		totalPower += validator.GetPower()
-// 	}
-// 	powerThreshold := totalPower * 2 / 3
+func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *types.BridgeValidatorSet) error {
+	k.Logger(ctx).Info("@SetBridgeValidatorParams", "msg", "setting bridge validator params")
+	var totalPower uint64
+	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
+		totalPower += validator.GetPower()
+	}
+	powerThreshold := totalPower * 2 / 3
 
-// 	// calculate validator set hash
-// 	validatorSetHash := k.GetBridgeValidatorSetHash(validatorSet)
-// }
+	validatorTimestamp := uint64(ctx.BlockTime().Unix())
+
+	// calculate validator set hash
+	_, validatorSetHash, err := k.EncodeAndHashValidatorSet(ctx, bridgeValidatorSet)
+	if err != nil {
+		k.Logger(ctx).Info("Error encoding and hashing validator set: ", "error", err)
+		return err
+	}
+
+	// calculate validator set checkpoint
+	checkpoint, err := k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, validatorSetHash)
+	if err != nil {
+		k.Logger(ctx).Info("Error calculating validator set checkpoint: ", "error", err)
+		return err
+	}
+
+	k.Logger(ctx).Info("@SetBridgeValidatorParams", "powerThreshold", fmt.Sprint(powerThreshold))
+	k.Logger(ctx).Info("SetBridgeValidatorParams", "validatorTimestamp", fmt.Sprint(validatorTimestamp))
+	k.Logger(ctx).Info("SetBridgeValidatorParams", "validatorSetHash", fmt.Sprintf("%x", validatorSetHash))
+	k.Logger(ctx).Info("SetBridgeValidatorParams", "checkpoint", fmt.Sprintf("%x", checkpoint))
+
+	return nil
+}
 
 // func (k Keeper) GetBridgeValidatorSetHash(validatorSet *types.BridgeValidatorSet) []byte {
 // 	// get keccak256 hash of the validator set
@@ -168,40 +195,103 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 // 	return crypto.Keccak256(validatorSetBytes)
 // }
 
-// func (k Keeper) CalculateValidatorSetCheckpoint(
-//     powerThreshold uint64,
-//     validatorTimestamp uint64,
-//     validatorSetHash []byte,
-// ) ([]byte, error) {
-//     // Convert powerThreshold and validatorTimestamp to *big.Int for ABI encoding
-//     powerThresholdBigInt := new(big.Int).SetUint64(powerThreshold)
-//     validatorTimestampBigInt := new(big.Int).SetUint64(validatorTimestamp)
+func (k Keeper) CalculateValidatorSetCheckpoint(
+	ctx sdk.Context,
+	powerThreshold uint64,
+	validatorTimestamp uint64,
+	validatorSetHash []byte,
+) ([]byte, error) {
+	k.Logger(ctx).Info("@CalculateValidatorSetCheckpoint", "msg", "calculating validator set checkpoint")
 
-//     // Prepare the types for encoding
-//     arguments := abi.Arguments{
-//         {Type: abi.Bytes},
-//         {Type: abi.Uint256},
-//         {Type: abi.Uint256},
-//         {Type: abi.Bytes32},
-//     }
+	// Define the domain separator for the validator set hash, fixed size 32 bytes
+	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
+	var domainSeparatorFixSize [32]byte
+	copy(domainSeparatorFixSize[:], VALIDATOR_SET_HASH_DOMAIN_SEPARATOR)
 
-//     // Encode the arguments
-//     // Note: Ensure VALIDATOR_SET_HASH_DOMAIN_SEPARATOR is correctly defined as per your contract
-//     encodedData, err := arguments.Pack(
-//         VALIDATOR_SET_HASH_DOMAIN_SEPARATOR,
-//         powerThresholdBigInt,
-//         validatorTimestampBigInt,
-//         validatorSetHash,
-//     )
-//     if err != nil {
-//         return nil, err
-//     }
+	// Convert validatorSetHash to a fixed size 32 bytes
+	var validatorSetHashFixSize [32]byte
+	copy(validatorSetHashFixSize[:], validatorSetHash)
 
-//     // Hash the encoded data
-//     return crypto.Keccak256(encodedData), nil
-// }
+	// Convert powerThreshold and validatorTimestamp to *big.Int for ABI encoding
+	powerThresholdBigInt := new(big.Int).SetUint64(powerThreshold)
+	validatorTimestampBigInt := new(big.Int).SetUint64(validatorTimestamp)
 
-func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) ([]byte, []byte, error) {
+	Bytes32Type, err := abi.NewType("bytes32", "", nil)
+	if err != nil {
+		k.Logger(ctx).Warn("Error creating new bytes32 ABI type", "error", err)
+		return nil, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		k.Logger(ctx).Warn("Error creating new uint256 ABI type", "error", err)
+		return nil, err
+	}
+
+	// Prepare the types for encoding
+	arguments := abi.Arguments{
+		{Type: Bytes32Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Bytes32Type},
+	}
+
+	// ********** DELETE THIS, JUST FOR TESTING - START **********
+	arg1 := abi.Arguments{{Type: Bytes32Type}}
+	arg2 := abi.Arguments{{Type: Uint256Type}}
+	arg3 := abi.Arguments{{Type: Uint256Type}}
+	arg4 := abi.Arguments{{Type: Bytes32Type}}
+
+	encodedData1, err := arg1.Pack(domainSeparatorFixSize)
+	if err != nil {
+		k.Logger(ctx).Warn("Error encoding arguments arg1", "error", err)
+		return nil, err
+	}
+	encodedData2, err := arg2.Pack(powerThresholdBigInt)
+	if err != nil {
+		k.Logger(ctx).Warn("Error encoding arguments arg2", "error", err)
+		return nil, err
+	}
+	encodedData3, err := arg3.Pack(validatorTimestampBigInt)
+	if err != nil {
+		k.Logger(ctx).Warn("Error encoding arguments arg3", "error", err)
+		return nil, err
+	}
+	encodedData4, err := arg4.Pack(validatorSetHashFixSize)
+	if err != nil {
+		k.Logger(ctx).Warn("Error encoding arguments arg4", "error", err)
+		return nil, err
+	}
+
+	encodedDataTest := append(encodedData1, encodedData2...)
+	encodedDataTest = append(encodedDataTest, encodedData3...)
+	encodedDataTest = append(encodedDataTest, encodedData4...)
+
+	// ********** DELETE THIS, JUST FOR TESTING - END ************
+
+	// Encode the arguments
+	encodedData, err := arguments.Pack(
+		domainSeparatorFixSize,
+		powerThresholdBigInt,
+		validatorTimestampBigInt,
+		validatorSetHashFixSize,
+	)
+	if err != nil {
+		k.Logger(ctx).Warn("Error encoding arguments", "error", err)
+		return nil, err
+	}
+
+	checkpoint := crypto.Keccak256(encodedData)
+
+	k.Logger(ctx).Info("DOMAIN_SEPARATOR", "DOMAIN_SEPARATOR", fmt.Sprintf("%x", domainSeparatorFixSize))
+	k.Logger(ctx).Info("encodedData", "encodedData", fmt.Sprintf("%x", encodedData))
+	k.Logger(ctx).Info("checkpoint", "checkpoint", fmt.Sprintf("%x", checkpoint))
+
+	// Hash the encoded data
+	return checkpoint, nil
+}
+
+func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
+	k.Logger(ctx).Info("@EncodeAndHashValidatorSet", "msg", "encoding and hashing validator set")
 	// Define Go equivalent of the Solidity Validator struct
 	type Validator struct {
 		Addr  common.Address
@@ -261,7 +351,7 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.B
 	valSetHash := crypto.Keccak256(finalEncoded)
 
 	// print finalEncoded string
-	k.Logger(ctx).Info("finalEncoded", "finalEncoded", fmt.Sprintf("%x", finalEncoded))
+	k.Logger(ctx).Info("finalEncoded valset", "finalEncoded", fmt.Sprintf("%x", finalEncoded))
 	// valsethash string
 	k.Logger(ctx).Info("valsethash", "valsethash", fmt.Sprintf("%x", valSetHash))
 	return finalEncoded, valSetHash, nil
