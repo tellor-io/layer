@@ -7,13 +7,13 @@ import (
 
 var (
 	StaticMarketParamsConfig = map[uint32]*types.MarketParam{
-		exchange_common.USD_ID: {
-			Id:                 exchange_common.USD_ID,
-			Pair:               `"-USD"`,
+		exchange_common.BTCUSD_ID: {
+			Id:                 exchange_common.BTCUSD_ID,
+			Pair:               `"BTC-USD"`,
 			Exponent:           -5,
 			MinExchanges:       1,
 			MinPriceChangePpm:  1000,
-			ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"USDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"USD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"USDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"-USDT\"}]}`,
+			ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"BTCUSDT\\\"\"},{\"exchangeName\":\"BinanceUS\",\"ticker\":\"\\\"BTCUSD\\\"\"},{\"exchangeName\":\"Bitfinex\",\"ticker\":\"tBTCUSD\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"BTC/USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BTCUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BTC-USD\"},{\"exchangeName\":\"CryptoCom\",\"ticker\":\"BTC_USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BTC-USDT\"}]}`,
 			QueryData:          `"00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"`,
 		},
 		exchange_common.ETHUSD_ID: {
