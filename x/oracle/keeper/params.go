@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // SetParams sets the x/oracle module parameters.
@@ -13,9 +13,7 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 		return err
 	}
 	for i, query := range params.CycleList {
-		if rk.Has0xPrefix(query) {
-			query = query[2:]
-		}
+		query = regtypes.Remove0xPrefix(query)
 		params.CycleList[i] = query
 	}
 	store := ctx.KVStore(k.storeKey)

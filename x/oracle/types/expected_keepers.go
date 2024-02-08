@@ -6,11 +6,12 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	rktypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 type RegistryKeeper interface {
 	// Methods imported from registry should be defined here
-	Spec(ctx sdk.Context, queryType string) []byte
+	GetSpec(ctx sdk.Context, queryType string) (rktypes.DataSpec, error)
 }
 type StakingKeeper interface {
 	// Methods imported from staking should be defined here
