@@ -39976,41 +39976,22 @@ paths:
         - Query
   /layer/oracle/get_reportsby_qid/{queryId}:
     get:
-      summary: Queries a list of GetReportsbyQid items.
-      operationId: LayerOracleGetReportsbyQid
+      summary: Queries a list of DecodeQuerydata items.
+      operationId: LayerRegistryDecodeQuerydata
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              reports:
-                type: object
-                properties:
-                  microReports:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        reporter:
-                          type: string
-                        power:
-                          type: string
-                          format: int64
-                        queryType:
-                          type: string
-                        queryId:
-                          type: string
-                        aggregateMethod:
-                          type: string
-                        value:
-                          type: string
-                        blockNumber:
-                          type: string
-                          format: int64
-                        timestamp:
-                          type: string
-                          format: date-time
+              spec:
+                type: string
+                description: >-
+                  spec is the decoded json represention of the query data hex
+                  string.
+            description: >-
+              QueryDecodeQuerydataResponse is response type for the
+              Query/DecodeQuerydata RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -40030,45 +40011,29 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: queryId
+        - name: querydata
+          description: querydata is the query data hex string to be decoded.
           in: path
           required: true
           type: string
       tags:
         - Query
-  /layer/oracle/get_reportsby_reporter/{reporter}:
+  /layer/registry/decode_value/{queryType}/{value}:
     get:
-      operationId: LayerOracleGetReportsbyReporter
+      summary: Queries a list of DecodeValue items.
+      operationId: LayerRegistryDecodeValue
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              microReports:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    reporter:
-                      type: string
-                    power:
-                      type: string
-                      format: int64
-                    queryType:
-                      type: string
-                    queryId:
-                      type: string
-                    aggregateMethod:
-                      type: string
-                    value:
-                      type: string
-                    blockNumber:
-                      type: string
-                      format: int64
-                    timestamp:
-                      type: string
-                      format: date-time
+              decodedValue:
+                type: string
+                description: decodedValue is the decoded value of the hex string.
+            description: >-
+              QueryDecodeValueResponse is response type for the
+              Query/DecodeValue RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -40088,48 +40053,34 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: reporter
+        - name: queryType
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+        - name: value
+          description: value is the value hex string to be decoded.
           in: path
           required: true
           type: string
       tags:
         - Query
-  /layer/oracle/get_reportsby_reporter_qid/{reporter}/{queryId}:
+  /layer/registry/generate_querydata/{querytype}/{parameters}:
     get:
-      operationId: LayerOracleGetReportsbyReporterQid
+      summary: Queries a list of GenerateQuerydata items.
+      operationId: LayerRegistryGenerateQuerydata
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              reports:
-                type: object
-                properties:
-                  microReports:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        reporter:
-                          type: string
-                        power:
-                          type: string
-                          format: int64
-                        queryType:
-                          type: string
-                        queryId:
-                          type: string
-                        aggregateMethod:
-                          type: string
-                        value:
-                          type: string
-                        blockNumber:
-                          type: string
-                          format: int64
-                        timestamp:
-                          type: string
-                          format: date-time
+              querydata:
+                type: string
+                description: querydata is the generated querydata hex string.
+            description: >-
+              QueryGenerateQuerydataResponse is response type for the
+              Query/GenerateQuerydata RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -40149,20 +40100,57 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: reporter
+        - name: querytype
+          description: querytype for which querydata is to be generated.
           in: path
           required: true
           type: string
-        - name: queryId
+        - name: parameters
+          description: parameters for which querydata is to be generated.
           in: path
           required: true
           type: string
       tags:
         - Query
-  /layer/oracle/params:
+  /layer/registry/get_data_spec/{query_type}:
+    get:
+      summary: Queries a list of GetDataSpec items.
+      operationId: LayerRegistryGetDataSpec
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/layer.registry.QueryGetDataSpecResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_type
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: LayerOracleParams
+      operationId: LayerRegistryParams
       responses:
         '200':
           description: A successful response.
@@ -40172,11 +40160,6 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
-                properties:
-                  cycle_list:
-                    type: array
-                    items:
-                      type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -65592,42 +65575,35 @@ definitions:
   layer.oracle.Aggregate:
     type: object
     properties:
-      queryId:
+      name:
         type: string
-      aggregateValue:
+        title: name
+      type:
         type: string
-      aggregateReporter:
-        type: string
-      reporterPower:
-        type: string
-        format: int64
-      standardDeviation:
-        type: number
-        format: double
-      reporters:
+        title: type
+      nested_component:
         type: array
         items:
           type: object
-          properties:
-            reporter:
-              type: string
-            power:
-              type: string
-              format: int64
-      flagged:
-        type: boolean
-      nonce:
-        type: string
-        format: int64
-      aggregateReportIndex:
-        type: string
-        format: int64
-  layer.oracle.AggregateReporter:
+          $ref: '#/definitions/layer.registry.ABIComponent'
+        title: consider taking this recursion out and make it once only
+    title: ABIComponent is a specification for how to interpret abi_components
+  layer.registry.DataSpec:
     type: object
     properties:
-      reporter:
+      document_hash:
         type: string
-      power:
+        title: ipfs hash of the data spec
+      value_type:
+        type: string
+        title: the value's datatype for decoding the value
+      abi_components:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/layer.registry.ABIComponent'
+        title: the abi components for decoding
+      aggregation_method:
         type: string
         format: int64
   layer.oracle.MicroReport:
@@ -65730,114 +65706,81 @@ definitions:
 
               signatures required by gogoproto.
         title: >-
-          Tips is a struct that contains the query data and the amount it was
-          tipped
-  layer.oracle.QueryGetReportsbyQidResponse:
+          how to aggregate the data (ie. average, median, mode, etc) for
+          aggregating reports and arriving at final value
+      registrar:
+        type: string
+        title: address that originally registered the data spec
+      report_buffer_window:
+        type: string
+        title: >-
+          report_buffer_window specifies the duration of the time window
+          following an initial report
+
+          during which additional reports can be submitted. This duration acts
+          as a buffer, allowing
+
+          a collection of related reports in a defined time frame. The window
+          ensures that all
+
+          pertinent reports are aggregated together before arriving at a final
+          value. This defaults
+
+          to 0s if not specified.
+
+          extensions: treat as a golang time.duration, don't allow nil values,
+          don't omit empty values
+    title: DataSpec is a specification for how to interpret and aggregate data
+  layer.registry.MsgRegisterSpecResponse:
+    type: object
+    description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
+  layer.registry.MsgUpdateDataSpecResponse:
+    type: object
+  layer.registry.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.registry.QueryDecodeQuerydataResponse:
     type: object
     properties:
-      reports:
-        type: object
-        properties:
-          microReports:
-            type: array
-            items:
-              type: object
-              properties:
-                reporter:
-                  type: string
-                power:
-                  type: string
-                  format: int64
-                queryType:
-                  type: string
-                queryId:
-                  type: string
-                aggregateMethod:
-                  type: string
-                value:
-                  type: string
-                blockNumber:
-                  type: string
-                  format: int64
-                timestamp:
-                  type: string
-                  format: date-time
-  layer.oracle.QueryGetReportsbyReporterResponse:
+      spec:
+        type: string
+        description: spec is the decoded json represention of the query data hex string.
+    description: >-
+      QueryDecodeQuerydataResponse is response type for the
+      Query/DecodeQuerydata RPC method.
+  layer.registry.QueryDecodeValueResponse:
     type: object
     properties:
-      microReports:
-        type: array
-        items:
-          type: object
-          properties:
-            reporter:
-              type: string
-            power:
-              type: string
-              format: int64
-            queryType:
-              type: string
-            queryId:
-              type: string
-            aggregateMethod:
-              type: string
-            value:
-              type: string
-            blockNumber:
-              type: string
-              format: int64
-            timestamp:
-              type: string
-              format: date-time
-  layer.oracle.QueryGetTimeBasedRewardsResponse:
+      decodedValue:
+        type: string
+        description: decodedValue is the decoded value of the hex string.
+    description: >-
+      QueryDecodeValueResponse is response type for the Query/DecodeValue RPC
+      method.
+  layer.registry.QueryGenerateQuerydataResponse:
     type: object
     properties:
-      reward:
-        type: object
-        properties:
-          denom:
-            type: string
-          amount:
-            type: string
-        description: |-
-          Coin defines a token with a denomination and an amount.
-
-          NOTE: The amount field is an Int which implements the custom method
-          signatures required by gogoproto.
-  layer.oracle.QueryGetUserTipTotalResponse:
+      querydata:
+        type: string
+        description: querydata is the generated querydata hex string.
+    description: >-
+      QueryGenerateQuerydataResponse is response type for the
+      Query/GenerateQuerydata RPC method.
+  layer.registry.QueryGetDataSpecResponse:
     type: object
     properties:
-      totalTips:
-        type: object
-        properties:
-          address:
-            type: string
-          total:
-            type: object
-            properties:
-              denom:
-                type: string
-              amount:
-                type: string
-            description: >-
-              Coin defines a token with a denomination and an amount.
-
-
-              NOTE: The amount field is an Int which implements the custom
-              method
-
-              signatures required by gogoproto.
-  layer.oracle.QueryParamsResponse:
+      spec:
+        $ref: '#/definitions/layer.registry.DataSpec'
+        description: spec is the data spec corresponding to the query type.
+    description: >-
+      QueryGetDataSpecResponse is response type for the Query/GetDataSpec RPC
+      method.
+  layer.registry.QueryParamsResponse:
     type: object
     properties:
       params:
         description: params holds all the parameters of this module.
         type: object
-        properties:
-          cycle_list:
-            type: array
-            items:
-              type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.oracle.Reports:
     type: object
