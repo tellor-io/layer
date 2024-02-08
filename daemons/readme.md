@@ -1,27 +1,8 @@
-# Daemon gRPC Server
+# Daemon
 
 **Note:** Daemon services code was adopted from dydx [](https://github.com/dydxprotocol/v4-chain/tree/main/protocol/daemons) and reconfigured.
 
-## Overview
-
-Implements a gRPC server for daemon processes using Unix Domain Sockets (UDS) for communication.
-
-## Usage
-
-### Starting the Server
-
-```go
-server := NewServer(logger, grpcServer, fileHandler, socketAddress)
-server.Start()
-```
-
-### Stopping the server
-
-```go
-server.Stop()
-```
-
-### Task loops
+## Task loops
 
 ## PriceFetcher
 
@@ -99,3 +80,30 @@ Median server was added for a way to query median values that were from an endpo
 All median values or median value given query data using the following commands respectively.
 `layerd query oracle get-all-median-values`
 `layerd query oracle get-median-value <querydata>`
+
+## How to add a market pair as defaults to be queried with existing APIs [Exchange_Details](./constants/static_exchange_details.go)?
+
+- Add market_id for your pair in [exchange_common](./exchange_common/market_id.go)
+
+```go
+const (
+    BTCUSD_ID uint32 = 0
+    ETHUSD_ID uint32 = 1
+    TRBUSD_ID uint32 = 69
+    NEWPAIR_ID uint32 = <unique-number>
+)
+```
+
+- Add market param config to [static_market_params_config](./constants/static_market_params_config.go)
+
+```go
+exchange_common.TRBUSD_ID: {
+        Id:                 exchange_common.TRBUSD_ID,
+        Pair:               `"TRB-USD"`,
+        Exponent:           -6,
+        MinExchanges:       1,
+        MinPriceChangePpm:  1000,
+        ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"TRBUSDT\\\"\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"TRBUSDT\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"TRB-USD\"}]}`,
+        QueryData:          `"00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"`,
+    },
+```

@@ -2,40 +2,31 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "BTCUSDT",
+      "ticker": "TRBUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Bybit",
-      "ticker": "BTCUSDT",
+      "ticker": "TRBUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
-      "ticker": "BTC-USD"
+      "ticker": "TRB-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "btcusdt",
+      "exchangeName": "Gate",
+      "ticker": "TRB_USDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Kraken",
-      "ticker": "XXBTZUSD"
     },
     {
       "exchangeName": "Kucoin",
-      "ticker": "BTC-USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Mexc",
-      "ticker": "BTC_USDT",
+      "ticker": "TRB-USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",
-      "ticker": "BTC-USDT",
+      "ticker": "TRB-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]
