@@ -201,6 +201,7 @@ func (s *E2ETestSuite) SetupTest() {
 				integration.OracleModule(),
 				integration.DisputeModule(),
 				integration.RegistryModule(),
+				configurator.MintModule(), // configurator vs integration ?
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
@@ -208,7 +209,7 @@ func (s *E2ETestSuite) SetupTest() {
 		integration.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
-		&s.disputekeeper, &s.registrykeeper, &s.govKeeper)
+		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.distrKeeper, &s.mintkeeper)
 
 	s.NoError(err)
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))

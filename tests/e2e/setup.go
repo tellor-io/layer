@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
-	// mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"x
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 )

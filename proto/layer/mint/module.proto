@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package layer.mint;
+
+option go_package = "github.com/tellor-io/layer/api/mint/types";
+
+// option go_package = "cosmos/app/v1alpha1/module.proto";
+
+message Module {
+
+  string authority = 1;
+
+}

@@ -9,11 +9,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/registry/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
+
+func (s *E2ETestSuite) TestMint500k() {
+
+	mintAmount := math.NewInt(500000)
+	coin := sdk.NewCoin(s.denom, mintAmount)
+	genesisMint := &minttypes.GenesisState{
+		BondDenom:   s.denom,
+		InitialMint: sdk.NewCoins(coin),
+	}
+	s.mintkeeper.InitialMint(s.ctx, genesisMint)
+
+}
 
 // func (s *E2ETestSuite) TestMint500kToVal() []sdk.AccAddress {
 // 	// require := s.Require()
