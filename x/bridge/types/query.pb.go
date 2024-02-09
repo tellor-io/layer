@@ -197,6 +197,86 @@ func (m *QueryGetEvmValidatorsResponse) GetBridgeValidatorSet() []*BridgeValidat
 	return nil
 }
 
+type QueryGetValidatorCheckpointRequest struct {
+}
+
+func (m *QueryGetValidatorCheckpointRequest) Reset()         { *m = QueryGetValidatorCheckpointRequest{} }
+func (m *QueryGetValidatorCheckpointRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetValidatorCheckpointRequest) ProtoMessage()    {}
+func (*QueryGetValidatorCheckpointRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{4}
+}
+func (m *QueryGetValidatorCheckpointRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetValidatorCheckpointRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetValidatorCheckpointRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetValidatorCheckpointRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetValidatorCheckpointRequest.Merge(m, src)
+}
+func (m *QueryGetValidatorCheckpointRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetValidatorCheckpointRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetValidatorCheckpointRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetValidatorCheckpointRequest proto.InternalMessageInfo
+
+type QueryGetValidatorCheckpointResponse struct {
+	ValidatorCheckpoint string `protobuf:"bytes,1,opt,name=validatorCheckpoint,proto3" json:"validatorCheckpoint,omitempty"`
+}
+
+func (m *QueryGetValidatorCheckpointResponse) Reset()         { *m = QueryGetValidatorCheckpointResponse{} }
+func (m *QueryGetValidatorCheckpointResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetValidatorCheckpointResponse) ProtoMessage()    {}
+func (*QueryGetValidatorCheckpointResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{5}
+}
+func (m *QueryGetValidatorCheckpointResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetValidatorCheckpointResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetValidatorCheckpointResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetValidatorCheckpointResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetValidatorCheckpointResponse.Merge(m, src)
+}
+func (m *QueryGetValidatorCheckpointResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetValidatorCheckpointResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetValidatorCheckpointResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetValidatorCheckpointResponse proto.InternalMessageInfo
+
+func (m *QueryGetValidatorCheckpointResponse) GetValidatorCheckpoint() string {
+	if m != nil {
+		return m.ValidatorCheckpoint
+	}
+	return ""
+}
+
 type BridgeValidator struct {
 	EthereumAddress string `protobuf:"bytes,1,opt,name=ethereumAddress,proto3" json:"ethereumAddress,omitempty"`
 	Power           uint64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
@@ -206,7 +286,7 @@ func (m *BridgeValidator) Reset()         { *m = BridgeValidator{} }
 func (m *BridgeValidator) String() string { return proto.CompactTextString(m) }
 func (*BridgeValidator) ProtoMessage()    {}
 func (*BridgeValidator) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e48df680904493de, []int{4}
+	return fileDescriptor_e48df680904493de, []int{6}
 }
 func (m *BridgeValidator) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -257,7 +337,7 @@ func (m *BridgeValidatorSet) Reset()         { *m = BridgeValidatorSet{} }
 func (m *BridgeValidatorSet) String() string { return proto.CompactTextString(m) }
 func (*BridgeValidatorSet) ProtoMessage()    {}
 func (*BridgeValidatorSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e48df680904493de, []int{5}
+	return fileDescriptor_e48df680904493de, []int{7}
 }
 func (m *BridgeValidatorSet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -305,7 +385,7 @@ func (m *BridgeValidatorSetParams) Reset()         { *m = BridgeValidatorSetPara
 func (m *BridgeValidatorSetParams) String() string { return proto.CompactTextString(m) }
 func (*BridgeValidatorSetParams) ProtoMessage()    {}
 func (*BridgeValidatorSetParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e48df680904493de, []int{6}
+	return fileDescriptor_e48df680904493de, []int{8}
 }
 func (m *BridgeValidatorSetParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -379,7 +459,7 @@ func (m *BridgeValidatorSetCheckpointParams) Reset()         { *m = BridgeValida
 func (m *BridgeValidatorSetCheckpointParams) String() string { return proto.CompactTextString(m) }
 func (*BridgeValidatorSetCheckpointParams) ProtoMessage()    {}
 func (*BridgeValidatorSetCheckpointParams) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e48df680904493de, []int{7}
+	return fileDescriptor_e48df680904493de, []int{9}
 }
 func (m *BridgeValidatorSetCheckpointParams) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -429,57 +509,108 @@ func (m *BridgeValidatorSetCheckpointParams) GetValidatorSetHash() []byte {
 	return nil
 }
 
+type BridgeValidatorSetCheckpoint struct {
+	ValidatorCheckpoint []byte `protobuf:"bytes,1,opt,name=validatorCheckpoint,proto3" json:"validatorCheckpoint,omitempty"`
+}
+
+func (m *BridgeValidatorSetCheckpoint) Reset()         { *m = BridgeValidatorSetCheckpoint{} }
+func (m *BridgeValidatorSetCheckpoint) String() string { return proto.CompactTextString(m) }
+func (*BridgeValidatorSetCheckpoint) ProtoMessage()    {}
+func (*BridgeValidatorSetCheckpoint) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{10}
+}
+func (m *BridgeValidatorSetCheckpoint) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BridgeValidatorSetCheckpoint) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BridgeValidatorSetCheckpoint.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BridgeValidatorSetCheckpoint) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BridgeValidatorSetCheckpoint.Merge(m, src)
+}
+func (m *BridgeValidatorSetCheckpoint) XXX_Size() int {
+	return m.Size()
+}
+func (m *BridgeValidatorSetCheckpoint) XXX_DiscardUnknown() {
+	xxx_messageInfo_BridgeValidatorSetCheckpoint.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BridgeValidatorSetCheckpoint proto.InternalMessageInfo
+
+func (m *BridgeValidatorSetCheckpoint) GetValidatorCheckpoint() []byte {
+	if m != nil {
+		return m.ValidatorCheckpoint
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.bridge.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.bridge.QueryParamsResponse")
 	proto.RegisterType((*QueryGetEvmValidatorsRequest)(nil), "layer.bridge.QueryGetEvmValidatorsRequest")
 	proto.RegisterType((*QueryGetEvmValidatorsResponse)(nil), "layer.bridge.QueryGetEvmValidatorsResponse")
+	proto.RegisterType((*QueryGetValidatorCheckpointRequest)(nil), "layer.bridge.QueryGetValidatorCheckpointRequest")
+	proto.RegisterType((*QueryGetValidatorCheckpointResponse)(nil), "layer.bridge.QueryGetValidatorCheckpointResponse")
 	proto.RegisterType((*BridgeValidator)(nil), "layer.bridge.BridgeValidator")
 	proto.RegisterType((*BridgeValidatorSet)(nil), "layer.bridge.BridgeValidatorSet")
 	proto.RegisterType((*BridgeValidatorSetParams)(nil), "layer.bridge.BridgeValidatorSetParams")
 	proto.RegisterType((*BridgeValidatorSetCheckpointParams)(nil), "layer.bridge.BridgeValidatorSetCheckpointParams")
+	proto.RegisterType((*BridgeValidatorSetCheckpoint)(nil), "layer.bridge.BridgeValidatorSetCheckpoint")
 }
 
 func init() { proto.RegisterFile("layer/bridge/query.proto", fileDescriptor_e48df680904493de) }
 
 var fileDescriptor_e48df680904493de = []byte{
-	// 567 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcd, 0x6e, 0xd3, 0x40,
-	0x10, 0xce, 0xe6, 0x4f, 0x62, 0x5b, 0xa9, 0xd5, 0x36, 0x12, 0x26, 0x6a, 0x8d, 0xf1, 0x01, 0x85,
-	0x00, 0x5e, 0x1a, 0x2e, 0x5c, 0x49, 0x85, 0x80, 0x03, 0x52, 0xea, 0x56, 0x1c, 0xb8, 0x54, 0x9b,
-	0x64, 0x64, 0x5b, 0xd8, 0x5e, 0x77, 0x77, 0x13, 0xc8, 0x95, 0x27, 0x40, 0xe2, 0x01, 0xe0, 0x21,
-	0x38, 0xf1, 0x04, 0x3d, 0x56, 0xe2, 0xc2, 0x09, 0xa1, 0x84, 0x07, 0x41, 0x59, 0xbb, 0xa1, 0x89,
-	0x9d, 0x0a, 0x10, 0x37, 0x7b, 0xbe, 0x6f, 0xe6, 0xfb, 0xbe, 0xb1, 0xc6, 0xd8, 0x08, 0xd9, 0x04,
-	0x04, 0xed, 0x8b, 0x60, 0xe8, 0x01, 0x3d, 0x1d, 0x81, 0x98, 0x38, 0x89, 0xe0, 0x8a, 0x93, 0x4d,
-	0x8d, 0x38, 0x29, 0xd2, 0x6c, 0x78, 0xdc, 0xe3, 0x1a, 0xa0, 0xf3, 0xa7, 0x94, 0xd3, 0xdc, 0xf5,
-	0x38, 0xf7, 0x42, 0xa0, 0x2c, 0x09, 0x28, 0x8b, 0x63, 0xae, 0x98, 0x0a, 0x78, 0x2c, 0x33, 0xb4,
-	0x3d, 0xe0, 0x32, 0xe2, 0x92, 0xf6, 0x99, 0xcc, 0x46, 0xd3, 0xf1, 0x7e, 0x1f, 0x14, 0xdb, 0xa7,
-	0x09, 0xf3, 0x82, 0x58, 0x93, 0x33, 0xee, 0x8d, 0x25, 0x1f, 0x09, 0x13, 0x2c, 0xca, 0xc6, 0xd8,
-	0x0d, 0x4c, 0x0e, 0xe7, 0xcd, 0x3d, 0x5d, 0x74, 0xe1, 0x74, 0x04, 0x52, 0xd9, 0xcf, 0xf1, 0xce,
-	0x52, 0x55, 0x26, 0x3c, 0x96, 0x40, 0x3a, 0xb8, 0x9e, 0x36, 0x1b, 0xc8, 0x42, 0xad, 0x8d, 0x4e,
-	0xc3, 0xb9, 0x1c, 0xc3, 0x49, 0xd9, 0xdd, 0xea, 0xd9, 0xf7, 0x9b, 0x25, 0x37, 0x63, 0xda, 0x26,
-	0xde, 0xd5, 0xa3, 0x9e, 0x82, 0x7a, 0x32, 0x8e, 0x5e, 0xb2, 0x30, 0x18, 0x32, 0xc5, 0xc5, 0x42,
-	0x2a, 0xc6, 0x7b, 0x6b, 0xf0, 0x4c, 0xf4, 0x05, 0x26, 0xe9, 0xfc, 0x05, 0x76, 0x04, 0xca, 0x40,
-	0x56, 0xa5, 0xb5, 0xd1, 0xd9, 0x5b, 0x36, 0xd0, 0x5d, 0xe6, 0xb9, 0x05, 0x8d, 0xf6, 0x21, 0xde,
-	0x5a, 0xa1, 0x91, 0x16, 0xde, 0x02, 0xe5, 0x83, 0x80, 0x51, 0xf4, 0x78, 0x38, 0x14, 0x20, 0xd3,
-	0x7c, 0xd7, 0xdc, 0xd5, 0x32, 0x69, 0xe0, 0x5a, 0xc2, 0xdf, 0x80, 0x30, 0xca, 0x16, 0x6a, 0x55,
-	0xdd, 0xf4, 0xc5, 0x1e, 0x60, 0xd2, 0xcd, 0x09, 0xfd, 0x6f, 0xdf, 0x9f, 0xcb, 0xd8, 0xc8, 0xab,
-	0xa4, 0x2b, 0x27, 0xbd, 0x35, 0x5a, 0xf3, 0x8f, 0x64, 0x5d, 0xa9, 0x75, 0x04, 0xaa, 0x48, 0x8e,
-	0x38, 0x98, 0x8c, 0x2f, 0xde, 0x8f, 0x83, 0x08, 0xa4, 0x62, 0x51, 0xa2, 0x63, 0x57, 0xdc, 0x02,
-	0x84, 0x3c, 0xc2, 0xd7, 0x17, 0xd5, 0xde, 0x7c, 0x2b, 0xc7, 0xbe, 0x00, 0xe9, 0xf3, 0x70, 0x68,
-	0x54, 0x74, 0xd3, 0x3a, 0x98, 0xb4, 0xf1, 0xf6, 0xf8, 0x92, 0xf2, 0x33, 0x26, 0x7d, 0xa3, 0x6a,
-	0xa1, 0xd6, 0xa6, 0x9b, 0xab, 0x93, 0x07, 0x78, 0x67, 0x51, 0x3b, 0xf0, 0x61, 0xf0, 0x3a, 0xe1,
-	0x41, 0xac, 0x8c, 0x9a, 0xa6, 0x17, 0x41, 0xf6, 0x17, 0x84, 0xed, 0x7c, 0xe4, 0xdf, 0x84, 0x6c,
-	0x81, 0xc5, 0x71, 0xd1, 0xbf, 0xc4, 0x2d, 0xff, 0x7d, 0xdc, 0x4a, 0x71, 0xdc, 0xce, 0xa7, 0x32,
-	0xae, 0xe9, 0xe3, 0x20, 0x23, 0x5c, 0xcf, 0x9c, 0xae, 0x7c, 0xce, 0xfc, 0xf1, 0x36, 0x6f, 0x5d,
-	0xc1, 0x48, 0x6f, 0xca, 0xbe, 0xfd, 0xee, 0xeb, 0xcf, 0x0f, 0x65, 0x8b, 0x98, 0x54, 0x41, 0x18,
-	0x72, 0x71, 0x3f, 0xe0, 0xb4, 0xe0, 0x1f, 0x41, 0x3e, 0x22, 0xbc, 0xbd, 0x7a, 0x98, 0xa4, 0x5d,
-	0x30, 0x7f, 0xcd, 0x75, 0x37, 0xef, 0xfe, 0x11, 0x37, 0x73, 0xd5, 0xd1, 0xae, 0xee, 0x91, 0xf6,
-	0x3a, 0x57, 0x1e, 0xa8, 0x13, 0x18, 0x47, 0x27, 0x8b, 0x45, 0xc9, 0xee, 0xc1, 0xd9, 0xd4, 0x44,
-	0xe7, 0x53, 0x13, 0xfd, 0x98, 0x9a, 0xe8, 0xfd, 0xcc, 0x2c, 0x9d, 0xcf, 0xcc, 0xd2, 0xb7, 0x99,
-	0x59, 0x7a, 0x75, 0xc7, 0x0b, 0x94, 0x3f, 0xea, 0x3b, 0x03, 0x1e, 0xe5, 0xe6, 0xbd, 0xbd, 0x98,
-	0xa8, 0x26, 0x09, 0xc8, 0x7e, 0x5d, 0xff, 0x0b, 0x1f, 0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x46,
-	0x3f, 0xe9, 0xc4, 0xb0, 0x05, 0x00, 0x00,
+	// 638 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xc1, 0x6e, 0xd3, 0x4c,
+	0x10, 0xce, 0x26, 0x6d, 0xa5, 0x7f, 0x5a, 0xa9, 0xd5, 0x36, 0xfa, 0x31, 0x51, 0x6b, 0x82, 0x41,
+	0x28, 0x04, 0x88, 0xdb, 0x70, 0xe9, 0x95, 0x54, 0x08, 0x38, 0x20, 0xa5, 0x6e, 0x05, 0x12, 0x97,
+	0x6a, 0x93, 0xac, 0x1c, 0x8b, 0xd8, 0xeb, 0x7a, 0x37, 0x86, 0x5e, 0x79, 0x02, 0x24, 0x1e, 0x80,
+	0x97, 0x40, 0x42, 0xe2, 0x09, 0x7a, 0xac, 0xc4, 0x05, 0x71, 0x40, 0xa8, 0xe5, 0x41, 0x50, 0xd6,
+	0x1b, 0xb7, 0x89, 0xd7, 0x16, 0x45, 0xdc, 0x92, 0xf9, 0xbe, 0x99, 0xf9, 0xbe, 0xd9, 0xdd, 0x31,
+	0x18, 0x23, 0x72, 0x4c, 0x23, 0xbb, 0x17, 0x79, 0x03, 0x97, 0xda, 0x47, 0x63, 0x1a, 0x1d, 0xb7,
+	0xc2, 0x88, 0x09, 0x86, 0x57, 0x24, 0xd2, 0x4a, 0x90, 0x5a, 0xd5, 0x65, 0x2e, 0x93, 0x80, 0x3d,
+	0xf9, 0x95, 0x70, 0x6a, 0x1b, 0x2e, 0x63, 0xee, 0x88, 0xda, 0x24, 0xf4, 0x6c, 0x12, 0x04, 0x4c,
+	0x10, 0xe1, 0xb1, 0x80, 0x2b, 0xb4, 0xd9, 0x67, 0xdc, 0x67, 0xdc, 0xee, 0x11, 0xae, 0x4a, 0xdb,
+	0xf1, 0x76, 0x8f, 0x0a, 0xb2, 0x6d, 0x87, 0xc4, 0xf5, 0x02, 0x49, 0x56, 0xdc, 0xeb, 0x33, 0x3a,
+	0x42, 0x12, 0x11, 0x5f, 0x95, 0xb1, 0xaa, 0x80, 0xf7, 0x26, 0xc9, 0x5d, 0x19, 0x74, 0xe8, 0xd1,
+	0x98, 0x72, 0x61, 0x3d, 0x83, 0xf5, 0x99, 0x28, 0x0f, 0x59, 0xc0, 0x29, 0x6e, 0xc3, 0x52, 0x92,
+	0x6c, 0xa0, 0x3a, 0x6a, 0x2c, 0xb7, 0xab, 0xad, 0xcb, 0x36, 0x5a, 0x09, 0xbb, 0xb3, 0x70, 0xf2,
+	0xe3, 0x46, 0xc9, 0x51, 0x4c, 0xcb, 0x84, 0x0d, 0x59, 0xea, 0x09, 0x15, 0x8f, 0x63, 0xff, 0x05,
+	0x19, 0x79, 0x03, 0x22, 0x58, 0x94, 0xb6, 0x0a, 0x60, 0x33, 0x07, 0x57, 0x4d, 0x9f, 0x03, 0x4e,
+	0xea, 0xa7, 0xd8, 0x3e, 0x15, 0x06, 0xaa, 0x57, 0x1a, 0xcb, 0xed, 0xcd, 0x59, 0x01, 0x9d, 0x59,
+	0x9e, 0xa3, 0x49, 0xb4, 0x6e, 0x83, 0x35, 0xed, 0x97, 0xc6, 0x77, 0x87, 0xb4, 0xff, 0x3a, 0x64,
+	0x5e, 0x20, 0xa6, 0xaa, 0x5e, 0xc2, 0xad, 0x42, 0x96, 0xd2, 0xb6, 0x05, 0xeb, 0x71, 0x16, 0x96,
+	0xd3, 0xf9, 0xcf, 0xd1, 0x41, 0xd6, 0x1e, 0xac, 0xce, 0xa9, 0xc4, 0x0d, 0x58, 0xa5, 0x62, 0x48,
+	0x23, 0x3a, 0xf6, 0x1f, 0x0d, 0x06, 0x11, 0xe5, 0x5c, 0x15, 0x98, 0x0f, 0xe3, 0x2a, 0x2c, 0x86,
+	0xec, 0x0d, 0x8d, 0x8c, 0x72, 0x1d, 0x35, 0x16, 0x9c, 0xe4, 0x8f, 0xd5, 0x07, 0xdc, 0xc9, 0xf8,
+	0xfc, 0xd7, 0x63, 0xfb, 0x54, 0x06, 0x23, 0xdb, 0x25, 0x39, 0x71, 0xdc, 0xcd, 0xe9, 0x35, 0xb9,
+	0x23, 0xf5, 0xc2, 0x5e, 0xfb, 0x54, 0xe8, 0xda, 0xe1, 0x16, 0xe0, 0x74, 0x7a, 0x07, 0x9e, 0x4f,
+	0xb9, 0x20, 0x7e, 0x28, 0x6d, 0x57, 0x1c, 0x0d, 0x82, 0x77, 0xe0, 0x5a, 0x1a, 0xed, 0x4e, 0xa6,
+	0x72, 0x30, 0x8c, 0x28, 0x1f, 0xb2, 0xd1, 0xc0, 0xa8, 0xc8, 0xa4, 0x3c, 0x18, 0x37, 0x61, 0x2d,
+	0xbe, 0xd4, 0xf9, 0x29, 0xe1, 0x43, 0x63, 0xa1, 0x8e, 0x1a, 0x2b, 0x4e, 0x26, 0x9e, 0x77, 0xdc,
+	0x8b, 0x92, 0xae, 0x3d, 0xee, 0x2f, 0x08, 0xac, 0xac, 0xe5, 0x0b, 0x82, 0x1a, 0xa0, 0xde, 0x2e,
+	0xfa, 0x1b, 0xbb, 0xe5, 0xab, 0xdb, 0xad, 0xe8, 0xed, 0x5a, 0x5d, 0xd8, 0x28, 0xd2, 0x5e, 0x74,
+	0xfb, 0xf5, 0xe3, 0x68, 0x7f, 0xaf, 0xc0, 0xa2, 0x7c, 0x57, 0x78, 0x0c, 0x4b, 0xca, 0xfb, 0xdc,
+	0x05, 0xc9, 0x6e, 0xa3, 0xda, 0xcd, 0x02, 0x46, 0xf2, 0x10, 0xad, 0x3b, 0xef, 0xbe, 0xfe, 0xfa,
+	0x50, 0xae, 0x63, 0xd3, 0x16, 0x74, 0x34, 0x62, 0xd1, 0x03, 0x8f, 0xd9, 0x9a, 0xa5, 0x87, 0x3f,
+	0x22, 0x58, 0x9b, 0xdf, 0x34, 0xb8, 0xa9, 0xa9, 0x9f, 0xb3, 0xae, 0x6a, 0xf7, 0xfe, 0x88, 0xab,
+	0x54, 0xb5, 0xa5, 0xaa, 0xfb, 0xb8, 0x99, 0xa7, 0xca, 0xa5, 0xe2, 0x90, 0xc6, 0xfe, 0x61, 0x7c,
+	0x21, 0xe6, 0x33, 0x82, 0xff, 0xf5, 0x5b, 0x07, 0x6f, 0xe9, 0x7b, 0xe7, 0xaf, 0xb1, 0xda, 0xf6,
+	0x15, 0x32, 0x94, 0xe6, 0x1d, 0xa9, 0xb9, 0x8d, 0xb7, 0x8a, 0x34, 0xa7, 0x7a, 0x0f, 0xfb, 0x69,
+	0x85, 0xce, 0xee, 0xc9, 0x99, 0x89, 0x4e, 0xcf, 0x4c, 0xf4, 0xf3, 0xcc, 0x44, 0xef, 0xcf, 0xcd,
+	0xd2, 0xe9, 0xb9, 0x59, 0xfa, 0x76, 0x6e, 0x96, 0x5e, 0xdd, 0x75, 0x3d, 0x31, 0x1c, 0xf7, 0x5a,
+	0x7d, 0xe6, 0x67, 0xaa, 0xbe, 0x9d, 0xd6, 0x15, 0xc7, 0x21, 0xe5, 0xbd, 0x25, 0xf9, 0x59, 0x7a,
+	0xf8, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x91, 0x8b, 0xf2, 0x2d, 0x3b, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -498,6 +629,7 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of GetEvmValidators items.
 	GetEvmValidators(ctx context.Context, in *QueryGetEvmValidatorsRequest, opts ...grpc.CallOption) (*QueryGetEvmValidatorsResponse, error)
+	GetValidatorCheckpoint(ctx context.Context, in *QueryGetValidatorCheckpointRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointResponse, error)
 }
 
 type queryClient struct {
@@ -526,12 +658,22 @@ func (c *queryClient) GetEvmValidators(ctx context.Context, in *QueryGetEvmValid
 	return out, nil
 }
 
+func (c *queryClient) GetValidatorCheckpoint(ctx context.Context, in *QueryGetValidatorCheckpointRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointResponse, error) {
+	out := new(QueryGetValidatorCheckpointResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetValidatorCheckpoint", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of GetEvmValidators items.
 	GetEvmValidators(context.Context, *QueryGetEvmValidatorsRequest) (*QueryGetEvmValidatorsResponse, error)
+	GetValidatorCheckpoint(context.Context, *QueryGetValidatorCheckpointRequest) (*QueryGetValidatorCheckpointResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -543,6 +685,9 @@ func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsReq
 }
 func (*UnimplementedQueryServer) GetEvmValidators(ctx context.Context, req *QueryGetEvmValidatorsRequest) (*QueryGetEvmValidatorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEvmValidators not implemented")
+}
+func (*UnimplementedQueryServer) GetValidatorCheckpoint(ctx context.Context, req *QueryGetValidatorCheckpointRequest) (*QueryGetValidatorCheckpointResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetValidatorCheckpoint not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -585,6 +730,24 @@ func _Query_GetEvmValidators_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetValidatorCheckpoint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetValidatorCheckpointRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetValidatorCheckpoint(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetValidatorCheckpoint",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetValidatorCheckpoint(ctx, req.(*QueryGetValidatorCheckpointRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.bridge.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -596,6 +759,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetEvmValidators",
 			Handler:    _Query_GetEvmValidators_Handler,
+		},
+		{
+			MethodName: "GetValidatorCheckpoint",
+			Handler:    _Query_GetValidatorCheckpoint_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -714,6 +881,59 @@ func (m *QueryGetEvmValidatorsResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 			i--
 			dAtA[i] = 0xa
 		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetValidatorCheckpointRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetValidatorCheckpointRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetValidatorCheckpointRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetValidatorCheckpointResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetValidatorCheckpointResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetValidatorCheckpointResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorCheckpoint) > 0 {
+		i -= len(m.ValidatorCheckpoint)
+		copy(dAtA[i:], m.ValidatorCheckpoint)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorCheckpoint)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -889,6 +1109,36 @@ func (m *BridgeValidatorSetCheckpointParams) MarshalToSizedBuffer(dAtA []byte) (
 	return len(dAtA) - i, nil
 }
 
+func (m *BridgeValidatorSetCheckpoint) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BridgeValidatorSetCheckpoint) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BridgeValidatorSetCheckpoint) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorCheckpoint) > 0 {
+		i -= len(m.ValidatorCheckpoint)
+		copy(dAtA[i:], m.ValidatorCheckpoint)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValidatorCheckpoint)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -940,6 +1190,28 @@ func (m *QueryGetEvmValidatorsResponse) Size() (n int) {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
+	}
+	return n
+}
+
+func (m *QueryGetValidatorCheckpointRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetValidatorCheckpointResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorCheckpoint)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -1015,6 +1287,19 @@ func (m *BridgeValidatorSetCheckpointParams) Size() (n int) {
 		n += 1 + sovQuery(uint64(m.ValidatorPowerThreshold))
 	}
 	l = len(m.ValidatorSetHash)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *BridgeValidatorSetCheckpoint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ValidatorCheckpoint)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
@@ -1272,6 +1557,138 @@ func (m *QueryGetEvmValidatorsResponse) Unmarshal(dAtA []byte) error {
 			if err := m.BridgeValidatorSet[len(m.BridgeValidatorSet)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetValidatorCheckpointRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetValidatorCheckpointResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpoint", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorCheckpoint = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1770,6 +2187,90 @@ func (m *BridgeValidatorSetCheckpointParams) Unmarshal(dAtA []byte) error {
 			m.ValidatorSetHash = append(m.ValidatorSetHash[:0], dAtA[iNdEx:postIndex]...)
 			if m.ValidatorSetHash == nil {
 				m.ValidatorSetHash = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BridgeValidatorSetCheckpoint) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BridgeValidatorSetCheckpoint: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BridgeValidatorSetCheckpoint: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpoint", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorCheckpoint = append(m.ValidatorCheckpoint[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorCheckpoint == nil {
+				m.ValidatorCheckpoint = []byte{}
 			}
 			iNdEx = postIndex
 		default:

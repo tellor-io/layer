@@ -26,7 +26,10 @@ service Query {
   // Queries a list of GetEvmValidators items.
   rpc GetEvmValidators (QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
     option (google.api.http).get = "/tellor-io/layer/bridge/get_evm_validators";
-  
+  }
+
+  rpc GetValidatorCheckpoint (QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
+    option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_checkpoint";
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -52,6 +55,12 @@ message QueryGetEvmValidatorsResponse {
   repeated BridgeValidator bridgeValidatorSet = 1;
 }
 
+message QueryGetValidatorCheckpointRequest {}
+
+message QueryGetValidatorCheckpointResponse {
+  string validatorCheckpoint = 1;
+}
+
 message BridgeValidator {
   string ethereumAddress = 1;
   uint64 power = 2;
@@ -73,5 +82,9 @@ message BridgeValidatorSetCheckpointParams {
   int64 validatorTimestamp = 1;
   int64 validatorPowerThreshold = 2;
   bytes validatorSetHash = 3;
+}
+
+message BridgeValidatorSetCheckpoint {
+  bytes validatorCheckpoint = 1;
 }
 

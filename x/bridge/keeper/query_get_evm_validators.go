@@ -16,7 +16,7 @@ func (k Keeper) GetEvmValidators(goCtx context.Context, req *types.QueryGetEvmVa
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ethAddresses, _ := k.GetBridgeValidators(ctx)
+	ethAddresses, _ := k.GetCurrentValidatorsEVMCompatible(ctx)
 	ethAddressesStr := make([]string, len(ethAddresses))
 	for i, ethAddresses := range ethAddresses {
 		ethAddressesStr[i] = ethAddresses.EthereumAddress

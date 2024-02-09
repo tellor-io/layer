@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/big"
-	"strconv"
 
 	gomath "math"
 
@@ -16,8 +15,6 @@ import (
 	math "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -33,9 +30,10 @@ type (
 		cdc          codec.BinaryCodec
 		storeService storetypes.KVStoreService
 
-		Schema       collections.Schema
-		Params       collections.Item[types.Params]
-		BridgeValset collections.Item[types.BridgeValidatorSet]
+		Schema              collections.Schema
+		Params              collections.Item[types.Params]
+		BridgeValset        collections.Item[types.BridgeValidatorSet]
+		ValidatorCheckpoint collections.Item[types.ValidatorCheckpoint]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -50,12 +48,13 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:            cdc,
-		storeService:   storeService,
-		Params:         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		BridgeValset:   collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
-		stakingKeeper:  stakingKeeper,
-		slashingKeeper: slashingKeeper,
+		cdc:                 cdc,
+		storeService:        storeService,
+		Params:              collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		BridgeValset:        collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValidatorCheckpoint: collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		stakingKeeper:       stakingKeeper,
+		slashingKeeper:      slashingKeeper,
 	}
 
 	schema, err := sb.Build()
@@ -71,7 +70,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, error) {
+func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx sdk.Context) ([]*types.BridgeValidator, error) {
 	validators, err := k.stakingKeeper.GetAllValidators(ctx)
 	if err != nil {
 		return nil, err
@@ -104,9 +103,9 @@ func (k Keeper) GetBridgeValidators(ctx sdk.Context) ([]*types.BridgeValidator, 
 	return bridgeValset, nil
 }
 
-func (k Keeper) GetBridgeValidatorSet(ctx sdk.Context) (*types.BridgeValidatorSet, error) {
+func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx sdk.Context) (*types.BridgeValidatorSet, error) {
 	// use GetBridgeValidators to get the current bridge validator set
-	bridgeValset, err := k.GetBridgeValidators(ctx)
+	bridgeValset, err := k.GetCurrentValidatorsEVMCompatible(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -117,40 +116,52 @@ func (k Keeper) GetBridgeValidatorSet(ctx sdk.Context) (*types.BridgeValidatorSe
 // function for loading last saved bridge validator set and comparing it to current set
 func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 	k.Logger(ctx).Info("@CompareBridgeValidators", "msg", "comparing bridge validators")
-	currentBridgeValidators, err := k.GetBridgeValidatorSet(ctx)
+	// load current validator set in EVM compatible format
+	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
 	if err != nil {
-		k.Logger(ctx).Info("No current bridge validator set found")
+		k.Logger(ctx).Info("No current validator set found")
 		return false, err
 	}
-	// k.EncodeAndHashValidatorSet(ctx, currentBridgeValidators)
 	k.Logger(ctx).Info("@COMPARE", "msg", "setting bridge validator params")
-	error := k.SetBridgeValidatorParams(ctx, currentBridgeValidators)
-	if error != nil {
-		k.Logger(ctx).Info("Error setting bridge validator params: ", "error", error)
-		return false, error
-	}
+
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No saved bridge validator set found")
-		k.BridgeValset.Set(ctx, *currentBridgeValidators)
+		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting bridge validator set: ", "error", err)
+			return false, err
+		}
+		error := k.SetBridgeValidatorParams(ctx, currentValidatorSetEVMCompatible)
+		if error != nil {
+			k.Logger(ctx).Info("Error setting bridge validator params: ", "error", error)
+			return false, error
+		}
 		return false, err
 	}
-	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentBridgeValidators)) {
+	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) {
+		k.Logger(ctx).Info("Bridge validator set has not changed")
 		return true, nil
-	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentBridgeValidators) < 0.05 {
+	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 {
 		k.Logger(ctx).Info("Power diff is less than 5%")
 		return false, nil
 	} else {
-		err := k.BridgeValset.Set(ctx, *currentBridgeValidators)
+		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
 		if err != nil {
+			k.Logger(ctx).Info("Error setting bridge validator set: ", "error", err)
 			return false, err
+		}
+		error := k.SetBridgeValidatorParams(ctx, currentValidatorSetEVMCompatible)
+		if error != nil {
+			k.Logger(ctx).Info("Error setting bridge validator params: ", "error", error)
+			return false, error
 		}
 		k.Logger(ctx).Info("Bridge validator set updated")
 		for i, validator := range lastSavedBridgeValidators.BridgeValidatorSet {
 			k.Logger(ctx).Info("Last saved bridge validator ", "savedVal", validator.EthereumAddress)
 			k.Logger(ctx).Info("i ", "i", i)
 		}
-		for i, validator := range currentBridgeValidators.BridgeValidatorSet {
+		for i, validator := range currentValidatorSetEVMCompatible.BridgeValidatorSet {
 			k.Logger(ctx).Info("Current bridge validator ", i, ": ", validator.EthereumAddress+" "+fmt.Sprint(validator.Power))
 		}
 		return true, nil
@@ -186,14 +197,27 @@ func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *ty
 	k.Logger(ctx).Info("SetBridgeValidatorParams", "validatorSetHash", fmt.Sprintf("%x", validatorSetHash))
 	k.Logger(ctx).Info("SetBridgeValidatorParams", "checkpoint", fmt.Sprintf("%x", checkpoint))
 
+	// Set the validator checkpoint
+	checkpointType := types.ValidatorCheckpoint{
+		Checkpoint: checkpoint,
+	}
+
+	error := k.ValidatorCheckpoint.Set(ctx, checkpointType)
+	if error != nil {
+		k.Logger(ctx).Info("Error setting validator checkpoint: ", "error", error)
+		return error
+	}
+
+	// Emit EventTypeBridgeValidatorSetUpdated event
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeBridgeValidatorSetUpdated, // Assuming types.EventTypeBridgeValidatorSetUpdated is the constant for the event type
+			sdk.NewAttribute(types.AttributeKeyValidatorSetCheckpoint, fmt.Sprintf("%x", checkpoint)),
+		),
+	)
+
 	return nil
 }
-
-// func (k Keeper) GetBridgeValidatorSetHash(validatorSet *types.BridgeValidatorSet) []byte {
-// 	// get keccak256 hash of the validator set
-// 	validatorSetBytes := k.cdc.MustMarshal(validatorSet)
-// 	return crypto.Keccak256(validatorSetBytes)
-// }
 
 func (k Keeper) CalculateValidatorSetCheckpoint(
 	ctx sdk.Context,
@@ -235,41 +259,41 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 		{Type: Bytes32Type},
 	}
 
-	// ********** DELETE THIS, JUST FOR TESTING - START **********
-	arg1 := abi.Arguments{{Type: Bytes32Type}}
-	arg2 := abi.Arguments{{Type: Uint256Type}}
-	arg3 := abi.Arguments{{Type: Uint256Type}}
-	arg4 := abi.Arguments{{Type: Bytes32Type}}
+	// // ********** DELETE THIS, JUST FOR TESTING - START **********
+	// arg1 := abi.Arguments{{Type: Bytes32Type}}
+	// arg2 := abi.Arguments{{Type: Uint256Type}}
+	// arg3 := abi.Arguments{{Type: Uint256Type}}
+	// arg4 := abi.Arguments{{Type: Bytes32Type}}
 
-	encodedData1, err := arg1.Pack(domainSeparatorFixSize)
-	if err != nil {
-		k.Logger(ctx).Warn("Error encoding arguments arg1", "error", err)
-		return nil, err
-	}
-	encodedData2, err := arg2.Pack(powerThresholdBigInt)
-	if err != nil {
-		k.Logger(ctx).Warn("Error encoding arguments arg2", "error", err)
-		return nil, err
-	}
-	encodedData3, err := arg3.Pack(validatorTimestampBigInt)
-	if err != nil {
-		k.Logger(ctx).Warn("Error encoding arguments arg3", "error", err)
-		return nil, err
-	}
-	encodedData4, err := arg4.Pack(validatorSetHashFixSize)
-	if err != nil {
-		k.Logger(ctx).Warn("Error encoding arguments arg4", "error", err)
-		return nil, err
-	}
+	// encodedData1, err := arg1.Pack(domainSeparatorFixSize)
+	// if err != nil {
+	// 	k.Logger(ctx).Warn("Error encoding arguments arg1", "error", err)
+	// 	return nil, err
+	// }
+	// encodedData2, err := arg2.Pack(powerThresholdBigInt)
+	// if err != nil {
+	// 	k.Logger(ctx).Warn("Error encoding arguments arg2", "error", err)
+	// 	return nil, err
+	// }
+	// encodedData3, err := arg3.Pack(validatorTimestampBigInt)
+	// if err != nil {
+	// 	k.Logger(ctx).Warn("Error encoding arguments arg3", "error", err)
+	// 	return nil, err
+	// }
+	// encodedData4, err := arg4.Pack(validatorSetHashFixSize)
+	// if err != nil {
+	// 	k.Logger(ctx).Warn("Error encoding arguments arg4", "error", err)
+	// 	return nil, err
+	// }
 
-	encodedDataTest := append(encodedData1, encodedData2...)
-	encodedDataTest = append(encodedDataTest, encodedData3...)
-	encodedDataTest = append(encodedDataTest, encodedData4...)
+	// encodedDataTest := append(encodedData1, encodedData2...)
+	// encodedDataTest = append(encodedDataTest, encodedData3...)
+	// encodedDataTest = append(encodedDataTest, encodedData4...)
 
-	// ********** DELETE THIS, JUST FOR TESTING - END ************
+	// // ********** DELETE THIS, JUST FOR TESTING - END ************
 
 	// Encode the arguments
-	encodedData, err := arguments.Pack(
+	encodedCheckpointData, err := arguments.Pack(
 		domainSeparatorFixSize,
 		powerThresholdBigInt,
 		validatorTimestampBigInt,
@@ -280,14 +304,23 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 		return nil, err
 	}
 
-	checkpoint := crypto.Keccak256(encodedData)
+	checkpoint := crypto.Keccak256(encodedCheckpointData)
 
 	k.Logger(ctx).Info("DOMAIN_SEPARATOR", "DOMAIN_SEPARATOR", fmt.Sprintf("%x", domainSeparatorFixSize))
-	k.Logger(ctx).Info("encodedData", "encodedData", fmt.Sprintf("%x", encodedData))
+	k.Logger(ctx).Info("encodedData", "encodedData", fmt.Sprintf("%x", encodedCheckpointData))
 	k.Logger(ctx).Info("checkpoint", "checkpoint", fmt.Sprintf("%x", checkpoint))
 
 	// Hash the encoded data
 	return checkpoint, nil
+}
+
+func (k Keeper) GetValidatorCheckpointFromStorage(ctx sdk.Context) (*types.ValidatorCheckpoint, error) {
+	checkpoint, err := k.ValidatorCheckpoint.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get validator checkpoint", "error", err)
+		return nil, err
+	}
+	return &checkpoint, nil
 }
 
 func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
@@ -377,54 +410,4 @@ func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.B
 	}
 
 	return gomath.Abs(delta / float64(gomath.MaxUint32))
-}
-
-// https://github.com/ethereum/go-ethereum/blob/master/accounts/abi/argument.go
-func EncodeArguments(dataTypes []string, dataFields []string) ([]byte, error) {
-	var arguments abi.Arguments
-
-	interfaceFields := make([]interface{}, len(dataFields))
-	for i, dataType := range dataTypes {
-		argType, err := abi.NewType(dataType, dataType, nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create new ABI type: %v", err)
-		}
-
-		interfaceFields[i], err = ConvertStringToType(dataType, dataFields[i])
-		if err != nil {
-			return nil, err
-		}
-
-		arguments = append(arguments, abi.Argument{
-			Name:    "",
-			Type:    argType,
-			Indexed: false,
-		})
-	}
-
-	return arguments.Pack(interfaceFields...)
-}
-
-func ConvertStringToType(dataType, dataField string) (interface{}, error) {
-	switch dataType {
-	case "string":
-		return dataField, nil
-	case "bool":
-		return strconv.ParseBool(dataField)
-	case "address":
-		// TODO: Validate address, maybe?
-		return dataField, nil
-	case "bytes":
-		return []byte(dataField), nil
-	case "int8", "int16", "int32", "int64", "int128", "int256", "uint8", "uint16", "uint32", "uint64", "uint128", "uint256":
-		// https://docs.soliditylang.org/en/latest/types.html#integers
-		value := new(big.Int)
-		value, success := value.SetString(dataField, 10)
-		if !success {
-			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("could not set string to big.Int for value %s", dataField))
-		}
-		return value, nil
-	default:
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("unsupported data type: %s", dataType))
-	}
 }

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -136,9 +137,9 @@ import (
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 
+	bridgesignerclient "github.com/tellor-io/layer/daemons/bridge/client"
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-	// bridgesignerclient "github.com/tellor-io/layer/daemons/bridge/client"
 )
 
 const (
@@ -263,7 +264,7 @@ type App struct {
 	startDaemons        func(client.Context, *api.Server)
 	PriceFeedClient     *pricefeedclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
-	// BridgeSignerClient  *bridgesignerclient.Client
+	BridgeSignerClient  *bridgesignerclient.Client
 }
 
 // New returns a reference to an initialized blockchain app
@@ -663,6 +664,10 @@ func New(
 		// 	)
 		// }()
 
+		// Start the Bridge Signer Daemon.
+		ctx := context.Background()
+		app.BridgeSignerClient = bridgesignerclient.NewClient(app.Logger())
+		go app.BridgeSignerClient.Start(ctx, app.AppCodec())
 	}
 
 	/**** IBC Routing ****/
