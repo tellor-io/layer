@@ -85,3 +85,10 @@ package keeper_test
 // 	fmt.Println("newStore: ", newStore)
 // 	// require.NotEqual(oldStore, newStore)
 // }
+
+// func (s *KeeperTestSuite) TestFindTimestampBefore() {
+// 	require := s.Require()
+
+// 	timestamps := []int64{1, 2, 3, 4, 5}
+// 	found, index := FindTimestampBefore(timestamps, 3)
+// }
