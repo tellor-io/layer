@@ -28,6 +28,7 @@ func (s *E2ETestSuite) TestMint500k() {
 
 }
 
+
 // func (s *E2ETestSuite) TestMint500kToVal() []sdk.AccAddress {
 // 	// require := s.Require()
 
