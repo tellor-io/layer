@@ -87,7 +87,12 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	}
 
 	// 3) Make API call to an exchange and verify the response status code is not an error status code.
-	url := CreateRequestUrl(exchangeQueryDetails.Url, tickers)
+	var url string
+	if exchangeQueryDetails.Exchange == "Coingecko" {
+		url = CreateCoingeckoRequestUrl(exchangeQueryDetails.Url, tickers)
+	} else {
+		url = CreateRequestUrl(exchangeQueryDetails.Url, tickers)
+	}
 	response, err := requestHandler.Get(ctx, url)
 	if err != nil {
 		return nil, nil, err
@@ -146,4 +151,18 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 
 func CreateRequestUrl(baseUrl string, tickers []string) string {
 	return strings.Replace(baseUrl, "$", strings.Join(tickers, ","), -1)
+}
+
+func CreateCoingeckoRequestUrl(baseUrl string, tickers []string) string {
+	if len(tickers) > 0 {
+		parts := strings.Split(tickers[0], "-")
+		if len(parts) == 2 {
+			id := parts[0]
+			currency := parts[1]
+			urlWithId := strings.Replace(baseUrl, "ids=$", "ids="+id, 1)
+			finalUrl := strings.Replace(urlWithId, "vs_currencies=$", "vs_currencies="+currency, 1)
+			return finalUrl
+		}
+	}
+	return baseUrl
 }

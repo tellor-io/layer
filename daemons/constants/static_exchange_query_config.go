@@ -16,6 +16,9 @@ const (
 	defaultTimeoutMs             = 3_000
 	defaultMaxQueries            = 3
 	defaultMultiMarketMaxQueries = 1
+	// For Public API user, the rate limit is 10-30/min and it varies depending on the traffic size.
+	// https://apiguide.coingecko.com/getting-started/error-and-rate-limit#rate-limit
+	coingeckoIntervalMs = 8_000
 )
 
 var (
@@ -118,6 +121,12 @@ var (
 		exchange_common.EXCHANGE_ID_COINBASE_PRO: {
 			ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
 			IntervalMs: defaultIntervalMs,
+			TimeoutMs:  defaultTimeoutMs,
+			MaxQueries: defaultMaxQueries,
+		},
+		exchange_common.EXCHANGE_ID_COINGECKO: {
+			ExchangeId: exchange_common.EXCHANGE_ID_COINGECKO,
+			IntervalMs: coingeckoIntervalMs,
 			TimeoutMs:  defaultTimeoutMs,
 			MaxQueries: defaultMaxQueries,
 		},
