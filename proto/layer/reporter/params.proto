@@ -1,0 +1,16 @@
+syntax = "proto3";
+package layer.reporter;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "layer/x/reporter/Params";
+  option (gogoproto.equal) = true;
+
+  
+  uint64 minStakeAmount = 1 [(gogoproto.moretags) = "yaml:\"min_stake_amount\""];
+}

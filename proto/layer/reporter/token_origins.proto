@@ -1,0 +1,10 @@
+syntax = "proto3";
+package layer.reporter;
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+message TokenOrigins {
+  
+  string validatorAddress = 1; 
+  uint64 amount = 2; 
+}

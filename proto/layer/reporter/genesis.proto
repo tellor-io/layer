@@ -1,0 +1,17 @@
+syntax = "proto3";
+package layer.reporter;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+import "layer/reporter/params.proto";
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+// GenesisState defines the reporter module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}

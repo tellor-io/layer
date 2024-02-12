@@ -1,0 +1,9 @@
+syntax = "proto3";
+package layer.reporter;
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+message OracleReporter {
+  string reporter = 1;
+  uint64 totalTokens = 2;
+}
