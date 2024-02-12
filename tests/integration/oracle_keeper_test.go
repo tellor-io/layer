@@ -210,9 +210,9 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 
 func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
-		Creator:     creator,
-		QueryData:   qdata,
-		Hash: hash,
+		Creator:   creator,
+		QueryData: qdata,
+		Hash:      hash,
 	}
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
