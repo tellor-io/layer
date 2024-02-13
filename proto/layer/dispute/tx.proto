@@ -2,47 +2,51 @@ syntax = "proto3";
 
 package layer.dispute;
 
-import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "gogoproto/gogo.proto";
 import "layer/dispute/dispute.proto";
 
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc ProposeDispute  (MsgProposeDispute ) returns (MsgProposeDisputeResponse );
-  rpc AddFeeToDispute (MsgAddFeeToDispute) returns (MsgAddFeeToDisputeResponse);
-  rpc Vote            (MsgVote           ) returns (MsgVoteResponse           );
+  rpc ProposeDispute(MsgProposeDispute) returns (MsgProposeDisputeResponse);
+  rpc AddFeeToDispute(MsgAddFeeToDispute) returns (MsgAddFeeToDisputeResponse);
+  rpc Vote(MsgVote) returns (MsgVoteResponse);
 }
 message MsgProposeDispute {
-  string                   creator          = 1;
-  MicroReport              report           = 2;
-  DisputeCategory          disputeCategory  = 3;
-  cosmos.base.v1beta1.Coin fee              = 4 [(gogoproto.nullable) = false];
-  bool                     payFromBond      = 5;
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  MicroReport report = 2;
+  DisputeCategory disputeCategory = 3;
+  cosmos.base.v1beta1.Coin fee = 4 [(gogoproto.nullable) = false];
+  bool payFromBond = 5;
 }
 
 message MsgProposeDisputeResponse {}
 
 message MsgAddFeeToDispute {
-  string                   creator          = 1;
-  uint64                   disputeId        = 2;
-  cosmos.base.v1beta1.Coin amount           = 3 [(gogoproto.nullable) = false];
-  bool                     payFromBond      = 4;
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  uint64 disputeId = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  bool payFromBond = 4;
 }
 
 message MsgAddFeeToDisputeResponse {}
 
 message MsgVote {
+  option (cosmos.msg.v1.signer) = "voter";
   string voter = 1;
-  uint64 id    = 2;
-  VoteEnum   vote  = 3;
+  uint64 id = 2;
+  VoteEnum vote = 3;
 }
 
 message MsgVoteResponse {}
 
 enum VoteEnum {
   VOTE_INVALID = 0;
-  VOTE_SUPPORT       = 1;
-  VOTE_AGAINST        = 2;
+  VOTE_SUPPORT = 1;
+  VOTE_AGAINST = 2;
 }

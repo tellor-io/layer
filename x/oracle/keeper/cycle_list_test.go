@@ -8,9 +8,9 @@ func (s *KeeperTestSuite) TestGetCycleList() {
 	require := s.Require()
 
 	cycleList := s.oracleKeeper.GetCycleList(s.ctx)
-	require.Contains(s.T(), cycleList, ethQueryData)
-	require.Contains(s.T(), cycleList, btcQueryData)
-	require.Contains(s.T(), cycleList, trbQueryData)
+	require.Contains(cycleList, ethQueryData)
+	require.Contains(cycleList, btcQueryData)
+	require.Contains(cycleList, trbQueryData)
 }
 
 func (s *KeeperTestSuite) TestRotateQueries() {
@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestRotateQueries() {
 	for i := 0; i < 10; i++ {
 		// Rotate queries
 		query := s.oracleKeeper.RotateQueries(s.ctx)
-		require.Contains(s.T(), queries, query)
+		require.Contains(queries, query)
 	}
 }
 
@@ -43,19 +43,19 @@ func (s *KeeperTestSuite) TestGetCurrentIndex() {
 
 	require.Equal(ethQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	currentIndex := s.oracleKeeper.GetCurrentIndex(s.ctx)
-	require.Equal(s.T(), int64(0), currentIndex)
+	require.Equal(int64(0), currentIndex)
 	_ = s.oracleKeeper.RotateQueries(s.ctx)
 	require.Equal(btcQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	currentIndex = s.oracleKeeper.GetCurrentIndex(s.ctx)
-	require.Equal(s.T(), int64(1), currentIndex)
+	require.Equal(int64(1), currentIndex)
 	_ = s.oracleKeeper.RotateQueries(s.ctx)
 	require.Equal(trbQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	currentIndex = s.oracleKeeper.GetCurrentIndex(s.ctx)
-	require.Equal(s.T(), int64(2), currentIndex)
+	require.Equal(int64(2), currentIndex)
 	_ = s.oracleKeeper.RotateQueries(s.ctx)
 	require.Equal(ethQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	currentIndex = s.oracleKeeper.GetCurrentIndex(s.ctx)
-	require.Equal(s.T(), int64(0), currentIndex)
+	require.Equal(int64(0), currentIndex)
 }
 
 func (s *KeeperTestSuite) TestGetCurrentQueryInCycleList() {

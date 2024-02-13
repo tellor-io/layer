@@ -30,6 +30,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "dispute", Permissions: []string{"burner"}},
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},
+					{Account: "mint_to_team"},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},

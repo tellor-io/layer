@@ -70,13 +70,14 @@ import (
 	"github.com/tellor-io/layer/x/oracle"
 
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/registry"
+	_ "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/tellor-io/layer/tests/e2e"
 	"github.com/tellor-io/layer/tests/integration"
 )
 
@@ -160,11 +161,10 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	suite.registrykeeper = *registrykeeper.NewKeeper(
+	suite.registrykeeper = registrykeeper.NewKeeper(
 		appCodec,
-		suite.fetchStoreKey(registrytypes.StoreKey),
-		suite.fetchStoreKey(registrytypes.StoreKey),
-		paramtypes.Subspace{},
+		runtime.NewKVStoreService(suite.fetchStoreKey(registrytypes.StoreKey).(*storetypes.KVStoreKey)),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.distrKeeper = distrkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -181,7 +181,6 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 }
 
 func (s *E2ETestSuite) SetupTest() {
-	registry.AppWiringSetup()
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
 	mint.AppWiringSetup()
@@ -201,7 +200,7 @@ func (s *E2ETestSuite) SetupTest() {
 				integration.OracleModule(),
 				integration.DisputeModule(),
 				integration.RegistryModule(),
-				configurator.MintModule(), // configurator vs integration ?
+				e2e.MintModule(), // configurator vs integration ?
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
@@ -402,7 +401,7 @@ func (s *E2ETestSuite) disputeKeeper() (queryClient disputetypes.QueryClient, ms
 }
 
 func (s *E2ETestSuite) registryKeeper() (queryClient registrytypes.QueryClient, msgServer registrytypes.MsgServer) {
-	registrytypes.RegisterQueryServer(s.queryHelper, s.registrykeeper)
+	registrytypes.RegisterQueryServer(s.queryHelper, registrykeeper.NewQuerier(s.registrykeeper))
 	registrytypes.RegisterInterfaces(s.interfaceRegistry)
 	queryClient = registrytypes.NewQueryClient(s.queryHelper)
 	msgServer = registrykeeper.NewMsgServerImpl(s.registrykeeper)

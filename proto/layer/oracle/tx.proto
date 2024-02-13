@@ -2,11 +2,11 @@ syntax = "proto3";
 
 package layer.oracle;
 
-import "gogoproto/gogo.proto";
 import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
 import "layer/oracle/params.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
@@ -16,10 +16,11 @@ service Msg {
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
-  rpc SubmitValue  (MsgSubmitValue ) returns (MsgSubmitValueResponse );
-  rpc CommitReport (MsgCommitReport) returns (MsgCommitReportResponse);
-  rpc Tip          (MsgTip         ) returns (MsgTipResponse         );
+  rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
+  rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
+  rpc Tip(MsgTip) returns (MsgTipResponse);
 }
+
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
@@ -38,16 +39,18 @@ message MsgUpdateParams {
 }
 message MsgUpdateParamsResponse {}
 message MsgSubmitValue {
-  string creator   = 1;
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
   string queryData = 2;
-  string value     = 3; 
-  string salt      = 4; // hex encoded 32 bytes salt
+  string value = 3;
+  string salt = 4; // hex encoded 32 bytes salt
 }
 
 message MsgSubmitValueResponse {}
 
 message MsgCommitReport {
-  string creator   = 1;
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
   string queryData = 2;
   string hash = 3; // hex encoded sha256 of "salt:value"
 }
@@ -55,10 +58,9 @@ message MsgCommitReport {
 message MsgCommitReportResponse {}
 
 message MsgTip {
-  string                   tipper    = 1;
-  string                   queryData = 2;
-  cosmos.base.v1beta1.Coin amount    = 3 [(gogoproto.nullable) = false];
+  string tipper = 1;
+  string queryData = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
 message MsgTipResponse {}
-
