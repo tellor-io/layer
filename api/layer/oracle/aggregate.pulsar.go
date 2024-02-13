@@ -4,17 +4,16 @@ package oracle
 import (
 	binary "encoding/binary"
 	fmt "fmt"
-	io "io"
-	math "math"
-	reflect "reflect"
-	sync "sync"
-
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	io "io"
+	math "math"
+	reflect "reflect"
+	sync "sync"
 )
 
 var _ protoreflect.List = (*_Aggregate_6_list)(nil)
