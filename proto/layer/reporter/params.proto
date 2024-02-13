@@ -2,6 +2,7 @@ syntax = "proto3";
 package layer.reporter;
 
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
@@ -11,6 +12,13 @@ message Params {
   option (amino.name) = "layer/x/reporter/Params";
   option (gogoproto.equal) = true;
 
-  
-  uint64 minStakeAmount = 1 [(gogoproto.moretags) = "yaml:\"min_stake_amount\""];
+  uint64 min_stake_amount = 1 [(gogoproto.moretags) = "yaml:\"min_stake_amount\""];
+  // min_commission_rate, adopted from staking module, is the minimum commission rate a reporter can their delegators
+  string min_commission_rate = 2 [
+    (gogoproto.moretags) = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar) = "cosmos.Dec"
+  ];
 }

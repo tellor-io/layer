@@ -1,6 +1,8 @@
 syntax = "proto3";
 package layer.reporter;
 
+import "cosmos/staking/v1beta1/staking.proto";
+
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
 // OracleReporter is the struct that holds the data for a reporter
@@ -9,4 +11,6 @@ message OracleReporter {
   string reporter = 1;
   // tokens is the amount of tokens the reporter has
   uint64 total_tokens = 2;
+  // commission for the reporter
+  cosmos.staking.v1beta1.Commission commission = 3;
 }

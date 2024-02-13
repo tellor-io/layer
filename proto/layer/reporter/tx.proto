@@ -4,6 +4,7 @@ package layer.reporter;
 
 import "amino/amino.proto";
 import "cosmos/msg/v1/msg.proto";
+import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/reporter/params.proto";
@@ -50,6 +51,7 @@ message MsgCreateReporter {
   string reporter = 1;
   uint64 amount = 2;
   repeated TokenOrigins token_origins = 3;
+  cosmos.staking.v1beta1.Commission commission = 4;
 }
 
 message MsgCreateReporterResponse {}
