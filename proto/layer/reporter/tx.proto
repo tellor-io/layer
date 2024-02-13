@@ -18,7 +18,10 @@ service Msg {
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  // CreateReporter defines a (reporter) operation for creating a new reporter.
   rpc CreateReporter(MsgCreateReporter) returns (MsgCreateReporterResponse);
+  // DelegateReporter defines a (reporter) operation for delegating to a reporter.
+  rpc DelegateReporter(MsgDelegateReporter) returns (MsgDelegateReporterResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -46,7 +49,17 @@ message MsgCreateReporter {
   option (cosmos.msg.v1.signer) = "reporter";
   string reporter = 1;
   uint64 amount = 2;
-  repeated TokenOrigins tokenOrigins = 3;
+  repeated TokenOrigins token_origins = 3;
 }
 
 message MsgCreateReporterResponse {}
+
+message MsgDelegateReporter {
+  option (cosmos.msg.v1.signer) = "delegator";
+  string delegator = 1;
+  string reporter = 2;
+  uint64 amount = 3;
+  repeated TokenOrigins token_origin = 4;
+}
+
+message MsgDelegateReporterResponse {}

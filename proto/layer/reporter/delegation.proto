@@ -3,8 +3,10 @@ package layer.reporter;
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
+// Delegation is a type that represents a delegator's delegation to a reporter
 message Delegation {
-  
-  string delegator = 1; 
-  uint64 amount = 2; 
+  // reporter is the address of the reporter being delegated to
+  string reporter = 1;
+  // amount is the amount of tokens delegated
+  uint64 amount = 2;
 }

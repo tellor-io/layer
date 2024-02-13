@@ -27,6 +27,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateReporter int = 100
 
+	opWeightMsgDelegateReporter = "op_weight_msg_delegate_reporter"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgDelegateReporter int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -66,6 +70,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		reportersimulation.SimulateMsgCreateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgDelegateReporter int
+	simState.AppParams.GetOrGenerate(opWeightMsgDelegateReporter, &weightMsgDelegateReporter, nil,
+		func(_ *rand.Rand) {
+			weightMsgDelegateReporter = defaultWeightMsgDelegateReporter
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgDelegateReporter,
+		reportersimulation.SimulateMsgDelegateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -79,6 +94,14 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgCreateReporter,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				reportersimulation.SimulateMsgCreateReporter(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgDelegateReporter,
+			defaultWeightMsgDelegateReporter,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				reportersimulation.SimulateMsgDelegateReporter(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

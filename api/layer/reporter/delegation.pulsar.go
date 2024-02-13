@@ -13,15 +13,15 @@ import (
 )
 
 var (
-	md_Delegation           protoreflect.MessageDescriptor
-	fd_Delegation_delegator protoreflect.FieldDescriptor
-	fd_Delegation_amount    protoreflect.FieldDescriptor
+	md_Delegation          protoreflect.MessageDescriptor
+	fd_Delegation_reporter protoreflect.FieldDescriptor
+	fd_Delegation_amount   protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_reporter_delegation_proto_init()
 	md_Delegation = File_layer_reporter_delegation_proto.Messages().ByName("Delegation")
-	fd_Delegation_delegator = md_Delegation.Fields().ByName("delegator")
+	fd_Delegation_reporter = md_Delegation.Fields().ByName("reporter")
 	fd_Delegation_amount = md_Delegation.Fields().ByName("amount")
 }
 
@@ -90,9 +90,9 @@ func (x *fastReflection_Delegation) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Delegation) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Delegator != "" {
-		value := protoreflect.ValueOfString(x.Delegator)
-		if !f(fd_Delegation_delegator, value) {
+	if x.Reporter != "" {
+		value := protoreflect.ValueOfString(x.Reporter)
+		if !f(fd_Delegation_reporter, value) {
 			return
 		}
 	}
@@ -117,8 +117,8 @@ func (x *fastReflection_Delegation) Range(f func(protoreflect.FieldDescriptor, p
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Delegation) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.reporter.Delegation.delegator":
-		return x.Delegator != ""
+	case "layer.reporter.Delegation.reporter":
+		return x.Reporter != ""
 	case "layer.reporter.Delegation.amount":
 		return x.Amount != uint64(0)
 	default:
@@ -137,8 +137,8 @@ func (x *fastReflection_Delegation) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Delegation) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.reporter.Delegation.delegator":
-		x.Delegator = ""
+	case "layer.reporter.Delegation.reporter":
+		x.Reporter = ""
 	case "layer.reporter.Delegation.amount":
 		x.Amount = uint64(0)
 	default:
@@ -157,8 +157,8 @@ func (x *fastReflection_Delegation) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Delegation) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.reporter.Delegation.delegator":
-		value := x.Delegator
+	case "layer.reporter.Delegation.reporter":
+		value := x.Reporter
 		return protoreflect.ValueOfString(value)
 	case "layer.reporter.Delegation.amount":
 		value := x.Amount
@@ -183,8 +183,8 @@ func (x *fastReflection_Delegation) Get(descriptor protoreflect.FieldDescriptor)
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Delegation) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.reporter.Delegation.delegator":
-		x.Delegator = value.Interface().(string)
+	case "layer.reporter.Delegation.reporter":
+		x.Reporter = value.Interface().(string)
 	case "layer.reporter.Delegation.amount":
 		x.Amount = value.Uint()
 	default:
@@ -207,8 +207,8 @@ func (x *fastReflection_Delegation) Set(fd protoreflect.FieldDescriptor, value p
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Delegation) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.reporter.Delegation.delegator":
-		panic(fmt.Errorf("field delegator of message layer.reporter.Delegation is not mutable"))
+	case "layer.reporter.Delegation.reporter":
+		panic(fmt.Errorf("field reporter of message layer.reporter.Delegation is not mutable"))
 	case "layer.reporter.Delegation.amount":
 		panic(fmt.Errorf("field amount of message layer.reporter.Delegation is not mutable"))
 	default:
@@ -224,7 +224,7 @@ func (x *fastReflection_Delegation) Mutable(fd protoreflect.FieldDescriptor) pro
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Delegation) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.reporter.Delegation.delegator":
+	case "layer.reporter.Delegation.reporter":
 		return protoreflect.ValueOfString("")
 	case "layer.reporter.Delegation.amount":
 		return protoreflect.ValueOfUint64(uint64(0))
@@ -297,7 +297,7 @@ func (x *fastReflection_Delegation) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Delegator)
+		l = len(x.Reporter)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -338,10 +338,10 @@ func (x *fastReflection_Delegation) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x10
 		}
-		if len(x.Delegator) > 0 {
-			i -= len(x.Delegator)
-			copy(dAtA[i:], x.Delegator)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Delegator)))
+		if len(x.Reporter) > 0 {
+			i -= len(x.Reporter)
+			copy(dAtA[i:], x.Reporter)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reporter)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -396,7 +396,7 @@ func (x *fastReflection_Delegation) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Delegator", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -424,7 +424,7 @@ func (x *fastReflection_Delegation) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Delegator = string(dAtA[iNdEx:postIndex])
+				x.Reporter = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 0 {
@@ -493,13 +493,16 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Delegation is a type that represents a delegator's delegation to a reporter
 type Delegation struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Delegator string `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty"`
-	Amount    uint64 `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	// reporter is the address of the reporter being delegated to
+	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	// amount is the amount of tokens delegated
+	Amount uint64 `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *Delegation) Reset() {
@@ -522,9 +525,9 @@ func (*Delegation) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_delegation_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Delegation) GetDelegator() string {
+func (x *Delegation) GetReporter() string {
 	if x != nil {
-		return x.Delegator
+		return x.Reporter
 	}
 	return ""
 }
@@ -542,21 +545,21 @@ var file_layer_reporter_delegation_proto_rawDesc = []byte{
 	0x0a, 0x1f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
 	0x2f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x12, 0x0e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
-	0x72, 0x22, 0x42, 0x0a, 0x0a, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12,
-	0x1c, 0x0a, 0x09, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x16, 0x0a,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x61,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x9f, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x0f, 0x44, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x1f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
-	0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x22, 0x40, 0x0a, 0x0a, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12,
+	0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x61,
+	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x42, 0x9f, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x0f, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x1f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xa2, 0x02,
+	0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

@@ -3,8 +3,10 @@ package layer.reporter;
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
+// TokenOrigins is a message to store the origin of a token
 message TokenOrigins {
-  
-  string validatorAddress = 1; 
-  uint64 amount = 2; 
+  // validator_address is the address of the validator that tokens in staking are delegated to
+  string validator_address = 1;
+  // amount is the amount of tokens to be delegated to a reporter from a delegation in staking
+  uint64 amount = 2;
 }

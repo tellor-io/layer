@@ -21,7 +21,10 @@ type MsgClient interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
+	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
+	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
 }
 
 type msgClient struct {
@@ -50,6 +53,15 @@ func (c *msgClient) CreateReporter(ctx context.Context, in *MsgCreateReporter, o
 	return out, nil
 }
 
+func (c *msgClient) DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error) {
+	out := new(MsgDelegateReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/DelegateReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -57,7 +69,10 @@ type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
+	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
+	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -70,6 +85,9 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReporter not implemented")
+}
+func (UnimplementedMsgServer) DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegateReporter not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -120,6 +138,24 @@ func _Msg_CreateReporter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDelegateReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DelegateReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/DelegateReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DelegateReporter(ctx, req.(*MsgDelegateReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +170,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateReporter",
 			Handler:    _Msg_CreateReporter_Handler,
+		},
+		{
+			MethodName: "DelegateReporter",
+			Handler:    _Msg_DelegateReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

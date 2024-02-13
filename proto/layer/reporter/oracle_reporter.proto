@@ -3,7 +3,10 @@ package layer.reporter;
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
+// OracleReporter is the struct that holds the data for a reporter
 message OracleReporter {
+  // reporter is the address of the reporter
   string reporter = 1;
-  uint64 totalTokens = 2;
+  // tokens is the amount of tokens the reporter has
+  uint64 total_tokens = 2;
 }
