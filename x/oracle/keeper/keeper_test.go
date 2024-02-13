@@ -14,10 +14,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -25,8 +26,8 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/mocks"
 	"github.com/tellor-io/layer/x/oracle/types"
-	r "github.com/tellor-io/layer/x/registry"
 	registryk "github.com/tellor-io/layer/x/registry/keeper"
+	r "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
@@ -78,19 +79,12 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.stakingKeeper = new(mocks.StakingKeeper)
 	s.accountKeeper = new(mocks.AccountKeeper)
 	s.distrKeeper = new(mocks.DistrKeeper)
+
 	s.bankKeeper = new(mocks.BankKeeper)
-	rmemStoreKey := storetypes.NewMemoryStoreKey(registrytypes.MemStoreKey)
-	rparamsSubspace := typesparams.NewSubspace(cdc,
-		types.Amino,
-		storeKey,
-		memStoreKey,
-		"RegistryParams",
-	)
-	s.registryKeeper = *registryk.NewKeeper(
+	s.registryKeeper = registryk.NewKeeper(
 		cdc,
-		rStoreKey,
-		rmemStoreKey,
-		rparamsSubspace,
+		runtime.NewKVStoreService(rStoreKey),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	s.oracleKeeper = keeper.NewKeeper(
@@ -107,7 +101,8 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	s.ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	genesisState := registrytypes.GenesisState{
-		Params: registrytypes.DefaultParams(),
+		Params:   registrytypes.DefaultParams(),
+		Dataspec: registrytypes.GenesisDataSpec(),
 	}
 	r.InitGenesis(s.ctx, s.registryKeeper, genesisState)
 	// Initialize params

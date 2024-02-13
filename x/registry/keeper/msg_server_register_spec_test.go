@@ -14,9 +14,9 @@ func TestRegisterSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// register a spec
-	spec1 := types.DataSpec{DocumentHash: "hash1", ValueType: "uint256"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
 	specInput := &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType1",
 		Spec:      spec1,
 	}
@@ -26,18 +26,18 @@ func TestRegisterSpec(t *testing.T) {
 
 	// try to register spec that already exists
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType1",
 		Spec:      spec1,
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
-	require.ErrorContains(t, err, "spec already exists")
+	require.ErrorContains(t, err, "data spec previously registered")
 	require.Nil(t, registerSpecResult)
 
 	// register invalid value type
-	spec2 := types.DataSpec{DocumentHash: "hash1", ValueType: "fakeValueType"}
+	spec2 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "fakeValueType", AggregationMethod: "weighted-median"}
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType2",
 		Spec:      spec2,
 	}
@@ -51,135 +51,135 @@ func TestRegisterSpec(t *testing.T) {
 	type11, type12, type13, type14, type15 := "uint8", "uint16", "uint32", "uint64", "uint128" //uint256 already done
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType3",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type1},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type1, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType4",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type2},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type2, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType5",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type3},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type3, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType6",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type4},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type4, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType7",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type5},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type5, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType8",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type6},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type6, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType9",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type7},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type7, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType10",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type8},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type8, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType11",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type9},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type9, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType12",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type10},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type10, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType13",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type11},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type11, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType14",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type12},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type12, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType15",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type13},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type13, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType16",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type14},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type14, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Creator:   "creator1",
+		Registrar: "creator1",
 		QueryType: "queryType17",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ValueType: type15},
+		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type15, AggregationMethod: "weighted-median"},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)

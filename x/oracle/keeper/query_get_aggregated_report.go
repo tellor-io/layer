@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -21,9 +21,8 @@ func (k Keeper) GetAggregatedReport(goCtx context.Context, req *types.QueryGetCu
 
 	var aggregatedReport types.Aggregate
 	store := k.AggregateStore(ctx)
-	if rk.Has0xPrefix(req.QueryId) {
-		req.QueryId = req.QueryId[2:]
-	}
+
+	req.QueryId = regtypes.Remove0xPrefix(req.QueryId)
 	queryId, err := hex.DecodeString(req.QueryId)
 	if err != nil {
 		panic(err)

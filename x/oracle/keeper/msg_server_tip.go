@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipResponse, error) {
@@ -15,9 +15,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if msg.Amount.Denom != types.DefaultBondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
-	if rk.Has0xPrefix(msg.QueryData) {
-		msg.QueryData = msg.QueryData[2:]
-	}
+	msg.QueryData = regtypes.Remove0xPrefix(msg.QueryData)
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
 
 	tip, err := k.Keeper.transfer(ctx, tipper, msg.Amount)

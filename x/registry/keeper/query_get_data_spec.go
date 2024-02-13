@@ -5,28 +5,28 @@ import (
 
 	"github.com/tellor-io/layer/x/registry/types"
 
-	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetDataSpec(goCtx context.Context, req *types.QueryGetDataSpecRequest) (*types.QueryGetDataSpecResponse, error) {
+func (k Querier) GetDataSpec(goCtx context.Context, req *types.QueryGetDataSpecRequest) (*types.QueryGetDataSpecResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	dataSpecBytes := k.Spec(ctx, req.QueryType)
-	var dataSpec types.DataSpec
-	k.cdc.Unmarshal(dataSpecBytes, &dataSpec)
+	if req.QueryType == "" {
+		return nil, status.Error(codes.InvalidArgument, "invalid request; query type cannot be empty")
+	}
 
+	exists, err := k.Keeper.HasSpec(ctx, req.QueryType)
+	if !exists {
+		return nil, status.Error(codes.NotFound, "data spec not registered")
+	}
+	dataSpec, err := k.Keeper.GetSpec(ctx, req.QueryType)
+	if err != nil {
+		return nil, err
+	}
 	return &types.QueryGetDataSpecResponse{Spec: &dataSpec}, nil
-}
-
-func (k Keeper) Spec(ctx sdk.Context, queryType string) []byte {
-
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.SpecRegistryKey))
-
-	return store.Get([]byte(queryType))
 }
