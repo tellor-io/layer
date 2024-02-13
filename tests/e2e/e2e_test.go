@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,16 +15,105 @@ import (
 )
 
 func (s *E2ETestSuite) TestMint500k() {
+	require := s.Require()
 
-	mintAmount := math.NewInt(500000)
-	coin := sdk.NewCoin(s.denom, mintAmount)
-	genesisMint := &minttypes.GenesisState{
-		BondDenom:   s.denom,
-		InitialMint: sdk.NewCoins(coin),
-	}
-	s.mintkeeper.InitialMint(s.ctx, genesisMint)
+	mintToTeamAcc := s.accountKeeper.GetModuleAddress(minttypes.MintToTeam)
+	require.NotNil(mintToTeamAcc)
+	balance := s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom)
+	fmt.Println("balance before doing anything: ", balance)
 
+	// initialMint := minttypes.InitialMint
+	// mintAmount := math.NewInt(500 * 1e6) // 500k
+	// coin := sdk.NewCoin(s.denom, mintAmount)
+	// genesisMint := &minttypes.GenesisState{
+	// 	BondDenom:   s.denom,
+	// 	InitialMint: sdk.NewCoins(coin),
+	// }
+
+	// s.mintkeeper.InitGenesis(s.ctx, s.accountKeeper, genesisMint)
+	// minter := s.mintkeeper.GetMinter(s.ctx)
+	// require.Equal(minter.BondDenom, s.denom)
+
+	// // Check that the module account has the correct amount of minted coins
+	// balance = s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom)
+	// fmt.Println("balance after calling initGenesis with 500k: ", balance)
+	// require.Equal(mintAmount, balance.Amount)
 }
+
+// func (s *E2ETestSuite) TestTransfer() {
+// 	require := s.Require()
+// 	s.TestMint500k()
+
+// 	mintToTeamAcc := s.accountKeeper.GetModuleAddress(minttypes.MintToTeam)
+// 	require.NotNil(mintToTeamAcc)
+
+// 	// create 10 accounts
+// 	type Accounts struct {
+// 		PrivateKey secp256k1.PrivKey
+// 		Account    sdk.AccAddress
+// 	}
+// 	accounts := make([]Accounts, 0, 10)
+
+// 	for i := 0; i < 10; i++ {
+// 		privKey := secp256k1.GenPrivKey()
+// 		fmt.Println("privKey: ", privKey)
+// 		accountAddress := sdk.AccAddress(privKey.PubKey().Address())
+// 		account := authtypes.BaseAccount{
+// 			Address:       accountAddress.String(),
+// 			PubKey:        codectypes.UnsafePackAny(privKey.PubKey()),
+// 			AccountNumber: uint64(i + 1),
+// 		}
+// 		existingAccount := s.accountKeeper.GetAccount(s.ctx, accountAddress)
+// 		if existingAccount == nil {
+// 			s.accountKeeper.SetAccount(s.ctx, &account)
+// 			accounts = append(accounts, Accounts{
+// 				PrivateKey: *privKey,
+// 				Account:    accountAddress,
+// 			})
+// 		}
+// 	}
+
+// 	for _, acc := range accounts {
+// 		startBalance := s.bankKeeper.GetBalance(s.ctx, acc.Account, s.denom).Amount
+// 		err := s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.MintToTeam, acc.Account, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1000))))
+// 		require.NoError(err)
+// 		require.Equal(startBalance.Add(math.NewInt(100000)), s.bankKeeper.GetBalance(s.ctx, acc.Account, s.denom).Amount)
+// 	}
+
+// }
+
+// func (s *E2ETestSuite) TestStakeTokens() {
+// 	require := s.Require()
+// 	s.TestMint500k()
+
+// 	// create an account
+// 	accAddr, _, pubKey := s.newKeysWithTokens()
+// 	account := authtypes.BaseAccount{
+// 		Address:       accAddr.String(),
+// 		PubKey:        codectypes.UnsafePackAny(pubKey),
+// 		AccountNumber: 1,
+// 	}
+// 	s.accountKeeper.SetAccount(s.ctx, &account)
+
+// 	// stake the account
+// 	validator, err := stakingtypes.NewValidator(accAddr.String(), nil, stakingtypes.Description{})
+// 	require.NoError(err)
+// 	s.stakingKeeper.SetValidator(s.ctx, validator)
+// 	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+// 	s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, validator)
+// 	_, err = s.stakingKeeper.Delegate(s.ctx, accAddr, math.NewInt(10000), stakingtypes.Unbonded, validator, true)
+// 	require.NoError(err)
+// 	_ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
+// 	val, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(accAddr))
+// 	status := val.GetStatus()
+// 	// check that the validator is bonded
+// 	require.Equal(stakingtypes.Bonded.String(), status.String())
+// }
+
+// func (s *E2ETestSuite) TestValidateAPICallsAtConsensus() {
+// 	// require := s.Require()
+
+// }
 
 // func (s *E2ETestSuite) TestMint500kToVal() []sdk.AccAddress {
 // 	// require := s.Require()

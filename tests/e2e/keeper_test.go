@@ -200,7 +200,7 @@ func (s *E2ETestSuite) SetupTest() {
 				integration.OracleModule(),
 				integration.DisputeModule(),
 				integration.RegistryModule(),
-				e2e.MintModule(), // configurator vs integration ?
+				e2e.MintModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),

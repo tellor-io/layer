@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"fmt"
+	"runtime/debug"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/mint/types"
 )
@@ -13,6 +16,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, gen *types.
 
 	// mint initial coins
 	k.InitialMint(ctx, gen)
+
+	fmt.Println("Initialized x/mint genesis state")
+	debug.PrintStack()
 }
 
 // ExportGenesis returns a x/mint GenesisState for the given context.
