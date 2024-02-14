@@ -64,11 +64,11 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
+	testutils "github.com/tellor-io/layer/tests/testutils"
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/mint"
 	"github.com/tellor-io/layer/x/oracle"
-
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	_ "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -77,8 +77,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/tellor-io/layer/tests/e2e"
-	"github.com/tellor-io/layer/tests/integration"
 )
 
 const (
@@ -190,22 +188,22 @@ func (s *E2ETestSuite) SetupTest() {
 	app, err := sims.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				integration.AuthModule(),
+				testutils.AuthModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.SlashingModule(),
 				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.DistributionModule(),
-				integration.OracleModule(),
-				integration.DisputeModule(),
-				integration.RegistryModule(),
-				e2e.MintModule(),
+				testutils.OracleModule(),
+				testutils.DisputeModule(),
+				testutils.RegistryModule(),
+				testutils.MintModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		integration.DefaultStartUpConfig(),
+		testutils.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
 		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.distrKeeper, &s.mintkeeper)
@@ -407,6 +405,14 @@ func (s *E2ETestSuite) registryKeeper() (queryClient registrytypes.QueryClient, 
 	msgServer = registrykeeper.NewMsgServerImpl(s.registrykeeper)
 	return
 }
+
+// func (s *E2ETestSuite) mintKeeper() (queryClient minttypes.QueryClient) {
+// 	// minttypes.RegisterQueryServer(s.queryHelper, mintkeeper.NewQuerier(s.mintkeeper))
+// 	// minttypes.RegisterInterfaces(s.interfaceRegistry)
+// 	queryClient = minttypes.NewQueryClient(s.queryHelper)
+// 	// msgServer = mintkeeper.NewMsgServerImpl(s.mintkeeper)
+// 	return
+// }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))

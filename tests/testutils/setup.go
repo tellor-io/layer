@@ -1,4 +1,4 @@
-package integration
+package testutils
 
 import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 )
@@ -73,6 +74,18 @@ func RegistryModule() configurator.ModuleOption {
 		config.ModuleConfigs["registry"] = &appv1alpha1.ModuleConfig{
 			Name:   "registry",
 			Config: appconfig.WrapAny(&registrymodulev1.Module{}),
+		}
+	}
+}
+
+func MintModule() configurator.ModuleOption {
+	return func(config *configurator.Config) {
+		// config.BeginBlockersOrder = append(config.BeginBlockersOrder, "mint")
+		// config.EndBlockersOrder = append(config.EndBlockersOrder, "mint")
+		// config.InitGenesisOrder = append(config.InitGenesisOrder, "mint")
+		config.ModuleConfigs["mint"] = &appv1alpha1.ModuleConfig{
+			Name:   "mint",
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
 		}
 	}
 }

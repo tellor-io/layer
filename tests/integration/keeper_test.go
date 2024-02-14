@@ -74,7 +74,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/tellor-io/layer/tests/integration"
+	testutils "github.com/tellor-io/layer/tests/testutils"
 )
 
 const (
@@ -183,21 +183,21 @@ func (s *IntegrationTestSuite) SetupTest() {
 	app, err := sims.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				integration.AuthModule(),
+				testutils.AuthModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.SlashingModule(),
 				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.DistributionModule(),
-				integration.OracleModule(),
-				integration.DisputeModule(),
-				integration.RegistryModule(),
+				testutils.OracleModule(),
+				testutils.DisputeModule(),
+				testutils.RegistryModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
 		),
-		integration.DefaultStartUpConfig(),
+		testutils.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
 		&s.disputekeeper, &s.registrykeeper, &s.govKeeper)
