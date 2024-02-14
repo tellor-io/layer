@@ -4,15 +4,17 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var _ sdk.Msg = &MsgCreateReporter{}
 
-func NewMsgCreateReporter(reporter string, amount uint64, tokenOrigins []*TokenOrigin) *MsgCreateReporter {
+func NewMsgCreateReporter(reporter string, amount uint64, tokenOrigins []*TokenOrigin, commission *stakingtypes.Commission) *MsgCreateReporter {
 	return &MsgCreateReporter{
 		Reporter:     reporter,
 		Amount:       amount,
 		TokenOrigins: tokenOrigins,
+		Commission:   commission,
 	}
 }
 

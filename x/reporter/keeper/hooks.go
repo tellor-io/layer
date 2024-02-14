@@ -84,6 +84,7 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 		if err != nil {
 			return err
 		}
+		// update token origin if the staked amount becomes less than what is written in the token origin struct
 		if tokenAmount < source.Amount {
 			// get the difference in the token change to reduce delegation and reporter tokens by.
 			diff := source.Amount - tokenAmount

@@ -12,6 +12,7 @@ option go_package = "github.com/tellor-io/layer/x/registry/types";
 
 // Msg defines the Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
   // RegisterSpec defines a method for registering a new data specification.
   rpc RegisterSpec(MsgRegisterSpec) returns (MsgRegisterSpecResponse);
   // UpdateDataSpec defines a method for updating an existing data specification.

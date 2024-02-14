@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
@@ -11,7 +12,8 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 var (
 	KeyMinStakeAmount = []byte("MinStakeAmount")
 	// TODO: Determine the default value
-	DefaultMinStakeAmount uint64 = 0
+	DefaultMinStakeAmount    uint64 = 0
+	DefaultMinCommissionRate        = math.LegacyZeroDec()
 )
 
 // ParamKeyTable the param key table for launch module
@@ -22,9 +24,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams(
 	minStakeAmount uint64,
+	minCommissionRate math.LegacyDec,
 ) Params {
 	return Params{
-		MinStakeAmount: minStakeAmount,
+		MinStakeAmount:    minStakeAmount,
+		MinCommissionRate: minCommissionRate,
 	}
 }
 
@@ -32,6 +36,7 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultMinStakeAmount,
+		DefaultMinCommissionRate,
 	)
 }
 
