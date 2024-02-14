@@ -19,7 +19,7 @@ type (
 		Params       collections.Item[types.Params]
 		Reporters    collections.Map[sdk.AccAddress, types.OracleReporter]
 		Delegators   collections.Map[sdk.AccAddress, types.Delegation]
-		TokenOrigin  collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.TokenOrigins]
+		TokenOrigin  collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.TokenOrigin]
 		Schema       collections.Schema
 		logger       log.Logger
 
@@ -50,7 +50,7 @@ func NewKeeper(
 		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Reporters:     collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
 		Delegators:    collections.NewMap(sb, types.DelegatorsKey, "delegation_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc)),
-		TokenOrigin:   collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_reporter", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), codec.CollValue[types.TokenOrigins](cdc)),
+		TokenOrigin:   collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_reporter", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), codec.CollValue[types.TokenOrigin](cdc)),
 		authority:     authority,
 		logger:        logger,
 		stakingKeeper: stakingKeeper,

@@ -14,7 +14,7 @@ type StakingKeeper interface {
 	ConsensusAddressCodec() address.Codec
 	ValidatorByConsAddr(context.Context, sdk.ConsAddress) (stakingtypes.ValidatorI, error)
 	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (stakingtypes.DelegationI, error)
-	Validator(context.Context, sdk.ValAddress) stakingtypes.ValidatorI
+	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
 	// Methods imported from account should be defined here
 }
 

@@ -25,6 +25,8 @@ type MsgClient interface {
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
 	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
 	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
+	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
+	UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error)
 }
 
 type msgClient struct {
@@ -62,6 +64,15 @@ func (c *msgClient) DelegateReporter(ctx context.Context, in *MsgDelegateReporte
 	return out, nil
 }
 
+func (c *msgClient) UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error) {
+	out := new(MsgUndelegateReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/UndelegateReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -73,6 +84,8 @@ type MsgServer interface {
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
 	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
 	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
+	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
+	UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -88,6 +101,9 @@ func (UnimplementedMsgServer) CreateReporter(context.Context, *MsgCreateReporter
 }
 func (UnimplementedMsgServer) DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegateReporter not implemented")
+}
+func (UnimplementedMsgServer) UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndelegateReporter not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -156,6 +172,24 @@ func _Msg_DelegateReporter_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UndelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUndelegateReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UndelegateReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/UndelegateReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UndelegateReporter(ctx, req.(*MsgUndelegateReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -174,6 +208,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegateReporter",
 			Handler:    _Msg_DelegateReporter_Handler,
+		},
+		{
+			MethodName: "UndelegateReporter",
+			Handler:    _Msg_UndelegateReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -11,7 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (k Keeper) ValidateAmount(ctx context.Context, delegator sdk.AccAddress, originAmounts []*types.TokenOrigins, amount uint64) error {
+func (k Keeper) ValidateAmount(ctx context.Context, delegator sdk.AccAddress, originAmounts []*types.TokenOrigin, amount uint64) error {
 	var _amount uint64
 	for _, origin := range originAmounts {
 		_amount += origin.Amount
@@ -33,9 +33,9 @@ func (k Keeper) ValidateAmount(ctx context.Context, delegator sdk.AccAddress, or
 			}
 		}
 		var _sumAmount = tokenSource.Amount + origin.Amount
-		validator := k.stakingKeeper.Validator(ctx, valAddr)
-		if validator == nil {
-			return fmt.Errorf("Validator not found: %s", valAddr)
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			return fmt.Errorf("Error fetching validator %v", err)
 		}
 		delegation, err := k.stakingKeeper.Delegation(ctx, delegator, valAddr)
 		if err != nil {

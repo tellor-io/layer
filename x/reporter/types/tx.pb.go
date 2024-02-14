@@ -128,7 +128,7 @@ var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 type MsgCreateReporter struct {
 	Reporter     string            `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
 	Amount       uint64            `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	TokenOrigins []*TokenOrigins   `protobuf:"bytes,3,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
+	TokenOrigins []*TokenOrigin    `protobuf:"bytes,3,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
 	Commission   *types.Commission `protobuf:"bytes,4,opt,name=commission,proto3" json:"commission,omitempty"`
 }
 
@@ -179,7 +179,7 @@ func (m *MsgCreateReporter) GetAmount() uint64 {
 	return 0
 }
 
-func (m *MsgCreateReporter) GetTokenOrigins() []*TokenOrigins {
+func (m *MsgCreateReporter) GetTokenOrigins() []*TokenOrigin {
 	if m != nil {
 		return m.TokenOrigins
 	}
@@ -230,10 +230,10 @@ func (m *MsgCreateReporterResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgCreateReporterResponse proto.InternalMessageInfo
 
 type MsgDelegateReporter struct {
-	Delegator   string          `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty"`
-	Reporter    string          `protobuf:"bytes,2,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Amount      uint64          `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
-	TokenOrigin []*TokenOrigins `protobuf:"bytes,4,rep,name=token_origin,json=tokenOrigin,proto3" json:"token_origin,omitempty"`
+	Delegator    string         `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty"`
+	Reporter     string         `protobuf:"bytes,2,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	Amount       uint64         `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	TokenOrigins []*TokenOrigin `protobuf:"bytes,4,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
 }
 
 func (m *MsgDelegateReporter) Reset()         { *m = MsgDelegateReporter{} }
@@ -290,13 +290,14 @@ func (m *MsgDelegateReporter) GetAmount() uint64 {
 	return 0
 }
 
-func (m *MsgDelegateReporter) GetTokenOrigin() []*TokenOrigins {
+func (m *MsgDelegateReporter) GetTokenOrigins() []*TokenOrigin {
 	if m != nil {
-		return m.TokenOrigin
+		return m.TokenOrigins
 	}
 	return nil
 }
 
+// MsgDelegateReporterResponse defines the response structure for executing a MsgDelegateReporter message.
 type MsgDelegateReporterResponse struct {
 }
 
@@ -333,6 +334,97 @@ func (m *MsgDelegateReporterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDelegateReporterResponse proto.InternalMessageInfo
 
+// MsgUndelegateReporter defines the Msg/UndelegateReporter request type.
+type MsgUndelegateReporter struct {
+	Delegator string `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty"`
+	// token_origin is the token origin to undelegate from. If empty, all token origins are undelegated,
+	// else the amount field will be the amount to undelegate from the specified token origin.
+	TokenOrigins []*TokenOrigin `protobuf:"bytes,2,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
+}
+
+func (m *MsgUndelegateReporter) Reset()         { *m = MsgUndelegateReporter{} }
+func (m *MsgUndelegateReporter) String() string { return proto.CompactTextString(m) }
+func (*MsgUndelegateReporter) ProtoMessage()    {}
+func (*MsgUndelegateReporter) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{6}
+}
+func (m *MsgUndelegateReporter) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUndelegateReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUndelegateReporter.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUndelegateReporter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUndelegateReporter.Merge(m, src)
+}
+func (m *MsgUndelegateReporter) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUndelegateReporter) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUndelegateReporter.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUndelegateReporter proto.InternalMessageInfo
+
+func (m *MsgUndelegateReporter) GetDelegator() string {
+	if m != nil {
+		return m.Delegator
+	}
+	return ""
+}
+
+func (m *MsgUndelegateReporter) GetTokenOrigins() []*TokenOrigin {
+	if m != nil {
+		return m.TokenOrigins
+	}
+	return nil
+}
+
+type MsgUndelegateReporterResponse struct {
+}
+
+func (m *MsgUndelegateReporterResponse) Reset()         { *m = MsgUndelegateReporterResponse{} }
+func (m *MsgUndelegateReporterResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUndelegateReporterResponse) ProtoMessage()    {}
+func (*MsgUndelegateReporterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{7}
+}
+func (m *MsgUndelegateReporterResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUndelegateReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUndelegateReporterResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUndelegateReporterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUndelegateReporterResponse.Merge(m, src)
+}
+func (m *MsgUndelegateReporterResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUndelegateReporterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUndelegateReporterResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUndelegateReporterResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "layer.reporter.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "layer.reporter.MsgUpdateParamsResponse")
@@ -340,49 +432,53 @@ func init() {
 	proto.RegisterType((*MsgCreateReporterResponse)(nil), "layer.reporter.MsgCreateReporterResponse")
 	proto.RegisterType((*MsgDelegateReporter)(nil), "layer.reporter.MsgDelegateReporter")
 	proto.RegisterType((*MsgDelegateReporterResponse)(nil), "layer.reporter.MsgDelegateReporterResponse")
+	proto.RegisterType((*MsgUndelegateReporter)(nil), "layer.reporter.MsgUndelegateReporter")
+	proto.RegisterType((*MsgUndelegateReporterResponse)(nil), "layer.reporter.MsgUndelegateReporterResponse")
 }
 
 func init() { proto.RegisterFile("layer/reporter/tx.proto", fileDescriptor_67b904a7aa978eb1) }
 
 var fileDescriptor_67b904a7aa978eb1 = []byte{
-	// 589 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x41, 0x8f, 0xd2, 0x5c,
-	0x14, 0xa5, 0xc0, 0x47, 0x3e, 0x1e, 0x0c, 0x3a, 0x75, 0x32, 0x94, 0x32, 0x76, 0xb0, 0x9a, 0x88,
-	0x4c, 0xa6, 0xcd, 0x30, 0x89, 0x89, 0x6c, 0xcc, 0x30, 0xba, 0x24, 0x9a, 0xaa, 0x89, 0x71, 0xe1,
-	0xa4, 0xc0, 0xcb, 0x9b, 0x66, 0x68, 0x5f, 0xf3, 0xde, 0xc3, 0x0c, 0x3b, 0xe3, 0xd2, 0x95, 0x3f,
-	0xc3, 0x85, 0x0b, 0x16, 0x2e, 0xf4, 0x1f, 0xcc, 0x72, 0xe2, 0xca, 0x8d, 0xc6, 0xc0, 0x82, 0xbf,
-	0x61, 0xda, 0xbe, 0x96, 0xb6, 0x60, 0x66, 0x36, 0xc0, 0xbd, 0xf7, 0xdc, 0x7b, 0xcf, 0x39, 0xbd,
-	0x05, 0x54, 0x47, 0xe6, 0x04, 0x12, 0x9d, 0x40, 0x17, 0x13, 0x06, 0x89, 0xce, 0xce, 0x35, 0x97,
-	0x60, 0x86, 0xc5, 0x8a, 0x5f, 0xd0, 0xc2, 0x82, 0xbc, 0x69, 0xda, 0x96, 0x83, 0x75, 0xff, 0x33,
-	0x80, 0xc8, 0xd5, 0x01, 0xa6, 0x36, 0xa6, 0xba, 0x4d, 0x91, 0xfe, 0xee, 0xc0, 0xfb, 0xe2, 0x85,
-	0x7b, 0xbc, 0x40, 0x99, 0x79, 0x66, 0x39, 0x5e, 0xb1, 0x0f, 0x99, 0x79, 0x10, 0xc6, 0x1c, 0x55,
-	0x0b, 0x50, 0x27, 0x7e, 0xa4, 0x07, 0x01, 0x2f, 0x6d, 0x21, 0x8c, 0x70, 0x90, 0xf7, 0x7e, 0xf1,
-	0x6c, 0x3d, 0xc5, 0xd5, 0x35, 0x89, 0x69, 0x87, 0x2d, 0x6a, 0x5a, 0x08, 0x3e, 0x83, 0xce, 0x09,
-	0x26, 0x16, 0xb2, 0x1c, 0x8e, 0x51, 0xbf, 0x0b, 0xe0, 0x46, 0x8f, 0xa2, 0x57, 0xee, 0xd0, 0x64,
-	0xf0, 0xb9, 0xdf, 0x2d, 0x3e, 0x04, 0x45, 0x73, 0xcc, 0x4e, 0x31, 0xb1, 0xd8, 0x44, 0x12, 0x1a,
-	0x42, 0xb3, 0xd8, 0x95, 0x7e, 0x7c, 0xdd, 0xdf, 0xe2, 0x7c, 0x8e, 0x86, 0x43, 0x02, 0x29, 0x7d,
-	0xc1, 0x88, 0xe5, 0x20, 0x63, 0x09, 0x15, 0x1f, 0x81, 0x42, 0xb0, 0x5f, 0xca, 0x36, 0x84, 0x66,
-	0xa9, 0xbd, 0xad, 0x25, 0x0d, 0xd3, 0x82, 0xf9, 0xdd, 0xe2, 0xc5, 0xef, 0xdd, 0xcc, 0xe7, 0xc5,
-	0xb4, 0x25, 0x18, 0xbc, 0xa1, 0x73, 0xf8, 0x61, 0x31, 0x6d, 0x2d, 0x47, 0x7d, 0x5c, 0x4c, 0x5b,
-	0x8d, 0x80, 0xfd, 0xf9, 0x92, 0x7f, 0x8a, 0xa7, 0x5a, 0x03, 0xd5, 0x54, 0xca, 0x80, 0xd4, 0xc5,
-	0x0e, 0x85, 0xea, 0x2f, 0x01, 0x6c, 0xf6, 0x28, 0x3a, 0x26, 0xd0, 0x64, 0xd0, 0xe0, 0x03, 0x44,
-	0x19, 0xfc, 0x1f, 0x0e, 0x0b, 0x74, 0x19, 0x51, 0x2c, 0x6e, 0x83, 0x82, 0x69, 0xe3, 0xb1, 0xc3,
-	0x7c, 0xf2, 0x79, 0x83, 0x47, 0xe2, 0x11, 0xd8, 0x48, 0xf8, 0x26, 0xe5, 0x1a, 0xb9, 0x66, 0xa9,
-	0xbd, 0x93, 0xd6, 0xf6, 0xd2, 0x03, 0x3d, 0x0b, 0x30, 0x46, 0x99, 0xc5, 0x22, 0xb1, 0x0b, 0xc0,
-	0x00, 0xdb, 0xb6, 0x45, 0xa9, 0x85, 0x1d, 0x29, 0xef, 0x7b, 0xa3, 0x6a, 0xdc, 0xcd, 0xf0, 0x00,
-	0xf8, 0x41, 0x68, 0xc7, 0x11, 0xd2, 0x88, 0x75, 0x75, 0x36, 0x3c, 0x83, 0x22, 0xb6, 0x6a, 0x1d,
-	0xd4, 0x56, 0xe4, 0x45, 0xe2, 0xbf, 0x09, 0xe0, 0x56, 0x8f, 0xa2, 0x27, 0x70, 0x04, 0x51, 0x5c,
-	0xfe, 0x0e, 0x28, 0x0e, 0x83, 0x1c, 0x0e, 0xf5, 0x2f, 0x13, 0x09, 0x73, 0xb2, 0xff, 0x34, 0x27,
-	0x97, 0x30, 0xe7, 0x31, 0x28, 0xc7, 0xcd, 0x91, 0xf2, 0xd7, 0xf0, 0xa6, 0x14, 0xf3, 0xa6, 0x53,
-	0xf1, 0x9f, 0x7b, 0x44, 0x42, 0xbd, 0x0d, 0xea, 0x6b, 0x98, 0x87, 0xca, 0xda, 0x5f, 0xb2, 0x20,
-	0xd7, 0xa3, 0x48, 0x7c, 0x0d, 0xca, 0x89, 0x8b, 0xdd, 0x4d, 0x6f, 0x4c, 0xdd, 0x85, 0x7c, 0xff,
-	0x0a, 0x40, 0xb8, 0x41, 0x7c, 0x0b, 0x2a, 0xa9, 0xa3, 0xb9, 0xb3, 0xa6, 0x35, 0x09, 0x91, 0x1f,
-	0x5c, 0x09, 0x89, 0xe6, 0x0f, 0xc1, 0xcd, 0x95, 0xe7, 0x72, 0x77, 0x4d, 0x7b, 0x1a, 0x24, 0xef,
-	0x5d, 0x03, 0x14, 0x6e, 0x91, 0xff, 0x7b, 0xef, 0xbd, 0x5d, 0xdd, 0xa7, 0x17, 0x33, 0x45, 0xb8,
-	0x9c, 0x29, 0xc2, 0x9f, 0x99, 0x22, 0x7c, 0x9a, 0x2b, 0x99, 0xcb, 0xb9, 0x92, 0xf9, 0x39, 0x57,
-	0x32, 0x6f, 0xf6, 0x90, 0xc5, 0x4e, 0xc7, 0x7d, 0x6d, 0x80, 0x6d, 0x9d, 0xc1, 0xd1, 0x08, 0x93,
-	0x7d, 0x0b, 0xeb, 0x2b, 0x6f, 0x1c, 0x9b, 0xb8, 0x90, 0xf6, 0x0b, 0xfe, 0x5f, 0xc5, 0xe1, 0xdf,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0xc8, 0xf5, 0x34, 0x6b, 0x19, 0x05, 0x00, 0x00,
+	// 622 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4f, 0x6f, 0x12, 0x5f,
+	0x14, 0x65, 0x4a, 0x7f, 0xe4, 0xc7, 0x6d, 0x8b, 0x76, 0xac, 0x05, 0x06, 0x3b, 0xd0, 0x51, 0x23,
+	0xd2, 0x30, 0x93, 0xd2, 0xc4, 0x44, 0x56, 0x4a, 0x75, 0x49, 0x34, 0xa3, 0x26, 0xc6, 0x85, 0xcd,
+	0xc0, 0xbc, 0x4c, 0xc7, 0x32, 0xf3, 0x26, 0xef, 0x3d, 0x4c, 0xd9, 0x19, 0x37, 0x26, 0xae, 0x5c,
+	0xfa, 0x11, 0x5c, 0xb2, 0x70, 0xd3, 0x6f, 0xd0, 0x65, 0xe3, 0xca, 0x85, 0x31, 0x06, 0x16, 0x7c,
+	0x0d, 0x33, 0x7f, 0x81, 0x61, 0xb4, 0x6d, 0xdc, 0x00, 0xf7, 0xde, 0x73, 0xef, 0x3d, 0xe7, 0xbc,
+	0xc7, 0x83, 0x7c, 0x4f, 0x1b, 0x20, 0xa2, 0x10, 0xe4, 0x60, 0xc2, 0x10, 0x51, 0xd8, 0xb1, 0xec,
+	0x10, 0xcc, 0x30, 0x9f, 0xf3, 0x0a, 0x72, 0x58, 0x10, 0xd6, 0x35, 0xcb, 0xb4, 0xb1, 0xe2, 0x7d,
+	0xfa, 0x10, 0x21, 0xdf, 0xc5, 0xd4, 0xc2, 0x54, 0xb1, 0xa8, 0xa1, 0xbc, 0xdd, 0x75, 0xbf, 0x82,
+	0xc2, 0xad, 0xa0, 0x40, 0x99, 0x76, 0x64, 0xda, 0x6e, 0xb1, 0x83, 0x98, 0xb6, 0x1b, 0xc6, 0x01,
+	0xaa, 0xe8, 0xa3, 0x0e, 0xbc, 0x48, 0xf1, 0x83, 0xa0, 0xb4, 0x61, 0x60, 0x03, 0xfb, 0x79, 0xf7,
+	0x57, 0x90, 0x2d, 0xc5, 0xb8, 0x3a, 0x1a, 0xd1, 0xac, 0xb0, 0x65, 0x3b, 0x2e, 0x04, 0x1f, 0x21,
+	0xfb, 0x00, 0x13, 0xd3, 0x30, 0x6d, 0x1f, 0x22, 0x9d, 0x70, 0x70, 0xa5, 0x4d, 0x8d, 0x17, 0x8e,
+	0xae, 0x31, 0xf4, 0xd4, 0x6b, 0xe6, 0xef, 0x41, 0x56, 0xeb, 0xb3, 0x43, 0x4c, 0x4c, 0x36, 0x28,
+	0x70, 0x15, 0xae, 0x9a, 0x6d, 0x15, 0xbe, 0x7d, 0xad, 0x6f, 0x04, 0x74, 0x1e, 0xea, 0x3a, 0x41,
+	0x94, 0x3e, 0x63, 0xc4, 0xb4, 0x0d, 0x75, 0x0a, 0xe5, 0xef, 0x43, 0xc6, 0x5f, 0x5f, 0x58, 0xaa,
+	0x70, 0xd5, 0x95, 0xc6, 0xa6, 0x3c, 0xef, 0x97, 0xec, 0xcf, 0x6f, 0x65, 0x4f, 0x7f, 0x96, 0x53,
+	0x5f, 0x26, 0xc3, 0x1a, 0xa7, 0x06, 0x0d, 0xcd, 0xbd, 0xf7, 0x93, 0x61, 0x6d, 0x3a, 0xea, 0xe3,
+	0x64, 0x58, 0xab, 0xf8, 0xe4, 0x8f, 0xa7, 0xf4, 0x63, 0x3c, 0xa5, 0x22, 0xe4, 0x63, 0x29, 0x15,
+	0x51, 0x07, 0xdb, 0x14, 0x49, 0x3f, 0x38, 0x58, 0x6f, 0x53, 0x63, 0x9f, 0x20, 0x8d, 0x21, 0x35,
+	0x18, 0xc0, 0x0b, 0xf0, 0x7f, 0x38, 0xcc, 0xd7, 0xa5, 0x46, 0x31, 0xbf, 0x09, 0x19, 0xcd, 0xc2,
+	0x7d, 0x9b, 0x79, 0xe4, 0x97, 0xd5, 0x20, 0xe2, 0x1f, 0xc0, 0xda, 0xac, 0x6d, 0xb4, 0x90, 0xae,
+	0xa4, 0xab, 0x2b, 0x8d, 0x52, 0x5c, 0xdb, 0x73, 0x17, 0xf4, 0xc4, 0xc3, 0xa8, 0xab, 0x6c, 0x1a,
+	0x50, 0xbe, 0x05, 0xd0, 0xc5, 0x96, 0x65, 0x52, 0x6a, 0x62, 0xbb, 0xb0, 0xec, 0x59, 0x23, 0xc9,
+	0x81, 0x99, 0xe1, 0xf1, 0x07, 0xd7, 0x41, 0xde, 0x8f, 0x90, 0xea, 0x4c, 0x57, 0x73, 0xcd, 0xf5,
+	0x27, 0x22, 0x2b, 0x95, 0xa0, 0xb8, 0xa0, 0x2e, 0xd2, 0x7e, 0xc2, 0xc1, 0xb5, 0x36, 0x35, 0x1e,
+	0xa1, 0x1e, 0x32, 0x66, 0xd5, 0xdf, 0x80, 0xac, 0xee, 0xe7, 0x70, 0x28, 0x7f, 0x9a, 0x98, 0xf3,
+	0x66, 0xe9, 0x8f, 0xde, 0xa4, 0xff, 0xee, 0xcd, 0xf2, 0x25, 0xbd, 0x69, 0xe6, 0xbc, 0x73, 0x8f,
+	0x58, 0x48, 0x5b, 0x50, 0x4a, 0xa0, 0x1e, 0x49, 0xfb, 0xc0, 0xc1, 0x75, 0xf7, 0xc8, 0x6d, 0xfd,
+	0x72, 0xe2, 0x16, 0x88, 0x2e, 0xfd, 0x2b, 0xd1, 0x32, 0x6c, 0x25, 0x12, 0x09, 0xa9, 0x36, 0x3e,
+	0xa7, 0x21, 0xdd, 0xa6, 0x06, 0xff, 0x12, 0x56, 0xe7, 0xfe, 0x5c, 0xe5, 0xf8, 0xce, 0xd8, 0x15,
+	0x16, 0xee, 0x9c, 0x03, 0x08, 0x37, 0xf0, 0xaf, 0x21, 0x17, 0xbb, 0xdf, 0xdb, 0x09, 0xad, 0xf3,
+	0x10, 0xe1, 0xee, 0xb9, 0x90, 0x68, 0xbe, 0x0e, 0x57, 0x17, 0xee, 0xd0, 0xcd, 0x84, 0xf6, 0x38,
+	0x48, 0xd8, 0xb9, 0x00, 0x28, 0xda, 0xf2, 0x06, 0xf8, 0x84, 0xe3, 0xbc, 0x9d, 0x64, 0xc2, 0x02,
+	0x4c, 0xa8, 0x5f, 0x08, 0x16, 0xee, 0x12, 0xfe, 0x7b, 0xe7, 0x3e, 0x3a, 0xad, 0xc7, 0xa7, 0x23,
+	0x91, 0x3b, 0x1b, 0x89, 0xdc, 0xaf, 0x91, 0xc8, 0x7d, 0x1a, 0x8b, 0xa9, 0xb3, 0xb1, 0x98, 0xfa,
+	0x3e, 0x16, 0x53, 0xaf, 0x76, 0x0c, 0x93, 0x1d, 0xf6, 0x3b, 0x72, 0x17, 0x5b, 0x0a, 0x43, 0xbd,
+	0x1e, 0x26, 0x75, 0x13, 0x2b, 0x0b, 0x0f, 0x11, 0x1b, 0x38, 0x88, 0x76, 0x32, 0xde, 0x0b, 0xba,
+	0xf7, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x88, 0x9e, 0xcb, 0x83, 0x2f, 0x06, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -404,6 +500,8 @@ type MsgClient interface {
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
 	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
 	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
+	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
+	UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error)
 }
 
 type msgClient struct {
@@ -441,6 +539,15 @@ func (c *msgClient) DelegateReporter(ctx context.Context, in *MsgDelegateReporte
 	return out, nil
 }
 
+func (c *msgClient) UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error) {
+	out := new(MsgUndelegateReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/UndelegateReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -450,6 +557,8 @@ type MsgServer interface {
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
 	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
 	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
+	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
+	UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -464,6 +573,9 @@ func (*UnimplementedMsgServer) CreateReporter(ctx context.Context, req *MsgCreat
 }
 func (*UnimplementedMsgServer) DelegateReporter(ctx context.Context, req *MsgDelegateReporter) (*MsgDelegateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegateReporter not implemented")
+}
+func (*UnimplementedMsgServer) UndelegateReporter(ctx context.Context, req *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UndelegateReporter not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -524,6 +636,24 @@ func _Msg_DelegateReporter_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UndelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUndelegateReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UndelegateReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/UndelegateReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UndelegateReporter(ctx, req.(*MsgUndelegateReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.reporter.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -539,6 +669,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegateReporter",
 			Handler:    _Msg_DelegateReporter_Handler,
+		},
+		{
+			MethodName: "UndelegateReporter",
+			Handler:    _Msg_UndelegateReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -712,10 +846,10 @@ func (m *MsgDelegateReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if len(m.TokenOrigin) > 0 {
-		for iNdEx := len(m.TokenOrigin) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.TokenOrigins) > 0 {
+		for iNdEx := len(m.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.TokenOrigin[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.TokenOrigins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -764,6 +898,73 @@ func (m *MsgDelegateReporterResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgDelegateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUndelegateReporter) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUndelegateReporter) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUndelegateReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TokenOrigins) > 0 {
+		for iNdEx := len(m.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TokenOrigins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Delegator) > 0 {
+		i -= len(m.Delegator)
+		copy(dAtA[i:], m.Delegator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Delegator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUndelegateReporterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUndelegateReporterResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUndelegateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -858,8 +1059,8 @@ func (m *MsgDelegateReporter) Size() (n int) {
 	if m.Amount != 0 {
 		n += 1 + sovTx(uint64(m.Amount))
 	}
-	if len(m.TokenOrigin) > 0 {
-		for _, e := range m.TokenOrigin {
+	if len(m.TokenOrigins) > 0 {
+		for _, e := range m.TokenOrigins {
 			l = e.Size()
 			n += 1 + l + sovTx(uint64(l))
 		}
@@ -868,6 +1069,34 @@ func (m *MsgDelegateReporter) Size() (n int) {
 }
 
 func (m *MsgDelegateReporterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUndelegateReporter) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Delegator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.TokenOrigins) > 0 {
+		for _, e := range m.TokenOrigins {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgUndelegateReporterResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1156,7 +1385,7 @@ func (m *MsgCreateReporter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigins{})
+			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigin{})
 			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -1382,7 +1611,7 @@ func (m *MsgDelegateReporter) Unmarshal(dAtA []byte) error {
 			}
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOrigin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOrigins", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1409,8 +1638,8 @@ func (m *MsgDelegateReporter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenOrigin = append(m.TokenOrigin, &TokenOrigins{})
-			if err := m.TokenOrigin[len(m.TokenOrigin)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigin{})
+			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1462,6 +1691,172 @@ func (m *MsgDelegateReporterResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgDelegateReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUndelegateReporter) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUndelegateReporter: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUndelegateReporter: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Delegator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Delegator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenOrigins", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigin{})
+			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUndelegateReporterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUndelegateReporterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUndelegateReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

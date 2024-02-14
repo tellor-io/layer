@@ -10,14 +10,10 @@ import (
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateReporter{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgDelegateReporter{},
-	)
-	// this line is used by starport scaffolding # 3
-
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUndelegateReporter{},
 		&MsgUpdateParams{},
 	)
+	// this line is used by starport scaffolding # 3
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

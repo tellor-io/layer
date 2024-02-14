@@ -122,6 +122,10 @@ import (
 	disputemodulekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputemoduletypes "github.com/tellor-io/layer/x/dispute/types"
 
+	reportermodulekeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportermodule "github.com/tellor-io/layer/x/reporter/module"
+	reportermoduletypes "github.com/tellor-io/layer/x/reporter/types"
+
 	_ "github.com/tellor-io/layer/app/config"
 
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -250,6 +254,8 @@ type App struct {
 	RegistryKeeper registrymodulekeeper.Keeper
 
 	DisputeKeeper disputemodulekeeper.Keeper
+
+	ReporterKeeper reportermodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -316,6 +322,7 @@ func New(
 		oraclemoduletypes.StoreKey,
 		registrymoduletypes.StoreKey,
 		disputemoduletypes.StoreKey,
+		reportermoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 
@@ -581,6 +588,15 @@ func New(
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
 
+	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
+		logger,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper,
+	)
+	reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed App flags", "Flags", appFlags)
@@ -688,6 +704,7 @@ func New(
 			// insert staking hooks receivers here
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
+			app.ReporterKeeper.Hooks(),
 		),
 	)
 
@@ -723,6 +740,7 @@ func New(
 		oracleModule,
 		registryModule,
 		disputeModule,
+		reporterModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -768,6 +786,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -794,6 +813,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
 
@@ -825,6 +845,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 	app.mm.SetOrderInitGenesis(genesisModuleOrder...)

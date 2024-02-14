@@ -3,6 +3,52 @@ info:
   title: HTTP API Console
   name: ''
   description: ''
+paths:
+  /tellor-io/layer/reporter/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerReporterParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  min_stake_amount:
+                    type: string
+                    format: uint64
+                  min_commission_rate:
+                    type: string
+                    title: >-
+                      min_commission_rate, adopted from staking module, is the
+                      minimum commission rate a reporter can their delegators
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
 definitions:
   cosmos.auth.v1beta1.MsgUpdateParamsResponse:
     type: object
@@ -2129,9 +2175,41 @@ definitions:
     description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
   layer.registry.MsgUpdateDataSpecResponse:
     type: object
+  cosmos.staking.v1beta1.Commission:
+    type: object
+    properties:
+      commission_rates:
+        description: >-
+          commission_rates defines the initial commission rates to be used for
+          creating a validator.
+        type: object
+        properties:
+          rate:
+            type: string
+            description: rate is the commission rate charged to delegators, as a fraction.
+          max_rate:
+            type: string
+            description: >-
+              max_rate defines the maximum commission rate which validator can
+              ever charge, as a fraction.
+          max_change_rate:
+            type: string
+            description: >-
+              max_change_rate defines the maximum daily increase of the
+              validator commission, as a fraction.
+      update_time:
+        type: string
+        format: date-time
+        description: update_time is the last time the commission rate was changed.
+    description: Commission defines commission parameters for a given validator.
   layer.reporter.MsgCreateReporterResponse:
     type: object
   layer.reporter.MsgDelegateReporterResponse:
+    type: object
+    description: >-
+      MsgDelegateReporterResponse defines the response structure for executing a
+      MsgDelegateReporter message.
+  layer.reporter.MsgUndelegateReporterResponse:
     type: object
   layer.reporter.MsgUpdateParamsResponse:
     type: object
@@ -2141,15 +2219,43 @@ definitions:
   layer.reporter.Params:
     type: object
     properties:
-      minStakeAmount:
+      min_stake_amount:
         type: string
         format: uint64
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate, adopted from staking module, is the minimum
+          commission rate a reporter can their delegators
     description: Params defines the parameters for the module.
-  layer.reporter.TokenOrigins:
+  layer.reporter.TokenOrigin:
     type: object
     properties:
-      validatorAddress:
+      validator_address:
         type: string
+        title: >-
+          validator_address is the address of the validator that tokens in
+          staking are delegated to
       amount:
         type: string
         format: uint64
+        title: >-
+          amount is the amount of tokens to be delegated to a reporter from a
+          delegation in staking
+    title: TokenOrigin is a message to store the origin of a token
+  layer.reporter.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          min_stake_amount:
+            type: string
+            format: uint64
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate, adopted from staking module, is the minimum
+              commission rate a reporter can their delegators
+    description: QueryParamsResponse is response type for the Query/Params RPC method.

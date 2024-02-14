@@ -8,7 +8,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateReporter{}
 
-func NewMsgCreateReporter(reporter string, amount uint64, tokenOrigins []*TokenOrigins) *MsgCreateReporter {
+func NewMsgCreateReporter(reporter string, amount uint64, tokenOrigins []*TokenOrigin) *MsgCreateReporter {
 	return &MsgCreateReporter{
 		Reporter:     reporter,
 		Amount:       amount,

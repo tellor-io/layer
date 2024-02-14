@@ -32,13 +32,19 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "CreateReporter",
 					Use:            "create-reporter [amount] [token-origins]",
 					Short:          "Send a createReporter tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}, {ProtoField: "tokenOrigins"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}, {ProtoField: "token_origins"}},
 				},
 				{
 					RpcMethod:      "DelegateReporter",
 					Use:            "delegate-reporter [reporter] [amount] [token-origin]",
 					Short:          "Send a delegateReporter tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}, {ProtoField: "amount"}, {ProtoField: "tokenOrigin"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}, {ProtoField: "amount"}, {ProtoField: "token_origins"}},
+				},
+				{
+					RpcMethod:      "UndelegateReporter",
+					Use:            "undelegate-reporter [amount]",
+					Short:          "Send a undelegateReporter tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "token_origins"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

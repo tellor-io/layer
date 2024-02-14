@@ -6,18 +6,16 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ sdk.Msg = &MsgDelegateReporter{}
+var _ sdk.Msg = &MsgUndelegateReporter{}
 
-func NewMsgDelegateReporter(delegator string, reporter string, amount uint64, tokenOrigin []*TokenOrigin) *MsgDelegateReporter {
-	return &MsgDelegateReporter{
+func NewMsgUndelegateReporter(delegator string, tokenOrigin []*TokenOrigin) *MsgUndelegateReporter {
+	return &MsgUndelegateReporter{
 		Delegator:    delegator,
-		Reporter:     reporter,
-		Amount:       amount,
 		TokenOrigins: tokenOrigin,
 	}
 }
 
-func (msg *MsgDelegateReporter) ValidateBasic() error {
+func (msg *MsgUndelegateReporter) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Delegator)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid delegator address (%s)", err)

@@ -8,7 +8,7 @@ import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/reporter/params.proto";
-import "layer/reporter/token_origins.proto";
+import "layer/reporter/token_origin.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
@@ -19,10 +19,14 @@ service Msg {
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
   // CreateReporter defines a (reporter) operation for creating a new reporter.
   rpc CreateReporter(MsgCreateReporter) returns (MsgCreateReporterResponse);
+
   // DelegateReporter defines a (reporter) operation for delegating to a reporter.
   rpc DelegateReporter(MsgDelegateReporter) returns (MsgDelegateReporterResponse);
+  // UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
+  rpc UndelegateReporter(MsgUndelegateReporter) returns (MsgUndelegateReporterResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -50,7 +54,7 @@ message MsgCreateReporter {
   option (cosmos.msg.v1.signer) = "reporter";
   string reporter = 1;
   uint64 amount = 2;
-  repeated TokenOrigins token_origins = 3;
+  repeated TokenOrigin token_origins = 3;
   cosmos.staking.v1beta1.Commission commission = 4;
 }
 
@@ -61,7 +65,19 @@ message MsgDelegateReporter {
   string delegator = 1;
   string reporter = 2;
   uint64 amount = 3;
-  repeated TokenOrigins token_origin = 4;
+  repeated TokenOrigin token_origins = 4;
 }
 
+// MsgDelegateReporterResponse defines the response structure for executing a MsgDelegateReporter message.
 message MsgDelegateReporterResponse {}
+
+// MsgUndelegateReporter defines the Msg/UndelegateReporter request type.
+message MsgUndelegateReporter {
+  option (cosmos.msg.v1.signer) = "delegator";
+  string delegator = 1;
+  // token_origin is the token origin to undelegate from. If empty, all token origins are undelegated,
+  // else the amount field will be the amount to undelegate from the specified token origin.
+  repeated TokenOrigin token_origins = 2;
+}
+
+message MsgUndelegateReporterResponse {}
