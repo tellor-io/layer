@@ -30,7 +30,7 @@ func (s *IntegrationTestSuite) createdelegators(delegators map[string]Delegator)
 	return delegators
 }
 
-func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() {
+func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]Delegator {
 	_, valAddr, _ := s.createValidatorAccs([]int64{1000})
 	val, err := s.stakingKeeper.GetValidator(s.ctx, valAddr[0])
 	s.NoError(err)
@@ -125,4 +125,42 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() {
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
 	s.Equal(oracleReporter.TotalTokens, uint64(200*1e6))
+
+	return delegators
+}
+
+func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
+	delegators := s.TestRegisteringReporterDelegators()
+	// delegatorI undelegates from validator
+	shares, err := delegators[delegatorI].validator.SharesFromTokens(math.NewInt(10 * 1e6))
+	s.NoError(err)
+	valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(delegators[delegatorI].validator.GetOperator())
+	s.NoError(err)
+	// delegatorI undelegates from validator but is still has more tokens with validator than the reporter so reporter tokens should not be affected
+	_, amt, err := s.stakingKeeper.Undelegate(s.ctx, delegators[delegatorI].delegatorAddress, valBz, shares)
+	s.NoError(err)
+	s.Equal(amt, math.NewInt(10*1e6))
+	// call the staking hook
+	s.stakingKeeper.SetHooks(s.reporterkeeper.Hooks())
+	err = s.stakingKeeper.Hooks().AfterDelegationModified(s.ctx, delegators[delegatorI].delegatorAddress, valBz)
+	s.NoError(err)
+	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
+	s.NoError(err)
+	s.Equal(oracleReporter.TotalTokens, uint64(200*1e6))
+	shares, err = delegators[delegatorI].validator.SharesFromTokens(math.NewInt(75 * 1e6))
+	s.NoError(err)
+	// delegatorI undelegates from validator and is left with 15 tokens less than the 25 delegated with reporter
+	_, amt, err = s.stakingKeeper.Undelegate(s.ctx, delegators[delegatorI].delegatorAddress, valBz, shares)
+	s.NoError(err)
+	s.Equal(amt, math.NewInt(75*1e6))
+	err = s.stakingKeeper.Hooks().AfterDelegationModified(s.ctx, delegators[delegatorI].delegatorAddress, valBz)
+	s.NoError(err)
+	// reporter total tokens should go down by 10 since delegatorI undelegated 85 total tokens
+	// from validator remaining 15, which also mean delegation should have only 15 tokens
+	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
+	s.NoError(err)
+	s.Equal(oracleReporter.TotalTokens, uint64(190*1e6))
+	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
+	s.NoError(err)
+	s.Equal(delegationIReporter.Amount, uint64(15*1e6))
 }
