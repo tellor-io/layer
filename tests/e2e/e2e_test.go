@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -54,6 +55,7 @@ func (s *E2ETestSuite) TestTransfer() {
 	}
 	accounts := make([]Accounts, 0, 10)
 
+	// transfer from team to accounts
 	for i := 0; i < 10; i++ {
 		privKey := secp256k1.GenPrivKey()
 		accountAddress := sdk.AccAddress(privKey.PubKey().Address())
@@ -78,7 +80,18 @@ func (s *E2ETestSuite) TestTransfer() {
 		require.NoError(err)
 		require.Equal(startBalance.Add(math.NewInt(1000)), s.bankKeeper.GetBalance(s.ctx, acc.Account, s.denom).Amount)
 	}
-	require.Equal(math.NewInt(300*1e6-1000*10), s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom).Amount)
+	expectedTeamBalance := math.NewInt(300*1e6 - 1000*10)
+	require.Equal(expectedTeamBalance, s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom).Amount)
+
+	//transfer from account 0 to account 1
+	s.bankKeeper.SendCoins(s.ctx, accounts[0].Account, accounts[1].Account, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1000))))
+	require.Equal(math.NewInt(0), s.bankKeeper.GetBalance(s.ctx, accounts[0].Account, s.denom).Amount)
+	require.Equal(math.NewInt(2000), s.bankKeeper.GetBalance(s.ctx, accounts[1].Account, s.denom).Amount)
+
+	//transfer from account 2 to team
+	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accounts[2].Account, minttypes.MintToTeam, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1000))))
+	require.Equal(math.NewInt(0), s.bankKeeper.GetBalance(s.ctx, accounts[2].Account, s.denom).Amount)
+	require.Equal(expectedTeamBalance.Add(math.NewInt(1000)), s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom).Amount)
 }
 
 func (s *E2ETestSuite) TestStakeTokens() {
@@ -92,155 +105,45 @@ func (s *E2ETestSuite) TestStakeTokens() {
 		require.Equal(stakingtypes.Bonded.String(), status.String())
 	}
 
-	// // create and set an account
-	// privKey := secp256k1.GenPrivKey()
-	// accountAddress := sdk.AccAddress(privKey.PubKey().Address())
-	// account := authtypes.BaseAccount{
-	// 	Address: accountAddress.String(),
-	// 	PubKey:  codectypes.UnsafePackAny(privKey.PubKey()),
-	// }
-	// s.accountKeeper.SetAccount(s.ctx, &account)
-	// validatorAddress := sdk.ValAddress(accountAddress)
+	// self-delegate
+	val, err := s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
+	previousPower := val.GetConsensusPower(sdk.DefaultPowerReduction)
+	fmt.Println("previousPower: ", previousPower)
+	require.Nil(err)
+	s.stakingKeeper.Delegate(s.ctx, accountAddrs[0], math.NewInt(10000000), stakingtypes.Unbonded, val, true)
+	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
+	require.Nil(err)
+	currentPower := val.GetConsensusPower(sdk.DefaultPowerReduction)
+	fmt.Println("currentPower: ", currentPower)
+	require.Equal(math.NewInt(previousPower).Add(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10000000), sdk.DefaultPowerReduction))), math.NewInt(currentPower))
+	fmt.Println("10000000 tokenstoconsensuspower: ", sdk.TokensToConsensusPower(math.NewInt(10000000), sdk.DefaultPowerReduction))
 
-	// // give the account some tokens from minttoteam account
-	// err := s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.MintToTeam, accountAddress, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(100*1e5))))
-	// require.NoError(err)
-
-	// // stake the account
-	// validator, err := stakingtypes.NewValidator(validatorAddress.String(), privKey.PubKey(), stakingtypes.Description{})
-	// require.NoError(err)
-	// s.stakingKeeper.SetValidator(s.ctx, validator)
-	// s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-	// s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, validator)
-	// _, err = s.stakingKeeper.Delegate(s.ctx, accountAddress, math.NewInt(100*1e5), stakingtypes.Unbonded, validator, true)
-	// require.NoError(err)
-	// _ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
-	// val, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(accountAddress))
-	// require.Nil(err)
-	// status := val.GetStatus()
-	// // check that the validator is bonded
-	// require.Equal(stakingtypes.Bonded.String(), status.String())
+	// undelegate some of self-delegated stake
+	s.stakingKeeper.Undelegate(s.ctx, accountAddrs[0], validatorAddrs[0], math.LegacyNewDecFromInt(math.NewInt(1)))
+	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
+	require.Nil(err)
+	currentPower = val.GetConsensusPower(sdk.DefaultPowerReduction)
+	fmt.Println("currentPower after undelegate: ", currentPower)
 }
 
-// func (s *E2ETestSuite) TestValidateAPICallsAtConsensus() {
-// 	// require := s.Require()
+func (s *E2ETestSuite) TestCycleList() {
+	
 
-// }
-
-// func (s *E2ETestSuite) TestMint500kToVal() []sdk.AccAddress {
-// 	// require := s.Require()
-
-// 	// // Create 10 validators
-// 	// powers := []int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100}
-// 	// valSet := s.createValidatorAccs(powers)
-// 	// target := valSet[9]
-// 	// startingBalance := s.bankKeeper.GetBalance(s.ctx, target, "loya").Amount
-
-// 	// // Mint coins to module account
-// 	// mintAmount := math.NewInt(500000)
-// 	// coin := sdk.NewCoin(s.denom, mintAmount)
-// 	// err := s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(coin))
-// 	// require.NoError(err)
-
-// 	// // transfer coins from module account to target
-// 	// err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, target, sdk.NewCoins(coin))
-// 	// require.NoError(err)
-
-// 	// // Check that the recipient's balance was updated
-// 	// balance := s.bankKeeper.GetBalance(s.ctx, target, "loya").Amount
-// 	// require.Equal(startingBalance.Add(mintAmount), balance)
-// 	// return valSet
-// }
-
-// func (s *E2ETestSuite) TestMint500kToAccount() {
-// require := s.Require()
-
-// // Create an account
-// PrivKey := secp256k1.GenPrivKey()
-// PubKey := PrivKey.PubKey()
-// Addr := sdk.AccAddress(PubKey.Address())
-
-// // set account with auth module
-// acc := authtypes.BaseAccount{
-// 	Address: Addr.String(),
-// 	PubKey:  codectypes.UnsafePackAny(PubKey),
-// }
-// s.accountKeeper.SetAccount(s.ctx, &acc)
-// startingBalance := s.bankKeeper.GetBalance(s.ctx, Addr, "loya").Amount
-// require.Equal(math.NewInt(0), startingBalance)
-
-// // mint to module
-// mintAmount := math.NewInt(500000)
-// coin := sdk.NewCoin(s.denom, mintAmount)
-// err := s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(coin))
-// require.NoError(err)
-
-// // transfer coins from module to account
-// err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, Addr, sdk.NewCoins(coin))
-// require.NoError(err)
-
-// // Check that the balance was updated
-// balance := s.bankKeeper.GetBalance(s.ctx, Addr, "loya").Amount
-// require.Equal(startingBalance.Add(mintAmount), balance)
-// }
-
-// func (s *E2ETestSuite) TestTransferFromValToVal() {
-// 	require := s.Require()
-
-// 	valSet := s.TestMint500kToVal()
-// 	val := valSet[9]
-// 	friends := valSet[:9]
-// 	transferAmount := math.NewInt(100)
-// 	coin := sdk.NewCoin(s.denom, transferAmount)
-
-// 	// Transfer coins to each friend
-// 	for _, friend := range friends {
-// 		startBalance := s.bankKeeper.GetBalance(s.ctx, friend, "loya").Amount
-// 		err := s.bankKeeper.SendCoins(s.ctx, val, friend, sdk.NewCoins(coin))
-// 		require.NoError(err)
-// 		require.Equal(startBalance.Add(transferAmount), s.bankKeeper.GetBalance(s.ctx, friend, "loya").Amount)
-// 	}
-// }
-
-// func (s *E2ETestSuite) TestStakeFromVal() {
-// 	require := s.Require()
-
-// 	valSet := s.TestMint500kToVal()
-// 	val := valSet[9]
-// 	validator, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(val))
-// 	require.NoError(err)
-// 	startingPower := validator.GetBondedTokens()
-// 	fmt.Println("startingPower: ", startingPower)
-
-// }
-
-// func (s *E2ETestSuite) TestTransferFromValToAcc() {
-// 	require := s.Require()
-
-// 	valSet := s.TestMint500k()
-// 	val := valSet[9]
-// 	acc, _, _ := s.newKeysWithTokens()
-// 	startBalance := s.bankKeeper.GetBalance(s.ctx, acc, "loya").Amount
-// 	transferAmount := math.NewInt(100)
-// 	coin := sdk.NewCoin(s.denom, transferAmount)
-// 	err := s.bankKeeper.SendCoins(s.ctx, val, acc, sdk.NewCoins(coin))
-// 	require.NoError(err)
-// 	require.Equal(startBalance.Add(transferAmount), s.bankKeeper.GetBalance(s.ctx, acc, "loya").Amount)
-// }
+}
 
 func (s *E2ETestSuite) TestRegisterCommitSubmit() {
 	require := s.Require()
 
 	// set up keepers and msg servers
 	oraclekeeper, msgServerOracle := s.oracleKeeper()
-	require.NotNil(s.T(), msgServerOracle)
-	require.NotNil(s.T(), oraclekeeper)
+	require.NotNil(msgServerOracle)
+	require.NotNil(oraclekeeper)
 	disputekeeper, msgServerDispute := s.disputeKeeper()
-	require.NotNil(s.T(), msgServerDispute)
-	require.NotNil(s.T(), disputekeeper)
+	require.NotNil(msgServerDispute)
+	require.NotNil(disputekeeper)
 	registrykeeper, msgServerRegistry := s.registryKeeper()
-	require.NotNil(s.T(), msgServerRegistry)
-	require.NotNil(s.T(), registrykeeper)
+	require.NotNil(msgServerRegistry)
+	require.NotNil(registrykeeper)
 
 	// register a spec spec1
 	spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
