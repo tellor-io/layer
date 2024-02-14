@@ -60,17 +60,19 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 		if err := k.Reporters.Remove(ctx, repAddr); err != nil {
 			return nil, err
 		}
+	} else {
+		if err := k.Reporters.Set(ctx, repAddr, reporter); err != nil {
+			return nil, err
+		}
 	}
 	if delegation.Amount <= 0 {
 		if err := k.Delegators.Remove(ctx, delAddr); err != nil {
 			return nil, err
 		}
-	}
-	if err := k.Reporters.Set(ctx, repAddr, reporter); err != nil {
-		return nil, err
-	}
-	if err := k.Delegators.Set(ctx, delAddr, delegation); err != nil {
-		return nil, err
+	} else {
+		if err := k.Delegators.Set(ctx, delAddr, delegation); err != nil {
+			return nil, err
+		}
 	}
 
 	return &types.MsgUndelegateReporterResponse{}, nil

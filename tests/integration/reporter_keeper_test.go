@@ -164,3 +164,33 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
 	s.NoError(err)
 	s.Equal(delegationIReporter.Amount, uint64(15*1e6))
 }
+
+func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
+	delegators := s.TestRegisteringReporterDelegators()
+	server := keeper.NewMsgServerImpl(s.reporterkeeper)
+	source := reportertypes.TokenOrigin{ValidatorAddress: delegators[delegatorI].validator.GetOperator()}
+	// delegatorI undelegates from reporter
+	source.Amount = 5 * 1e6
+	delegationI := reportertypes.NewMsgUndelegateReporter(
+		delegators[delegatorI].delegatorAddress.String(),
+		[]*reportertypes.TokenOrigin{&source},
+	)
+	_, err := server.UndelegateReporter(s.ctx, delegationI)
+	s.NoError(err)
+
+	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
+	s.NoError(err)
+	s.Equal(delegationIReporter.Amount, uint64(20*1e6))
+	// undelegate the remaining 15 tokens
+	source.Amount = 20 * 1e6
+	delegationI.TokenOrigins[0] = &source
+	_, err = server.UndelegateReporter(s.ctx, delegationI)
+	s.NoError(err)
+	//  delegatorI shouldn't exist in delegators table since they are fully undelegated
+	_, err = s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
+	s.Error(err)
+	// check if reporter total tokens went down by 25
+	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
+	s.NoError(err)
+	s.Equal(oracleReporter.TotalTokens, uint64(175*1e6))
+}
