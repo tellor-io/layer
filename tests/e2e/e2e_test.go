@@ -55,7 +55,7 @@ func (s *E2ETestSuite) TestTransfer() {
 	}
 	accounts := make([]Accounts, 0, 10)
 
-	// transfer from team to accounts
+	// transfer from team to 10 accounts
 	for i := 0; i < 10; i++ {
 		privKey := secp256k1.GenPrivKey()
 		accountAddress := sdk.AccAddress(privKey.PubKey().Address())
@@ -107,31 +107,94 @@ func (s *E2ETestSuite) TestStakeTokens() {
 
 	// self-delegate
 	val, err := s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	previousPower := val.GetConsensusPower(sdk.DefaultPowerReduction)
-	fmt.Println("previousPower: ", previousPower)
 	require.Nil(err)
-	s.stakingKeeper.Delegate(s.ctx, accountAddrs[0], math.NewInt(10000000), stakingtypes.Unbonded, val, true)
+	power := val.GetConsensusPower(sdk.DefaultPowerReduction) // start with 10
+	require.Equal(math.NewInt(10), math.NewInt(power))
+	_, err = s.stakingKeeper.Delegate(s.ctx, accountAddrs[0], math.NewInt(10*1e6), stakingtypes.Unbonded, val, true) // delegate 10
+	require.Nil(err)
 	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
 	require.Nil(err)
-	currentPower := val.GetConsensusPower(sdk.DefaultPowerReduction)
-	fmt.Println("currentPower: ", currentPower)
-	require.Equal(math.NewInt(previousPower).Add(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10000000), sdk.DefaultPowerReduction))), math.NewInt(currentPower))
-	fmt.Println("10000000 tokenstoconsensuspower: ", sdk.TokensToConsensusPower(math.NewInt(10000000), sdk.DefaultPowerReduction))
+	actualPower := val.GetConsensusPower(sdk.DefaultPowerReduction)                                                                  // 20
+	expectedPower := math.NewInt(power).Add(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e6), sdk.DefaultPowerReduction))) // 20
+	require.Equal(expectedPower, math.NewInt(actualPower))
 
-	// undelegate some of self-delegated stake
-	s.stakingKeeper.Undelegate(s.ctx, accountAddrs[0], validatorAddrs[0], math.LegacyNewDecFromInt(math.NewInt(1)))
+	// undelegate 1 of self-delegated stake
+	power = val.GetConsensusPower(sdk.DefaultPowerReduction) // 20
+	sharesAmount := math.LegacyNewDecFromInt(math.NewInt(1))
+	_, _, err = s.stakingKeeper.Undelegate(s.ctx, accountAddrs[0], validatorAddrs[0], sharesAmount) // undelegate 1
+	require.Nil(err)
+
+	unbondingAmount, err := s.stakingKeeper.GetDelegatorUnbonding(s.ctx, accountAddrs[0])
+	fmt.Println("unbondingAmount: ", unbondingAmount)
+	require.Nil(err)
+	currentTime := s.ctx.BlockTime()
+	fmt.Println("current time: ", currentTime)
+	unbondingDelegation, err := s.stakingKeeper.GetAllUnbondingDelegations(s.ctx, accountAddrs[0])
+	require.Nil(err)
+	fmt.Println("unbondingDelegation: ", unbondingDelegation)
+
 	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
 	require.Nil(err)
-	currentPower = val.GetConsensusPower(sdk.DefaultPowerReduction)
-	fmt.Println("currentPower after undelegate: ", currentPower)
+	actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction)                                                                  // 19
+	expectedPower = math.NewInt(power).Sub(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e5), sdk.DefaultPowerReduction))) // 19
+	require.Equal(expectedPower, math.NewInt(actualPower))
+
+	// delegate from validator 1 to validator 0
+	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
+	require.Nil(err)
+	power = val.GetConsensusPower(sdk.DefaultPowerReduction)                                                         // 19
+	_, err = s.stakingKeeper.Delegate(s.ctx, accountAddrs[1], math.NewInt(10*1e6), stakingtypes.Unbonded, val, true) // delegate 10
+	require.Nil(err)
+	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
+	require.Nil(err)
+	actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction)                                                                  // 29
+	expectedPower = math.NewInt(power).Add(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e6), sdk.DefaultPowerReduction))) // 29
+	require.Equal(expectedPower, math.NewInt(actualPower))
+
+	// undelegate from validator 1 to validator 0
+	power = val.GetConsensusPower(sdk.DefaultPowerReduction) // 29
+	sharesAmount = math.LegacyNewDecFromInt(math.NewInt(1))
+	_, _, err = s.stakingKeeper.Undelegate(s.ctx, accountAddrs[1], validatorAddrs[0], sharesAmount)
+	require.Nil(err)
+
+	unbondingAmount, err = s.stakingKeeper.GetDelegatorUnbonding(s.ctx, accountAddrs[1])
+	fmt.Println("unbondingAmount: ", unbondingAmount)
+	require.Nil(err)
+	currentTime = s.ctx.BlockTime()
+	fmt.Println("current time: ", currentTime)
+	unbondingDelegation, err = s.stakingKeeper.GetAllUnbondingDelegations(s.ctx, accountAddrs[1])
+	require.Nil(err)
+	fmt.Println("unbondingDelegation: ", unbondingDelegation)
+
+	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
+	require.Nil(err)
+	actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction) // should be 28
+	fmt.Println("actual power: ", actualPower)
+	expectedPower = math.NewInt(power).Sub(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e5), sdk.DefaultPowerReduction))) // 28
+	fmt.Println("expected power: ", expectedPower)
+	require.Equal(expectedPower, math.NewInt(actualPower))
+
 }
 
-func (s *E2ETestSuite) TestCycleList() {
-	
+func (s *E2ETestSuite) TestValidateCycleList() {
+	// require := s.Require()
+	currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	fmt.Println("currentQuery block 0: ", currentQuery)
+	fmt.Println("current block height: ", s.ctx.BlockHeight())
+	//advance 1 block
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	currentQuery = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	fmt.Println("currentQuery block 1: ", currentQuery)
+	fmt.Println("current block height: ", s.ctx.BlockHeight())
+	//advance 1 block
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	currentQuery = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	fmt.Println("currentQuery block 2: ", currentQuery)
+	fmt.Println("current block height: ", s.ctx.BlockHeight())
 
 }
 
-func (s *E2ETestSuite) TestRegisterCommitSubmit() {
+func (s *E2ETestSuite) TestTipCommitReveal() {
 	require := s.Require()
 
 	// set up keepers and msg servers
