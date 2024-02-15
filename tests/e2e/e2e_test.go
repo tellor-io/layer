@@ -168,7 +168,7 @@ func (s *E2ETestSuite) TestStakeTokens() {
 
 	val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
 	require.Nil(err)
-	actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction) // should be 28
+	actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction) // should be 28 ?
 	fmt.Println("actual power: ", actualPower)
 	expectedPower = math.NewInt(power).Sub(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e5), sdk.DefaultPowerReduction))) // 28
 	fmt.Println("expected power: ", expectedPower)
@@ -177,20 +177,27 @@ func (s *E2ETestSuite) TestStakeTokens() {
 }
 
 func (s *E2ETestSuite) TestValidateCycleList() {
-	// require := s.Require()
+	_ = sdk.BeginBlocker(s.app.BeginBlocker)
 	currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	fmt.Println("currentQuery block 0: ", currentQuery)
 	fmt.Println("current block height: ", s.ctx.BlockHeight())
+	_ = sdk.EndBlocker(s.app.EndBlocker)
+
 	//advance 1 block
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_ = sdk.BeginBlocker(s.app.BeginBlocker)
 	currentQuery = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	fmt.Println("currentQuery block 1: ", currentQuery)
 	fmt.Println("current block height: ", s.ctx.BlockHeight())
+	_ = sdk.EndBlocker(s.app.EndBlocker)
+
 	//advance 1 block
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	currentQuery = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	fmt.Println("currentQuery block 2: ", currentQuery)
 	fmt.Println("current block height: ", s.ctx.BlockHeight())
+	err := sdk.EndBlocker(s.app.EndBlocker)
+	fmt.Println("err: ", err) // 0x101e2e970
 
 }
 
@@ -238,6 +245,7 @@ func (s *E2ETestSuite) TestTipCommitReveal() {
 	require.NoError(err)
 	_ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
 	validator, err := s.stakingKeeper.Validator(s.ctx, valAddr)
+	require.NoError(err)
 	status := validator.GetStatus()
 	require.Equal(stakingtypes.Bonded.String(), status.String())
 
