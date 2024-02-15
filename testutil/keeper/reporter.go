@@ -18,10 +18,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/tellor-io/layer/x/reporter/keeper"
+	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func ReporterKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -32,13 +33,13 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-
+	sk := new(mocks.StakingKeeper)
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		log.NewNopLogger(),
 		authority.String(),
-		nil,
+		sk,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
@@ -46,5 +47,5 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx
+	return k, sk, ctx
 }

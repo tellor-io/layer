@@ -3,7 +3,8 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,14 +14,15 @@ import (
 func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegateReporter) (*types.MsgDelegateReporterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	delegator := sdk.MustAccAddressFromBech32(msg.Delegator)
+	delAddr := sdk.MustAccAddressFromBech32(msg.Delegator)
+	repAddr := sdk.MustAccAddressFromBech32(msg.Reporter)
 
 	// fetch reporter
-	reporter, err := k.Reporters.Get(ctx, sdk.MustAccAddressFromBech32(msg.Reporter))
+	reporter, err := k.Reporters.Get(ctx, repAddr)
 	if err != nil {
 		return nil, err
 	}
-	delegation, err := k.Delegators.Get(ctx, delegator)
+	delegation, err := k.Delegators.Get(ctx, delAddr)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
@@ -33,19 +35,19 @@ func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegat
 		// found delegation, update the amount
 		// validate right reporter selected
 		if delegation.Reporter != msg.Reporter {
-			return nil, fmt.Errorf("A delegation exists but reporter, %s, does not match the selected reporter: %s", delegation.Reporter, msg.Reporter)
+			return nil, errorsmod.Wrapf(types.ErrInvalidReporter, "Reporter mismatch for delegated address %s, expected %s, got %s", msg.Delegator, delegation.Reporter, msg.Reporter)
 		}
-		delegation.Amount += msg.Amount
+		delegation.Amount = delegation.Amount.Add(msg.Amount)
 	}
-	if err := k.Keeper.ValidateAmount(ctx, delegator, msg.TokenOrigins, msg.Amount); err != nil {
+	if err := k.Keeper.ValidateAmount(ctx, delAddr, msg.TokenOrigins, msg.Amount); err != nil {
 		return nil, err
 	}
-	if err := k.Delegators.Set(ctx, delegator, delegation); err != nil {
+	if err := k.Delegators.Set(ctx, delAddr, delegation); err != nil {
 		return nil, err
 	}
 	// update reporter total tokens
-	reporter.TotalTokens += msg.Amount
-	if err := k.Reporters.Set(ctx, sdk.MustAccAddressFromBech32(msg.Reporter), reporter); err != nil {
+	reporter.TotalTokens = reporter.TotalTokens.Add(msg.Amount)
+	if err := k.Reporters.Set(ctx, repAddr, reporter); err != nil {
 		return nil, err
 	}
 

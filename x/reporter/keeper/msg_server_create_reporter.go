@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
@@ -16,14 +16,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	if reporterExists {
-		return nil, fmt.Errorf("Reporter already registered!")
-	}
-	minStakeAmount, err := k.MinStakeAmount(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if msg.Amount < minStakeAmount {
-		return nil, fmt.Errorf("Insufficient stake amount")
+		return nil, errors.Wrapf(types.ErrReporterExists, "cannot create reporter with address %s, it already exists", msg.Reporter)
 	}
 	// check if reporter is delegated somewhere
 	delegatorExists, err := k.Delegators.Has(ctx, reporter)
@@ -31,7 +24,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	if delegatorExists {
-		return nil, fmt.Errorf("Reporter already delegated!")
+		return nil, errors.Wrapf(types.ErrAddressDelegated, "cannot use address %s as reporter as it is already delegated", msg.Reporter)
 	}
 	if err := k.Keeper.ValidateAmount(ctx, reporter, msg.TokenOrigins, msg.Amount); err != nil {
 		return nil, err
@@ -41,7 +34,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	if msg.Commission.Rate.LT(minCommRate) {
-		return nil, fmt.Errorf("cannot set reporter commission to less than minimum rate of %s", minCommRate)
+		return nil, errors.Wrapf(types.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", minCommRate)
 	}
 
 	commission := types.NewCommissionWithTime(msg.Commission.Rate, msg.Commission.MaxRate,

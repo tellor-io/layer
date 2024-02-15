@@ -78,43 +78,27 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 		if err != nil {
 			return err
 		}
-		tokenAmount := validator.TokensFromSharesTruncated(delegation.GetShares()).TruncateInt().Uint64()
+		tokenAmount := validator.TokensFromSharesTruncated(delegation.GetShares()).TruncateInt()
 		// get token origin
 		source, err := h.k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
 		if err != nil {
 			return err
 		}
 		// update token origin if the staked amount becomes less than what is written in the token origin struct
-		if tokenAmount < source.Amount {
+		if tokenAmount.LT(source.Amount) {
 			// get the difference in the token change to reduce delegation and reporter tokens by.
-			diff := source.Amount - tokenAmount
-			source.Amount = tokenAmount
-			if source.Amount <= 0 {
-				if err := h.k.TokenOrigin.Remove(ctx, collections.Join(delAddr, valAddr)); err != nil {
-					return err
-				}
-			} else {
-				if err := h.k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), source); err != nil {
-					return err
-				}
+			diff := source.Amount.Sub(tokenAmount)
+			if err := h.k.UpdateOrRemoveSource(ctx, collections.Join(delAddr, valAddr), source, tokenAmount); err != nil {
+				return err
 			}
+
 			// update delegator
 			delegator, err := h.k.Delegators.Get(ctx, delAddr)
 			if err != nil {
 				return err
 			}
-			delegator, err = delegator.ReduceDelegationby(diff)
-			if err != nil {
+			if err := h.k.UpdateOrRemoveDelegator(ctx, delAddr, delegator, diff); err != nil {
 				return err
-			}
-			if delegator.Amount <= 0 {
-				if err := h.k.Delegators.Remove(ctx, delAddr); err != nil {
-					return err
-				}
-			} else {
-				if err := h.k.Delegators.Set(ctx, delAddr, delegator); err != nil {
-					return err
-				}
 			}
 			// update reporter
 			repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
@@ -122,18 +106,8 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 			if err != nil {
 				return err
 			}
-			reporter, err = reporter.ReduceReporterTokensby(diff)
-			if err != nil {
+			if err := h.k.UpdateOrRemoveReporter(ctx, repAddr, reporter, diff); err != nil {
 				return err
-			}
-			if reporter.TotalTokens <= 0 {
-				if err := h.k.Reporters.Remove(ctx, repAddr); err != nil {
-					return err
-				}
-			} else {
-				if err := h.k.Reporters.Set(ctx, repAddr, reporter); err != nil {
-					return err
-				}
 			}
 		}
 

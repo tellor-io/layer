@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -9,7 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateReporter{}
 
-func NewMsgCreateReporter(reporter string, amount uint64, tokenOrigins []*TokenOrigin, commission *stakingtypes.Commission) *MsgCreateReporter {
+func NewMsgCreateReporter(reporter string, amount math.Int, tokenOrigins []*TokenOrigin, commission *stakingtypes.Commission) *MsgCreateReporter {
 	return &MsgCreateReporter{
 		Reporter:     reporter,
 		Amount:       amount,

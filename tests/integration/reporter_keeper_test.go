@@ -8,6 +8,13 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
+/*
+Need:
+reporter Address: delegated stake with a validator 100*1e6 tokens
+4-delegators staked with validator(100*1e6 tokens) that will delegate their tokens (25*1e6 tokens) tokens with the reporter
+1-What happens when delegator removes delegation(10(shouldn't affect reporter), and 76(should affect reporter)) from validator? What to reporter, delegation?
+2-
+*/
 const (
 	reporter     = "reporter"
 	delegatorI   = "delegator1"
@@ -49,8 +56,8 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
 
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: 100 * 1e6}
-	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators[reporter].delegatorAddress.String(), 100*1e6, []*reportertypes.TokenOrigin{&source}, &commission)
+	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewIntFromUint64(100 * 1e6)}
+	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators[reporter].delegatorAddress.String(), math.NewIntFromUint64(100*1e6), []*reportertypes.TokenOrigin{&source}, &commission)
 	server := keeper.NewMsgServerImpl(s.reporterkeeper)
 	_, err = server.CreateReporter(s.ctx, createReporterMsg)
 	s.NoError(err)
@@ -58,14 +65,14 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
 	s.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.String())
-	s.Equal(oracleReporter.TotalTokens, uint64(100*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(100*1e6))
 
 	// add delegation to reporter
-	source = reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: 25 * 1e6}
+	source = reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewInt(25 * 1e6)}
 	delegationI := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
-		25*1e6,
+		math.NewInt(25*1e6),
 		[]*reportertypes.TokenOrigin{&source},
 	)
 	_, err = server.DelegateReporter(s.ctx, delegationI)
@@ -76,12 +83,12 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(125*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(125*1e6))
 	// add 2nd delegation to reporter
 	delegationII := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorII].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
-		25*1e6,
+		math.NewInt(25*1e6),
 		[]*reportertypes.TokenOrigin{&source},
 	)
 	_, err = server.DelegateReporter(s.ctx, delegationII)
@@ -92,12 +99,12 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(150*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(150*1e6))
 	// add 3rd delegation to reporter
 	delegationIII := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorIII].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
-		25*1e6,
+		math.NewInt(25*1e6),
 		[]*reportertypes.TokenOrigin{&source},
 	)
 	_, err = server.DelegateReporter(s.ctx, delegationIII)
@@ -108,12 +115,12 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(175*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(175*1e6))
 	// add 4th delegation to reporter
 	delegationIV := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorIV].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
-		25*1e6,
+		math.NewInt(25*1e6),
 		[]*reportertypes.TokenOrigin{&source},
 	)
 	_, err = server.DelegateReporter(s.ctx, delegationIV)
@@ -124,7 +131,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(200*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(200*1e6))
 
 	return delegators
 }
@@ -146,7 +153,7 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
 	s.NoError(err)
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(200*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(200*1e6))
 	shares, err = delegators[delegatorI].validator.SharesFromTokens(math.NewInt(75 * 1e6))
 	s.NoError(err)
 	// delegatorI undelegates from validator and is left with 15 tokens less than the 25 delegated with reporter
@@ -159,10 +166,10 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
 	// from validator remaining 15, which also mean delegation should have only 15 tokens
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(190*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(190*1e6))
 	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIReporter.Amount, uint64(15*1e6))
+	s.Equal(delegationIReporter.Amount, math.NewInt(15*1e6))
 }
 
 func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
@@ -170,7 +177,7 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
 	server := keeper.NewMsgServerImpl(s.reporterkeeper)
 	source := reportertypes.TokenOrigin{ValidatorAddress: delegators[delegatorI].validator.GetOperator()}
 	// delegatorI undelegates from reporter
-	source.Amount = 5 * 1e6
+	source.Amount = math.NewInt(5 * 1e6)
 	delegationI := reportertypes.NewMsgUndelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		[]*reportertypes.TokenOrigin{&source},
@@ -180,9 +187,9 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
 
 	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIReporter.Amount, uint64(20*1e6))
+	s.Equal(delegationIReporter.Amount, math.NewInt(20*1e6))
 	// undelegate the remaining 15 tokens
-	source.Amount = 20 * 1e6
+	source.Amount = math.NewInt(20 * 1e6)
 	delegationI.TokenOrigins[0] = &source
 	_, err = server.UndelegateReporter(s.ctx, delegationI)
 	s.NoError(err)
@@ -192,5 +199,5 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
 	// check if reporter total tokens went down by 25
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.TotalTokens, uint64(175*1e6))
+	s.Equal(oracleReporter.TotalTokens, math.NewInt(175*1e6))
 }

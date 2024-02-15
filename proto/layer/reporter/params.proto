@@ -12,9 +12,8 @@ message Params {
   option (amino.name) = "layer/x/reporter/Params";
   option (gogoproto.equal) = true;
 
-  uint64 min_stake_amount = 1 [(gogoproto.moretags) = "yaml:\"min_stake_amount\""];
   // min_commission_rate, adopted from staking module, is the minimum commission rate a reporter can their delegators
-  string min_commission_rate = 2 [
+  string min_commission_rate = 1 [
     (gogoproto.moretags) = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false,

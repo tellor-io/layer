@@ -53,7 +53,11 @@ message MsgUpdateParamsResponse {}
 message MsgCreateReporter {
   option (cosmos.msg.v1.signer) = "reporter";
   string reporter = 1;
-  uint64 amount = 2;
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
   repeated TokenOrigin token_origins = 3;
   cosmos.staking.v1beta1.Commission commission = 4;
 }
@@ -64,7 +68,11 @@ message MsgDelegateReporter {
   option (cosmos.msg.v1.signer) = "delegator";
   string delegator = 1;
   string reporter = 2;
-  uint64 amount = 3;
+  string amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
   repeated TokenOrigin token_origins = 4;
 }
 

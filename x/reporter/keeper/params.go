@@ -21,11 +21,6 @@ func (k Keeper) SetParams(ctx context.Context, params types.Params) error {
 	return k.Params.Set(ctx, params)
 }
 
-func (k Keeper) MinStakeAmount(ctx context.Context) (uint64, error) {
-	params, err := k.Params.Get(ctx)
-	return params.MinStakeAmount, err
-}
-
 func (k Keeper) MinCommissionRate(ctx context.Context) (math.LegacyDec, error) {
 	params, err := k.Params.Get(ctx)
 	return params.MinCommissionRate, err

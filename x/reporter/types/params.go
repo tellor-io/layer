@@ -10,10 +10,9 @@ import (
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
-	KeyMinStakeAmount = []byte("MinStakeAmount")
+	KeyMinCommissionRate = []byte("MinCommissionRate")
 	// TODO: Determine the default value
-	DefaultMinStakeAmount    uint64 = 0
-	DefaultMinCommissionRate        = math.LegacyZeroDec()
+	DefaultMinCommissionRate = math.LegacyZeroDec()
 )
 
 // ParamKeyTable the param key table for launch module
@@ -23,11 +22,9 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams(
-	minStakeAmount uint64,
 	minCommissionRate math.LegacyDec,
 ) Params {
 	return Params{
-		MinStakeAmount:    minStakeAmount,
 		MinCommissionRate: minCommissionRate,
 	}
 }
@@ -35,7 +32,6 @@ func NewParams(
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
 	return NewParams(
-		DefaultMinStakeAmount,
 		DefaultMinCommissionRate,
 	)
 }
@@ -43,13 +39,13 @@ func DefaultParams() Params {
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyMinStakeAmount, &p.MinStakeAmount, validateMinStakeAmount),
+		paramtypes.NewParamSetPair(KeyMinCommissionRate, &p.MinCommissionRate, validateMinCommissionRate),
 	}
 }
 
 // Validate validates the set of params
 func (p Params) Validate() error {
-	if err := validateMinStakeAmount(p.MinStakeAmount); err != nil {
+	if err := validateMinCommissionRate(p.MinCommissionRate); err != nil {
 		return err
 	}
 
@@ -57,14 +53,14 @@ func (p Params) Validate() error {
 }
 
 // validateMinStakeAmount validates the MinStakeAmount param
-func validateMinStakeAmount(v interface{}) error {
-	minStakeAmount, ok := v.(uint64)
+func validateMinCommissionRate(v interface{}) error {
+	minCommissionRate, ok := v.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
 	// TODO implement validation
-	_ = minStakeAmount
+	_ = minCommissionRate
 
 	return nil
 }
