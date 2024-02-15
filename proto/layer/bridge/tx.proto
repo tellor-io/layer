@@ -1,7 +1,19 @@
 syntax = "proto3";
 package layer.bridge;
+import "cosmos/msg/v1/msg.proto";
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+    rpc RegisterOperatorPubkey (MsgRegisterOperatorPubkey) returns (MsgRegisterOperatorPubkeyResponse);
+}
+
+message MsgRegisterOperatorPubkey {
+    option (cosmos.msg.v1.signer) = "creator";
+
+    string creator = 1;
+    string operatorPubkey = 2;
+}
+
+message MsgRegisterOperatorPubkeyResponse {}

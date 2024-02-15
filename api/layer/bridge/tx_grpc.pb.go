@@ -3,7 +3,10 @@
 package bridge
 
 import (
+	context "context"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -15,6 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
+	RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterOperatorPubkey, opts ...grpc.CallOption) (*MsgRegisterOperatorPubkeyResponse, error)
 }
 
 type msgClient struct {
@@ -25,10 +29,20 @@ func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
 }
 
+func (c *msgClient) RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterOperatorPubkey, opts ...grpc.CallOption) (*MsgRegisterOperatorPubkeyResponse, error) {
+	out := new(MsgRegisterOperatorPubkeyResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/RegisterOperatorPubkey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
+	RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -36,6 +50,9 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
+func (UnimplementedMsgServer) RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterOperatorPubkey not implemented")
+}
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
 // UnsafeMsgServer may be embedded to opt out of forward compatibility for this service.
@@ -49,13 +66,36 @@ func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 	s.RegisterService(&Msg_ServiceDesc, srv)
 }
 
+func _Msg_RegisterOperatorPubkey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRegisterOperatorPubkey)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RegisterOperatorPubkey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/RegisterOperatorPubkey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RegisterOperatorPubkey(ctx, req.(*MsgRegisterOperatorPubkey))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.bridge.Msg",
 	HandlerType: (*MsgServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "layer/bridge/tx.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RegisterOperatorPubkey",
+			Handler:    _Msg_RegisterOperatorPubkey_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "layer/bridge/tx.proto",
 }

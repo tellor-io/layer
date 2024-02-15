@@ -3,7 +3,9 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 
@@ -34,6 +36,7 @@ type (
 		Params              collections.Item[types.Params]
 		BridgeValset        collections.Item[types.BridgeValidatorSet]
 		ValidatorCheckpoint collections.Item[types.ValidatorCheckpoint]
+		// EVMAddressByOperator collections.Map[types.EVMAddressByOperator]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -410,4 +413,39 @@ func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.B
 	}
 
 	return gomath.Abs(delta / float64(gomath.MaxUint32))
+}
+
+func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error) {
+	message := "TellorLayer: Initial bridge daemon signature"
+	// convert message to bytes
+	msgBytes := []byte(message)
+	// hash message
+	msgHashBytes32 := sha256.Sum256(msgBytes)
+	// convert [32]byte to []byte
+	msgHashBytes := msgHashBytes32[:]
+
+	// hash the hash, since the keyring signer automatically hashes the message
+	msgDoubleHashBytes32 := sha256.Sum256(msgHashBytes)
+	msgDoubleHashBytes := msgDoubleHashBytes32[:]
+
+	// Convert the hex signature to bytes
+	signatureBytes, err := hex.DecodeString(sigHexString)
+	if err != nil {
+		k.Logger(ctx).Warn("Error decoding signature hex", "error", err)
+		return "", err
+	}
+	// append 01
+
+	// Recover the public key
+	sigPublicKey, err := crypto.SigToPub(msgDoubleHashBytes, signatureBytes)
+	if err != nil {
+		k.Logger(ctx).Warn("Error recovering public key from signature", "error", err)
+		return "", err
+	}
+
+	// Get the address
+	recoveredAddr := crypto.PubkeyToAddress(*sigPublicKey)
+
+	k.Logger(ctx).Info("Recovered Address:", recoveredAddr.Hex())
+	return recoveredAddr.Hex(), nil
 }

@@ -49,7 +49,7 @@ func (c *Client) SignMessage(msg []byte) ([]byte, error) {
 		fmt.Printf("Failed to sign message: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("Signature:", bytes.HexBytes(sig).String())
-	fmt.Println("Public Key:", pubKeyReturned.Address().String())
+	c.logger.Info("Signature:", "sig", bytes.HexBytes(sig).String())
+	c.logger.Info("Public Key:", pubKeyReturned.Address().String())
 	return sig, nil
 }
