@@ -69,6 +69,12 @@ func (k msgServer) RegisterOperatorPubkey(ctx context.Context, msg *types.MsgReg
 	// // Add the pubkey to the store
 	// k.SetOperatorPubKey(sdkCtx, msg.PubKey, msg.Creator)
 
+	error := k.Keeper.SetEVMAddressByOperator(sdkCtx, operatorAddr2, ethAddress)
+	if error != nil {
+		k.Keeper.Logger(sdkCtx).Error("failed to set eth address by operator", "error", error)
+		return nil, status.Error(codes.Internal, error.Error())
+	}
+
 	return &types.MsgRegisterOperatorPubkeyResponse{}, nil
 }
 

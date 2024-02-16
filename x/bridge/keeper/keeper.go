@@ -32,11 +32,11 @@ type (
 		cdc          codec.BinaryCodec
 		storeService storetypes.KVStoreService
 
-		Schema              collections.Schema
-		Params              collections.Item[types.Params]
-		BridgeValset        collections.Item[types.BridgeValidatorSet]
-		ValidatorCheckpoint collections.Item[types.ValidatorCheckpoint]
-		// EVMAddressByOperator collections.Map[types.EVMAddressByOperator]
+		Schema                  collections.Schema
+		Params                  collections.Item[types.Params]
+		BridgeValset            collections.Item[types.BridgeValidatorSet]
+		ValidatorCheckpoint     collections.Item[types.ValidatorCheckpoint]
+		OperatorToEVMAddressMap collections.Map[string, types.EVMAddress]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -51,13 +51,14 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:                 cdc,
-		storeService:        storeService,
-		Params:              collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		BridgeValset:        collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
-		ValidatorCheckpoint: collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
-		stakingKeeper:       stakingKeeper,
-		slashingKeeper:      slashingKeeper,
+		cdc:                     cdc,
+		storeService:            storeService,
+		Params:                  collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		BridgeValset:            collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValidatorCheckpoint:     collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		OperatorToEVMAddressMap: collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
+		stakingKeeper:           stakingKeeper,
+		slashingKeeper:          slashingKeeper,
 	}
 
 	schema, err := sb.Build()
@@ -82,12 +83,14 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx sdk.Context) ([]*types.Bri
 	bridgeValset := make([]*types.BridgeValidator, len(validators))
 
 	for i, validator := range validators {
-		valAddress, err := sdk.ValAddressFromBech32(validator.GetOperator())
+		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
+		evmAddressHex := hex.EncodeToString(evmAddress.EVMAddress)
 		if err != nil {
+			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			return nil, err
 		}
 		bridgeValset[i] = &types.BridgeValidator{
-			EthereumAddress: DefaultEVMAddress(valAddress).String(),
+			EthereumAddress: evmAddressHex,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
 		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator DDDD", "test", bridgeValset[i].EthereumAddress)
@@ -448,4 +451,19 @@ func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (s
 
 	k.Logger(ctx).Info("Recovered Address:", recoveredAddr.Hex())
 	return recoveredAddr.Hex(), nil
+}
+
+func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error {
+	k.Logger(ctx).Info("@SetEVMAddressByOperator", "msg", "setting EVM address by operator")
+	evmAddrBytes := common.HexToAddress(evmAddr).Bytes()
+	evmAddrType := types.EVMAddress{
+		EVMAddress: evmAddrBytes,
+	}
+
+	err := k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, types.EVMAddress(evmAddrType))
+	if err != nil {
+		k.Logger(ctx).Info("Error setting EVM address by operator", "error", err)
+		return err
+	}
+	return nil
 }

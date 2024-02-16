@@ -17,7 +17,8 @@ const (
 )
 
 var (
-	ParamsKey              = collections.NewPrefix(0) // Prefix for params key
-	BridgeValsetKey        = collections.NewPrefix(1) // Prefix for bridge_valset key
-	ValidatorCheckpointKey = collections.NewPrefix(2) // Prefix for validator_checkpoint key
+	ParamsKey                  = collections.NewPrefix(0) // Prefix for params key
+	BridgeValsetKey            = collections.NewPrefix(1) // Prefix for bridge_valset key
+	ValidatorCheckpointKey     = collections.NewPrefix(2) // Prefix for validator_checkpoint key
+	OperatorToEVMAddressMapKey = collections.NewPrefix(3) // Prefix for operator_to_evm_address_map key
 )
