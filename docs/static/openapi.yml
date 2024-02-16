@@ -2137,6 +2137,8 @@ definitions:
       the connection handshake.
   layer.bridge.MsgRegisterOperatorPubkeyResponse:
     type: object
+  layer.bridge.MsgSubmitBridgeValsetSignatureResponse:
+    type: object
   layer.bridge.BridgeValidator:
     type: object
     properties:
