@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterOperatorPubkey, opts ...grpc.CallOption) (*MsgRegisterOperatorPubkeyResponse, error)
+	SubmitBridgeValsetSignature(ctx context.Context, in *MsgSubmitBridgeValsetSignature, opts ...grpc.CallOption) (*MsgSubmitBridgeValsetSignatureResponse, error)
 }
 
 type msgClient struct {
@@ -38,11 +39,21 @@ func (c *msgClient) RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterO
 	return out, nil
 }
 
+func (c *msgClient) SubmitBridgeValsetSignature(ctx context.Context, in *MsgSubmitBridgeValsetSignature, opts ...grpc.CallOption) (*MsgSubmitBridgeValsetSignatureResponse, error) {
+	out := new(MsgSubmitBridgeValsetSignatureResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/SubmitBridgeValsetSignature", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error)
+	SubmitBridgeValsetSignature(context.Context, *MsgSubmitBridgeValsetSignature) (*MsgSubmitBridgeValsetSignatureResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -52,6 +63,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterOperatorPubkey not implemented")
+}
+func (UnimplementedMsgServer) SubmitBridgeValsetSignature(context.Context, *MsgSubmitBridgeValsetSignature) (*MsgSubmitBridgeValsetSignatureResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitBridgeValsetSignature not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -84,6 +98,24 @@ func _Msg_RegisterOperatorPubkey_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SubmitBridgeValsetSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubmitBridgeValsetSignature)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SubmitBridgeValsetSignature(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/SubmitBridgeValsetSignature",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SubmitBridgeValsetSignature(ctx, req.(*MsgSubmitBridgeValsetSignature))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +126,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RegisterOperatorPubkey",
 			Handler:    _Msg_RegisterOperatorPubkey_Handler,
+		},
+		{
+			MethodName: "SubmitBridgeValsetSignature",
+			Handler:    _Msg_SubmitBridgeValsetSignature_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,0 +1,16 @@
+package keeper
+
+import (
+	"context"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/x/bridge/types"
+)
+
+func (k msgServer) SubmitBridgeValsetSignature(ctx context.Context, msg *types.MsgSubmitBridgeValsetSignature) (*types.MsgSubmitBridgeValsetSignatureResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	k.Keeper.Logger(sdkCtx).Info("@FuncSubmitBridgeValsetSignature", "msg", msg)
+
+	return &types.MsgSubmitBridgeValsetSignatureResponse{}, nil
+}
