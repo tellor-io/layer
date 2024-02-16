@@ -19,7 +19,6 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
 
-	// TODO: figure out how to get the current cycle query
 	currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
 	tip := k.GetQueryTip(ctx, queryId)
 	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {

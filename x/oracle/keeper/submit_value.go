@@ -42,27 +42,8 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, q
 		Timestamp:       ctx.BlockTime(),
 	}
 
-	fmt.Printf("the reporter HERE %x\n", reporter.Bytes())
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), ctx.BlockHeight()), report)
-
-	// k.setValueByReporter(ctx, report)
-	// k.setValueByQueryId(ctx, queryId, report)
-	// k.AppendReport(ctx, report)
-	// return nil
 }
-
-// func (k Keeper) AppendReport(ctx sdk.Context, report *types.MicroReport) {
-// 	store := k.ReportsStore(ctx)
-// 	// get reports for current block height to append new report
-// 	var reportsByHeight types.Reports
-// 	key := types.NumKey(report.BlockNumber)
-// 	bz := store.Get(key)
-// 	k.cdc.MustUnmarshal(bz, &reportsByHeight)
-// 	reportsByHeight.MicroReports = append(reportsByHeight.MicroReports, report)
-// 	store.Set(key, k.cdc.MustMarshal(&reportsByHeight))
-// 	// delete reports that were stored by height(only) for previous block height
-// 	store.Delete(types.NumKey(report.BlockNumber - 1))
-// }
 
 func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int64, bool) {
 

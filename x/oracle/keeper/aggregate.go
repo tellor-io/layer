@@ -89,9 +89,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
-	// TODO: can we store this as bytes?
 	report.QueryId = regtypes.Remove0xPrefix(report.QueryId)
-
 	queryId, err := utils.QueryIDFromString(report.QueryId)
 	if err != nil {
 		panic(err)

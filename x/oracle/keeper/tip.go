@@ -57,7 +57,6 @@ func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) types.Us
 }
 
 func (k Keeper) GetTotalTips(ctx context.Context) sdk.Coin {
-	// TODO: handle this error correctly
 	totalTips, err := k.TotalTips.Get(ctx)
 	if errors.Is(err, collections.ErrNotFound) {
 		return sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())

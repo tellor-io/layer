@@ -18,10 +18,6 @@ func (k Keeper) GetReportsbyQid(goCtx context.Context, req *types.QueryGetReport
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// queryId, err := utils.QueryIDFromString(req.QueryId)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to decode query ID string: %v", err)
-	// }
 
 	// TODO: add index and use that
 	reports := types.Reports{

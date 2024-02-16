@@ -29,7 +29,6 @@ func (s *KeeperTestSuite) TestSubmitValue() string {
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.Equal(&submitres, res)
 	require.Nil(err)
-	// TODO: Where this query id was coming from?
 
 	queryId, err := utils.QueryIDFromDataString(queryData)
 	require.NoError(err)
