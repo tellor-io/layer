@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -20,5 +21,21 @@ func NewCommissionWithTime(rate, maxRate, maxChangeRate math.LegacyDec, updatedA
 	return stakingtypes.Commission{
 		CommissionRates: stakingtypes.NewCommissionRates(rate, maxRate, maxChangeRate),
 		UpdateTime:      updatedAt,
+	}
+}
+
+// create a new ReporterHistoricalRewards
+func NewReporterHistoricalRewards(cumulativeRewardRatio sdk.DecCoins, referenceCount uint32) ReporterHistoricalRewards {
+	return ReporterHistoricalRewards{
+		CumulativeRewardRatio: cumulativeRewardRatio,
+		ReferenceCount:        referenceCount,
+	}
+}
+
+// create a new ReporterCurrentRewards
+func NewReporterCurrentRewards(rewards sdk.DecCoins, period uint64) ReporterCurrentRewards {
+	return ReporterCurrentRewards{
+		Rewards: rewards,
+		Period:  period,
 	}
 }

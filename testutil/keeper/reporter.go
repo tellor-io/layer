@@ -33,6 +33,7 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Cont
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	bk := new(mocks.BankKeeper)
 	sk := new(mocks.StakingKeeper)
 	k := keeper.NewKeeper(
 		cdc,
@@ -40,6 +41,7 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Cont
 		log.NewNopLogger(),
 		authority.String(),
 		sk,
+		bk,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

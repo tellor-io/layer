@@ -1,0 +1,87 @@
+syntax = "proto3";
+package layer.reporter;
+
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+message ReporterAccumulatedCommission {
+  repeated cosmos.base.v1beta1.DecCoin commission = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
+// for a reporter inexpensive to track, allows simple sanity checks.
+message ReporterOutstandingRewards {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// DelegatorStartingInfo represents the starting info for a delegator reward
+// period. It tracks the previous reporter period, the delegation's amount of
+// staking token, and the creation height (to check later on if any slashes have
+// occurred).
+message DelegatorStartingInfo {
+  uint64 previous_period = 1;
+  string stake = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  uint64 height = 3 [
+    (gogoproto.jsontag) = "creation_height",
+    (amino.field_name) = "creation_height",
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// ReporterHistoricalRewards represents historical rewards for a reporter.
+// Height is implicit within the store key.
+// Cumulative reward ratio is the sum from the zeroeth period
+// until this period of rewards / tokens, per the spec.
+// The reference count indicates the number of objects
+// which might need to reference this historical entry at any point.
+// ReferenceCount =
+//    number of outstanding delegations which ended the associated period (and
+//    might need to read that record)
+//  + number of slashes which ended the associated period (and might need to
+//  read that record)
+//  + one per reporter for the zeroeth period, set on initialization
+message ReporterHistoricalRewards {
+  repeated cosmos.base.v1beta1.DecCoin cumulative_reward_ratio = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  uint32 reference_count = 2;
+}
+
+// ReporterCurrentRewards represents current rewards and current
+// period for a reporter kept as a running counter and incremented
+// each block as long as the reporter's tokens remain constant.
+message ReporterCurrentRewards {
+  repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  uint64 period = 2;
+}
+
+message ReporterDisputeEvent {
+  uint64 reporter_period = 1;
+  string fraction = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
