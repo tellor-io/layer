@@ -666,8 +666,8 @@ func New(
 
 		// Start the Bridge Signer Daemon.
 		ctx := context.Background()
-		app.BridgeSignerClient = bridgesignerclient.NewClient(app.Logger())
-		go app.BridgeSignerClient.Start(ctx, app.AppCodec())
+		app.BridgeSignerClient = bridgesignerclient.NewClient(cltx, app.Logger())
+		go app.BridgeSignerClient.Start(ctx, app.AppCodec(), &daemontypes.GrpcClientImpl{})
 	}
 
 	/**** IBC Routing ****/
