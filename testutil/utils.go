@@ -17,9 +17,9 @@ func GenerateRandomAddress() sdk.AccAddress {
 	return sdk.AccAddress(randBytes)
 }
 
-func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, queryData string) []oracletypes.MicroReport {
+func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport
-	queryId, err := utils.QueryIDFromDataString(queryData)
+	queryId, err := utils.QueryIDFromString(qId)
 	if err != nil {
 		panic(fmt.Sprintf("failed to decode query ID string: %v", err))
 	}

@@ -55,7 +55,10 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 		// Handle weighted-median aggregation method.
 		if reports[0].AggregateMethod == "weighted-median" {
 			// Calculate the aggregated report.
-			report := k.WeightedMedian(ctx, reports)
+			report, err := k.WeightedMedian(ctx, reports)
+			if err != nil {
+				return err
+			}
 			// Get the tip for this query.
 			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
 			// Allocate rewards if there is a tip.
