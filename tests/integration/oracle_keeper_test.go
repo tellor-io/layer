@@ -274,11 +274,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	// report bypass commit/reveal
 	values := []string{"000001", "000002", "000003", "000004"}
 	// case 1: 1 reporter 1 report
-	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
-	bal1 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
-	s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
 	qId, err := utils.QueryIDFromDataString(ethQueryData)
 	s.NoError(err)
+	reports := testutil.GenerateReports(accs, values, powers, hex.EncodeToString(qId))
+	bal1 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
+	s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
 	s.Equal(res.Report.AggregateReportIndex, int64(0))
@@ -299,7 +299,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	// transfer tokens to distribution module
 	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(reward))))
 	// generate 4 reports for ethQueryData
-	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
+	qId, err := utils.QueryIDFromDataString(ethQueryData)
+	s.NoError(err)
+	reports := testutil.GenerateReports(accs, values, powers, hex.EncodeToString(qId))
 	testCases := []struct {
 		name                 string
 		reporterIndex        int
@@ -320,8 +322,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 		},
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:2])
-	qId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
 
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
@@ -347,7 +347,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	// transfer tokens to distribution module
 	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(reward))))
 	// generate 4 reports for ethQueryData
-	reports := testutil.GenerateReports(accs, values, powers, ethQueryData)
+	qId, err := utils.QueryIDFromDataString(ethQueryData)
+	s.NoError(err)
+	reports := testutil.GenerateReports(accs, values, powers, hex.EncodeToString(qId))
 	testCases := []struct {
 		name                 string
 		reporterIndex        int
@@ -374,8 +376,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 		},
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
-	qId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
 
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
