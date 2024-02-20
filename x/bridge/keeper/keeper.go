@@ -378,6 +378,16 @@ func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp 
 	return &valsetSigs, nil
 }
 
+func (k Keeper) GetOracleAttestationsFromStorage(ctx sdk.Context, queryId string, timestamp uint64) (*types.OracleAttestations, error) {
+	key := hex.EncodeToString(crypto.Keccak256([]byte(queryId + fmt.Sprint(timestamp))))
+	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get oracle attestations", "error", err)
+		return nil, err
+	}
+	return &oracleAttestations, nil
+}
+
 func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
 	k.Logger(ctx).Info("@EncodeAndHashValidatorSet", "msg", "encoding and hashing validator set")
 	// Define Go equivalent of the Solidity Validator struct

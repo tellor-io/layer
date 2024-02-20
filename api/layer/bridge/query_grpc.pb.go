@@ -26,6 +26,7 @@ type QueryClient interface {
 	GetValidatorCheckpointParams(ctx context.Context, in *QueryGetValidatorCheckpointParamsRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointParamsResponse, error)
 	GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error)
+	GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error)
 }
 
 type queryClient struct {
@@ -90,6 +91,15 @@ func (c *queryClient) GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsR
 	return out, nil
 }
 
+func (c *queryClient) GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error) {
+	out := new(QueryGetOracleAttestationsResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetOracleAttestations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -102,6 +112,7 @@ type QueryServer interface {
 	GetValidatorCheckpointParams(context.Context, *QueryGetValidatorCheckpointParamsRequest) (*QueryGetValidatorCheckpointParamsResponse, error)
 	GetValidatorTimestampByIndex(context.Context, *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error)
+	GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -126,6 +137,9 @@ func (UnimplementedQueryServer) GetValidatorTimestampByIndex(context.Context, *Q
 }
 func (UnimplementedQueryServer) GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValsetSigs not implemented")
+}
+func (UnimplementedQueryServer) GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOracleAttestations not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -248,6 +262,24 @@ func _Query_GetValsetSigs_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetOracleAttestations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetOracleAttestationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetOracleAttestations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetOracleAttestations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetOracleAttestations(ctx, req.(*QueryGetOracleAttestationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +310,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetValsetSigs",
 			Handler:    _Query_GetValsetSigs_Handler,
+		},
+		{
+			MethodName: "GetOracleAttestations",
+			Handler:    _Query_GetOracleAttestations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

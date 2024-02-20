@@ -29,10 +29,11 @@ import (
 )
 
 type Client struct {
-	logger     log.Logger
-	codec      codec.Codec
-	checkpoint string
-	cosmosCtx  client.Context
+	logger         log.Logger
+	codec          codec.Codec
+	checkpoint     string
+	queryTimestamp string
+	cosmosCtx      client.Context
 }
 
 func NewClient(clientCtx client.Context, logger log.Logger) *Client {
@@ -88,6 +89,17 @@ func (c *Client) Start(ctx context.Context, appCodec codec.Codec, grpcClient dae
 					continue
 				}
 			}
+			// // query the latest report
+			// queryId := "abcd"
+			// aggregatedReport, err := c.QueryAggregatedReport(queryId)
+			// if err != nil {
+			// 	c.logger.Error("Failed to query aggregated report", "error", err)
+			// 	continue
+			// }
+
+			// check if the report is valid
+			// if not, sign the latest checkpoint
+			// if valid, submit the report to the bridge module
 
 			error := c.CheckAndSignInitialMessage()
 			if error != nil {
@@ -142,8 +154,54 @@ func (c *Client) QueryValsetTimestamp() (string, error) {
 	return result.Timestamp, nil
 }
 
+// type Aggregate struct {
+// 	QueryId              string               `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
+// 	AggregateValue       string               `protobuf:"bytes,2,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
+// 	AggregateReporter    string               `protobuf:"bytes,3,opt,name=aggregateReporter,proto3" json:"aggregateReporter,omitempty"`
+// 	ReporterPower        int64                `protobuf:"varint,4,opt,name=reporterPower,proto3" json:"reporterPower,omitempty"`
+// 	StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
+// 	Reporters            []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
+// 	Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
+// 	Nonce                int64                `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
+// 	AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
+// }
+
+func (c *Client) QueryAggregatedReport(queryId string) (string, error) {
+	resp, err := http.Get("http://localhost:1317/tellor-io/layer/oracle/get_aggregated_report?queryId=" + queryId)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// Aggregate returned
+	var result struct {
+		QueryId              string   `json:"queryId"`
+		AggregateValue       string   `json:"aggregateValue"`
+		AggregateReporter    string   `json:"aggregateReporter"`
+		ReporterPower        int64    `json:"reporterPower"`
+		StandardDeviation    float64  `json:"standardDeviation"`
+		Reporters            []string `json:"reporters"`
+		Flagged              bool     `json:"flagged"`
+		Nonce                int64    `json:"nonce"`
+		AggregateReportIndex int64    `json:"aggregateReportIndex"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", err
+	}
+	return result.AggregateValue, nil
+}
+
 func (c *Client) isNewCheckpoint(checkpoint string) bool {
 	return checkpoint != c.checkpoint
+}
+
+func (c *Client) isNewReport(timestamp string) bool {
+	return timestamp != c.queryTimestamp
 }
 
 func (c *Client) EncodeAndSignMessage(checkpointString string) ([]byte, error) {
