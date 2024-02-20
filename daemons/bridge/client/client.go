@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -19,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/crypto"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
@@ -411,4 +414,116 @@ func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 		case <-ticker.C:
 		}
 	}
+}
+
+func (c *Client) EncodeOracleAttestationData(
+	queryId string,
+	value string,
+	timestamp string,
+	aggregatePower string,
+	previousTimestamp string,
+	nextTimestamp string,
+	valsetCheckpoint string,
+	attestationTimestamp string,
+) ([]byte, error) {
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR := []byte("tellorNewReport")
+	var domainSepBytes32 [32]byte
+	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
+
+	// Convert queryId to bytes32
+	queryIdBytes, err := hex.DecodeString(queryId)
+	if err != nil {
+		return nil, err
+	}
+	var queryIdBytes32 [32]byte
+	copy(queryIdBytes32[:], queryIdBytes)
+
+	// Convert value to bytes
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert timestamp to uint64
+	timestampUint64, err := strconv.ParseUint(timestamp, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert aggregatePower to uint64
+	aggregatePowerUint64, err := strconv.ParseUint(aggregatePower, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert previousTimestamp to uint64
+	previousTimestampUint64, err := strconv.ParseUint(previousTimestamp, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert nextTimestamp to uint64
+	nextTimestampUint64, err := strconv.ParseUint(nextTimestamp, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert valsetCheckpoint to bytes32
+	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
+	if err != nil {
+		return nil, err
+	}
+	var valsetCheckpointBytes32 [32]byte
+	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
+
+	// Convert attestationTimestamp to uint64
+	attestationTimestampUint64, err := strconv.ParseUint(attestationTimestamp, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	// Prepare Encoding
+	Bytes32Type, err := abi.NewType("bytes32", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	arguments := abi.Arguments{
+		{Type: Bytes32Type},
+		{Type: Bytes32Type},
+		{Type: BytesType},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Bytes32Type},
+		{Type: Uint256Type},
+	}
+
+	// Encode the data
+	encodedData, err := arguments.Pack(
+		domainSepBytes32,
+		queryIdBytes32,
+		valueBytes,
+		timestampUint64,
+		aggregatePowerUint64,
+		previousTimestampUint64,
+		nextTimestampUint64,
+		valsetCheckpointBytes32,
+		attestationTimestampUint64,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleAttestationHash := crypto.Keccak256(encodedData)
+	return oracleAttestationHash, nil
 }
