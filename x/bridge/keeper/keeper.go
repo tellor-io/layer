@@ -32,12 +32,15 @@ type (
 		cdc          codec.BinaryCodec
 		storeService storetypes.KVStoreService
 
-		Schema                    collections.Schema
-		Params                    collections.Item[types.Params]
-		BridgeValset              collections.Item[types.BridgeValidatorSet]
-		ValidatorCheckpoint       collections.Item[types.ValidatorCheckpoint]
-		OperatorToEVMAddressMap   collections.Map[string, types.EVMAddress]
-		BridgeValsetSignaturesMap collections.Map[uint64, types.BridgeValsetSignatures]
+		Schema                       collections.Schema
+		Params                       collections.Item[types.Params]
+		BridgeValset                 collections.Item[types.BridgeValidatorSet]
+		ValidatorCheckpoint          collections.Item[types.ValidatorCheckpoint]
+		OperatorToEVMAddressMap      collections.Map[string, types.EVMAddress]
+		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
+		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
+		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
+		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -52,15 +55,19 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:                       cdc,
-		storeService:              storeService,
-		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		BridgeValset:              collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
-		ValidatorCheckpoint:       collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
-		OperatorToEVMAddressMap:   collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
-		BridgeValsetSignaturesMap: collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
-		stakingKeeper:             stakingKeeper,
-		slashingKeeper:            slashingKeeper,
+		cdc:                          cdc,
+		storeService:                 storeService,
+		Params:                       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		BridgeValset:                 collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
+		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
+		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
+		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
+		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
+
+		stakingKeeper:  stakingKeeper,
+		slashingKeeper: slashingKeeper,
 	}
 
 	schema, err := sb.Build()
@@ -274,39 +281,6 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 		{Type: Bytes32Type},
 	}
 
-	// // ********** DELETE THIS, JUST FOR TESTING - START **********
-	// arg1 := abi.Arguments{{Type: Bytes32Type}}
-	// arg2 := abi.Arguments{{Type: Uint256Type}}
-	// arg3 := abi.Arguments{{Type: Uint256Type}}
-	// arg4 := abi.Arguments{{Type: Bytes32Type}}
-
-	// encodedData1, err := arg1.Pack(domainSeparatorFixSize)
-	// if err != nil {
-	// 	k.Logger(ctx).Warn("Error encoding arguments arg1", "error", err)
-	// 	return nil, err
-	// }
-	// encodedData2, err := arg2.Pack(powerThresholdBigInt)
-	// if err != nil {
-	// 	k.Logger(ctx).Warn("Error encoding arguments arg2", "error", err)
-	// 	return nil, err
-	// }
-	// encodedData3, err := arg3.Pack(validatorTimestampBigInt)
-	// if err != nil {
-	// 	k.Logger(ctx).Warn("Error encoding arguments arg3", "error", err)
-	// 	return nil, err
-	// }
-	// encodedData4, err := arg4.Pack(validatorSetHashFixSize)
-	// if err != nil {
-	// 	k.Logger(ctx).Warn("Error encoding arguments arg4", "error", err)
-	// 	return nil, err
-	// }
-
-	// encodedDataTest := append(encodedData1, encodedData2...)
-	// encodedDataTest = append(encodedDataTest, encodedData3...)
-	// encodedDataTest = append(encodedDataTest, encodedData4...)
-
-	// // ********** DELETE THIS, JUST FOR TESTING - END ************
-
 	// Encode the arguments
 	encodedCheckpointData, err := arguments.Pack(
 		domainSeparatorFixSize,
@@ -327,7 +301,42 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	k.Logger(ctx).Info("encodedData", "encodedData", fmt.Sprintf("%x", encodedCheckpointData))
 	k.Logger(ctx).Info("checkpoint", "checkpoint", fmt.Sprintf("%x", checkpoint))
 
-	// Hash the encoded data
+	// save checkpoint params
+	checkpointParams := types.ValidatorCheckpointParams{
+		Checkpoint:     checkpoint,
+		ValsetHash:     validatorSetHash,
+		Timestamp:      int64(validatorTimestamp),
+		PowerThreshold: int64(powerThreshold),
+	}
+	err = k.ValidatorCheckpointParamsMap.Set(ctx, validatorTimestamp, checkpointParams)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting validator checkpoint params: ", "error", err)
+		return nil, err
+	}
+
+	// load checkpoint index. if not found, set to 0
+	checkpointIdx := types.CheckpointIdx{}
+	lastCheckpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
+		checkpointIdx.Index = 0
+	} else {
+		checkpointIdx.Index = lastCheckpointIdx.Index + 1
+	}
+
+	// save checkpoint index
+	err = k.ValidatorCheckpointIdxMap.Set(ctx, checkpointIdx.Index, types.CheckpointTimestamp{Timestamp: validatorTimestamp})
+	if err != nil {
+		k.Logger(ctx).Info("Error setting validator checkpoint index: ", "error", err)
+		return nil, err
+	}
+
+	// save latest checkpoint index
+	err = k.LatestCheckpointIdx.Set(ctx, checkpointIdx)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting latest checkpoint index: ", "error", err)
+		return nil, err
+	}
 	return checkpoint, nil
 }
 
@@ -338,6 +347,24 @@ func (k Keeper) GetValidatorCheckpointFromStorage(ctx sdk.Context) (*types.Valid
 		return nil, err
 	}
 	return &checkpoint, nil
+}
+
+func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*types.ValidatorCheckpointParams, error) {
+	checkpointParams, err := k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get validator checkpoint params", "error", err)
+		return nil, err
+	}
+	return &checkpointParams, nil
+}
+
+func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*types.CheckpointTimestamp, error) {
+	checkpointTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, checkpointIdx)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get validator checkpoint index", "error", err)
+		return nil, err
+	}
+	return &checkpointTimestamp, nil
 }
 
 func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {

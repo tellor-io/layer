@@ -31,6 +31,14 @@ service Query {
   rpc GetValidatorCheckpoint (QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
     option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_checkpoint";
   }
+
+  rpc GetValidatorCheckpointParams (QueryGetValidatorCheckpointParamsRequest) returns (QueryGetValidatorCheckpointParamsResponse) {
+    option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_checkpoint_params";
+  }
+
+  rpc GetValidatorTimestampByIndex (QueryGetValidatorTimestampByIndexRequest) returns (QueryGetValidatorTimestampByIndexResponse) {
+    option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_timestamp_by_index";
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -42,13 +50,6 @@ message QueryParamsResponse {
   Params params = 1 [(gogoproto.nullable) = false];
 }
 
-
-// message QueryBridgeValidatorsRequest {}
-
-// message QueryBridgeValidatorsResponse {
-//   repeated BridgeValidator bridge_validators = 1;
-//   pagination.PageResponse page_response = 2;
-// }
 message QueryGetEvmValidatorsRequest {}
 
 message QueryGetEvmValidatorsResponse {
@@ -88,3 +89,21 @@ message BridgeValidatorSetCheckpoint {
   bytes validatorCheckpoint = 1;
 }
 
+message QueryGetValidatorCheckpointParamsRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValidatorCheckpointParamsResponse {
+  string checkpoint = 1;
+  string valsetHash = 2;
+  int64 timestamp = 3;
+  int64 powerThreshold = 4;
+}
+
+message QueryGetValidatorTimestampByIndexRequest {
+  int64 index = 1;
+}
+
+message QueryGetValidatorTimestampByIndexResponse {
+  int64 timestamp = 1;
+}

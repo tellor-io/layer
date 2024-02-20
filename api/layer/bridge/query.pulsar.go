@@ -4997,6 +4997,1798 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) ProtoMethods() *protoiface
 	}
 }
 
+var (
+	md_QueryGetValidatorCheckpointParamsRequest           protoreflect.MessageDescriptor
+	fd_QueryGetValidatorCheckpointParamsRequest_timestamp protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetValidatorCheckpointParamsRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetValidatorCheckpointParamsRequest")
+	fd_QueryGetValidatorCheckpointParamsRequest_timestamp = md_QueryGetValidatorCheckpointParamsRequest.Fields().ByName("timestamp")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetValidatorCheckpointParamsRequest)(nil)
+
+type fastReflection_QueryGetValidatorCheckpointParamsRequest QueryGetValidatorCheckpointParamsRequest
+
+func (x *QueryGetValidatorCheckpointParamsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorCheckpointParamsRequest)(x)
+}
+
+func (x *QueryGetValidatorCheckpointParamsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType{}
+
+type fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType struct{}
+
+func (x fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorCheckpointParamsRequest)(nil)
+}
+func (x fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorCheckpointParamsRequest)
+}
+func (x fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorCheckpointParamsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorCheckpointParamsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetValidatorCheckpointParamsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorCheckpointParamsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetValidatorCheckpointParamsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Timestamp != int64(0) {
+		value := protoreflect.ValueOfInt64(x.Timestamp)
+		if !f(fd_QueryGetValidatorCheckpointParamsRequest_timestamp, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
+		return x.Timestamp != int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
+		x.Timestamp = int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfInt64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
+		x.Timestamp = value.Int()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetValidatorCheckpointParamsRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
+		return protoreflect.ValueOfInt64(int64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetValidatorCheckpointParamsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetValidatorCheckpointParamsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorCheckpointParamsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorCheckpointParamsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorCheckpointParamsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorCheckpointParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetValidatorCheckpointParamsResponse                protoreflect.MessageDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_checkpoint     protoreflect.FieldDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_valsetHash     protoreflect.FieldDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_timestamp      protoreflect.FieldDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_powerThreshold protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetValidatorCheckpointParamsResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetValidatorCheckpointParamsResponse")
+	fd_QueryGetValidatorCheckpointParamsResponse_checkpoint = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("checkpoint")
+	fd_QueryGetValidatorCheckpointParamsResponse_valsetHash = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("valsetHash")
+	fd_QueryGetValidatorCheckpointParamsResponse_timestamp = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("timestamp")
+	fd_QueryGetValidatorCheckpointParamsResponse_powerThreshold = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("powerThreshold")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetValidatorCheckpointParamsResponse)(nil)
+
+type fastReflection_QueryGetValidatorCheckpointParamsResponse QueryGetValidatorCheckpointParamsResponse
+
+func (x *QueryGetValidatorCheckpointParamsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorCheckpointParamsResponse)(x)
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType{}
+
+type fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType struct{}
+
+func (x fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorCheckpointParamsResponse)(nil)
+}
+func (x fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorCheckpointParamsResponse)
+}
+func (x fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorCheckpointParamsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorCheckpointParamsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetValidatorCheckpointParamsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorCheckpointParamsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetValidatorCheckpointParamsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Checkpoint != "" {
+		value := protoreflect.ValueOfString(x.Checkpoint)
+		if !f(fd_QueryGetValidatorCheckpointParamsResponse_checkpoint, value) {
+			return
+		}
+	}
+	if x.ValsetHash != "" {
+		value := protoreflect.ValueOfString(x.ValsetHash)
+		if !f(fd_QueryGetValidatorCheckpointParamsResponse_valsetHash, value) {
+			return
+		}
+	}
+	if x.Timestamp != int64(0) {
+		value := protoreflect.ValueOfInt64(x.Timestamp)
+		if !f(fd_QueryGetValidatorCheckpointParamsResponse_timestamp, value) {
+			return
+		}
+	}
+	if x.PowerThreshold != int64(0) {
+		value := protoreflect.ValueOfInt64(x.PowerThreshold)
+		if !f(fd_QueryGetValidatorCheckpointParamsResponse_powerThreshold, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
+		return x.Checkpoint != ""
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+		return x.ValsetHash != ""
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
+		return x.Timestamp != int64(0)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+		return x.PowerThreshold != int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
+		x.Checkpoint = ""
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+		x.ValsetHash = ""
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
+		x.Timestamp = int64(0)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+		x.PowerThreshold = int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
+		value := x.Checkpoint
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+		value := x.ValsetHash
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfInt64(value)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+		value := x.PowerThreshold
+		return protoreflect.ValueOfInt64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
+		x.Checkpoint = value.Interface().(string)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+		x.ValsetHash = value.Interface().(string)
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
+		x.Timestamp = value.Int()
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+		x.PowerThreshold = value.Int()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
+		panic(fmt.Errorf("field checkpoint of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+		panic(fmt.Errorf("field valsetHash of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+		panic(fmt.Errorf("field powerThreshold of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
+		return protoreflect.ValueOfInt64(int64(0))
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+		return protoreflect.ValueOfInt64(int64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorCheckpointParamsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetValidatorCheckpointParamsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetValidatorCheckpointParamsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Checkpoint)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ValsetHash)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.PowerThreshold != 0 {
+			n += 1 + runtime.Sov(uint64(x.PowerThreshold))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorCheckpointParamsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.PowerThreshold != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.PowerThreshold))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x18
+		}
+		if len(x.ValsetHash) > 0 {
+			i -= len(x.ValsetHash)
+			copy(dAtA[i:], x.ValsetHash)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValsetHash)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Checkpoint) > 0 {
+			i -= len(x.Checkpoint)
+			copy(dAtA[i:], x.Checkpoint)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Checkpoint)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorCheckpointParamsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorCheckpointParamsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorCheckpointParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Checkpoint = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetHash", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValsetHash = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PowerThreshold", wireType)
+				}
+				x.PowerThreshold = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.PowerThreshold |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetValidatorTimestampByIndexRequest       protoreflect.MessageDescriptor
+	fd_QueryGetValidatorTimestampByIndexRequest_index protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetValidatorTimestampByIndexRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetValidatorTimestampByIndexRequest")
+	fd_QueryGetValidatorTimestampByIndexRequest_index = md_QueryGetValidatorTimestampByIndexRequest.Fields().ByName("index")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetValidatorTimestampByIndexRequest)(nil)
+
+type fastReflection_QueryGetValidatorTimestampByIndexRequest QueryGetValidatorTimestampByIndexRequest
+
+func (x *QueryGetValidatorTimestampByIndexRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorTimestampByIndexRequest)(x)
+}
+
+func (x *QueryGetValidatorTimestampByIndexRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType{}
+
+type fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType struct{}
+
+func (x fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorTimestampByIndexRequest)(nil)
+}
+func (x fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorTimestampByIndexRequest)
+}
+func (x fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorTimestampByIndexRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorTimestampByIndexRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetValidatorTimestampByIndexRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorTimestampByIndexRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetValidatorTimestampByIndexRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Index != int64(0) {
+		value := protoreflect.ValueOfInt64(x.Index)
+		if !f(fd_QueryGetValidatorTimestampByIndexRequest_index, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
+		return x.Index != int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
+		x.Index = int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
+		value := x.Index
+		return protoreflect.ValueOfInt64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
+		x.Index = value.Int()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
+		panic(fmt.Errorf("field index of message layer.bridge.QueryGetValidatorTimestampByIndexRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
+		return protoreflect.ValueOfInt64(int64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetValidatorTimestampByIndexRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetValidatorTimestampByIndexRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Index != 0 {
+			n += 1 + runtime.Sov(uint64(x.Index))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorTimestampByIndexRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Index != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Index))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorTimestampByIndexRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorTimestampByIndexRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorTimestampByIndexRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+				}
+				x.Index = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Index |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetValidatorTimestampByIndexResponse           protoreflect.MessageDescriptor
+	fd_QueryGetValidatorTimestampByIndexResponse_timestamp protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetValidatorTimestampByIndexResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetValidatorTimestampByIndexResponse")
+	fd_QueryGetValidatorTimestampByIndexResponse_timestamp = md_QueryGetValidatorTimestampByIndexResponse.Fields().ByName("timestamp")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetValidatorTimestampByIndexResponse)(nil)
+
+type fastReflection_QueryGetValidatorTimestampByIndexResponse QueryGetValidatorTimestampByIndexResponse
+
+func (x *QueryGetValidatorTimestampByIndexResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorTimestampByIndexResponse)(x)
+}
+
+func (x *QueryGetValidatorTimestampByIndexResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType{}
+
+type fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType struct{}
+
+func (x fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetValidatorTimestampByIndexResponse)(nil)
+}
+func (x fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorTimestampByIndexResponse)
+}
+func (x fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorTimestampByIndexResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetValidatorTimestampByIndexResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetValidatorTimestampByIndexResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryGetValidatorTimestampByIndexResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetValidatorTimestampByIndexResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Timestamp != int64(0) {
+		value := protoreflect.ValueOfInt64(x.Timestamp)
+		if !f(fd_QueryGetValidatorTimestampByIndexResponse_timestamp, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
+		return x.Timestamp != int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
+		x.Timestamp = int64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfInt64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
+		x.Timestamp = value.Int()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetValidatorTimestampByIndexResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
+		return protoreflect.ValueOfInt64(int64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetValidatorTimestampByIndexResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetValidatorTimestampByIndexResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetValidatorTimestampByIndexResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorTimestampByIndexResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetValidatorTimestampByIndexResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorTimestampByIndexResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetValidatorTimestampByIndexResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -5074,10 +6866,6 @@ func (x *QueryParamsResponse) GetParams() *Params {
 	return nil
 }
 
-//	message QueryBridgeValidatorsResponse {
-//	  repeated BridgeValidator bridge_validators = 1;
-//	  pagination.PageResponse page_response = 2;
-//	}
 type QueryGetEvmValidatorsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5431,6 +7219,170 @@ func (x *BridgeValidatorSetCheckpoint) GetValidatorCheckpoint() []byte {
 	return nil
 }
 
+type QueryGetValidatorCheckpointParamsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (x *QueryGetValidatorCheckpointParamsRequest) Reset() {
+	*x = QueryGetValidatorCheckpointParamsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetValidatorCheckpointParamsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetValidatorCheckpointParamsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryGetValidatorCheckpointParamsRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetValidatorCheckpointParamsRequest) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *QueryGetValidatorCheckpointParamsRequest) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+type QueryGetValidatorCheckpointParamsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Checkpoint     string `protobuf:"bytes,1,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
+	ValsetHash     string `protobuf:"bytes,2,opt,name=valsetHash,proto3" json:"valsetHash,omitempty"`
+	Timestamp      int64  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	PowerThreshold int64  `protobuf:"varint,4,opt,name=powerThreshold,proto3" json:"powerThreshold,omitempty"`
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) Reset() {
+	*x = QueryGetValidatorCheckpointParamsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetValidatorCheckpointParamsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryGetValidatorCheckpointParamsResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetValidatorCheckpointParamsResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) GetCheckpoint() string {
+	if x != nil {
+		return x.Checkpoint
+	}
+	return ""
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) GetValsetHash() string {
+	if x != nil {
+		return x.ValsetHash
+	}
+	return ""
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *QueryGetValidatorCheckpointParamsResponse) GetPowerThreshold() int64 {
+	if x != nil {
+		return x.PowerThreshold
+	}
+	return 0
+}
+
+type QueryGetValidatorTimestampByIndexRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Index int64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+}
+
+func (x *QueryGetValidatorTimestampByIndexRequest) Reset() {
+	*x = QueryGetValidatorTimestampByIndexRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetValidatorTimestampByIndexRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetValidatorTimestampByIndexRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryGetValidatorTimestampByIndexRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetValidatorTimestampByIndexRequest) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *QueryGetValidatorTimestampByIndexRequest) GetIndex() int64 {
+	if x != nil {
+		return x.Index
+	}
+	return 0
+}
+
+type QueryGetValidatorTimestampByIndexResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (x *QueryGetValidatorTimestampByIndexResponse) Reset() {
+	*x = QueryGetValidatorTimestampByIndexResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetValidatorTimestampByIndexResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetValidatorTimestampByIndexResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryGetValidatorTimestampByIndexResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetValidatorTimestampByIndexResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *QueryGetValidatorTimestampByIndexResponse) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
 var File_layer_bridge_query_proto protoreflect.FileDescriptor
 
 var file_layer_bridge_query_proto_rawDesc = []byte{
@@ -5515,46 +7467,97 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x30, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63,
 	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61,
 	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
-	0x74, 0x32, 0xda, 0x03, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x75, 0x0a, 0x06, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x26, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x20, 0x12, 0x1e, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x12, 0x9f, 0x01, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45,
-	0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x32, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2c, 0x12, 0x2a, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f,
-	0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x73, 0x12, 0xb7, 0x01, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12,
-	0x30, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x38, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x12, 0x30, 0x2f, 0x74,
-	0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x42, 0x8e,
-	0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x42,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x22, 0x48, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03,
+	0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xb1, 0x01, 0x0a, 0x29,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65,
+	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63,
+	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x76, 0x61, 0x6c,
+	0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76,
+	0x61, 0x6c, 0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x26, 0x0a, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72,
+	0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x22,
+	0x40, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49,
+	0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x69,
+	0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65,
+	0x78, 0x22, 0x49, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42,
+	0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c,
+	0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x32, 0x81, 0x07, 0x0a,
+	0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x75, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x26, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x20, 0x12, 0x1e, 0x2f,
+	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x9f, 0x01,
+	0x0a, 0x10, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x73, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x32, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x2c, 0x12, 0x2a, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74,
+	0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12,
+	0xb7, 0x01, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x30, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
+	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
+	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x38, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x32, 0x12, 0x30, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72,
+	0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63,
+	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0xd0, 0x01, 0x0a, 0x1c, 0x47, 0x65,
+	0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
+	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3f, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x39, 0x12, 0x37, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74,
+	0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0xd1, 0x01, 0x0a,
+	0x1c, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x36, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42,
+	0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x40,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3a, 0x12, 0x38, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
+	0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f,
+	0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x62, 0x79, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78,
+	0x42, 0x8e, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -5569,34 +7572,42 @@ func file_layer_bridge_query_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_query_proto_rawDescData
 }
 
-var file_layer_bridge_query_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_layer_bridge_query_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_layer_bridge_query_proto_goTypes = []interface{}{
-	(*QueryParamsRequest)(nil),                  // 0: layer.bridge.QueryParamsRequest
-	(*QueryParamsResponse)(nil),                 // 1: layer.bridge.QueryParamsResponse
-	(*QueryGetEvmValidatorsRequest)(nil),        // 2: layer.bridge.QueryGetEvmValidatorsRequest
-	(*QueryGetEvmValidatorsResponse)(nil),       // 3: layer.bridge.QueryGetEvmValidatorsResponse
-	(*QueryGetValidatorCheckpointRequest)(nil),  // 4: layer.bridge.QueryGetValidatorCheckpointRequest
-	(*QueryGetValidatorCheckpointResponse)(nil), // 5: layer.bridge.QueryGetValidatorCheckpointResponse
-	(*BridgeValidator)(nil),                     // 6: layer.bridge.BridgeValidator
-	(*BridgeValidatorSet)(nil),                  // 7: layer.bridge.BridgeValidatorSet
-	(*BridgeValidatorSetParams)(nil),            // 8: layer.bridge.BridgeValidatorSetParams
-	(*BridgeValidatorSetCheckpointParams)(nil),  // 9: layer.bridge.BridgeValidatorSetCheckpointParams
-	(*BridgeValidatorSetCheckpoint)(nil),        // 10: layer.bridge.BridgeValidatorSetCheckpoint
-	(*Params)(nil),                              // 11: layer.bridge.Params
+	(*QueryParamsRequest)(nil),                        // 0: layer.bridge.QueryParamsRequest
+	(*QueryParamsResponse)(nil),                       // 1: layer.bridge.QueryParamsResponse
+	(*QueryGetEvmValidatorsRequest)(nil),              // 2: layer.bridge.QueryGetEvmValidatorsRequest
+	(*QueryGetEvmValidatorsResponse)(nil),             // 3: layer.bridge.QueryGetEvmValidatorsResponse
+	(*QueryGetValidatorCheckpointRequest)(nil),        // 4: layer.bridge.QueryGetValidatorCheckpointRequest
+	(*QueryGetValidatorCheckpointResponse)(nil),       // 5: layer.bridge.QueryGetValidatorCheckpointResponse
+	(*BridgeValidator)(nil),                           // 6: layer.bridge.BridgeValidator
+	(*BridgeValidatorSet)(nil),                        // 7: layer.bridge.BridgeValidatorSet
+	(*BridgeValidatorSetParams)(nil),                  // 8: layer.bridge.BridgeValidatorSetParams
+	(*BridgeValidatorSetCheckpointParams)(nil),        // 9: layer.bridge.BridgeValidatorSetCheckpointParams
+	(*BridgeValidatorSetCheckpoint)(nil),              // 10: layer.bridge.BridgeValidatorSetCheckpoint
+	(*QueryGetValidatorCheckpointParamsRequest)(nil),  // 11: layer.bridge.QueryGetValidatorCheckpointParamsRequest
+	(*QueryGetValidatorCheckpointParamsResponse)(nil), // 12: layer.bridge.QueryGetValidatorCheckpointParamsResponse
+	(*QueryGetValidatorTimestampByIndexRequest)(nil),  // 13: layer.bridge.QueryGetValidatorTimestampByIndexRequest
+	(*QueryGetValidatorTimestampByIndexResponse)(nil), // 14: layer.bridge.QueryGetValidatorTimestampByIndexResponse
+	(*Params)(nil), // 15: layer.bridge.Params
 }
 var file_layer_bridge_query_proto_depIdxs = []int32{
-	11, // 0: layer.bridge.QueryParamsResponse.params:type_name -> layer.bridge.Params
+	15, // 0: layer.bridge.QueryParamsResponse.params:type_name -> layer.bridge.Params
 	6,  // 1: layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
 	6,  // 2: layer.bridge.BridgeValidatorSet.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
 	7,  // 3: layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidatorSet
 	0,  // 4: layer.bridge.Query.Params:input_type -> layer.bridge.QueryParamsRequest
 	2,  // 5: layer.bridge.Query.GetEvmValidators:input_type -> layer.bridge.QueryGetEvmValidatorsRequest
 	4,  // 6: layer.bridge.Query.GetValidatorCheckpoint:input_type -> layer.bridge.QueryGetValidatorCheckpointRequest
-	1,  // 7: layer.bridge.Query.Params:output_type -> layer.bridge.QueryParamsResponse
-	3,  // 8: layer.bridge.Query.GetEvmValidators:output_type -> layer.bridge.QueryGetEvmValidatorsResponse
-	5,  // 9: layer.bridge.Query.GetValidatorCheckpoint:output_type -> layer.bridge.QueryGetValidatorCheckpointResponse
-	7,  // [7:10] is the sub-list for method output_type
-	4,  // [4:7] is the sub-list for method input_type
+	11, // 7: layer.bridge.Query.GetValidatorCheckpointParams:input_type -> layer.bridge.QueryGetValidatorCheckpointParamsRequest
+	13, // 8: layer.bridge.Query.GetValidatorTimestampByIndex:input_type -> layer.bridge.QueryGetValidatorTimestampByIndexRequest
+	1,  // 9: layer.bridge.Query.Params:output_type -> layer.bridge.QueryParamsResponse
+	3,  // 10: layer.bridge.Query.GetEvmValidators:output_type -> layer.bridge.QueryGetEvmValidatorsResponse
+	5,  // 11: layer.bridge.Query.GetValidatorCheckpoint:output_type -> layer.bridge.QueryGetValidatorCheckpointResponse
+	12, // 12: layer.bridge.Query.GetValidatorCheckpointParams:output_type -> layer.bridge.QueryGetValidatorCheckpointParamsResponse
+	14, // 13: layer.bridge.Query.GetValidatorTimestampByIndex:output_type -> layer.bridge.QueryGetValidatorTimestampByIndexResponse
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name
@@ -5741,6 +7752,54 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
+		file_layer_bridge_query_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetValidatorCheckpointParamsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetValidatorCheckpointParamsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetValidatorTimestampByIndexRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetValidatorTimestampByIndexResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -5748,7 +7807,7 @@ func file_layer_bridge_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   11,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

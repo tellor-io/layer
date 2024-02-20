@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -66,13 +66,24 @@ func (c *Client) Start(ctx context.Context, appCodec codec.Codec, grpcClient dae
 			if c.isNewCheckpoint(checkpoint) {
 				c.checkpoint = checkpoint
 				c.logger.Info("New checkpoint", "checkpoint", checkpoint)
+				// this is for initial eth address registration, update this to wait for node to be ready, then submit signature one time
 				sig, err := c.EncodeAndSignMessage(checkpoint)
 				if err != nil {
 					c.logger.Error("Failed to encode and sign message", "error", err)
 					continue
 				}
 				sigHex := hex.EncodeToString(sig)
+				timestamp, err := c.QueryValsetTimestamp()
+				if err != nil {
+					c.logger.Error("Failed to query valset timestamp", "error", err)
+					continue
+				}
 				c.logger.Info("Message sig successfully made it to daemon Start func", "signature", sigHex)
+				err = c.SubmitSignature(context.Background(), sigHex, timestamp)
+				if err != nil {
+					c.logger.Error("Failed to submit signature to bridge module", "error", err)
+					continue
+				}
 			}
 
 			error := c.CheckAndSignInitialMessage()
@@ -91,7 +102,7 @@ func (c *Client) QueryLatestCheckpoint() (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -104,6 +115,28 @@ func (c *Client) QueryLatestCheckpoint() (string, error) {
 	}
 
 	return result.Checkpoint, nil
+}
+
+func (c *Client) QueryValsetTimestamp() (string, error) {
+	resp, err := http.Get("http://localhost:1317/tellor-io/layer/bridge/get_validator_timestamp_by_index?index=0")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var result struct {
+		Timestamp string `json:"timestamp"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", err
+	}
+
+	return result.Timestamp, nil
 }
 
 func (c *Client) isNewCheckpoint(checkpoint string) bool {
@@ -242,7 +275,7 @@ func (c *Client) SubmitPubkey(ctx context.Context, signature string) error {
 	return nil
 }
 
-func (c *Client) SubmitSignature(ctx context.Context, signature string) error {
+func (c *Client) SubmitSignature(ctx context.Context, signature string, timestamp string) error {
 	// Submit the signature to the bridge module using "SubmitReport" below as a guide
 	accountName := "alice"
 	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
@@ -254,7 +287,7 @@ func (c *Client) SubmitSignature(ctx context.Context, signature string) error {
 	msgSubmitSig := &bridgetypes.MsgSubmitBridgeValsetSignature{
 		Creator:   fromAddr.String(),
 		Signature: signature,
-		Timestamp: fmt.Sprint(time.Now().Unix()),
+		Timestamp: timestamp,
 	}
 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, fromAddr)
 	if err != nil {
@@ -274,7 +307,7 @@ func (c *Client) SubmitSignature(ctx context.Context, signature string) error {
 	if err != nil {
 		return fmt.Errorf("error preparing transaction: %v", err)
 	}
-	gas := uint64(10000)
+	gas := uint64(100000)
 	txf = txf.WithGas(gas)
 
 	txn, err := txf.BuildUnsignedTx(msgSubmitSig)
@@ -379,126 +412,3 @@ func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 		}
 	}
 }
-
-// func (c *Client) SubmitReport(ctx context.Context) error {
-// 	// Account `alice` was initialized during `ignite chain serve`
-// 	// TODO: add flag
-// 	accountName := "alice"
-// 	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
-// 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
-// 	if err != nil {
-// 		panic(fmt.Errorf("error getting address from keyring: %v", err))
-// 	}
-// 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
-// 	accAddr := c.cosmosCtx.GetFromAddress()
-// 	c.logger.Info("SubmitReport", "Account address to sign messages", accAddr.String())
-
-// 	response, err := c.OracleQueryClient.CurrentCyclelistQuery(ctx, &oracletypes.QueryCurrentCyclelistQueryRequest{})
-// 	if err != nil {
-// 		return fmt.Errorf("Error calling 'CurrentCyclelistQuery': %v", err)
-// 	}
-// 	c.logger.Info("SubmitReport", "next query in cycle list", response)
-// 	time.Sleep(2 * time.Second)
-// 	value, err := c.median(ctx, response.Querydata)
-// 	if err != nil {
-// 		return fmt.Errorf("Error getting median from median client': %v", err)
-// 	}
-// 	c.logger.Info("SubmitReport", "Median value", value)
-// 	// Salt and hash the value
-// 	salt, err := utils.Salt(32)
-// 	hash := utils.CalculateCommitment(value, salt)
-// 	//
-// 	//
-// 	// MsgCommitReport
-// 	msgCommit := &oracletypes.MsgCommitReport{
-// 		Creator:   accAddr.String(),
-// 		QueryData: response.Querydata,
-// 		Hash:      hash,
-// 	}
-// 	txf := newFactory(c.cosmosCtx)
-
-// 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
-// 	if err != nil {
-// 		return fmt.Errorf("Error getting account number sequence for 'MsgCommitReport': %v", err)
-// 	}
-// 	txf = txf.WithSequence(seq)
-// 	txf, err = txf.Prepare(c.cosmosCtx)
-// 	if err != nil {
-// 		return fmt.Errorf("Error preparing transaction during 'MsgCommitReport': %v", err)
-// 	}
-// 	// _, adjusted, err := tx.CalculateGas(c.cosmosCtx, txf, msgCommit)
-// 	// if err != nil {
-// 	// 	return fmt.Errorf("Error calculating commit report transaction gas: %v", err)
-// 	// }
-// 	gas += 10000
-// 	txf = txf.WithGas(gas)
-
-// 	txn, err := txf.BuildUnsignedTx(msgCommit)
-// 	if err != nil {
-// 		return fmt.Errorf("Error building 'MsgCommitReport' unsigned transaction: %v", err)
-// 	}
-// 	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-// 		return fmt.Errorf("Error when signing 'MsgCommitReport' transaction: %v", err)
-// 	}
-
-// 	txBytes, err := c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
-// 	if err != nil {
-// 		return fmt.Errorf("Error encoding 'MsgCommitReport' transaction: %v", err)
-// 	}
-// 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
-// 	if err := handleBroadcastResult(res, err); err != nil {
-// 		return fmt.Errorf("Error broadcasting 'MsgCommitReport' transaction after 'handleBroadcastResult': %v", err)
-// 	}
-// 	txnResult, err := c.WaitForTx(ctx, res.TxHash)
-// 	if err != nil {
-// 		return fmt.Errorf("Error waiting for 'MsgCommitReport' transaction: %v", err)
-// 	}
-// 	c.logger.Info("CommitReportTxResult", "TxResult", txnResult)
-// 	//
-// 	//
-// 	// MsgSubmitValue
-// 	msgSubmit := &oracletypes.MsgSubmitValue{
-// 		Creator:   accAddr.String(),
-// 		QueryData: response.Querydata,
-// 		Value:     value,
-// 		Salt:      salt,
-// 	}
-
-// 	// _, seq, err = c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
-// 	// if err != nil {
-// 	// 	return fmt.Errorf("Error getting account number sequence for 'MsgSubmitValue': %v", err)
-// 	// }
-// 	seq += 1
-// 	txf = txf.WithSequence(seq)
-// 	txf, err = txf.Prepare(c.cosmosCtx)
-// 	if err != nil {
-// 		return fmt.Errorf("Error preparing transaction during 'MsgCommitReport': %v", err)
-// 	}
-// 	// _, adjusted, err = tx.CalculateGas(c.cosmosCtx, txf, msgSubmit)
-// 	// if err != nil {
-// 	// 	return fmt.Errorf("Error calculating submit value transaction gas: %v", err)
-// 	// }
-// 	txf = txf.WithGas(gas)
-// 	txn, err = txf.BuildUnsignedTx(msgSubmit)
-// 	if err != nil {
-// 		return fmt.Errorf("Error building 'MsgSubmitValue' unsigned transaction: %v", err)
-// 	}
-// 	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-// 		return fmt.Errorf("Error when signing 'MsgSubmitValue' transaction: %v", err)
-// 	}
-// 	txBytes, err = c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
-// 	if err != nil {
-// 		return fmt.Errorf("Error encoding 'MsgSubmitValue' transaction: %v", err)
-// 	}
-// 	// broadcast to a CometBFT node
-// 	res, err = c.cosmosCtx.BroadcastTx(txBytes)
-// 	if err := handleBroadcastResult(res, err); err != nil {
-// 		return fmt.Errorf("Error broadcasting 'MsgSubmitValue' transaction after 'handleBroadcastResult': %v", err)
-// 	}
-// 	txnResult, err = c.WaitForTx(ctx, res.TxHash)
-// 	if err != nil {
-// 		return fmt.Errorf("Error waiting for 'MsgSubmitValue' transaction: %v", err)
-// 	}
-// 	c.logger.Info("SubmitValueTxResult", "TxResult", txnResult)
-// 	return nil
-// }

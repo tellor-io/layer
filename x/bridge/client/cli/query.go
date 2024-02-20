@@ -2,13 +2,10 @@ package cli
 
 import (
 	"fmt"
-	// "strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tellor-io/layer/x/bridge/types"
 )
@@ -27,6 +24,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQueryParams())
 	cmd.AddCommand(CmdGetEvmValidators())
 	cmd.AddCommand(CmdGetValidatorCheckpoint())
+	cmd.AddCommand(CmdGetValidatorCheckpointParams())
+	cmd.AddCommand(CmdGetValidatorTimestampByIndex())
 
 	// this line is used by starport scaffolding # 1
 

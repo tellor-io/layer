@@ -113,10 +113,6 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
-//	message QueryBridgeValidatorsResponse {
-//	  repeated BridgeValidator bridge_validators = 1;
-//	  pagination.PageResponse page_response = 2;
-//	}
 type QueryGetEvmValidatorsRequest struct {
 }
 
@@ -553,6 +549,218 @@ func (m *BridgeValidatorSetCheckpoint) GetValidatorCheckpoint() []byte {
 	return nil
 }
 
+type QueryGetValidatorCheckpointParamsRequest struct {
+	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (m *QueryGetValidatorCheckpointParamsRequest) Reset() {
+	*m = QueryGetValidatorCheckpointParamsRequest{}
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetValidatorCheckpointParamsRequest) ProtoMessage()    {}
+func (*QueryGetValidatorCheckpointParamsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{11}
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetValidatorCheckpointParamsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetValidatorCheckpointParamsRequest.Merge(m, src)
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetValidatorCheckpointParamsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetValidatorCheckpointParamsRequest proto.InternalMessageInfo
+
+func (m *QueryGetValidatorCheckpointParamsRequest) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+type QueryGetValidatorCheckpointParamsResponse struct {
+	Checkpoint     string `protobuf:"bytes,1,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
+	ValsetHash     string `protobuf:"bytes,2,opt,name=valsetHash,proto3" json:"valsetHash,omitempty"`
+	Timestamp      int64  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	PowerThreshold int64  `protobuf:"varint,4,opt,name=powerThreshold,proto3" json:"powerThreshold,omitempty"`
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) Reset() {
+	*m = QueryGetValidatorCheckpointParamsResponse{}
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetValidatorCheckpointParamsResponse) ProtoMessage() {}
+func (*QueryGetValidatorCheckpointParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{12}
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetValidatorCheckpointParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetValidatorCheckpointParamsResponse.Merge(m, src)
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetValidatorCheckpointParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetValidatorCheckpointParamsResponse proto.InternalMessageInfo
+
+func (m *QueryGetValidatorCheckpointParamsResponse) GetCheckpoint() string {
+	if m != nil {
+		return m.Checkpoint
+	}
+	return ""
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) GetValsetHash() string {
+	if m != nil {
+		return m.ValsetHash
+	}
+	return ""
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) GetPowerThreshold() int64 {
+	if m != nil {
+		return m.PowerThreshold
+	}
+	return 0
+}
+
+type QueryGetValidatorTimestampByIndexRequest struct {
+	Index int64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+}
+
+func (m *QueryGetValidatorTimestampByIndexRequest) Reset() {
+	*m = QueryGetValidatorTimestampByIndexRequest{}
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetValidatorTimestampByIndexRequest) ProtoMessage()    {}
+func (*QueryGetValidatorTimestampByIndexRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{13}
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetValidatorTimestampByIndexRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetValidatorTimestampByIndexRequest.Merge(m, src)
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetValidatorTimestampByIndexRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetValidatorTimestampByIndexRequest proto.InternalMessageInfo
+
+func (m *QueryGetValidatorTimestampByIndexRequest) GetIndex() int64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+type QueryGetValidatorTimestampByIndexResponse struct {
+	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (m *QueryGetValidatorTimestampByIndexResponse) Reset() {
+	*m = QueryGetValidatorTimestampByIndexResponse{}
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*QueryGetValidatorTimestampByIndexResponse) ProtoMessage() {}
+func (*QueryGetValidatorTimestampByIndexResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e48df680904493de, []int{14}
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetValidatorTimestampByIndexResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetValidatorTimestampByIndexResponse.Merge(m, src)
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetValidatorTimestampByIndexResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetValidatorTimestampByIndexResponse proto.InternalMessageInfo
+
+func (m *QueryGetValidatorTimestampByIndexResponse) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.bridge.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.bridge.QueryParamsResponse")
@@ -565,52 +773,66 @@ func init() {
 	proto.RegisterType((*BridgeValidatorSetParams)(nil), "layer.bridge.BridgeValidatorSetParams")
 	proto.RegisterType((*BridgeValidatorSetCheckpointParams)(nil), "layer.bridge.BridgeValidatorSetCheckpointParams")
 	proto.RegisterType((*BridgeValidatorSetCheckpoint)(nil), "layer.bridge.BridgeValidatorSetCheckpoint")
+	proto.RegisterType((*QueryGetValidatorCheckpointParamsRequest)(nil), "layer.bridge.QueryGetValidatorCheckpointParamsRequest")
+	proto.RegisterType((*QueryGetValidatorCheckpointParamsResponse)(nil), "layer.bridge.QueryGetValidatorCheckpointParamsResponse")
+	proto.RegisterType((*QueryGetValidatorTimestampByIndexRequest)(nil), "layer.bridge.QueryGetValidatorTimestampByIndexRequest")
+	proto.RegisterType((*QueryGetValidatorTimestampByIndexResponse)(nil), "layer.bridge.QueryGetValidatorTimestampByIndexResponse")
 }
 
 func init() { proto.RegisterFile("layer/bridge/query.proto", fileDescriptor_e48df680904493de) }
 
 var fileDescriptor_e48df680904493de = []byte{
-	// 638 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xc1, 0x6e, 0xd3, 0x4c,
-	0x10, 0xce, 0x26, 0x6d, 0xa5, 0x7f, 0x5a, 0xa9, 0xd5, 0x36, 0xfa, 0x31, 0x51, 0x6b, 0x82, 0x41,
-	0x28, 0x04, 0x88, 0xdb, 0x70, 0xe9, 0x95, 0x54, 0x08, 0x38, 0x20, 0xa5, 0x6e, 0x05, 0x12, 0x97,
-	0x6a, 0x93, 0xac, 0x1c, 0x8b, 0xd8, 0xeb, 0x7a, 0x37, 0x86, 0x5e, 0x79, 0x02, 0x24, 0x1e, 0x80,
-	0x97, 0x40, 0x42, 0xe2, 0x09, 0x7a, 0xac, 0xc4, 0x05, 0x71, 0x40, 0xa8, 0xe5, 0x41, 0x50, 0xd6,
-	0x1b, 0xb7, 0x89, 0xd7, 0x16, 0x45, 0xdc, 0x92, 0xf9, 0xbe, 0x99, 0xf9, 0xbe, 0xd9, 0xdd, 0x31,
-	0x18, 0x23, 0x72, 0x4c, 0x23, 0xbb, 0x17, 0x79, 0x03, 0x97, 0xda, 0x47, 0x63, 0x1a, 0x1d, 0xb7,
-	0xc2, 0x88, 0x09, 0x86, 0x57, 0x24, 0xd2, 0x4a, 0x90, 0x5a, 0xd5, 0x65, 0x2e, 0x93, 0x80, 0x3d,
-	0xf9, 0x95, 0x70, 0x6a, 0x1b, 0x2e, 0x63, 0xee, 0x88, 0xda, 0x24, 0xf4, 0x6c, 0x12, 0x04, 0x4c,
-	0x10, 0xe1, 0xb1, 0x80, 0x2b, 0xb4, 0xd9, 0x67, 0xdc, 0x67, 0xdc, 0xee, 0x11, 0xae, 0x4a, 0xdb,
-	0xf1, 0x76, 0x8f, 0x0a, 0xb2, 0x6d, 0x87, 0xc4, 0xf5, 0x02, 0x49, 0x56, 0xdc, 0xeb, 0x33, 0x3a,
-	0x42, 0x12, 0x11, 0x5f, 0x95, 0xb1, 0xaa, 0x80, 0xf7, 0x26, 0xc9, 0x5d, 0x19, 0x74, 0xe8, 0xd1,
-	0x98, 0x72, 0x61, 0x3d, 0x83, 0xf5, 0x99, 0x28, 0x0f, 0x59, 0xc0, 0x29, 0x6e, 0xc3, 0x52, 0x92,
-	0x6c, 0xa0, 0x3a, 0x6a, 0x2c, 0xb7, 0xab, 0xad, 0xcb, 0x36, 0x5a, 0x09, 0xbb, 0xb3, 0x70, 0xf2,
-	0xe3, 0x46, 0xc9, 0x51, 0x4c, 0xcb, 0x84, 0x0d, 0x59, 0xea, 0x09, 0x15, 0x8f, 0x63, 0xff, 0x05,
-	0x19, 0x79, 0x03, 0x22, 0x58, 0x94, 0xb6, 0x0a, 0x60, 0x33, 0x07, 0x57, 0x4d, 0x9f, 0x03, 0x4e,
-	0xea, 0xa7, 0xd8, 0x3e, 0x15, 0x06, 0xaa, 0x57, 0x1a, 0xcb, 0xed, 0xcd, 0x59, 0x01, 0x9d, 0x59,
-	0x9e, 0xa3, 0x49, 0xb4, 0x6e, 0x83, 0x35, 0xed, 0x97, 0xc6, 0x77, 0x87, 0xb4, 0xff, 0x3a, 0x64,
-	0x5e, 0x20, 0xa6, 0xaa, 0x5e, 0xc2, 0xad, 0x42, 0x96, 0xd2, 0xb6, 0x05, 0xeb, 0x71, 0x16, 0x96,
-	0xd3, 0xf9, 0xcf, 0xd1, 0x41, 0xd6, 0x1e, 0xac, 0xce, 0xa9, 0xc4, 0x0d, 0x58, 0xa5, 0x62, 0x48,
-	0x23, 0x3a, 0xf6, 0x1f, 0x0d, 0x06, 0x11, 0xe5, 0x5c, 0x15, 0x98, 0x0f, 0xe3, 0x2a, 0x2c, 0x86,
-	0xec, 0x0d, 0x8d, 0x8c, 0x72, 0x1d, 0x35, 0x16, 0x9c, 0xe4, 0x8f, 0xd5, 0x07, 0xdc, 0xc9, 0xf8,
-	0xfc, 0xd7, 0x63, 0xfb, 0x54, 0x06, 0x23, 0xdb, 0x25, 0x39, 0x71, 0xdc, 0xcd, 0xe9, 0x35, 0xb9,
-	0x23, 0xf5, 0xc2, 0x5e, 0xfb, 0x54, 0xe8, 0xda, 0xe1, 0x16, 0xe0, 0x74, 0x7a, 0x07, 0x9e, 0x4f,
-	0xb9, 0x20, 0x7e, 0x28, 0x6d, 0x57, 0x1c, 0x0d, 0x82, 0x77, 0xe0, 0x5a, 0x1a, 0xed, 0x4e, 0xa6,
-	0x72, 0x30, 0x8c, 0x28, 0x1f, 0xb2, 0xd1, 0xc0, 0xa8, 0xc8, 0xa4, 0x3c, 0x18, 0x37, 0x61, 0x2d,
-	0xbe, 0xd4, 0xf9, 0x29, 0xe1, 0x43, 0x63, 0xa1, 0x8e, 0x1a, 0x2b, 0x4e, 0x26, 0x9e, 0x77, 0xdc,
-	0x8b, 0x92, 0xae, 0x3d, 0xee, 0x2f, 0x08, 0xac, 0xac, 0xe5, 0x0b, 0x82, 0x1a, 0xa0, 0xde, 0x2e,
-	0xfa, 0x1b, 0xbb, 0xe5, 0xab, 0xdb, 0xad, 0xe8, 0xed, 0x5a, 0x5d, 0xd8, 0x28, 0xd2, 0x5e, 0x74,
-	0xfb, 0xf5, 0xe3, 0x68, 0x7f, 0xaf, 0xc0, 0xa2, 0x7c, 0x57, 0x78, 0x0c, 0x4b, 0xca, 0xfb, 0xdc,
-	0x05, 0xc9, 0x6e, 0xa3, 0xda, 0xcd, 0x02, 0x46, 0xf2, 0x10, 0xad, 0x3b, 0xef, 0xbe, 0xfe, 0xfa,
-	0x50, 0xae, 0x63, 0xd3, 0x16, 0x74, 0x34, 0x62, 0xd1, 0x03, 0x8f, 0xd9, 0x9a, 0xa5, 0x87, 0x3f,
-	0x22, 0x58, 0x9b, 0xdf, 0x34, 0xb8, 0xa9, 0xa9, 0x9f, 0xb3, 0xae, 0x6a, 0xf7, 0xfe, 0x88, 0xab,
-	0x54, 0xb5, 0xa5, 0xaa, 0xfb, 0xb8, 0x99, 0xa7, 0xca, 0xa5, 0xe2, 0x90, 0xc6, 0xfe, 0x61, 0x7c,
-	0x21, 0xe6, 0x33, 0x82, 0xff, 0xf5, 0x5b, 0x07, 0x6f, 0xe9, 0x7b, 0xe7, 0xaf, 0xb1, 0xda, 0xf6,
-	0x15, 0x32, 0x94, 0xe6, 0x1d, 0xa9, 0xb9, 0x8d, 0xb7, 0x8a, 0x34, 0xa7, 0x7a, 0x0f, 0xfb, 0x69,
-	0x85, 0xce, 0xee, 0xc9, 0x99, 0x89, 0x4e, 0xcf, 0x4c, 0xf4, 0xf3, 0xcc, 0x44, 0xef, 0xcf, 0xcd,
-	0xd2, 0xe9, 0xb9, 0x59, 0xfa, 0x76, 0x6e, 0x96, 0x5e, 0xdd, 0x75, 0x3d, 0x31, 0x1c, 0xf7, 0x5a,
-	0x7d, 0xe6, 0x67, 0xaa, 0xbe, 0x9d, 0xd6, 0x15, 0xc7, 0x21, 0xe5, 0xbd, 0x25, 0xf9, 0x59, 0x7a,
-	0xf8, 0x3b, 0x00, 0x00, 0xff, 0xff, 0x91, 0x8b, 0xf2, 0x2d, 0x3b, 0x07, 0x00, 0x00,
+	// 797 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcd, 0x6e, 0xd3, 0x4a,
+	0x14, 0x8e, 0xf3, 0xd3, 0xab, 0x9e, 0x56, 0xb7, 0xd5, 0x34, 0xba, 0x37, 0x37, 0x4a, 0x7d, 0x73,
+	0x7d, 0x51, 0x95, 0x06, 0x88, 0xdb, 0x20, 0xd1, 0xc2, 0x86, 0x92, 0x0a, 0xd1, 0x2e, 0x90, 0xd2,
+	0xb4, 0x02, 0x89, 0x4d, 0xe4, 0x24, 0x23, 0xc7, 0x22, 0xf6, 0xb8, 0xf6, 0x24, 0x34, 0x4b, 0x78,
+	0x02, 0x24, 0x1e, 0x80, 0x67, 0x40, 0x42, 0x42, 0xe2, 0x09, 0xba, 0x2c, 0x62, 0xc3, 0x0a, 0xa1,
+	0x96, 0x07, 0x41, 0x19, 0x4f, 0x9c, 0xf8, 0xb7, 0x09, 0x62, 0x97, 0x39, 0xe7, 0x9b, 0x73, 0xbe,
+	0xef, 0xfc, 0x78, 0x02, 0xb9, 0x9e, 0x32, 0xc4, 0x96, 0xdc, 0xb2, 0xb4, 0x8e, 0x8a, 0xe5, 0xd3,
+	0x3e, 0xb6, 0x86, 0x15, 0xd3, 0x22, 0x94, 0xa0, 0x65, 0xe6, 0xa9, 0x38, 0x9e, 0x7c, 0x56, 0x25,
+	0x2a, 0x61, 0x0e, 0x79, 0xf4, 0xcb, 0xc1, 0xe4, 0x0b, 0x2a, 0x21, 0x6a, 0x0f, 0xcb, 0x8a, 0xa9,
+	0xc9, 0x8a, 0x61, 0x10, 0xaa, 0x50, 0x8d, 0x18, 0x36, 0xf7, 0x96, 0xdb, 0xc4, 0xd6, 0x89, 0x2d,
+	0xb7, 0x14, 0x9b, 0x87, 0x96, 0x07, 0xdb, 0x2d, 0x4c, 0x95, 0x6d, 0xd9, 0x54, 0x54, 0xcd, 0x60,
+	0x60, 0x8e, 0xfd, 0xc7, 0xc3, 0xc3, 0x54, 0x2c, 0x45, 0xe7, 0x61, 0xa4, 0x2c, 0xa0, 0xa3, 0xd1,
+	0xe5, 0x3a, 0x33, 0x36, 0xf0, 0x69, 0x1f, 0xdb, 0x54, 0x3a, 0x84, 0x35, 0x8f, 0xd5, 0x36, 0x89,
+	0x61, 0x63, 0x54, 0x85, 0x05, 0xe7, 0x72, 0x4e, 0x28, 0x0a, 0xa5, 0xa5, 0x6a, 0xb6, 0x32, 0x2d,
+	0xa3, 0xe2, 0xa0, 0x6b, 0xe9, 0xf3, 0x6f, 0xff, 0x26, 0x1a, 0x1c, 0x29, 0x89, 0x50, 0x60, 0xa1,
+	0x1e, 0x63, 0xfa, 0x68, 0xa0, 0x3f, 0x55, 0x7a, 0x5a, 0x47, 0xa1, 0xc4, 0x72, 0x53, 0x19, 0xb0,
+	0x1e, 0xe1, 0xe7, 0x49, 0x9f, 0x00, 0x72, 0xe2, 0xbb, 0xbe, 0x63, 0x4c, 0x73, 0x42, 0x31, 0x55,
+	0x5a, 0xaa, 0xae, 0x7b, 0x09, 0xd4, 0xbc, 0xb8, 0x46, 0xc8, 0x45, 0xe9, 0x06, 0x48, 0xe3, 0x7c,
+	0xae, 0x7d, 0xbf, 0x8b, 0xdb, 0x2f, 0x4c, 0xa2, 0x19, 0x74, 0xcc, 0xea, 0x19, 0xfc, 0x1f, 0x8b,
+	0xe2, 0xdc, 0xb6, 0x60, 0x6d, 0x10, 0x74, 0xb3, 0xea, 0x2c, 0x36, 0xc2, 0x5c, 0xd2, 0x11, 0xac,
+	0xf8, 0x58, 0xa2, 0x12, 0xac, 0x60, 0xda, 0xc5, 0x16, 0xee, 0xeb, 0x0f, 0x3b, 0x1d, 0x0b, 0xdb,
+	0x36, 0x0f, 0xe0, 0x37, 0xa3, 0x2c, 0x64, 0x4c, 0xf2, 0x12, 0x5b, 0xb9, 0x64, 0x51, 0x28, 0xa5,
+	0x1b, 0xce, 0x41, 0x6a, 0x03, 0xaa, 0x05, 0x74, 0xfe, 0xee, 0xb2, 0x7d, 0x48, 0x42, 0x2e, 0x98,
+	0xc5, 0xe9, 0x38, 0xaa, 0x47, 0xe4, 0x1a, 0xcd, 0x48, 0x31, 0x36, 0xd7, 0x31, 0xa6, 0x61, 0xe9,
+	0x50, 0x05, 0x90, 0x5b, 0xbd, 0x13, 0x4d, 0xc7, 0x36, 0x55, 0x74, 0x93, 0xc9, 0x4e, 0x35, 0x42,
+	0x3c, 0x68, 0x17, 0xfe, 0x76, 0xad, 0xf5, 0x51, 0x55, 0x4e, 0xba, 0x16, 0xb6, 0xbb, 0xa4, 0xd7,
+	0xc9, 0xa5, 0xd8, 0xa5, 0x28, 0x37, 0x2a, 0xc3, 0xea, 0x60, 0x2a, 0xf3, 0x81, 0x62, 0x77, 0x73,
+	0xe9, 0xa2, 0x50, 0x5a, 0x6e, 0x04, 0xec, 0x51, 0xed, 0xce, 0x30, 0x78, 0x68, 0xbb, 0x3f, 0x09,
+	0x20, 0x05, 0x25, 0x4f, 0x00, 0xbc, 0x80, 0xe1, 0x72, 0x85, 0x5f, 0x91, 0x9b, 0x9c, 0x5f, 0x6e,
+	0x2a, 0x5c, 0xae, 0x54, 0x87, 0x42, 0x1c, 0xf7, 0xb8, 0xe9, 0x8f, 0x28, 0xc7, 0x01, 0x94, 0x62,
+	0xd6, 0xca, 0xf3, 0x0d, 0x42, 0x05, 0x58, 0xa4, 0xbe, 0x52, 0x4c, 0x0c, 0xd2, 0x7b, 0x01, 0x36,
+	0x67, 0x08, 0xc5, 0xf7, 0x54, 0x04, 0x68, 0xfb, 0xd7, 0x73, 0xca, 0x32, 0xf2, 0x0f, 0x94, 0x9e,
+	0xcd, 0xeb, 0x91, 0x74, 0xfc, 0x13, 0x8b, 0x97, 0x4b, 0xca, 0xc7, 0x05, 0x6d, 0xc0, 0x9f, 0xa6,
+	0xb7, 0x09, 0x69, 0x06, 0xf1, 0x59, 0xa5, 0xbd, 0x10, 0xf5, 0x6e, 0x4f, 0x6b, 0xc3, 0x43, 0xa3,
+	0x83, 0xcf, 0xc6, 0xea, 0xb3, 0x90, 0xd1, 0x46, 0x67, 0xae, 0xdc, 0x39, 0x48, 0x87, 0x21, 0xa2,
+	0x83, 0x11, 0xb8, 0xe8, 0xd8, 0x02, 0x56, 0x5f, 0xfd, 0x01, 0x19, 0x16, 0x0b, 0xf5, 0x61, 0x81,
+	0x8f, 0xa1, 0x6f, 0x57, 0x83, 0x0f, 0x43, 0xfe, 0xbf, 0x18, 0x84, 0x93, 0x56, 0xda, 0x78, 0xfd,
+	0xe5, 0xc7, 0xdb, 0x64, 0x11, 0x89, 0x32, 0xc5, 0xbd, 0x1e, 0xb1, 0x6e, 0x6b, 0x44, 0x0e, 0x79,
+	0x7f, 0xd0, 0x3b, 0x01, 0x56, 0xfd, 0x1f, 0x7d, 0x54, 0x0e, 0x89, 0x1f, 0xf1, 0x72, 0xe4, 0x6f,
+	0xce, 0x84, 0xe5, 0xac, 0xaa, 0x8c, 0xd5, 0x2d, 0x54, 0x8e, 0x62, 0xa5, 0x62, 0xda, 0xc4, 0x03,
+	0xbd, 0x39, 0x98, 0x90, 0xf9, 0x28, 0xc0, 0x5f, 0xe1, 0xe3, 0x85, 0xb6, 0xc2, 0x73, 0x47, 0xbf,
+	0x28, 0xf9, 0xed, 0x39, 0x6e, 0x70, 0xce, 0xbb, 0x8c, 0x73, 0x15, 0x6d, 0xc5, 0x71, 0x76, 0xf9,
+	0x36, 0xa7, 0xe6, 0xf9, 0x42, 0x80, 0x42, 0xdc, 0x62, 0xa0, 0xbb, 0x33, 0xb3, 0xf1, 0xf6, 0x7f,
+	0x67, 0xee, 0x7b, 0x5c, 0xcb, 0x03, 0xa6, 0xe5, 0x1e, 0xda, 0x99, 0x57, 0x4b, 0x93, 0x8f, 0xcb,
+	0x67, 0x9f, 0x24, 0xff, 0xd8, 0x5f, 0x2b, 0x29, 0x62, 0xd3, 0xae, 0x95, 0x14, 0xb5, 0x5f, 0xd2,
+	0x1e, 0x93, 0x74, 0x1f, 0xed, 0xce, 0x26, 0xc9, 0x5d, 0xbd, 0x66, 0x6b, 0xd8, 0x64, 0xeb, 0x5c,
+	0xdb, 0x3f, 0xbf, 0x14, 0x85, 0x8b, 0x4b, 0x51, 0xf8, 0x7e, 0x29, 0x0a, 0x6f, 0xae, 0xc4, 0xc4,
+	0xc5, 0x95, 0x98, 0xf8, 0x7a, 0x25, 0x26, 0x9e, 0x6f, 0xaa, 0x1a, 0xed, 0xf6, 0x5b, 0x95, 0x36,
+	0xd1, 0x03, 0xd1, 0xcf, 0xc6, 0xf1, 0xe9, 0xd0, 0xc4, 0x76, 0x6b, 0x81, 0xfd, 0x91, 0xbb, 0xf3,
+	0x33, 0x00, 0x00, 0xff, 0xff, 0x89, 0xca, 0xb4, 0x5d, 0x6d, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -630,6 +852,8 @@ type QueryClient interface {
 	// Queries a list of GetEvmValidators items.
 	GetEvmValidators(ctx context.Context, in *QueryGetEvmValidatorsRequest, opts ...grpc.CallOption) (*QueryGetEvmValidatorsResponse, error)
 	GetValidatorCheckpoint(ctx context.Context, in *QueryGetValidatorCheckpointRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointResponse, error)
+	GetValidatorCheckpointParams(ctx context.Context, in *QueryGetValidatorCheckpointParamsRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointParamsResponse, error)
+	GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error)
 }
 
 type queryClient struct {
@@ -667,6 +891,24 @@ func (c *queryClient) GetValidatorCheckpoint(ctx context.Context, in *QueryGetVa
 	return out, nil
 }
 
+func (c *queryClient) GetValidatorCheckpointParams(ctx context.Context, in *QueryGetValidatorCheckpointParamsRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointParamsResponse, error) {
+	out := new(QueryGetValidatorCheckpointParamsResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetValidatorCheckpointParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error) {
+	out := new(QueryGetValidatorTimestampByIndexResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetValidatorTimestampByIndex", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -674,6 +916,8 @@ type QueryServer interface {
 	// Queries a list of GetEvmValidators items.
 	GetEvmValidators(context.Context, *QueryGetEvmValidatorsRequest) (*QueryGetEvmValidatorsResponse, error)
 	GetValidatorCheckpoint(context.Context, *QueryGetValidatorCheckpointRequest) (*QueryGetValidatorCheckpointResponse, error)
+	GetValidatorCheckpointParams(context.Context, *QueryGetValidatorCheckpointParamsRequest) (*QueryGetValidatorCheckpointParamsResponse, error)
+	GetValidatorTimestampByIndex(context.Context, *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -688,6 +932,12 @@ func (*UnimplementedQueryServer) GetEvmValidators(ctx context.Context, req *Quer
 }
 func (*UnimplementedQueryServer) GetValidatorCheckpoint(ctx context.Context, req *QueryGetValidatorCheckpointRequest) (*QueryGetValidatorCheckpointResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValidatorCheckpoint not implemented")
+}
+func (*UnimplementedQueryServer) GetValidatorCheckpointParams(ctx context.Context, req *QueryGetValidatorCheckpointParamsRequest) (*QueryGetValidatorCheckpointParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetValidatorCheckpointParams not implemented")
+}
+func (*UnimplementedQueryServer) GetValidatorTimestampByIndex(ctx context.Context, req *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetValidatorTimestampByIndex not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -748,6 +998,42 @@ func _Query_GetValidatorCheckpoint_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetValidatorCheckpointParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetValidatorCheckpointParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetValidatorCheckpointParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetValidatorCheckpointParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetValidatorCheckpointParams(ctx, req.(*QueryGetValidatorCheckpointParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetValidatorTimestampByIndex_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetValidatorTimestampByIndexRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetValidatorTimestampByIndex(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetValidatorTimestampByIndex",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetValidatorTimestampByIndex(ctx, req.(*QueryGetValidatorTimestampByIndexRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.bridge.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -763,6 +1049,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetValidatorCheckpoint",
 			Handler:    _Query_GetValidatorCheckpoint_Handler,
+		},
+		{
+			MethodName: "GetValidatorCheckpointParams",
+			Handler:    _Query_GetValidatorCheckpointParams_Handler,
+		},
+		{
+			MethodName: "GetValidatorTimestampByIndex",
+			Handler:    _Query_GetValidatorTimestampByIndex_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1139,6 +1433,137 @@ func (m *BridgeValidatorSetCheckpoint) MarshalToSizedBuffer(dAtA []byte) (int, e
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryGetValidatorCheckpointParamsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetValidatorCheckpointParamsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetValidatorCheckpointParamsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.PowerThreshold != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.PowerThreshold))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Timestamp != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.ValsetHash) > 0 {
+		i -= len(m.ValsetHash)
+		copy(dAtA[i:], m.ValsetHash)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ValsetHash)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Checkpoint) > 0 {
+		i -= len(m.Checkpoint)
+		copy(dAtA[i:], m.Checkpoint)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Checkpoint)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetValidatorTimestampByIndexRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetValidatorTimestampByIndexRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetValidatorTimestampByIndexRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Index != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Index))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetValidatorTimestampByIndexResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetValidatorTimestampByIndexResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetValidatorTimestampByIndexResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1302,6 +1727,65 @@ func (m *BridgeValidatorSetCheckpoint) Size() (n int) {
 	l = len(m.ValidatorCheckpoint)
 	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryGetValidatorCheckpointParamsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		n += 1 + sovQuery(uint64(m.Timestamp))
+	}
+	return n
+}
+
+func (m *QueryGetValidatorCheckpointParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Checkpoint)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ValsetHash)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Timestamp != 0 {
+		n += 1 + sovQuery(uint64(m.Timestamp))
+	}
+	if m.PowerThreshold != 0 {
+		n += 1 + sovQuery(uint64(m.PowerThreshold))
+	}
+	return n
+}
+
+func (m *QueryGetValidatorTimestampByIndexRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Index != 0 {
+		n += 1 + sovQuery(uint64(m.Index))
+	}
+	return n
+}
+
+func (m *QueryGetValidatorTimestampByIndexResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		n += 1 + sovQuery(uint64(m.Timestamp))
 	}
 	return n
 }
@@ -2273,6 +2757,365 @@ func (m *BridgeValidatorSetCheckpoint) Unmarshal(dAtA []byte) error {
 				m.ValidatorCheckpoint = []byte{}
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetValidatorCheckpointParamsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointParamsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointParamsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetValidatorCheckpointParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetValidatorCheckpointParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Checkpoint = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValsetHash", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValsetHash = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PowerThreshold", wireType)
+			}
+			m.PowerThreshold = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PowerThreshold |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetValidatorTimestampByIndexRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetValidatorTimestampByIndexRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetValidatorTimestampByIndexRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Index |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetValidatorTimestampByIndexResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetValidatorTimestampByIndexResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetValidatorTimestampByIndexResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
