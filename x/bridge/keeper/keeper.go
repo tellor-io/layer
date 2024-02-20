@@ -41,6 +41,7 @@ type (
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
+		OracleAttestationsMap        collections.Map[string, types.OracleAttestations]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -65,6 +66,7 @@ func NewKeeper(
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
+		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
@@ -552,6 +554,71 @@ func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string
 	err = k.BridgeValsetSignaturesMap.Set(ctx, timestamp, valsetSigs)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting bridge valset signatures", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error {
+	k.Logger(ctx).Info("@SetOracleAttestation", "msg", "setting oracle attestation")
+	// get the key by taking keccak256 hash of queryid and timestamp
+	key := hex.EncodeToString(crypto.Keccak256([]byte(queryId + fmt.Sprint(timestamp))))
+	// check if map for this key exists, otherwise create a new map
+	exists, err := k.OracleAttestationsMap.Has(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if oracle attestation map exists", "error", err)
+		return err
+	}
+	if !exists {
+		lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+		if err != nil {
+			k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+			return err
+		}
+		// create a new map
+		oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
+		// set the map
+		err = k.OracleAttestationsMap.Set(ctx, key, *oracleAttestations)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting oracle attestation map", "error", err)
+			return err
+		}
+	}
+	// get the map
+	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting oracle attestation map", "error", err)
+		return err
+	}
+	// get the evm address associated with the operator address
+	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
+		return err
+	}
+	// decode the signature hex
+	signatureBytes, err := hex.DecodeString(signature)
+	if err != nil {
+		k.Logger(ctx).Info("Error decoding signature hex", "error", err)
+		return err
+	}
+	// get the last saved bridge validator set
+	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+		return err
+	}
+	// set the signature in the oracle attestation map by finding the index of the operator address
+	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
+	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
+		if val.EthereumAddress == ethAddressHex {
+			oracleAttestations.SetAttestation(i, signatureBytes)
+		}
+	}
+	// set the valset signatures array by timestamp
+	err = k.OracleAttestationsMap.Set(ctx, key, oracleAttestations)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting oracle attestation", "error", err)
 		return err
 	}
 	return nil
