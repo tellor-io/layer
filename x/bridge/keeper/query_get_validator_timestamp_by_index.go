@@ -18,7 +18,7 @@ func (k Keeper) GetValidatorTimestampByIndex(goCtx context.Context, req *types.Q
 
 	validatorTimestamp, err := k.GetValidatorTimestampByIdxFromStorage(ctx, uint64(req.Index))
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to get validator checkpoint")
+		return nil, status.Error(codes.Internal, "failed to get validator timestamp by index")
 	}
 
 	return &types.QueryGetValidatorTimestampByIndexResponse{

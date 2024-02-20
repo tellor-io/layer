@@ -19,7 +19,7 @@ func (k Keeper) GetValidatorCheckpointParams(goCtx context.Context, req *types.Q
 
 	checkpointParams, err := k.GetValidatorCheckpointParamsFromStorage(ctx, uint64(req.Timestamp))
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to get validator checkpoint")
+		return nil, status.Error(codes.Internal, "failed to get validator checkpoint params")
 	}
 
 	checkpointHexString := hex.EncodeToString(checkpointParams.Checkpoint)

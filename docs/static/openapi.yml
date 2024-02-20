@@ -158,6 +158,45 @@ paths:
           format: int64
       tags:
         - Query
+  /tellor-io/layer/bridge/get_valset_sigs:
+    get:
+      operationId: LayerBridgeGetValsetSigs
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              signatures:
+                type: array
+                items:
+                  type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: timestamp
+          in: query
+          required: false
+          type: string
+          format: int64
+      tags:
+        - Query
   /tellor-io/layer/bridge/params:
     get:
       summary: Parameters queries the parameters of the module.
@@ -2270,6 +2309,13 @@ definitions:
       timestamp:
         type: string
         format: int64
+  layer.bridge.QueryGetValsetSigsResponse:
+    type: object
+    properties:
+      signatures:
+        type: array
+        items:
+          type: string
   layer.bridge.QueryParamsResponse:
     type: object
     properties:

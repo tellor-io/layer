@@ -16,7 +16,10 @@ func (k Keeper) GetEvmValidators(goCtx context.Context, req *types.QueryGetEvmVa
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ethAddresses, _ := k.GetCurrentValidatorsEVMCompatible(ctx)
+	ethAddresses, err := k.GetCurrentValidatorsEVMCompatible(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to get current validators")
+	}
 	ethAddressesStr := make([]string, len(ethAddresses))
 	for i, ethAddresses := range ethAddresses {
 		ethAddressesStr[i] = ethAddresses.EthereumAddress

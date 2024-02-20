@@ -367,6 +367,15 @@ func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpoin
 	return &checkpointTimestamp, nil
 }
 
+func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp uint64) (*types.BridgeValsetSignatures, error) {
+	valsetSigs, err := k.BridgeValsetSignaturesMap.Get(ctx, timestamp)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get bridge valset signatures", "error", err)
+		return nil, err
+	}
+	return &valsetSigs, nil
+}
+
 func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
 	k.Logger(ctx).Info("@EncodeAndHashValidatorSet", "msg", "encoding and hashing validator set")
 	// Define Go equivalent of the Solidity Validator struct
