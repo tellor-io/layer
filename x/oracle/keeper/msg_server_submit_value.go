@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/oracle/utils"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
@@ -31,8 +32,11 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.GetCommit(ctx, reporter, HashQueryData(qDataBytes))
+	commitValue, err := k.Commits.Get(ctx, collections.Join(reporter.Bytes(), HashQueryData(qDataBytes)))
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, status.Error(codes.NotFound, "no commits to reveal found")
+		}
 		return nil, err
 	}
 	currentBlock := ctx.BlockHeight()
@@ -44,13 +48,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
 	// }
 
-	// calculate the move's commitment, must match the one stored
-	valueDecoded, err := hex.DecodeString(msg.Value)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
-	}
-	commit := utils.CalculateCommitment(string(valueDecoded), msg.Salt)
-	fmt.Println("commit:", commit)
+	commit := utils.CalculateCommitment(msg.Value, msg.Salt)
 	if commit != commitValue.Report.Hash {
 		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
 	}

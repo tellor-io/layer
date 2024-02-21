@@ -188,7 +188,7 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 		"config file has malformed values": {
 			exchangeConfigSourcePath: "test_data/missingvals_test.toml",
 			expectedPanic: errors.New(
-				"One or more query config values are unset or are set to zero for exchange with id: 'BinanceUS'",
+				"one or more query config values are unset or are set to zero for exchange with id: 'BinanceUS'",
 			),
 		},
 		"config file has incorrect values": {

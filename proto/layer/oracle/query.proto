@@ -68,7 +68,12 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_time_based_rewards";
   
   }
-
+  
+  // Queries a list of CurrentCyclelistQuery items.
+  rpc CurrentCyclelistQuery (QueryCurrentCyclelistQueryRequest) returns (QueryCurrentCyclelistQueryResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/current_cyclelist_query";
+  
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -136,3 +141,10 @@ message QueryGetTimeBasedRewardsRequest {}
 message QueryGetTimeBasedRewardsResponse {
   cosmos.base.v1beta1.Coin reward = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
+
+message QueryCurrentCyclelistQueryRequest {}
+
+message QueryCurrentCyclelistQueryResponse {
+  string querydata = 1;
+}
+

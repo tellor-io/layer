@@ -35,7 +35,8 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.distrKeeper.On("GetFeePool", mock.Anything).Return(distrtypes.FeePool{CommunityPool: sdk.DecCoins{sdk.NewDecCoinFromDec("loya", math.LegacyNewDec(1000))}})
 	s.distrKeeper.On("SetFeePool", mock.Anything, mock.Anything).Return(nil)
 
-	s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err := s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	require.NoError(err)
 	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	require.Nil(err)
 	require.Equal(res.Report.QueryId, qId, "query id is not correct")
