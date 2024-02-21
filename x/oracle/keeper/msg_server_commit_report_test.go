@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +32,7 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.NoError(err)
 	_hexxy, _ := hex.DecodeString(queryData)
-	commitValue, err := s.oracleKeeper.GetCommit(s.ctx, Addr, keeper.HashQueryData(_hexxy))
+	commitValue, err := s.oracleKeeper.Commits.Get(s.ctx, collections.Join(Addr.Bytes(), keeper.HashQueryData(_hexxy)))
 	s.NoError(err)
 	require.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, Addr.String(), value, salt, hash))
 	require.Equal(commitValue.Report.Creator, Addr.String())
@@ -58,7 +59,6 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 }
 
 func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
-
 	// commit query in cycle list
 	queryData1 := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	commitreq.QueryData = queryData1
 	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.Nil(err)
+	s.NoError(err)
 
 	// commit for query that was tipped
 	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
@@ -89,7 +89,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	commitreq.QueryData = queryData2
 	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.Nil(err)
+	s.NoError(err)
 
 }
 
