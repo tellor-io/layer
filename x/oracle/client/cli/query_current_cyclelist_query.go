@@ -6,19 +6,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 var _ = strconv.Itoa(0)
 
-func CmdGetReportsbyQid() *cobra.Command {
+func CmdCurrentCyclelistQuery() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-reportsby-qid [q-id]",
-		Short: "Query getReportsbyQid",
-		Args:  cobra.ExactArgs(1),
+		Use:   "current-cyclelist-query",
+		Short: "Query CurrentCyclelistQuery",
+		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			reqQId := utils.Remove0xPrefix(args[0])
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -27,12 +25,9 @@ func CmdGetReportsbyQid() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetReportsbyQidRequest{
+			params := &types.QueryCurrentCyclelistQueryRequest{}
 
-				QueryId: reqQId,
-			}
-
-			res, err := queryClient.GetReportsbyQid(cmd.Context(), params)
+			res, err := queryClient.CurrentCyclelistQuery(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

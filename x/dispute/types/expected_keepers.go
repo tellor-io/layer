@@ -65,6 +65,6 @@ type BankKeeper interface {
 }
 
 type OracleKeeper interface {
-	GetTotalTips(ctx sdk.Context) sdk.Coin
-	GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) oracletypes.UserTipTotal
+	GetTotalTips(ctx context.Context) sdk.Coin
+	GetUserTips(ctx context.Context, tipper sdk.AccAddress) oracletypes.UserTipTotal
 }

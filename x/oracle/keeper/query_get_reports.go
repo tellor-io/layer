@@ -2,13 +2,12 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
-	"fmt"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -19,17 +18,19 @@ func (k Keeper) GetReportsbyQid(goCtx context.Context, req *types.QueryGetReport
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	qIdBytes, err := hex.DecodeString(req.QueryId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode query ID string: %v", err)
+
+	// TODO: add index and use that
+	reports := types.Reports{
+		MicroReports: []*types.MicroReport{},
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportsKey))
-	reportsBytes := store.Get(qIdBytes)
-	var reports types.Reports
-	if err := k.cdc.Unmarshal(reportsBytes, &reports); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal reports: %v", err)
-	}
+	k.Reports.Walk(ctx, nil, func(key collections.Triple[[]byte, []byte, int64], value types.MicroReport) (stop bool, err error) {
+		if value.QueryId == req.QueryId {
+			reports.MicroReports = append(reports.MicroReports, &value)
+		}
+		return false, nil
+	})
+
 	return &types.QueryGetReportsbyQidResponse{Reports: reports}, nil
 }
 
@@ -37,37 +38,46 @@ func (k Keeper) GetReportsbyReporter(goCtx context.Context, req *types.QueryGetR
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
-	reporterKey := []byte(req.Reporter + ":")
-	iterator := storetypes.KVStorePrefixIterator(store, reporterKey)
 
-	var finalReportsList []types.MicroReport
-	// Iterate and fetch all reports for the reporter
-	for ; iterator.Valid(); iterator.Next() {
-		var report types.Reports
-		if err := k.cdc.Unmarshal(iterator.Value(), &report); err != nil {
-			return nil, status.Error(codes.InvalidArgument, "failed to unmarshal reports")
-		}
-		for _, microReport := range report.MicroReports {
-			finalReportsList = append(finalReportsList, *microReport)
-		}
+	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
 
+	// Retrieve the stored reports for the current block height.
+	iter, err := k.Reports.Indexes.Reporter.MatchExact(goCtx, reporter.Bytes())
+	if err != nil {
+		return nil, err
 	}
-	return &types.QueryGetReportsbyReporterResponse{MicroReports: finalReportsList}, nil
+
+	reports, err := indexes.CollectValues(goCtx, k.Reports, iter)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryGetReportsbyReporterResponse{MicroReports: reports}, nil
 }
 
 func (k Keeper) GetReportsbyReporterQid(goCtx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryGetReportsbyQidResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReporterStoreKey))
-	reporterKey := []byte(req.Reporter + ":" + req.QueryId)
-	reportsBytes := store.Get(reporterKey)
-	var reports types.Reports
-	if err := k.cdc.Unmarshal(reportsBytes, &reports); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal reports: %v", err)
+
+	reporterAdd, err := sdk.AccAddressFromBech32(req.Reporter)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "failed to decode reporter address")
 	}
-	return &types.QueryGetReportsbyQidResponse{Reports: reports}, nil
+
+	qId, err := utils.QueryIDFromString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "failed to decode query ID")
+	}
+
+	microReports := []*types.MicroReport{}
+	rng := collections.NewSuperPrefixedTripleRange[[]byte, []byte, int64](qId, reporterAdd.Bytes())
+	k.Reports.Walk(goCtx, rng, func(key collections.Triple[[]byte, []byte, int64], value types.MicroReport) (stop bool, err error) {
+		microReports = append(microReports, &value)
+		return false, nil
+	})
+
+	return &types.QueryGetReportsbyQidResponse{Reports: types.Reports{
+		MicroReports: microReports,
+	}}, nil
 }

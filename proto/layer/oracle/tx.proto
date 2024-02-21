@@ -42,7 +42,7 @@ message MsgUpdateParamsResponse {}
 message MsgSubmitValue {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string queryData = 2;
+  string query_data = 2;
   string value = 3;
   string salt = 4; // hex encoded 32 bytes salt
 }
@@ -52,7 +52,7 @@ message MsgSubmitValueResponse {}
 message MsgCommitReport {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string queryData = 2;
+  string query_data = 2;
   string hash = 3; // hex encoded sha256 of "salt:value"
 }
 
@@ -61,7 +61,7 @@ message MsgCommitReportResponse {}
 message MsgTip {
   option (cosmos.msg.v1.signer) = "tipper";
   string tipper = 1;
-  string queryData = 2;
+  string query_data = 2;
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 

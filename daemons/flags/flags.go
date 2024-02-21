@@ -15,6 +15,8 @@ const (
 
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
+
+	FlagReporterDaemonEnabled = "reporter-daemon-enabled"
 )
 
 // Shared flags contains configuration flags shared by all daemons.
@@ -35,10 +37,18 @@ type PriceFlags struct {
 	LoopDelayMs uint32
 }
 
+// ReporterFlags contains configuration flags for the Reporter Daemon.
+type ReporterFlags struct {
+	// Enabled toggles the reporter daemon on or off.
+	Enabled     bool
+	AccountName string
+}
+
 // DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
-	Shared SharedFlags
-	Price  PriceFlags
+	Shared   SharedFlags
+	Price    PriceFlags
+	Reporter ReporterFlags
 }
 
 var defaultDaemonFlags *DaemonFlags
@@ -55,6 +65,11 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Price: PriceFlags{
 				Enabled:     true,
 				LoopDelayMs: 3_000,
+			},
+			Reporter: ReporterFlags{
+				Enabled: true,
+				// Account `alice` was initialized during `ignite chain serve`
+				AccountName: "alice",
 			},
 		}
 	}
@@ -99,6 +114,11 @@ func AddDaemonFlagsToCmd(
 		df.Price.LoopDelayMs,
 		"Delay in milliseconds between sending price updates to the application.",
 	)
+	cmd.Flags().Bool(
+		FlagReporterDaemonEnabled,
+		df.Reporter.Enabled,
+		"Enable Reporter Daemon. Set to false for non-validator nodes.",
+	)
 }
 
 // GetDaemonFlagValuesFromOptions gets all daemon flag values from the `AppOptions` struct.
@@ -134,6 +154,13 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagPriceDaemonLoopDelayMs); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.Price.LoopDelayMs = v
+		}
+	}
+
+	// Reporter Daemon.
+	if option := appOpts.Get(FlagReporterDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Reporter.Enabled = v
 		}
 	}
 

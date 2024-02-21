@@ -1,15 +1,14 @@
 package keeper
 
 import (
-	"encoding/hex"
-	"fmt"
+	"context"
+	"errors"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
-	"cosmossdk.io/store"
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {
@@ -25,113 +24,43 @@ func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (
 	return tip.Sub(burnCoin), nil
 }
 
-func (k Keeper) SetTip(ctx sdk.Context, tipper sdk.AccAddress, queryData string, tip sdk.Coin) {
-	tipStore := k.TipStore(ctx)
-	k.SetTotalTips(ctx, tipStore, tip)
-	k.SetQueryTips(ctx, tipStore, queryData, tip)
-	k.SetTipperTipsForQuery(ctx, tipStore, tipper.String(), queryData, tip)
-	k.SetTipperTotalTips(ctx, tipStore, tipper, tip)
+func (k Keeper) GetQueryTip(ctx sdk.Context, queryId []byte) sdk.Coin {
+	tipsSum := sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](queryId) // range all tips for this queryID
+	k.Tips.Walk(ctx, rng, func(key collections.Pair[[]byte, []byte], value math.Int) (stop bool, err error) {
+		tipsSum = tipsSum.AddAmount(value)
+		return false, nil
+	})
+	return tipsSum
 }
 
-func (k Keeper) SetQueryTips(ctx sdk.Context, tipStore storetypes.KVStore, queryData string, tip sdk.Coin) {
-	tips, queryId := k.GetQueryTips(ctx, tipStore, queryData)
-	tips.Amount = tips.Amount.Add(tip)
-	tips.TotalTips = tips.TotalTips.Add(tip)
-	tipStore.Set(queryId, k.cdc.MustMarshal(&tips))
-}
-
-func (k Keeper) SetTipperTipsForQuery(ctx sdk.Context, tipStore store.KVStore, tipper, queryData string, tip sdk.Coin) {
-	tips := k.GetUserQueryTips(ctx, tipper, queryData)
-	tips.Total = tips.Total.Add(tip)
-	tipStore.Set(k.TipperKey(tipper, queryData), k.cdc.MustMarshal(&tips))
-}
-
-func (k Keeper) SetTipperTotalTips(ctx sdk.Context, tipStore store.KVStore, tipper sdk.AccAddress, tip sdk.Coin) {
-	tips := k.GetUserTips(ctx, tipper)
-	tips.Total = tips.Total.Add(tip)
-	tipStore.Set(tipper, k.cdc.MustMarshal(&tips))
-}
-
-func (k Keeper) SetTotalTips(ctx sdk.Context, tipStore store.KVStore, tip sdk.Coin) {
-	total := k.GetTotalTips(ctx)
-	totals := total.Add(tip)
-	tipStore.Set([]byte("totaltips"), k.cdc.MustMarshal(&totals))
-}
-
-func (k Keeper) GetQueryTips(ctx sdk.Context, tipStore store.KVStore, queryData string) (types.Tips, []byte) {
-	// remove 0x prefix from query data
-	queryData = regtypes.Remove0xPrefix(queryData)
-	// decode query data hex string to bytes
-	queryDataBytes, err := hex.DecodeString(queryData)
+func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) types.UserTipTotal {
+	it, err := k.Tips.Indexes.Tipper.MatchExact(ctx, tipper.Bytes())
 	if err != nil {
 		panic(err)
 	}
-	queryId := HashQueryData(queryDataBytes)
-	bz := tipStore.Get(queryId)
-	if bz == nil {
-		return types.Tips{
-			QueryData: queryData,
-			Amount:    sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt()),
-			TotalTips: sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt()),
-		}, queryId
+
+	vals, err := indexes.CollectValues(ctx, k.Tips, it)
+	if err != nil {
+		panic(err)
 	}
-	var tips types.Tips
-	k.cdc.Unmarshal(bz, &tips)
-	return tips, queryId
+
+	totalTips := sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
+	for _, tip := range vals {
+		totalTips = totalTips.AddAmount(tip)
+	}
+
+	return types.UserTipTotal{
+		Address: tipper.String(),
+		Total:   totalTips,
+	}
 }
 
-func (k Keeper) GetQueryTip(ctx sdk.Context, queryId string) sdk.Coin {
-	tipStore := k.TipStore(ctx)
-	qId, _ := hex.DecodeString(queryId)
-	bz := tipStore.Get(qId)
-	if bz == nil {
+func (k Keeper) GetTotalTips(ctx context.Context) sdk.Coin {
+	totalTips, err := k.TotalTips.Get(ctx)
+	if errors.Is(err, collections.ErrNotFound) {
 		return sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
 	}
-	var tips types.Tips
-	k.cdc.Unmarshal(bz, &tips)
-	return tips.Amount
-}
 
-func (k Keeper) GetUserTips(ctx sdk.Context, tipper sdk.AccAddress) types.UserTipTotal {
-	tipStore := k.TipStore(ctx)
-	bz := tipStore.Get(tipper)
-	if bz == nil {
-		return types.UserTipTotal{
-			Address: tipper.String(),
-			Total:   sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt()),
-		}
-	}
-	var tips types.UserTipTotal
-	k.cdc.Unmarshal(bz, &tips)
-	return tips
-}
-
-func (k Keeper) GetUserQueryTips(ctx sdk.Context, tipper, queryData string) (tips types.UserTipTotal) {
-	tipStore := k.TipStore(ctx)
-
-	queryData = regtypes.Remove0xPrefix(queryData)
-	bz := tipStore.Get(k.TipperKey(tipper, queryData))
-	if bz == nil {
-		return types.UserTipTotal{
-			Address: tipper,
-			Total:   sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt()),
-		}
-	}
-	k.cdc.Unmarshal(bz, &tips)
-	return
-}
-
-func (k Keeper) TipperKey(tipper, queryData string) []byte {
-	return types.KeyPrefix(fmt.Sprintf("%s:%s", tipper, queryData))
-}
-
-func (k Keeper) GetTotalTips(ctx sdk.Context) sdk.Coin {
-	tipStore := k.TipStore(ctx)
-	bz := tipStore.Get([]byte("totaltips"))
-	if bz == nil {
-		return sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
-	}
-	var total sdk.Coin
-	k.cdc.MustUnmarshal(bz, &total)
-	return total
+	return sdk.NewCoin(types.DefaultBondDenom, totalTips)
 }

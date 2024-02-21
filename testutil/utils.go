@@ -2,10 +2,12 @@ package testutil
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -17,12 +19,17 @@ func GenerateRandomAddress() sdk.AccAddress {
 
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport
+	queryId, err := utils.QueryIDFromString(qId)
+	if err != nil {
+		panic(fmt.Sprintf("failed to decode query ID string: %v", err))
+	}
+
 	for i, reporter := range reporters {
 		reports = append(reports, oracletypes.MicroReport{
 			Reporter: reporter.String(),
 			Value:    values[i],
 			Power:    powers[i],
-			QueryId:  qId,
+			QueryId:  hex.EncodeToString(queryId),
 		})
 	}
 	return reports
