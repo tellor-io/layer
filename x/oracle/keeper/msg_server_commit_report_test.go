@@ -22,11 +22,9 @@ func (s *KeeperTestSuite) TestCommitValue() string {
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
 	// Commit report transaction
-	valueDecoded, err := hex.DecodeString(value)
-	require.Nil(err)
 	salt, err := utils.Salt(32)
 	require.Nil(err)
-	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	hash := utils.CalculateCommitment(value, salt)
 	require.Nil(err)
 	commitreq.Creator = Addr.String()
 	commitreq.QueryData = queryData

@@ -7,6 +7,5 @@ import (
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
 	// Rotate through the cycle list and set the current query index
-	k.RotateQueries(ctx)
-	return nil
+	return k.RotateQueries(ctx)
 }

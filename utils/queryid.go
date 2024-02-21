@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/hex"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -11,7 +12,7 @@ func QueryIDFromData(queryData []byte) []byte {
 }
 
 func QueryIDFromDataString(queryData string) ([]byte, error) {
-	bz, err := hex.DecodeString(remove0xPrefix(queryData))
+	bz, err := hex.DecodeString(Remove0xPrefix(queryData))
 	if err != nil {
 		return nil, err
 	}
@@ -20,14 +21,14 @@ func QueryIDFromDataString(queryData string) ([]byte, error) {
 }
 
 func QueryIDFromString(queryID string) ([]byte, error) {
-	return hex.DecodeString(remove0xPrefix(queryID))
+	return hex.DecodeString(Remove0xPrefix(queryID))
 }
 
-func remove0xPrefix(hexString string) string {
+func Remove0xPrefix(hexString string) string {
 	if has0xPrefix(hexString) {
 		hexString = hexString[2:]
 	}
-	return hexString
+	return strings.ToLower(hexString)
 }
 
 // has0xPrefix validates str begins with '0x' or '0X'.

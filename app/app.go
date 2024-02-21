@@ -52,7 +52,6 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -140,6 +139,7 @@ import (
 	"runtime/debug"
 
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
+	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
 	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
@@ -261,8 +261,9 @@ type App struct {
 	configurator module.Configurator
 
 	Server              *daemonserver.Server
-	startDaemons        func(client.Context, *api.Server)
+	startDaemons        func(*api.Server)
 	PriceFeedClient     *pricefeedclient.Client
+	ReporterClient      *reporterclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 }
 
@@ -290,7 +291,7 @@ func New(
 		panic(err)
 	}
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
-	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterInterfaces(appCodec.InterfaceRegistry())
 	std.RegisterLegacyAminoCodec(legacyAmino)
@@ -384,17 +385,17 @@ func New(
 	)
 	// https://docs.cosmos.network/main/build/migrations/upgrading
 	// When using (legacy) application wiring, the following must be added to app.go after setting the app's bank keeper
-	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := tx.ConfigOptions{
+	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := authtx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
-	txConfig, err = tx.NewTxConfigWithOptions(
+	txConfig, err = authtx.NewTxConfigWithOptions(
 		appCodec,
 		txConfigOpts,
 	)
 	if err != nil {
-		panic(fmt.Errorf("Failed to create new TxConfig with options: %v", err))
+		panic(fmt.Errorf("failed to create new TxConfig with options: %v", err))
 	}
 	app.txConfig = txConfig
 	app.StakingKeeper = stakingkeeper.NewKeeper(
@@ -583,14 +584,12 @@ func New(
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed App flags", "Flags", appFlags)
 	// Panic if this is not a full node and gRPC is disabled.
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
 	// Get Daemon Flags.
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
 	// Create server that will ingest gRPC messages from daemon clients.
@@ -614,10 +613,12 @@ func New(
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
-	app.startDaemons = func(cltx client.Context, apiSvr *api.Server) {
+	app.startDaemons = func(apiSvr *api.Server) {
+		cltx := apiSvr.ClientCtx
 		// enabled by default, set flag `--price-daemon-enabled=false` to false to disable
 		if daemonFlags.Price.Enabled {
-			maxDaemonUnhealthyDuration := time.Second
+			// set flag `--price-daemon-max-unhealthy-seconds=0` to disable
+			maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 			// Start server for handling gRPC messages from daemons.
 			go app.Server.Start()
 
@@ -639,8 +640,24 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
+			go medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+			// enabled by default, set flag `--reporter-daemon-enabled=false` to false to disable
+			if daemonFlags.Reporter.Enabled {
+				go func() {
+					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName)
+					if err := app.ReporterClient.Start(
+						context.Background(),
+						daemonFlags,
+						appFlags,
+						&daemontypes.GrpcClientImpl{},
+						marketParamsConfig,
+						indexPriceCache,
+					); err != nil {
+						panic(err)
+					}
+				}()
+			}
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
@@ -1029,7 +1046,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	docs.RegisterOpenAPIService(Name, apiSvr.Router)
-	app.startDaemons(clientCtx, apiSvr)
+	app.startDaemons(apiSvr)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.
