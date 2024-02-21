@@ -3,6 +3,49 @@ info:
   title: HTTP API Console
   name: ''
   description: ''
+paths:
+  /tellor-io/layer/reporter/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerReporterParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  min_commission_rate:
+                    type: string
+                    title: >-
+                      min_commission_rate, adopted from staking module, is the
+                      minimum commission rate a reporter can their delegators
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
 definitions:
   cosmos.auth.v1beta1.MsgUpdateParamsResponse:
     type: object
@@ -2129,6 +2172,28 @@ definitions:
     description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
   layer.registry.MsgUpdateDataSpecResponse:
     type: object
+  layer.reporter.Params:
+    type: object
+    properties:
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate, adopted from staking module, is the minimum
+          commission rate a reporter can their delegators
+    description: Params defines the parameters for the module.
+  layer.reporter.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate, adopted from staking module, is the minimum
+              commission rate a reporter can their delegators
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   cosmos.staking.v1beta1.Commission:
     type: object
     properties:
@@ -2170,18 +2235,6 @@ definitions:
     description: |-
       MsgUpdateParamsResponse defines the response structure for executing a
       MsgUpdateParams message.
-  layer.reporter.Params:
-    type: object
-    properties:
-      min_stake_amount:
-        type: string
-        format: uint64
-      min_commission_rate:
-        type: string
-        title: >-
-          min_commission_rate, adopted from staking module, is the minimum
-          commission rate a reporter can their delegators
-    description: Params defines the parameters for the module.
   layer.reporter.TokenOrigin:
     type: object
     properties:
@@ -2192,7 +2245,6 @@ definitions:
           staking are delegated to
       amount:
         type: string
-        format: uint64
         title: >-
           amount is the amount of tokens to be delegated to a reporter from a
           delegation in staking
