@@ -39,3 +39,11 @@ func NewReporterCurrentRewards(rewards sdk.DecCoins, period uint64) ReporterCurr
 		Period:  period,
 	}
 }
+
+// create a new ReporterDisputeEvent
+func NewReporterDisputeEvent(reporterPeriod uint64, fraction math.LegacyDec) ReporterDisputeEvent {
+	return ReporterDisputeEvent{
+		ReporterPeriod: reporterPeriod,
+		Fraction:       fraction,
+	}
+}

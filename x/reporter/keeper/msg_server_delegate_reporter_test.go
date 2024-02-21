@@ -13,7 +13,7 @@ import (
 )
 
 func TestDelegateReporter(t *testing.T) {
-	k, sk, ms, ctx := setupMsgServer(t)
+	k, sk, _, ms, ctx := setupMsgServer(t)
 
 	delAddr := sdk.AccAddress([]byte("delegator"))
 	repAddr := sdk.AccAddress([]byte("reporter"))
@@ -35,8 +35,16 @@ func TestDelegateReporter(t *testing.T) {
 			},
 		},
 	}
+
 	// add the reporter to the keeper
-	err := k.Reporters.Set(ctx, repAddr, types.OracleReporter{Reporter: repAddr.String(), TotalTokens: math.NewInt(200)})
+	reporter := types.OracleReporter{Reporter: repAddr.String(), TotalTokens: math.NewInt(200)}
+	err := k.Reporters.Set(ctx, repAddr, reporter)
+	require.NoError(t, err)
+	// call distr hooks
+	err = k.AfterReporterCreated(ctx, reporter)
+	require.NoError(t, err)
+
+	err = k.BeforeDelegationCreated(ctx, reporter)
 	require.NoError(t, err)
 
 	// set up mock for ValidateAmount method of Keeper

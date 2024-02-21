@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetParams(t *testing.T) {
-	k, _, ctx := keepertest.ReporterKeeper(t)
+	k, _, _, ctx := keepertest.ReporterKeeper(t)
 	params := types.DefaultParams()
 	querier := keeper.NewQuerier(k)
 	require.NoError(t, k.SetParams(ctx, params))

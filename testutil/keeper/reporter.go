@@ -22,7 +22,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Context) {
+func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -49,5 +49,5 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Cont
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, sk, ctx
+	return k, sk, bk, ctx
 }

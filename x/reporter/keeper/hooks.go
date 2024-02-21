@@ -97,13 +97,13 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 			if err != nil {
 				return err
 			}
-			if err := h.k.UpdateOrRemoveDelegator(ctx, delAddr, delegator, diff); err != nil {
-				return err
-			}
-			// update reporter
 			repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
+			// update reporter
 			reporter, err := h.k.Reporters.Get(ctx, repAddr)
 			if err != nil {
+				return err
+			}
+			if err := h.k.UpdateOrRemoveDelegator(ctx, delAddr, delegator, reporter, diff); err != nil {
 				return err
 			}
 			if err := h.k.UpdateOrRemoveReporter(ctx, repAddr, reporter, diff); err != nil {

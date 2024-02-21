@@ -58,17 +58,29 @@ func (k Keeper) ValidateAmount(ctx context.Context, delegator sdk.AccAddress, or
 	return nil
 }
 
-func (k Keeper) UpdateOrRemoveDelegator(ctx context.Context, key sdk.AccAddress, del types.Delegation, amt math.Int) error {
+func (k Keeper) UpdateOrRemoveDelegator(ctx context.Context, delAddr sdk.AccAddress, del types.Delegation, reporter types.OracleReporter, amt math.Int) error {
+	if err := k.BeforeDelegationModified(ctx, delAddr, del, reporter); err != nil {
+		return err
+	}
 	if del.Amount.LTE(amt) {
-		return k.Delegators.Remove(ctx, key)
+		return k.Delegators.Remove(ctx, delAddr)
 	}
 	del.Amount = del.Amount.Sub(amt)
-	return k.Delegators.Set(ctx, key, del)
+	err := k.Delegators.Set(ctx, delAddr, del)
+	if err != nil {
+		return err
+	}
+	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.GetReporter()))
+	return k.AfterDelegationModified(ctx, delAddr, reporterVal, del.Amount)
 }
 
 func (k Keeper) UpdateOrRemoveReporter(ctx context.Context, key sdk.AccAddress, rep types.OracleReporter, amt math.Int) error {
 	if rep.TotalTokens.LTE(amt) {
-		return k.Reporters.Remove(ctx, key)
+		if err := k.Reporters.Remove(ctx, key); err != nil {
+			return err
+		}
+		reporterVal := sdk.ValAddress(key)
+		return k.AfterReporterRemoved(ctx, reporterVal)
 	}
 	rep.TotalTokens = rep.TotalTokens.Sub(amt)
 	return k.Reporters.Set(ctx, key, rep)

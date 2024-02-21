@@ -13,9 +13,16 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (k Keeper) WithdrawReporterCommission(ctx context.Context, reporterAcc sdk.AccAddress) (sdk.Coins, error) {
-	// fetch validator accumulated commission
-	reporterVal := sdk.ValAddress(reporterAcc)
+// WithdrawReporterCommission withdraws the accumulated commission of a reporter.
+// It fetches the reporter's accumulated commission from the storage and checks if it is zero.
+// If the commission is zero, it returns an error.
+// Otherwise, it truncates the commission and updates the remainder in the storage for later withdrawal.
+// It then updates the outstanding rewards by subtracting the commission from the reporter's rewards.
+// If the commission is not zero, it sends the commission coins from the module to the reporter's account.
+// Finally, it emits an event to indicate the successful withdrawal of the commission.
+// Returns the withdrawn commission coins and any error encountered.
+func (k Keeper) WithdrawReporterCommission(ctx context.Context, reporterVal sdk.ValAddress) (sdk.Coins, error) {
+	// fetch reporter accumulated commission
 	accumCommission, err := k.ReportersAccumulatedCommission.Get(ctx, reporterVal)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
@@ -43,7 +50,7 @@ func (k Keeper) WithdrawReporterCommission(ctx context.Context, reporterAcc sdk.
 
 	if !commission.IsZero() {
 
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, reporterAcc, commission)
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, reporterVal.Bytes(), commission)
 		if err != nil {
 			return nil, err
 		}
@@ -60,15 +67,23 @@ func (k Keeper) WithdrawReporterCommission(ctx context.Context, reporterAcc sdk.
 	return commission, nil
 }
 
-// AllocateTokensToReporter allocate tokens to a particular validator,
+// AllocateTokensToReporter allocate tokens to a particular reporter,
 // splitting according to commission.
-func (k Keeper) AllocateTokensToReporter(ctx context.Context, reporterAcc sdk.AccAddress, tokens sdk.DecCoins) error {
+// AllocateTokensToReporter allocates tokens to a reporter and updates the commission, rewards, and outstanding rewards.
+// It splits the tokens between the reporter and delegators according to the commission rate.
+// Parameters:
+// - ctx: The context of the current operation.
+// - reporterAcc: The account address of the reporter as AccAddress type.
+// - tokens: The tokens to be allocated.
+// Returns:
+// - error: An error if the operation fails, nil otherwise.
+func (k Keeper) AllocateTokensToReporter(ctx context.Context, reporterVal sdk.ValAddress, tokens sdk.DecCoins) error {
 	// split tokens between reporter and delegators according to commission
-	rep, err := k.Reporters.Get(ctx, reporterAcc)
+	rep, err := k.Reporters.Get(ctx, reporterVal.Bytes())
 	if err != nil {
 		return err
 	}
-	reporterVal := sdk.ValAddress(reporterAcc)
+
 	commission := tokens.MulDec(rep.Commission.Rate)
 	shared := tokens.Sub(commission)
 
@@ -78,7 +93,7 @@ func (k Keeper) AllocateTokensToReporter(ctx context.Context, reporterAcc sdk.Ac
 		sdk.NewEvent(
 			types.EventTypeCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
-			sdk.NewAttribute(types.AttributeKeyReporter, reporterAcc.String()),
+			sdk.NewAttribute(types.AttributeKeyReporter, sdk.AccAddress(reporterVal).String()),
 		),
 	)
 	currentCommission, err := k.ReportersAccumulatedCommission.Get(ctx, reporterVal)
@@ -110,7 +125,7 @@ func (k Keeper) AllocateTokensToReporter(ctx context.Context, reporterAcc sdk.Ac
 		sdk.NewEvent(
 			types.EventTypeRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, tokens.String()),
-			sdk.NewAttribute(types.AttributeKeyReporter, reporterAcc.String()),
+			sdk.NewAttribute(types.AttributeKeyReporter, sdk.AccAddress(reporterVal).String()),
 		),
 	)
 
@@ -123,12 +138,16 @@ func (k Keeper) AllocateTokensToReporter(ctx context.Context, reporterAcc sdk.Ac
 	return k.ReporterOutstandingRewards.Set(ctx, reporterVal, outstanding)
 }
 
-func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, reporterAcc sdk.AccAddress) (sdk.Coins, error) {
-	reporter, err := k.Reporters.Get(ctx, reporterAcc)
+// WithdrawDelegationRewards withdraws the delegation rewards for a given delegator and reporter.
+// It retrieves the reporter and delegator from the keeper and asserts that the reporter matches the delegator's reporter.
+// Then, it calls the withdrawDelegationRewards function to actually withdraw the rewards.
+// After that, it reinitializes the delegation by calling the initializeDelegation function.
+// Finally, it returns the withdrawn rewards.
+func (k Keeper) WithdrawDelegationRewards(ctx context.Context, reporterVal sdk.ValAddress, delAddr sdk.AccAddress) (sdk.Coins, error) {
+	reporter, err := k.Reporters.Get(ctx, reporterVal.Bytes())
 	if err != nil {
 		return nil, err
 	}
-	reporterVal := sdk.ValAddress(reporterAcc)
 
 	del, err := k.Delegators.Get(ctx, delAddr)
 	if err != nil {
@@ -140,13 +159,13 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	}
 
 	// withdraw rewards
-	rewards, err := k.withdrawDelegationRewards(ctx, reporterVal, reporter, delAddr)
+	rewards, err := k.withdrawDelegationRewards(ctx, reporter, delAddr, del)
 	if err != nil {
 		return nil, err
 	}
 
 	// reinitialize the delegation
-	err = k.initializeDelegation(ctx, reporterVal, delAddr)
+	err = k.initializeDelegation(ctx, reporterVal, delAddr, del.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +173,9 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 }
 
 // initialize starting info for a new delegation
-func (k Keeper) initializeDelegation(ctx context.Context, reporterVal sdk.ValAddress, del sdk.AccAddress) error {
+// initializeDelegation initializes a delegation by storing the period ended by the delegation action and updating the reference count for the period.
+// It also sets the DelegatorStartingInfo for the delegation.
+func (k Keeper) initializeDelegation(ctx context.Context, reporterVal sdk.ValAddress, delAddr sdk.AccAddress, stake math.Int) error {
 	// period has already been incremented - we want to store the period ended by this delegation action
 	repCurrentRewards, err := k.ReporterCurrentRewards.Get(ctx, reporterVal)
 	if err != nil {
@@ -168,37 +189,16 @@ func (k Keeper) initializeDelegation(ctx context.Context, reporterVal sdk.ValAdd
 		return err
 	}
 
-	// validator, err := k.stakingKeeper.Validator(ctx, varl)
-	// if err != nil {
-	// 	return err
-	// }
-	rep, err := k.Reporters.Get(ctx, sdk.AccAddress(reporterVal))
-	if err != nil {
-		return err
-	}
-	// delegation, err := k.stakingKeeper.Delegation(ctx, del, val)
-	// if err != nil {
-	// 	return err
-	// }
-	delegation, err := k.Delegators.Get(ctx, del)
-	if err != nil {
-		return err
-	}
-
-	if delegation.Reporter != rep.Reporter {
-		return types.ErrReporterMismatch
-	}
-	// calculate delegation stake in tokens
-	// we don't store directly, so multiply delegation shares * (tokens per share)
-	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
-	stake := delegation.Amount
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.DelegatorStartingInfo.Set(ctx, collections.Join(reporterVal, del), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
+	return k.DelegatorStartingInfo.Set(ctx, collections.Join(reporterVal, delAddr), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 
 // increment the reference count for a historical rewards value
-func (k Keeper) incrementReferenceCount(ctx context.Context, reporter sdk.ValAddress, period uint64) error {
-	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporter, period))
+// incrementReferenceCount increments the reference count for a reporter's historical rewards for a specific period.
+// It retrieves the historical rewards for the reporter and period from the store, increments the reference count,
+// and updates the store with the modified historical rewards.
+func (k Keeper) incrementReferenceCount(ctx context.Context, reporterVal sdk.ValAddress, period uint64) error {
+	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal, period))
 	if err != nil {
 		return err
 	}
@@ -206,14 +206,15 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, reporter sdk.ValAdd
 		panic("reference count should never exceed 2")
 	}
 	historical.ReferenceCount++
-	return k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporter, period), historical)
+	return k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterVal, period), historical)
 }
 
-func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporterVal sdk.ValAddress, reporter types.OracleReporter, delAddr sdk.AccAddress) (sdk.Coins, error) {
-	del, err := k.Delegators.Get(ctx, delAddr)
-	if err != nil {
-		return nil, err
-	}
+// withdrawDelegationRewards withdraws the delegation rewards for a specific delegator.
+// It calculates the rewards, truncates the decimal portion, adds the rewards to the delegator's account,
+// updates the outstanding rewards, burns the remainder, decrements the reference count of the starting period,
+// and removes the delegator starting info. Finally, it emits an event for the withdrawal of rewards.
+func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.OracleReporter, delAddr sdk.AccAddress, del types.Delegation) (sdk.Coins, error) {
+	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.Reporter))
 
 	// check existence of delegator starting info
 	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(reporterVal, delAddr))
@@ -224,9 +225,8 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporterVal sdk.V
 	if !hasInfo {
 		return nil, types.ErrEmptyDelegationDistInfo
 	}
-
 	// end current period and calculate rewards
-	endingPeriod, err := k.IncrementReporterPeriod(ctx, reporterVal, reporter)
+	endingPeriod, err := k.IncrementReporterPeriod(ctx, reporter)
 	if err != nil {
 		return nil, err
 	}
@@ -327,20 +327,16 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, reporterVal sdk.
 	startingPeriod := startingInfo.PreviousPeriod
 	stake := math.LegacyNewDecFromInt(startingInfo.Stake)
 
-	// Iterate through slashes and withdraw with calculated staking for
-	// distribution periods. These period offsets are dependent on *when* slashes
-	// happen - namely, in BeginBlock, after rewards are allocated...
-	// Slashes which happened in the first block would have been before this
-	// delegation existed, UNLESS they were slashes of a redelegation to this
-	// validator which was itself slashed (from a fault committed by the
-	// redelegation source validator) earlier in the same BeginBlock.
+	// Iterate through disputes and withdraw with calculated staking for
+	// distribution periods. These period offsets are dependent on *when* disputes
+	// happen
 	startingHeight := startingInfo.Height
-	// Slashes this block happened after reward allocation, but we have to account
+	// Disputes this block happened after reward allocation, but we have to account
 	// for them for the stake sanity check below.
 	endingHeight := uint64(sdkCtx.BlockHeight())
 	var iterErr error
 	if endingHeight > startingHeight {
-		err = k.IterateValidatorSlashEventsBetween(ctx, reporterVal, startingHeight, endingHeight,
+		err = k.IterateReporterDisputeEventsBetween(ctx, reporterVal, startingHeight, endingHeight,
 			func(height uint64, event types.ReporterDisputeEvent) (stop bool) {
 				endingPeriod := event.ReporterPeriod
 				if endingPeriod > startingPeriod {
@@ -415,9 +411,10 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, reporterVal sdk.
 	return rewards, nil
 }
 
-// increment validator period, returning the period just ended
-func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporterVal sdk.ValAddress, reporter types.OracleReporter) (uint64, error) {
+// increment reporter period, returning the period just ended
+func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporter types.OracleReporter) (uint64, error) {
 	// fetch current rewards
+	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.Reporter))
 	rewards, err := k.ReporterCurrentRewards.Get(ctx, reporterVal)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return 0, err
@@ -428,19 +425,14 @@ func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporterVal sdk.Val
 	if reporter.TotalTokens.IsZero() {
 
 		// can't calculate ratio for zero-token validators
-		// ergo we instead add to the decimal pool
+		// ergo we instead add to ~~~the decimal pool~~ TODO: burn rewards.Rewards
 
 		outstanding, err := k.ReporterOutstandingRewards.Get(ctx, reporterVal)
 		if err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return 0, err
 		}
-		// TODO: burn rewards.Rewards
-		// feePool.DecimalPool = feePool.DecimalPool.Add(rewards.Rewards...)
+
 		outstanding.Rewards = outstanding.GetRewards().Sub(rewards.Rewards)
-		// err = k.FeePool.Set(ctx, feePool)
-		// if err != nil {
-		// 	return 0, err
-		// }
 
 		err = k.ReporterOutstandingRewards.Set(ctx, reporterVal, outstanding)
 		if err != nil {
@@ -558,10 +550,90 @@ func (k Keeper) GetReporterOutstandingRewardsCoins(ctx context.Context, reporter
 	return rewards.Rewards, nil
 }
 
-// call this when reporters coins are zero and reporter is removed from table, call before deleting reporter
-// TODO: call IncrementReporterPeriod before this BeforeDelegationCreated
-// TODO: call withdrawDelegationRewards before Delegation tokens are modified
-// TODO: call initializeDelegation after Delegation tokens are modified
+// iterate over slash events between heights, inclusive
+func (k Keeper) IterateReporterDisputeEventsBetween(ctx context.Context, reporterVal sdk.ValAddress, startingHeight, endingHeight uint64,
+	handler func(height uint64, event types.ReporterDisputeEvent) (stop bool),
+) error {
+	rng := new(collections.Range[collections.Triple[sdk.ValAddress, uint64, uint64]]).
+		StartInclusive(collections.Join3(reporterVal, startingHeight, uint64(0))).
+		EndExclusive(collections.Join3(reporterVal, endingHeight+1, uint64(gomath.MaxUint64)))
+
+	err := k.ReporterDisputeEvents.Walk(ctx, rng, func(k collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ReporterDisputeEvent) (stop bool, err error) {
+		height := k.K2()
+		if handler(height, ev) {
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) initializeReporter(ctx context.Context, reporter types.OracleReporter) error {
+	valBz := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.Reporter))
+	// set initial historical rewards (period 0) with reference count of 1
+	err := k.ReporterHistoricalRewards.Set(ctx, collections.Join(valBz, uint64(0)), types.NewReporterHistoricalRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		return err
+	}
+
+	// set current rewards (starting at period 1)
+	err = k.ReporterCurrentRewards.Set(ctx, valBz, types.NewReporterCurrentRewards(sdk.DecCoins{}, 1))
+	if err != nil {
+		return err
+	}
+
+	// set accumulated commission
+	err = k.ReportersAccumulatedCommission.Set(ctx, valBz, types.ReporterAccumulatedCommission{})
+	if err != nil {
+		return err
+	}
+
+	// set outstanding rewards
+	err = k.ReporterOutstandingRewards.Set(ctx, valBz, types.ReporterOutstandingRewards{Rewards: sdk.DecCoins{}})
+	return err
+}
+
+func (k Keeper) updateReporterDisputeFraction(ctx context.Context, reporterVal sdk.ValAddress, fraction math.LegacyDec) error {
+	if fraction.GT(math.LegacyOneDec()) || fraction.IsNegative() {
+		return fmt.Errorf("fraction must be >=0 and <=1, current fraction: %v", fraction)
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	reporter, err := k.Reporters.Get(ctx, sdk.AccAddress(reporterVal))
+	if err != nil {
+		return err
+	}
+	// increment current period
+	newPeriod, err := k.IncrementReporterPeriod(ctx, reporter)
+	if err != nil {
+		return err
+	}
+
+	// increment reference count on period we need to track
+	err = k.incrementReferenceCount(ctx, reporterVal, newPeriod)
+	if err != nil {
+		return err
+	}
+
+	slashEvent := types.NewReporterDisputeEvent(newPeriod, fraction)
+	height := uint64(sdkCtx.BlockHeight())
+
+	return k.ReporterDisputeEvents.Set(
+		ctx,
+		collections.Join3[sdk.ValAddress, uint64, uint64](
+			reporterVal,
+			height,
+			newPeriod,
+		),
+		slashEvent,
+	)
+}
+
+// Hooks to implement part of reporter crud operations
 func (k Keeper) AfterReporterRemoved(ctx context.Context, reporterVal sdk.ValAddress) error {
 	// fetch outstanding
 	outstanding, err := k.GetReporterOutstandingRewardsCoins(ctx, reporterVal)
@@ -609,7 +681,7 @@ func (k Keeper) AfterReporterRemoved(ctx context.Context, reporterVal sdk.ValAdd
 		return err
 	}
 
-	// clear slashes
+	// clear disputes
 	err = k.ReporterDisputeEvents.Clear(ctx, collections.NewPrefixedTripleRange[sdk.ValAddress, uint64, uint64](reporterVal))
 	if err != nil {
 		return err
@@ -629,24 +701,29 @@ func (k Keeper) AfterReporterRemoved(ctx context.Context, reporterVal sdk.ValAdd
 	return nil
 }
 
-// iterate over slash events between heights, inclusive
-func (k Keeper) IterateValidatorSlashEventsBetween(ctx context.Context, reporterVal sdk.ValAddress, startingHeight, endingHeight uint64,
-	handler func(height uint64, event types.ReporterDisputeEvent) (stop bool),
-) error {
-	rng := new(collections.Range[collections.Triple[sdk.ValAddress, uint64, uint64]]).
-		StartInclusive(collections.Join3(reporterVal, startingHeight, uint64(0))).
-		EndExclusive(collections.Join3(reporterVal, endingHeight+1, uint64(gomath.MaxUint64)))
+// initialize reporter
+func (k Keeper) AfterReporterCreated(ctx context.Context, reporter types.OracleReporter) error {
+	return k.initializeReporter(ctx, reporter)
+}
 
-	err := k.ReporterDisputeEvents.Walk(ctx, rng, func(k collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ReporterDisputeEvent) (stop bool, err error) {
-		height := k.K2()
-		if handler(height, ev) {
-			return true, nil
-		}
-		return false, nil
-	})
-	if err != nil {
-		return err
-	}
+// increment period
+func (k Keeper) BeforeDelegationCreated(ctx context.Context, reporter types.OracleReporter) error {
+	_, err := k.IncrementReporterPeriod(ctx, reporter)
+	return err
+}
 
-	return nil
+// withdraw delegation rewards (which also increments period)
+func (k Keeper) BeforeDelegationModified(ctx context.Context, delAddr sdk.AccAddress, del types.Delegation, reporter types.OracleReporter) error {
+	_, err := k.withdrawDelegationRewards(ctx, reporter, delAddr, del)
+	return err
+}
+
+// create new delegation period record
+func (k Keeper) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, reporterVal sdk.ValAddress, stake math.Int) error {
+	return k.initializeDelegation(ctx, reporterVal, delAddr, stake)
+}
+
+// record the dispute event
+func (k Keeper) BeforeReporterDisputed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
+	return k.updateReporterDisputeFraction(ctx, valAddr, fraction)
 }

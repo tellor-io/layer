@@ -40,7 +40,7 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 		reducedbyAmount = reducedbyAmount.Add(source.Amount)
 	}
 
-	if err := k.UpdateOrRemoveDelegator(ctx, delAddr, delegation, reducedbyAmount); err != nil {
+	if err := k.UpdateOrRemoveDelegator(ctx, delAddr, delegation, reporter, reducedbyAmount); err != nil {
 		return nil, err
 	}
 	if err := k.UpdateOrRemoveReporter(ctx, repAddr, reporter, reducedbyAmount); err != nil {

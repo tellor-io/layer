@@ -65,6 +65,7 @@ func NewKeeper(
 		ReporterCurrentRewards:         collections.NewMap(sb, types.ReporterCurrentRewardsPrefix, "reporters_current_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterCurrentRewards](cdc)),
 		DelegatorStartingInfo:          collections.NewMap(sb, types.DelegatorStartingInfoPrefix, "delegators_starting_info", collections.PairKeyCodec(sdk.ValAddressKey, sdk.AccAddressKey), codec.CollValue[types.DelegatorStartingInfo](cdc)),
 		ReporterHistoricalRewards:      collections.NewMap(sb, types.ReporterHistoricalRewardsPrefix, "reporter_historical_rewards", collections.PairKeyCodec(sdk.ValAddressKey, collections.Uint64Key), codec.CollValue[types.ReporterHistoricalRewards](cdc)),
+		ReporterDisputeEvents:          collections.NewMap(sb, types.ReporterDisputeEventPrefix, "reporter_dispute_events", collections.TripleKeyCodec(sdk.ValAddressKey, collections.Uint64Key, collections.Uint64Key), codec.CollValue[types.ReporterDisputeEvent](cdc)),
 		authority:                      authority,
 		logger:                         logger,
 		stakingKeeper:                  stakingKeeper,

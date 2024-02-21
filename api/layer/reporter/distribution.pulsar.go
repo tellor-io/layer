@@ -3121,7 +3121,7 @@ func (x *ReporterAccumulatedCommission) GetCommission() []*v1beta1.DecCoin {
 }
 
 // ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
-// for a validator inexpensive to track, allows simple sanity checks.
+// for a reporter inexpensive to track, allows simple sanity checks.
 type ReporterOutstandingRewards struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3158,11 +3158,9 @@ func (x *ReporterOutstandingRewards) GetRewards() []*v1beta1.DecCoin {
 }
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
-// period. It tracks the previous validator period, the delegation's amount of
+// period. It tracks the previous reporter period, the delegation's amount of
 // staking token, and the creation height (to check later on if any slashes have
-// occurred). NOTE: Even though validators are slashed to whole staking tokens,
-// the delegators within the validator may be left with less than a full token,
-// thus sdk.Dec is used.
+// occurred).
 type DelegatorStartingInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3214,7 +3212,7 @@ func (x *DelegatorStartingInfo) GetHeight() uint64 {
 	return 0
 }
 
-// ReporterHistoricalRewards represents historical rewards for a validator.
+// ReporterHistoricalRewards represents historical rewards for a reporter.
 // Height is implicit within the store key.
 // Cumulative reward ratio is the sum from the zeroeth period
 // until this period of rewards / tokens, per the spec.

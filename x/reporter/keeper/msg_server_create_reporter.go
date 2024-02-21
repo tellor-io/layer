@@ -48,10 +48,25 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err := k.Reporters.Set(ctx, reporter, newOracleReporter); err != nil {
 		return nil, err
 	}
+	// **********************  AfterReporterCreated  hook **************************************
+	if err := k.Keeper.AfterReporterCreated(ctx, newOracleReporter); err != nil {
+		return nil, err
+	}
+	// ************************************************************************************************
 	// create a new delegation
+	// **********************  BeforeDelegationCreated  hook **************************************
+	if err := k.Keeper.BeforeDelegationCreated(ctx, newOracleReporter); err != nil {
+		return nil, err
+	}
+	// ************************************************************************************************
 	newDelegation := types.NewDelegation(msg.Reporter, msg.Amount)
 	if err := k.Delegators.Set(ctx, reporter, newDelegation); err != nil {
 		return nil, err
 	}
+	// **********************  AfterDelegationModified  hook **************************************
+	if err := k.Keeper.AfterDelegationModified(ctx, reporter, sdk.ValAddress(reporter), newDelegation.Amount); err != nil {
+		return nil, err
+	}
+	// ************************************************************************************************
 	return &types.MsgCreateReporterResponse{}, nil
 }

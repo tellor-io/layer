@@ -73,7 +73,7 @@ func (m *ReporterAccumulatedCommission) GetCommission() github_com_cosmos_cosmos
 }
 
 // ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
-// for a validator inexpensive to track, allows simple sanity checks.
+// for a reporter inexpensive to track, allows simple sanity checks.
 type ReporterOutstandingRewards struct {
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 }
@@ -119,11 +119,9 @@ func (m *ReporterOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_t
 }
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
-// period. It tracks the previous validator period, the delegation's amount of
+// period. It tracks the previous reporter period, the delegation's amount of
 // staking token, and the creation height (to check later on if any slashes have
-// occurred). NOTE: Even though validators are slashed to whole staking tokens,
-// the delegators within the validator may be left with less than a full token,
-// thus sdk.Dec is used.
+// occurred).
 type DelegatorStartingInfo struct {
 	PreviousPeriod uint64                `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty"`
 	Stake          cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=stake,proto3,customtype=cosmossdk.io/math.Int" json:"stake"`
@@ -177,7 +175,7 @@ func (m *DelegatorStartingInfo) GetHeight() uint64 {
 	return 0
 }
 
-// ReporterHistoricalRewards represents historical rewards for a validator.
+// ReporterHistoricalRewards represents historical rewards for a reporter.
 // Height is implicit within the store key.
 // Cumulative reward ratio is the sum from the zeroeth period
 // until this period of rewards / tokens, per the spec.

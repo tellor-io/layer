@@ -11,7 +11,7 @@ import (
 )
 
 func TestUndelegateReporter(t *testing.T) {
-	k, _, ms, ctx := setupMsgServer(t)
+	k, _, _, ms, ctx := setupMsgServer(t)
 
 	delAddr := sdk.AccAddress([]byte("delegator"))
 	repAddr := sdk.AccAddress([]byte("reporter"))
@@ -34,6 +34,13 @@ func TestUndelegateReporter(t *testing.T) {
 	err = k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), tokenOrigin)
 	require.NoError(t, err)
 	err = k.Reporters.Set(ctx, repAddr, reporter)
+	require.NoError(t, err)
+	// distr hooks
+	err = k.AfterReporterCreated(ctx, reporter)
+	require.NoError(t, err)
+	err = k.BeforeDelegationCreated(ctx, reporter)
+	require.NoError(t, err)
+	err = k.AfterDelegationModified(ctx, delAddr, sdk.ValAddress(repAddr), delegation.Amount)
 	require.NoError(t, err)
 
 	// check if delegation and reporter exist

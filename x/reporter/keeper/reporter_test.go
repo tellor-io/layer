@@ -14,7 +14,7 @@ import (
 )
 
 func TestUpdateOrRemoveSource(t *testing.T) {
-	k, _, _, ctx := setupMsgServer(t)
+	k, _, _, ctx := setupKeeper(t)
 
 	// Create a test key
 	reporterAddr := sdk.AccAddress([]byte("reporter"))
@@ -49,7 +49,7 @@ func TestUpdateOrRemoveSource(t *testing.T) {
 	require.Error(t, err)
 }
 func TestUpdateOrRemoveReporter(t *testing.T) {
-	k, _, _, ctx := setupMsgServer(t)
+	k, _, _, ctx := setupKeeper(t)
 
 	// Create a test reporter
 	reporterAddr := sdk.AccAddress([]byte("reporter"))
@@ -80,7 +80,7 @@ func TestUpdateOrRemoveReporter(t *testing.T) {
 	require.Error(t, err)
 }
 func TestUpdateOrRemoveDelegator(t *testing.T) {
-	k, _, _, ctx := setupMsgServer(t)
+	k, _, _, ctx := setupKeeper(t)
 
 	// Create a test key
 	delegatorAddr := sdk.AccAddress([]byte("delegator"))
@@ -88,15 +88,30 @@ func TestUpdateOrRemoveDelegator(t *testing.T) {
 
 	// Create a test delegation
 	delegation := types.Delegation{
-		Amount: math.NewInt(100),
+		Reporter: delegatorAddr.String(),
+		Amount:   math.NewInt(100),
 	}
+	reporter := types.OracleReporter{
+		Reporter:    key.String(),
+		TotalTokens: math.NewInt(100),
+	}
+	err := k.Reporters.Set(ctx, key, reporter)
+	require.NoError(t, err)
+	// hooks
+	err = k.AfterReporterCreated(ctx, reporter)
+	require.NoError(t, err)
+
+	err = k.BeforeDelegationCreated(ctx, reporter)
+	require.NoError(t, err)
 
 	// Add the delegation to the keeper
-	err := k.Delegators.Set(ctx, key, delegation)
+	err = k.Delegators.Set(ctx, key, delegation)
+	require.NoError(t, err)
+	err = k.AfterDelegationModified(ctx, key, sdk.ValAddress(key), delegation.Amount)
 	require.NoError(t, err)
 
 	// Call the UpdateOrRemoveDelegator function with a reduction amount of 50
-	err = k.UpdateOrRemoveDelegator(ctx, key, delegation, math.NewInt(50))
+	err = k.UpdateOrRemoveDelegator(ctx, key, delegation, reporter, math.NewInt(50))
 	require.NoError(t, err)
 
 	// Check if the delegation was updated correctly
@@ -105,7 +120,7 @@ func TestUpdateOrRemoveDelegator(t *testing.T) {
 	require.Equal(t, math.NewInt(50), updatedDelegation.Amount)
 
 	// Call the UpdateOrRemoveDelegator function with a reduction amount of 60
-	err = k.UpdateOrRemoveDelegator(ctx, key, updatedDelegation, math.NewInt(60))
+	err = k.UpdateOrRemoveDelegator(ctx, key, updatedDelegation, reporter, math.NewInt(60))
 	require.NoError(t, err)
 
 	// Check if the delegation was removed
@@ -114,7 +129,7 @@ func TestUpdateOrRemoveDelegator(t *testing.T) {
 }
 
 func TestValidateAmount(t *testing.T) {
-	k, sk, _, ctx := setupMsgServer(t)
+	k, sk, _, ctx := setupKeeper(t)
 	// setup
 	delegator := sdk.AccAddress([]byte("delegator"))
 	validatorI := sdk.ValAddress([]byte("validator1"))
