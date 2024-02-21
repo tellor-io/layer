@@ -52,7 +52,6 @@ import (
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -292,7 +291,7 @@ func New(
 		panic(err)
 	}
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
-	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterInterfaces(appCodec.InterfaceRegistry())
 	std.RegisterLegacyAminoCodec(legacyAmino)
@@ -386,17 +385,17 @@ func New(
 	)
 	// https://docs.cosmos.network/main/build/migrations/upgrading
 	// When using (legacy) application wiring, the following must be added to app.go after setting the app's bank keeper
-	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := tx.ConfigOptions{
+	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := authtx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
-	txConfig, err = tx.NewTxConfigWithOptions(
+	txConfig, err = authtx.NewTxConfigWithOptions(
 		appCodec,
 		txConfigOpts,
 	)
 	if err != nil {
-		panic(fmt.Errorf("Failed to create new TxConfig with options: %v", err))
+		panic(fmt.Errorf("failed to create new TxConfig with options: %v", err))
 	}
 	app.txConfig = txConfig
 	app.StakingKeeper = stakingkeeper.NewKeeper(
@@ -585,14 +584,12 @@ func New(
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed App flags", "Flags", appFlags)
 	// Panic if this is not a full node and gRPC is disabled.
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
 	// Get Daemon Flags.
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
 	// Create server that will ingest gRPC messages from daemon clients.
@@ -620,7 +617,8 @@ func New(
 		cltx := apiSvr.ClientCtx
 		// enabled by default, set flag `--price-daemon-enabled=false` to false to disable
 		if daemonFlags.Price.Enabled {
-			maxDaemonUnhealthyDuration := time.Second
+			// set flag `--price-daemon-max-unhealthy-seconds=0` to disable
+			maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 			// Start server for handling gRPC messages from daemons.
 			go app.Server.Start()
 
@@ -644,20 +642,22 @@ func New(
 			)
 			go medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
-
-			go func() {
-				app.ReporterClient = reporterclient.NewClient(cltx, logger)
-				if err := app.ReporterClient.Start(
-					context.Background(),
-					daemonFlags,
-					appFlags,
-					&daemontypes.GrpcClientImpl{},
-					marketParamsConfig,
-					indexPriceCache,
-				); err != nil {
-					panic(err)
-				}
-			}()
+			// enabled by default, set flag `--reporter-daemon-enabled=false` to false to disable
+			if daemonFlags.Reporter.Enabled {
+				go func() {
+					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName)
+					if err := app.ReporterClient.Start(
+						context.Background(),
+						daemonFlags,
+						appFlags,
+						&daemontypes.GrpcClientImpl{},
+						marketParamsConfig,
+						indexPriceCache,
+					); err != nil {
+						panic(err)
+					}
+				}()
+			}
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.

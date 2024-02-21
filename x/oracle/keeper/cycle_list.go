@@ -14,19 +14,23 @@ func (k Keeper) GetCycleList(ctx sdk.Context) []string {
 // rotation what query is next
 func (k Keeper) RotateQueries(ctx sdk.Context) error {
 	queries := k.GetCycleList(ctx)
-	// cycle list collections is empty at block 0
-	if ctx.BlockHeight() == 0 {
-		return nil
-	}
+
 	currentIndex, err := k.CycleIndex.Get(ctx)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			err = k.CycleIndex.Set(ctx, 0)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
 		return err
 	}
 	if currentIndex >= int64(len(queries)) {
 		currentIndex = 0
 	}
-
-	err = k.CycleIndex.Set(ctx, (currentIndex+1)%int64(len(queries)))
+	i := (currentIndex + 1) % int64(len(queries))
+	err = k.CycleIndex.Set(ctx, i)
 	if err != nil {
 		return err
 	}

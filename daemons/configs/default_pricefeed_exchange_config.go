@@ -95,7 +95,7 @@ func ReadExchangeQueryConfigFile(homeDir string) map[types.ExchangeId]*types.Exc
 			exchange.MaxQueries == 0 {
 			panic(
 				fmt.Errorf(
-					"One or more query config values are unset or are set to zero for exchange with id: '%v'",
+					"one or more query config values are unset or are set to zero for exchange with id: '%v'",
 					exchange.ExchangeId,
 				),
 			)
