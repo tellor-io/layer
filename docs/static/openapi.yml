@@ -3,6 +3,875 @@ info:
   title: HTTP API Console
   name: ''
   description: ''
+paths:
+  /tellor-io/layer/dispute/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerDisputeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_qid/{queryId}:
+    get:
+      summary: Queries a list of GetReportsbyQid items.
+      operationId: LayerOracleGetReportsbyQid
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reports:
+                type: object
+                properties:
+                  microReports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                        queryType:
+                          type: string
+                        queryId:
+                          type: string
+                        aggregateMethod:
+                          type: string
+                        value:
+                          type: string
+                        blockNumber:
+                          type: string
+                          format: int64
+                        timestamp:
+                          type: string
+                          format: date-time
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_reporter/{reporter}:
+    get:
+      operationId: LayerOracleGetReportsbyReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              microReports:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reporter:
+                      type: string
+                    power:
+                      type: string
+                      format: int64
+                    queryType:
+                      type: string
+                    queryId:
+                      type: string
+                    aggregateMethod:
+                      type: string
+                    value:
+                      type: string
+                    blockNumber:
+                      type: string
+                      format: int64
+                    timestamp:
+                      type: string
+                      format: date-time
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_reporter_qid/{reporter}/{queryId}:
+    get:
+      operationId: LayerOracleGetReportsbyReporterQid
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reports:
+                type: object
+                properties:
+                  microReports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                        queryType:
+                          type: string
+                        queryId:
+                          type: string
+                        aggregateMethod:
+                          type: string
+                        value:
+                          type: string
+                        blockNumber:
+                          type: string
+                          format: int64
+                        timestamp:
+                          type: string
+                          format: date-time
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          in: path
+          required: true
+          type: string
+        - name: queryId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/oracle/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerOracleParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  cycle_list:
+                    type: array
+                    items:
+                      type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/GetDataBefore/{queryId}/{timestamp}:
+    get:
+      summary: Queries a list of GetAggregatedReport items.
+      operationId: LayerOracleGetDataBefore
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              report:
+                type: object
+                properties:
+                  queryId:
+                    type: string
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                  flagged:
+                    type: boolean
+                  nonce:
+                    type: string
+                    format: int64
+                  aggregateReportIndex:
+                    type: string
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+        - name: timestamp
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /tellor-io/layer/oracle/current_cyclelist_query:
+    get:
+      summary: Queries a list of CurrentCyclelistQuery items.
+      operationId: LayerOracleCurrentCyclelistQuery
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              querydata:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_aggregated_report/{queryId}:
+    get:
+      summary: Queries a list of GetAggregatedReport items.
+      operationId: LayerOracleGetAggregatedReport
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              report:
+                type: object
+                properties:
+                  queryId:
+                    type: string
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                  flagged:
+                    type: boolean
+                  nonce:
+                    type: string
+                    format: int64
+                  aggregateReportIndex:
+                    type: string
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_current_tip/{queryData}:
+    get:
+      summary: Queries a list of GetCurrentTip items.
+      operationId: LayerOracleGetCurrentTip
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tips:
+                type: object
+                properties:
+                  query_data:
+                    type: string
+                    title: queryData is the query data that was tipped
+                  amount:
+                    title: amount is the amount that was tipped
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  total_tips:
+                    title: >-
+                      totalTips is the total amount of tips for this query data
+                      so far
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                title: >-
+                  Tips is a struct that contains the query data and the amount
+                  it was tipped
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryData
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_time_based_rewards:
+    get:
+      summary: Queries a list of GetTimeBasedRewards items.
+      operationId: LayerOracleGetTimeBasedRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reward:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_user_tip_total/{tipper}/{queryData}:
+    get:
+      summary: Queries a list of GetUserTipTotal items.
+      operationId: LayerOracleGetUserTipTotal
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              totalTips:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  total:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: tipper
+          in: path
+          required: true
+          type: string
+        - name: queryData
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/decode_querydata/{querydata}:
+    get:
+      summary: Queries a list of DecodeQuerydata items.
+      operationId: LayerRegistryDecodeQuerydata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              spec:
+                type: string
+                description: >-
+                  spec is the decoded json represention of the query data hex
+                  string.
+            description: >-
+              QueryDecodeQuerydataResponse is response type for the
+              Query/DecodeQuerydata RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: querydata
+          description: querydata is the query data hex string to be decoded.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/decode_value/{queryType}/{value}:
+    get:
+      summary: Queries a list of DecodeValue items.
+      operationId: LayerRegistryDecodeValue
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              decodedValue:
+                type: string
+                description: decodedValue is the decoded value of the hex string.
+            description: >-
+              QueryDecodeValueResponse is response type for the
+              Query/DecodeValue RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryType
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+        - name: value
+          description: value is the value hex string to be decoded.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/generate_querydata/{querytype}/{parameters}:
+    get:
+      summary: Queries a list of GenerateQuerydata items.
+      operationId: LayerRegistryGenerateQuerydata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              querydata:
+                type: string
+                description: querydata is the generated querydata hex string.
+            description: >-
+              QueryGenerateQuerydataResponse is response type for the
+              Query/GenerateQuerydata RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: querytype
+          description: querytype for which querydata is to be generated.
+          in: path
+          required: true
+          type: string
+        - name: parameters
+          description: parameters for which querydata is to be generated.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/get_data_spec/{query_type}:
+    get:
+      summary: Queries a list of GetDataSpec items.
+      operationId: LayerRegistryGetDataSpec
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            $ref: '#/definitions/layer.registry.QueryGetDataSpecResponse'
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_type
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerRegistryParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/reporter/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerReporterParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  min_commission_rate:
+                    type: string
+                    title: >-
+                      min_commission_rate, adopted from staking module, is the
+                      minimum commission rate a reporter can their delegators
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
 definitions:
   cosmos.auth.v1beta1.MsgUpdateParamsResponse:
     type: object
@@ -2065,6 +2934,405 @@ definitions:
     description: >-
       UpdateMarketPricesResponse is a response message for updating market
       prices.
+  layer.dispute.DisputeCategory:
+    type: string
+    enum:
+      - DISPUTE_CATEGORY_UNSPECIFIED
+      - DISPUTE_CATEGORY_WARNING
+      - DISPUTE_CATEGORY_MINOR
+      - DISPUTE_CATEGORY_MAJOR
+    default: DISPUTE_CATEGORY_UNSPECIFIED
+    description: |2-
+       - DISPUTE_CATEGORY_UNSPECIFIED: UNSPECIFIED defines an invalid dispute category.
+       - DISPUTE_CATEGORY_WARNING: WARNING defines a 1 percent slashing.
+       - DISPUTE_CATEGORY_MINOR: MINOR defines a 5 percent slashing.
+       - DISPUTE_CATEGORY_MAJOR: MAJOR defines a 100 percent slashing.
+  layer.dispute.MicroReport:
+    type: object
+    properties:
+      reporter:
+        type: string
+      power:
+        type: string
+        format: int64
+      queryId:
+        type: string
+      value:
+        type: string
+      timestamp:
+        type: string
+        format: int64
+  layer.dispute.MsgAddFeeToDisputeResponse:
+    type: object
+  layer.dispute.MsgProposeDisputeResponse:
+    type: object
+  layer.dispute.MsgVoteResponse:
+    type: object
+  layer.dispute.VoteEnum:
+    type: string
+    enum:
+      - VOTE_INVALID
+      - VOTE_SUPPORT
+      - VOTE_AGAINST
+    default: VOTE_INVALID
+  layer.dispute.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.dispute.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.oracle.Aggregate:
+    type: object
+    properties:
+      queryId:
+        type: string
+      aggregateValue:
+        type: string
+      aggregateReporter:
+        type: string
+      reporterPower:
+        type: string
+        format: int64
+      standardDeviation:
+        type: number
+        format: double
+      reporters:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            power:
+              type: string
+              format: int64
+      flagged:
+        type: boolean
+      nonce:
+        type: string
+        format: int64
+      aggregateReportIndex:
+        type: string
+        format: int64
+  layer.oracle.AggregateReporter:
+    type: object
+    properties:
+      reporter:
+        type: string
+      power:
+        type: string
+        format: int64
+  layer.oracle.MicroReport:
+    type: object
+    properties:
+      reporter:
+        type: string
+      power:
+        type: string
+        format: int64
+      queryType:
+        type: string
+      queryId:
+        type: string
+      aggregateMethod:
+        type: string
+      value:
+        type: string
+      blockNumber:
+        type: string
+        format: int64
+      timestamp:
+        type: string
+        format: date-time
+  layer.oracle.Params:
+    type: object
+    properties:
+      cycle_list:
+        type: array
+        items:
+          type: string
+    description: Params defines the parameters for the module.
+  layer.oracle.QueryCurrentCyclelistQueryResponse:
+    type: object
+    properties:
+      querydata:
+        type: string
+  layer.oracle.QueryGetAggregatedReportResponse:
+    type: object
+    properties:
+      report:
+        type: object
+        properties:
+          queryId:
+            type: string
+          aggregateValue:
+            type: string
+          aggregateReporter:
+            type: string
+          reporterPower:
+            type: string
+            format: int64
+          standardDeviation:
+            type: number
+            format: double
+          reporters:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                power:
+                  type: string
+                  format: int64
+          flagged:
+            type: boolean
+          nonce:
+            type: string
+            format: int64
+          aggregateReportIndex:
+            type: string
+            format: int64
+  layer.oracle.QueryGetCurrentTipResponse:
+    type: object
+    properties:
+      tips:
+        type: object
+        properties:
+          query_data:
+            type: string
+            title: queryData is the query data that was tipped
+          amount:
+            title: amount is the amount that was tipped
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+          total_tips:
+            title: totalTips is the total amount of tips for this query data so far
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+        title: >-
+          Tips is a struct that contains the query data and the amount it was
+          tipped
+  layer.oracle.QueryGetReportsbyQidResponse:
+    type: object
+    properties:
+      reports:
+        type: object
+        properties:
+          microReports:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                power:
+                  type: string
+                  format: int64
+                queryType:
+                  type: string
+                queryId:
+                  type: string
+                aggregateMethod:
+                  type: string
+                value:
+                  type: string
+                blockNumber:
+                  type: string
+                  format: int64
+                timestamp:
+                  type: string
+                  format: date-time
+  layer.oracle.QueryGetReportsbyReporterResponse:
+    type: object
+    properties:
+      microReports:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            power:
+              type: string
+              format: int64
+            queryType:
+              type: string
+            queryId:
+              type: string
+            aggregateMethod:
+              type: string
+            value:
+              type: string
+            blockNumber:
+              type: string
+              format: int64
+            timestamp:
+              type: string
+              format: date-time
+  layer.oracle.QueryGetTimeBasedRewardsResponse:
+    type: object
+    properties:
+      reward:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+  layer.oracle.QueryGetUserTipTotalResponse:
+    type: object
+    properties:
+      totalTips:
+        type: object
+        properties:
+          address:
+            type: string
+          total:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+  layer.oracle.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          cycle_list:
+            type: array
+            items:
+              type: string
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.oracle.Reports:
+    type: object
+    properties:
+      microReports:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            power:
+              type: string
+              format: int64
+            queryType:
+              type: string
+            queryId:
+              type: string
+            aggregateMethod:
+              type: string
+            value:
+              type: string
+            blockNumber:
+              type: string
+              format: int64
+            timestamp:
+              type: string
+              format: date-time
+  layer.oracle.Tips:
+    type: object
+    properties:
+      query_data:
+        type: string
+        title: queryData is the query data that was tipped
+      amount:
+        title: amount is the amount that was tipped
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      total_tips:
+        title: totalTips is the total amount of tips for this query data so far
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    title: Tips is a struct that contains the query data and the amount it was tipped
+  layer.oracle.UserTipTotal:
+    type: object
+    properties:
+      address:
+        type: string
+      total:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+  layer.oracle.MsgCommitReportResponse:
+    type: object
+  layer.oracle.MsgSubmitValueResponse:
+    type: object
+  layer.oracle.MsgTipResponse:
+    type: object
+  layer.oracle.MsgUpdateParamsResponse:
+    type: object
   layer.registry.ABIComponent:
     type: object
     properties:
@@ -2124,6 +3392,52 @@ definitions:
           extensions: treat as a golang time.duration, don't allow nil values,
           don't omit empty values
     title: DataSpec is a specification for how to interpret and aggregate data
+  layer.registry.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.registry.QueryDecodeQuerydataResponse:
+    type: object
+    properties:
+      spec:
+        type: string
+        description: spec is the decoded json represention of the query data hex string.
+    description: >-
+      QueryDecodeQuerydataResponse is response type for the
+      Query/DecodeQuerydata RPC method.
+  layer.registry.QueryDecodeValueResponse:
+    type: object
+    properties:
+      decodedValue:
+        type: string
+        description: decodedValue is the decoded value of the hex string.
+    description: >-
+      QueryDecodeValueResponse is response type for the Query/DecodeValue RPC
+      method.
+  layer.registry.QueryGenerateQuerydataResponse:
+    type: object
+    properties:
+      querydata:
+        type: string
+        description: querydata is the generated querydata hex string.
+    description: >-
+      QueryGenerateQuerydataResponse is response type for the
+      Query/GenerateQuerydata RPC method.
+  layer.registry.QueryGetDataSpecResponse:
+    type: object
+    properties:
+      spec:
+        $ref: '#/definitions/layer.registry.DataSpec'
+        description: spec is the data spec corresponding to the query type.
+    description: >-
+      QueryGetDataSpecResponse is response type for the Query/GetDataSpec RPC
+      method.
+  layer.registry.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.registry.MsgRegisterSpecResponse:
     type: object
     description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
@@ -2173,9 +3487,6 @@ definitions:
   layer.reporter.Params:
     type: object
     properties:
-      min_stake_amount:
-        type: string
-        format: uint64
       min_commission_rate:
         type: string
         title: >-
@@ -2192,8 +3503,20 @@ definitions:
           staking are delegated to
       amount:
         type: string
-        format: uint64
         title: >-
           amount is the amount of tokens to be delegated to a reporter from a
           delegation in staking
     title: TokenOrigin is a message to store the origin of a token
+  layer.reporter.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate, adopted from staking module, is the minimum
+              commission rate a reporter can their delegators
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
