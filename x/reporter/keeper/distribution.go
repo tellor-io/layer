@@ -310,7 +310,9 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.Or
 	return finalRewards, nil
 }
 
-// calculate the total rewards accrued by a delegation
+// CalculateDelegationRewards calculates the rewards for a delegation based on the starting and ending period.
+// It takes the context, reporter ValAddress, delegator AccAddress, delegation information, and the ending period as input.
+// It returns the rewards as sdk.DecCoins and an error if any.
 func (k Keeper) CalculateDelegationRewards(ctx context.Context, reporterVal sdk.ValAddress, delAddr sdk.AccAddress, del types.Delegation, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
 	// fetch starting info for delegation
 	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(reporterVal, delAddr))
@@ -374,7 +376,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, reporterVal sdk.
 		//
 		//     currentStake: calculated as in staking with a single computation
 		//     stake:        calculated as an accumulation of stake
-		//                   calculations across validator's distribution periods
+		//                   calculations across reporter's distribution periods
 		//
 		// These inconsistencies are due to differing order of operations which
 		// will inevitably have different accumulated rounding and may lead to
@@ -424,7 +426,7 @@ func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporter types.Orac
 	var current sdk.DecCoins
 	if reporter.TotalTokens.IsZero() {
 
-		// can't calculate ratio for zero-token validators
+		// can't calculate ratio for zero-token reporters
 		// ergo we instead add to ~~~the decimal pool~~ TODO: burn rewards.Rewards
 
 		outstanding, err := k.ReporterOutstandingRewards.Get(ctx, reporterVal)
@@ -658,7 +660,7 @@ func (k Keeper) AfterReporterRemoved(ctx context.Context, reporterVal sdk.ValAdd
 		// TODO: burn remainder (inflationary?)
 		_ = remainder
 
-		// add to validator account
+		// add to reporter account
 		if !coins.IsZero() {
 			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(reporterVal), coins); err != nil {
 				return err

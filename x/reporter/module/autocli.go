@@ -17,6 +17,42 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "params",
 					Short:     "Shows the parameters of the module",
 				},
+				{
+					RpcMethod:      "Reporters",
+					Use:            "reporters",
+					Short:          "Query staked reporters",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "DelegatorReporter",
+					Use:            "delegator-reporter [delegator-addr]",
+					Short:          "Query reporter of a delegator",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "delegator_address"}},
+				},
+				{
+					RpcMethod:      "ReporterStake",
+					Use:            "reporter-stake [reporter-addr]",
+					Short:          "Query total tokens of a reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "DelegationRewards",
+					Use:            "delegation-rewards [delegator-addr] [reporter-addr]",
+					Short:          "Query delegator rewards from a particular reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "delegator_address"}, {ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "ReporterOutstandingRewards",
+					Use:            "outstanding-rewards [reporter]",
+					Short:          "Query outstanding rewards for a reporter and all their delegations",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "ReporterCommission",
+					Use:            "commission [reporter]",
+					Short:          "Query distribution reporter commission",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -31,19 +67,19 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "CreateReporter",
 					Use:            "create-reporter [amount] [token-origins]",
-					Short:          "Send a createReporter tx",
+					Short:          "Execute the CreateReporter RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "amount"}, {ProtoField: "token_origins"}},
 				},
 				{
 					RpcMethod:      "DelegateReporter",
 					Use:            "delegate-reporter [reporter] [amount] [token-origin]",
-					Short:          "Send a delegateReporter tx",
+					Short:          "Execute the DelegateReporter RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}, {ProtoField: "amount"}, {ProtoField: "token_origins"}},
 				},
 				{
 					RpcMethod:      "UndelegateReporter",
 					Use:            "undelegate-reporter [amount]",
-					Short:          "Send a undelegateReporter tx",
+					Short:          "Execute the UndelegateReporter RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "token_origins"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx

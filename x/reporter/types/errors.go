@@ -19,4 +19,5 @@ var (
 	ErrReporterMismatch        = sdkerrors.Register(ModuleName, 1108, "reporter mismatch")
 	ErrEmptyDelegationDistInfo = sdkerrors.Register(ModuleName, 1109, "no delegation distribution info")
 	ErrNoReporterCommission    = sdkerrors.Register(ModuleName, 1110, "no reporter commission to withdraw")
+	ErrReporterDoesNotExist    = sdkerrors.Register(ModuleName, 1111, "reporter does not exist")
 )

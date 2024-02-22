@@ -8,6 +8,8 @@ import (
 	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -412,6 +414,177 @@ func (m *MsgUndelegateReporterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUndelegateReporterResponse proto.InternalMessageInfo
 
+// MsgWithdrawReporterCommission withdraws the full commission to the reporter
+// address.
+type MsgWithdrawReporterCommission struct {
+	ReporterAddress string `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (m *MsgWithdrawReporterCommission) Reset()         { *m = MsgWithdrawReporterCommission{} }
+func (m *MsgWithdrawReporterCommission) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawReporterCommission) ProtoMessage()    {}
+func (*MsgWithdrawReporterCommission) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{8}
+}
+func (m *MsgWithdrawReporterCommission) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawReporterCommission) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawReporterCommission.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawReporterCommission) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawReporterCommission.Merge(m, src)
+}
+func (m *MsgWithdrawReporterCommission) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawReporterCommission) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawReporterCommission.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawReporterCommission proto.InternalMessageInfo
+
+// MsgWithdrawReporterCommissionResponse defines the
+// Msg/WithdrawReporterCommission response type.
+type MsgWithdrawReporterCommissionResponse struct {
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+}
+
+func (m *MsgWithdrawReporterCommissionResponse) Reset()         { *m = MsgWithdrawReporterCommissionResponse{} }
+func (m *MsgWithdrawReporterCommissionResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawReporterCommissionResponse) ProtoMessage()    {}
+func (*MsgWithdrawReporterCommissionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{9}
+}
+func (m *MsgWithdrawReporterCommissionResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawReporterCommissionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawReporterCommissionResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawReporterCommissionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawReporterCommissionResponse.Merge(m, src)
+}
+func (m *MsgWithdrawReporterCommissionResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawReporterCommissionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawReporterCommissionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawReporterCommissionResponse proto.InternalMessageInfo
+
+func (m *MsgWithdrawReporterCommissionResponse) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a reporter.
+type MsgWithdrawDelegatorReward struct {
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	ReporterAddress  string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (m *MsgWithdrawDelegatorReward) Reset()         { *m = MsgWithdrawDelegatorReward{} }
+func (m *MsgWithdrawDelegatorReward) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawDelegatorReward) ProtoMessage()    {}
+func (*MsgWithdrawDelegatorReward) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{10}
+}
+func (m *MsgWithdrawDelegatorReward) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawDelegatorReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawDelegatorReward.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawDelegatorReward) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawDelegatorReward.Merge(m, src)
+}
+func (m *MsgWithdrawDelegatorReward) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawDelegatorReward) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawDelegatorReward.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawDelegatorReward proto.InternalMessageInfo
+
+// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+// response type.
+type MsgWithdrawDelegatorRewardResponse struct {
+	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) Reset()         { *m = MsgWithdrawDelegatorRewardResponse{} }
+func (m *MsgWithdrawDelegatorRewardResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawDelegatorRewardResponse) ProtoMessage()    {}
+func (*MsgWithdrawDelegatorRewardResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{11}
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.Merge(m, src)
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawDelegatorRewardResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawDelegatorRewardResponse proto.InternalMessageInfo
+
+func (m *MsgWithdrawDelegatorRewardResponse) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
+	if m != nil {
+		return m.Amount
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "layer.reporter.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "layer.reporter.MsgUpdateParamsResponse")
@@ -421,53 +594,70 @@ func init() {
 	proto.RegisterType((*MsgDelegateReporterResponse)(nil), "layer.reporter.MsgDelegateReporterResponse")
 	proto.RegisterType((*MsgUndelegateReporter)(nil), "layer.reporter.MsgUndelegateReporter")
 	proto.RegisterType((*MsgUndelegateReporterResponse)(nil), "layer.reporter.MsgUndelegateReporterResponse")
+	proto.RegisterType((*MsgWithdrawReporterCommission)(nil), "layer.reporter.MsgWithdrawReporterCommission")
+	proto.RegisterType((*MsgWithdrawReporterCommissionResponse)(nil), "layer.reporter.MsgWithdrawReporterCommissionResponse")
+	proto.RegisterType((*MsgWithdrawDelegatorReward)(nil), "layer.reporter.MsgWithdrawDelegatorReward")
+	proto.RegisterType((*MsgWithdrawDelegatorRewardResponse)(nil), "layer.reporter.MsgWithdrawDelegatorRewardResponse")
 }
 
 func init() { proto.RegisterFile("layer/reporter/tx.proto", fileDescriptor_67b904a7aa978eb1) }
 
 var fileDescriptor_67b904a7aa978eb1 = []byte{
-	// 656 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcf, 0x6e, 0xd3, 0x4e,
-	0x10, 0x8e, 0x93, 0xfe, 0xaa, 0x5f, 0xb6, 0x7f, 0xa0, 0xa6, 0xa5, 0xa9, 0x43, 0x9d, 0xd4, 0x80,
-	0x08, 0x89, 0x62, 0xab, 0xa9, 0x84, 0x44, 0x4e, 0x90, 0xc0, 0xa1, 0x87, 0x08, 0x64, 0x40, 0x42,
-	0x1c, 0xa8, 0x9c, 0x78, 0xe5, 0x98, 0xc4, 0x5e, 0x6b, 0x77, 0x83, 0x9a, 0x1b, 0xe2, 0x82, 0xe0,
-	0xc4, 0x91, 0x47, 0xe0, 0x98, 0x43, 0x2f, 0xbc, 0x41, 0x8f, 0x55, 0x4f, 0x88, 0x43, 0x85, 0x12,
-	0x89, 0xbc, 0x06, 0xb2, 0xbd, 0x76, 0x12, 0xc7, 0xa8, 0xad, 0xe0, 0x62, 0x7b, 0x66, 0xbe, 0x99,
-	0xf9, 0xe6, 0xf3, 0xec, 0x82, 0xcd, 0xae, 0xd6, 0x87, 0x58, 0xc1, 0xd0, 0x41, 0x98, 0x42, 0xac,
-	0xd0, 0x43, 0xd9, 0xc1, 0x88, 0x22, 0x7e, 0xd5, 0x0b, 0xc8, 0x41, 0x40, 0x58, 0xd3, 0x2c, 0xd3,
-	0x46, 0x8a, 0xf7, 0xf4, 0x21, 0xc2, 0x66, 0x0b, 0x11, 0x0b, 0x11, 0xc5, 0x22, 0x86, 0xf2, 0x76,
-	0xd7, 0x7d, 0xb1, 0xc0, 0x2d, 0x16, 0x20, 0x54, 0xeb, 0x98, 0xb6, 0x1b, 0x6c, 0x42, 0xaa, 0xed,
-	0x06, 0x36, 0x43, 0x6d, 0xf9, 0xa8, 0x03, 0xcf, 0x52, 0x7c, 0x83, 0x85, 0xd6, 0x0d, 0x64, 0x20,
-	0xdf, 0xef, 0x7e, 0x31, 0x6f, 0x36, 0xc2, 0xd5, 0xd1, 0xb0, 0x66, 0x05, 0x29, 0x3b, 0xd1, 0x41,
-	0x50, 0x07, 0xda, 0x07, 0x08, 0x9b, 0x86, 0x69, 0xfb, 0x10, 0xe9, 0x1b, 0x07, 0xae, 0x34, 0x88,
-	0xf1, 0xc2, 0xd1, 0x35, 0x0a, 0x9f, 0x7a, 0xc9, 0xfc, 0x3d, 0x90, 0xd6, 0x7a, 0xb4, 0x8d, 0xb0,
-	0x49, 0xfb, 0x19, 0x2e, 0xcf, 0x15, 0xd2, 0xb5, 0xcc, 0xe9, 0x51, 0x79, 0x9d, 0xd1, 0x79, 0xa8,
-	0xeb, 0x18, 0x12, 0xf2, 0x8c, 0x62, 0xd3, 0x36, 0xd4, 0x09, 0x94, 0xbf, 0x0f, 0x16, 0xfd, 0xf6,
-	0x99, 0x64, 0x9e, 0x2b, 0x2c, 0x55, 0xae, 0xcb, 0xb3, 0x7a, 0xc9, 0x7e, 0xfd, 0x5a, 0xfa, 0xf8,
-	0x2c, 0x97, 0xf8, 0x3a, 0x1e, 0x14, 0x39, 0x95, 0x25, 0x54, 0xf7, 0xde, 0x8f, 0x07, 0xc5, 0x49,
-	0xa9, 0x4f, 0xe3, 0x41, 0x31, 0xef, 0x93, 0x3f, 0x9c, 0xd0, 0x8f, 0xf0, 0x94, 0xb6, 0xc0, 0x66,
-	0xc4, 0xa5, 0x42, 0xe2, 0x20, 0x9b, 0x40, 0xe9, 0x63, 0x12, 0xac, 0x35, 0x88, 0x51, 0xc7, 0x50,
-	0xa3, 0x50, 0x65, 0x05, 0x78, 0x01, 0xfc, 0x1f, 0x14, 0xf3, 0xe7, 0x52, 0x43, 0x9b, 0xaf, 0x83,
-	0x45, 0xcd, 0x42, 0x3d, 0x9b, 0x7a, 0xe4, 0xd3, 0xb5, 0x92, 0x4b, 0xf2, 0xc7, 0x59, 0x6e, 0xc3,
-	0x9f, 0x9a, 0xe8, 0x1d, 0xd9, 0x44, 0x8a, 0xa5, 0xd1, 0xb6, 0xbc, 0x6f, 0xd3, 0xd3, 0xa3, 0x32,
-	0x60, 0x72, 0xec, 0xdb, 0x54, 0x65, 0xa9, 0xfc, 0x03, 0xb0, 0x32, 0xad, 0x31, 0xc9, 0xa4, 0xf2,
-	0xa9, 0xc2, 0x52, 0x25, 0x1b, 0x15, 0xe2, 0xb9, 0x0b, 0x7a, 0xe2, 0x61, 0xd4, 0x65, 0x3a, 0x31,
-	0x08, 0x5f, 0x03, 0xa0, 0x85, 0x2c, 0xcb, 0x24, 0xc4, 0x44, 0x76, 0x66, 0xc1, 0xd3, 0x51, 0x92,
-	0x59, 0xab, 0x60, 0x57, 0xd8, 0xee, 0xc8, 0xf5, 0x10, 0xa9, 0x4e, 0x65, 0x55, 0x57, 0x5c, 0x31,
-	0xc3, 0xc9, 0xa4, 0x2c, 0xd8, 0x9a, 0x93, 0x22, 0x14, 0xea, 0x17, 0x07, 0xae, 0x35, 0x88, 0xf1,
-	0x08, 0x76, 0xa1, 0x31, 0x2d, 0xd5, 0x0d, 0x90, 0xd6, 0x7d, 0x1f, 0x0a, 0xb4, 0x9a, 0x38, 0x66,
-	0x84, 0x4c, 0xfe, 0x51, 0xc8, 0xd4, 0x3f, 0x14, 0x72, 0xe1, 0x92, 0x42, 0x56, 0x57, 0xbd, 0x8d,
-	0x0a, 0x29, 0x4b, 0xdb, 0x20, 0x1b, 0x33, 0x67, 0xa8, 0xc3, 0x07, 0x0e, 0x6c, 0xb8, 0xcb, 0x64,
-	0xeb, 0x97, 0x53, 0x62, 0x8e, 0x68, 0xf2, 0x6f, 0x89, 0xe6, 0xc0, 0x76, 0x2c, 0x91, 0x80, 0x6a,
-	0xe5, 0x4b, 0x0a, 0xa4, 0x1a, 0xc4, 0xe0, 0x5f, 0x82, 0xe5, 0x99, 0x63, 0x9b, 0x8b, 0xf6, 0x8c,
-	0x1c, 0x0e, 0xe1, 0xce, 0x39, 0x80, 0xa0, 0x03, 0xff, 0x1a, 0xac, 0x46, 0x4e, 0xce, 0x4e, 0x4c,
-	0xea, 0x2c, 0x44, 0xb8, 0x7b, 0x2e, 0x24, 0xac, 0xaf, 0x83, 0xab, 0x73, 0x0b, 0x77, 0x33, 0x26,
-	0x3d, 0x0a, 0x12, 0x4a, 0x17, 0x00, 0x85, 0x5d, 0xde, 0x00, 0x3e, 0xe6, 0x77, 0xde, 0x8e, 0x13,
-	0x61, 0x0e, 0x26, 0x94, 0x2f, 0x04, 0x0b, 0x7a, 0x09, 0xff, 0xbd, 0x73, 0xaf, 0xb3, 0xda, 0xe3,
-	0xe3, 0xa1, 0xc8, 0x9d, 0x0c, 0x45, 0xee, 0xe7, 0x50, 0xe4, 0x3e, 0x8f, 0xc4, 0xc4, 0xc9, 0x48,
-	0x4c, 0x7c, 0x1f, 0x89, 0x89, 0x57, 0x25, 0xc3, 0xa4, 0xed, 0x5e, 0x53, 0x6e, 0x21, 0x4b, 0xa1,
-	0xb0, 0xdb, 0x45, 0xb8, 0x6c, 0x22, 0x65, 0xee, 0x8a, 0xa3, 0x7d, 0x07, 0x92, 0xe6, 0xa2, 0x77,
-	0x37, 0xef, 0xfd, 0x0e, 0x00, 0x00, 0xff, 0xff, 0xbb, 0x33, 0xd6, 0x47, 0x89, 0x06, 0x00, 0x00,
+	// 854 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x56, 0xcf, 0x6f, 0xe3, 0x44,
+	0x14, 0xce, 0x24, 0xbb, 0x15, 0x99, 0xdd, 0xed, 0xb6, 0x66, 0x4b, 0x12, 0x87, 0x3a, 0xa9, 0xa1,
+	0x22, 0xa4, 0x8a, 0xad, 0xa6, 0x2a, 0x12, 0x39, 0x41, 0xd2, 0x1e, 0x7a, 0x88, 0x40, 0x06, 0x04,
+	0xe2, 0x40, 0xe5, 0xc4, 0x23, 0xc7, 0x24, 0xf6, 0x44, 0x9e, 0xe9, 0x8f, 0xdc, 0x50, 0x39, 0xf0,
+	0xe3, 0x80, 0xe0, 0xc6, 0xb1, 0x47, 0xc4, 0xa9, 0x87, 0x5e, 0xf8, 0x0f, 0x7a, 0xac, 0x7a, 0x42,
+	0x1c, 0x0a, 0x6a, 0x25, 0xca, 0x9f, 0x81, 0x6c, 0x8f, 0x27, 0x89, 0xe3, 0xb4, 0x89, 0x40, 0x7b,
+	0xa9, 0x3b, 0xef, 0x7d, 0xef, 0xcd, 0xf7, 0x3e, 0x7d, 0x7e, 0x31, 0xcc, 0xf4, 0xf4, 0x01, 0x72,
+	0x55, 0x17, 0xf5, 0xb1, 0x4b, 0x91, 0xab, 0xd2, 0x63, 0xa5, 0xef, 0x62, 0x8a, 0x85, 0x45, 0x3f,
+	0xa1, 0x84, 0x09, 0x71, 0x59, 0xb7, 0x2d, 0x07, 0xab, 0xfe, 0xdf, 0x00, 0x22, 0x4a, 0x6d, 0x4c,
+	0x6c, 0x4c, 0xd4, 0x96, 0x4e, 0x90, 0x7a, 0xb8, 0xd9, 0x42, 0x54, 0xdf, 0x54, 0xdb, 0xd8, 0x72,
+	0x58, 0x3e, 0xc3, 0xf2, 0x36, 0x31, 0xd5, 0xc3, 0x4d, 0xef, 0xc1, 0x12, 0x6f, 0xb2, 0x04, 0xa1,
+	0x7a, 0xd7, 0x72, 0x4c, 0x5e, 0xcb, 0xce, 0x0c, 0x95, 0x0b, 0x50, 0xfb, 0xfe, 0x49, 0x0d, 0x0e,
+	0x2c, 0xf5, 0xc2, 0xc4, 0x26, 0x0e, 0xe2, 0xde, 0x7f, 0x2c, 0x9a, 0x8f, 0xcc, 0xd2, 0xd7, 0x5d,
+	0xdd, 0x0e, 0x4b, 0xd6, 0xa2, 0x83, 0xe2, 0x2e, 0x72, 0xf6, 0xb1, 0x6b, 0x99, 0x21, 0x5f, 0xf9,
+	0x37, 0x00, 0x9f, 0x37, 0x89, 0xf9, 0x49, 0xdf, 0xd0, 0x29, 0xfa, 0xd0, 0x2f, 0x16, 0xde, 0x81,
+	0x69, 0xfd, 0x80, 0x76, 0xb0, 0x6b, 0xd1, 0x41, 0x16, 0x14, 0x41, 0x29, 0x5d, 0xcf, 0x5e, 0x9d,
+	0x57, 0x5e, 0x30, 0x3a, 0xef, 0x1b, 0x86, 0x8b, 0x08, 0xf9, 0x88, 0xba, 0x96, 0x63, 0x6a, 0x43,
+	0xa8, 0xf0, 0x2e, 0x5c, 0x08, 0xae, 0xcf, 0x26, 0x8b, 0xa0, 0xf4, 0xa4, 0xfa, 0x9a, 0x32, 0xae,
+	0xa7, 0x12, 0xf4, 0xaf, 0xa7, 0x2f, 0xae, 0x0b, 0x89, 0x5f, 0xee, 0xce, 0xca, 0x40, 0x63, 0x05,
+	0xb5, 0xad, 0x93, 0xbb, 0xb3, 0xf2, 0xb0, 0xd5, 0xf7, 0x77, 0x67, 0xe5, 0x62, 0x40, 0xfe, 0x78,
+	0x48, 0x3f, 0xc2, 0x53, 0xce, 0xc1, 0x4c, 0x24, 0xa4, 0x21, 0xd2, 0xc7, 0x0e, 0x41, 0xf2, 0x77,
+	0x49, 0xb8, 0xdc, 0x24, 0x66, 0xc3, 0x45, 0x3a, 0x45, 0x1a, 0x6b, 0x20, 0x88, 0xf0, 0x95, 0xb0,
+	0x59, 0x30, 0x97, 0xc6, 0xcf, 0x42, 0x03, 0x2e, 0xe8, 0x36, 0x3e, 0x70, 0xa8, 0x4f, 0x3e, 0x5d,
+	0xdf, 0xf0, 0x48, 0xfe, 0x71, 0x5d, 0x58, 0x09, 0xa6, 0x26, 0x46, 0x57, 0xb1, 0xb0, 0x6a, 0xeb,
+	0xb4, 0xa3, 0xec, 0x39, 0xf4, 0xea, 0xbc, 0x02, 0x99, 0x1c, 0x7b, 0x0e, 0xd5, 0x58, 0xa9, 0xf0,
+	0x1e, 0x7c, 0x36, 0xaa, 0x31, 0xc9, 0xa6, 0x8a, 0xa9, 0xd2, 0x93, 0x6a, 0x3e, 0x2a, 0xc4, 0xc7,
+	0x1e, 0xe8, 0x03, 0x1f, 0xa3, 0x3d, 0xa5, 0xc3, 0x03, 0x11, 0xea, 0x10, 0xb6, 0xb1, 0x6d, 0x5b,
+	0x84, 0x58, 0xd8, 0xc9, 0x3e, 0xf2, 0x75, 0x94, 0x15, 0x76, 0x55, 0xe8, 0x15, 0xe6, 0x1d, 0xa5,
+	0xc1, 0x91, 0xda, 0x48, 0x55, 0xed, 0x99, 0x27, 0x26, 0x9f, 0x4c, 0xce, 0xc3, 0xdc, 0x84, 0x14,
+	0x5c, 0xa8, 0xbf, 0x01, 0x7c, 0xb5, 0x49, 0xcc, 0x1d, 0xd4, 0x43, 0xe6, 0xa8, 0x54, 0xaf, 0xc3,
+	0xb4, 0x11, 0xc4, 0x70, 0xa8, 0xd5, 0x30, 0x30, 0x26, 0x64, 0x72, 0xaa, 0x90, 0xa9, 0xff, 0x51,
+	0xc8, 0x47, 0x73, 0x0a, 0x59, 0x5b, 0xf4, 0x1d, 0xc5, 0x29, 0xcb, 0xab, 0x30, 0x1f, 0x33, 0x27,
+	0xd7, 0xe1, 0x1b, 0x00, 0x57, 0x3c, 0x33, 0x39, 0xc6, 0x7c, 0x4a, 0x4c, 0x10, 0x4d, 0xfe, 0x57,
+	0xa2, 0x05, 0xb8, 0x1a, 0x4b, 0x84, 0x53, 0xfd, 0x1a, 0xf8, 0x88, 0x4f, 0x2d, 0xda, 0x31, 0x5c,
+	0xfd, 0x28, 0xcc, 0x0f, 0xcd, 0x20, 0x34, 0xe0, 0x52, 0x78, 0xf1, 0xbe, 0x1e, 0xbc, 0xad, 0x0f,
+	0xbe, 0xc7, 0xcf, 0xc3, 0x0a, 0x16, 0xae, 0xad, 0x7e, 0x7b, 0x5a, 0x48, 0xfc, 0x73, 0x5a, 0x48,
+	0x78, 0xfc, 0x26, 0xfa, 0xc9, 0x3f, 0x01, 0xb8, 0x7e, 0x2f, 0x8b, 0x90, 0xaf, 0xd0, 0xe1, 0x86,
+	0x00, 0xbe, 0x36, 0xb9, 0xd0, 0xce, 0xde, 0x0e, 0x1d, 0xf1, 0xb2, 0xe5, 0xd4, 0xb7, 0x3d, 0xaf,
+	0xfc, 0xfa, 0x67, 0xa1, 0x64, 0x5a, 0xb4, 0x73, 0xd0, 0x52, 0xda, 0xd8, 0x66, 0x4b, 0x90, 0x3d,
+	0x2a, 0xc4, 0xe8, 0xaa, 0x74, 0xd0, 0x47, 0xc4, 0x2f, 0x20, 0x6c, 0x8b, 0x04, 0xfd, 0xe5, 0x0b,
+	0x00, 0xc5, 0x11, 0x4e, 0x3b, 0xa1, 0xa6, 0x1a, 0x3a, 0xd2, 0x5d, 0x43, 0xd8, 0x85, 0xcb, 0x5c,
+	0xe6, 0x99, 0x75, 0x59, 0xe2, 0x25, 0x2c, 0x1e, 0xab, 0x6e, 0x72, 0x5e, 0x75, 0xa5, 0x51, 0x75,
+	0x27, 0x69, 0xc9, 0x3f, 0x00, 0x28, 0x4f, 0x1f, 0xe5, 0xe5, 0x6b, 0x5b, 0xfd, 0xf9, 0x31, 0x4c,
+	0x35, 0x89, 0x29, 0x7c, 0x06, 0x9f, 0x8e, 0xfd, 0x58, 0x14, 0xa2, 0x4e, 0x8f, 0xac, 0x64, 0xf1,
+	0xad, 0x07, 0x00, 0x7c, 0x96, 0x2f, 0xe0, 0x62, 0x64, 0x5f, 0xaf, 0xc5, 0x94, 0x8e, 0x43, 0xc4,
+	0xb7, 0x1f, 0x84, 0xf0, 0xfe, 0x06, 0x5c, 0x9a, 0x58, 0x73, 0x6f, 0xc4, 0x94, 0x47, 0x41, 0xe2,
+	0xc6, 0x0c, 0x20, 0x7e, 0xcb, 0x97, 0x50, 0x88, 0x59, 0x22, 0xeb, 0x71, 0x22, 0x4c, 0xc0, 0xc4,
+	0xca, 0x4c, 0x30, 0x7e, 0xd7, 0x09, 0x80, 0xe2, 0x3d, 0x6b, 0x20, 0xae, 0xdb, 0x74, 0xb8, 0xb8,
+	0x3d, 0x17, 0x9c, 0x93, 0x18, 0xc0, 0xcc, 0xb4, 0x17, 0xae, 0x7c, 0x4f, 0xc7, 0x08, 0x56, 0xac,
+	0xce, 0x8e, 0x0d, 0xaf, 0x16, 0x1f, 0x7f, 0xe5, 0x59, 0xb4, 0xbe, 0x7b, 0x71, 0x23, 0x81, 0xcb,
+	0x1b, 0x09, 0xfc, 0x75, 0x23, 0x81, 0x1f, 0x6f, 0xa5, 0xc4, 0xe5, 0xad, 0x94, 0xf8, 0xfd, 0x56,
+	0x4a, 0x7c, 0xbe, 0x31, 0xe2, 0x75, 0x8a, 0x7a, 0x3d, 0xec, 0x56, 0x2c, 0xac, 0x4e, 0x7c, 0x58,
+	0xf8, 0xa6, 0x6f, 0x2d, 0xf8, 0x5f, 0x44, 0x5b, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x8e, 0x34,
+	0x4f, 0xd3, 0x1f, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -491,6 +681,12 @@ type MsgClient interface {
 	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
 	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
 	UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error)
+	// WithdrawReporterCommission defines a method to withdraw the
+	// full commission to the reporter address.
+	WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error)
+	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+	// from a reporter.
+	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
 }
 
 type msgClient struct {
@@ -537,6 +733,24 @@ func (c *msgClient) UndelegateReporter(ctx context.Context, in *MsgUndelegateRep
 	return out, nil
 }
 
+func (c *msgClient) WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error) {
+	out := new(MsgWithdrawReporterCommissionResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawReporterCommission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error) {
+	out := new(MsgWithdrawDelegatorRewardResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawDelegatorReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -548,6 +762,12 @@ type MsgServer interface {
 	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
 	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
 	UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error)
+	// WithdrawReporterCommission defines a method to withdraw the
+	// full commission to the reporter address.
+	WithdrawReporterCommission(context.Context, *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error)
+	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+	// from a reporter.
+	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -565,6 +785,12 @@ func (*UnimplementedMsgServer) DelegateReporter(ctx context.Context, req *MsgDel
 }
 func (*UnimplementedMsgServer) UndelegateReporter(ctx context.Context, req *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UndelegateReporter not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawReporterCommission(ctx context.Context, req *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawReporterCommission not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawDelegatorReward(ctx context.Context, req *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegatorReward not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -643,6 +869,42 @@ func _Msg_UndelegateReporter_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawReporterCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawReporterCommission)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawReporterCommission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/WithdrawReporterCommission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawReporterCommission(ctx, req.(*MsgWithdrawReporterCommission))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawDelegatorReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawDelegatorReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawDelegatorReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/WithdrawDelegatorReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawDelegatorReward(ctx, req.(*MsgWithdrawDelegatorReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.reporter.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -662,6 +924,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UndelegateReporter",
 			Handler:    _Msg_UndelegateReporter_Handler,
+		},
+		{
+			MethodName: "WithdrawReporterCommission",
+			Handler:    _Msg_WithdrawReporterCommission_Handler,
+		},
+		{
+			MethodName: "WithdrawDelegatorReward",
+			Handler:    _Msg_WithdrawDelegatorReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -971,6 +1241,147 @@ func (m *MsgUndelegateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgWithdrawReporterCommission) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawReporterCommission) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawReporterCommission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ReporterAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawReporterCommissionResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawReporterCommissionResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawReporterCommissionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawDelegatorReward) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawDelegatorReward) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawDelegatorReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ReporterAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.DelegatorAddress) > 0 {
+		i -= len(m.DelegatorAddress)
+		copy(dAtA[i:], m.DelegatorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.DelegatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1099,6 +1510,66 @@ func (m *MsgUndelegateReporterResponse) Size() (n int) {
 	}
 	var l int
 	_ = l
+	return n
+}
+
+func (m *MsgWithdrawReporterCommission) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ReporterAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgWithdrawReporterCommissionResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgWithdrawDelegatorReward) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.DelegatorAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ReporterAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgWithdrawDelegatorRewardResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Amount) > 0 {
+		for _, e := range m.Amount {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1886,6 +2357,370 @@ func (m *MsgUndelegateReporterResponse) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: MsgUndelegateReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawReporterCommission) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawReporterCommission: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawReporterCommission: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawReporterCommissionResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawReporterCommissionResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawReporterCommissionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types1.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawDelegatorReward: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawDelegatorReward: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgWithdrawDelegatorRewardResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgWithdrawDelegatorRewardResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgWithdrawDelegatorRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Amount = append(m.Amount, types1.Coin{})
+			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
