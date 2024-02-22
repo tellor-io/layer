@@ -20,6 +20,18 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Reporters queries all the staked reporters.
+	Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error)
+	// DelegatorReporter queries the reporter of a delegator.
+	DelegatorReporter(ctx context.Context, in *QueryDelegatorReporterRequest, opts ...grpc.CallOption) (*QueryDelegatorReporterResponse, error)
+	// ReporterStake queries the total tokens of a reporter.
+	ReporterStake(ctx context.Context, in *QueryReporterStakeRequest, opts ...grpc.CallOption) (*QueryReporterStakeResponse, error)
+	// DelegationRewards queries the total rewards accrued by a delegation.
+	DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error)
+	// ReporterOutstandingRewards queries rewards of a reporter address.
+	ReporterOutstandingRewards(ctx context.Context, in *QueryReporterOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryReporterOutstandingRewardsResponse, error)
+	// ReporterCommission queries accumulated commission for a reporter.
+	ReporterCommission(ctx context.Context, in *QueryReporterCommissionRequest, opts ...grpc.CallOption) (*QueryReporterCommissionResponse, error)
 }
 
 type queryClient struct {
@@ -39,12 +51,78 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error) {
+	out := new(QueryReportersResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/Reporters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DelegatorReporter(ctx context.Context, in *QueryDelegatorReporterRequest, opts ...grpc.CallOption) (*QueryDelegatorReporterResponse, error) {
+	out := new(QueryDelegatorReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/DelegatorReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ReporterStake(ctx context.Context, in *QueryReporterStakeRequest, opts ...grpc.CallOption) (*QueryReporterStakeResponse, error) {
+	out := new(QueryReporterStakeResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/ReporterStake", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) DelegationRewards(ctx context.Context, in *QueryDelegationRewardsRequest, opts ...grpc.CallOption) (*QueryDelegationRewardsResponse, error) {
+	out := new(QueryDelegationRewardsResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/DelegationRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ReporterOutstandingRewards(ctx context.Context, in *QueryReporterOutstandingRewardsRequest, opts ...grpc.CallOption) (*QueryReporterOutstandingRewardsResponse, error) {
+	out := new(QueryReporterOutstandingRewardsResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/ReporterOutstandingRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ReporterCommission(ctx context.Context, in *QueryReporterCommissionRequest, opts ...grpc.CallOption) (*QueryReporterCommissionResponse, error) {
+	out := new(QueryReporterCommissionResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/ReporterCommission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Reporters queries all the staked reporters.
+	Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error)
+	// DelegatorReporter queries the reporter of a delegator.
+	DelegatorReporter(context.Context, *QueryDelegatorReporterRequest) (*QueryDelegatorReporterResponse, error)
+	// ReporterStake queries the total tokens of a reporter.
+	ReporterStake(context.Context, *QueryReporterStakeRequest) (*QueryReporterStakeResponse, error)
+	// DelegationRewards queries the total rewards accrued by a delegation.
+	DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error)
+	// ReporterOutstandingRewards queries rewards of a reporter address.
+	ReporterOutstandingRewards(context.Context, *QueryReporterOutstandingRewardsRequest) (*QueryReporterOutstandingRewardsResponse, error)
+	// ReporterCommission queries accumulated commission for a reporter.
+	ReporterCommission(context.Context, *QueryReporterCommissionRequest) (*QueryReporterCommissionResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -54,6 +132,24 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reporters not implemented")
+}
+func (UnimplementedQueryServer) DelegatorReporter(context.Context, *QueryDelegatorReporterRequest) (*QueryDelegatorReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegatorReporter not implemented")
+}
+func (UnimplementedQueryServer) ReporterStake(context.Context, *QueryReporterStakeRequest) (*QueryReporterStakeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReporterStake not implemented")
+}
+func (UnimplementedQueryServer) DelegationRewards(context.Context, *QueryDelegationRewardsRequest) (*QueryDelegationRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelegationRewards not implemented")
+}
+func (UnimplementedQueryServer) ReporterOutstandingRewards(context.Context, *QueryReporterOutstandingRewardsRequest) (*QueryReporterOutstandingRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReporterOutstandingRewards not implemented")
+}
+func (UnimplementedQueryServer) ReporterCommission(context.Context, *QueryReporterCommissionRequest) (*QueryReporterCommissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReporterCommission not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -86,6 +182,114 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Reporters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReportersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Reporters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/Reporters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Reporters(ctx, req.(*QueryReportersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DelegatorReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelegatorReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DelegatorReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/DelegatorReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DelegatorReporter(ctx, req.(*QueryDelegatorReporterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ReporterStake_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReporterStakeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ReporterStake(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/ReporterStake",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ReporterStake(ctx, req.(*QueryReporterStakeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_DelegationRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDelegationRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DelegationRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/DelegationRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DelegationRewards(ctx, req.(*QueryDelegationRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ReporterOutstandingRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReporterOutstandingRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ReporterOutstandingRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/ReporterOutstandingRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ReporterOutstandingRewards(ctx, req.(*QueryReporterOutstandingRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ReporterCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReporterCommissionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ReporterCommission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/ReporterCommission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ReporterCommission(ctx, req.(*QueryReporterCommissionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -96,6 +300,30 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Reporters",
+			Handler:    _Query_Reporters_Handler,
+		},
+		{
+			MethodName: "DelegatorReporter",
+			Handler:    _Query_DelegatorReporter_Handler,
+		},
+		{
+			MethodName: "ReporterStake",
+			Handler:    _Query_ReporterStake_Handler,
+		},
+		{
+			MethodName: "DelegationRewards",
+			Handler:    _Query_DelegationRewards_Handler,
+		},
+		{
+			MethodName: "ReporterOutstandingRewards",
+			Handler:    _Query_ReporterOutstandingRewards_Handler,
+		},
+		{
+			MethodName: "ReporterCommission",
+			Handler:    _Query_ReporterCommission_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

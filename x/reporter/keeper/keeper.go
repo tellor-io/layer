@@ -14,20 +14,28 @@ import (
 
 type (
 	Keeper struct {
-		cdc          codec.BinaryCodec
-		storeService store.KVStoreService
-		Params       collections.Item[types.Params]
-		Reporters    collections.Map[sdk.AccAddress, types.OracleReporter]
-		Delegators   collections.Map[sdk.AccAddress, types.Delegation]
-		TokenOrigin  collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.TokenOrigin]
-		Schema       collections.Schema
-		logger       log.Logger
+		cdc                            codec.BinaryCodec
+		storeService                   store.KVStoreService
+		Params                         collections.Item[types.Params]
+		Reporters                      collections.Map[sdk.AccAddress, types.OracleReporter]
+		Delegators                     collections.Map[sdk.AccAddress, types.Delegation]
+		TokenOrigin                    collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.TokenOrigin]
+		ReportersAccumulatedCommission collections.Map[sdk.ValAddress, types.ReporterAccumulatedCommission]
+		ReporterOutstandingRewards     collections.Map[sdk.ValAddress, types.ReporterOutstandingRewards]
+		ReporterCurrentRewards         collections.Map[sdk.ValAddress, types.ReporterCurrentRewards]
+		DelegatorStartingInfo          collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
+		ReporterHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ReporterHistoricalRewards]
+		ReporterDisputeEvents          collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ReporterDisputeEvent]
+
+		Schema collections.Schema
+		logger log.Logger
 
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
 
 		stakingKeeper types.StakingKeeper
+		bankKeeper    types.BankKeeper
 	}
 )
 
@@ -38,6 +46,7 @@ func NewKeeper(
 	authority string,
 
 	stakingKeeper types.StakingKeeper,
+	bankKeeper types.BankKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -47,13 +56,20 @@ func NewKeeper(
 		cdc:          cdc,
 		storeService: storeService,
 
-		Params:        collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		Reporters:     collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
-		Delegators:    collections.NewMap(sb, types.DelegatorsKey, "delegation_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc)),
-		TokenOrigin:   collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_reporter", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), codec.CollValue[types.TokenOrigin](cdc)),
-		authority:     authority,
-		logger:        logger,
-		stakingKeeper: stakingKeeper,
+		Params:                         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
+		Delegators:                     collections.NewMap(sb, types.DelegatorsKey, "delegation_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc)),
+		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_reporter", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), codec.CollValue[types.TokenOrigin](cdc)),
+		ReportersAccumulatedCommission: collections.NewMap(sb, types.ReporterAccumulatedCommissionPrefix, "reporters_accumulated_commission", sdk.ValAddressKey, codec.CollValue[types.ReporterAccumulatedCommission](cdc)),
+		ReporterOutstandingRewards:     collections.NewMap(sb, types.ReporterOutstandingRewardsPrefix, "reporter_outstanding_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterOutstandingRewards](cdc)),
+		ReporterCurrentRewards:         collections.NewMap(sb, types.ReporterCurrentRewardsPrefix, "reporters_current_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterCurrentRewards](cdc)),
+		DelegatorStartingInfo:          collections.NewMap(sb, types.DelegatorStartingInfoPrefix, "delegators_starting_info", collections.PairKeyCodec(sdk.ValAddressKey, sdk.AccAddressKey), codec.CollValue[types.DelegatorStartingInfo](cdc)),
+		ReporterHistoricalRewards:      collections.NewMap(sb, types.ReporterHistoricalRewardsPrefix, "reporter_historical_rewards", collections.PairKeyCodec(sdk.ValAddressKey, collections.Uint64Key), codec.CollValue[types.ReporterHistoricalRewards](cdc)),
+		ReporterDisputeEvents:          collections.NewMap(sb, types.ReporterDisputeEventPrefix, "reporter_dispute_events", collections.TripleKeyCodec(sdk.ValAddressKey, collections.Uint64Key, collections.Uint64Key), codec.CollValue[types.ReporterDisputeEvent](cdc)),
+		authority:                      authority,
+		logger:                         logger,
+		stakingKeeper:                  stakingKeeper,
+		bankKeeper:                     bankKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {

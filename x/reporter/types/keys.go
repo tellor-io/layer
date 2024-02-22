@@ -11,13 +11,21 @@ const (
 
 	// MemStoreKey defines the in-memory store key
 	MemStoreKey = "mem_reporter"
+
+	Denom = "loya"
 )
 
 var (
-	ParamsKey       = []byte("p_reporter")
-	ReportersKey    = collections.NewPrefix(11)
-	DelegatorsKey   = collections.NewPrefix(12)
-	TokenOriginsKey = collections.NewPrefix(13)
+	ParamsKey                           = []byte("p_reporter")
+	ReportersKey                        = collections.NewPrefix(11)
+	DelegatorsKey                       = collections.NewPrefix(12)
+	TokenOriginsKey                     = collections.NewPrefix(13)
+	ReporterAccumulatedCommissionPrefix = collections.NewPrefix(14)
+	ReporterOutstandingRewardsPrefix    = collections.NewPrefix(15)
+	ReporterCurrentRewardsPrefix        = collections.NewPrefix(16)
+	DelegatorStartingInfoPrefix         = collections.NewPrefix(17)
+	ReporterHistoricalRewardsPrefix     = collections.NewPrefix(18)
+	ReporterDisputeEventPrefix          = collections.NewPrefix(19)
 )
 
 func KeyPrefix(p string) []byte {

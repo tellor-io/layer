@@ -22,7 +22,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Context) {
+func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	db := dbm.NewMemDB()
@@ -33,6 +33,7 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Cont
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	bk := new(mocks.BankKeeper)
 	sk := new(mocks.StakingKeeper)
 	k := keeper.NewKeeper(
 		cdc,
@@ -40,6 +41,7 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Cont
 		log.NewNopLogger(),
 		authority.String(),
 		sk,
+		bk,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
@@ -47,5 +49,5 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, sdk.Cont
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, sk, ctx
+	return k, sk, bk, ctx
 }

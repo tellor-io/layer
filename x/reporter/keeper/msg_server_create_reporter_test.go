@@ -13,13 +13,13 @@ import (
 )
 
 func TestCreateReporter(t *testing.T) {
-	k, sk, ms, ctx := setupMsgServer(t)
+	k, sk, _, ms, ctx := setupMsgServer(t)
 
 	// setup delegator and validators
 	reporterAddr := sdk.AccAddress([]byte("reporter"))
 	reporterBech32 := reporterAddr.String()
 	amount := math.NewInt(100)
-	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), time.Time{})
 
 	validatorI := sdk.ValAddress([]byte("validator1"))

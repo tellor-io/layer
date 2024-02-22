@@ -3443,6 +3443,18 @@ definitions:
     description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
   layer.registry.MsgUpdateDataSpecResponse:
     type: object
+  cosmos.base.v1beta1.DecCoin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      DecCoin defines a token with a denomination and a decimal amount.
+
+      NOTE: The amount field is an Dec which implements the custom method
+      signatures required by gogoproto.
   cosmos.staking.v1beta1.Commission:
     type: object
     properties:
@@ -3470,6 +3482,255 @@ definitions:
         format: date-time
         description: update_time is the last time the commission rate was changed.
     description: Commission defines commission parameters for a given validator.
+  layer.reporter.OracleReporter:
+    type: object
+    properties:
+      reporter:
+        type: string
+        title: reporter is the address of the reporter
+      total_tokens:
+        type: string
+        title: tokens is the amount of tokens the reporter has
+      commission:
+        title: commission for the reporter
+        type: object
+        properties:
+          commission_rates:
+            description: >-
+              commission_rates defines the initial commission rates to be used
+              for creating a validator.
+            type: object
+            properties:
+              rate:
+                type: string
+                description: >-
+                  rate is the commission rate charged to delegators, as a
+                  fraction.
+              max_rate:
+                type: string
+                description: >-
+                  max_rate defines the maximum commission rate which validator
+                  can ever charge, as a fraction.
+              max_change_rate:
+                type: string
+                description: >-
+                  max_change_rate defines the maximum daily increase of the
+                  validator commission, as a fraction.
+          update_time:
+            type: string
+            format: date-time
+            description: update_time is the last time the commission rate was changed.
+        description: Commission defines commission parameters for a given validator.
+    title: OracleReporter is the struct that holds the data for a reporter
+  layer.reporter.Params:
+    type: object
+    properties:
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate, adopted from staking module, is the minimum
+          commission rate a reporter can their delegators
+    description: Params defines the parameters for the module.
+  layer.reporter.QueryDelegationRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+        description: rewards defines the rewards accrued by a delegation.
+    description: |-
+      QueryDelegationRewardsResponse is the response type for the
+      Query/DelegationRewards RPC method.
+  layer.reporter.QueryDelegatorReporterResponse:
+    type: object
+    properties:
+      reporter:
+        type: string
+        description: reporter defines the reporter of a delegator.
+    description: |-
+      QueryDelegatorReporterResponse is the response type for the
+      Query/DelegatorReporter RPC method.
+  layer.reporter.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate, adopted from staking module, is the minimum
+              commission rate a reporter can their delegators
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.reporter.QueryReporterCommissionResponse:
+    type: object
+    properties:
+      commission:
+        description: commission defines the commission the reporter received.
+        type: object
+        properties:
+          commission:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+    title: |-
+      QueryReporterCommissionResponse is the response type for the
+      Query/ReporterCommission RPC method
+  layer.reporter.QueryReporterOutstandingRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: object
+        properties:
+          rewards:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+        description: >-
+          ReporterOutstandingRewards represents outstanding (un-withdrawn)
+          rewards
+
+          for a reporter inexpensive to track, allows simple sanity checks.
+    description: |-
+      QueryReporterOutstandingRewardsResponse is the response type for the
+      Query/ReporterOutstandingRewards RPC method.
+  layer.reporter.QueryReporterStakeResponse:
+    type: object
+    properties:
+      stake:
+        type: string
+        description: stake defines the total tokens of a reporter.
+    description: |-
+      QueryReporterStakeResponse is the response type for the
+      Query/ReporterStake RPC method.
+  layer.reporter.QueryReportersResponse:
+    type: object
+    properties:
+      reporters:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+              title: reporter is the address of the reporter
+            total_tokens:
+              type: string
+              title: tokens is the amount of tokens the reporter has
+            commission:
+              title: commission for the reporter
+              type: object
+              properties:
+                commission_rates:
+                  description: >-
+                    commission_rates defines the initial commission rates to be
+                    used for creating a validator.
+                  type: object
+                  properties:
+                    rate:
+                      type: string
+                      description: >-
+                        rate is the commission rate charged to delegators, as a
+                        fraction.
+                    max_rate:
+                      type: string
+                      description: >-
+                        max_rate defines the maximum commission rate which
+                        validator can ever charge, as a fraction.
+                    max_change_rate:
+                      type: string
+                      description: >-
+                        max_change_rate defines the maximum daily increase of
+                        the validator commission, as a fraction.
+                update_time:
+                  type: string
+                  format: date-time
+                  description: >-
+                    update_time is the last time the commission rate was
+                    changed.
+              description: Commission defines commission parameters for a given validator.
+          title: OracleReporter is the struct that holds the data for a reporter
+        description: all the reporters.
+    description: >-
+      QueryReportersResponse is the response type for the Query/Reporters RPC
+      method.
+  layer.reporter.ReporterAccumulatedCommission:
+    type: object
+    properties:
+      commission:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+  layer.reporter.ReporterOutstandingRewards:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
+      for a reporter inexpensive to track, allows simple sanity checks.
   layer.reporter.MsgCreateReporterResponse:
     type: object
   layer.reporter.MsgDelegateReporterResponse:
@@ -3484,15 +3745,55 @@ definitions:
     description: |-
       MsgUpdateParamsResponse defines the response structure for executing a
       MsgUpdateParams message.
-  layer.reporter.Params:
+  layer.reporter.MsgWithdrawDelegatorRewardResponse:
     type: object
     properties:
+<<<<<<< HEAD
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+      response type.
+  layer.reporter.MsgWithdrawReporterCommissionResponse:
+    type: object
+    properties:
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      MsgWithdrawReporterCommissionResponse defines the
+      Msg/WithdrawReporterCommission response type.
+=======
       min_commission_rate:
         type: string
         title: >-
           min_commission_rate, adopted from staking module, is the minimum
           commission rate a reporter can their delegators
     description: Params defines the parameters for the module.
+>>>>>>> reporterModule
   layer.reporter.TokenOrigin:
     type: object
     properties:

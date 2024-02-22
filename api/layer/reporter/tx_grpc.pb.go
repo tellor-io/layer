@@ -27,6 +27,12 @@ type MsgClient interface {
 	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
 	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
 	UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error)
+	// WithdrawReporterCommission defines a method to withdraw the
+	// full commission to the reporter address.
+	WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error)
+	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+	// from a reporter.
+	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
 }
 
 type msgClient struct {
@@ -73,6 +79,24 @@ func (c *msgClient) UndelegateReporter(ctx context.Context, in *MsgUndelegateRep
 	return out, nil
 }
 
+func (c *msgClient) WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error) {
+	out := new(MsgWithdrawReporterCommissionResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawReporterCommission", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error) {
+	out := new(MsgWithdrawDelegatorRewardResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawDelegatorReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -86,6 +110,12 @@ type MsgServer interface {
 	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
 	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
 	UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error)
+	// WithdrawReporterCommission defines a method to withdraw the
+	// full commission to the reporter address.
+	WithdrawReporterCommission(context.Context, *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error)
+	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+	// from a reporter.
+	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -104,6 +134,12 @@ func (UnimplementedMsgServer) DelegateReporter(context.Context, *MsgDelegateRepo
 }
 func (UnimplementedMsgServer) UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UndelegateReporter not implemented")
+}
+func (UnimplementedMsgServer) WithdrawReporterCommission(context.Context, *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawReporterCommission not implemented")
+}
+func (UnimplementedMsgServer) WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegatorReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -190,6 +226,42 @@ func _Msg_UndelegateReporter_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawReporterCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawReporterCommission)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawReporterCommission(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/WithdrawReporterCommission",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawReporterCommission(ctx, req.(*MsgWithdrawReporterCommission))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawDelegatorReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawDelegatorReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawDelegatorReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/WithdrawDelegatorReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawDelegatorReward(ctx, req.(*MsgWithdrawDelegatorReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -212,6 +284,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UndelegateReporter",
 			Handler:    _Msg_UndelegateReporter_Handler,
+		},
+		{
+			MethodName: "WithdrawReporterCommission",
+			Handler:    _Msg_WithdrawReporterCommission_Handler,
+		},
+		{
+			MethodName: "WithdrawDelegatorReward",
+			Handler:    _Msg_WithdrawDelegatorReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

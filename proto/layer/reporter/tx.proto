@@ -3,6 +3,7 @@ syntax = "proto3";
 package layer.reporter;
 
 import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
@@ -27,6 +28,13 @@ service Msg {
   rpc DelegateReporter(MsgDelegateReporter) returns (MsgDelegateReporterResponse);
   // UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
   rpc UndelegateReporter(MsgUndelegateReporter) returns (MsgUndelegateReporterResponse);
+
+  // WithdrawReporterCommission defines a method to withdraw the
+  // full commission to the reporter address.
+  rpc WithdrawReporterCommission(MsgWithdrawReporterCommission) returns (MsgWithdrawReporterCommissionResponse);
+  // WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+  // from a reporter.
+  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -89,3 +97,45 @@ message MsgUndelegateReporter {
 }
 
 message MsgUndelegateReporterResponse {}
+
+// MsgWithdrawReporterCommission withdraws the full commission to the reporter
+// address.
+message MsgWithdrawReporterCommission {
+  option (cosmos.msg.v1.signer) = "reporter_address";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawReporterCommissionResponse defines the
+// Msg/WithdrawReporterCommission response type.
+message MsgWithdrawReporterCommissionResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a reporter.
+message MsgWithdrawDelegatorReward {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string reporter_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+// response type.
+message MsgWithdrawDelegatorRewardResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
