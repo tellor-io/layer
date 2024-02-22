@@ -15,7 +15,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
+func TestAllocateTokensToReporterWithCommission(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 	// create reporter with 50% commission
 	reporterAcc := sdk.AccAddress([]byte("reporter"))
@@ -35,17 +35,17 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		{Denom: types.Denom, Amount: math.LegacyNewDec(5)},
 	}
 
-	valCommission, err := k.ReportersAccumulatedCommission.Get(ctx, sdk.ValAddress(reporterAcc))
+	repCommission, err := k.ReportersAccumulatedCommission.Get(ctx, reporterAcc.Bytes())
 	require.NoError(t, err)
-	require.Equal(t, expected, valCommission.Commission)
+	require.Equal(t, expected, repCommission.Commission)
 
 	// check current rewards
-	currentRewards, err := k.ReporterCurrentRewards.Get(ctx, sdk.ValAddress(reporterAcc))
+	currentRewards, err := k.ReporterCurrentRewards.Get(ctx, reporterAcc.Bytes())
 	require.NoError(t, err)
 	require.Equal(t, expected, currentRewards.Rewards)
 }
 
-func TestAllocateTokensToManyValidators(t *testing.T) {
+func TestAllocateTokensToManyReporters(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
@@ -63,22 +63,22 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 	require.NoError(t, err)
 
 	// assert initial state: zero outstanding rewards, zero commission, zero current rewards
-	_, err = k.ReporterOutstandingRewards.Get(ctx, sdk.ValAddress(reporterAccI))
+	_, err = k.ReporterOutstandingRewards.Get(ctx, reporterAccI.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	_, err = k.ReporterOutstandingRewards.Get(ctx, sdk.ValAddress(reporterAccII))
+	_, err = k.ReporterOutstandingRewards.Get(ctx, reporterAccII.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	_, err = k.ReportersAccumulatedCommission.Get(ctx, sdk.ValAddress(reporterAccI))
+	_, err = k.ReportersAccumulatedCommission.Get(ctx, reporterAccI.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	_, err = k.ReportersAccumulatedCommission.Get(ctx, sdk.ValAddress(reporterAccII))
+	_, err = k.ReportersAccumulatedCommission.Get(ctx, reporterAccII.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	_, err = k.ReporterCurrentRewards.Get(ctx, sdk.ValAddress(reporterAccI))
+	_, err = k.ReporterCurrentRewards.Get(ctx, reporterAccI.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound) // require no rewards
 
-	_, err = k.ReporterCurrentRewards.Get(ctx, sdk.ValAddress(reporterAccII))
+	_, err = k.ReporterCurrentRewards.Get(ctx, reporterAccII.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound) // require no rewards
 
 	require.NoError(t, k.AllocateTokensToReporter(ctx, reporterAccI.Bytes(), sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDec(50)}}))
@@ -137,7 +137,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	err = CallCreateReporterHooks(sdkCtx, k, delegatorI, reporter, delegationI.Amount)
 	require.NoError(t, err)
 
-	// historical count should be 2 (once for validator init, once for delegation init)
+	// historical count should be 2 (once for reporter init, once for delegation init)
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 1)
 	require.Equal(t, 2, getRepHistoricalReferenceCount(k, sdkCtx))
 
@@ -148,7 +148,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	require.Equal(t, 2, getRepHistoricalReferenceCount(k, sdkCtx))
 
 	// calculate delegation rewards
-	rewards, err := k.CalculateDelegationRewards(sdkCtx, sdk.ValAddress(reporterAccI), delegatorI, delegationI, endingPeriod)
+	rewards, err := k.CalculateDelegationRewards(sdkCtx, reporterAccI.Bytes(), delegatorI, delegationI, endingPeriod)
 	require.NoError(t, err)
 
 	// rewards should be zero
@@ -163,37 +163,21 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	endingPeriod, _ = k.IncrementReporterPeriod(sdkCtx, reporter)
 
 	// calculate delegation rewards
-	rewards, err = k.CalculateDelegationRewards(sdkCtx, sdk.ValAddress(reporterAccI), delegatorI, delegationI, endingPeriod)
+	rewards, err = k.CalculateDelegationRewards(sdkCtx, reporterAccI.Bytes(), delegatorI, delegationI, endingPeriod)
 	require.NoError(t, err)
 	// rewards should be half the tokens
 	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDec(initial / 2)}}, rewards)
 
 	// commission should be the other half
-	repCommission, err := k.ReportersAccumulatedCommission.Get(sdkCtx, sdk.ValAddress(reporterAccI))
+	repCommission, err := k.ReportersAccumulatedCommission.Get(sdkCtx, reporterAccI.Bytes())
 	require.NoError(t, err)
 	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDec(initial / 2)}}, repCommission.Commission)
 }
 
-func getRepHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
-	count := 0
-	err := k.ReporterHistoricalRewards.Walk(
-		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ReporterHistoricalRewards) (stop bool, err error) {
-			count += int(rewards.ReferenceCount)
-			return false, nil
-		},
-	)
-	if err != nil {
-		panic(err)
-	}
-
-	return count
-}
-
 func TestCalculateRewardsAfterSlash(t *testing.T) {
-
 	k, _, _, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -227,8 +211,8 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	// start out block height
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
 
-	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
-	reporter, burned := SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
+	// slash the reporter by 50% (simulated with manual calls; we assume the reporter is bonded)
+	reporter, burned := SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
 
 	// increase block height
@@ -256,25 +240,10 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 		repCommission.Commission)
 }
 
-func CallCreateReporterHooks(sdkCtx sdk.Context, k keeper.Keeper, delegator sdk.AccAddress, reporter types.OracleReporter, stake math.Int) error {
-	// hooks
-	err := k.AfterReporterCreated(sdkCtx, reporter)
-	if err != nil {
-		return err
-	}
-
-	_, err = k.IncrementReporterPeriod(sdkCtx, reporter)
-	if err != nil {
-		return err
-	}
-	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.GetReporter())) // not necessary but just to show how to convert
-	return k.AfterDelegationModified(sdkCtx, delegator, reporterVal, stake)
-}
-
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -308,8 +277,8 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// start out block height
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
 
-	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
-	reporter, burned := SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
+	// slash the reporter by 50% (simulated with manual calls; we assume the reporter is bonded)
+	reporter, burned := SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
 
 	// increase block height
@@ -320,8 +289,8 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	tokens := sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDecFromInt(initial)}}
 	require.NoError(t, k.AllocateTokensToReporter(sdkCtx, reporterAccI.Bytes(), tokens))
 
-	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
-	reporter, burned = SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(2, 1), reporter, k)
+	// slash the reporter by 50% (simulated with manual calls; we assume the reporter is bonded)
+	reporter, burned = SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(2, 1), reporter, k)
 
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
 
@@ -344,16 +313,15 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	// commission should be the other half
 	repCommission, err := k.ReportersAccumulatedCommission.Get(sdkCtx, reporterAccI.Bytes())
 	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDecFromInt(initial)}},
-		repCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDecFromInt(initial)}}, repCommission.Commission)
 }
 
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -428,7 +396,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	k, _, bk, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -478,7 +446,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -517,11 +485,11 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	tokens := sdk.DecCoins{{Denom: types.Denom, Amount: initial}}
 	require.NoError(t, k.AllocateTokensToReporter(sdkCtx, reporterAccI.Bytes(), tokens))
 
-	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
-	reporter, burned := SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
+	// slash the reporter by 50% (simulated with manual calls; we assume the reporter is bonded)
+	reporter, burned := SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
-	// slash the validator by 50% again
-	reporter, burned = SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
+	// slash the reporter by 50% again
+	reporter, burned = SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
 
 	// increase block height
@@ -543,14 +511,13 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	// commission should be the other half
 	repCommission, err := k.ReportersAccumulatedCommission.Get(sdkCtx, reporterAccI.Bytes())
 	require.NoError(t, err)
-	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: initial}},
-		repCommission.Commission)
+	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: initial}}, repCommission.Commission)
 }
 
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -576,10 +543,10 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	tokens := sdk.DecCoins{{Denom: types.Denom, Amount: initial}}
 	require.NoError(t, k.AllocateTokensToReporter(sdkCtx, reporterAccI.Bytes(), tokens))
 
-	// slash the validator
+	// slash the reporter
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
-	// slash the validator by 50% (simulated with manual calls; we assume the validator is bonded)
-	reporter, burned := SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
+	// slash the reporter by 50% (simulated with manual calls; we assume the reporter is bonded)
+	reporter, burned := SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
 
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
@@ -606,9 +573,9 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	// allocate some more rewards
 	require.NoError(t, k.AllocateTokensToReporter(sdkCtx, reporterAccI.Bytes(), tokens))
 
-	// slash the validator again
+	// slash the reporter again
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
-	reporter, burned = SlashReporter(sdkCtx, sdk.ValAddress(reporterAccI), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
+	reporter, burned = SlashReporter(sdkCtx, reporterAccI.Bytes(), sdkCtx.BlockHeight(), math.LegacyNewDecWithPrec(5, 1), reporter, k)
 	require.True(t, burned.IsPositive(), "expected positive slashed tokens, got: %s", burned)
 
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
@@ -639,7 +606,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	k, _, bk, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -665,7 +632,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	tokens := sdk.DecCoins{sdk.NewDecCoin(types.Denom, math.NewInt(initial))}
 	require.NoError(t, k.AllocateTokensToReporter(sdkCtx, reporterAccI.Bytes(), tokens))
 
-	// historical count should be 2 (validator init, delegation init)
+	// historical count should be 2 (reporter init, delegation init)
 	require.Equal(t, 2, getRepHistoricalReferenceCount(k, sdkCtx))
 
 	// second delegation
@@ -706,10 +673,10 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	_, err = k.WithdrawDelegationRewards(sdkCtx, reporterAccI.Bytes(), delegatorII)
 	require.Nil(t, err)
 
-	// historical count should be 3 (validator init + two delegations)
+	// historical count should be 3 (reporter init + two delegations)
 	require.Equal(t, 3, getRepHistoricalReferenceCount(k, sdkCtx))
 
-	// validator withdraws commission
+	// reporter withdraws commission
 	expCommission := sdk.Coins{sdk.NewCoin(types.Denom, math.NewInt(initial))}
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, types.ModuleName, reporterAccI, expCommission).Return(nil)
 	_, err = k.WithdrawReporterCommission(sdkCtx, reporterAccI.Bytes())
@@ -809,7 +776,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 func Test100PercentCommissionReward(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create validator with 50% commission
+	// create reporter with 50% commission
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(10, 1), math.LegacyNewDecWithPrec(10, 1),
 		math.LegacyNewDec(0), time.Time{})
@@ -870,9 +837,11 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.True(t, hasValue)
 }
 
-// SlashValidator copies what x/staking Slash does. It should be used for testing only.
+// ******************** helpers *********************
+
+// SlashReporter copies what x/staking Slash does. It should be used for testing only.
 // And it must be updated whenever the original function is updated.
-// The passed validator will get its tokens updated.
+// The passed reporter will get its tokens updated.
 func SlashReporter(
 	ctx sdk.Context,
 	reporterVal sdk.ValAddress,
@@ -884,12 +853,6 @@ func SlashReporter(
 	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
-
-	// call the before-modification hook nil
-	// err = k.BeforeRE.BeforeValidatorModified(ctx, reporterVal)
-	// if err != nil {
-	// 	panic(err)
-	// }
 
 	// we simplify this part, as we won't be able to test redelegations or
 	// unbonding delegations
@@ -919,7 +882,7 @@ func SlashReporter(
 			panic(err)
 		}
 	}
-	// Deduct from validator's bonded tokens and update the validator.
+	// Deduct from reporter's bonded tokens and update the reporter.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
 	reporter.TotalTokens = reporter.TotalTokens.Sub(tokensToBurn)
 	err := k.Reporters.Set(ctx, sdk.AccAddress(reporterVal), reporter)
@@ -928,4 +891,34 @@ func SlashReporter(
 	}
 
 	return reporter, tokensToBurn
+}
+
+func getRepHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
+	count := 0
+	err := k.ReporterHistoricalRewards.Walk(
+		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ReporterHistoricalRewards) (stop bool, err error) {
+			count += int(rewards.ReferenceCount)
+			return false, nil
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	return count
+}
+
+func CallCreateReporterHooks(sdkCtx sdk.Context, k keeper.Keeper, delegator sdk.AccAddress, reporter types.OracleReporter, stake math.Int) error {
+	// hooks
+	err := k.AfterReporterCreated(sdkCtx, reporter)
+	if err != nil {
+		return err
+	}
+
+	_, err = k.IncrementReporterPeriod(sdkCtx, reporter)
+	if err != nil {
+		return err
+	}
+	reporterVal := sdk.MustAccAddressFromBech32(reporter.GetReporter())
+	return k.AfterDelegationModified(sdkCtx, delegator, reporterVal.Bytes(), stake)
 }
