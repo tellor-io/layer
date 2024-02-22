@@ -24,6 +24,21 @@ func NewQuerier(keeper Keeper) Querier {
 	return Querier{Keeper: keeper}
 }
 
+// Reporter queries a reporter by address
+func (k Querier) Reporter(ctx context.Context, req *types.QueryReporterRequest) (*types.QueryReporterResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	reporterAddr := sdk.MustAccAddressFromBech32(req.ReporterAddress)
+
+	reporter, err := k.Keeper.Reporter(ctx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryReporterResponse{Reporter: reporter}, nil
+}
+
 // Reporters queries all the reporters
 func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest) (*types.QueryReportersResponse, error) {
 	if req == nil {

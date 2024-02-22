@@ -94,3 +94,14 @@ func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[s
 	s.Amount = s.Amount.Sub(amt)
 	return k.TokenOrigin.Set(ctx, key, s)
 }
+
+func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (*types.OracleReporter, error) {
+	reporter, err := k.Reporters.Get(ctx, repAddr)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, types.ErrReporterDoesNotExist
+		}
+		return nil, err
+	}
+	return &reporter, nil
+}

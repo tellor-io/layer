@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Reporter queries the reporter of a reporter address.
+	Reporter(ctx context.Context, in *QueryReporterRequest, opts ...grpc.CallOption) (*QueryReporterResponse, error)
 	// Reporters queries all the staked reporters.
 	Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error)
 	// DelegatorReporter queries the reporter of a delegator.
@@ -45,6 +47,15 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	out := new(QueryParamsResponse)
 	err := c.cc.Invoke(ctx, "/layer.reporter.Query/Params", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Reporter(ctx context.Context, in *QueryReporterRequest, opts ...grpc.CallOption) (*QueryReporterResponse, error) {
+	out := new(QueryReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/Reporter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,6 +122,8 @@ func (c *queryClient) ReporterCommission(ctx context.Context, in *QueryReporterC
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Reporter queries the reporter of a reporter address.
+	Reporter(context.Context, *QueryReporterRequest) (*QueryReporterResponse, error)
 	// Reporters queries all the staked reporters.
 	Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error)
 	// DelegatorReporter queries the reporter of a delegator.
@@ -132,6 +145,9 @@ type UnimplementedQueryServer struct {
 
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) Reporter(context.Context, *QueryReporterRequest) (*QueryReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reporter not implemented")
 }
 func (UnimplementedQueryServer) Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reporters not implemented")
@@ -178,6 +194,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Reporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Reporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/Reporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Reporter(ctx, req.(*QueryReporterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -300,6 +334,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Reporter",
+			Handler:    _Query_Reporter_Handler,
 		},
 		{
 			MethodName: "Reporters",

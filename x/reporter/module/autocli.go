@@ -18,6 +18,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Shows the parameters of the module",
 				},
 				{
+					RpcMethod:      "Reporter",
+					Use:            "reporter [reporter-addr]",
+					Short:          "Query staked reporter by address",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
 					RpcMethod:      "Reporters",
 					Use:            "reporters",
 					Short:          "Query staked reporters",
