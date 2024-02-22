@@ -1,0 +1,23 @@
+syntax = "proto3";
+package layer.reporter;
+
+import "amino/amino.proto";
+import "cosmos/staking/v1beta1/staking.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+// OracleReporter is the struct that holds the data for a reporter
+message OracleReporter {
+  // reporter is the address of the reporter
+  string reporter = 1;
+  // tokens is the amount of tokens the reporter has
+  string total_tokens = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // commission for the reporter
+  cosmos.staking.v1beta1.Commission commission = 3;
+}

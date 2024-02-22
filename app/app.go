@@ -78,7 +78,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -121,6 +120,10 @@ import (
 	disputemodulekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputemoduletypes "github.com/tellor-io/layer/x/dispute/types"
 
+	reportermodulekeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportermodule "github.com/tellor-io/layer/x/reporter/module"
+	reportermoduletypes "github.com/tellor-io/layer/x/reporter/types"
+
 	_ "github.com/tellor-io/layer/app/config"
 
 	// this line is used by starport scaffolding # stargate/app/moduleImport
@@ -155,18 +158,6 @@ const (
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
 
-func getGovProposalHandlers() []govclient.ProposalHandler {
-	var govProposalHandlers []govclient.ProposalHandler
-	// this line is used by starport scaffolding # stargate/app/govProposalHandlers
-
-	govProposalHandlers = append(govProposalHandlers,
-		paramsclient.ProposalHandler,
-		// this line is used by starport scaffolding # stargate/app/govProposalHandler
-	)
-
-	return govProposalHandlers
-}
-
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
@@ -185,6 +176,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		oraclemoduletypes.ModuleName:   {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		disputemoduletypes.ModuleName:  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		reportermoduletypes.ModuleName: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -250,6 +242,8 @@ type App struct {
 	RegistryKeeper registrymodulekeeper.Keeper
 
 	DisputeKeeper disputemodulekeeper.Keeper
+
+	ReporterKeeper reportermodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -317,6 +311,7 @@ func New(
 		oraclemoduletypes.StoreKey,
 		registrymoduletypes.StoreKey,
 		disputemoduletypes.StoreKey,
+		reportermoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 
@@ -582,6 +577,16 @@ func New(
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
 
+	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
+		logger,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper,
+		app.BankKeeper,
+	)
+	reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
@@ -705,6 +710,7 @@ func New(
 			// insert staking hooks receivers here
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
+			app.ReporterKeeper.Hooks(),
 		),
 	)
 
@@ -740,6 +746,7 @@ func New(
 		oracleModule,
 		registryModule,
 		disputeModule,
+		reporterModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -785,6 +792,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -811,6 +819,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
 
@@ -842,6 +851,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 	app.mm.SetOrderInitGenesis(genesisModuleOrder...)

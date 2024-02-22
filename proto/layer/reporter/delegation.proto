@@ -1,0 +1,20 @@
+syntax = "proto3";
+package layer.reporter;
+
+import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+// Delegation is a type that represents a delegator's delegation to a reporter
+message Delegation {
+  // reporter is the address of the reporter being delegated to
+  string reporter = 1;
+  // amount is the amount of tokens delegated
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}

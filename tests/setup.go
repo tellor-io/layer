@@ -1,4 +1,4 @@
-package integration
+package setup
 
 import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -13,7 +13,9 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
+	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
 )
 
 func AuthModule() configurator.ModuleOption {
@@ -26,10 +28,11 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "fee_collector"},
 					{Account: "distribution"},
 					{Account: "oracle", Permissions: []string{"burner"}},
-					{Account: "time_based_rewards"},
 					{Account: "dispute", Permissions: []string{"burner"}},
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},
+					{Account: "time_based_rewards"},
+					{Account: "mint_to_team"},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
@@ -72,6 +75,27 @@ func RegistryModule() configurator.ModuleOption {
 		config.ModuleConfigs["registry"] = &appv1alpha1.ModuleConfig{
 			Name:   "registry",
 			Config: appconfig.WrapAny(&registrymodulev1.Module{}),
+		}
+	}
+}
+
+func MintModule() configurator.ModuleOption {
+	return func(config *configurator.Config) {
+		config.ModuleConfigs["mint"] = &appv1alpha1.ModuleConfig{
+			Name:   "mint",
+			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
+		}
+	}
+}
+
+func ReporterModule() configurator.ModuleOption {
+	return func(config *configurator.Config) {
+		config.BeginBlockersOrder = append(config.BeginBlockersOrder, "reporter")
+		config.EndBlockersOrder = append(config.EndBlockersOrder, "reporter")
+		config.InitGenesisOrder = append(config.InitGenesisOrder, "reporter")
+		config.ModuleConfigs["reporter"] = &appv1alpha1.ModuleConfig{
+			Name:   "reporter",
+			Config: appconfig.WrapAny(&reportermodulev1.Module{}),
 		}
 	}
 }

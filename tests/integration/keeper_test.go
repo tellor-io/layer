@@ -48,6 +48,7 @@ import (
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -62,6 +63,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
 	_ "github.com/tellor-io/layer/x/registry/module"
+	_ "github.com/tellor-io/layer/x/reporter/module"
 
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
@@ -74,7 +76,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/tellor-io/layer/tests/integration"
+	integration "github.com/tellor-io/layer/tests"
 )
 
 const (
@@ -89,6 +91,7 @@ type IntegrationTestSuite struct {
 	oraclekeeper   oraclekeeper.Keeper
 	disputekeeper  disputekeeper.Keeper
 	registrykeeper registrykeeper.Keeper
+	reporterkeeper reporterkeeper.Keeper
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
@@ -193,6 +196,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 				integration.OracleModule(),
 				integration.DisputeModule(),
 				integration.RegistryModule(),
+				integration.ReporterModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
@@ -200,7 +204,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		integration.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
-		&s.disputekeeper, &s.registrykeeper, &s.govKeeper)
+		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.reporterkeeper)
 
 	s.NoError(err)
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
@@ -345,6 +349,16 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	s.NoError(err)
 
 	return addrs, valAddrs, privKeys
+}
+
+func (s *IntegrationTestSuite) CreateAccountsWithTokens(numofAccs int, amountOfTokens int64) []sdk.AccAddress {
+	privKeys := CreateRandomPrivateKeys(numofAccs)
+	accs := make([]sdk.AccAddress, numofAccs)
+	for i, pk := range privKeys {
+		accs[i] = sdk.AccAddress(pk.PubKey().Address())
+		s.mintTokens(accs[i], sdk.NewCoin(s.denom, math.NewInt(amountOfTokens)))
+	}
+	return accs
 }
 
 // inspired by telliot python code
