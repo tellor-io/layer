@@ -31,7 +31,7 @@ func TestUndelegateReporter(t *testing.T) {
 		ValidatorAddress: valAddr.String(),
 		Amount:           math.NewInt(50),
 	}
-	err = k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), tokenOrigin)
+	err = k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), math.NewInt(50))
 	require.NoError(t, err)
 	err = k.Reporters.Set(ctx, repAddr, reporter)
 	require.NoError(t, err)

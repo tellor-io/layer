@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,7 +20,7 @@ type (
 		Params                         collections.Item[types.Params]
 		Reporters                      collections.Map[sdk.AccAddress, types.OracleReporter]
 		Delegators                     collections.Map[sdk.AccAddress, types.Delegation]
-		TokenOrigin                    collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], types.TokenOrigin]
+		TokenOrigin                    collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], math.Int]
 		ReportersAccumulatedCommission collections.Map[sdk.ValAddress, types.ReporterAccumulatedCommission]
 		ReporterOutstandingRewards     collections.Map[sdk.ValAddress, types.ReporterOutstandingRewards]
 		ReporterCurrentRewards         collections.Map[sdk.ValAddress, types.ReporterCurrentRewards]
@@ -59,7 +60,7 @@ func NewKeeper(
 		Params:                         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
 		Delegators:                     collections.NewMap(sb, types.DelegatorsKey, "delegation_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc)),
-		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_reporter", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), codec.CollValue[types.TokenOrigin](cdc)),
+		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_delegator_validator", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), sdk.IntValue),
 		ReportersAccumulatedCommission: collections.NewMap(sb, types.ReporterAccumulatedCommissionPrefix, "reporters_accumulated_commission", sdk.ValAddressKey, codec.CollValue[types.ReporterAccumulatedCommission](cdc)),
 		ReporterOutstandingRewards:     collections.NewMap(sb, types.ReporterOutstandingRewardsPrefix, "reporter_outstanding_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterOutstandingRewards](cdc)),
 		ReporterCurrentRewards:         collections.NewMap(sb, types.ReporterCurrentRewardsPrefix, "reporters_current_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterCurrentRewards](cdc)),

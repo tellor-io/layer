@@ -32,8 +32,7 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 				return errorsmod.Wrapf(err, "unable to fetch token origin")
 			} else {
 				// not found so initialize
-				tokenSource.ValidatorAddress = origin.ValidatorAddress
-				tokenSource.Amount = math.ZeroInt()
+				tokenSource = math.ZeroInt()
 			}
 		}
 		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
@@ -46,11 +45,11 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 		}
 		// check if the validator has enough tokens bonded with validator, this would be the sum
 		// of what is currently delegated to reporter plus the amount being added in this transaction
-		sum := tokenSource.Amount.Add(origin.Amount)
+		sum := tokenSource.Add(origin.Amount)
 		if validator.TokensFromShares(delegation.GetShares()).TruncateInt().LT(sum) {
 			return errorsmod.Wrapf(types.ErrInsufficientTokens, "insufficient tokens bonded with validator %v", valAddr)
 		}
-		tokenSource.Amount = sum
+		tokenSource = sum
 		if err := k.TokenOrigin.Set(ctx, collections.Join(delegator, valAddr), tokenSource); err != nil {
 			return err
 		}
@@ -87,12 +86,12 @@ func (k Keeper) UpdateOrRemoveReporter(ctx context.Context, key sdk.AccAddress, 
 
 }
 
-func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], s types.TokenOrigin, amt math.Int) (err error) {
-	if s.Amount.LTE(amt) {
+func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], srcAmount math.Int, amt math.Int) (err error) {
+	if srcAmount.LTE(amt) {
 		return k.TokenOrigin.Remove(ctx, key)
 	}
-	s.Amount = s.Amount.Sub(amt)
-	return k.TokenOrigin.Set(ctx, key, s)
+	srcAmount = srcAmount.Sub(amt)
+	return k.TokenOrigin.Set(ctx, key, srcAmount)
 }
 
 func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (*types.OracleReporter, error) {

@@ -21,24 +21,18 @@ func TestUpdateOrRemoveSource(t *testing.T) {
 	validatorAddr := sdk.ValAddress([]byte("validator"))
 	key := collections.Join(reporterAddr, validatorAddr)
 
-	// Create a test token origin
-	tokenOrigin := types.TokenOrigin{
-		ValidatorAddress: validatorAddr.String(),
-		Amount:           math.NewInt(100),
-	}
-
 	// Add the token origin to the keeper
-	err := k.TokenOrigin.Set(ctx, key, tokenOrigin)
+	err := k.TokenOrigin.Set(ctx, key, math.NewInt(100))
 	require.NoError(t, err)
 
 	// Call the updateOrRemoveSource function with a reduction amount of 50
-	err = k.UpdateOrRemoveSource(ctx, key, tokenOrigin, math.NewInt(50))
+	err = k.UpdateOrRemoveSource(ctx, key, math.NewInt(100), math.NewInt(50))
 	require.NoError(t, err)
 
 	// Check if the token origin was updated correctly
 	updatedTokenOrigin, err := k.TokenOrigin.Get(ctx, key)
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(50), updatedTokenOrigin.Amount)
+	require.Equal(t, math.NewInt(50), updatedTokenOrigin)
 
 	// Call the updateOrRemoveSource function with a reduction amount of 60
 	err = k.UpdateOrRemoveSource(ctx, key, updatedTokenOrigin, math.NewInt(60))
@@ -174,19 +168,19 @@ func TestValidateAndSetAmount(t *testing.T) {
 	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
 	// check if the token origin is set correctly for validatorI
-	o, err := k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
+	amt, err := k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(50), o.Amount)
+	require.Equal(t, math.NewInt(50), amt)
 
 	// set origin amount before calling ValidateAndSetAmount
 	// and check if the token origin is updated correctly
 	// should not treat it as a new origin
-	k.TokenOrigin.Set(ctx, collections.Join(delegator, validatorI), types.TokenOrigin{ValidatorAddress: validatorI.String(), Amount: math.NewInt(50)})
+	k.TokenOrigin.Set(ctx, collections.Join(delegator, validatorI), math.NewInt(50))
 	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
-	o, err = k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
+	amt, err = k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(100), o.Amount)
+	require.Equal(t, math.NewInt(100), amt)
 
 	// call ValidateAndSetAmount with insufficient tokens bonded with validator
 	// and check if the error is ErrInsufficientTokens

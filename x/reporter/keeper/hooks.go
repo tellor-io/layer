@@ -80,15 +80,15 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 		}
 		tokenAmount := validator.TokensFromSharesTruncated(delegation.GetShares()).TruncateInt()
 		// get token origin
-		source, err := h.k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+		sourced, err := h.k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
 		if err != nil {
 			return err
 		}
 		// update token origin if the staked amount becomes less than what is written in the token origin struct
-		if tokenAmount.LT(source.Amount) {
+		if tokenAmount.LT(sourced) {
 			// get the difference in the token change to reduce delegation and reporter tokens by.
-			diff := source.Amount.Sub(tokenAmount)
-			if err := h.k.UpdateOrRemoveSource(ctx, collections.Join(delAddr, valAddr), source, tokenAmount); err != nil {
+			diff := sourced.Sub(tokenAmount)
+			if err := h.k.UpdateOrRemoveSource(ctx, collections.Join(delAddr, valAddr), sourced, tokenAmount); err != nil {
 				return err
 			}
 
