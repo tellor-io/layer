@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
-	"cosmossdk.io/errors"
+	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -71,6 +73,9 @@ func (k Querier) ReporterStake(ctx context.Context, req *types.QueryReporterStak
 
 	reporter, err := k.Keeper.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, types.ErrReporterDoesNotExist
+		}
 		return nil, err
 	}
 
@@ -127,7 +132,7 @@ func (k Querier) ReporterOutstandingRewards(ctx context.Context, req *types.Quer
 	}
 
 	if !exists {
-		return nil, errors.Wrapf(types.ErrReporterDoesNotExist, req.ReporterAddress)
+		return nil, errorsmod.Wrapf(types.ErrReporterDoesNotExist, req.ReporterAddress)
 	}
 
 	rewards, err := k.Keeper.ReporterOutstandingRewards.Get(ctx, reporterAddr.Bytes())
@@ -152,7 +157,7 @@ func (k Querier) ReporterCommission(ctx context.Context, req *types.QueryReporte
 	}
 
 	if !exists {
-		return nil, errors.Wrapf(types.ErrReporterDoesNotExist, req.ReporterAddress)
+		return nil, errorsmod.Wrapf(types.ErrReporterDoesNotExist, req.ReporterAddress)
 	}
 	commission, err := k.Keeper.ReportersAccumulatedCommission.Get(ctx, reporterAddr.Bytes())
 	if err != nil {
