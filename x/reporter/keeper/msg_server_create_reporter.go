@@ -26,7 +26,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if delegatorExists {
 		return nil, errors.Wrapf(types.ErrAddressDelegated, "cannot use address %s as reporter as it is already delegated", msg.Reporter)
 	}
-	if err := k.Keeper.ValidateAmount(ctx, reporter, msg.TokenOrigins, msg.Amount); err != nil {
+	if err := k.Keeper.ValidateAndSetAmount(ctx, reporter, msg.TokenOrigins, msg.Amount); err != nil {
 		return nil, err
 	}
 	minCommRate, err := k.MinCommissionRate(ctx)

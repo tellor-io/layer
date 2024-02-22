@@ -48,7 +48,7 @@ func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegat
 		}
 		delegation.Amount = delegation.Amount.Add(msg.Amount)
 	}
-	if err := k.Keeper.ValidateAmount(ctx, delAddr, msg.TokenOrigins, msg.Amount); err != nil {
+	if err := k.Keeper.ValidateAndSetAmount(ctx, delAddr, msg.TokenOrigins, msg.Amount); err != nil {
 		return nil, err
 	}
 	if err := k.Delegators.Set(ctx, delAddr, delegation); err != nil {

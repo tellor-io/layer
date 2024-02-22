@@ -47,7 +47,7 @@ func TestDelegateReporter(t *testing.T) {
 	err = k.BeforeDelegationCreated(ctx, reporter)
 	require.NoError(t, err)
 
-	// set up mock for ValidateAmount method of Keeper
+	// set up mock for ValidateAndSetAmount method of Keeper
 	delegationI := stakingtypes.Delegation{Shares: math.LegacyNewDec(50), DelegatorAddress: delAddr.String(), ValidatorAddress: validatorI.String()}
 	valI := stakingtypes.Validator{OperatorAddress: validatorI.String(), Tokens: math.NewInt(100), DelegatorShares: math.LegacyNewDec(50)}
 	delegationII := stakingtypes.Delegation{Shares: math.LegacyNewDec(50), DelegatorAddress: delAddr.String(), ValidatorAddress: validatorII.String()}

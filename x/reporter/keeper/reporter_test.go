@@ -128,7 +128,7 @@ func TestUpdateOrRemoveDelegator(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestValidateAmount(t *testing.T) {
+func TestValidateAndSetAmount(t *testing.T) {
 	k, sk, _, ctx := setupKeeper(t)
 	// setup
 	delegator := sdk.AccAddress([]byte("delegator"))
@@ -164,34 +164,34 @@ func TestValidateAmount(t *testing.T) {
 	sk.On("Delegation", mock.Anything, delegator, validatorII).Return(delegationII, nil)
 	sk.On("Delegation", mock.Anything, delegator, validatorIII).Return(delegationIII, nil)
 
-	// call ValidateAmount with amount not matching the sum of token origins
-	err := k.ValidateAmount(ctx, delegator, originAmounts, math.NewInt(1000))
+	// call ValidateAndSetAmount with amount not matching the sum of token origins
+	err := k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(1000))
 	require.ErrorIs(t, err, types.ErrTokenAmountMismatch)
 
-	// call ValidateAmount with amount matching the sum of token origins
+	// call ValidateAndSetAmount with amount matching the sum of token origins
 	// and no token origins set so it will treat it as a new origin
 	// and check if the token origin is set correctly
-	err = k.ValidateAmount(ctx, delegator, originAmounts, math.NewInt(100))
+	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
 	// check if the token origin is set correctly for validatorI
 	o, err := k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
 	require.NoError(t, err)
 	require.Equal(t, math.NewInt(50), o.Amount)
 
-	// set origin amount before calling ValidateAmount
+	// set origin amount before calling ValidateAndSetAmount
 	// and check if the token origin is updated correctly
 	// should not treat it as a new origin
 	k.TokenOrigin.Set(ctx, collections.Join(delegator, validatorI), types.TokenOrigin{ValidatorAddress: validatorI.String(), Amount: math.NewInt(50)})
-	err = k.ValidateAmount(ctx, delegator, originAmounts, math.NewInt(100))
+	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
 	o, err = k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
 	require.NoError(t, err)
 	require.Equal(t, math.NewInt(100), o.Amount)
 
-	// call ValidateAmount with insufficient tokens bonded with validator
+	// call ValidateAndSetAmount with insufficient tokens bonded with validator
 	// and check if the error is ErrInsufficientTokens
 	originAmounts[0].Amount = math.NewInt(950)
-	err = k.ValidateAmount(ctx, delegator, originAmounts, math.NewInt(1000))
+	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(1000))
 	require.ErrorIs(t, err, types.ErrInsufficientTokens)
 
 }

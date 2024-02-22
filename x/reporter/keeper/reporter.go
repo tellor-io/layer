@@ -12,7 +12,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (k Keeper) ValidateAmount(ctx context.Context, delegator sdk.AccAddress, originAmounts []*types.TokenOrigin, amount math.Int) error {
+func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddress, originAmounts []*types.TokenOrigin, amount math.Int) error {
 	var _amt = math.ZeroInt()
 	for _, origin := range originAmounts {
 		_amt = _amt.Add(origin.Amount)
