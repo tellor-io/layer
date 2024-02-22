@@ -28,7 +28,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// ReporterAccumulatedCommission represents accumulated commission for a reporter
 type ReporterAccumulatedCommission struct {
+	// commission is the accumulated commission for the reporter
 	Commission github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=commission,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"commission"`
 }
 
@@ -75,6 +77,7 @@ func (m *ReporterAccumulatedCommission) GetCommission() github_com_cosmos_cosmos
 // ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a reporter inexpensive to track, allows simple sanity checks.
 type ReporterOutstandingRewards struct {
+	// rewards is the outstanding rewards for the reporter
 	Rewards github_com_cosmos_cosmos_sdk_types.DecCoins `protobuf:"bytes,1,rep,name=rewards,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.DecCoins" json:"rewards"`
 }
 
@@ -120,12 +123,15 @@ func (m *ReporterOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_t
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
 // period. It tracks the previous reporter period, the delegation's amount of
-// staking token, and the creation height (to check later on if any slashes have
+// staking token, and the creation height (to check later on if any disputes have
 // occurred).
 type DelegatorStartingInfo struct {
-	PreviousPeriod uint64                `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty"`
-	Stake          cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=stake,proto3,customtype=cosmossdk.io/math.Int" json:"stake"`
-	Height         uint64                `protobuf:"varint,3,opt,name=height,proto3" json:"creation_height"`
+	// previous_period is the period last tracked for the delegator
+	PreviousPeriod uint64 `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty"`
+	// stake is the amount of staking token delegated.
+	Stake cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=stake,proto3,customtype=cosmossdk.io/math.Int" json:"stake"`
+	// creation_height is the height at which the starting was created/last updated.
+	Height uint64 `protobuf:"varint,3,opt,name=height,proto3" json:"creation_height"`
 }
 
 func (m *DelegatorStartingInfo) Reset()         { *m = DelegatorStartingInfo{} }
@@ -295,6 +301,8 @@ func (m *ReporterCurrentRewards) GetPeriod() uint64 {
 	return 0
 }
 
+// ReporterDisputeEvent tracks disputes and the fraction of the
+// reporter's stake that is slashed.
 type ReporterDisputeEvent struct {
 	ReporterPeriod uint64                      `protobuf:"varint,1,opt,name=reporter_period,json=reporterPeriod,proto3" json:"reporter_period,omitempty"`
 	Fraction       cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"fraction"`

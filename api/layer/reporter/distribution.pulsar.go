@@ -3085,11 +3085,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// ReporterAccumulatedCommission represents accumulated commission for a reporter
 type ReporterAccumulatedCommission struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// commission is the accumulated commission for the reporter
 	Commission []*v1beta1.DecCoin `protobuf:"bytes,1,rep,name=commission,proto3" json:"commission,omitempty"`
 }
 
@@ -3127,6 +3129,7 @@ type ReporterOutstandingRewards struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// rewards is the outstanding rewards for the reporter
 	Rewards []*v1beta1.DecCoin `protobuf:"bytes,1,rep,name=rewards,proto3" json:"rewards,omitempty"`
 }
 
@@ -3159,16 +3162,19 @@ func (x *ReporterOutstandingRewards) GetRewards() []*v1beta1.DecCoin {
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
 // period. It tracks the previous reporter period, the delegation's amount of
-// staking token, and the creation height (to check later on if any slashes have
+// staking token, and the creation height (to check later on if any disputes have
 // occurred).
 type DelegatorStartingInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// previous_period is the period last tracked for the delegator
 	PreviousPeriod uint64 `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty"`
-	Stake          string `protobuf:"bytes,2,opt,name=stake,proto3" json:"stake,omitempty"`
-	Height         uint64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
+	// stake is the amount of staking token delegated.
+	Stake string `protobuf:"bytes,2,opt,name=stake,proto3" json:"stake,omitempty"`
+	// creation_height is the height at which the starting was created/last updated.
+	Height uint64 `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 }
 
 func (x *DelegatorStartingInfo) Reset() {
@@ -3314,6 +3320,8 @@ func (x *ReporterCurrentRewards) GetPeriod() uint64 {
 	return 0
 }
 
+// ReporterDisputeEvent tracks disputes and the fraction of the
+// reporter's stake that is slashed.
 type ReporterDisputeEvent struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

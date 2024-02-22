@@ -8,7 +8,9 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
+// ReporterAccumulatedCommission represents accumulated commission for a reporter
 message ReporterAccumulatedCommission {
+  // commission is the accumulated commission for the reporter
   repeated cosmos.base.v1beta1.DecCoin commission = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false,
@@ -19,6 +21,7 @@ message ReporterAccumulatedCommission {
 // ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
 // for a reporter inexpensive to track, allows simple sanity checks.
 message ReporterOutstandingRewards {
+  // rewards is the outstanding rewards for the reporter
   repeated cosmos.base.v1beta1.DecCoin rewards = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable) = false,
@@ -28,15 +31,18 @@ message ReporterOutstandingRewards {
 
 // DelegatorStartingInfo represents the starting info for a delegator reward
 // period. It tracks the previous reporter period, the delegation's amount of
-// staking token, and the creation height (to check later on if any slashes have
+// staking token, and the creation height (to check later on if any disputes have
 // occurred).
 message DelegatorStartingInfo {
+  // previous_period is the period last tracked for the delegator
   uint64 previous_period = 1;
+  // stake is the amount of staking token delegated.
   string stake = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+  // creation_height is the height at which the starting was created/last updated.
   uint64 height = 3 [
     (gogoproto.jsontag) = "creation_height",
     (amino.field_name) = "creation_height",
@@ -77,6 +83,8 @@ message ReporterCurrentRewards {
   uint64 period = 2;
 }
 
+// ReporterDisputeEvent tracks disputes and the fraction of the
+// reporter's stake that is slashed.
 message ReporterDisputeEvent {
   uint64 reporter_period = 1;
   string fraction = 2 [
