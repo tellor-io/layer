@@ -10,7 +10,12 @@
 
 ## Context
 
-how many signatures fit into ETH block (max validator size)? How many queryIds can we add to vote extensions? How many reports can we fit in a block? If we put val sigs as txns, whats the pros/ cons? If we put it as voteCheckpoints, whats the size limit?
+Layer is limited in many ways:
+    - blockSize - how many reports can fit into a block (queryIds with one reporter or multiple reporters on a given queryId)
+    - validator Size - how many signatures can fit into ETH block? 
+    - voteExtension size limit - How many signatures can we add to vote extensions (queryId's aggregated x validators needed to hit 2/3 consnesns)?
+    - If we don't use voteExtensions, how many signatures can we fit into a block? 
+    - How fast does our chain grow in size? 
 
 
 ## Alternative Approaches

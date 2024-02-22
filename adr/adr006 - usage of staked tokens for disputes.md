@@ -6,7 +6,7 @@
 
 ## Changelog
 
-- 2024-02-21: initial version
+- 2024-02-22: initial version
 
 ## Context
 
@@ -15,7 +15,11 @@ only reporter can use the ones delegated to him for a dispute
 
 ## Alternative Approaches
 
-### altApproach1
+### Only the validator can use them for a dispute
+
+### both reporter and validator can use them for a dispute
+
+### Neither can use them for a dispute (only free floating tokens)
 
 
 ## Issues / Notes on Implementation

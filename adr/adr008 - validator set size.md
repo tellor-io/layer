@@ -15,7 +15,13 @@ Why 100 Validators
 
 ## Alternative Approaches
 
-### altApproach1
+### More validators
+
+More decentralized
+
+### Less validators
+
+Cheaper bridging, faster blocktimes
 
 
 ## Issues / Notes on Implementation
