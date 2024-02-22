@@ -181,13 +181,13 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
-	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100_000_000), &commission)
+	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100), &commission)
 	err := k.Reporters.Set(sdkCtx, reporterAccI, reporter)
 	require.NoError(t, err)
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -219,7 +219,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	sdkCtx = sdkCtx.WithBlockHeight(sdkCtx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := sdk.TokensFromConsensusPower(10, sdk.DefaultPowerReduction)
+	initial := math.NewInt(10)
 	tokens := sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDecFromInt(initial)}}
 	require.NoError(t, k.AllocateTokensToReporter(sdkCtx, reporterAccI.Bytes(), tokens))
 
@@ -231,7 +231,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	require.NoError(t, err)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDecFromInt(math.NewInt(10_000_000).QuoRaw(2))}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: types.Denom, Amount: math.LegacyNewDecFromInt(initial.QuoRaw(2))}}, rewards)
 
 	// commission should be the other half
 	repCommission, err := k.ReportersAccumulatedCommission.Get(sdkCtx, reporterAccI.Bytes())
@@ -247,13 +247,13 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
-	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100_000_000), &commission)
+	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100), &commission)
 	err := k.Reporters.Set(sdkCtx, reporterAccI, reporter)
 	require.NoError(t, err)
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -400,13 +400,13 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
-	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100_000_000), &commission)
+	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100), &commission)
 	err := k.Reporters.Set(sdkCtx, reporterAccI, reporter)
 	require.NoError(t, err)
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -450,13 +450,13 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
-	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100_000_000), &commission)
+	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100), &commission)
 	err := k.Reporters.Set(sdkCtx, reporterAccI, reporter)
 	require.NoError(t, err)
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -521,13 +521,13 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
-	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100_000_000), &commission)
+	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100), &commission)
 	err := k.Reporters.Set(sdkCtx, reporterAccI, reporter)
 	require.NoError(t, err)
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -553,7 +553,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// second delegation
 	delegatorII := sdk.AccAddress([]byte("delegator2"))
-	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.BeforeDelegationCreated(sdkCtx, reporter)
 	require.NoError(t, err)
 	err = k.Delegators.Set(sdkCtx, delegatorII, delegationII)
@@ -610,13 +610,13 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	reporterAccI := sdk.AccAddress([]byte("reporter1"))
 	commission := types.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1),
 		math.LegacyNewDec(0), time.Time{})
-	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100_000_000), &commission)
+	reporter := types.NewOracleReporter(reporterAccI.String(), math.NewInt(100), &commission)
 	err := k.Reporters.Set(sdkCtx, reporterAccI, reporter)
 	require.NoError(t, err)
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -636,9 +636,8 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 	require.Equal(t, 2, getRepHistoricalReferenceCount(k, sdkCtx))
 
 	// second delegation
-	// second delegation
 	delegatorII := sdk.AccAddress([]byte("delegator2"))
-	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100_000_000)}
+	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
 	err = k.BeforeDelegationCreated(sdkCtx, reporter)
 	require.NoError(t, err)
 	err = k.Delegators.Set(sdkCtx, delegatorII, delegationII)
