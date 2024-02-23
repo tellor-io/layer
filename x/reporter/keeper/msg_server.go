@@ -52,7 +52,7 @@ func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailRep
 		return nil, err
 	}
 
-	if err := k.Keeper.unjailReporter(ctx, reporter); err != nil {
+	if err := k.Keeper.unjailReporter(ctx, reporterAddr, reporter); err != nil {
 		return nil, err
 	}
 
