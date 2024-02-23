@@ -20,4 +20,6 @@ var (
 	ErrEmptyDelegationDistInfo = sdkerrors.Register(ModuleName, 1109, "no delegation distribution info")
 	ErrNoReporterCommission    = sdkerrors.Register(ModuleName, 1110, "no reporter commission to withdraw")
 	ErrReporterDoesNotExist    = sdkerrors.Register(ModuleName, 1111, "reporter does not exist")
+	ErrReporterJailed          = sdkerrors.Register(ModuleName, 1112, "reporter jailed")
+	ErrReporterNotJailed       = sdkerrors.Register(ModuleName, 1113, "reporter not jailed")
 )

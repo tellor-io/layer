@@ -41,3 +41,20 @@ func (k msgServer) WithdrawReporterCommission(ctx context.Context, msg *types.Ms
 
 	return &types.MsgWithdrawReporterCommissionResponse{Amount: amount}, nil
 }
+
+func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailReporter) (*types.MsgUnjailReporterResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	reporterAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
+
+	reporter, err := k.Reporters.Get(ctx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.unjailReporter(ctx, reporterAddr, reporter); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUnjailReporterResponse{}, nil
+}
