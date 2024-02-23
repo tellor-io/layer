@@ -93,6 +93,7 @@ func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
 	key := types.AggregateKey(queryId, currentTimestamp)
 	store := k.AggregateStore(ctx)
 	store.Set(key, k.cdc.MustMarshal(report))
+	k.SetQueryIdAndTimestampPairByBlockHeight(ctx, report.QueryId, currentTimestamp)
 }
 
 func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
@@ -168,31 +169,67 @@ func (k Keeper) GetCurrentValueForQueryId(ctx sdk.Context, queryId []byte) *type
 }
 
 func FindTimestampBefore(timestamps []time.Time, target time.Time) (bool, int) {
-	switch len(timestamps) {
-	case 0:
-		return false, 0
-
-	case 1:
-		if timestamps[0].Before(target) || timestamps[0].Equal(target) {
-			return true, 0
-		}
-		return false, 0
-
-	default:
-		midIdx := len(timestamps) / 2
-		midTimestamp := timestamps[midIdx]
-
-		if target.Before(midTimestamp) {
-			return FindTimestampBefore(timestamps[:midIdx], target)
+	left, right := 0, len(timestamps)-1
+	resultIndex := -1
+	for left <= right {
+		mid := left + (right-left)/2
+		if timestamps[mid].Before(target) {
+			resultIndex = mid
+			left = mid + 1
 		} else {
-			if midIdx == len(timestamps)-1 || timestamps[midIdx+1].After(target) {
-				return true, midIdx
-			}
-			found, idx := FindTimestampBefore(timestamps[midIdx+1:], target)
-			if found {
-				return true, midIdx + 1 + idx
-			}
-			return true, midIdx
+			right = mid - 1
 		}
 	}
+	return resultIndex != -1, resultIndex
+}
+
+func FindTimestampAfter(timestamps []time.Time, target time.Time) (bool, int) {
+	left, right := 0, len(timestamps)-1
+	resultIndex := -1
+	for left <= right {
+		mid := left + (right-left)/2
+		if timestamps[mid].After(target) {
+			resultIndex = mid
+			right = mid - 1 // Search in the left half
+		} else {
+			left = mid + 1 // Search in the right half
+		}
+	}
+	if resultIndex != -1 {
+		return true, resultIndex
+	}
+	return false, -1
+}
+
+func (k Keeper) GetAggregateReport(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+	key := types.AggregateKey(queryId, timestamp)
+	store := k.AggregateStore(ctx)
+	bz := store.Get(key)
+	var report types.Aggregate
+	k.cdc.MustUnmarshal(bz, &report)
+	return &report, nil
+}
+
+func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
+	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
+	if len(availableTimestamps.Timestamps) == 0 {
+		return time.Time{}, fmt.Errorf("no data available for query id %s", hex.EncodeToString(queryId))
+	}
+	found, index := FindTimestampBefore(availableTimestamps.Timestamps, timestamp)
+	if found {
+		return availableTimestamps.Timestamps[index], nil
+	}
+	return time.Time{}, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
+}
+
+func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
+	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
+	if len(availableTimestamps.Timestamps) == 0 {
+		return time.Time{}, fmt.Errorf("no data available for query id %s", hex.EncodeToString(queryId))
+	}
+	found, index := FindTimestampAfter(availableTimestamps.Timestamps, timestamp)
+	if found {
+		return availableTimestamps.Timestamps[index], nil
+	}
+	return time.Time{}, fmt.Errorf("no data after timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
 }

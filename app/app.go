@@ -693,6 +693,9 @@ func New(
 		),
 	)
 
+	voteExtHandler := NewVoteExtHandler(app.OracleKeeper, app.BridgeKeeper)
+	app.BaseApp.SetExtendVoteHandler(voteExtHandler.BridgeExtendVoteHandler)
+
 	/**** Module Options ****/
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.

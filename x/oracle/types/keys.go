@@ -69,3 +69,7 @@ func CycleListKey() []byte {
 func CurrentIndexKey() []byte {
 	return KeyPrefix("currentIndex")
 }
+
+func QueryIdTimestampPairsByBlockHeightKey(blockHeight int64) []byte {
+	return KeyPrefix(fmt.Sprintf("queryIdTimestampPairs:%d", blockHeight))
+}
