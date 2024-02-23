@@ -21,7 +21,7 @@ message OracleReporter {
   ];
   // commission for the reporter
   cosmos.staking.v1beta1.Commission commission = 3;
-  // jailed is a bool weather the reporter is jailed or not
+  // jailed is a bool whether the reporter is jailed or not
   bool jailed = 4;
   // jailed_until is the time the reporter is jailed until
   google.protobuf.Timestamp jailed_until = 5 [

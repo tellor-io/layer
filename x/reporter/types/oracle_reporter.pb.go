@@ -39,7 +39,7 @@ type OracleReporter struct {
 	TotalTokens cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=total_tokens,json=totalTokens,proto3,customtype=cosmossdk.io/math.Int" json:"total_tokens"`
 	// commission for the reporter
 	Commission *types.Commission `protobuf:"bytes,3,opt,name=commission,proto3" json:"commission,omitempty"`
-	// jailed is a bool weather the reporter is jailed or not
+	// jailed is a bool whether the reporter is jailed or not
 	Jailed bool `protobuf:"varint,4,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// jailed_until is the time the reporter is jailed until
 	JailedUntil time.Time `protobuf:"bytes,5,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
