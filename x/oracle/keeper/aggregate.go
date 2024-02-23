@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 // TODO: Add support for other aggregation methods.
 // Rewards are allocated to the reporters based on the query tip amount, and time-based rewards are also
 // allocated to the reporters.
-func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
+func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 	// Get the current block height of the blockchain.
 	currentHeight := ctx.BlockHeight()
 
@@ -63,7 +64,10 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
 			// Allocate rewards if there is a tip.
 			if !tip.Amount.IsZero() {
-				k.AllocateRewards(ctx, report.Reporters, tip)
+				err = k.AllocateRewards(ctx, report.Reporters, tip)
+				if err != nil {
+					return err
+				}
 			}
 			// Add reporters to the tbr payment list.
 			reportersToPay = append(reportersToPay, report.Reporters...)
@@ -77,7 +81,10 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
 			// Allocate rewards if there is a tip.
 			if !tip.Amount.IsZero() {
-				k.AllocateRewards(ctx, report.Reporters, tip)
+				err = k.AllocateRewards(ctx, report.Reporters, tip)
+				if err != nil {
+					return err
+				}
 			}
 			// Add reporters to the tbr payment list.
 			reportersToPay = append(reportersToPay, report.Reporters...)
@@ -87,32 +94,29 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 	// Process time-based rewards for reporters.
 	tbr := k.getTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
-	k.AllocateRewards(ctx, reportersToPay, tbr)
-	return nil
+	return k.AllocateRewards(ctx, reportersToPay, tbr)
 }
 
-func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
+func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) error {
 	report.QueryId = regtypes.Remove0xPrefix(report.QueryId)
 	queryId, err := utils.QueryIDFromString(report.QueryId)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	nonce, _ := k.Nonces.Get(ctx, queryId)
+	nonce, err := k.Nonces.Get(ctx, queryId)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
 	nonce++
 	err = k.Nonces.Set(ctx, queryId, nonce)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	report.Nonce = nonce // TODO: do we want to use int64 for nonce?
+	report.Nonce = nonce // TODO: do we want to use int64 for nonce? ***Done switch to uint64***
 
 	currentTimestamp := ctx.BlockTime().Unix()
 
-	// TODO: handle error
-	err = k.Aggregates.Set(ctx, collections.Join(queryId, currentTimestamp), *report)
-	if err != nil {
-		panic(err)
-	}
-
+	return k.Aggregates.Set(ctx, collections.Join(queryId, currentTimestamp), *report)
 }
 
 // getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
@@ -122,11 +126,15 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 	var mostRecent *types.Aggregate
 	// This should get us the most recent aggregate, as they are walked in descending order
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
-		mostRecent = &value
-		return true, nil
+		if !value.Flagged {
+			mostRecent = &value
+			return true, nil
+		}
+		return false, nil
 	})
 
 	if err != nil {
+		// why panic here? should we return an error instead?
 		panic(err)
 	}
 

@@ -7,14 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) GetCycleList(ctx sdk.Context) []string {
-	return k.GetParams(ctx).CycleList
-}
-
 // rotation what query is next
 func (k Keeper) RotateQueries(ctx sdk.Context) error {
-	queries := k.GetCycleList(ctx)
-
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return err
+	}
 	currentIndex, err := k.CycleIndex.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -26,10 +24,10 @@ func (k Keeper) RotateQueries(ctx sdk.Context) error {
 		}
 		return err
 	}
-	if currentIndex >= int64(len(queries)) {
+	if currentIndex >= int64(len(params.CycleList)) {
 		currentIndex = 0
 	}
-	i := (currentIndex + 1) % int64(len(queries))
+	i := (currentIndex + 1) % int64(len(params.CycleList))
 	err = k.CycleIndex.Set(ctx, i)
 	if err != nil {
 		return err
@@ -37,11 +35,14 @@ func (k Keeper) RotateQueries(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) GetCurrentQueryInCycleList(ctx sdk.Context) string {
-	queries := k.GetCycleList(ctx)
+func (k Keeper) GetCurrentQueryInCycleList(ctx sdk.Context) (string, error) {
 	currentIndex, err := k.CycleIndex.Get(ctx)
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		panic(err)
+	if err != nil {
+		return "", err
 	}
-	return queries[currentIndex]
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return "", err
+	}
+	return params.CycleList[currentIndex], nil
 }

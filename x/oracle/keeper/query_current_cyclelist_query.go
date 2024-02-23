@@ -9,12 +9,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) CurrentCyclelistQuery(goCtx context.Context, req *types.QueryCurrentCyclelistQueryRequest) (*types.QueryCurrentCyclelistQueryResponse, error) {
+func (k Querier) CurrentCyclelistQuery(goCtx context.Context, req *types.QueryCurrentCyclelistQueryRequest) (*types.QueryCurrentCyclelistQueryResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	return &types.QueryCurrentCyclelistQueryResponse{Querydata: k.GetCurrentQueryInCycleList(ctx)}, nil
+	querydata, err := k.GetCurrentQueryInCycleList(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryCurrentCyclelistQueryResponse{Querydata: querydata}, nil
 }

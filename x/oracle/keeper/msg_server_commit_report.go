@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -14,30 +15,45 @@ import (
 
 func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	reporterAddr, err := msg.GetSignerAndValidateMsg()
+	if err != nil {
+		return nil, err
+	}
+
 	queryId, err := utils.QueryIDFromDataString(msg.QueryData)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
 
-	currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
-	tip := k.GetQueryTip(ctx, queryId)
-	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
-		return nil, status.Error(codes.Unavailable, "query data does not have tips/not in cycle")
-	}
-
-	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
-
-	// get delegation info
-	validator, err := k.stakingKeeper.Validator(ctx, sdk.ValAddress(reporter))
+	currentCycleQuery, err := k.GetCurrentQueryInCycleList(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if validator.IsJailed() {
-		return nil, status.Error(codes.Unavailable, "validator is jailed")
+	tip := k.GetQueryTip(ctx, queryId)
+
+	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
+		return nil, status.Error(codes.Unavailable, "query does not have tips and is not in cycle")
 	}
-	if !validator.IsBonded() {
-		return nil, status.Error(codes.Unavailable, "validator is not bonded")
+
+	reporter, err := k.reporterKeeper.Reporter(ctx, reporterAddr)
+	if err != nil {
+		return nil, err
 	}
+
+	if reporter.Jailed {
+		return nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", reporterAddr)
+	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if reporter.TotalTokens.LT(params.MinStakeAmount) {
+		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporter.TotalTokens, params.MinStakeAmount)
+	}
+
 	report := types.CommitReport{
 		Report: &types.Commit{
 			Creator: msg.Creator,
@@ -46,7 +62,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		},
 		Block: ctx.BlockHeight(),
 	}
-	err = k.Commits.Set(ctx, collections.Join(reporter.Bytes(), queryId), report)
+	err = k.Commits.Set(ctx, collections.Join(reporterAddr.Bytes(), queryId), report)
 	if err != nil {
 		return nil, err
 	}

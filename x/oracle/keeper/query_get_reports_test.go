@@ -1,20 +1,25 @@
 package keeper_test
 
 import (
+	// "github.com/stretchr/testify/require"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestGetReportsByQueryId() {
-	require := s.Require()
-	s.TestCommitValue()
-	queryIdStr := s.TestSubmitValue()
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
 
-	require.Nil(err)
+	stakedReporter, queryIdStr := s.TestSubmitValue()
+
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+
+	req := &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr}
+
+	report, err := s.queryClient.GetReportsbyQid(s.ctx, req)
+	s.Nil(err)
+
 	MicroReport := &types.MicroReport{
-		Reporter:        Addr.String(),
-		Power:           1000000000000,
+		Reporter:        stakedReporter.GetReporter(),
+		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryType:       "SpotPrice",
 		QueryId:         queryIdStr,
 		AggregateMethod: "weighted-median",
@@ -26,17 +31,17 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 		MicroReports: []*types.MicroReport{MicroReport},
 	}
 
-	require.Equal(expectedReports, report.Reports)
+	s.Equal(expectedReports, report.Reports)
 
-	report2, err := s.oracleKeeper.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: Addr.String()})
-	require.NoError(err)
-	require.Equal(*expectedReports.MicroReports[0], report2.MicroReports[0])
+	report2, err := s.queryClient.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: stakedReporter.GetReporter()})
+	s.NoError(err)
+	s.Equal(*expectedReports.MicroReports[0], report2.MicroReports[0])
 
-	report3, err := s.oracleKeeper.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: Addr.String(), QueryId: queryIdStr})
-	require.NoError(err)
-	require.EqualValues(expectedReports.MicroReports, report3.Reports.MicroReports)
+	report3, err := s.queryClient.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: stakedReporter.GetReporter(), QueryId: queryIdStr})
+	s.NoError(err)
+	s.EqualValues(expectedReports.MicroReports, report3.Reports.MicroReports)
 
-	report, err = s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
-	require.NoError(err)
-	require.Equal(expectedReports, report.Reports)
+	report, err = s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
+	s.NoError(err)
+	s.Equal(expectedReports, report.Reports)
 }

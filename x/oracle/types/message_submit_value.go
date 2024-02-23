@@ -47,3 +47,20 @@ func (msg *MsgSubmitValue) ValidateBasic() error {
 	}
 	return nil
 }
+
+func (msg *MsgSubmitValue) GetSignerAndValidateMsg() (sdk.AccAddress, error) {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if msg.QueryData == "" {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data cannot be empty")
+	}
+	if msg.Value == "" {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
+	}
+	if msg.Salt == "" {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "salt cannot be empty")
+	}
+	return addr, nil
+}

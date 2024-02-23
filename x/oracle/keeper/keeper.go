@@ -4,11 +4,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -17,13 +16,12 @@ import (
 type (
 	Keeper struct {
 		cdc            codec.BinaryCodec
-		storeKey       storetypes.StoreKey
-		memKey         storetypes.StoreKey
+		storeService   store.KVStoreService
+		Params         collections.Item[types.Params]
 		accountKeeper  types.AccountKeeper
 		bankKeeper     types.BankKeeper
-		distrKeeper    types.DistrKeeper
-		stakingKeeper  types.StakingKeeper
 		registryKeeper types.RegistryKeeper
+		reporterKeeper types.ReporterKeeper
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		Schema     collections.Schema
@@ -31,7 +29,7 @@ type (
 		Tips       *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                      // key: queryId, tipper
 		TotalTips  collections.Item[math.Int]                                                                          // keep track of the total tips
 		Aggregates collections.Map[collections.Pair[[]byte, int64], types.Aggregate]                                   // key: queryId, timestamp
-		Nonces     collections.Map[[]byte, int64]                                                                      // key: queryId
+		Nonces     collections.Map[[]byte, uint64]                                                                     // key: queryId
 		Reports    *collections.IndexedMap[collections.Triple[[]byte, []byte, int64], types.MicroReport, reportsIndex] // key: queryId, reporter, blockHeight
 		CycleIndex collections.Item[int64]                                                                             // keep track of the current cycle
 
@@ -41,41 +39,30 @@ type (
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey storetypes.StoreKey,
+	storeService store.KVStoreService,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	distrKeeper types.DistrKeeper,
-	stakingKeeper types.StakingKeeper,
 	registryKeeper types.RegistryKeeper,
+	reporterKeeper types.ReporterKeeper,
 	authority string,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
 	}
 
-	if storeKey == nil {
-		panic("storeKey cannot be nil")
-	}
-
-	if memKey == nil {
-		panic("memKey cannot be nil")
-	}
-
-	storeService := runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey))
 	sb := collections.NewSchemaBuilder(storeService)
 
 	k := Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
-		memKey:   memKey,
+		cdc:          cdc,
+		storeService: storeService,
 
+		Params:         collections.NewItem(sb, types.ParamsKeyPrefix(), "params", codec.CollValue[types.Params](cdc)),
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		distrKeeper:    distrKeeper,
-		stakingKeeper:  stakingKeeper,
 		registryKeeper: registryKeeper,
-		authority:      authority,
+		reporterKeeper: reporterKeeper,
+
+		authority: authority,
 
 		Commits: collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), codec.CollValue[types.CommitReport](cdc)),
 		Tips: collections.NewIndexedMap(sb,
@@ -87,7 +74,7 @@ func NewKeeper(
 		),
 		TotalTips:  collections.NewItem(sb, types.TotalTipsPrefix, "total_tips", sdk.IntValue),
 		Aggregates: collections.NewMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc)),
-		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Int64Value),
+		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",

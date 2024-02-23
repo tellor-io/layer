@@ -16,24 +16,14 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 		query = regtypes.Remove0xPrefix(query)
 		params.CycleList[i] = query
 	}
-	store := ctx.KVStore(k.storeKey)
-	bz, err := k.cdc.Marshal(&params)
-	if err != nil {
+	// initially set the cycle index to 0
+	if err := k.CycleIndex.Set(ctx, 0); err != nil {
 		return err
 	}
-	store.Set(types.ParamsKeyPrefix(), bz)
-
-	return nil
+	return k.Params.Set(ctx, params)
 }
 
 // GetParams sets the x/oracle module parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
-	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.ParamsKeyPrefix())
-	if bz == nil {
-		return params
-	}
-
-	k.cdc.MustUnmarshal(bz, &params)
-	return params
+func (k Keeper) GetParams(ctx sdk.Context) (types.Params, error) {
+	return k.Params.Get(ctx)
 }

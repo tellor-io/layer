@@ -8,8 +8,8 @@ import (
 	// this line is used by starport scaffolding # 1
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	storetypes "cosmossdk.io/store/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -125,7 +125,7 @@ func NewAppModule(
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
@@ -175,16 +175,15 @@ func AppWiringSetup() {
 type OracleInputs struct {
 	depinject.In
 
-	KvStoreKey  *storetypes.KVStoreKey
-	MemStoreKey *storetypes.MemoryStoreKey
-	Cdc         codec.Codec
-	Config      *oraclemodulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	Config       *oraclemodulev1.Module
 
-	AccountKeeper  types.AccountKeeper
-	BankKeeper     types.BankKeeper
-	Distr          types.DistrKeeper
-	StakingKeeper  types.StakingKeeper
+	AccountKeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+
 	RegistryKeeper types.RegistryKeeper
+	ReporterKeeper types.ReporterKeeper
 }
 
 type OracleOutputs struct {
@@ -201,13 +200,11 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 	}
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.KvStoreKey,
-		in.MemStoreKey,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.Distr,
-		in.StakingKeeper,
 		in.RegistryKeeper,
+		in.ReporterKeeper,
 		authority.String(),
 	)
 	m := NewAppModule(

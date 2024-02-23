@@ -552,13 +552,11 @@ func New(
 
 	app.OracleKeeper = oraclemodulekeeper.NewKeeper(
 		appCodec,
-		keys[oraclemoduletypes.StoreKey],
-		keys[oraclemoduletypes.MemStoreKey],
+		runtime.NewKVStoreService(keys[oraclemoduletypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.DistrKeeper,
-		app.StakingKeeper,
 		app.RegistryKeeper,
+		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper)

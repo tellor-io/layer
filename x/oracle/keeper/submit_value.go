@@ -45,50 +45,6 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, q
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), ctx.BlockHeight()), report)
 }
 
-func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int64, bool) {
-
-	validator, err := k.stakingKeeper.Validator(ctx, reporter)
-	if err != nil {
-		// TODO: return errors
-		panic(err)
-	}
-	if validator == nil {
-		return 0, false
-	}
-	// check if validator is active
-	if validator.IsJailed() || validator.IsUnbonding() || validator.IsUnbonded() {
-		return 0, false
-	}
-	// get voting power
-	votingPower := validator.GetConsensusPower(sdk.DefaultPowerReduction)
-
-	return votingPower, validator.IsBonded()
-}
-
-// tODO: double check this
-func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signature string) bool {
-	addr, err := sdk.AccAddressFromBech32(reporter)
-	if err != nil {
-		return false
-	}
-	reporterAccount := k.accountKeeper.GetAccount(ctx, addr)
-	pubKey := reporterAccount.GetPubKey()
-	sigBytes, err := hex.DecodeString(signature)
-	if err != nil {
-		return false
-	}
-	// decode value from hex string
-	valBytes, err := hex.DecodeString(value)
-	if err != nil {
-		return false
-	}
-	// verify signature
-	if !pubKey.VerifySignature(valBytes, sigBytes) {
-		return false
-	}
-	return true
-}
-
 func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {
 	// calculate commitment
 	calculatedCommit := utils.CalculateCommitment(value, salt)

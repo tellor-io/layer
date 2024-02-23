@@ -3,42 +3,49 @@ package keeper_test
 import (
 	"encoding/hex"
 
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	utils "github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (s *KeeperTestSuite) TestSubmitValue() string {
-	require := s.Require()
+func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, string) {
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	// Commit value transaction first
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	var submitres types.MsgSubmitValueResponse
+	stakedReporter, salt := s.TestCommitValue()
 	// forward block by 1 and reveal value
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
 	// Submit value transaction with value revealed, this checks if the value is correctly hashed
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = salt
+	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: queryData,
+		Value:     value,
+		Salt:      salt,
+	}
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.Equal(&submitres, res)
-	require.Nil(err)
+	s.Equal(&types.MsgSubmitValueResponse{}, res)
+	s.Nil(err)
 
 	queryId, err := utils.QueryIDFromDataString(queryData)
-	require.NoError(err)
+	s.NoError(err)
 	queryIdStr := hex.EncodeToString(queryId)
 
-	report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
-	require.Nil(err)
+	report, err := s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
+	s.Nil(err)
+
 	microReport := types.MicroReport{
-		Reporter:        Addr.String(),
-		Power:           1000000000000,
+		Reporter:        stakedReporter.GetReporter(),
+		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryType:       "SpotPrice",
 		QueryId:         queryIdStr,
 		AggregateMethod: "weighted-median",
@@ -51,198 +58,233 @@ func (s *KeeperTestSuite) TestSubmitValue() string {
 			MicroReports: []*types.MicroReport{&microReport},
 		},
 	}
-	require.Equal(&expectedReport, report)
+	s.Equal(&expectedReport, report)
 
-	return queryIdStr
+	return stakedReporter, queryIdStr
 }
 
 func (s *KeeperTestSuite) TestSubmitFromWrongAddr() {
-	require := s.Require()
 
 	// submit from different address than commit
-	randomPrivKey := secp256k1.GenPrivKey()
-	randomPubKey := randomPrivKey.PubKey()
-	randomAddr := sdk.AccAddress(randomPubKey.Address())
+	randomAddr := sample.AccAddressBytes()
+
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = randomAddr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = salt
+
+	stakedReporter, salt := s.TestCommitValue()
+	stakedReporter.Reporter = randomAddr.String()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   randomAddr.String(),
+		QueryData: queryData,
+		Value:     value,
+		Salt:      salt,
+	}
+
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(&stakedReporter, nil)
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.Error(err)
+	s.Error(err)
 }
 
 func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
-	require := s.Require()
 
 	// submit value with bad query data
 	badQueryData := "stupidQueryData"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = badQueryData
-	submitreq.Value = value
-	submitreq.Salt = salt
+
+	stakedReporter, salt := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: badQueryData,
+		Value:     value,
+		Salt:      salt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "failed to decode query data string")
+	s.ErrorContains(err, "failed to decode query data string")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithBadValue() {
-	require := s.Require()
 
 	// submit wrong value but correct salt
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	badValue := "00000F4240"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = badValue
-	submitreq.Salt = salt
+
+	stakedReporter, salt := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: queryData,
+		Value:     badValue,
+		Salt:      salt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
+	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
-	require := s.Require()
 
 	// submit correct value but wrong salt
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	_ = s.TestCommitValue()
+
+	stakedReporter, _ := s.TestCommitValue()
+
 	badSalt, err := oracleutils.Salt(32)
-	require.Nil(err)
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = badSalt
+	s.Nil(err)
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: queryData,
+		Value:     value,
+		Salt:      badSalt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
+	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
 }
 
 func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
-	require := s.Require()
 
 	// try to submit value in same block as commit
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = salt
+
+	stakedReporter, salt := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: queryData,
+		Value:     value,
+		Salt:      salt,
+	}
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "missed commit reveal window")
+	s.ErrorContains(err, "commit reveal window is too early")
 
 	// try to submit value 2 blocks after commit
-	height := s.ctx.BlockHeight() + 10
-	s.ctx = s.ctx.WithBlockHeight(height)
-	salt = s.TestCommitValue()
-	height = s.ctx.BlockHeight() + 2
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = salt
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 2)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil) // submitreq.Salt = salt
+
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "missed commit reveal window")
+	s.ErrorContains(err, "missed commit reveal window")
 
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoCommit() {
-	require := s.Require()
 
 	// try to submit value without commit
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	salt, err := oracleutils.Salt(32)
-	require.Nil(err)
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = salt
+	s.Nil(err)
+
+	addr := sample.AccAddressBytes()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   addr.String(),
+		QueryData: queryData,
+		Value:     value,
+		Salt:      salt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	stakedReporter := reportertypes.NewOracleReporter(
+		addr.String(),
+		math.NewInt(1_000_000),
+		nil,
+	)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "no commits to reveal found")
+	s.ErrorContains(err, "no commits to reveal found")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
-	require := s.Require()
 
 	// submit value with no creator
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.QueryData = queryData
-	submitreq.Value = value
-	submitreq.Salt = salt
-	require.Panics(func() { s.msgServer.SubmitValue(s.ctx, &submitreq) }, "empty address string is not allowed")
+
+	_, salt := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		QueryData: queryData,
+		Value:     value,
+		Salt:      salt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
+	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
+	s.ErrorContains(err, "invalid creator address")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoQueryData() {
-	require := s.Require()
 
 	// submit value with no query data
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.Value = value
-	submitreq.Salt = salt
+
+	stakedReporter, salt := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator: stakedReporter.GetReporter(),
+		Value:   value,
+		Salt:    salt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "no commits to reveal found")
+	s.ErrorContains(err, "query data cannot be empty")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoValue() {
-	require := s.Require()
 
 	// submit value with no value
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	salt := s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Salt = salt
+
+	stakedReporter, salt := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: queryData,
+		Salt:      salt,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
+	s.ErrorContains(err, "value cannot be empty")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoSalt() {
-	require := s.Require()
 
 	// submit value with no salt
 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	_ = s.TestCommitValue()
-	var submitreq types.MsgSubmitValue
-	height := s.ctx.BlockHeight() + 1
-	s.ctx = s.ctx.WithBlockHeight(height)
-	submitreq.Creator = Addr.String()
-	submitreq.QueryData = queryData
-	submitreq.Value = value
+
+	stakedReporter, _ := s.TestCommitValue()
+
+	var submitreq = types.MsgSubmitValue{
+		Creator:   stakedReporter.GetReporter(),
+		QueryData: queryData,
+		Value:     value,
+	}
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	require.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
+	s.ErrorContains(err, "salt cannot be empty")
 }

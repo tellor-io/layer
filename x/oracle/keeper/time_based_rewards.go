@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"cosmossdk.io/math"
-	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -18,7 +17,7 @@ type ValidatorReportCount struct {
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards to the corresponding validator.
 // Finally, it sends the allocated rewards to the distribution module.
-func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateReporter, tip sdk.Coin) {
+func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateReporter, tip sdk.Coin) error {
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.
@@ -47,22 +46,26 @@ func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateRep
 		rewards[r] = sdk.NewDecCoins(sdk.NewDecCoin(tip.Denom, amount))
 	}
 	toDistr := sdk.NewCoins()
-	// Allocate calculated rewards to the corresponding validators.
-	for reporter, reward := range rewards {
-		validator, err := k.stakingKeeper.Validator(ctx, sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter)))
-		// TODO: return error instead of panic
+	var err error
+	// Allocate calculated rewards to the corresponding reporters.
+	for rep, reward := range rewards {
+		repoterAddr, err := sdk.AccAddressFromBech32(rep)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		k.distrKeeper.AllocateTokensToValidator(ctx, validator, reward)
+		err = k.reporterKeeper.AllocateTokensToReporter(ctx, repoterAddr.Bytes(), reward)
+		if err != nil {
+			return err
+		}
 		coin, _ := reward.TruncateDecimal()
 		toDistr = toDistr.Add(coin...)
 	}
 	// If there are rewards to distribute, send them to the distribution module.
 	if !toDistr.IsZero() {
 		// Once rewards are allocated, send them to the distribution module.
-		k.bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.TimeBasedRewards, distrtypes.ModuleName, toDistr)
+		err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.TimeBasedRewards, distrtypes.ModuleName, toDistr)
 	}
+	return err
 }
 
 func (k Keeper) getTimeBasedRewards(ctx sdk.Context) sdk.Coin {
@@ -74,7 +77,7 @@ func (k Keeper) getTimeBasedRewardsAccount(ctx sdk.Context) authtypes.ModuleAcco
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward cosmosmath.Int) cosmosmath.Int {
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward math.Int) math.Int {
 	power := math.LegacyNewDec(reporterPower * reportsCount)
 	amount := power.Quo(math.LegacyNewDec(totalPower)).MulTruncate(math.LegacyNewDecFromBigInt(reward.BigInt()))
 	return amount.RoundInt()

@@ -3,23 +3,11 @@ package types
 import (
 	context "context"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	rktypes "github.com/tellor-io/layer/x/registry/types"
-)
 
-type RegistryKeeper interface {
-	// Methods imported from registry should be defined here
-	GetSpec(ctx sdk.Context, queryType string) (rktypes.DataSpec, error)
-}
-type StakingKeeper interface {
-	// Methods imported from staking should be defined here
-	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (stakingtypes.Delegation, error)
-	Validator(ctx context.Context, address sdk.ValAddress) (stakingtypes.ValidatorI, error)
-	GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error)
-	GetLastTotalPower(ctx context.Context) (math.Int, error)
-}
+	rktypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+)
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
@@ -37,7 +25,13 @@ type BankKeeper interface {
 	// Methods imported from bank should be defined here
 }
 
-// DistributionKeeper defines the expected interface needed to retrieve community pool funds.
-type DistrKeeper interface {
-	AllocateTokensToValidator(ctx context.Context, val stakingtypes.ValidatorI, tokens sdk.DecCoins) error
+type RegistryKeeper interface {
+	// Methods imported from registry should be defined here
+	GetSpec(ctx sdk.Context, queryType string) (rktypes.DataSpec, error)
+}
+
+type ReporterKeeper interface {
+	// Methods imported from reporter should be defined here
+	AllocateTokensToReporter(ctx context.Context, reporterAddr sdk.ValAddress, tokens sdk.DecCoins) error
+	Reporter(ctx context.Context, repAddress sdk.AccAddress) (*reportertypes.OracleReporter, error)
 }

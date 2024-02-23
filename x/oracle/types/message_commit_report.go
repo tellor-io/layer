@@ -46,3 +46,17 @@ func (msg *MsgCommitReport) ValidateBasic() error {
 	}
 	return nil
 }
+
+func (msg *MsgCommitReport) GetSignerAndValidateMsg() (sdk.AccAddress, error) {
+	addr, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	if msg.QueryData == "" {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data field cannot be empty")
+	}
+	if msg.Hash == "" {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "hash field cannot be empty")
+	}
+	return addr, nil
+}

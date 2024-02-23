@@ -18,12 +18,18 @@ import (
 
 func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
-	// check if validator is bonded and active
-	votingPower, isBonded := k.IsReporterStaked(ctx, sdk.ValAddress(reporter))
-	if !isBonded {
-		return nil, types.ErrValidatorNotBonded
+
+	reporterAddr, err := msg.GetSignerAndValidateMsg()
+	if err != nil {
+		return nil, err
 	}
+	// get reporter
+	reporter, err := k.reporterKeeper.Reporter(ctx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	votingPower := reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64()
 	// check if querydata has prefix 0x
 	msg.QueryData = regtypes.Remove0xPrefix(msg.QueryData)
 	// decode query data hex string to bytes
@@ -32,7 +38,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
 	}
 	// get commit from store
-	commitValue, err := k.Commits.Get(ctx, collections.Join(reporter.Bytes(), HashQueryData(qDataBytes)))
+	commitValue, err := k.Commits.Get(ctx, collections.Join(reporterAddr.Bytes(), HashQueryData(qDataBytes)))
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil, status.Error(codes.NotFound, "no commits to reveal found")
@@ -41,6 +47,9 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	}
 	currentBlock := ctx.BlockHeight()
 	// check if value is being revealed in the one block after commit
+	if currentBlock == commitValue.Block {
+		return nil, types.ErrCommitRevealWindowEarly
+	}
 	if currentBlock-1 != commitValue.Block {
 		return nil, types.ErrMissedCommitRevealWindow
 	}
@@ -54,7 +63,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	}
 
 	// set value
-	if err := k.setValue(ctx, reporter, msg.Value, qDataBytes, votingPower, currentBlock); err != nil {
+	if err := k.setValue(ctx, reporterAddr, msg.Value, qDataBytes, votingPower, currentBlock); err != nil {
 		return nil, err
 	}
 	// emit event

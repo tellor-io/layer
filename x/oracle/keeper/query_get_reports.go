@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetReportsbyQid(goCtx context.Context, req *types.QueryGetReportsbyQidRequest) (*types.QueryGetReportsbyQidResponse, error) {
+func (k Querier) GetReportsbyQid(goCtx context.Context, req *types.QueryGetReportsbyQidRequest) (*types.QueryGetReportsbyQidResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -34,7 +34,7 @@ func (k Keeper) GetReportsbyQid(goCtx context.Context, req *types.QueryGetReport
 	return &types.QueryGetReportsbyQidResponse{Reports: reports}, nil
 }
 
-func (k Keeper) GetReportsbyReporter(goCtx context.Context, req *types.QueryGetReportsbyReporterRequest) (*types.QueryGetReportsbyReporterResponse, error) {
+func (k Querier) GetReportsbyReporter(goCtx context.Context, req *types.QueryGetReportsbyReporterRequest) (*types.QueryGetReportsbyReporterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -55,7 +55,7 @@ func (k Keeper) GetReportsbyReporter(goCtx context.Context, req *types.QueryGetR
 	return &types.QueryGetReportsbyReporterResponse{MicroReports: reports}, nil
 }
 
-func (k Keeper) GetReportsbyReporterQid(goCtx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryGetReportsbyQidResponse, error) {
+func (k Querier) GetReportsbyReporterQid(goCtx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryGetReportsbyQidResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}

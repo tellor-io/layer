@@ -3,7 +3,6 @@ package keeper
 import (
 	"testing"
 
-	"github.com/tellor-io/layer/app/config"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 
@@ -22,56 +21,39 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/oracle/mocks"
-	rkeeper "github.com/tellor-io/layer/x/registry/keeper"
-	r "github.com/tellor-io/layer/x/registry/module"
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.AccountKeeper, sdk.Context) {
-	config.SetupConfig()
+func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
-	rStoreKey := storetypes.NewKVStoreKey(registrytypes.StoreKey)
-	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	db := tmdb.NewMemDB()
+
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(rStoreKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	sk := new(mocks.StakingKeeper)
-	ak := new(mocks.AccountKeeper)
-
-	rk := rkeeper.NewKeeper(
-		cdc,
-		runtime.NewKVStoreService(rStoreKey),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
+	accountKeeper := new(mocks.AccountKeeper)
+	bankKeeper := new(mocks.BankKeeper)
+	registryKeeper := new(mocks.RegistryKeeper)
+	reporterKeeper := new(mocks.ReporterKeeper)
 
 	k := keeper.NewKeeper(
 		cdc,
-		storeKey,
-		memStoreKey,
-		ak,
-		nil,
-		nil,
-		sk,
-		rk,
+		runtime.NewKVStoreService(storeKey),
+		accountKeeper,
+		bankKeeper,
+		registryKeeper,
+		reporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
-	genesisState := registrytypes.GenesisState{
-		Params:   registrytypes.DefaultParams(),
-		Dataspec: registrytypes.GenesisDataSpec(),
-	}
-	r.InitGenesis(ctx, rk, genesisState)
+
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, sk, ak, ctx
+	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, ctx
 }
