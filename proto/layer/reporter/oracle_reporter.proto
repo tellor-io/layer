@@ -5,6 +5,7 @@ import "amino/amino.proto";
 import "cosmos/staking/v1beta1/staking.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
@@ -20,4 +21,12 @@ message OracleReporter {
   ];
   // commission for the reporter
   cosmos.staking.v1beta1.Commission commission = 3;
+  // jailed is a bool weather the reporter is jailed or not
+  bool jailed = 4;
+  // jailed_until is the time the reporter is jailed until
+  google.protobuf.Timestamp jailed_until = 5 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }

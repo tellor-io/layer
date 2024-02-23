@@ -33,6 +33,8 @@ type MsgClient interface {
 	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
 	// from a reporter.
 	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
+	// UnjailReporter defines a method to unjail a jailed reporter.
+	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 }
 
 type msgClient struct {
@@ -97,6 +99,15 @@ func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdraw
 	return out, nil
 }
 
+func (c *msgClient) UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error) {
+	out := new(MsgUnjailReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/UnjailReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -116,6 +127,8 @@ type MsgServer interface {
 	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
 	// from a reporter.
 	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
+	// UnjailReporter defines a method to unjail a jailed reporter.
+	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -140,6 +153,9 @@ func (UnimplementedMsgServer) WithdrawReporterCommission(context.Context, *MsgWi
 }
 func (UnimplementedMsgServer) WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegatorReward not implemented")
+}
+func (UnimplementedMsgServer) UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnjailReporter not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -262,6 +278,24 @@ func _Msg_WithdrawDelegatorReward_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UnjailReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnjailReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnjailReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/UnjailReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnjailReporter(ctx, req.(*MsgUnjailReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -292,6 +326,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawDelegatorReward",
 			Handler:    _Msg_WithdrawDelegatorReward_Handler,
+		},
+		{
+			MethodName: "UnjailReporter",
+			Handler:    _Msg_UnjailReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
