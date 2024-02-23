@@ -2,6 +2,8 @@ package app
 
 import (
 	"bytes"
+	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -29,6 +31,8 @@ type OracleKeeper interface {
 
 type BridgeKeeper interface {
 	GetValidatorCheckpointFromStorage(ctx sdk.Context) (*bridgetypes.ValidatorCheckpoint, error)
+	Logger(ctx context.Context) log.Logger
+	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
 }
 
 type VoteExtHandler struct {
@@ -36,19 +40,28 @@ type VoteExtHandler struct {
 	oracleKeeper OracleKeeper
 	bridgeKeeper BridgeKeeper
 	codec        codec.Codec
+	// cosmosCtx    sdk.Context
 }
 
 type OracleAttestation struct {
 	Attestation []byte
 }
 
-type BridgeVoteExtension struct {
-	OracleAttestations []OracleAttestation
+type InitialSignature struct {
+	Signature []byte
 }
 
-func NewVoteExtHandler(oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper) *VoteExtHandler {
+type BridgeVoteExtension struct {
+	OracleAttestations []OracleAttestation
+	InitialSignature   InitialSignature
+}
+
+func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper) *VoteExtHandler {
 	return &VoteExtHandler{
 		oracleKeeper: oracleKeeper,
+		bridgeKeeper: bridgeKeeper,
+		logger:       logger,
+		codec:        appCodec,
 	}
 }
 
@@ -64,7 +77,35 @@ func NewVoteExtHandler(oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper) *Vo
 //     AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
 // }
 
-func (h *VoteExtHandler) BridgeExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	h.logger.Info("@BridgeExtendVoteHandler", "req", req)
+	// check if evm address by operator exists
+	operatorAddress, err := h.GetOperatorAddress()
+	if err != nil {
+		return nil, err
+	}
+	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
+	if err != nil {
+		h.logger.Info("EVM address not found for operator address", "operatorAddress", operatorAddress)
+		initialSig, err := h.SignInitialMessage()
+		if err != nil {
+			h.logger.Info("Failed to sign initial message", "error", err)
+			return nil, err
+		}
+		// include the initial sig in the vote extension
+		initialSignature := InitialSignature{
+			Signature: initialSig,
+		}
+		voteExt := BridgeVoteExtension{
+			InitialSignature: initialSignature,
+		}
+		bz, err := json.Marshal(voteExt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
+		}
+		h.logger.Info("Vote extension data", "voteExt", string(bz))
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+	}
 	// logic for generating oracle sigs and including them via vote extensions
 	blockHeight := ctx.BlockHeight()
 	reportIds := h.oracleKeeper.GetQueryIdAndTimestampPairsByBlockHeight(ctx, uint64(blockHeight))
@@ -118,7 +159,8 @@ func (h *VoteExtHandler) BridgeExtendVoteHandler(ctx sdk.Context, req *abci.Requ
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
 
-func VerifyBridgeVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	h.logger.Error("@VerifyVoteExtensionHandler", "req", req)
 	// logic for verifying oracle sigs
 	extension := req.GetVoteExtension()
 	if bytes.Equal(extension, []byte("vote extension data")) {
@@ -268,4 +310,44 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	h.logger.Info("Signature:", "sig", cosbytes.HexBytes(sig).String())
 	h.logger.Info("Public Key:", pubKeyReturned.Address().String())
 	return sig, nil
+}
+
+func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
+	message := "TellorLayer: Initial bridge daemon signature"
+	// convert message to bytes
+	msgBytes := []byte(message)
+	// hash message
+	msgHashBytes32 := sha256.Sum256(msgBytes)
+	// convert [32]byte to []byte
+	msgHashBytes := msgHashBytes32[:]
+	// sign message
+	sig, err := h.SignMessage(msgHashBytes)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}
+
+func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
+	// define keyring backend and the path to the keystore dir
+	krBackend := keyring.BackendTest
+	krDir := os.ExpandEnv("$HOME/.layer")
+	h.logger.Info("Keyring dir:", "dir", krDir)
+
+	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
+	if err != nil {
+		fmt.Printf("Failed to create keyring: %v\n", err)
+		return "", err
+	}
+
+	// Fetch the operator key from the keyring.
+	info, err := kr.Key("alice")
+	if err != nil {
+		fmt.Printf("Failed to get operator key: %v\n", err)
+		return "", err
+	}
+	// Output the public key associated with the operator key.
+	key, _ := info.GetPubKey()
+	keyAddrStr := key.Address().String()
+	return keyAddrStr, nil
 }

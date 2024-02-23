@@ -633,3 +633,13 @@ func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, qu
 	}
 	return nil
 }
+
+func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error) {
+	k.Logger(ctx).Info("@GetEVMAddressByOperator", "msg", "getting EVM address by operator")
+	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
+		return "", err
+	}
+	return hex.EncodeToString(ethAddress.EVMAddress), nil
+}
