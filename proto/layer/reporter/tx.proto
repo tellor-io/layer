@@ -35,6 +35,9 @@ service Msg {
   // WithdrawDelegatorReward defines a method to withdraw rewards of delegator
   // from a reporter.
   rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
+
+  // UnjailReporter defines a method to unjail a jailed reporter.
+  rpc UnjailReporter(MsgUnjailReporter) returns (MsgUnjailReporterResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -139,3 +142,15 @@ message MsgWithdrawDelegatorRewardResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
+
+// MsgUnjailReporter defines the Msg/UnjailReporter request type.
+message MsgUnjailReporter {
+  option (cosmos.msg.v1.signer) = "reporter_address";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUnjailReporterResponse defines the Msg/UnjailReporter response type.
+message MsgUnjailReporterResponse {}

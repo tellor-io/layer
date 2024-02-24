@@ -88,6 +88,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Execute the UndelegateReporter RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "token_origins"}},
 				},
+				{
+					RpcMethod:      "UnjailReporter",
+					Use:            "unjail-reporter [reporter-addr]",
+					Short:          "Execute the UnjailReporter RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
