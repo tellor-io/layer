@@ -25,17 +25,12 @@ import (
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
-func (s *IntegrationTestSuite) oracleKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
-	types.RegisterQueryServer(s.queryHelper, s.oraclekeeper)
-	types.RegisterInterfaces(s.interfaceRegistry)
-	queryClient = types.NewQueryClient(s.queryHelper)
-	msgServer = keeper.NewMsgServerImpl(s.oraclekeeper)
-	return
-}
-
 func (s *IntegrationTestSuite) TestTipping() {
-	_, msgServer := s.oracleKeeper()
+
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+
 	addr := s.newKeysWithTokens()
+
 	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
 	twoPercent := sdk.NewCoin(s.denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
@@ -86,8 +81,10 @@ func (s *IntegrationTestSuite) TestTipping() {
 }
 
 func (s *IntegrationTestSuite) TestGetCurrentTip() {
-	_, msgServer := s.oracleKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+
 	addr := s.newKeysWithTokens()
+
 	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
 	twoPercent := sdk.NewCoin(s.denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
@@ -105,8 +102,10 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 }
 
 func (s *IntegrationTestSuite) TestGetUserTipTotal() {
-	_, msgServer := s.oracleKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+
 	addr := s.newKeysWithTokens()
+
 	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
 	twoPercent := sdk.NewCoin(s.denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
@@ -128,8 +127,10 @@ func (s *IntegrationTestSuite) TestGetUserTipTotal() {
 }
 
 func (s *IntegrationTestSuite) TestSmallTip() {
-	_, msgServer := s.oracleKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+
 	addr := s.newKeysWithTokens()
+
 	tip := sdk.NewCoin(s.denom, math.NewInt(10))
 	twoPercent := sdk.NewCoin(s.denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
@@ -148,48 +149,66 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 }
 
 func (s *IntegrationTestSuite) TestMedianReports() {
-	_, msgServer := s.oracleKeeper()
-	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+	tipper := s.newKeysWithTokens()
 	s.ctx = s.ctx.WithBlockHeight(2)
+
 	reporters := []struct {
 		name          string
 		reporterIndex int
 		value         string
+		stakeAmount   math.Int
+		power         int64
 	}{
 		{
 			name:          "reporter 1",
 			reporterIndex: 0,
 			value:         encodeValue(162926),
+			stakeAmount:   math.NewInt(1_000_000),
+			power:         1,
 		},
 		{
 			name:          "reporter 2",
 			reporterIndex: 1,
 			value:         encodeValue(362926),
+			stakeAmount:   math.NewInt(2_000_000),
+			power:         2,
 		},
 		{
 			name:          "reporter 3",
 			reporterIndex: 2,
 			value:         encodeValue(262926),
+			stakeAmount:   math.NewInt(3_000_000),
+			power:         3,
 		},
 		{
 			name:          "reporter 4",
 			reporterIndex: 3,
 			value:         encodeValue(562926),
+			stakeAmount:   math.NewInt(4_000_000),
+			power:         4,
 		},
 		{
 			name:          "reporter 5",
 			reporterIndex: 4,
 			value:         encodeValue(462926),
+			stakeAmount:   math.NewInt(5_000_000),
+			power:         5,
 		},
 	}
-	msgServer.Tip(s.ctx, &types.MsgTip{Tipper: accs[0].String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
+	msgServer.Tip(s.ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
+	addr := make([]sdk.AccAddress, len(reporters))
 	for _, r := range reporters {
 		s.T().Run(r.name, func(t *testing.T) {
+			// create reporter
+			newReporter, err := createReporter(s.ctx, r.power, s.reporterkeeper)
+			s.Nil(err)
+			addr[r.reporterIndex] = newReporter
 			salt, err := oracleutils.Salt(32)
 			s.Nil(err)
 			hash := oracleutils.CalculateCommitment(r.value, salt)
 			s.Nil(err)
-			commit, reveal := report(accs[r.reporterIndex].String(), r.value, salt, hash, ethQueryData)
+			commit, reveal := report(newReporter.String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.CommitReport(s.ctx, &commit)
 			s.Nil(err)
 			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
@@ -203,7 +222,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	s.Nil(err)
 	expectedMedianReporterIndex := 4
-	expectedMedianReporter := accs[expectedMedianReporterIndex].String()
+	expectedMedianReporter := addr[expectedMedianReporterIndex].String()
 	s.Equal(expectedMedianReporter, res.Report.AggregateReporter)
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
 }
@@ -224,11 +243,11 @@ func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, ty
 }
 
 func (s *IntegrationTestSuite) TestGetCylceListQueries() {
-	s.oracleKeeper()
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
-	resp := s.oraclekeeper.GetCycleList(s.ctx)
-	s.Equal(resp, []string{ethQueryData[2:], btcQueryData[2:], trbQueryData[2:]})
+	resp, err := s.oraclekeeper.Params.Get(s.ctx)
+	s.NoError(err)
+	s.Equal(resp.CycleList, []string{ethQueryData[2:], btcQueryData[2:], trbQueryData[2:]})
 	fakeQueryData := "000001"
 	msgContent := &types.MsgUpdateParams{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -258,79 +277,112 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal1.Id)
 	s.NoError(err)
 	s.True(proposal1.Status == v1.StatusPassed)
-	resp = s.oraclekeeper.GetCycleList(s.ctx)
-	s.Equal(resp, []string{fakeQueryData})
+	resp, err = s.oraclekeeper.Params.Get(s.ctx)
+	s.NoError(err)
+	s.Equal(resp.CycleList, []string{fakeQueryData})
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
-	powers := []int64{100, 200, 300, 400}
-	accs, vals, _ := s.createValidatorAccs(powers)
-	// transfer tokens to distribution module
+	// send timebasedrewards tokens to oracle module to pay reporters with
+	tipper := s.newKeysWithTokens()
 	reward := math.NewInt(100)
-	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
+	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
 	s.NoError(err)
-	// report bypass commit/reveal
-	values := []string{"000001", "000002", "000003", "000004"}
-	// case 1: 1 reporter 1 report
+
+	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
 	qId, err := utils.QueryIDFromDataString(ethQueryData)
 	s.NoError(err)
-	reports := testutil.GenerateReports(accs, values, powers, hex.EncodeToString(qId))
-	bal1 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
-	s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
+	value := []string{"000001"}
+
+	reporterPower := int64(1)
+	addr, err := createReporter(s.ctx, 1, s.reporterkeeper)
+	s.NoError(err)
+
+	reports := testutil.GenerateReports([]sdk.AccAddress{addr}, value, []int64{reporterPower}, hex.EncodeToString(qId))
+
+	bal1 := s.bankKeeper.GetBalance(s.ctx, addr, s.denom)
+
+	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
+	s.NoError(err)
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
-	s.Equal(res.Report.AggregateReportIndex, int64(0))
-	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	s.Equal(res.Report.AggregateReportIndex, int64(0), "single report should be at index 0")
+
+	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.NoError(err)
+
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[0], vals[0])
-	bal2 := s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom)
-	s.Equal(bal1.Amount.Add(reward), bal2.Amount)
+	amt, err := s.reporterkeeper.WithdrawDelegationRewards(s.ctx, addr.Bytes(), addr)
+	s.NoError(err)
+	s.True(amt.AmountOf(s.denom).GT(math.ZeroInt()))
+
+	bal2 := s.bankKeeper.GetBalance(s.ctx, addr, s.denom)
+	s.Equal(bal1.Amount.Add(reward), bal2.Amount, "current balance should be equal to previous balance + reward")
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
-	powers := []int64{100, 200, 300, 400}
-	values := []string{"000001", "000002", "000003", "000004"}
-	accs, vals, _ := s.createValidatorAccs(powers)
-	reward := int64(100)
-	// transfer tokens to distribution module
-	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(reward))))
-	// generate 4 reports for ethQueryData
+	// send timebasedrewards tokens to oracle module to pay reporters with
+	tipper := s.newKeysWithTokens()
+	reward := math.NewInt(100)
+	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
+	s.NoError(err)
+
 	qId, err := utils.QueryIDFromDataString(ethQueryData)
 	s.NoError(err)
-	reports := testutil.GenerateReports(accs, values, powers, hex.EncodeToString(qId))
+	value := []string{"000001", "000002"}
+	reporterPower1 := int64(1)
+	reporterPower2 := int64(2)
+	totalReporterPower := reporterPower1 + reporterPower2
+
+	reporterAddr, err := createReporter(s.ctx, 1, s.reporterkeeper)
+	s.NoError(err)
+	reporterAddr2, err := createReporter(s.ctx, 2, s.reporterkeeper)
+	s.NoError(err)
+
+	// generate 2 reports for ethQueryData
+	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2}, value, []int64{reporterPower1, reporterPower2}, hex.EncodeToString(qId))
+
 	testCases := []struct {
 		name                 string
 		reporterIndex        int
 		beforeBalance        sdk.Coin
 		afterBalanceIncrease math.Int
+		delegator            sdk.AccAddress
 	}{
 		{
-			name:                 "reporter with 100 voting power",
+			name:                 "reporter with 1 voting power",
 			reporterIndex:        0,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom),
-			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[0], 1, powers[0]+powers[1], math.NewInt(reward)),
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr, s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward),
+			delegator:            reporterAddr,
 		},
 		{
-			name:                 "reporter with 200 voting power",
+			name:                 "reporter with 2 voting power",
 			reporterIndex:        1,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[1], s.denom),
-			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[1], 1, powers[0]+powers[1], math.NewInt(reward)),
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr2, s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward),
+			delegator:            reporterAddr2,
 		},
 	}
-	s.oraclekeeper.WeightedMedian(s.ctx, reports[:2])
+	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports)
+	s.NoError(err)
 
-	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
-	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	s.NoError(err, "error getting aggregated report")
+	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.NoError(err, "error getting time based rewards")
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	s.NoError(err, "error allocating rewards")
+
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[tc.reporterIndex], vals[tc.reporterIndex])
-			afterBalance := s.bankKeeper.GetBalance(s.ctx, accs[tc.reporterIndex], s.denom)
+			s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
 			s.Equal(tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease), afterBalance.Amount)
 
 		})
@@ -338,52 +390,72 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
-	powers := []int64{100, 200, 300, 400}
+
+	tipper := s.newKeysWithTokens()
+	reward := math.NewInt(100)
+	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
+	s.NoError(err)
+
 	values := []string{"000001", "000002", "000003", "000004"}
-	accs, vals, _ := s.createValidatorAccs(powers)
-	reward := int64(100)
-	// transfer tokens to distribution module
-	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accs[0], minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(reward))))
+
+	reporterPower1 := int64(1)
+	reporterPower2 := int64(2)
+	reporterPower3 := int64(3)
+	totalPower := reporterPower1 + reporterPower2 + reporterPower3
+
+	reporterAddr, err := createReporter(s.ctx, 1, s.reporterkeeper)
+	s.NoError(err)
+	reporterAddr2, err := createReporter(s.ctx, 2, s.reporterkeeper)
+	s.NoError(err)
+	reporterAddr3, err := createReporter(s.ctx, 3, s.reporterkeeper)
+	s.NoError(err)
+
 	// generate 4 reports for ethQueryData
 	qId, err := utils.QueryIDFromDataString(ethQueryData)
 	s.NoError(err)
-	reports := testutil.GenerateReports(accs, values, powers, hex.EncodeToString(qId))
+	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2, reporterAddr3}, values, []int64{reporterPower1, reporterPower2, reporterPower3}, hex.EncodeToString(qId))
+
 	testCases := []struct {
 		name                 string
 		reporterIndex        int
 		beforeBalance        sdk.Coin
 		afterBalanceIncrease math.Int
+		delegator            sdk.AccAddress
 	}{
 		{
 			name:                 "reporter with 100 voting power",
 			reporterIndex:        0,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[0], s.denom),
-			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[0], 1, powers[0]+powers[1]+powers[2], math.NewInt(reward)),
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr, s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward),
+			delegator:            reporterAddr,
 		},
 		{
 			name:                 "reporter with 200 voting power",
 			reporterIndex:        1,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[1], s.denom),
-			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[1], 1, powers[0]+powers[1]+powers[2], math.NewInt(reward)),
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr2, s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward),
+			delegator:            reporterAddr2,
 		},
 		{
 			name:                 "reporter with 300 voting power",
 			reporterIndex:        2,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, accs[2], s.denom),
-			afterBalanceIncrease: keeper.CalculateRewardAmount(powers[2], 1, powers[0]+powers[1]+powers[2], math.NewInt(reward)),
+			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr3, s.denom),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward),
+			delegator:            reporterAddr3,
 		},
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
 
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			s.distrKeeper.WithdrawDelegationRewards(s.ctx, accs[tc.reporterIndex], vals[tc.reporterIndex])
-			afterBalance := s.bankKeeper.GetBalance(s.ctx, accs[tc.reporterIndex], s.denom)
+			s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
 			expectedAfterBalance := tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease)
 			tolerance := expectedAfterBalance.SubRaw(1) //due to rounding int
 			withinTolerance := expectedAfterBalance.Equal(afterBalance.Amount) || tolerance.Equal(afterBalance.Amount)
@@ -394,18 +466,21 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 }
 
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
-	_, msgServer := s.oracleKeeper()
-	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
-	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
-	queryData1 := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	tipper := s.newKeysWithTokens()
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+	// accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	queryData1, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	s.Nil(err)
 	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	queryData3 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	msg := types.MsgTip{
-		Tipper:    accs[0].String(),
+		Tipper:    tipper.String(),
 		QueryData: queryData2,
-		Amount:    tip,
+		Amount:    sdk.NewCoin(s.denom, math.NewInt(1000)),
 	}
-	_, err := msgServer.Tip(s.ctx, &msg)
+	_, err = msgServer.Tip(s.ctx, &msg)
+	s.Nil(err)
+	reporterAddr, err := createReporter(s.ctx, 1, s.reporterkeeper)
 	s.Nil(err)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	salt, err := oracleutils.Salt(32)
@@ -413,15 +488,15 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	hash := oracleutils.CalculateCommitment(value, salt)
 	s.Nil(err)
 	// commit report with query data in cycle list
-	commit, _ := report(accs[0].String(), value, salt, hash, queryData1)
+	commit, _ := report(reporterAddr.String(), value, salt, hash, queryData1)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list but has a tip
-	commit, _ = report(accs[0].String(), value, salt, hash, queryData2)
+	commit, _ = report(reporterAddr.String(), value, salt, hash, queryData2)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list and has no tip
-	commit, _ = report(accs[0].String(), value, salt, hash, queryData3)
+	commit, _ = report(reporterAddr.String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
-	s.ErrorContains(err, "query data does not have tips/not in cycle")
+	s.ErrorContains(err, "query does not have tips and is not in cycle")
 }

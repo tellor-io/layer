@@ -166,7 +166,7 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 // App Wiring Setup
 // ----------------------------------------------------------------------------
 
-func AppWiringSetup() {
+func init() {
 	appmodule.Register(&oraclemodulev1.Module{},
 		appmodule.Provide(ProvideModule))
 

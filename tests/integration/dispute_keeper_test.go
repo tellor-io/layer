@@ -5,23 +5,14 @@ import (
 	"cosmossdk.io/math"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (s *IntegrationTestSuite) disputeKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
-	types.RegisterQueryServer(s.queryHelper, s.disputekeeper)
-	types.RegisterInterfaces(s.interfaceRegistry)
-	queryClient = types.NewQueryClient(s.queryHelper)
-	msgServer = keeper.NewMsgServerImpl(s.disputekeeper)
-
-	return
-}
-
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
-	_, msgServer := s.disputeKeeper()
+
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{1000, 20})
 	val, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	s.NoError(err)
@@ -82,7 +73,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	require := s.Require()
 	ctx := s.ctx
 	addrs, valAddrs := s.createValidators([]int64{100})
@@ -127,7 +118,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	reporterAddr := addrs[0].String()
 	disputerAcc := addrs[1]
@@ -203,23 +194,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.Equal(disputerBalanceBeforeExecuteVote, disputerBalanceAfterExecuteVote)
 }
 
-func (suite *IntegrationTestSuite) getTestMetadata() banktypes.Metadata {
-	return banktypes.Metadata{
-		Name:        "Tellor Layer Tributes",
-		Symbol:      "TRB",
-		Description: "The native staking token of the TellorLayer.",
-		DenomUnits: []*banktypes.DenomUnit{
-			{Denom: "loya", Exponent: uint32(0), Aliases: nil},
-			{Denom: "mloya", Exponent: uint32(3), Aliases: []string{"milliloya"}},
-			{Denom: "trb", Exponent: uint32(6), Aliases: nil},
-		},
-		Base:    "loya",
-		Display: "trb",
-	}
-}
-
 func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 
 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
@@ -272,7 +248,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	s.NoError(err)
@@ -360,7 +336,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{200, 300, 400, 500})
 	reporterBefore, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	s.NoError(err)
@@ -441,7 +417,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 
 	bal0, err := s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[0], s.denom))
@@ -592,11 +568,13 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 
 	// check reporter stake
 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
+	s.NoError(err)
 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore))
 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.ctx = s.ctx.WithBlockHeader(header)
 	_, err = s.app.BeginBlocker(s.ctx)
+	s.NoError(err)
 
 	// voting that doesn't reach quorum
 	votes = []types.MsgVote{
@@ -745,6 +723,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
 	s.ctx = s.ctx.WithBlockHeader(header)
 	_, err = s.app.BeginBlocker(s.ctx)
+	s.NoError(err)
 
 	// check reporter stake, stake should be restored due to invalid vote final result
 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
@@ -770,7 +749,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	s.NoError(err)
@@ -828,7 +807,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
-	_, msgServer := s.disputeKeeper()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
 	s.NoError(err)

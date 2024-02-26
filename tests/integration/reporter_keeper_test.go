@@ -4,17 +4,11 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
-/*
-Need:
-reporter Address: delegated stake with a validator 100*1e6 tokens
-4-delegators staked with validator(100*1e6 tokens) that will delegate their tokens (25*1e6 tokens) tokens with the reporter
-1-What happens when delegator removes delegation(10(shouldn't affect reporter), and 76(should affect reporter)) from validator? What to reporter, delegation?
-2-
-*/
 const (
 	reporter     = "reporter"
 	delegatorI   = "delegator1"
@@ -53,7 +47,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	delegators = s.createdelegators(delegators)
 
 	// register reporter in reporter module
-	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
 
 	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewIntFromUint64(100 * 1e6)}
@@ -200,4 +194,36 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
 	s.Equal(oracleReporter.TotalTokens, math.NewInt(175*1e6))
+}
+
+func callrewardHooks(ctx sdk.Context, k keeper.Keeper, delegator sdk.AccAddress, stake math.Int, reporterAddr sdk.AccAddress, reporter reportertypes.OracleReporter) error {
+	err := k.AfterReporterCreated(ctx, reporter)
+	if err != nil {
+		return err
+	}
+	err = k.BeforeDelegationCreated(ctx, reporter)
+	if err != nil {
+		return err
+	}
+	return k.AfterDelegationModified(ctx, delegator, reporterAddr.Bytes(), stake)
+}
+
+func createReporter(ctx sdk.Context, power int64, k keeper.Keeper) (sdk.AccAddress, error) {
+	reporterAddr := sample.AccAddressBytes()
+	stake := sdk.DefaultPowerReduction.MulRaw(power)
+	reporter := reportertypes.NewOracleReporter(reporterAddr.String(), stake, &stakingtypes.Commission{})
+	err := k.Reporters.Set(ctx, reporterAddr, reporter)
+	if err != nil {
+		return nil, err
+	}
+	delegator := reportertypes.NewDelegation(reporterAddr.String(), stake)
+	err = k.Delegators.Set(ctx, reporterAddr, delegator)
+	if err != nil {
+		return nil, err
+	}
+	err = callrewardHooks(ctx, k, reporterAddr, delegator.Amount, reporterAddr, reporter)
+	if err != nil {
+		return nil, err
+	}
+	return reporterAddr, nil
 }
