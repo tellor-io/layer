@@ -97,6 +97,7 @@ func BenchmarkSimulation(b *testing.B) {
 	require.Equal(b, app.Name, bApp.Name())
 
 	// run randomized simulation
+	fmt.Println("running simulation...")
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,

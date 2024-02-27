@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
-
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
@@ -120,7 +120,10 @@ func (s *E2ETestSuite) TestStakeTokens() {
 
 	// undelegate 1 of self-delegated stake
 	power = val.GetConsensusPower(sdk.DefaultPowerReduction) // 20
-	sharesAmount := math.LegacyNewDecFromInt(math.NewInt(1))
+	sharesAmount, err := s.stakingKeeper.ValidateUnbondAmount(
+		s.ctx, accountAddrs[1], validatorAddrs[0], math.NewInt(10*1e5),
+	)
+	require.Nil(err)
 	_, _, err = s.stakingKeeper.Undelegate(s.ctx, accountAddrs[0], validatorAddrs[0], sharesAmount) // undelegate 1
 	require.Nil(err)
 
@@ -153,7 +156,11 @@ func (s *E2ETestSuite) TestStakeTokens() {
 
 	// undelegate from validator 1 to validator 0
 	power = val.GetConsensusPower(sdk.DefaultPowerReduction) // 29
-	sharesAmount = math.LegacyNewDecFromInt(math.NewInt(1))
+	sharesAmount, err = s.stakingKeeper.ValidateUnbondAmount(
+		s.ctx, accountAddrs[1], validatorAddrs[0], math.NewInt(10*1e5),
+	)
+	require.Nil(err)
+	// sharesAmount = math.LegacyNewDecFromInt(math.NewInt(1))
 	_, _, err = s.stakingKeeper.Undelegate(s.ctx, accountAddrs[1], validatorAddrs[0], sharesAmount)
 	require.Nil(err)
 
@@ -200,6 +207,102 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	fmt.Println("err: ", err) // 0x101e2e970
 
 }
+
+func (s *E2ETestSuite) TestSubmit() {
+	require := s.Require()
+	_, msgServerOracle := s.oracleKeeper()
+	require.NotNil(msgServerOracle)
+	currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	queryDataBytes, err := hex.DecodeString(currentQuery[2:])
+	require.Nil(err)
+	queryIdBytes := crypto.Keccak256(queryDataBytes)
+	// queryId := hex.EncodeToString(queryIdBytes)
+
+	accountAddrs, validatorAddrs := s.createValidators([]int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
+	for i := range accountAddrs {
+		validator, err := s.stakingKeeper.Validator(s.ctx, validatorAddrs[i])
+		status := validator.GetStatus()
+		require.Nil(err)
+		require.Equal(stakingtypes.Bonded.String(), status.String())
+	}
+
+	// commit
+	err = CommitReport(s.ctx, string(accountAddrs[0].String()), currentQuery, msgServerOracle)
+	require.Nil(err)
+
+	commit, err := s.oraclekeeper.GetCommit(s.ctx, accountAddrs[0], queryIdBytes)
+	require.Nil(err)
+	require.NotNil(commit)
+	fmt.Println("commit: ", commit)
+
+	// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	// valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
+	// s.Nil(err)
+	// salt, err := utils.Salt(32)
+	// s.Nil(err)
+	// hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	// s.Nil(err)
+	// // commit report with query data in cycle list
+	// commitreq := &oracletypes.MsgCommitReport{
+	// 	Creator:   accountAddrs[0].String(),
+	// 	QueryData: currentQuery,
+	// 	Hash:      hash,
+	// }
+	// _, err = msgServerOracle.CommitReport(s.ctx, commitreq)
+	// require.Nil(err)
+
+	// // submit
+	// var submitreq types.MsgSubmitValue
+	// var submitres types.MsgSubmitValueResponse
+
+	// height := s.ctx.BlockHeight() + 1
+	// s.ctx = s.ctx.WithBlockHeight(height)
+	// // Submit value transaction with value revealed, this checks if the value is correctly hashed
+	// submitreq.Creator = Addr.String()
+	// submitreq.QueryData = queryData
+	// submitreq.Value = value
+	// submitreq.Salt = salt
+	// res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
+	// require.Equal(&submitres, res)
+	// require.Nil(err)
+	// report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
+	// require.Nil(err)
+	// microReport := types.MicroReport{
+	// 	Reporter:        Addr.String(),
+	// 	Power:           1000000000000,
+	// 	QueryType:       "SpotPrice",
+	// 	QueryId:         "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+	// 	AggregateMethod: "weighted-median",
+	// 	Value:           value,
+	// 	BlockNumber:     s.ctx.BlockHeight(),
+	// 	Timestamp:       s.ctx.BlockTime(),
+	// }
+	// expectedReport := types.QueryGetReportsbyQidResponse{
+	// 	Reports: types.Reports{
+	// 		MicroReports: []*types.MicroReport{&microReport},
+	// 	},
+	// }
+	// require.Equal(&expectedReport, report)
+
+}
+
+func (s *E2ETestSuite) TestDisputes() {
+	require := s.Require()
+	_, msgServerDispute := s.disputeKeeper()
+	require.NotNil(msgServerDispute)
+
+	// // create dispute
+	// var disputeReq disputetypes.MsgDispute
+	// var disputeRes disputetypes.MsgDisputeResponse
+	// disputeReq.Creator = accountAddrs[0].String()
+	// disputeReq.QueryId = currentQuery.QueryId
+	// disputeReq.DisputeType = "query"
+	// disputeReq.DisputeId = "1"
+	// disputeReq.Value = ""
+}
+
+// get delegation
+// call slash
 
 func (s *E2ETestSuite) TestTipCommitReveal() {
 	require := s.Require()

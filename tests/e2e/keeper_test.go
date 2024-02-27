@@ -50,6 +50,7 @@ import (
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/utils"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
@@ -319,6 +320,50 @@ func (s *E2ETestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []sdk.AccAd
 		testAddrs[i] = sdk.AccAddress(pk.PubKey().Address())
 	}
 	return testAddrs
+}
+
+func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorAddress sdk.ValAddress, k stakingkeeper.Keeper) error {
+	validator, err := k.GetValidator(ctx, validatorAddress)
+	if err != nil {
+		return fmt.Errorf("validator %s not found", validatorAddress)
+	}
+
+	if validator.Jailed {
+		return fmt.Errorf("validator %s is already jailed", validatorAddress)
+	}
+
+	k.Jail(ctx, consensusAddress)
+
+	return nil
+}
+
+func CommitReport(ctx sdk.Context, accountAddr string, queryData string, msgServerOracle oracletypes.MsgServer) error {
+	// commit
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
+	if err != nil {
+		return err
+	}
+	salt, err := utils.Salt(32)
+	if err != nil {
+		return err
+	}
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	if err != nil {
+		return err
+	}
+	// commit report with query data in cycle list
+	commitreq := &oracletypes.MsgCommitReport{
+		Creator:   accountAddr,
+		QueryData: queryData,
+		Hash:      hash,
+	}
+	_, err = msgServerOracle.CommitReport(ctx, commitreq)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *E2ETestSuite) createValidatorAccs(powers []int64) []sdk.AccAddress {
