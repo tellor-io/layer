@@ -39,7 +39,7 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/alice/c
 echo "bill..."
 jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 
-# Create a tx to give the alice loyas to stake
+# Create a tx to give alice loyas to stake
 echo "Adding genesis accounts..."
 echo "alice..."
 ./layerd genesis add-genesis-account $(layerd keys show alice -a --keyring-backend test)  10000000000000loya --keyring-backend test --home ~/.layer/alice
