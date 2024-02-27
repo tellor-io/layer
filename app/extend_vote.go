@@ -329,6 +329,7 @@ func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
 }
 
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
+	h.logger.Info("@GetOperatorAddress - extend_vote.go")
 	// define keyring backend and the path to the keystore dir
 	krBackend := keyring.BackendTest
 	krDir := os.ExpandEnv("$HOME/.layer")
@@ -349,5 +350,8 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	// Output the public key associated with the operator key.
 	key, _ := info.GetPubKey()
 	keyAddrStr := key.Address().String()
+	pubkeystr := key.String()
+	h.logger.Info("@pubkeystr:", "pubkeystr", pubkeystr)
+	h.logger.Info("Operator Public Key:", "keyAddrStr", keyAddrStr)
 	return keyAddrStr, nil
 }
