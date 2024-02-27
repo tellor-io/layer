@@ -92,7 +92,8 @@ echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 
 # Stake Bill as a validator
 echo "Staking bill as a validator..."
-layerd tx staking create-validator $NODE2_HOME_DIR/config/validator.json --from bill --keyring-backend test --keyring-dir $HOME/.layer/ --chain-id layer
+# layerd tx staking create-validator $NODE2_HOME_DIR/config/validator.json --from bill --keyring-backend test --keyring-dir $HOME/.layer/ --chain-id layer
+layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend test --keyring-dir ~/.layer/ --chain-id layer
 
 # Start the second node
 echo "Starting the second node..."
