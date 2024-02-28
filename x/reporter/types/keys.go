@@ -26,6 +26,7 @@ var (
 	DelegatorStartingInfoPrefix         = collections.NewPrefix(17)
 	ReporterHistoricalRewardsPrefix     = collections.NewPrefix(18)
 	ReporterDisputeEventPrefix          = collections.NewPrefix(19)
+	ReporterDelegatorsIndexPrefix       = collections.NewPrefix(20)
 )
 
 func KeyPrefix(p string) []byte {

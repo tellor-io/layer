@@ -3,6 +3,8 @@ package types
 import (
 	context "context"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	rktypes "github.com/tellor-io/layer/x/registry/types"
@@ -33,5 +35,6 @@ type RegistryKeeper interface {
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
 	AllocateTokensToReporter(ctx context.Context, reporterAddr sdk.ValAddress, tokens sdk.DecCoins) error
+	AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error
 	Reporter(ctx context.Context, repAddress sdk.AccAddress) (*reportertypes.OracleReporter, error)
 }

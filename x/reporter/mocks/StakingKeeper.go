@@ -9,6 +9,8 @@ import (
 
 	cosmos_sdktypes "github.com/cosmos/cosmos-sdk/types"
 
+	math "cosmossdk.io/math"
+
 	mock "github.com/stretchr/testify/mock"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -33,6 +35,30 @@ func (_m *StakingKeeper) ConsensusAddressCodec() address.Codec {
 	}
 
 	return r0
+}
+
+// Delegate provides a mock function with given fields: ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount
+func (_m *StakingKeeper) Delegate(ctx context.Context, delAddr cosmos_sdktypes.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator, subtractAccount bool) (math.LegacyDec, error) {
+	ret := _m.Called(ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
+
+	var r0 math.LegacyDec
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress, math.Int, stakingtypes.BondStatus, stakingtypes.Validator, bool) (math.LegacyDec, error)); ok {
+		return rf(ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress, math.Int, stakingtypes.BondStatus, stakingtypes.Validator, bool) math.LegacyDec); ok {
+		r0 = rf(ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
+	} else {
+		r0 = ret.Get(0).(math.LegacyDec)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, cosmos_sdktypes.AccAddress, math.Int, stakingtypes.BondStatus, stakingtypes.Validator, bool) error); ok {
+		r1 = rf(ctx, delAddr, bondAmt, tokenSrc, validator, subtractAccount)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Delegation provides a mock function with given fields: _a0, _a1, _a2

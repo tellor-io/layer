@@ -233,7 +233,7 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
 	amount := new(big.Int).Mul(big.NewInt(1000), base)
 	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
+	addrs := s.addTestAddrs(math.NewIntFromBigInt(amount), testAddrs)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
@@ -254,7 +254,7 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	return addrs, valAddrs
 }
 
-func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
+func (s *IntegrationTestSuite) addTestAddrs(accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
 	initCoins := sdk.NewCoin(s.denom, accAmt)
 	for _, addr := range testAddrs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
@@ -300,7 +300,7 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	amount := new(big.Int).Mul(big.NewInt(1000), base)
 	privKeys := CreateRandomPrivateKeys(acctNum)
 	testAddrs := s.convertToAccAddress(privKeys)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
+	addrs := s.addTestAddrs(math.NewIntFromBigInt(amount), testAddrs)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	for i, pk := range privKeys {

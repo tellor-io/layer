@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
+	"strings"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // SetAggregatedReport calculates and allocates rewards to reporters based on aggregated reports.
@@ -50,55 +49,54 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 
 	// Prepare a list to keep track of reporters who are eligible for tbr.
 	reportersToPay := make([]*types.AggregateReporter, 0)
-
+	cycleList, err := k.CycleListAsQueryIds(ctx)
+	if err != nil {
+		return err
+	}
 	// Process each set of reports based on their aggregation method.
 	for queryIdStr, reports := range revealedReportsByQueryID {
 		// Handle weighted-median aggregation method.
+		var aggrFunc func(ctx sdk.Context, reports []types.MicroReport) (*types.Aggregate, error)
 		if reports[0].AggregateMethod == "weighted-median" {
 			// Calculate the aggregated report.
-			report, err := k.WeightedMedian(ctx, reports)
+			aggrFunc = k.WeightedMedian
+		} else {
+			// default to weighted-mode aggregation method.
+			// Calculate the aggregated report.
+			aggrFunc = k.WeightedMode
+		}
+		report, err := aggrFunc(ctx, reports)
+		if err != nil {
+			return err
+		}
+
+		// Get the tip for this query.
+		queryIdBytes, err := hex.DecodeString(queryIdStr)
+		if err != nil {
+			return err
+		}
+		tip := k.GetQueryTip(ctx, queryIdBytes)
+		// Allocate rewards if there is a tip.
+		if !tip.Amount.IsZero() {
+			err = k.AllocateRewardsToStake(ctx, report.Reporters, tip)
 			if err != nil {
 				return err
 			}
-			// Get the tip for this query.
-			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
-			// Allocate rewards if there is a tip.
-			if !tip.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, report.Reporters, tip)
-				if err != nil {
-					return err
-				}
-			}
-			// Add reporters to the tbr payment list.
+		}
+		// Add reporters to the tbr payment list.
+		if cycleList[strings.ToLower(queryIdStr)] {
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
 
-		// Handle weighted-mode aggregation method.
-		if reports[0].AggregateMethod == "weighted-mode" {
-			// Calculate the aggregated report.
-			report := k.WeightedMode(ctx, reports)
-			// Get the tip for this query.
-			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
-			// Allocate rewards if there is a tip.
-			if !tip.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, report.Reporters, tip)
-				if err != nil {
-					return err
-				}
-			}
-			// Add reporters to the tbr payment list.
-			reportersToPay = append(reportersToPay, report.Reporters...)
-		}
 	}
 
 	// Process time-based rewards for reporters.
 	tbr := k.getTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
-	return k.AllocateRewards(ctx, reportersToPay, tbr)
+	return k.AllocateTBRRewards(ctx, reportersToPay, tbr)
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) error {
-	report.QueryId = regtypes.Remove0xPrefix(report.QueryId)
 	queryId, err := utils.QueryIDFromString(report.QueryId)
 	if err != nil {
 		return err
@@ -139,13 +137,13 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 	}
 
 	if mostRecent == nil {
-		return nil, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
+		return nil, types.ErrNoAvailableReports.Wrapf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
 	}
 
 	return mostRecent, nil
 }
 
-func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) *types.Aggregate {
+func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
 	var mostRecent *types.Aggregate
 	// This should get us the most recent aggregate, as they are walked in descending order
@@ -155,8 +153,8 @@ func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) *
 	})
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return mostRecent
+	return mostRecent, nil
 }

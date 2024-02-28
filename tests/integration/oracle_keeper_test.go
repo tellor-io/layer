@@ -23,6 +23,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *IntegrationTestSuite) TestTipping() {
@@ -311,7 +312,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateTBRRewards(s.ctx, res.Report.Reporters, tbr.Reward)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -374,7 +375,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateTBRRewards(s.ctx, res.Report.Reporters, tbr.Reward)
 	s.NoError(err, "error allocating rewards")
 
 	// advance height
@@ -448,7 +449,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateTBRRewards(s.ctx, res.Report.Reporters, tbr.Reward)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -499,4 +500,117 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	commit, _ = report(reporterAddr.String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.ErrorContains(err, "query does not have tips and is not in cycle")
+}
+
+// test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
+func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	repAccs := s.CreateAccountsWithTokens(2, 100*1e6)
+
+	stakeAmount := math.NewInt(100 * 1e6)
+	tipAmount := math.NewInt(1000)
+
+	tipper := repAccs[0]
+	repAcc := repAccs[1]
+	valAddr := valAddrs[0]
+	delegators := repAccs[1:]
+
+	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryId, err := utils.QueryIDFromDataString(queryData)
+	s.Nil(err)
+
+	// tip. Using msgServer.Tip to handle the transfers and burning of tokens
+	msg := types.MsgTip{
+		Tipper:    tipper.String(),
+		QueryData: queryData,
+		Amount:    sdk.NewCoin(s.denom, tipAmount),
+	}
+	_, err = msgServer.Tip(s.ctx, &msg)
+	s.Nil(err)
+
+	// create createReporterStakedWithValidator handles the delegation and staking plus the reporter creation
+	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
+	_, err = createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	s.Nil(err)
+
+	// check delegation shares before reporting, should be equal to the stake amount
+	delBefore, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
+	s.Nil(err)
+	s.True(delBefore.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation shares should be equal to the stake amount")
+
+	reporterPower := int64(1)
+	value := []string{"000001"}
+	reports := testutil.GenerateReports(repAccs[1:], value, []int64{reporterPower}, hex.EncodeToString(queryId))
+
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), s.ctx.BlockHeight()), reports[0])
+	s.Nil(err)
+	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
+	s.Nil(err)
+	// delegation shares should increase after reporting
+	delAfter, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
+	s.Nil(err)
+	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares should the tip added") // 1000 - 2% tip
+}
+
+func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	accs := s.CreateAccountsWithTokens(3, 100*1e6)
+
+	stakeAmount := math.NewInt(100 * 1e6)
+	tipAmount := math.NewInt(1000)
+
+	tipper := accs[0]
+	repAcc := accs[1]
+	valAddr := valAddrs[0]
+	delegators := accs[1:]
+	delegator1 := accs[1]
+	delegator2 := accs[2]
+
+	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryId, err := utils.QueryIDFromDataString(queryData)
+	s.Nil(err)
+
+	// tip. Using msgServer.Tip to handle the transfers and burning of tokens
+	msg := types.MsgTip{
+		Tipper:    tipper.String(),
+		QueryData: queryData,
+		Amount:    sdk.NewCoin(s.denom, tipAmount),
+	}
+	_, err = msgServer.Tip(s.ctx, &msg)
+	s.Nil(err)
+
+	// create createReporterStakedWithValidator handles the delegation and staking plus the reporter creation with 50 percent commission
+	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), s.ctx.BlockTime())
+	_, err = createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	s.Nil(err)
+	err = DelegateToReporterSingleValidator(s.ctx, s.reporterkeeper, repAcc, delegator2, valAddr, stakeAmount)
+	s.Nil(err)
+
+	// check delegation shares before reporting, should be equal to the stake amount
+	del1Before, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr)
+	s.Nil(err)
+	s.True(del1Before.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation 1 shares should be equal to the stake amount")
+
+	del2Before, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr)
+	s.Nil(err)
+	s.True(del2Before.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation 2 shares should be equal to the stake amount")
+
+	reporterPower := int64(2) // normalize by sdk.DefaultPowerReduction
+	value := []string{"000001"}
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAcc}, value, []int64{reporterPower}, hex.EncodeToString(queryId))
+
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), s.ctx.BlockHeight()), reports[0])
+	s.Nil(err)
+	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
+	s.Nil(err)
+	// delegation shares should increase after reporting
+	del1After, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr)
+	s.Nil(err)
+	// 980 = 1000 - 2% tip, 980 / 2 = 490 for each delegator but with 50 percent commission for the reporter would be 490 + (490 / 2) = 735
+	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(735))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
+	del2After, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr)
+	s.Nil(err)
+	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(245))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
 }

@@ -1,6 +1,8 @@
 package integration_test
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -23,12 +25,14 @@ type Delegator struct {
 	tokenAmount      math.Int
 }
 
-func (s *IntegrationTestSuite) createdelegators(delegators map[string]Delegator) map[string]Delegator {
+func createdelegators(ctx sdk.Context, delegators map[string]Delegator, sk reportertypes.StakingKeeper) (map[string]Delegator, error) {
 	for _, del := range delegators {
-		_, err := s.stakingKeeper.Delegate(s.ctx, del.delegatorAddress, del.tokenAmount, stakingtypes.Unbonded, del.validator, true)
-		s.NoError(err)
+		_, err := sk.Delegate(ctx, del.delegatorAddress, del.tokenAmount, stakingtypes.Unbonded, del.validator, true)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return delegators
+	return delegators, nil
 }
 
 func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]Delegator {
@@ -44,7 +48,8 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 		delegatorIII: {delegatorAddress: delAcc[3], validator: val, tokenAmount: math.NewInt(100 * 1e6)},
 		delegatorIV:  {delegatorAddress: delAcc[4], validator: val, tokenAmount: math.NewInt(100 * 1e6)},
 	}
-	delegators = s.createdelegators(delegators)
+	delegators, err = createdelegators(s.ctx, delegators, s.stakingKeeper)
+	s.NoError(err)
 
 	// register reporter in reporter module
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
@@ -226,4 +231,48 @@ func createReporter(ctx sdk.Context, power int64, k keeper.Keeper) (sdk.AccAddre
 		return nil, err
 	}
 	return reporterAddr, nil
+}
+
+func createReporterStakedWithValidator(ctx sdk.Context, k keeper.Keeper, sk reportertypes.StakingKeeper, valAddr sdk.ValAddress, delAcc []sdk.AccAddress, commission stakingtypes.Commission, stake math.Int) (*reportertypes.MsgCreateReporter, error) {
+	val, err := sk.GetValidator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+	// create delegator funded accounts
+	delegators := make(map[string]Delegator, len(delAcc))
+	for i, addr := range delAcc {
+		key := fmt.Sprintf("delegator%d", i)
+		delegators[key] = Delegator{delegatorAddress: addr, validator: val, tokenAmount: stake}
+
+	}
+
+	delegators, err = createdelegators(ctx, delegators, sk)
+	if err != nil {
+		return nil, err
+	}
+
+	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: stake}
+	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators["delegator0"].delegatorAddress.String(), stake, []*reportertypes.TokenOrigin{&source}, &commission)
+	server := keeper.NewMsgServerImpl(k)
+	_, err = server.CreateReporter(ctx, createReporterMsg)
+	if err != nil {
+		return nil, err
+	}
+	return createReporterMsg, nil
+}
+
+func DelegateToReporterSingleValidator(ctx sdk.Context, k keeper.Keeper, repAddr sdk.AccAddress, delAddr sdk.AccAddress, valAddr sdk.ValAddress, stake math.Int) error {
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.String(), Amount: stake}
+	delegation := reportertypes.NewMsgDelegateReporter(
+		delAddr.String(),
+		repAddr.String(),
+		stake,
+		[]*reportertypes.TokenOrigin{&source},
+	)
+	server := keeper.NewMsgServerImpl(k)
+	_, err := server.DelegateReporter(ctx, delegation)
+	if err != nil {
+		return err
+	}
+	return err
 }

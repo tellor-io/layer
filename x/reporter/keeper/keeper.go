@@ -19,7 +19,7 @@ type (
 		storeService                   store.KVStoreService
 		Params                         collections.Item[types.Params]
 		Reporters                      collections.Map[sdk.AccAddress, types.OracleReporter]
-		Delegators                     collections.Map[sdk.AccAddress, types.Delegation]
+		Delegators                     *collections.IndexedMap[sdk.AccAddress, types.Delegation, ReporterDelegatorsIndex]
 		TokenOrigin                    collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], math.Int]
 		ReportersAccumulatedCommission collections.Map[sdk.ValAddress, types.ReporterAccumulatedCommission]
 		ReporterOutstandingRewards     collections.Map[sdk.ValAddress, types.ReporterOutstandingRewards]
@@ -59,7 +59,7 @@ func NewKeeper(
 
 		Params:                         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
-		Delegators:                     collections.NewMap(sb, types.DelegatorsKey, "delegation_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc)),
+		Delegators:                     collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
 		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_delegator_validator", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), sdk.IntValue),
 		ReportersAccumulatedCommission: collections.NewMap(sb, types.ReporterAccumulatedCommissionPrefix, "reporters_accumulated_commission", sdk.ValAddressKey, codec.CollValue[types.ReporterAccumulatedCommission](cdc)),
 		ReporterOutstandingRewards:     collections.NewMap(sb, types.ReporterOutstandingRewardsPrefix, "reporter_outstanding_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterOutstandingRewards](cdc)),

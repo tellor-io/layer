@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
@@ -728,4 +729,64 @@ func (k Keeper) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddr
 // record the dispute event
 func (k Keeper) BeforeReporterDisputed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error {
 	return k.updateReporterDisputeFraction(ctx, valAddr, fraction)
+}
+
+func (k Keeper) AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error {
+	reporter, err := k.Reporters.Get(ctx, reporterAddr)
+	if err != nil {
+		return err
+	}
+	// Calculate commission
+	commission := math.LegacyNewDecFromInt(reward).Mul(reporter.Commission.Rate)
+
+	// Calculate net reward
+	netReward := math.LegacyNewDecFromInt(reward).Sub(commission)
+
+	// Calculate each delegator's share (including the reporter as a self-delegator)
+	repAddr, err := sdk.AccAddressFromBech32(reporter.Reporter)
+	if err != nil {
+		return err
+	}
+	delAddrs, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return err
+	}
+	defer delAddrs.Close()
+	for ; delAddrs.Valid(); delAddrs.Next() {
+		key, err := delAddrs.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		del, err := k.Delegators.Get(ctx, key)
+		if err != nil {
+			return err
+		}
+		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(reporter.TotalTokens))
+		if key.Equals(repAddr) {
+			delegatorShare = delegatorShare.Add(commission)
+		}
+		rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](key)
+		iter, err := k.TokenOrigin.Iterate(ctx, rng)
+		if err != nil {
+			return err
+		}
+		delegatorSources, err := iter.KeyValues()
+		if err != nil {
+			return err
+		}
+		for _, source := range delegatorSources {
+			srcAmt := source.Value
+			_share := delegatorShare.Mul(math.LegacyNewDecFromInt(srcAmt)).Quo(math.LegacyNewDecFromInt(del.Amount))
+			val, err := k.stakingKeeper.GetValidator(ctx, source.Key.K2())
+			if err != nil {
+				return err
+			}
+			_, err = k.stakingKeeper.Delegate(ctx, key, _share.TruncateInt(), stakingtypes.Bonded, val, false) // ignore dust???
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

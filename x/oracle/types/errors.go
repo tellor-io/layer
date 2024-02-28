@@ -16,4 +16,6 @@ var (
 	ErrNotEnoughStake              = sdkerrors.Register(ModuleName, 1104, "not enough stake")
 	ErrCommitRevealWindowEarly     = sdkerrors.Register(ModuleName, 1105, "commit reveal window is too early")
 	ErrReporterJailed              = sdkerrors.Register(ModuleName, 1106, "reporter is jailed")
+	ErrNoAvailableReports          = sdkerrors.Register(ModuleName, 1107, "no available reports")
+	ErrNoReportsToAggregate        = sdkerrors.Register(ModuleName, 1108, "no reports to aggregate")
 )

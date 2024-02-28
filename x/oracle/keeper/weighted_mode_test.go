@@ -47,7 +47,8 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 			QueryId:  qId,
 		},
 	}
-	aggregates := s.oracleKeeper.WeightedMode(s.ctx, reports)
+	aggregates, err := s.oracleKeeper.WeightedMode(s.ctx, reports)
+	s.Nil(err)
 	s.NotNil(aggregates)
 	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	s.Nil(err)
