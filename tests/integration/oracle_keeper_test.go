@@ -312,7 +312,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.oraclekeeper.AllocateTBRRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward, false)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -375,7 +375,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.oraclekeeper.AllocateTBRRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward, false)
 	s.NoError(err, "error allocating rewards")
 
 	// advance height
@@ -449,7 +449,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.oraclekeeper.AllocateTBRRewards(s.ctx, res.Report.Reporters, tbr.Reward)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward, false)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)

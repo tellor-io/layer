@@ -18,9 +18,7 @@ import (
 // at a specific blockchain height (to be ran in begin-blocker)
 // It retrieves the revealed reports from the reports store, sorts them by query ID, and then
 // calculates the aggregate report for each query using either the weighted-median or weighted-mode method.
-// TODO: Add support for other aggregation methods.
-// Rewards are allocated to the reporters based on the query tip amount, and time-based rewards are also
-// allocated to the reporters.
+// Rewards based on the source are then allocated to the reporters.
 func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 	// Get the current block height of the blockchain.
 	currentHeight := ctx.BlockHeight()
@@ -78,7 +76,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 		tip := k.GetQueryTip(ctx, queryIdBytes)
 		// Allocate rewards if there is a tip.
 		if !tip.Amount.IsZero() {
-			err = k.AllocateRewardsToStake(ctx, report.Reporters, tip)
+			err = k.AllocateRewards(ctx, report.Reporters, tip, true)
 			if err != nil {
 				return err
 			}
@@ -87,13 +85,11 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 		if cycleList[strings.ToLower(queryIdStr)] {
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
-
 	}
-
 	// Process time-based rewards for reporters.
 	tbr := k.getTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
-	return k.AllocateTBRRewards(ctx, reportersToPay, tbr)
+	return k.AllocateRewards(ctx, reportersToPay, tbr, false)
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) error {
