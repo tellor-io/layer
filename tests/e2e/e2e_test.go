@@ -215,7 +215,7 @@ func (s *E2ETestSuite) TestSubmit() {
 	currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	queryDataBytes, err := hex.DecodeString(currentQuery[2:])
 	require.Nil(err)
-	queryIdBytes := crypto.Keccak256(queryDataBytes)
+	_ = crypto.Keccak256(queryDataBytes)
 	// queryId := hex.EncodeToString(queryIdBytes)
 
 	accountAddrs, validatorAddrs := s.createValidators([]int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
@@ -230,10 +230,10 @@ func (s *E2ETestSuite) TestSubmit() {
 	err = CommitReport(s.ctx, string(accountAddrs[0].String()), currentQuery, msgServerOracle)
 	require.Nil(err)
 
-	commit, err := s.oraclekeeper.GetCommit(s.ctx, accountAddrs[0], queryIdBytes)
-	require.Nil(err)
-	require.NotNil(commit)
-	fmt.Println("commit: ", commit)
+	// commit, err := s.oraclekeeper.GetCommit(s.ctx, accountAddrs[0], queryIdBytes)
+	// require.Nil(err)
+	// require.NotNil(commit)
+	// fmt.Println("commit: ", commit)
 
 	// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	// valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes

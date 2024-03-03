@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:tests/setup.go
 package setup
-========
-package testutils
->>>>>>>> refs/remotes/origin/salt:tests/testutils/setup.go
 
 import (
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
@@ -18,7 +14,6 @@ import (
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
-	mintmodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
 )
@@ -36,10 +31,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "dispute", Permissions: []string{"burner"}},
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},
-<<<<<<<< HEAD:tests/setup.go
 					{Account: "time_based_rewards"},
-========
->>>>>>>> refs/remotes/origin/salt:tests/testutils/setup.go
 					{Account: "mint_to_team"},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
@@ -89,12 +81,9 @@ func RegistryModule() configurator.ModuleOption {
 
 func MintModule() configurator.ModuleOption {
 	return func(config *configurator.Config) {
-<<<<<<<< HEAD:tests/setup.go
-========
 		// config.BeginBlockersOrder = append(config.BeginBlockersOrder, "mint")
 		// config.EndBlockersOrder = append(config.EndBlockersOrder, "mint")
 		// config.InitGenesisOrder = append(config.InitGenesisOrder, "mint")
->>>>>>>> refs/remotes/origin/salt:tests/testutils/setup.go
 		config.ModuleConfigs["mint"] = &appv1alpha1.ModuleConfig{
 			Name:   "mint",
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
@@ -102,7 +91,6 @@ func MintModule() configurator.ModuleOption {
 	}
 }
 
-<<<<<<<< HEAD:tests/setup.go
 func ReporterModule() configurator.ModuleOption {
 	return func(config *configurator.Config) {
 		config.BeginBlockersOrder = append(config.BeginBlockersOrder, "reporter")
@@ -115,8 +103,6 @@ func ReporterModule() configurator.ModuleOption {
 	}
 }
 
-========
->>>>>>>> refs/remotes/origin/salt:tests/testutils/setup.go
 func DefaultStartUpConfig() sims.StartupConfig {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)

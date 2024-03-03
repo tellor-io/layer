@@ -4,10 +4,8 @@ package layer.oracle;
 
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
-import "gogoproto/gogo.proto";
 import "gogoproto/gogo.proto";
 import "layer/oracle/params.proto";
 
@@ -19,9 +17,6 @@ service Msg {
   // UpdateParams defines a (governance) operation for updating the module
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
-  rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
-  rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
-  rpc Tip(MsgTip) returns (MsgTipResponse);
   rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
   rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
   rpc Tip(MsgTip) returns (MsgTipResponse);
