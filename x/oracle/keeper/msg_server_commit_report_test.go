@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) TestCommitWithBadQueryData() {
 	require := s.Require()
 
 	// try to commit bad query data
-	queryData := "stupidQueryData"
+	queryData := "invalidQueryData"
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	var commitreq types.MsgCommitReport
 	valueDecoded, err := hex.DecodeString(value)
@@ -193,7 +193,6 @@ func (s *KeeperTestSuite) TestCommitWithMissingCreator() {
 	require.Panics(func() { s.msgServer.CommitReport(s.ctx, &commitreq) }, "empty address string is not allowed")
 }
 
-// Should ppl be allowed to commit with no query data and/or no hash ?
 func (s *KeeperTestSuite) TestCommitWithMissingQueryData() {
 	require := s.Require()
 

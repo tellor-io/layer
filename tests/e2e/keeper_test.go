@@ -1,4 +1,4 @@
-package integration_test
+package e2e_test
 
 import (
 	"encoding/hex"
@@ -13,6 +13,7 @@ import (
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	storetypes "cosmossdk.io/store/types"
@@ -46,9 +47,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/app/config"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/utils"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -62,25 +65,19 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
-	_ "github.com/tellor-io/layer/x/registry/module"
-	_ "github.com/tellor-io/layer/x/reporter/module"
-
+	testutils "github.com/tellor-io/layer/tests/testutils"
 	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+	"github.com/tellor-io/layer/x/mint"
 	"github.com/tellor-io/layer/x/oracle"
-
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	_ "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/accounts/abi"
-<<<<<<< HEAD
-	integration "github.com/tellor-io/layer/tests"
-=======
-	testutils "github.com/tellor-io/layer/tests/testutils"
->>>>>>> refs/remotes/origin/salt
 )
 
 const (
@@ -89,13 +86,13 @@ const (
 	trbQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 )
 
-type IntegrationTestSuite struct {
+type E2ETestSuite struct {
 	suite.Suite
 
 	oraclekeeper   oraclekeeper.Keeper
 	disputekeeper  disputekeeper.Keeper
 	registrykeeper registrykeeper.Keeper
-	reporterkeeper reporterkeeper.Keeper
+	mintkeeper     mintkeeper.Keeper
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
@@ -115,7 +112,7 @@ type IntegrationTestSuite struct {
 	app   *runtime.App
 }
 
-func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
+func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 	maccPerms := map[string][]string{}
 	for _, permission := range suite.authConfig.ModuleAccountPermissions {
 		maccPerms[permission.Account] = permission.Permissions
@@ -168,22 +165,24 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 		runtime.NewKVStoreService(suite.fetchStoreKey(registrytypes.StoreKey).(*storetypes.KVStoreKey)),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
 	suite.distrKeeper = distrkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.oraclekeeper = oraclekeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
 	suite.disputekeeper = disputekeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.slashingKeeper, suite.stakingKeeper,
 	)
+	suite.mintkeeper = mintkeeper.NewKeeper(
+		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
+	)
 }
 
-func (s *IntegrationTestSuite) SetupTest() {
+func (s *E2ETestSuite) SetupTest() {
 	dispute.AppWiringSetup()
 	oracle.AppWiringSetup()
+	mint.AppWiringSetup()
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
@@ -197,16 +196,10 @@ func (s *IntegrationTestSuite) SetupTest() {
 				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.DistributionModule(),
-<<<<<<< HEAD
-				integration.OracleModule(),
-				integration.DisputeModule(),
-				integration.RegistryModule(),
-				integration.ReporterModule(),
-=======
 				testutils.OracleModule(),
 				testutils.DisputeModule(),
 				testutils.RegistryModule(),
->>>>>>> refs/remotes/origin/salt
+				testutils.MintModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
@@ -214,7 +207,7 @@ func (s *IntegrationTestSuite) SetupTest() {
 		testutils.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
-		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.reporterkeeper)
+		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.distrKeeper, &s.mintkeeper)
 
 	s.NoError(err)
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
@@ -226,22 +219,22 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.app = app
 }
 
-func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
+func (s *E2ETestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
 	ctx := s.ctx
-	// s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
+	s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
 	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(amount)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(amount)))
 }
 
-func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
+func (s *E2ETestSuite) newKeysWithTokens() (sdk.AccAddress, cryptotypes.PrivKey, cryptotypes.PubKey) {
 	PrivKey := secp256k1.GenPrivKey()
 	PubKey := PrivKey.PubKey()
 	Addr := sdk.AccAddress(PubKey.Address())
 	s.mintTokens(Addr, sdk.NewCoin(s.denom, math.NewInt(1000000)))
-	return Addr
+	return Addr, PrivKey, PubKey
 }
 
-func (s *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
+func (s *E2ETestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
 	vals, err := s.stakingKeeper.GetAllValidators(s.ctx)
 	s.Require().NoError(err)
 	valAddr, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
@@ -256,7 +249,7 @@ func (s *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValA
 
 }
 
-func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func (s *E2ETestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
 	ctx := s.ctx
 	acctNum := len(powers)
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
@@ -267,6 +260,13 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
 	for i, pk := range pks {
+		// account := authtypes.BaseAccount{
+		// 	Address:       testAddrs[i].String(),
+		// 	PubKey:        codectypes.UnsafePackAny(pk),
+		// 	AccountNumber: s.accountKeeper.NextAccountNumber(ctx),
+		// }
+		// s.accountKeeper.NewAccount(s.ctx, &account)
+
 		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
 
 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
@@ -283,7 +283,7 @@ func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddres
 	return addrs, valAddrs
 }
 
-func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
+func (s *E2ETestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
 	initCoins := sdk.NewCoin(s.denom, accAmt)
 	for _, addr := range testAddrs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
@@ -298,7 +298,7 @@ type ModuleAccs struct {
 	dispute authtypes.AccountI
 }
 
-func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
+func (s *E2ETestSuite) ModuleAccs() ModuleAccs {
 	return ModuleAccs{
 		staking: s.accountKeeper.GetModuleAccount(s.ctx, "bonded_tokens_pool"),
 		dispute: s.accountKeeper.GetModuleAccount(s.ctx, "dispute"),
@@ -314,7 +314,7 @@ func CreateRandomPrivateKeys(accNum int) []secp256k1.PrivKey {
 	return testAddrs
 }
 
-func (s *IntegrationTestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []sdk.AccAddress {
+func (s *E2ETestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, len(priv))
 	for i, pk := range priv {
 		testAddrs[i] = sdk.AccAddress(pk.PubKey().Address())
@@ -322,7 +322,51 @@ func (s *IntegrationTestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []s
 	return testAddrs
 }
 
-func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []secp256k1.PrivKey) {
+func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorAddress sdk.ValAddress, k stakingkeeper.Keeper) error {
+	validator, err := k.GetValidator(ctx, validatorAddress)
+	if err != nil {
+		return fmt.Errorf("validator %s not found", validatorAddress)
+	}
+
+	if validator.Jailed {
+		return fmt.Errorf("validator %s is already jailed", validatorAddress)
+	}
+
+	k.Jail(ctx, consensusAddress)
+
+	return nil
+}
+
+func CommitReport(ctx sdk.Context, accountAddr string, queryData string, msgServerOracle oracletypes.MsgServer) error {
+	// commit
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
+	if err != nil {
+		return err
+	}
+	salt, err := utils.Salt(32)
+	if err != nil {
+		return err
+	}
+	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+	if err != nil {
+		return err
+	}
+	// commit report with query data in cycle list
+	commitreq := &oracletypes.MsgCommitReport{
+		Creator:   accountAddr,
+		QueryData: queryData,
+		Hash:      hash,
+	}
+	_, err = msgServerOracle.CommitReport(ctx, commitreq)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *E2ETestSuite) createValidatorAccs(powers []int64) []sdk.AccAddress {
 	ctx := s.ctx
 	acctNum := len(powers)
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
@@ -358,17 +402,7 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	_, err := s.stakingKeeper.EndBlocker(ctx)
 	s.NoError(err)
 
-	return addrs, valAddrs, privKeys
-}
-
-func (s *IntegrationTestSuite) CreateAccountsWithTokens(numofAccs int, amountOfTokens int64) []sdk.AccAddress {
-	privKeys := CreateRandomPrivateKeys(numofAccs)
-	accs := make([]sdk.AccAddress, numofAccs)
-	for i, pk := range privKeys {
-		accs[i] = sdk.AccAddress(pk.PubKey().Address())
-		s.mintTokens(accs[i], sdk.NewCoin(s.denom, math.NewInt(amountOfTokens)))
-	}
-	return accs
+	return addrs
 }
 
 // inspired by telliot python code
@@ -393,6 +427,38 @@ func encodeValue(number float64) string {
 	return encodedString
 }
 
+func (s *E2ETestSuite) oracleKeeper() (queryClient oracletypes.QueryClient, msgServer oracletypes.MsgServer) {
+	oracletypes.RegisterQueryServer(s.queryHelper, s.oraclekeeper)
+	oracletypes.RegisterInterfaces(s.interfaceRegistry)
+	queryClient = oracletypes.NewQueryClient(s.queryHelper)
+	msgServer = oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
+	return
+}
+
+func (s *E2ETestSuite) disputeKeeper() (queryClient disputetypes.QueryClient, msgServer disputetypes.MsgServer) {
+	disputetypes.RegisterQueryServer(s.queryHelper, s.disputekeeper)
+	disputetypes.RegisterInterfaces(s.interfaceRegistry)
+	queryClient = disputetypes.NewQueryClient(s.queryHelper)
+	msgServer = disputekeeper.NewMsgServerImpl(s.disputekeeper)
+	return
+}
+
+func (s *E2ETestSuite) registryKeeper() (queryClient registrytypes.QueryClient, msgServer registrytypes.MsgServer) {
+	registrytypes.RegisterQueryServer(s.queryHelper, registrykeeper.NewQuerier(s.registrykeeper))
+	registrytypes.RegisterInterfaces(s.interfaceRegistry)
+	queryClient = registrytypes.NewQueryClient(s.queryHelper)
+	msgServer = registrykeeper.NewMsgServerImpl(s.registrykeeper)
+	return
+}
+
+// func (s *E2ETestSuite) mintKeeper() (queryClient minttypes.QueryClient) {
+// 	// minttypes.RegisterQueryServer(s.queryHelper, mintkeeper.NewQuerier(s.mintkeeper))
+// 	// minttypes.RegisterInterfaces(s.interfaceRegistry)
+// 	queryClient = minttypes.NewQueryClient(s.queryHelper)
+// 	// msgServer = mintkeeper.NewMsgServerImpl(s.mintkeeper)
+// 	return
+// }
+
 func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
+	suite.Run(t, new(E2ETestSuite))
 }

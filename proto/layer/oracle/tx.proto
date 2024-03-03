@@ -4,8 +4,10 @@ package layer.oracle;
 
 import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 import "gogoproto/gogo.proto";
 import "layer/oracle/params.proto";
 
@@ -20,7 +22,11 @@ service Msg {
   rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
   rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
   rpc Tip(MsgTip) returns (MsgTipResponse);
+  rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
+  rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
+  rpc Tip(MsgTip) returns (MsgTipResponse);
 }
+
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
