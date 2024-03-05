@@ -35,6 +35,7 @@ var (
 	TotalTipsPrefix  = collections.NewPrefix(8)
 
 	CycleIndexPrefix = collections.NewPrefix(9)
+	CurrentTipPrefix = collections.NewPrefix(10)
 )
 
 func KeyPrefix(p string) []byte {

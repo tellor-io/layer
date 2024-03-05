@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -138,8 +139,6 @@ import (
 	daemonserver "github.com/tellor-io/layer/daemons/server"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-
-	"runtime/debug"
 
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
 	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
@@ -570,8 +569,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.OracleKeeper,
-		app.SlashingKeeper,
-		app.StakingKeeper,
+		app.ReporterKeeper,
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -918,8 +916,8 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // BeginBlocker application updates every begin block
-func (a *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	return a.mm.BeginBlock(ctx)
+func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block

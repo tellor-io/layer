@@ -73,10 +73,18 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		tip := k.GetQueryTip(ctx, queryIdBytes)
+		tip, err := k.GetQueryTip(ctx, queryIdBytes)
+		if err != nil {
+			return err
+		}
 		// Allocate rewards if there is a tip.
-		if !tip.Amount.IsZero() {
+		if !tip.IsZero() {
 			err = k.AllocateRewards(ctx, report.Reporters, tip, true)
+			if err != nil {
+				return err
+			}
+			// remove the tip from the store
+			err = k.CurrentTip.Remove(ctx, queryIdBytes)
 			if err != nil {
 				return err
 			}

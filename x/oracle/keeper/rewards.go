@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -17,7 +18,7 @@ type ReportersReportCount struct {
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the appropriate module based on the source of the reward.
-func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateReporter, reward sdk.Coin, toStake bool) error {
+func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateReporter, reward math.Int, toStake bool) error {
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.
@@ -51,7 +52,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateRep
 
 	}
 	for r, c := range reportCounts {
-		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward.Amount)
+		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward)
 		repoterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
 			return err
@@ -62,12 +63,13 @@ func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateRep
 		}
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, from, to, sdk.NewCoins(reward))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, from, to, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
 }
 
-func (k Keeper) getTimeBasedRewards(ctx sdk.Context) sdk.Coin {
+func (k Keeper) getTimeBasedRewards(ctx sdk.Context) math.Int {
 	tbrAccount := k.getTimeBasedRewardsAccount(ctx)
-	return k.bankKeeper.GetBalance(ctx, tbrAccount.GetAddress(), types.DefaultBondDenom)
+	balance := k.bankKeeper.GetBalance(ctx, tbrAccount.GetAddress(), layer.BondDenom)
+	return balance.Amount
 }
 
 func (k Keeper) getTimeBasedRewardsAccount(ctx sdk.Context) sdk.ModuleAccountI {
@@ -81,7 +83,7 @@ func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward
 }
 
 func (k Keeper) AllocateTBR(ctx sdk.Context, addr []byte, amount math.Int) error {
-	reward := sdk.NewDecCoins(sdk.NewDecCoin(types.DefaultBondDenom, amount))
+	reward := sdk.NewDecCoins(sdk.NewDecCoin(layer.BondDenom, amount))
 	return k.reporterKeeper.AllocateTokensToReporter(ctx, addr, reward)
 }
 

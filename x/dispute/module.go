@@ -153,10 +153,15 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ids := am.keeper.CheckPrevoteDisputesForExpiration(sdkCtx)
-	am.keeper.Tally(sdkCtx, ids)
-	am.keeper.ExecuteVotes(sdkCtx, ids)
-	return nil
+	ids, err := am.keeper.CheckPrevoteDisputesForExpiration(sdkCtx)
+	if err != nil {
+		return err
+	}
+	err = am.keeper.Tally(sdkCtx, ids)
+	if err != nil {
+		return err
+	}
+	return am.keeper.ExecuteVotes(sdkCtx, ids)
 }
 
 // ----------------------------------------------------------------------------
@@ -166,7 +171,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 func init() {
 	appmodule.Register(&disputemodulev1.Module{},
 		appmodule.Provide(ProvideModule))
-
 }
 
 type DisputeInputs struct {
@@ -180,8 +184,7 @@ type DisputeInputs struct {
 	AccountKeeper  types.AccountKeeper
 	BankKeeper     types.BankKeeper
 	OracleKeeper   types.OracleKeeper
-	SlashingKeeper types.SlashingKeeper
-	StakingKeeper  types.StakingKeeper
+	ReporterKeeper types.ReporterKeeper
 }
 
 type DisputeOutputs struct {
@@ -192,7 +195,6 @@ type DisputeOutputs struct {
 }
 
 func ProvideModule(in DisputeInputs) DisputeOutputs {
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.KvStoreKey,
@@ -201,8 +203,7 @@ func ProvideModule(in DisputeInputs) DisputeOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		in.OracleKeeper,
-		in.SlashingKeeper,
-		in.StakingKeeper,
+		in.ReporterKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,

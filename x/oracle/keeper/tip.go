@@ -15,52 +15,79 @@ func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (
 	twoPercent := tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	burnCoin := sdk.NewCoin(tip.Denom, twoPercent)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, tipper, types.ModuleName, sdk.NewCoins(tip)); err != nil {
-		return sdk.NewCoin(tip.Denom, math.ZeroInt()), err
+		return sdk.Coin{}, err
 	}
 	// burn 2% of tip
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(burnCoin)); err != nil {
-		return sdk.NewCoin(tip.Denom, math.ZeroInt()), err
+		return sdk.Coin{}, err
 	}
 	return tip.Sub(burnCoin), nil
 }
 
-func (k Keeper) GetQueryTip(ctx sdk.Context, queryId []byte) sdk.Coin {
-	tipsSum := sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
-	rng := collections.NewPrefixedPairRange[[]byte, []byte](queryId) // range all tips for this queryID
-	k.Tips.Walk(ctx, rng, func(key collections.Pair[[]byte, []byte], value math.Int) (stop bool, err error) {
-		tipsSum = tipsSum.AddAmount(value)
-		return false, nil
-	})
-	return tipsSum
+func (k Keeper) GetQueryTip(ctx sdk.Context, queryId []byte) (math.Int, error) {
+	tip, err := k.CurrentTip.Get(ctx, queryId)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return math.ZeroInt(), nil
+		} else {
+			return math.Int{}, err
+		}
+	}
+	return tip, nil
 }
 
-func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) types.UserTipTotal {
+func (k Keeper) SetQueryTip(ctx sdk.Context, queryId []byte, tip math.Int) error {
+	existingTip, err := k.GetQueryTip(ctx, queryId)
+	if err != nil {
+		return err
+	}
+	return k.CurrentTip.Set(ctx, queryId, existingTip.Add(tip))
+}
+
+func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) (types.UserTipTotal, error) {
 	it, err := k.Tips.Indexes.Tipper.MatchExact(ctx, tipper.Bytes())
 	if err != nil {
-		panic(err)
+		return types.UserTipTotal{}, err
 	}
 
 	vals, err := indexes.CollectValues(ctx, k.Tips, it)
 	if err != nil {
-		panic(err)
+		return types.UserTipTotal{}, err
 	}
 
-	totalTips := sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
+	totalTips := math.ZeroInt()
 	for _, tip := range vals {
-		totalTips = totalTips.AddAmount(tip)
+		totalTips = totalTips.Add(tip)
 	}
 
 	return types.UserTipTotal{
 		Address: tipper.String(),
 		Total:   totalTips,
-	}
+	}, nil
 }
 
-func (k Keeper) GetTotalTips(ctx context.Context) sdk.Coin {
+func (k Keeper) GetTotalTips(ctx context.Context) (math.Int, error) {
 	totalTips, err := k.TotalTips.Get(ctx)
-	if errors.Is(err, collections.ErrNotFound) {
-		return sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return math.ZeroInt(), nil
+		}
+		return math.Int{}, err
 	}
 
-	return sdk.NewCoin(types.DefaultBondDenom, totalTips)
+	return totalTips, nil
+}
+
+// Add to overall total tips, used for dispute voting calculation
+func (k Keeper) AddtoTotalTips(ctx context.Context, tip math.Int) error {
+	totalTips, err := k.TotalTips.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return k.TotalTips.Set(ctx, tip)
+		}
+	} else {
+		return err
+	}
+	totalTips = totalTips.Add(totalTips)
+	return k.TotalTips.Set(ctx, totalTips)
 }

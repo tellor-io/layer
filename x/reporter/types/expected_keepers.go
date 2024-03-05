@@ -19,6 +19,14 @@ type StakingKeeper interface {
 		ctx context.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus,
 		validator stakingtypes.Validator, subtractAccount bool,
 	) (newShares math.LegacyDec, err error)
+	RemoveDelegation(ctx context.Context, delegation stakingtypes.Delegation) error
+	RemoveValidatorTokensAndShares(ctx context.Context, validator stakingtypes.Validator,
+		sharesToRemove math.LegacyDec,
+	) (valOut stakingtypes.Validator, removedTokens math.Int, err error)
+	SetDelegation(ctx context.Context, delegation stakingtypes.Delegation) error
+	RemoveValidator(ctx context.Context, address sdk.ValAddress) error
+	Jail(ctx context.Context, consAddr sdk.ConsAddress) error
+	GetValidators(ctx context.Context, maxRetrieve uint32) (validators []stakingtypes.Validator, err error)
 	// Methods imported from account should be defined here
 }
 
@@ -32,6 +40,7 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	SpendableCoins(context.Context, sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
 

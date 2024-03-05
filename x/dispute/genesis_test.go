@@ -17,7 +17,7 @@ func TestGenesis(t *testing.T) {
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, ctx := keepertest.DisputeKeeper(t)
+	k, _, _, _, _, ctx := keepertest.DisputeKeeper(t)
 	dispute.InitGenesis(ctx, k, genesisState)
 	got := dispute.ExportGenesis(ctx, k)
 	require.NotNil(t, got)

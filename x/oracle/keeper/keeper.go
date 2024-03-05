@@ -26,6 +26,7 @@ type (
 		// should be the x/gov module account.
 		Schema     collections.Schema
 		Commits    collections.Map[collections.Pair[[]byte, []byte], types.CommitReport]                               // key: reporter, queryid
+		CurrentTip collections.Map[[]byte, math.Int]                                                                   // key: queryId
 		Tips       *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                      // key: queryId, tipper
 		TotalTips  collections.Item[math.Int]                                                                          // keep track of the total tips
 		Aggregates collections.Map[collections.Pair[[]byte, int64], types.Aggregate]                                   // key: queryId, timestamp
@@ -64,7 +65,8 @@ func NewKeeper(
 
 		authority: authority,
 
-		Commits: collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), codec.CollValue[types.CommitReport](cdc)),
+		Commits:    collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), codec.CollValue[types.CommitReport](cdc)),
+		CurrentTip: collections.NewMap(sb, types.CurrentTipPrefix, "current_tip", collections.BytesKey, sdk.IntValue),
 		Tips: collections.NewIndexedMap(sb,
 			types.TipsPrefix,
 			"tips",
@@ -92,7 +94,6 @@ func NewKeeper(
 	k.Schema = schema
 
 	return k
-
 }
 
 // GetAuthority returns the module's authority.

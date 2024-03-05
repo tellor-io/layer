@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
@@ -774,6 +775,7 @@ func (k Keeper) AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.Acc
 		if err != nil {
 			return err
 		}
+		bondedShares := math.ZeroInt()
 		for _, source := range delegatorSources {
 			srcAmt := source.Value
 			_share := delegatorShare.Mul(math.LegacyNewDecFromInt(srcAmt)).Quo(math.LegacyNewDecFromInt(del.Amount))
@@ -781,12 +783,85 @@ func (k Keeper) AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.Acc
 			if err != nil {
 				return err
 			}
-			_, err = k.stakingKeeper.Delegate(ctx, key, _share.TruncateInt(), stakingtypes.Bonded, val, false) // ignore dust???
+			newShares, err := k.stakingKeeper.Delegate(ctx, key, _share.TruncateInt(), stakingtypes.Bonded, val, false) // ignore dust???
 			if err != nil {
+				return err
+			}
+			source.Value = source.Value.Sub(newShares.TruncateInt())
+			if err := k.TokenOrigin.Set(ctx, collections.Join(source.Key.K1(), source.Key.K2()), source.Value); err != nil {
+				return err
+			}
+			bondedShares = bondedShares.Add(newShares.TruncateInt())
+		}
+		if bondedShares.IsPositive() {
+			del.Amount = del.Amount.Add(bondedShares)
+			if err := k.Delegators.Set(ctx, key, del); err != nil {
+				return err
+			}
+		}
+
+	}
+	reporter.TotalTokens = reporter.TotalTokens.Add(reward)
+	if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// allocate reward as stake to an address that isn't a reporter, that stakes with a validator
+// get all the validators and delegate to them as much as possible
+// is there a limit to how much you can delegate to a validator?
+func (k Keeper) allocateRewardsToStake(ctx context.Context, val stakingtypes.Validator, addr sdk.AccAddress, reward math.Int) (math.LegacyDec, error) {
+	newShares, err := k.stakingKeeper.Delegate(ctx, addr, reward, stakingtypes.Bonded, val, false)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	return newShares, nil
+}
+
+func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, recipients []disputetypes.PayerInfo, reward math.Int) error {
+	totalAmt := math.ZeroInt()
+	for _, recipient := range recipients {
+		totalAmt = totalAmt.Add(recipient.Amount.Amount)
+	}
+	unbondedAddrs := make([]disputetypes.PayerInfo, 0)
+	for _, recipient := range recipients {
+		amt := recipient.Amount.Amount.Quo(totalAmt).Mul(reward)
+		addr, err := sdk.AccAddressFromBech32(recipient.PayerAddress)
+		if err != nil {
+			return err
+		}
+		err = k.AllocateRewardsToStake(ctx, addr, amt)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				unbondedAddrs = append(unbondedAddrs, recipient)
+			} else {
 				return err
 			}
 		}
 	}
-
+	if len(unbondedAddrs) == 0 {
+		return nil
+	}
+	// allocate to unbonded addresses
+	// get list of validators
+	validators, err := k.stakingKeeper.GetValidators(ctx, uint32(len(unbondedAddrs)))
+	if err != nil {
+		return err
+	}
+	// for each validator, delegate as much as possible
+	for i, val := range validators {
+		payer := unbondedAddrs[i]
+		amt := payer.Amount.Amount.Quo(totalAmt).Mul(reward)
+		addr, err := sdk.AccAddressFromBech32(payer.PayerAddress)
+		if err != nil {
+			return err
+		}
+		_, err = k.allocateRewardsToStake(ctx, val, addr, amt)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

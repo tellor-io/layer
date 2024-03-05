@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,5 +19,5 @@ func (k Keeper) GetTimeBasedRewards(goCtx context.Context, req *types.QueryGetTi
 
 	rewards := k.getTimeBasedRewards(ctx)
 
-	return &types.QueryGetTimeBasedRewardsResponse{Reward: rewards}, nil
+	return &types.QueryGetTimeBasedRewardsResponse{Reward: sdk.NewCoin(layer.BondDenom, rewards)}, nil
 }

@@ -147,7 +147,6 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
 	s.NoError(err)
 	s.Equal(amt, math.NewInt(10*1e6))
 	// call the staking hook
-	s.stakingKeeper.SetHooks(s.reporterkeeper.Hooks())
 	err = s.stakingKeeper.Hooks().AfterDelegationModified(s.ctx, delegators[delegatorI].delegatorAddress, valBz)
 	s.NoError(err)
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
@@ -261,13 +260,14 @@ func createReporterStakedWithValidator(ctx sdk.Context, k keeper.Keeper, sk repo
 	return createReporterMsg, nil
 }
 
-func DelegateToReporterSingleValidator(ctx sdk.Context, k keeper.Keeper, repAddr sdk.AccAddress, delAddr sdk.AccAddress, valAddr sdk.ValAddress, stake math.Int) error {
-	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.String(), Amount: stake}
+func DelegateToReporterSingleValidator(
+	ctx sdk.Context, k keeper.Keeper, repAddr sdk.AccAddress, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sources []*reportertypes.TokenOrigin, stake math.Int,
+) error {
 	delegation := reportertypes.NewMsgDelegateReporter(
 		delAddr.String(),
 		repAddr.String(),
 		stake,
-		[]*reportertypes.TokenOrigin{&source},
+		sources,
 	)
 	server := keeper.NewMsgServerImpl(k)
 	_, err := server.DelegateReporter(ctx, delegation)
@@ -276,3 +276,8 @@ func DelegateToReporterSingleValidator(ctx sdk.Context, k keeper.Keeper, repAddr
 	}
 	return err
 }
+
+// create multiple validators
+// stake 5 delegators with each validator
+// create one reporter
+// delegate 5 delegators to the reporter with token sources from each validator for each delegator

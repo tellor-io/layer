@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package layer.oracle;
 
-import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
@@ -12,7 +12,15 @@ message Tips {
   // queryData is the query data that was tipped
   string query_data = 1;
   // amount is the amount that was tipped
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
   // totalTips is the total amount of tips for this query data so far
-  cosmos.base.v1beta1.Coin total_tips = 3 [(gogoproto.nullable) = false];
+  string total_tips = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }

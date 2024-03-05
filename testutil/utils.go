@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -10,12 +9,6 @@ import (
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
-
-func GenerateRandomAddress() sdk.AccAddress {
-	randBytes := make([]byte, 20)
-	rand.Read(randBytes)
-	return sdk.AccAddress(randBytes)
-}
 
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport

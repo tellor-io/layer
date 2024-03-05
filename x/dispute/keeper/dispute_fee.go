@@ -20,65 +20,20 @@ func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coi
 }
 
 // Pay fee from validator's bond can only be called by the validator itself
-func (k Keeper) PayFromBond(ctx sdk.Context, delAddr sdk.AccAddress, fee sdk.Coin) error {
-	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
-	if err != nil {
-		return stakingtypes.ErrNoValidatorFound
-	}
-
-	// Check if validator has tokens to pay the fee
-	if fee.Amount.GT(validator.GetBondedTokens()) {
-		return fmt.Errorf("not enough stake to pay the fee")
-	}
-
-	// Deduct tokens from validator
-	validator, err = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, fee.Amount)
-	if err != nil {
-		return err
-	}
-
-	// Send fee to module account
-	var poolName string
-	switch validator.GetStatus() {
-	case stakingtypes.Bonded:
-		poolName = stakingtypes.BondedPoolName
-	case stakingtypes.Unbonded, stakingtypes.Unbonding:
-		poolName = stakingtypes.NotBondedPoolName
-	default:
-		panic("invalid validator status")
-	}
-
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, poolName, types.ModuleName, sdk.NewCoins(fee)); err != nil {
-		return err
-	}
-	return nil
+func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin) error {
+	return k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, fee.Amount)
 }
 
 // Refund coins to bonded pool
 func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) error {
-	// TODO: loophole bypassing redelegation MaxEntries check
-	// k.GetLastRefundBlockTime(ctx, delAddr)
-	// k.SetLastRefundBlockTime(ctx, delAddr, currentBlock)
-	delAddr := sdk.MustAccAddressFromBech32(refundTo)
-	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
-	if err != nil {
-		return stakingtypes.ErrNoValidatorFound
-	}
-	validator, _, err = k.stakingKeeper.AddValidatorTokensAndShares(ctx, validator, fee.Amount)
+	reporterAddr, err := sdk.AccAddressFromBech32(refundTo)
 	if err != nil {
 		return err
 	}
-
-	if validator.IsBonded() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee)); err != nil {
-			return err
-		}
-	} else {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(fee)); err != nil {
-			return err
-		}
+	if err := k.reporterKeeper.AllocateRewardsToStake(ctx, reporterAddr, fee.Amount); err != nil {
+		return err
 	}
-	return nil
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee))
 }
 
 // Pay dispute fee

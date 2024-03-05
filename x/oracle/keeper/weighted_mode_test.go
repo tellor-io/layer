@@ -2,14 +2,14 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/testutil"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestWeightedMode() {
 	reporters := make([]sdk.AccAddress, 18)
 	for i := 0; i < 10; i++ {
-		reporters[i] = testutil.GenerateRandomAddress()
+		reporters[i] = sample.AccAddressBytes()
 	}
 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
 	// normal scenario
@@ -114,5 +114,4 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Report.Reporters[3].Reporter, reporters[8].String(), "reporter is not correct")
 	s.Equal(res.Report.Reporters[4].Reporter, reporters[9].String(), "reporter is not correct")
 	s.Equal(res.Report.AggregateReportIndex, int64(1), "report index is not correct")
-
 }

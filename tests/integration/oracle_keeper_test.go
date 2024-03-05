@@ -2,9 +2,8 @@ package integration_test
 
 import (
 	"encoding/hex"
-	"time"
-
 	"testing"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -27,7 +26,6 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestTipping() {
-
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 
 	addr := s.newKeysWithTokens()
@@ -45,40 +43,44 @@ func (s *IntegrationTestSuite) TestTipping() {
 	queryId, err := utils.QueryIDFromDataString(ethQueryData)
 	s.NoError(err)
 
-	tips := s.oraclekeeper.GetQueryTip(s.ctx, queryId)
-	s.Equal(tip.Sub(twoPercent).Amount, tips.Amount)
-	s.Equal(tips.Amount, tips.Amount)
+	tips, err := s.oraclekeeper.GetQueryTip(s.ctx, queryId)
+	s.NoError(err)
+	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
-	userTips := s.oraclekeeper.GetUserTips(s.ctx, addr)
+	userTips, err := s.oraclekeeper.GetUserTips(s.ctx, addr)
+	s.NoError(err)
 	s.Equal(userTips.Address, addr.String())
-	s.Equal(userTips.Total.Amount.Int64(), tips.Amount.Int64())
+	s.Equal(userTips.Total.Int64(), tips.Int64())
 
 	// tip same query again
 	_, err = msgServer.Tip(s.ctx, &msg)
 	s.NoError(err)
-	tips = s.oraclekeeper.GetQueryTip(s.ctx, queryId)
+	tips, err = s.oraclekeeper.GetQueryTip(s.ctx, queryId)
+	s.NoError(err)
 	// tips should be 2x
-	s.Equal(tip.Sub(twoPercent).Amount.Mul(math.NewInt(2)), tips.Amount)
-	s.Equal(tips.Amount, tips.Amount)
+	s.Equal(tip.Sub(twoPercent).Amount.Mul(math.NewInt(2)), tips)
+
 	// total tips overall
-	userTips = s.oraclekeeper.GetUserTips(s.ctx, addr)
+	userTips, err = s.oraclekeeper.GetUserTips(s.ctx, addr)
+	s.NoError(err)
 	s.Equal(userTips.Address, addr.String())
-	s.Equal(userTips.Total.Amount, tips.Amount)
+	s.Equal(userTips.Total, tips)
 
 	// tip different query
 	btcQueryId, err := utils.QueryIDFromDataString(btcQueryData)
 	s.NoError(err)
 	_, err = msgServer.Tip(s.ctx, &types.MsgTip{QueryData: btcQueryData, Tipper: addr.String(), Amount: tip})
 	s.NoError(err)
-	tips = s.oraclekeeper.GetQueryTip(s.ctx, btcQueryId)
-	s.Equal(tip.Sub(twoPercent).Amount, tips.Amount)
-	s.Equal(tips.Amount, tips.Amount)
+	tips, err = s.oraclekeeper.GetQueryTip(s.ctx, btcQueryId)
+	s.NoError(err)
+	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
 	userQueryTips, _ := s.oraclekeeper.Tips.Get(s.ctx, collections.Join(btcQueryId, addr.Bytes()))
-	s.Equal(userQueryTips, tips.Amount)
-	userTips = s.oraclekeeper.GetUserTips(s.ctx, addr)
+	s.Equal(userQueryTips, tips)
+	userTips, err = s.oraclekeeper.GetUserTips(s.ctx, addr)
+	s.NoError(err)
 	s.Equal(userTips.Address, addr.String())
-	s.Equal(userTips.Total.Amount, tips.Amount.Add(tips.Amount).Add(tips.Amount))
+	s.Equal(userTips.Total, tips.Add(tips).Add(tips))
 }
 
 func (s *IntegrationTestSuite) TestGetCurrentTip() {
@@ -99,10 +101,11 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 	// Get current tip
 	resp, err := s.oraclekeeper.GetCurrentTip(s.ctx, &types.QueryGetCurrentTipRequest{QueryData: ethQueryData})
 	s.NoError(err)
-	s.Equal(resp.Tips, &types.Tips{QueryData: ethQueryData, Amount: tip.Sub(twoPercent)})
+	s.Equal(resp.Tips, &types.Tips{QueryData: ethQueryData, Amount: tip.Amount.Sub(twoPercent.Amount)})
 }
 
-func (s *IntegrationTestSuite) TestGetUserTipTotal() {
+// test tipping, reporting and allocation of rewards
+func (s *IntegrationTestSuite) TestTippingReporting() {
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 
 	addr := s.newKeysWithTokens()
@@ -117,10 +120,58 @@ func (s *IntegrationTestSuite) TestGetUserTipTotal() {
 	_, err := msgServer.Tip(s.ctx, &msg)
 	s.NoError(err)
 
+	queryId, err := utils.QueryIDFromDataString(ethQueryData)
+	s.NoError(err)
+
+	tips, err := s.oraclekeeper.GetQueryTip(s.ctx, queryId)
+	s.NoError(err)
+	s.Equal(tip.Sub(twoPercent).Amount, tips)
+
+	newReporter, err := createReporter(s.ctx, int64(1), s.reporterkeeper)
+	s.Nil(err)
+	salt, err := oracleutils.Salt(32)
+	s.Nil(err)
+	value := encodeValue(29266)
+	hash := oracleutils.CalculateCommitment(value, salt)
+	commit, reveal := report(newReporter.String(), value, salt, hash, ethQueryData)
+	_, err = msgServer.CommitReport(s.ctx, &commit)
+	s.Nil(err)
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = msgServer.SubmitValue(s.ctx, &reveal)
+	s.Nil(err)
+	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
+	s.Nil(err)
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryId)})
+	s.Nil(err)
+	s.Equal(res.Report.AggregateReporter, newReporter.String())
+	// tip should be 0 after aggregated report
+	tips, err = s.oraclekeeper.GetQueryTip(s.ctx, queryId)
+	s.Nil(err)
+	s.Equal(tips, math.ZeroInt())
+	totalTips, err := s.oraclekeeper.GetTotalTips(s.ctx)
+	s.Nil(err)
+	s.Equal(totalTips, tip.Sub(twoPercent).Amount) // total tips should be equal to the tipped amount minus 2% burned
+}
+
+func (s *IntegrationTestSuite) TestGetUserTipTotal() {
+	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+
+	addr := s.newKeysWithTokens()
+
+	tip := math.NewInt(1000)
+	twoPercent := tip.Mul(math.NewInt(2)).Quo(math.NewInt(100))
+	msg := types.MsgTip{
+		Tipper:    addr.String(),
+		QueryData: ethQueryData,
+		Amount:    sdk.NewCoin(s.denom, tip),
+	}
+	_, err := msgServer.Tip(s.ctx, &msg)
+	s.NoError(err)
+
 	// Get current tip
 	resp, err := s.oraclekeeper.GetUserTipTotal(s.ctx, &types.QueryGetUserTipTotalRequest{Tipper: addr.String(), QueryData: ethQueryData})
 	s.NoError(err)
-	s.Equal(resp.TotalTips.Total.Amount, tip.Sub(twoPercent).Amount)
+	s.Equal(resp.TotalTips.Total, tip.Sub(twoPercent))
 	// Check total tips without a given query data
 	resp, err = s.oraclekeeper.GetUserTipTotal(s.ctx, &types.QueryGetUserTipTotalRequest{Tipper: addr.String()})
 	s.NoError(err)
@@ -312,7 +363,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward, false)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -375,7 +426,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward, false)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
 	s.NoError(err, "error allocating rewards")
 
 	// advance height
@@ -385,13 +436,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
 			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
 			s.Equal(tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease), afterBalance.Amount)
-
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
-
 	tipper := s.newKeysWithTokens()
 	reward := math.NewInt(100)
 	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
@@ -449,7 +498,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward, false)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -461,7 +510,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			tolerance := expectedAfterBalance.SubRaw(1) //due to rounding int
 			withinTolerance := expectedAfterBalance.Equal(afterBalance.Amount) || tolerance.Equal(afterBalance.Amount)
 			s.True(withinTolerance)
-
 		})
 	}
 }
@@ -585,7 +633,8 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), s.ctx.BlockTime())
 	_, err = createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
 	s.Nil(err)
-	err = DelegateToReporterSingleValidator(s.ctx, s.reporterkeeper, repAcc, delegator2, valAddr, stakeAmount)
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.String(), Amount: stakeAmount}
+	err = DelegateToReporterSingleValidator(s.ctx, s.reporterkeeper, repAcc, delegator2, valAddr, []*reportertypes.TokenOrigin{&source}, stakeAmount)
 	s.Nil(err)
 
 	// check delegation shares before reporting, should be equal to the stake amount

@@ -111,6 +111,119 @@ func (_m *StakingKeeper) GetValidator(ctx context.Context, addr cosmos_sdktypes.
 	return r0, r1
 }
 
+// GetValidators provides a mock function with given fields: ctx, maxRetrieve
+func (_m *StakingKeeper) GetValidators(ctx context.Context, maxRetrieve uint32) ([]stakingtypes.Validator, error) {
+	ret := _m.Called(ctx, maxRetrieve)
+
+	var r0 []stakingtypes.Validator
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint32) ([]stakingtypes.Validator, error)); ok {
+		return rf(ctx, maxRetrieve)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint32) []stakingtypes.Validator); ok {
+		r0 = rf(ctx, maxRetrieve)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]stakingtypes.Validator)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint32) error); ok {
+		r1 = rf(ctx, maxRetrieve)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Jail provides a mock function with given fields: ctx, consAddr
+func (_m *StakingKeeper) Jail(ctx context.Context, consAddr cosmos_sdktypes.ConsAddress) error {
+	ret := _m.Called(ctx, consAddr)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.ConsAddress) error); ok {
+		r0 = rf(ctx, consAddr)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveDelegation provides a mock function with given fields: ctx, delegation
+func (_m *StakingKeeper) RemoveDelegation(ctx context.Context, delegation stakingtypes.Delegation) error {
+	ret := _m.Called(ctx, delegation)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, stakingtypes.Delegation) error); ok {
+		r0 = rf(ctx, delegation)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveValidator provides a mock function with given fields: ctx, _a1
+func (_m *StakingKeeper) RemoveValidator(ctx context.Context, _a1 cosmos_sdktypes.ValAddress) error {
+	ret := _m.Called(ctx, _a1)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.ValAddress) error); ok {
+		r0 = rf(ctx, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// RemoveValidatorTokensAndShares provides a mock function with given fields: ctx, validator, sharesToRemove
+func (_m *StakingKeeper) RemoveValidatorTokensAndShares(ctx context.Context, validator stakingtypes.Validator, sharesToRemove math.LegacyDec) (stakingtypes.Validator, math.Int, error) {
+	ret := _m.Called(ctx, validator, sharesToRemove)
+
+	var r0 stakingtypes.Validator
+	var r1 math.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, stakingtypes.Validator, math.LegacyDec) (stakingtypes.Validator, math.Int, error)); ok {
+		return rf(ctx, validator, sharesToRemove)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, stakingtypes.Validator, math.LegacyDec) stakingtypes.Validator); ok {
+		r0 = rf(ctx, validator, sharesToRemove)
+	} else {
+		r0 = ret.Get(0).(stakingtypes.Validator)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, stakingtypes.Validator, math.LegacyDec) math.Int); ok {
+		r1 = rf(ctx, validator, sharesToRemove)
+	} else {
+		r1 = ret.Get(1).(math.Int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, stakingtypes.Validator, math.LegacyDec) error); ok {
+		r2 = rf(ctx, validator, sharesToRemove)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// SetDelegation provides a mock function with given fields: ctx, delegation
+func (_m *StakingKeeper) SetDelegation(ctx context.Context, delegation stakingtypes.Delegation) error {
+	ret := _m.Called(ctx, delegation)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, stakingtypes.Delegation) error); ok {
+		r0 = rf(ctx, delegation)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ValidatorByConsAddr provides a mock function with given fields: _a0, _a1
 func (_m *StakingKeeper) ValidatorByConsAddr(_a0 context.Context, _a1 cosmos_sdktypes.ConsAddress) (stakingtypes.ValidatorI, error) {
 	ret := _m.Called(_a0, _a1)

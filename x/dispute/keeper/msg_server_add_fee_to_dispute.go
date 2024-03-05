@@ -8,12 +8,13 @@ import (
 )
 
 func (k msgServer) AddFeeToDispute(goCtx context.Context,
-	msg *types.MsgAddFeeToDispute) (*types.MsgAddFeeToDisputeResponse, error) {
+	msg *types.MsgAddFeeToDispute,
+) (*types.MsgAddFeeToDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	dispute := k.GetDisputeById(ctx, msg.DisputeId)
+	dispute, err := k.GetDisputeById(ctx, msg.DisputeId)
 	if dispute == nil {
-		return nil, types.ErrDisputeDoesNotExist
+		return nil, err
 	}
 	// check if time to add fee has expired
 	if ctx.BlockTime().After(dispute.DisputeEndTime) {
@@ -39,14 +40,24 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	})
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory)
+		err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory)
+		if err != nil {
+			return nil, err
+		}
 		// begin voting immediately
 		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
-		k.Keeper.SetStartVote(ctx, dispute.DisputeId)
+		err = k.Keeper.SetStartVote(ctx, dispute.DisputeId)
+		if err != nil {
+			return nil, err
+		}
 	}
-	k.Keeper.SetDisputeById(ctx, dispute.DisputeId, *dispute)
-	k.Keeper.SetDisputeByReporter(ctx, *dispute)
+	if err := k.Keeper.SetDisputeById(ctx, dispute.DisputeId, *dispute); err != nil {
+		return nil, err
+	}
+	if err := k.Keeper.SetDisputeByReporter(ctx, *dispute); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgAddFeeToDisputeResponse{}, nil
 }

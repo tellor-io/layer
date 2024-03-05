@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -15,7 +16,7 @@ func (k Keeper) SortPayerInfo(feePayers []types.PayerInfo) (fromAcc, fromBond []
 			fromAcc = append(fromAcc, payer)
 		}
 	}
-	return
+	return fromAcc, fromBond
 }
 
 func (k Keeper) RefundDisputeFeeToAccount(ctx sdk.Context, fromAcc []types.PayerInfo) error {
@@ -44,8 +45,10 @@ func (k Keeper) RefundDisputeFeeToBond(ctx sdk.Context, fromBond []types.PayerIn
 		burn := recipient.Amount.Amount.MulRaw(1).QuoRaw(20)
 		recipient.Amount.Amount = recipient.Amount.Amount.Sub(burn)
 		if err := k.RefundToBond(ctx, recipient.PayerAddress, recipient.Amount); err != nil {
-			panic(err)
+			return err
 		}
+		// TODO: add fallback to stake in random validator if for some reason the address is not found
+		// due to undelegating from being a reporter
 	}
 	return nil
 }
@@ -58,10 +61,13 @@ func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.
 	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
 	for voter, share := range tokenDistribution {
-		reward := sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, share))
+		if share.IsZero() {
+			continue
+		}
+		reward := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, share))
 		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(voter), reward))
 	}
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, totalAmount)))
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, totalAmount)))
 	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }

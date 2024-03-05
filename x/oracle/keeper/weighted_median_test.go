@@ -3,15 +3,15 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestWeightedMedian() {
-
 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
 	reporters := make([]sdk.AccAddress, 18)
 	for i := 0; i < 18; i++ {
-		reporters[i] = testutil.GenerateRandomAddress()
+		reporters[i] = sample.AccAddressBytes()
 	}
 	// normal scenario - 5 reporters various weights
 	// list of addresses

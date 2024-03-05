@@ -30,9 +30,12 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if err != nil {
 		return nil, err
 	}
-	tip := k.GetQueryTip(ctx, queryId)
+	tip, err := k.GetQueryTip(ctx, queryId)
+	if err != nil {
+		return nil, err
+	}
 
-	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
+	if currentCycleQuery != msg.QueryData && tip.IsZero() {
 		return nil, status.Error(codes.Unavailable, "query does not have tips and is not in cycle")
 	}
 
