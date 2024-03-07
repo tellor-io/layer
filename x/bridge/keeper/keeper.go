@@ -640,6 +640,8 @@ func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 		return "", err
+	} else {
+		k.Logger(ctx).Info("EVM address from operator address", "evmAddress", hex.EncodeToString(ethAddress.EVMAddress))
 	}
 	return hex.EncodeToString(ethAddress.EVMAddress), nil
 }

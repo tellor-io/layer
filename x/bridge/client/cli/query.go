@@ -28,6 +28,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdGetValidatorTimestampByIndex())
 	cmd.AddCommand(CmdGetValsetSigs())
 	cmd.AddCommand(CmdGetOracleAttestations())
+	cmd.AddCommand(CmdGetEvmAddressByValidatorAddress())
 
 	// this line is used by starport scaffolding # 1
 

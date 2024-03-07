@@ -27,6 +27,7 @@ type QueryClient interface {
 	GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error)
 	GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error)
+	GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 }
 
 type queryClient struct {
@@ -100,6 +101,15 @@ func (c *queryClient) GetOracleAttestations(ctx context.Context, in *QueryGetOra
 	return out, nil
 }
 
+func (c *queryClient) GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error) {
+	out := new(QueryGetEvmAddressByValidatorAddressResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetEvmAddressByValidatorAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -113,6 +123,7 @@ type QueryServer interface {
 	GetValidatorTimestampByIndex(context.Context, *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error)
 	GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error)
+	GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -140,6 +151,9 @@ func (UnimplementedQueryServer) GetValsetSigs(context.Context, *QueryGetValsetSi
 }
 func (UnimplementedQueryServer) GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOracleAttestations not implemented")
+}
+func (UnimplementedQueryServer) GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEvmAddressByValidatorAddress not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -280,6 +294,24 @@ func _Query_GetOracleAttestations_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetEvmAddressByValidatorAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetEvmAddressByValidatorAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetEvmAddressByValidatorAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetEvmAddressByValidatorAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetEvmAddressByValidatorAddress(ctx, req.(*QueryGetEvmAddressByValidatorAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -314,6 +346,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOracleAttestations",
 			Handler:    _Query_GetOracleAttestations_Handler,
+		},
+		{
+			MethodName: "GetEvmAddressByValidatorAddress",
+			Handler:    _Query_GetEvmAddressByValidatorAddress_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

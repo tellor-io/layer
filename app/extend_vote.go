@@ -16,8 +16,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
@@ -33,6 +35,12 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointFromStorage(ctx sdk.Context) (*bridgetypes.ValidatorCheckpoint, error)
 	Logger(ctx context.Context) log.Logger
 	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
+	EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error)
+	SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error
+}
+
+type StakingKeeper interface {
+	GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, err error)
 }
 
 type VoteExtHandler struct {
@@ -78,7 +86,7 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 // }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	h.logger.Info("@BridgeExtendVoteHandler", "req", req)
+	h.logger.Info("@BridgeExtendVoteHandler called", "req", req)
 	// check if evm address by operator exists
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
@@ -87,6 +95,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("EVM address not found for operator address", "operatorAddress", operatorAddress)
+		h.logger.Info("Error message", "error", err)
 		initialSig, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)
@@ -112,7 +121,13 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	voteExt := BridgeVoteExtension{}
 	// iterate through reports and generate sigs
 	if len(reportIds.Pairs) == 0 {
-		return &abci.ResponseExtendVote{}, nil
+		h.logger.Info("No reports found for block height", "blockHeight", blockHeight)
+		voteExt := BridgeVoteExtension{}
+		bz, err := json.Marshal(voteExt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal empty vote extension: %w", err)
+		}
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	} else {
 
 		valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
@@ -160,9 +175,26 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	h.logger.Error("@VerifyVoteExtensionHandler", "req", req)
+	h.logger.Info("@VerifyVoteExtensionHandler", "req", req)
 	// logic for verifying oracle sigs
 	extension := req.GetVoteExtension()
+	// unmarshal vote extension
+	voteExt := BridgeVoteExtension{}
+	err := json.Unmarshal(extension, &voteExt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal vote extension: %w", err)
+	}
+	// check for initial sig
+	if len(voteExt.InitialSignature.Signature) > 0 {
+		// verify initial sig
+		sigHexString := hex.EncodeToString(voteExt.InitialSignature.Signature)
+		evmAddress, err := h.bridgeKeeper.EVMAddressFromSignature(ctx, sigHexString)
+		if err != nil {
+			return nil, err
+		}
+		h.logger.Info("EVM address from initial sig", "evmAddress", evmAddress)
+	}
+
 	if bytes.Equal(extension, []byte("vote extension data")) {
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 	} else {
@@ -272,6 +304,10 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	krBackend := keyring.BackendTest
 	krDir := os.ExpandEnv("$HOME/.layer")
 	h.logger.Info("Keyring dir:", "dir", krDir)
+	keyName := h.GetKeyName()
+	if keyName == "" {
+		return nil, fmt.Errorf("key name not found")
+	}
 
 	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
 	if err != nil {
@@ -290,7 +326,7 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	}
 
 	// Fetch the operator key from the keyring.
-	info, err := kr.Key("alice")
+	info, err := kr.Key(keyName)
 	if err != nil {
 		fmt.Printf("Failed to get operator key: %v\n", err)
 		return nil, err
@@ -302,7 +338,7 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 
 	// sign message
 	// tempmsg := []byte("hello")
-	sig, pubKeyReturned, err := kr.Sign("alice", msg, 1)
+	sig, pubKeyReturned, err := kr.Sign(keyName, msg, 1)
 	if err != nil {
 		fmt.Printf("Failed to sign message: %v\n", err)
 		return nil, err
@@ -325,14 +361,53 @@ func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	sig = append(sig, 0)
 	return sig, nil
 }
+
+// func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
+// 	h.logger.Info("@GetOperatorAddress - extend_vote.go")
+// 	// define keyring backend and the path to the keystore dir
+// 	krBackend := keyring.BackendTest
+// 	krDir := os.ExpandEnv("$HOME/.layer")
+// 	keyName := h.GetKeyName()
+// 	if keyName == "" {
+// 		return "", fmt.Errorf("key name not found")
+// 	}
+
+// 	h.logger.Info("Keyring dir:", "dir", krDir)
+
+// 	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
+// 	if err != nil {
+// 		fmt.Printf("Failed to create keyring: %v\n", err)
+// 		return "", err
+// 	}
+
+// 	// Fetch the operator key from the keyring.
+// 	info, err := kr.Key(keyName)
+// 	if err != nil {
+// 		fmt.Printf("Failed to get operator key: %v\n", err)
+// 		return "", err
+// 	}
+// 	// Output the public key associated with the operator key.
+// 	key, _ := info.GetPubKey()
+// 	keyAddrStr := key.Address().String()
+// 	pubkeystr := key.String()
+// 	h.logger.Info("@pubkeystr:", "pubkeystr", pubkeystr)
+// 	h.logger.Info("Operator Public Key:", "keyAddrStr", keyAddrStr)
+// 	return keyAddrStr, nil
+// }
 
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	h.logger.Info("@GetOperatorAddress - extend_vote.go")
 	// define keyring backend and the path to the keystore dir
 	krBackend := keyring.BackendTest
 	krDir := os.ExpandEnv("$HOME/.layer")
+	keyName := h.GetKeyName()
+	if keyName == "" {
+		return "", fmt.Errorf("key name not found")
+	}
+
 	h.logger.Info("Keyring dir:", "dir", krDir)
 
 	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
@@ -342,7 +417,7 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	}
 
 	// Fetch the operator key from the keyring.
-	info, err := kr.Key("alice")
+	info, err := kr.Key(keyName)
 	if err != nil {
 		fmt.Printf("Failed to get operator key: %v\n", err)
 		return "", err
@@ -353,5 +428,30 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	pubkeystr := key.String()
 	h.logger.Info("@pubkeystr:", "pubkeystr", pubkeystr)
 	h.logger.Info("Operator Public Key:", "keyAddrStr", keyAddrStr)
-	return keyAddrStr, nil
+
+	// Convert the operator's public key to a Bech32 validator address
+	config := sdk.GetConfig()
+	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
+	bech32ValAddr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, key.Address().Bytes())
+	if err != nil {
+		return "", fmt.Errorf("failed to convert operator public key to Bech32 validator address: %w", err)
+	}
+	h.logger.Info("Operator Validator Address:", "bech32ValAddr", bech32ValAddr)
+	return bech32ValAddr, nil
+}
+
+func (h *VoteExtHandler) GetKeyName() string {
+	globalHome := os.ExpandEnv("$HOME/.layer")
+	homeDir := viper.GetString("home")
+	// if home is global/alice, then the key name is alice
+	if homeDir == globalHome+"/alice" {
+		h.logger.Info("@keyname - alice")
+		return "alice"
+	} else if homeDir == globalHome+"/bill" {
+		h.logger.Info("@keyname - bill")
+		return "bill"
+	} else {
+		h.logger.Info("@keyname - empty")
+		return ""
+	}
 }

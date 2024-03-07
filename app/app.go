@@ -701,6 +701,11 @@ func New(
 	app.BaseApp.SetExtendVoteHandler(voteExtHandler.ExtendVoteHandler)
 	app.BaseApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtensionHandler)
 
+	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
+	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
+	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
+	app.BaseApp.SetPreBlocker(prepareProposalHandler.PreBlocker)
+
 	/**** Module Options ****/
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
