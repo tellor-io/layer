@@ -26,4 +26,5 @@ var (
 	ValidatorCheckpointIdxMapKey    = collections.NewPrefix(6) // Prefix for validator_checkpoint_idx_map key
 	LatestCheckpointIdxKey          = collections.NewPrefix(7) // Prefix for latest_checkpoint_idx key
 	OracleAttestationsMapKey        = collections.NewPrefix(8) // Prefix for oracle_attestations_map key
+	BridgeValsetByTimestampMapKey   = collections.NewPrefix(9) // Prefix for bridge_valset_by_timestamp_map key
 )

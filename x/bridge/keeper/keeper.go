@@ -42,6 +42,7 @@ type (
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
 		OracleAttestationsMap        collections.Map[string, types.OracleAttestations]
+		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -67,6 +68,7 @@ func NewKeeper(
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
 		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
+		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
@@ -180,6 +182,11 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 		}
 		for i, validator := range currentValidatorSetEVMCompatible.BridgeValidatorSet {
 			k.Logger(ctx).Info("Current bridge validator ", i, ": ", validator.EthereumAddress+" "+fmt.Sprint(validator.Power))
+		}
+		err = k.BridgeValsetByTimestampMap.Set(ctx, uint64(ctx.BlockTime().Unix()), *currentValidatorSetEVMCompatible)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
+			return false, err
 		}
 		return true, nil
 	}
@@ -644,4 +651,34 @@ func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string)
 		k.Logger(ctx).Info("EVM address from operator address", "evmAddress", hex.EncodeToString(ethAddress.EVMAddress))
 	}
 	return hex.EncodeToString(ethAddress.EVMAddress), nil
+}
+
+func (k Keeper) SetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
+	k.Logger(ctx).Info("@SetBridgeValsetByTimestamp", "msg", "setting bridge valset by timestamp")
+	err := k.BridgeValsetByTimestampMap.Set(ctx, timestamp, bridgeValset)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*types.BridgeValidatorSet, error) {
+	k.Logger(ctx).Info("@GetBridgeValsetByTimestamp", "msg", "getting bridge valset by timestamp")
+	bridgeValset, err := k.BridgeValsetByTimestampMap.Get(ctx, timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting bridge valset by timestamp", "error", err)
+		return nil, err
+	}
+	return &bridgeValset, nil
+}
+
+func (k Keeper) GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error) {
+	k.Logger(ctx).Info("@GetLatestCheckpointIndex", "msg", "getting latest checkpoint index")
+	checkpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting latest checkpoint index", "error", err)
+		return 0, err
+	}
+	return checkpointIdx.Index, nil
 }

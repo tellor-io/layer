@@ -37,6 +37,12 @@ type BridgeKeeper interface {
 	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
 	EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error)
 	SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error
+	GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
+	SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string, timestamp uint64, signature string) error
+	GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error)
+	GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValidatorSet, error)
+	GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
+	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
 }
 
 type StakingKeeper interface {
@@ -59,9 +65,15 @@ type InitialSignature struct {
 	Signature []byte
 }
 
+type BridgeValsetSignature struct {
+	Signature []byte
+	Timestamp uint64
+}
+
 type BridgeVoteExtension struct {
 	OracleAttestations []OracleAttestation
 	InitialSignature   InitialSignature
+	ValsetSignature    BridgeValsetSignature
 }
 
 func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper) *VoteExtHandler {
@@ -168,6 +180,20 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 			voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
 		}
 	}
+	// include the valset sig in the vote extension
+	sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
+	if err != nil || len(sig) == 0 {
+		bz, err := json.Marshal(voteExt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
+		}
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+	}
+	valsetSignature := BridgeValsetSignature{
+		Signature: sig,
+		Timestamp: timestamp,
+	}
+	voteExt.ValsetSignature = valsetSignature
 
 	bz, err := json.Marshal(voteExt)
 	if err != nil {
@@ -367,39 +393,6 @@ func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
 	return sig, nil
 }
 
-// func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
-// 	h.logger.Info("@GetOperatorAddress - extend_vote.go")
-// 	// define keyring backend and the path to the keystore dir
-// 	krBackend := keyring.BackendTest
-// 	krDir := os.ExpandEnv("$HOME/.layer")
-// 	keyName := h.GetKeyName()
-// 	if keyName == "" {
-// 		return "", fmt.Errorf("key name not found")
-// 	}
-
-// 	h.logger.Info("Keyring dir:", "dir", krDir)
-
-// 	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
-// 	if err != nil {
-// 		fmt.Printf("Failed to create keyring: %v\n", err)
-// 		return "", err
-// 	}
-
-// 	// Fetch the operator key from the keyring.
-// 	info, err := kr.Key(keyName)
-// 	if err != nil {
-// 		fmt.Printf("Failed to get operator key: %v\n", err)
-// 		return "", err
-// 	}
-// 	// Output the public key associated with the operator key.
-// 	key, _ := info.GetPubKey()
-// 	keyAddrStr := key.Address().String()
-// 	pubkeystr := key.String()
-// 	h.logger.Info("@pubkeystr:", "pubkeystr", pubkeystr)
-// 	h.logger.Info("Operator Public Key:", "keyAddrStr", keyAddrStr)
-// 	return keyAddrStr, nil
-// }
-
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	h.logger.Info("@GetOperatorAddress - extend_vote.go")
 	// define keyring backend and the path to the keystore dir
@@ -456,4 +449,126 @@ func (h *VoteExtHandler) GetKeyName() string {
 		h.logger.Info("@keyname - empty")
 		return ""
 	}
+}
+
+func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signature []byte, timestamp uint64, err error) {
+	// get latest checkpoint index
+	latestCheckpointIdx, err := h.bridgeKeeper.GetLatestCheckpointIndex(ctx)
+	if err != nil {
+		h.logger.Error("failed to get latest checkpoint index", "error", err)
+		return nil, 0, err
+	}
+	// get the latest checkpoint timestamp
+	latestCheckpointTimestamp, err := h.bridgeKeeper.GetValidatorTimestampByIdxFromStorage(ctx, latestCheckpointIdx)
+	if err != nil {
+		h.logger.Error("failed to get latest checkpoint timestamp", "error", err)
+		return nil, 0, err
+	}
+	// get the latest validator set signatures
+	latestValsetSignatures, err := h.bridgeKeeper.GetValidatorSetSignaturesFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
+	if err != nil {
+		h.logger.Error("failed to get latest validator set signatures", "error", err)
+		return nil, 0, err
+	}
+	// get the latest validator set
+	latestValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, latestCheckpointTimestamp.Timestamp)
+	if err != nil {
+		h.logger.Error("failed to get latest validator set", "error", err)
+		return nil, 0, err
+	}
+	// get operator address
+	operatorAddress, err := h.GetOperatorAddress()
+	if err != nil {
+		h.logger.Error("failed to get operator address", "error", err)
+		return nil, 0, err
+	}
+
+	// get evm address by operator
+	evmAddress, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
+	if err != nil {
+		h.logger.Error("failed to get evm address by operator", "error", err)
+		return nil, 0, err
+	}
+
+	// get validator's index in the latest validator set
+	valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, latestValset)
+	if valIndex < 0 {
+		h.logger.Error("validator not found in latest validator set", "error", err)
+		return nil, 0, err
+	}
+
+	// check for signature at index
+	if len(latestValsetSignatures.Signatures) > valIndex {
+		sig := latestValsetSignatures.Signatures[valIndex]
+		if len(sig) > 0 {
+			h.logger.Info("Signature found at index", "index", valIndex)
+			return nil, 0, nil
+		} else {
+			// check previous valset for inclusion
+			if latestCheckpointIdx > 0 {
+				previousCheckpointTimestamp, err := h.bridgeKeeper.GetValidatorTimestampByIdxFromStorage(ctx, latestCheckpointIdx-1)
+				if err != nil {
+					h.logger.Error("failed to get previous checkpoint timestamp", "error", err)
+					return nil, 0, err
+				}
+				previousValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, previousCheckpointTimestamp.Timestamp)
+				if err != nil {
+					h.logger.Error("failed to get previous validator set", "error", err)
+					return nil, 0, err
+				}
+				// check if validator is included in previous valset
+				valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, previousValset)
+				if valIndex < 0 {
+					h.logger.Error("validator not found in previous validator set", "error", err)
+					return nil, 0, nil
+				}
+				// sign the latest checkpoint
+				checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
+				if err != nil {
+					h.logger.Error("failed to get checkpoint params", "error", err)
+					return nil, 0, err
+				}
+				checkpoint := checkpointParams.Checkpoint
+				checkpointString := hex.EncodeToString(checkpoint)
+				signature, err := h.EncodeAndSignMessage(checkpointString)
+				if err != nil {
+					h.logger.Error("failed to encode and sign message", "error", err)
+					return nil, 0, err
+				}
+				return signature, latestCheckpointTimestamp.Timestamp, nil
+			} else {
+				h.logger.Info("No previous valset found")
+				return nil, 0, nil
+			}
+		}
+	} else {
+		h.logger.Info("No signature found at index", "index", valIndex)
+		return nil, 0, nil
+	}
+}
+
+func (h *VoteExtHandler) GetValidatorIndexInValset(ctx sdk.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {
+	for i, val := range valset.BridgeValidatorSet {
+		if val.EthereumAddress == evmAddress {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("validator not found in valset")
+}
+
+// func (h *VoteExtHandler) GetDidSignCheckpoint(ctx sdk.Context, evmAddress string)
+
+func (h *VoteExtHandler) EncodeAndSignMessage(checkpointString string) ([]byte, error) {
+	// Encode the checkpoint string to bytes
+	checkpoint, err := hex.DecodeString(checkpointString)
+	if err != nil {
+		h.logger.Error("Failed to decode checkpoint", "error", err)
+		return nil, err
+	}
+	signature, err := h.SignMessage(checkpoint)
+	if err != nil {
+		h.logger.Error("Failed to sign message", "error", err)
+		return nil, err
+	}
+	return signature, nil
 }
