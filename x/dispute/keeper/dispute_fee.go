@@ -21,7 +21,7 @@ func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coi
 
 // Pay fee from validator's bond can only be called by the validator itself
 func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin) error {
-	return k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, fee.Amount)
+	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount)
 }
 
 // Refund coins to bonded pool

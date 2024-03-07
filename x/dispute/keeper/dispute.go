@@ -200,7 +200,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report types.MicroReport, 
 	}
 	amount := sdk.TokensFromConsensusPower(report.Power, sdk.DefaultPowerReduction)
 	slashAmount := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
-	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, slashAmount.TruncateInt())
+	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.BlockNumber, slashAmount.TruncateInt())
 	if err != nil {
 		return err
 	}

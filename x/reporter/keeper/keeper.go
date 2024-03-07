@@ -27,6 +27,7 @@ type (
 		DelegatorStartingInfo          collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
 		ReporterHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ReporterHistoricalRewards]
 		ReporterDisputeEvents          collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ReporterDisputeEvent]
+		TokenOriginSnapshot            collections.Map[collections.Pair[sdk.AccAddress, int64], types.DelegationsPreUpdate]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -67,6 +68,7 @@ func NewKeeper(
 		DelegatorStartingInfo:          collections.NewMap(sb, types.DelegatorStartingInfoPrefix, "delegators_starting_info", collections.PairKeyCodec(sdk.ValAddressKey, sdk.AccAddressKey), codec.CollValue[types.DelegatorStartingInfo](cdc)),
 		ReporterHistoricalRewards:      collections.NewMap(sb, types.ReporterHistoricalRewardsPrefix, "reporter_historical_rewards", collections.PairKeyCodec(sdk.ValAddressKey, collections.Uint64Key), codec.CollValue[types.ReporterHistoricalRewards](cdc)),
 		ReporterDisputeEvents:          collections.NewMap(sb, types.ReporterDisputeEventPrefix, "reporter_dispute_events", collections.TripleKeyCodec(sdk.ValAddressKey, collections.Uint64Key, collections.Uint64Key), codec.CollValue[types.ReporterDisputeEvent](cdc)),
+		TokenOriginSnapshot:            collections.NewMap(sb, types.TokenOriginSnapshotPrefix, "token_origin_snapshot", collections.PairKeyCodec(sdk.AccAddressKey, collections.Int64Key), codec.CollValue[types.DelegationsPreUpdate](cdc)),
 		authority:                      authority,
 		logger:                         logger,
 		stakingKeeper:                  stakingKeeper,

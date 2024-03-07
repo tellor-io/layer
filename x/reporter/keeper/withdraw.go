@@ -12,9 +12,28 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layer "github.com/tellor-io/layer/types"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error {
+func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, height int64, amt math.Int) error {
+	// get origins at height
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, int64](reporterAddr).StartExclusive(height)
+	var firstValue *types.DelegationsPreUpdate
+	err := k.TokenOriginSnapshot.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, int64], value types.DelegationsPreUpdate) (stop bool, err error) {
+		firstValue = &value
+		return true, nil
+	})
+	if firstValue == nil {
+		return k.FeefromReporterStake(ctx, reporterAddr, amt)
+	}
+	if err != nil {
+		return err
+	}
+	// TODO:
+
+	return nil
+}
+func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err

@@ -1,6 +1,8 @@
 package integration_test
 
 import (
+	"time"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/keeper"
@@ -32,7 +34,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 	}
 	// disputer with tokens to pay fee
 	disputer := s.newKeysWithTokens()
@@ -110,7 +112,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 	}
 
 	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
@@ -161,7 +163,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 	}
 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
 	s.NoError(err)
@@ -255,7 +257,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 	}
 
 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
@@ -333,7 +335,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 	}
 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
 	s.NoError(err)
@@ -446,7 +448,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 	}
 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
 	s.NoError(err)

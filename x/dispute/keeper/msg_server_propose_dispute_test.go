@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 		Reporter:  addr.String(),
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
+		Timestamp: time.Unix(1696516597, 0),
 		Power:     1,
 	}
 
@@ -40,7 +40,8 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 	)
 	// mock dependency modules
 	s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, math.NewInt(10_000)).Return(nil)
+	s.reporterKeeper.On("FeefromReporterStake", s.ctx, addr, math.NewInt(10_000)).Return(nil)
+	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, int64(0), math.NewInt(10_000)).Return(nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, addr, int64(0)).Return(nil)
 
 	s.bankKeeper.On("HasBalance", s.ctx, addr, fee).Return(true)
