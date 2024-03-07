@@ -26,6 +26,16 @@ type OperatorAndEVM struct {
 	EVMAddresses      []string `json:"evm_addresses"`
 }
 
+type ValsetSignatures struct {
+	OperatorAddresses []string `json:"operator_addresses"`
+	Timestamps        []int64  `json:"timestamps"`
+	Signatures        []string `json:"signatures"`
+}
+
+type VoteExtTx struct {
+	OpAndEVMAddrs OperatorAndEVM `json:"op_and_evm_addrs"`
+}
+
 func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper, stakingKeeper StakingKeeper) *ProposalHandler {
 	return &ProposalHandler{
 		oracleKeeper:  oracleKeeper,
@@ -79,6 +89,24 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
 		if err != nil {
 			h.logger.Info("failed to check initial signatures from last commit", "error", err)
+			bz, err := json.Marshal(injectedVoteExtTx)
+			if err != nil {
+				h.logger.Error("failed to encode injected vote extension tx", "err", err)
+				return nil, errors.New("failed to encode injected vote extension tx")
+			}
+			proposalTxs = append([][]byte{bz}, proposalTxs...)
+			return &abci.ResponsePrepareProposal{
+				Txs: proposalTxs,
+			}, nil
+		}
+		operatorAndEvm := OperatorAndEVM{
+			OperatorAddresses: operatorAddresses,
+			EVMAddresses:      evmAddresses,
+		}
+
+		valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, req.LocalLastCommit)
+		if err != nil {
+			h.logger.Info("failed to check valset signatures from last commit", "error", err)
 			bz, err := json.Marshal(injectedVoteExtTx)
 			if err != nil {
 				h.logger.Error("failed to encode injected vote extension tx", "err", err)
@@ -143,9 +171,15 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 	return res, nil
 }
 
+// type BridgeValsetSignature struct {
+// 	Signature []byte
+// 	Timestamp uint64
+// }
+
 // type BridgeVoteExtension struct {
 // 	OracleAttestations []OracleAttestation
 // 	InitialSignature   InitialSignature
+// 	ValsetSignature    BridgeValsetSignature
 // }
 // // ExtendedCommitInfo is similar to CommitInfo except that it is only used in
 // // the PrepareProposal request such that CometBFT can provide vote extensions
@@ -221,6 +255,43 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 	}
 
 	return operatorAddresses, evmAddresses, nil
+}
+
+func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []int64, []string, error) {
+	h.logger.Info("@CheckValsetSignaturesFromLastCommit", "commit", commit)
+	var operatorAddresses []string
+	var timestamps []int64
+	var signatures []string
+
+	for _, vote := range commit.Votes {
+		extension := vote.GetVoteExtension()
+		// unmarshal vote extension
+		voteExt := BridgeVoteExtension{}
+		err := json.Unmarshal(extension, &voteExt)
+		if err != nil {
+			h.logger.Error("failed to unmarshal vote extension", "error", err)
+			return nil, nil, nil, errors.New("failed to unmarshal vote extension")
+		}
+
+		// check for valset sig
+		if len(voteExt.ValsetSignature.Signature) > 0 {
+			// verify valset sig
+			sigHexString := hex.EncodeToString(voteExt.ValsetSignature.Signature)
+			operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
+			if err != nil {
+				h.logger.Error("failed to get operator address from vote", "error", err)
+				return nil, nil, nil, err
+			}
+			h.logger.Info("Operator address from valset sig", "operatorAddress", operatorAddress)
+
+			timestamp := voteExt.ValsetSignature.Timestamp
+			operatorAddresses = append(operatorAddresses, operatorAddress)
+			timestamps = append(timestamps, int64(timestamp))
+			signatures = append(signatures, sigHexString)
+			h.logger.Info("Timestamp from valset sig", "timestamp", timestamp)
+		}
+	}
+	return operatorAddresses, timestamps, signatures, nil
 }
 
 func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses []string, evmAddresses []string) error {
