@@ -88,6 +88,7 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 	h.logger.Info("@BridgeExtendVoteHandler called", "req", req)
 	// check if evm address by operator exists
+	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
 		return nil, err
@@ -105,31 +106,32 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSignature := InitialSignature{
 			Signature: initialSig,
 		}
-		voteExt := BridgeVoteExtension{
-			InitialSignature: initialSignature,
-		}
+		// voteExt := BridgeVoteExtension{
+		// 	InitialSignature: initialSignature,
+		// }
+		voteExt.InitialSignature = initialSignature
 		bz, err := json.Marshal(voteExt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
 		}
 		h.logger.Info("Vote extension data", "voteExt", string(bz))
-		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+		// return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 	// logic for generating oracle sigs and including them via vote extensions
 	blockHeight := ctx.BlockHeight()
 	reportIds := h.oracleKeeper.GetQueryIdAndTimestampPairsByBlockHeight(ctx, uint64(blockHeight))
-	voteExt := BridgeVoteExtension{}
+	// voteExt := BridgeVoteExtension{}
 	// iterate through reports and generate sigs
 	if len(reportIds.Pairs) == 0 {
 		h.logger.Info("No reports found for block height", "blockHeight", blockHeight)
-		voteExt := BridgeVoteExtension{}
+		// voteExt := BridgeVoteExtension{}
 		bz, err := json.Marshal(voteExt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal empty vote extension: %w", err)
 		}
 		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	} else {
-
+		h.logger.Info("Reports found for block height", "blockHeight", blockHeight)
 		valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
 		if err != nil {
 			return nil, err
