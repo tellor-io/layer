@@ -69,14 +69,22 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 	h.logger.Info("@PrepareProposal", "req", req)
 	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
+		h.logger.Info("failed to validate vote extensions", "error", err)
 		return nil, err
 	}
 	proposalTxs := req.Txs
+	injectedVoteExtTx := OperatorAndEVM{}
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
 		if err != nil {
 			h.logger.Info("failed to check initial signatures from last commit", "error", err)
+			bz, err := json.Marshal(injectedVoteExtTx)
+			if err != nil {
+				h.logger.Error("failed to encode injected vote extension tx", "err", err)
+				return nil, errors.New("failed to encode injected vote extension tx")
+			}
+			proposalTxs = append([][]byte{bz}, proposalTxs...)
 			return &abci.ResponsePrepareProposal{
 				Txs: proposalTxs,
 			}, nil
@@ -121,6 +129,11 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
 			h.logger.Error("failed to decode injected vote extension tx", "err", err)
 			return nil, errors.New("failed to decode injected vote extension tx")
+		}
+
+		if len(injectedVoteExtTx.OperatorAddresses) == 0 {
+			h.logger.Info("no operator addresses found in injected vote extension tx")
+			return res, nil
 		}
 
 		if err := h.SetEVMAddresses(ctx, injectedVoteExtTx.OperatorAddresses, injectedVoteExtTx.EVMAddresses); err != nil {
