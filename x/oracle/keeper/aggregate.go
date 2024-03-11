@@ -106,6 +106,7 @@ func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
 	report.Nonce = nonce // TODO: do we want to use int64 for nonce?
 
 	currentTimestamp := ctx.BlockTime().Unix()
+	report.Height = ctx.BlockHeight()
 
 	// TODO: handle error
 	err = k.Aggregates.Set(ctx, collections.Join(queryId, currentTimestamp), *report)
