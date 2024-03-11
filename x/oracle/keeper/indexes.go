@@ -40,7 +40,7 @@ func (a aggregatesIndex) IndexesList() []collections.Index[collections.Pair[[]by
 func NewAggregatesIndex(sb *collections.SchemaBuilder) aggregatesIndex {
 	return aggregatesIndex{
 		BlockHeight: indexes.NewMulti(
-			sb, types.ReportsHeightIndexPrefix, "aggregates_by_height",
+			sb, types.AggregatesHeightIndexPrefix, "aggregates_by_height",
 			collections.Int64Key, collections.PairKeyCodec[[]byte, int64](collections.BytesKey, collections.Int64Key),
 			func(_ collections.Pair[[]byte, int64], v types.Aggregate) (int64, error) {
 				return v.Height, nil
