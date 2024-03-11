@@ -30,7 +30,7 @@ type (
 		Commits    collections.Map[collections.Pair[[]byte, []byte], types.CommitReport]                               // key: reporter, queryid
 		Tips       *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                      // key: queryId, tipper
 		TotalTips  collections.Item[math.Int]                                                                          // keep track of the total tips
-		Aggregates collections.Map[collections.Pair[[]byte, int64], types.Aggregate]                                   // key: queryId, timestamp
+		Aggregates *collections.IndexedMap[collections.Pair[[]byte, int64], types.Aggregate, aggregatesIndex]          // key: queryId, timestamp
 		Nonces     collections.Map[[]byte, int64]                                                                      // key: queryId
 		Reports    *collections.IndexedMap[collections.Triple[[]byte, []byte, int64], types.MicroReport, reportsIndex] // key: queryId, reporter, blockHeight
 		CycleIndex collections.Item[int64]                                                                             // keep track of the current cycle
@@ -86,7 +86,7 @@ func NewKeeper(
 			NewTipsIndex(sb),
 		),
 		TotalTips:  collections.NewItem(sb, types.TotalTipsPrefix, "total_tips", sdk.IntValue),
-		Aggregates: collections.NewMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc)),
+		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc), NewAggregatesIndex(sb)),
 		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Int64Value),
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
