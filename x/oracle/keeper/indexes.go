@@ -27,6 +27,28 @@ func NewTipsIndex(sb *collections.SchemaBuilder) tipsIndex {
 	}
 }
 
+type aggregatesIndex struct {
+	BlockHeight *indexes.Multi[int64, collections.Pair[[]byte, int64], types.Aggregate]
+}
+
+func (a aggregatesIndex) IndexesList() []collections.Index[collections.Pair[[]byte, int64], types.Aggregate] {
+	return []collections.Index[collections.Pair[[]byte, int64], types.Aggregate]{
+		a.BlockHeight,
+	}
+}
+
+func NewAggregatesIndex(sb *collections.SchemaBuilder) aggregatesIndex {
+	return aggregatesIndex{
+		BlockHeight: indexes.NewMulti(
+			sb, types.ReportsHeightIndexPrefix, "aggregates_by_height",
+			collections.Int64Key, collections.PairKeyCodec[[]byte, int64](collections.BytesKey, collections.Int64Key),
+			func(_ collections.Pair[[]byte, int64], v types.Aggregate) (int64, error) {
+				return v.Height, nil
+			},
+		),
+	}
+}
+
 type reportsIndex struct {
 	BlockHeight *indexes.Multi[int64, collections.Triple[[]byte, []byte, int64], types.MicroReport]
 	Reporter    *indexes.Multi[[]byte, collections.Triple[[]byte, []byte, int64], types.MicroReport]
