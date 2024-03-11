@@ -153,3 +153,41 @@ func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) *
 
 	return mostRecent
 }
+
+func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
+	var mostRecent int64
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		mostRecent = key.K2()
+		return true, nil
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	if mostRecent == 0 {
+		return time.Time{}, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
+	}
+
+	return time.Unix(mostRecent, 0), nil
+}
+
+func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartInclusive(timestamp.Unix())
+	var mostRecent int64
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		mostRecent = key.K2()
+		return true, nil
+	})
+
+	if err != nil {
+		panic(err)
+	}
+
+	if mostRecent == 0 {
+		return time.Time{}, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
+	}
+
+	return time.Unix(mostRecent, 0), nil
+}
