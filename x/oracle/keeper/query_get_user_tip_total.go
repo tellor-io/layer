@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -24,10 +26,21 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 		totalTips = k.GetUserTips(ctx, tipper)
 		return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 	}
-	if rk.Has0xPrefix(req.QueryData) {
-		req.QueryData = req.QueryData[2:]
+
+	queryId, err := utils.QueryIDFromDataString(req.QueryData)
+	if err != nil {
+		return nil, err
 	}
-	totalTips = k.GetUserQueryTips(ctx, tipper.String(), req.QueryData)
+
+	// TODO: figure out query id here
+	tip, err := k.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
+		}
+		return nil, err
+	}
+	totalTips.Total = sdk.NewCoin(types.DefaultBondDenom, tip)
 
 	return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 }

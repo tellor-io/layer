@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package layer.registry;
 
+import "amino/amino.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/registry/data_spec.proto";
 
@@ -9,25 +12,37 @@ option go_package = "github.com/tellor-io/layer/x/registry/types";
 
 // Msg defines the Msg service.
 service Msg {
-  rpc RegisterQuery (MsgRegisterQuery) returns (MsgRegisterQueryResponse);
-  rpc RegisterSpec  (MsgRegisterSpec ) returns (MsgRegisterSpecResponse );
-}
-message MsgRegisterQuery {
-           string creator    = 1;
-           string queryType  = 2;
-  repeated string dataTypes  = 3;
-  repeated string dataFields = 4;
+  option (cosmos.msg.v1.service) = true;
+  // RegisterSpec defines a method for registering a new data specification.
+  rpc RegisterSpec(MsgRegisterSpec) returns (MsgRegisterSpecResponse);
+  // UpdateDataSpec defines a method for updating an existing data specification.
+  rpc UpdateDataSpec(MsgUpdateDataSpec) returns (MsgUpdateDataSpecResponse);
 }
 
-message MsgRegisterQueryResponse {
-  string queryId = 1;
-}
-
+// MsgRegisterSpec defines the Msg/RegisterSpec request type.
 message MsgRegisterSpec {
-  string   creator   = 1;
-  string   queryType = 2;
-  DataSpec spec      = 3 [(gogoproto.nullable) = false];
+  option (cosmos.msg.v1.signer) = "registrar";
+  // address that registers the data spec
+  string registrar = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // name of the query type (ie. "SpotPrice")
+  string query_type = 2;
+  // data spec
+  DataSpec spec = 3 [(gogoproto.nullable) = false];
 }
 
+// MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
 message MsgRegisterSpecResponse {}
 
+// MsgUpdateDataSpec is the Msg/UpdateDataSpec request type.
+message MsgUpdateDataSpec {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/registry/MsgUpdateDataSpec";
+
+  // authority is the address that is allowed calling this msg.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // query type to update
+  string query_type = 2;
+  // data spec update
+  DataSpec spec = 3 [(gogoproto.nullable) = false];
+}
+message MsgUpdateDataSpecResponse {}

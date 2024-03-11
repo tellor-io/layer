@@ -70,7 +70,8 @@ const (
 	MARKET_SUI_USD types.MarketId = 31
 	// MARKET_XRP_USD is the id for the XRP-USD market pair.
 	MARKET_XRP_USD types.MarketId = 32
-
+	// MARKET_XRP_USD is the id for the XRP-USD market pair.
+	MARKET_TRB_USD types.MarketId = 69
 	// Testing markets used in local, staging, dev
 	// MARKET_TEST_USD is the id used for the TEST-USD market pair.
 	MARKET_TEST_USD types.MarketId = 33

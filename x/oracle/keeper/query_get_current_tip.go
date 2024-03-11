@@ -4,8 +4,8 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -16,11 +16,16 @@ func (k Keeper) GetCurrentTip(goCtx context.Context, req *types.QueryGetCurrentT
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	store := k.TipStore(ctx)
-	if rk.Has0xPrefix(req.QueryData) {
-		req.QueryData = req.QueryData[2:]
-	}
-	tips, _ := k.GetQueryTips(ctx, store, req.QueryData)
 
-	return &types.QueryGetCurrentTipResponse{Tips: &tips}, nil
+	// req.QueryData = regtypes.Remove0xPrefix(req.QueryData)
+	queryId, err := utils.QueryIDFromDataString(req.QueryData)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query data")
+	}
+	tips := k.GetQueryTip(ctx, queryId)
+
+	return &types.QueryGetCurrentTipResponse{Tips: &types.Tips{
+		QueryData: req.QueryData, // TODO: avoid returning the same data as the request
+		Amount:    tips,
+	}}, nil
 }

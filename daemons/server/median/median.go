@@ -3,6 +3,7 @@ package median
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,6 +26,7 @@ type medianServer struct {
 func NewMedianValuesServer(clientCtx client.Context, marketToExchange *pricefeedservertypes.MarketToExchangePrices, marketParams []pricefeedtypes.MarketParam) types.MedianValuesServiceServer {
 	mapQueryDataToMarketParams := make(map[string]pricefeedtypes.MarketParam)
 	for _, marketParam := range marketParams {
+		marketParam.QueryData = strings.ToLower(marketParam.QueryData)
 		mapQueryDataToMarketParams[marketParam.QueryData] = marketParam
 	}
 	return &medianServer{

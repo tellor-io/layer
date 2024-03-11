@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -17,7 +18,7 @@ func CmdGetReportsbyQid() *cobra.Command {
 		Short: "Query getReportsbyQid",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			reqQId := args[0]
+			reqQId := utils.Remove0xPrefix(args[0])
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {

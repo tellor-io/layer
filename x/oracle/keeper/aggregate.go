@@ -1,13 +1,17 @@
 package keeper
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	rk "github.com/tellor-io/layer/x/registry/keeper"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // SetAggregatedReport calculates and allocates rewards to reporters based on aggregated reports.
@@ -18,35 +22,45 @@ import (
 // Rewards are allocated to the reporters based on the query tip amount, and time-based rewards are also
 // allocated to the reporters.
 func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
-	// Access the store that holds reports.
-	reportsStore := k.ReportsStore(ctx)
 	// Get the current block height of the blockchain.
 	currentHeight := ctx.BlockHeight()
 
 	// Retrieve the stored reports for the current block height.
-	bz := reportsStore.Get(types.NumKey(currentHeight))
-	var revealedReports types.Reports
-	k.cdc.Unmarshal(bz, &revealedReports)
+	iter, err := k.Reports.Indexes.BlockHeight.MatchExact(ctx, currentHeight)
+	if err != nil {
+		return err
+	}
 
-	// Initialize a map to organize reports by their query ID.
-	reportMapping := make(map[string][]types.MicroReport)
+	kvs, err := indexes.CollectKeyValues(ctx, k.Reports, iter)
+	if err != nil {
+		return err
+	}
 
-	// Sort the micro reports by their query ID.
-	for _, s := range revealedReports.MicroReports {
-		reportMapping[s.QueryId] = append(reportMapping[s.QueryId], *s)
+	revealedReportsByQueryID := map[string][]types.MicroReport{}
+	for _, kv := range kvs {
+		// key is queryId, reporter
+		qIdStr := hex.EncodeToString(kv.Key.K1())
+		if _, ok := revealedReportsByQueryID[qIdStr]; !ok {
+			revealedReportsByQueryID[qIdStr] = []types.MicroReport{kv.Value}
+		} else {
+			revealedReportsByQueryID[qIdStr] = append(revealedReportsByQueryID[qIdStr], kv.Value)
+		}
 	}
 
 	// Prepare a list to keep track of reporters who are eligible for tbr.
 	reportersToPay := make([]*types.AggregateReporter, 0)
 
 	// Process each set of reports based on their aggregation method.
-	for _, reports := range reportMapping {
+	for queryIdStr, reports := range revealedReportsByQueryID {
 		// Handle weighted-median aggregation method.
 		if reports[0].AggregateMethod == "weighted-median" {
 			// Calculate the aggregated report.
-			report := k.WeightedMedian(ctx, reports)
+			report, err := k.WeightedMedian(ctx, reports)
+			if err != nil {
+				return err
+			}
 			// Get the tip for this query.
-			tip := k.GetQueryTip(ctx, report.QueryId)
+			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
 			// Allocate rewards if there is a tip.
 			if !tip.Amount.IsZero() {
 				k.AllocateRewards(ctx, report.Reporters, tip)
@@ -54,12 +68,13 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 			// Add reporters to the tbr payment list.
 			reportersToPay = append(reportersToPay, report.Reporters...)
 		}
+
 		// Handle weighted-mode aggregation method.
 		if reports[0].AggregateMethod == "weighted-mode" {
 			// Calculate the aggregated report.
 			report := k.WeightedMode(ctx, reports)
 			// Get the tip for this query.
-			tip := k.GetQueryTip(ctx, report.QueryId)
+			tip := k.GetQueryTip(ctx, []byte(queryIdStr))
 			// Allocate rewards if there is a tip.
 			if !tip.Amount.IsZero() {
 				k.AllocateRewards(ctx, report.Reporters, tip)
@@ -77,160 +92,64 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
-	k.Logger(ctx).Info("@SetAggregate", "report", report)
-	if rk.Has0xPrefix(report.QueryId) {
-		report.QueryId = report.QueryId[2:]
-	}
-	queryId, err := hex.DecodeString(report.QueryId)
+	report.QueryId = regtypes.Remove0xPrefix(report.QueryId)
+	queryId, err := utils.QueryIDFromString(report.QueryId)
 	if err != nil {
 		panic(err)
 	}
-	nonce := k.GetMaxNonceForQueryId(ctx, queryId)
+	nonce, _ := k.Nonces.Get(ctx, queryId)
 	nonce++
-	report.Nonce = nonce
-	currentTimestamp := ctx.BlockTime()
-	k.SetMaxNonceForQueryId(ctx, queryId, nonce)
-	k.AppendAvailableTimestamps(ctx, queryId, currentTimestamp)
-	key := types.AggregateKey(queryId, currentTimestamp)
-	store := k.AggregateStore(ctx)
-	store.Set(key, k.cdc.MustMarshal(report))
-	k.SetQueryIdAndTimestampPairByBlockHeight(ctx, report.QueryId, currentTimestamp)
+	err = k.Nonces.Set(ctx, queryId, nonce)
+	if err != nil {
+		panic(err)
+	}
+	report.Nonce = nonce // TODO: do we want to use int64 for nonce?
+
+	currentTimestamp := ctx.BlockTime().Unix()
+	report.Height = ctx.BlockHeight()
+
+	// TODO: handle error
+	err = k.Aggregates.Set(ctx, collections.Join(queryId, currentTimestamp), *report)
+	if err != nil {
+		panic(err)
+	}
+
 }
 
+// getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
+// TODO: add a test for this function.
 func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
-	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
-	if len(availableTimestamps.Timestamps) == 0 {
-		return nil, fmt.Errorf("no data available for query id %s", hex.EncodeToString(queryId))
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
+	var mostRecent *types.Aggregate
+	// This should get us the most recent aggregate, as they are walked in descending order
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		mostRecent = &value
+		return true, nil
+	})
+
+	if err != nil {
+		panic(err)
 	}
-	found, index := FindTimestampBefore(availableTimestamps.Timestamps, timestamp)
-	if found {
-		key := types.AggregateKey(queryId, availableTimestamps.Timestamps[index])
-		store := k.AggregateStore(ctx)
-		bz := store.Get(key)
-		var report types.Aggregate
-		k.cdc.MustUnmarshal(bz, &report)
-		return &report, nil
+
+	if mostRecent == nil {
+		return nil, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
 	}
-	return nil, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
+
+	return mostRecent, nil
 }
 
-func (k Keeper) GetAvailableTimestampsByQueryId(ctx sdk.Context, queryId []byte) types.AvailableTimestamps {
-	store := k.AggregateStore(ctx)
-	key := types.AvailableTimestampsKey(queryId)
-	bz := store.Get(key)
+func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) *types.Aggregate {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
+	var mostRecent *types.Aggregate
+	// This should get us the most recent aggregate, as they are walked in descending order
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		mostRecent = &value
+		return true, nil
+	})
 
-	var availableTimestamps types.AvailableTimestamps
-	k.cdc.MustUnmarshal(bz, &availableTimestamps)
-
-	return availableTimestamps
-}
-
-func (k Keeper) AppendAvailableTimestamps(ctx sdk.Context, queryId []byte, timestamp time.Time) {
-	store := k.AggregateStore(ctx)
-	key := types.AvailableTimestampsKey(queryId)
-	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
-
-	availableTimestamps.Timestamps = append(availableTimestamps.Timestamps, timestamp)
-	store.Set(key, k.cdc.MustMarshal(&availableTimestamps))
-
-}
-
-func (k Keeper) GetMaxNonceForQueryId(ctx sdk.Context, queryId []byte) int64 {
-	store := k.AggregateStore(ctx)
-	key := types.MaxNonceKey(queryId)
-	bz := store.Get(key)
-	if bz == nil {
-		return 0
+	if err != nil {
+		panic(err)
 	}
 
-	maxNonce := int64(sdk.BigEndianToUint64(bz))
-
-	return maxNonce
-}
-
-func (k Keeper) SetMaxNonceForQueryId(ctx sdk.Context, queryId []byte, maxNonce int64) {
-	store := k.AggregateStore(ctx)
-	key := types.MaxNonceKey(queryId)
-	store.Set(key, sdk.Uint64ToBigEndian(uint64(maxNonce)))
-}
-
-func (k Keeper) GetCurrentValueForQueryId(ctx sdk.Context, queryId []byte) *types.Aggregate {
-	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
-	if len(availableTimestamps.Timestamps) == 0 {
-		return nil
-	}
-	mostRecentTimestamp := availableTimestamps.Timestamps[len(availableTimestamps.Timestamps)-1]
-	key := types.AggregateKey(queryId, mostRecentTimestamp)
-
-	store := k.AggregateStore(ctx)
-	bz := store.Get(key)
-	var report types.Aggregate
-	k.cdc.MustUnmarshal(bz, &report)
-	return &report
-}
-
-func FindTimestampBefore(timestamps []time.Time, target time.Time) (bool, int) {
-	left, right := 0, len(timestamps)-1
-	resultIndex := -1
-	for left <= right {
-		mid := left + (right-left)/2
-		if timestamps[mid].Before(target) {
-			resultIndex = mid
-			left = mid + 1
-		} else {
-			right = mid - 1
-		}
-	}
-	return resultIndex != -1, resultIndex
-}
-
-func FindTimestampAfter(timestamps []time.Time, target time.Time) (bool, int) {
-	left, right := 0, len(timestamps)-1
-	resultIndex := -1
-	for left <= right {
-		mid := left + (right-left)/2
-		if timestamps[mid].After(target) {
-			resultIndex = mid
-			right = mid - 1 // Search in the left half
-		} else {
-			left = mid + 1 // Search in the right half
-		}
-	}
-	if resultIndex != -1 {
-		return true, resultIndex
-	}
-	return false, -1
-}
-
-func (k Keeper) GetAggregateReport(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
-	key := types.AggregateKey(queryId, timestamp)
-	store := k.AggregateStore(ctx)
-	bz := store.Get(key)
-	var report types.Aggregate
-	k.cdc.MustUnmarshal(bz, &report)
-	return &report, nil
-}
-
-func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
-	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
-	if len(availableTimestamps.Timestamps) == 0 {
-		return time.Time{}, fmt.Errorf("no data available for query id %s", hex.EncodeToString(queryId))
-	}
-	found, index := FindTimestampBefore(availableTimestamps.Timestamps, timestamp)
-	if found {
-		return availableTimestamps.Timestamps[index], nil
-	}
-	return time.Time{}, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
-}
-
-func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
-	availableTimestamps := k.GetAvailableTimestampsByQueryId(ctx, queryId)
-	if len(availableTimestamps.Timestamps) == 0 {
-		return time.Time{}, fmt.Errorf("no data available for query id %s", hex.EncodeToString(queryId))
-	}
-	found, index := FindTimestampAfter(availableTimestamps.Timestamps, timestamp)
-	if found {
-		return availableTimestamps.Timestamps[index], nil
-	}
-	return time.Time{}, fmt.Errorf("no data after timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
+	return mostRecent
 }

@@ -4,17 +4,56 @@ info:
   name: ''
   description: ''
 paths:
+<<<<<<< HEAD
   /tellor-io/layer/bridge/get_evm_address_by_validator_address:
     get:
       operationId: LayerBridgeGetEvmAddressByValidatorAddress
+=======
+  /tellor-io/layer/reporter/commission/{reporter_address}:
+    get:
+      summary: ReporterCommission queries accumulated commission for a reporter.
+      operationId: LayerReporterReporterCommission
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
+<<<<<<< HEAD
               evmAddress:
                 type: string
+=======
+              commission:
+                description: commission defines the commission the reporter received.
+                type: object
+                properties:
+                  commission:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    title: commission is the accumulated commission for the reporter
+                title: >-
+                  ReporterAccumulatedCommission represents accumulated
+                  commission for a reporter
+            title: |-
+              QueryReporterCommissionResponse is the response type for the
+              Query/ReporterCommission RPC method
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
         default:
           description: An unexpected error response.
           schema:
@@ -32,6 +71,7 @@ paths:
                   properties:
                     '@type':
                       type: string
+<<<<<<< HEAD
                   additionalProperties: {}
       parameters:
         - name: validatorAddress
@@ -44,22 +84,234 @@ paths:
     get:
       summary: Queries a list of GetEvmValidators items.
       operationId: LayerBridgeGetEvmValidators
+=======
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/reporter/delegation-rewards/{delegator_address}/{reporter_address}:
+    get:
+      summary: DelegationRewards queries the total rewards accrued by a delegation.
+      operationId: LayerReporterDelegationRewards
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
+<<<<<<< HEAD
               bridgeValidatorSet:
+=======
+              rewards:
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
                 type: array
                 items:
                   type: object
                   properties:
+<<<<<<< HEAD
                     ethereumAddress:
+=======
+                    denom:
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
                       type: string
-                    power:
+                    amount:
                       type: string
+<<<<<<< HEAD
                       format: uint64
+=======
+                  description: >-
+                    DecCoin defines a token with a denomination and a decimal
+                    amount.
+
+
+                    NOTE: The amount field is an Dec which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                description: rewards defines the rewards accrued by a delegation.
+            description: |-
+              QueryDelegationRewardsResponse is the response type for the
+              Query/DelegationRewards RPC method.
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
         default:
           description: An unexpected error response.
           schema:
@@ -77,22 +329,223 @@ paths:
                   properties:
                     '@type':
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                   additionalProperties: {}
+<<<<<<< HEAD
       tags:
         - Query
   /tellor-io/layer/bridge/get_oracle_attestations:
     get:
       operationId: LayerBridgeGetOracleAttestations
+=======
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: delegator_address
+          description: delegator_address defines the delegator address to query for.
+          in: path
+          required: true
+          type: string
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/reporter/delegator-reporter/{delegator_address}:
+    get:
+      summary: DelegatorReporter queries the reporter of a delegator.
+      operationId: LayerReporterDelegatorReporter
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
+<<<<<<< HEAD
               attestations:
                 type: array
                 items:
                   type: string
+=======
+              reporter:
+                type: string
+                description: reporter defines the reporter of a delegator.
+            description: |-
+              QueryDelegatorReporterResponse is the response type for the
+              Query/DelegatorReporter RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -110,11 +563,434 @@ paths:
                   properties:
                     '@type':
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                   additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       parameters:
+        - name: delegator_address
+          description: delegator_address defines the delegator address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/reporter/outstanding-rewards/{reporter_address}:
+    get:
+      summary: ReporterOutstandingRewards queries rewards of a reporter address.
+      operationId: LayerReporterReporterOutstandingRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                type: object
+                properties:
+                  rewards:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is an Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    title: rewards is the outstanding rewards for the reporter
+                description: >-
+                  ReporterOutstandingRewards represents outstanding
+                  (un-withdrawn) rewards
+
+                  for a reporter inexpensive to track, allows simple sanity
+                  checks.
+            description: >-
+              QueryReporterOutstandingRewardsResponse is the response type for
+              the
+
+              Query/ReporterOutstandingRewards RPC method.
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+<<<<<<< HEAD
         - name: queryId
           in: query
           required: false
+=======
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
           type: string
         - name: timestamp
           in: query
@@ -123,6 +999,7 @@ paths:
           format: int64
       tags:
         - Query
+<<<<<<< HEAD
   /tellor-io/layer/bridge/get_validator_checkpoint:
     get:
       operationId: LayerBridgeGetValidatorCheckpoint
@@ -280,6 +1157,12 @@ paths:
     get:
       summary: Parameters queries the parameters of the module.
       operationId: LayerBridgeParams
+=======
+  /tellor-io/layer/reporter/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerReporterParams
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
       responses:
         '200':
           description: A successful response.
@@ -289,6 +1172,15 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+<<<<<<< HEAD
+=======
+                properties:
+                  min_commission_rate:
+                    type: string
+                    title: >-
+                      min_commission_rate, adopted from staking module, is the
+                      minimum commission rate a reporter can their delegators
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -309,9 +1201,928 @@ paths:
                   properties:
                     '@type':
                       type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
                   additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
       tags:
         - Query
+<<<<<<< HEAD
+=======
+  /tellor-io/layer/reporter/reporter-stake/{reporter_address}:
+    get:
+      summary: ReporterStake queries the total tokens of a reporter.
+      operationId: LayerReporterReporterStake
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              stake:
+                type: string
+                description: stake defines the total tokens of a reporter.
+            description: |-
+              QueryReporterStakeResponse is the response type for the
+              Query/ReporterStake RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/reporter/reporters:
+    get:
+      summary: Reporters queries all the staked reporters.
+      operationId: LayerReporterReporters
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporters:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reporter:
+                      type: string
+                      title: reporter is the address of the reporter
+                    total_tokens:
+                      type: string
+                      title: tokens is the amount of tokens the reporter has
+                    commission:
+                      title: commission for the reporter
+                      type: object
+                      properties:
+                        commission_rates:
+                          description: >-
+                            commission_rates defines the initial commission
+                            rates to be used for creating a validator.
+                          type: object
+                          properties:
+                            rate:
+                              type: string
+                              description: >-
+                                rate is the commission rate charged to
+                                delegators, as a fraction.
+                            max_rate:
+                              type: string
+                              description: >-
+                                max_rate defines the maximum commission rate
+                                which validator can ever charge, as a fraction.
+                            max_change_rate:
+                              type: string
+                              description: >-
+                                max_change_rate defines the maximum daily
+                                increase of the validator commission, as a
+                                fraction.
+                        update_time:
+                          type: string
+                          format: date-time
+                          description: >-
+                            update_time is the last time the commission rate was
+                            changed.
+                      description: >-
+                        Commission defines commission parameters for a given
+                        validator.
+                    jailed:
+                      type: boolean
+                      title: jailed is a bool whether the reporter is jailed or not
+                    jailed_until:
+                      type: string
+                      format: date-time
+                      title: jailed_until is the time the reporter is jailed until
+                  title: >-
+                    OracleReporter is the struct that holds the data for a
+                    reporter
+                description: all the reporters.
+            description: >-
+              QueryReportersResponse is the response type for the
+              Query/Reporters RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      tags:
+        - Query
+  /tellor-io/layer/reporter/{reporter_address}:
+    get:
+      summary: Reporter queries the reporter of a reporter address.
+      operationId: LayerReporterReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporter:
+                type: object
+                properties:
+                  reporter:
+                    type: string
+                    title: reporter is the address of the reporter
+                  total_tokens:
+                    type: string
+                    title: tokens is the amount of tokens the reporter has
+                  commission:
+                    title: commission for the reporter
+                    type: object
+                    properties:
+                      commission_rates:
+                        description: >-
+                          commission_rates defines the initial commission rates
+                          to be used for creating a validator.
+                        type: object
+                        properties:
+                          rate:
+                            type: string
+                            description: >-
+                              rate is the commission rate charged to delegators,
+                              as a fraction.
+                          max_rate:
+                            type: string
+                            description: >-
+                              max_rate defines the maximum commission rate which
+                              validator can ever charge, as a fraction.
+                          max_change_rate:
+                            type: string
+                            description: >-
+                              max_change_rate defines the maximum daily increase
+                              of the validator commission, as a fraction.
+                      update_time:
+                        type: string
+                        format: date-time
+                        description: >-
+                          update_time is the last time the commission rate was
+                          changed.
+                    description: >-
+                      Commission defines commission parameters for a given
+                      validator.
+                  jailed:
+                    type: boolean
+                    title: jailed is a bool whether the reporter is jailed or not
+                  jailed_until:
+                    type: string
+                    format: date-time
+                    title: jailed_until is the time the reporter is jailed until
+                title: >-
+                  OracleReporter is the struct that holds the data for a
+                  reporter
+            description: >-
+              QueryReporterResponse is the response type for the Query/Reporter
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
 definitions:
   cosmos.auth.v1beta1.MsgUpdateParamsResponse:
     type: object
@@ -2336,6 +4147,7 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+<<<<<<< HEAD
   layer.bridge.MsgRegisterOperatorPubkeyResponse:
     type: object
   layer.bridge.MsgSubmitBridgeValsetSignatureResponse:
@@ -2416,6 +4228,8 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
+=======
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
   layer.daemons.ExchangePrice:
     type: object
     properties:
@@ -2454,19 +4268,507 @@ definitions:
     description: >-
       UpdateMarketPricesResponse is a response message for updating market
       prices.
+<<<<<<< HEAD
+  layer.registry.DataSpec:
+=======
+  layer.registry.ABIComponent:
+    type: object
+    properties:
+      name:
+        type: string
+        title: name
+      type:
+        type: string
+        title: type
+      nested_component:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/layer.registry.ABIComponent'
+        title: consider taking this recursion out and make it once only
+    title: ABIComponent is a specification for how to interpret abi_components
   layer.registry.DataSpec:
     type: object
     properties:
-      documentHash:
+      document_hash:
         type: string
-      valueType:
+        title: ipfs hash of the data spec
+      response_value_type:
         type: string
-      aggregationMethod:
+        title: the value's datatype for decoding the value
+      abi_components:
+        type: array
+        items:
+          type: object
+          $ref: '#/definitions/layer.registry.ABIComponent'
+        title: the abi components for decoding
+      aggregation_method:
         type: string
-  layer.registry.MsgRegisterQueryResponse:
-    type: object
-    properties:
-      queryId:
+        title: >-
+          how to aggregate the data (ie. average, median, mode, etc) for
+          aggregating reports and arriving at final value
+      registrar:
         type: string
+        title: address that originally registered the data spec
+      report_buffer_window:
+        type: string
+        title: >-
+          report_buffer_window specifies the duration of the time window
+          following an initial report
+
+          during which additional reports can be submitted. This duration acts
+          as a buffer, allowing
+
+          a collection of related reports in a defined time frame. The window
+          ensures that all
+
+          pertinent reports are aggregated together before arriving at a final
+          value. This defaults
+
+          to 0s if not specified.
+
+          extensions: treat as a golang time.duration, don't allow nil values,
+          don't omit empty values
+    title: DataSpec is a specification for how to interpret and aggregate data
   layer.registry.MsgRegisterSpecResponse:
     type: object
+    description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
+  layer.registry.MsgUpdateDataSpecResponse:
+    type: object
+  cosmos.base.v1beta1.DecCoin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      DecCoin defines a token with a denomination and a decimal amount.
+
+      NOTE: The amount field is an Dec which implements the custom method
+      signatures required by gogoproto.
+  cosmos.staking.v1beta1.Commission:
+    type: object
+    properties:
+      commission_rates:
+        description: >-
+          commission_rates defines the initial commission rates to be used for
+          creating a validator.
+        type: object
+        properties:
+          rate:
+            type: string
+            description: rate is the commission rate charged to delegators, as a fraction.
+          max_rate:
+            type: string
+            description: >-
+              max_rate defines the maximum commission rate which validator can
+              ever charge, as a fraction.
+          max_change_rate:
+            type: string
+            description: >-
+              max_change_rate defines the maximum daily increase of the
+              validator commission, as a fraction.
+      update_time:
+        type: string
+        format: date-time
+        description: update_time is the last time the commission rate was changed.
+    description: Commission defines commission parameters for a given validator.
+  layer.reporter.OracleReporter:
+    type: object
+    properties:
+      reporter:
+        type: string
+        title: reporter is the address of the reporter
+      total_tokens:
+        type: string
+        title: tokens is the amount of tokens the reporter has
+      commission:
+        title: commission for the reporter
+        type: object
+        properties:
+          commission_rates:
+            description: >-
+              commission_rates defines the initial commission rates to be used
+              for creating a validator.
+            type: object
+            properties:
+              rate:
+                type: string
+                description: >-
+                  rate is the commission rate charged to delegators, as a
+                  fraction.
+              max_rate:
+                type: string
+                description: >-
+                  max_rate defines the maximum commission rate which validator
+                  can ever charge, as a fraction.
+              max_change_rate:
+                type: string
+                description: >-
+                  max_change_rate defines the maximum daily increase of the
+                  validator commission, as a fraction.
+          update_time:
+            type: string
+            format: date-time
+            description: update_time is the last time the commission rate was changed.
+        description: Commission defines commission parameters for a given validator.
+      jailed:
+        type: boolean
+        title: jailed is a bool whether the reporter is jailed or not
+      jailed_until:
+        type: string
+        format: date-time
+        title: jailed_until is the time the reporter is jailed until
+    title: OracleReporter is the struct that holds the data for a reporter
+  layer.reporter.Params:
+    type: object
+    properties:
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate, adopted from staking module, is the minimum
+          commission rate a reporter can their delegators
+    description: Params defines the parameters for the module.
+  layer.reporter.QueryDelegationRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+        description: rewards defines the rewards accrued by a delegation.
+    description: |-
+      QueryDelegationRewardsResponse is the response type for the
+      Query/DelegationRewards RPC method.
+  layer.reporter.QueryDelegatorReporterResponse:
+    type: object
+    properties:
+      reporter:
+        type: string
+        description: reporter defines the reporter of a delegator.
+    description: |-
+      QueryDelegatorReporterResponse is the response type for the
+      Query/DelegatorReporter RPC method.
+  layer.reporter.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate, adopted from staking module, is the minimum
+              commission rate a reporter can their delegators
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.reporter.QueryReporterCommissionResponse:
+    type: object
+    properties:
+      commission:
+        description: commission defines the commission the reporter received.
+        type: object
+        properties:
+          commission:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+            title: commission is the accumulated commission for the reporter
+        title: >-
+          ReporterAccumulatedCommission represents accumulated commission for a
+          reporter
+    title: |-
+      QueryReporterCommissionResponse is the response type for the
+      Query/ReporterCommission RPC method
+  layer.reporter.QueryReporterOutstandingRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        type: object
+        properties:
+          rewards:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is an Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+            title: rewards is the outstanding rewards for the reporter
+        description: >-
+          ReporterOutstandingRewards represents outstanding (un-withdrawn)
+          rewards
+
+          for a reporter inexpensive to track, allows simple sanity checks.
+    description: |-
+      QueryReporterOutstandingRewardsResponse is the response type for the
+      Query/ReporterOutstandingRewards RPC method.
+  layer.reporter.QueryReporterResponse:
+    type: object
+    properties:
+      reporter:
+        type: object
+        properties:
+          reporter:
+            type: string
+            title: reporter is the address of the reporter
+          total_tokens:
+            type: string
+            title: tokens is the amount of tokens the reporter has
+          commission:
+            title: commission for the reporter
+            type: object
+            properties:
+              commission_rates:
+                description: >-
+                  commission_rates defines the initial commission rates to be
+                  used for creating a validator.
+                type: object
+                properties:
+                  rate:
+                    type: string
+                    description: >-
+                      rate is the commission rate charged to delegators, as a
+                      fraction.
+                  max_rate:
+                    type: string
+                    description: >-
+                      max_rate defines the maximum commission rate which
+                      validator can ever charge, as a fraction.
+                  max_change_rate:
+                    type: string
+                    description: >-
+                      max_change_rate defines the maximum daily increase of the
+                      validator commission, as a fraction.
+              update_time:
+                type: string
+                format: date-time
+                description: update_time is the last time the commission rate was changed.
+            description: Commission defines commission parameters for a given validator.
+          jailed:
+            type: boolean
+            title: jailed is a bool whether the reporter is jailed or not
+          jailed_until:
+            type: string
+            format: date-time
+            title: jailed_until is the time the reporter is jailed until
+        title: OracleReporter is the struct that holds the data for a reporter
+    description: >-
+      QueryReporterResponse is the response type for the Query/Reporter RPC
+      method.
+  layer.reporter.QueryReporterStakeResponse:
+    type: object
+    properties:
+      stake:
+        type: string
+        description: stake defines the total tokens of a reporter.
+    description: |-
+      QueryReporterStakeResponse is the response type for the
+      Query/ReporterStake RPC method.
+  layer.reporter.QueryReportersResponse:
+    type: object
+    properties:
+      reporters:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+              title: reporter is the address of the reporter
+            total_tokens:
+              type: string
+              title: tokens is the amount of tokens the reporter has
+            commission:
+              title: commission for the reporter
+              type: object
+              properties:
+                commission_rates:
+                  description: >-
+                    commission_rates defines the initial commission rates to be
+                    used for creating a validator.
+                  type: object
+                  properties:
+                    rate:
+                      type: string
+                      description: >-
+                        rate is the commission rate charged to delegators, as a
+                        fraction.
+                    max_rate:
+                      type: string
+                      description: >-
+                        max_rate defines the maximum commission rate which
+                        validator can ever charge, as a fraction.
+                    max_change_rate:
+                      type: string
+                      description: >-
+                        max_change_rate defines the maximum daily increase of
+                        the validator commission, as a fraction.
+                update_time:
+                  type: string
+                  format: date-time
+                  description: >-
+                    update_time is the last time the commission rate was
+                    changed.
+              description: Commission defines commission parameters for a given validator.
+            jailed:
+              type: boolean
+              title: jailed is a bool whether the reporter is jailed or not
+            jailed_until:
+              type: string
+              format: date-time
+              title: jailed_until is the time the reporter is jailed until
+          title: OracleReporter is the struct that holds the data for a reporter
+        description: all the reporters.
+    description: >-
+      QueryReportersResponse is the response type for the Query/Reporters RPC
+      method.
+  layer.reporter.ReporterAccumulatedCommission:
+    type: object
+    properties:
+      commission:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+        title: commission is the accumulated commission for the reporter
+    title: >-
+      ReporterAccumulatedCommission represents accumulated commission for a
+      reporter
+  layer.reporter.ReporterOutstandingRewards:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is an Dec which implements the custom method
+            signatures required by gogoproto.
+        title: rewards is the outstanding rewards for the reporter
+    description: |-
+      ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
+      for a reporter inexpensive to track, allows simple sanity checks.
+  layer.reporter.MsgCreateReporterResponse:
+    type: object
+  layer.reporter.MsgDelegateReporterResponse:
+    type: object
+    description: >-
+      MsgDelegateReporterResponse defines the response structure for executing a
+      MsgDelegateReporter message.
+  layer.reporter.MsgUndelegateReporterResponse:
+    type: object
+  layer.reporter.MsgUnjailReporterResponse:
+    type: object
+    description: MsgUnjailReporterResponse defines the Msg/UnjailReporter response type.
+  layer.reporter.MsgUpdateParamsResponse:
+    type: object
+    description: |-
+      MsgUpdateParamsResponse defines the response structure for executing a
+      MsgUpdateParams message.
+  layer.reporter.MsgWithdrawDelegatorRewardResponse:
+    type: object
+    properties:
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+      response type.
+  layer.reporter.MsgWithdrawReporterCommissionResponse:
+    type: object
+    properties:
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      MsgWithdrawReporterCommissionResponse defines the
+      Msg/WithdrawReporterCommission response type.
+  layer.reporter.TokenOrigin:
+>>>>>>> e179445934b645ef99bf4482610894be972eaabc
+    type: object
+    properties:
+      validator_address:
+        type: string
+        title: >-
+          validator_address is the address of the validator that tokens in
+          staking are delegated to
+      amount:
+        type: string
+        title: >-
+          amount is the amount of tokens to be delegated to a reporter from a
+          delegation in staking
+    title: TokenOrigin is a message to store the origin of a token

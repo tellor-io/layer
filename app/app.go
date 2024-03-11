@@ -46,14 +46,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -78,7 +79,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
-	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -115,13 +115,17 @@ import (
 	oraclemodule "github.com/tellor-io/layer/x/oracle"
 	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oraclemoduletypes "github.com/tellor-io/layer/x/oracle/types"
-	registrymodule "github.com/tellor-io/layer/x/registry"
 	registrymodulekeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registrymodule "github.com/tellor-io/layer/x/registry/module"
 	registrymoduletypes "github.com/tellor-io/layer/x/registry/types"
 
 	disputemodule "github.com/tellor-io/layer/x/dispute"
 	disputemodulekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputemoduletypes "github.com/tellor-io/layer/x/dispute/types"
+
+	reportermodulekeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportermodule "github.com/tellor-io/layer/x/reporter/module"
+	reportermoduletypes "github.com/tellor-io/layer/x/reporter/types"
 
 	_ "github.com/tellor-io/layer/app/config"
 
@@ -143,6 +147,7 @@ import (
 
 	bridgesignerclient "github.com/tellor-io/layer/daemons/bridge/client"
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
+	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
@@ -156,18 +161,6 @@ const (
 )
 
 // this line is used by starport scaffolding # stargate/wasm/app/enabledProposals
-
-func getGovProposalHandlers() []govclient.ProposalHandler {
-	var govProposalHandlers []govclient.ProposalHandler
-	// this line is used by starport scaffolding # stargate/app/govProposalHandlers
-
-	govProposalHandlers = append(govProposalHandlers,
-		paramsclient.ProposalHandler,
-		// this line is used by starport scaffolding # stargate/app/govProposalHandler
-	)
-
-	return govProposalHandlers
-}
 
 var (
 	// DefaultNodeHome default home directories for the application daemon
@@ -187,6 +180,7 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		oraclemoduletypes.ModuleName:   {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		disputemoduletypes.ModuleName:  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		reportermoduletypes.ModuleName: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -253,7 +247,8 @@ type App struct {
 
 	DisputeKeeper disputemodulekeeper.Keeper
 
-	BridgeKeeper bridgemodulekeeper.Keeper
+	BridgeKeeper   bridgemodulekeeper.Keeper
+	ReporterKeeper reportermodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -265,8 +260,9 @@ type App struct {
 	configurator module.Configurator
 
 	Server              *daemonserver.Server
-	startDaemons        func(client.Context, *api.Server)
+	startDaemons        func(*api.Server)
 	PriceFeedClient     *pricefeedclient.Client
+	ReporterClient      *reporterclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 	BridgeSignerClient  *bridgesignerclient.Client
 }
@@ -295,7 +291,7 @@ func New(
 		panic(err)
 	}
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
-	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
 	legacyAmino := codec.NewLegacyAmino()
 	std.RegisterInterfaces(appCodec.InterfaceRegistry())
 	std.RegisterLegacyAminoCodec(legacyAmino)
@@ -322,6 +318,7 @@ func New(
 		registrymoduletypes.StoreKey,
 		disputemoduletypes.StoreKey,
 		bridgemoduletypes.StoreKey,
+		reportermoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 
@@ -388,7 +385,21 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
 	)
-
+	// https://docs.cosmos.network/main/build/migrations/upgrading
+	// When using (legacy) application wiring, the following must be added to app.go after setting the app's bank keeper
+	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
+	txConfigOpts := authtx.ConfigOptions{
+		EnabledSignModes:           enabledSignModes,
+		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
+	}
+	txConfig, err = authtx.NewTxConfigWithOptions(
+		appCodec,
+		txConfigOpts,
+	)
+	if err != nil {
+		panic(fmt.Errorf("failed to create new TxConfig with options: %v", err))
+	}
+	app.txConfig = txConfig
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
@@ -539,11 +550,10 @@ func New(
 		),
 	)
 
-	app.RegistryKeeper = *registrymodulekeeper.NewKeeper(
+	app.RegistryKeeper = registrymodulekeeper.NewKeeper(
 		appCodec,
-		keys[registrymoduletypes.StoreKey],
-		keys[registrymoduletypes.MemStoreKey],
-		paramstypes.Subspace{}, //TODO: remove this!
+		runtime.NewKVStoreService(keys[registrymoduletypes.StoreKey]),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	registryModule := registrymodule.NewAppModule(appCodec, app.RegistryKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -581,17 +591,24 @@ func New(
 		app.SlashingKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
+	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
+		logger,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper,
+		app.BankKeeper,
+	)
+	reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed App flags", "Flags", appFlags)
 	// Panic if this is not a full node and gRPC is disabled.
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
 	}
 	// Get Daemon Flags.
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
 	// Create server that will ingest gRPC messages from daemon clients.
@@ -615,10 +632,12 @@ func New(
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
-	app.startDaemons = func(cltx client.Context, apiSvr *api.Server) {
+	app.startDaemons = func(apiSvr *api.Server) {
+		cltx := apiSvr.ClientCtx
 		// enabled by default, set flag `--price-daemon-enabled=false` to false to disable
 		if daemonFlags.Price.Enabled {
-			maxDaemonUnhealthyDuration := time.Second
+			// set flag `--price-daemon-max-unhealthy-seconds=0` to disable
+			maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 			// Start server for handling gRPC messages from daemons.
 			go app.Server.Start()
 
@@ -640,8 +659,24 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
+			go medianserver.StartMedianServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, marketParamsConfig, indexPriceCache)
 			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+			// enabled by default, set flag `--reporter-daemon-enabled=false` to false to disable
+			if daemonFlags.Reporter.Enabled {
+				go func() {
+					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName)
+					if err := app.ReporterClient.Start(
+						context.Background(),
+						daemonFlags,
+						appFlags,
+						&daemontypes.GrpcClientImpl{},
+						marketParamsConfig,
+						indexPriceCache,
+					); err != nil {
+						panic(err)
+					}
+				}()
+			}
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
@@ -694,6 +729,7 @@ func New(
 			// insert staking hooks receivers here
 			app.DistrKeeper.Hooks(),
 			app.SlashingKeeper.Hooks(),
+			app.ReporterKeeper.Hooks(),
 		),
 	)
 
@@ -739,6 +775,7 @@ func New(
 		registryModule,
 		disputeModule,
 		bridgeModule,
+		reporterModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -785,6 +822,7 @@ func New(
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
 		bridgemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
 
@@ -812,6 +850,7 @@ func New(
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
 		bridgemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
 
@@ -844,6 +883,7 @@ func New(
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
 		bridgemoduletypes.ModuleName,
+		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 	app.mm.SetOrderInitGenesis(genesisModuleOrder...)
@@ -1057,7 +1097,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 
 	// register app's OpenAPI routes.
 	docs.RegisterOpenAPIService(Name, apiSvr.Router)
-	app.startDaemons(clientCtx, apiSvr)
+	app.startDaemons(apiSvr)
 }
 
 // RegisterTxService implements the Application.RegisterTxService method.

@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package layer.reporter;
+
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos/staking/v1beta1/staking.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "layer/reporter/params.proto";
+import "layer/reporter/token_origin.proto";
+
+option go_package = "github.com/tellor-io/layer/x/reporter/types";
+
+// Msg defines the Msg service.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+
+  // CreateReporter defines a (reporter) operation for creating a new reporter.
+  rpc CreateReporter(MsgCreateReporter) returns (MsgCreateReporterResponse);
+
+  // DelegateReporter defines a (reporter) operation for delegating to a reporter.
+  rpc DelegateReporter(MsgDelegateReporter) returns (MsgDelegateReporterResponse);
+  // UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
+  rpc UndelegateReporter(MsgUndelegateReporter) returns (MsgUndelegateReporterResponse);
+
+  // WithdrawReporterCommission defines a method to withdraw the
+  // full commission to the reporter address.
+  rpc WithdrawReporterCommission(MsgWithdrawReporterCommission) returns (MsgWithdrawReporterCommissionResponse);
+  // WithdrawDelegatorReward defines a method to withdraw rewards of delegator
+  // from a reporter.
+  rpc WithdrawDelegatorReward(MsgWithdrawDelegatorReward) returns (MsgWithdrawDelegatorRewardResponse);
+
+  // UnjailReporter defines a method to unjail a jailed reporter.
+  rpc UnjailReporter(MsgUnjailReporter) returns (MsgUnjailReporterResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/reporter/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+message MsgCreateReporter {
+  option (cosmos.msg.v1.signer) = "reporter";
+  string reporter = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  repeated TokenOrigin token_origins = 3;
+  cosmos.staking.v1beta1.Commission commission = 4;
+}
+
+message MsgCreateReporterResponse {}
+
+message MsgDelegateReporter {
+  option (cosmos.msg.v1.signer) = "delegator";
+  string delegator = 1;
+  string reporter = 2;
+  string amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  repeated TokenOrigin token_origins = 4;
+}
+
+// MsgDelegateReporterResponse defines the response structure for executing a MsgDelegateReporter message.
+message MsgDelegateReporterResponse {}
+
+// MsgUndelegateReporter defines the Msg/UndelegateReporter request type.
+message MsgUndelegateReporter {
+  option (cosmos.msg.v1.signer) = "delegator";
+  string delegator = 1;
+  // token_origin is the token origin to undelegate from. If empty, all token origins are undelegated,
+  // else the amount field will be the amount to undelegate from the specified token origin.
+  repeated TokenOrigin token_origins = 2;
+}
+
+message MsgUndelegateReporterResponse {}
+
+// MsgWithdrawReporterCommission withdraws the full commission to the reporter
+// address.
+message MsgWithdrawReporterCommission {
+  option (cosmos.msg.v1.signer) = "reporter_address";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawReporterCommissionResponse defines the
+// Msg/WithdrawReporterCommission response type.
+message MsgWithdrawReporterCommissionResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
+// from a reporter.
+message MsgWithdrawDelegatorReward {
+  option (cosmos.msg.v1.signer) = "delegator_address";
+
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string reporter_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+// response type.
+message MsgWithdrawDelegatorRewardResponse {
+  repeated cosmos.base.v1beta1.Coin amount = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+}
+
+// MsgUnjailReporter defines the Msg/UnjailReporter request type.
+message MsgUnjailReporter {
+  option (cosmos.msg.v1.signer) = "reporter_address";
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUnjailReporterResponse defines the Msg/UnjailReporter response type.
+message MsgUnjailReporterResponse {}

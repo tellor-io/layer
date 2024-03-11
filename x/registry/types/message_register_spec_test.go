@@ -17,13 +17,13 @@ func TestMsgRegisterSpec_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: MsgRegisterSpec{
-				Creator: "invalid_address",
+				Registrar: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgRegisterSpec{
-				Creator: sample.AccAddress(),
+				Registrar: sample.AccAddress(),
 			},
 		},
 	}

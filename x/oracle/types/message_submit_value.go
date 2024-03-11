@@ -10,11 +10,12 @@ const TypeMsgSubmitValue = "submit_value"
 
 var _ sdk.Msg = &MsgSubmitValue{}
 
-func NewMsgSubmitValue(creator string, queryData string, value string) *MsgSubmitValue {
+func NewMsgSubmitValue(creator string, queryData string, value string, salt string) *MsgSubmitValue {
 	return &MsgSubmitValue{
 		Creator:   creator,
 		QueryData: queryData,
 		Value:     value,
+		Salt:      salt,
 	}
 }
 

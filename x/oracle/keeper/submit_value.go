@@ -4,7 +4,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/oracle/types"
+	"github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,54 +15,23 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetSignature(ctx sdk.Context, reporter sdk.AccAddress, queryId []byte) (*types.CommitReport, error) {
-	commitStore := k.CommitStore(ctx)
-	commit := commitStore.Get(append(reporter, queryId...))
-	if commit == nil {
-		return nil, status.Error(codes.NotFound, "no commits to reveal found")
-	}
-	var commitReport types.CommitReport
-	k.cdc.Unmarshal(commit, &commitReport)
-	return &commitReport, nil
-}
-
-func (k Keeper) setValueByReporter(ctx sdk.Context, report *types.MicroReport) {
-	reporterStore := k.ReporterStore(ctx)
-	// reporter-query id pair
-	reporterQueryIdKey := []byte(report.Reporter + ":" + report.QueryId)
-	// get reports list from store and unmarshal
-	var reportsList types.Reports
-	k.cdc.MustUnmarshal(reporterStore.Get(reporterQueryIdKey), &reportsList) // panics if can't unmarshal
-	reportsList.MicroReports = append(reportsList.MicroReports, report)
-	reporterStore.Set(reporterQueryIdKey, k.cdc.MustMarshal(&reportsList))
-}
-
-func (k Keeper) setValueByQueryId(ctx sdk.Context, queryId []byte, report *types.MicroReport) {
-	store := k.ReportsStore(ctx)
-	var reportsList types.Reports
-	k.cdc.MustUnmarshal(store.Get(queryId), &reportsList) // panics if can't unmarshal
-	reportsList.MicroReports = append(reportsList.MicroReports, report)
-	store.Set(queryId, k.cdc.MustMarshal(&reportsList))
-}
-
 func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, queryData []byte, power, block int64) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, err := decodeQueryType(queryData)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
-	dataSpec := k.GetValueType(ctx, queryType)
-	if dataSpec == nil {
+	dataSpec, err := k.GetDataSpec(ctx, queryType)
+	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to get value type: %v", err))
 	}
 	// decode value using value type from data spec and check if decodes successfully
 	// value is not used, only used to check if it decodes successfully
-	if _, err := decodeValue(val, dataSpec.ValueType); err != nil {
-		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value: %v", err))
+	if err := dataSpec.ValidateValue(val); err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to validate value: %v", err))
 	}
-
 	queryId := HashQueryData(queryData)
-	report := &types.MicroReport{
+	report := types.MicroReport{
 		Reporter:        reporter.String(),
 		Power:           power,
 		QueryType:       queryType,
@@ -71,23 +42,7 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, q
 		Timestamp:       ctx.BlockTime(),
 	}
 
-	k.setValueByReporter(ctx, report)
-	k.setValueByQueryId(ctx, queryId, report)
-	k.AppendReport(ctx, report)
-	return nil
-}
-
-func (k Keeper) AppendReport(ctx sdk.Context, report *types.MicroReport) {
-	store := k.ReportsStore(ctx)
-	// get reports for current block height to append new report
-	var reportsByHeight types.Reports
-	key := types.NumKey(report.BlockNumber)
-	bz := store.Get(key)
-	k.cdc.MustUnmarshal(bz, &reportsByHeight)
-	reportsByHeight.MicroReports = append(reportsByHeight.MicroReports, report)
-	store.Set(key, k.cdc.MustMarshal(&reportsByHeight))
-	// delete reports that were stored by height(only) for previous block height
-	store.Delete(types.NumKey(report.BlockNumber - 1))
+	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), ctx.BlockHeight()), report)
 }
 
 func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int64, bool) {
@@ -110,6 +65,7 @@ func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int6
 	return votingPower, validator.IsBonded()
 }
 
+// tODO: double check this
 func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signature string) bool {
 	addr, err := sdk.AccAddressFromBech32(reporter)
 	if err != nil {
@@ -133,6 +89,13 @@ func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signatu
 	return true
 }
 
+func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {
+	// calculate commitment
+	calculatedCommit := utils.CalculateCommitment(value, salt)
+	// compare calculated commitment with the one stored
+	return calculatedCommit == hash
+}
+
 func decodeQueryType(data []byte) (string, error) {
 	// Create an ABI arguments object based on the types
 	strArg, err := abi.NewType("string", "string", nil)
@@ -154,35 +117,11 @@ func decodeQueryType(data []byte) (string, error) {
 	return result[0].(string), nil
 }
 
-func decodeValue(value, dataType string) ([]interface{}, error) {
-	argType, err := abi.NewType(dataType, dataType, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create new ABI type when decoding value: %v", err)
-	}
-	arg := abi.Argument{
-		Type: argType,
-	}
-	args := abi.Arguments{arg}
-	valueBytes, err := hex.DecodeString(value)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode value string: %v", err))
-	}
-	var result []interface{}
-	result, err = args.Unpack(valueBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unpack value: %v", err)
-	}
-	fmt.Println("Decoded value: ", result[0])
-	return result, nil
-}
-
-func (k Keeper) GetValueType(ctx sdk.Context, queryType string) *regTypes.DataSpec {
+func (k Keeper) GetDataSpec(ctx sdk.Context, queryType string) (regTypes.DataSpec, error) {
 	// get data spec from registry by query type to validate value
-	dataSpecBytes := k.registryKeeper.Spec(ctx, queryType)
-	if dataSpecBytes == nil {
-		return nil
+	dataSpec, err := k.registryKeeper.GetSpec(ctx, queryType)
+	if err != nil {
+		return regTypes.DataSpec{}, err
 	}
-	var dataSpec regTypes.DataSpec
-	k.cdc.Unmarshal(dataSpecBytes, &dataSpec)
-	return &dataSpec
+	return dataSpec, nil
 }

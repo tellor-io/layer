@@ -5,8 +5,8 @@ package mocks
 import (
 	time "time"
 
-	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
 	mock "github.com/stretchr/testify/mock"
+	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
 
 	types "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 )

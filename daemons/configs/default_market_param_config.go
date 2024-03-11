@@ -90,7 +90,7 @@ func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {
 			param.QueryData == "" {
 			panic(
 				fmt.Errorf(
-					"One or more config values are unset or are set to zero for pair with id: '%v'",
+					"one or more config values are unset or are set to zero for pair with id: '%v'",
 					param.Id,
 				),
 			)

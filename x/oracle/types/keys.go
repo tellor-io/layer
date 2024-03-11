@@ -1,10 +1,7 @@
 package types
 
 import (
-	"fmt"
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/collections"
 )
 
 const (
@@ -22,20 +19,22 @@ const (
 
 	// ParamsKey
 	ParamsKey = "oracle_params"
+)
 
-	ReportsKey = "Reports-value-"
+var (
+	CommitsPrefix   = collections.NewPrefix(0)
+	TipsPrefix      = collections.NewPrefix(1)
+	TipsIndexPrefix = collections.NewPrefix(2)
 
-	// TipStoreKey defines the tip store key
-	TipStoreKey = "tip_store"
+	ReportsPrefix              = collections.NewPrefix(3)
+	ReportsHeightIndexPrefix   = collections.NewPrefix(4)
+	ReportsReporterIndexPrefix = collections.NewPrefix(5)
 
-	// CommitReportStoreKey defines the commit store key
-	CommitReportStoreKey = "commit_report_store"
+	AggregatesPrefix = collections.NewPrefix(6)
+	NoncesPrefix     = collections.NewPrefix(7)
+	TotalTipsPrefix  = collections.NewPrefix(8)
 
-	ReporterStoreKey = "reporter_store"
-
-	AggregateStoreKey = "aggergate_store"
-
-	CycleListStoreKey = "cycle_list_store"
+	CycleIndexPrefix = collections.NewPrefix(9)
 )
 
 func KeyPrefix(p string) []byte {
@@ -44,32 +43,4 @@ func KeyPrefix(p string) []byte {
 
 func ParamsKeyPrefix() []byte {
 	return KeyPrefix(ParamsKey)
-}
-
-func NumKey(num int64) []byte {
-	return sdk.Uint64ToBigEndian(uint64(num))
-}
-
-func AvailableTimestampsKey(queryId []byte) []byte {
-	return []byte(fmt.Sprintf("%s:%s", "timestamps", queryId))
-}
-
-func MaxNonceKey(queryId []byte) []byte {
-	return []byte(fmt.Sprintf("%s:%s", "maxNonce", queryId))
-}
-
-func AggregateKey(queryId []byte, timestamp time.Time) []byte {
-	return []byte(fmt.Sprintf("%s:%s:%v", "aggregate", queryId, timestamp))
-}
-
-func CycleListKey() []byte {
-	return KeyPrefix(CycleListStoreKey)
-}
-
-func CurrentIndexKey() []byte {
-	return KeyPrefix("currentIndex")
-}
-
-func QueryIdTimestampPairsByBlockHeightKey(blockHeight int64) []byte {
-	return KeyPrefix(fmt.Sprintf("queryIdTimestampPairs:%d", blockHeight))
 }
