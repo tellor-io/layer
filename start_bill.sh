@@ -97,4 +97,4 @@ layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bi
 
 # Start the second node
 echo "Starting the second node..."
-./layerd start --home $NODE2_HOME_DIR
+./layerd start --home $NODE2_HOME_DIR --api.enable

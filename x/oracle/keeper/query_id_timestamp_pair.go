@@ -8,6 +8,7 @@ import (
 )
 
 func (k Keeper) SetQueryIdAndTimestampPairByBlockHeight(ctx sdk.Context, queryId string, timestamp time.Time) {
+	k.Logger(ctx).Info("@SetQueryIdAndTimestampPairByBlockHeight", "queryId", queryId, "timestamp", timestamp)
 	store := ctx.KVStore(k.storeKey)
 	height := ctx.BlockHeight()
 	key := types.QueryIdTimestampPairsByBlockHeightKey(height)

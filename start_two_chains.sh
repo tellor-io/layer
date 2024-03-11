@@ -55,4 +55,4 @@ echo "Collecting gentxs..."
 ./layerd genesis collect-gentxs --home ~/.layer/alice
 
 echo "Start chain..."
-./layerd start --home ~/.layer/alice
+./layerd start --home ~/.layer/alice --api.enable

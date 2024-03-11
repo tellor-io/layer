@@ -33,7 +33,8 @@ type ValsetSignatures struct {
 }
 
 type VoteExtTx struct {
-	OpAndEVMAddrs OperatorAndEVM `json:"op_and_evm_addrs"`
+	OpAndEVMAddrs OperatorAndEVM   `json:"op_and_evm_addrs"`
+	ValsetSigs    ValsetSignatures `json:"valset_sigs"`
 }
 
 func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper, stakingKeeper StakingKeeper) *ProposalHandler {
@@ -117,10 +118,15 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 				Txs: proposalTxs,
 			}, nil
 		}
+		valsetSigs := ValsetSignatures{
+			OperatorAddresses: valsetOperatorAddresses,
+			Timestamps:        valsetTimestamps,
+			Signatures:        valsetSignatures,
+		}
 
-		injectedVoteExtTx := OperatorAndEVM{
-			OperatorAddresses: operatorAddresses,
-			EVMAddresses:      evmAddresses,
+		injectedVoteExtTx := VoteExtTx{
+			OpAndEVMAddrs: operatorAndEvm,
+			ValsetSigs:    valsetSigs,
 		}
 		// NOTE: We use stdlib JSON encoding, but an application may choose to use
 		// a performant mechanism. This is for demo purposes only.
@@ -153,18 +159,18 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		h.logger.Info("@PreBlocker", "height", req.Height)
-		var injectedVoteExtTx OperatorAndEVM
+		var injectedVoteExtTx VoteExtTx
 		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
 			h.logger.Error("failed to decode injected vote extension tx", "err", err)
 			return nil, errors.New("failed to decode injected vote extension tx")
 		}
 
-		if len(injectedVoteExtTx.OperatorAddresses) == 0 {
+		if len(injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) == 0 {
 			h.logger.Info("no operator addresses found in injected vote extension tx")
 			return res, nil
 		}
 
-		if err := h.SetEVMAddresses(ctx, injectedVoteExtTx.OperatorAddresses, injectedVoteExtTx.EVMAddresses); err != nil {
+		if err := h.SetEVMAddresses(ctx, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses); err != nil {
 			return nil, err
 		}
 	}

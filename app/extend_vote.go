@@ -43,6 +43,7 @@ type BridgeKeeper interface {
 	GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValidatorSet, error)
 	GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
 	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
+	SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error
 }
 
 type StakingKeeper interface {
@@ -58,6 +59,8 @@ type VoteExtHandler struct {
 }
 
 type OracleAttestation struct {
+	QueryId     string
+	Timestamp   uint64
 	Attestation []byte
 }
 

@@ -77,6 +77,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
+	k.Logger(ctx).Info("@SetAggregate", "report", report)
 	if rk.Has0xPrefix(report.QueryId) {
 		report.QueryId = report.QueryId[2:]
 	}
