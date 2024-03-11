@@ -316,10 +316,11 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 		s.accountKeeper.SetAccount(s.ctx, &account)
 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk.PubKey(), stakingtypes.Description{})
 		s.NoError(err)
-		s.stakingKeeper.SetValidator(ctx, val)
-		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+		s.NoError(s.stakingKeeper.SetValidator(ctx, val))
+		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(ctx, val))
+		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val))
+		_, err = s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+		s.NoError(err)
 		// call hooks for distribution init
 		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 		if err != nil {
