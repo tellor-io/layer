@@ -34,13 +34,13 @@ func (_m *ReporterKeeper) AllocateRewardsToStake(ctx context.Context, reporterAd
 	return r0
 }
 
-// EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, height, amt
-func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, height int64, amt math.Int) error {
-	ret := _m.Called(ctx, reporterAddr, height, amt)
+// EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt
+func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power int64, height int64, amt math.Int) error {
+	ret := _m.Called(ctx, reporterAddr, power, height, amt)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, int64, math.Int) error); ok {
-		r0 = rf(ctx, reporterAddr, height, amt)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, int64, int64, math.Int) error); ok {
+		r0 = rf(ctx, reporterAddr, power, height, amt)
 	} else {
 		r0 = ret.Error(0)
 	}

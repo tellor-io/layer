@@ -38,7 +38,7 @@ type OracleKeeper interface {
 
 type ReporterKeeper interface {
 	AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error
-	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, height int64, amt math.Int) error
+	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int) error
 	Reporter(ctx context.Context, repAddr sdk.AccAddress) (*reportertypes.OracleReporter, error)
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration int64) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)

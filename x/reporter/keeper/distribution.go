@@ -724,6 +724,23 @@ func (k Keeper) BeforeDelegationModified(ctx context.Context, delAddr sdk.AccAdd
 
 // create new delegation period record
 func (k Keeper) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, reporterVal sdk.ValAddress, stake math.Int) error {
+	delegator, err := k.Delegators.Get(ctx, delAddr)
+	if err != nil {
+		return err
+	}
+	repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	snapshotKey := collections.Join(repAddr, sdkCtx.BlockHeight())
+	// get all the token origins for the reporter
+	tokenSources, err := k.GetTokenSourcesForReporter(ctx, repAddr)
+	if err != nil {
+		return err
+	}
+	err = k.TokenOriginSnapshot.Set(ctx, snapshotKey, tokenSources)
+	if err != nil {
+		return err
+	}
 	return k.initializeDelegation(ctx, reporterVal, delAddr, stake)
 }
 

@@ -108,13 +108,14 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	s.NoError(err)
 
 	report := types.MicroReport{
-		Reporter:  repAcc.String(),
-		Power:     100,
-		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Reporter:    repAcc.String(),
+		Power:       100,
+		QueryId:     "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.ctx.BlockHeight(),
 	}
-
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
 		Creator:         repAcc.String(),
 		Report:          &report,
@@ -410,9 +411,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))
 	}
-	disputerDelgation, err := s.stakingKeeper.GetAllDelegatorDelegations(s.ctx, disputer)
+	disputerDelgation, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, disputer)
 	s.NoError(err)
-	s.True(disputerDelgation[0].Shares.Equal(math.LegacyNewDecFromInt(math.NewInt(1_000_000))))
+	s.True(disputerDelgation.Equal(math.NewInt(1_000_000)))
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {

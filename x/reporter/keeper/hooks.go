@@ -59,7 +59,6 @@ func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sd
 }
 
 func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	// TODO: check context to see how this is called in sdk!!!
 	// reflect changes only when token/power decreases
 	// update the reporter tokens and the delegator's tokens to reflect the new power numbers
 	// also need to update the token origins to reflect the new changes when the delegator's tokens are updated
@@ -91,24 +90,6 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 				return err
 			}
 			repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
-
-			sdkCtx := sdk.UnwrapSDKContext(ctx)
-			snapshotKey := collections.Join(repAddr, sdkCtx.BlockHeight())
-			snapshotExists, err := h.k.TokenOriginSnapshot.Has(ctx, snapshotKey)
-			if err != nil {
-				return err
-			}
-			if !snapshotExists {
-				// get all the token origins for the reporter
-				tokenSources, err := h.k.GetTokenSourcesForReporter(ctx, repAddr)
-				if err != nil {
-					return err
-				}
-				err = h.k.TokenOriginSnapshot.Set(ctx, snapshotKey, tokenSources)
-				if err != nil {
-					return err
-				}
-			}
 
 			// get the difference in the token change to reduce delegation and reporter tokens by.
 			diff := sourced.Sub(tokenAmount)
