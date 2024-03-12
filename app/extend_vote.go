@@ -21,6 +21,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 type OracleKeeper interface {
@@ -28,6 +29,7 @@ type OracleKeeper interface {
 	// GetAggregateReport(ctx sdk.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
 	GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
+	GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []oracletypes.Aggregate
 }
 
 type BridgeKeeper interface {
@@ -132,59 +134,65 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		// return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 	// logic for generating oracle sigs and including them via vote extensions
-	// blockHeight := ctx.BlockHeight()
-	// // reportIds := h.oracleKeeper.GetQueryIdAndTimestampPairsByBlockHeight(ctx, uint64(blockHeight))
-	// // voteExt := BridgeVoteExtension{}
-	// // iterate through reports and generate sigs
-	// if len(reportIds.Pairs) == 0 {
-	// 	h.logger.Info("No reports found for block height", "blockHeight", blockHeight)
-	// 	// voteExt := BridgeVoteExtension{}
-	// 	bz, err := json.Marshal(voteExt)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to marshal empty vote extension: %w", err)
-	// 	}
-	// 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
-	// } else {
-	// 	h.logger.Info("Reports found for block height", "blockHeight", blockHeight)
-	// 	valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	for _, reportId := range reportIds.Pairs {
-	// 		ts := time.Unix(reportId.Timestamp, 0)
-	// 		report, err := h.oracleKeeper.GetAggregateReport(ctx, []byte(reportId.QueryId), ts)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		tsBefore, _ := h.oracleKeeper.GetTimestampBefore(ctx, []byte(reportId.QueryId), ts)
-	// 		tsAfter, _ := h.oracleKeeper.GetTimestampAfter(ctx, []byte(reportId.QueryId), ts)
-	// 		oracleAttestationHash, err := h.EncodeOracleAttestationData(
-	// 			report.QueryId,
-	// 			report.AggregateValue,
-	// 			reportId.Timestamp,
-	// 			report.ReporterPower,
-	// 			tsBefore.Unix(),
-	// 			tsAfter.Unix(),
-	// 			hex.EncodeToString(valsetCheckpoint.Checkpoint),
-	// 			ctx.BlockTime().Unix(),
-	// 		)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		// sign the oracleAttestationHash
-	// 		sig, err := h.SignMessage(oracleAttestationHash)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		oracleAttestation := OracleAttestation{
-	// 			Attestation: sig,
-	// 		}
-	// 		voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
-	// 	}
-	// }
+	blockHeight := ctx.BlockHeight() - 1
+	reports := h.oracleKeeper.GetAggregatedReportsByHeight(ctx, int64(blockHeight))
+	// voteExt := BridgeVoteExtension{}
+	// iterate through reports and generate sigs
+	if len(reports) == 0 {
+		h.logger.Info("No reports found for block height", "blockHeight", blockHeight)
+		// voteExt := BridgeVoteExtension{}
+		// bz, err := json.Marshal(voteExt)
+		// if err != nil {
+		// 	return nil, fmt.Errorf("failed to marshal empty vote extension: %w", err)
+		// }
+		// return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+	} else {
+		h.logger.Info("Reports found for block height", "blockHeight", blockHeight)
+		valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, aggReport := range reports {
+			currentTime := time.Now()
+			ts := currentTime.Unix() + 1
+			reportTime, err := h.oracleKeeper.GetTimestampBefore(ctx, []byte(aggReport.QueryId), time.Unix(ts, 0))
+			if err != nil {
+				return nil, err
+			}
+			// report, err := h.oracleKeeper.GetAggregateReport(ctx, []byte(aggReport.QueryId), ts)
+			// if err != nil {
+			// 	return nil, err
+			// }
+			tsBefore, _ := h.oracleKeeper.GetTimestampBefore(ctx, []byte(aggReport.QueryId), reportTime)
+			tsAfter, _ := h.oracleKeeper.GetTimestampAfter(ctx, []byte(aggReport.QueryId), reportTime)
+			oracleAttestationHash, err := h.EncodeOracleAttestationData(
+				aggReport.QueryId,
+				aggReport.AggregateValue,
+				reportTime.Unix(),
+				aggReport.ReporterPower,
+				tsBefore.Unix(),
+				tsAfter.Unix(),
+				hex.EncodeToString(valsetCheckpoint.Checkpoint),
+				ctx.BlockTime().Unix(),
+			)
+			if err != nil {
+				return nil, err
+			}
+			// sign the oracleAttestationHash
+			sig, err := h.SignMessage(oracleAttestationHash)
+			if err != nil {
+				return nil, err
+			}
+			oracleAttestation := OracleAttestation{
+				Attestation: sig,
+			}
+			voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
+		}
+	}
 	// include the valset sig in the vote extension
 	sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
-	if err != nil || len(sig) == 0 {
+	if err != nil {
+		h.logger.Error("Failed to sign validator checkpoint", "error", err)
 		bz, err := json.Marshal(voteExt)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
@@ -196,6 +204,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		Timestamp: timestamp,
 	}
 	voteExt.ValsetSignature = valsetSignature
+	h.logger.Info("Vote extension data", "voteExt", voteExt)
 
 	bz, err := json.Marshal(voteExt)
 	if err != nil {
@@ -454,6 +463,7 @@ func (h *VoteExtHandler) GetKeyName() string {
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signature []byte, timestamp uint64, err error) {
+	h.logger.Info("@CheckAndSignValidatorCheckpoint - extend_vote.go")
 	// get latest checkpoint index
 	latestCheckpointIdx, err := h.bridgeKeeper.GetLatestCheckpointIndex(ctx)
 	if err != nil {
@@ -537,6 +547,7 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signa
 					h.logger.Error("failed to encode and sign message", "error", err)
 					return nil, 0, err
 				}
+				h.logger.Info("Signature generated", "signature", hex.EncodeToString(signature))
 				return signature, latestCheckpointTimestamp.Timestamp, nil
 			} else {
 				h.logger.Info("No previous valset found")
@@ -557,8 +568,6 @@ func (h *VoteExtHandler) GetValidatorIndexInValset(ctx sdk.Context, evmAddress s
 	}
 	return -1, fmt.Errorf("validator not found in valset")
 }
-
-// func (h *VoteExtHandler) GetDidSignCheckpoint(ctx sdk.Context, evmAddress string)
 
 func (h *VoteExtHandler) EncodeAndSignMessage(checkpointString string) ([]byte, error) {
 	// Encode the checkpoint string to bytes

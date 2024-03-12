@@ -183,11 +183,11 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 		for i, validator := range currentValidatorSetEVMCompatible.BridgeValidatorSet {
 			k.Logger(ctx).Info("Current bridge validator ", i, ": ", validator.EthereumAddress+" "+fmt.Sprint(validator.Power))
 		}
-		err = k.BridgeValsetByTimestampMap.Set(ctx, uint64(ctx.BlockTime().Unix()), *currentValidatorSetEVMCompatible)
-		if err != nil {
-			k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
-			return false, err
-		}
+		// err = k.BridgeValsetByTimestampMap.Set(ctx, uint64(ctx.BlockTime().Unix()), *currentValidatorSetEVMCompatible)
+		// if err != nil {
+		// 	k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
+		// 	return false, err
+		// }
 		return true, nil
 	}
 }
@@ -230,6 +230,13 @@ func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *ty
 	if error != nil {
 		k.Logger(ctx).Info("Error setting validator checkpoint: ", "error", error)
 		return error
+	}
+
+	// Set the bridge valset by timestamp
+	err = k.BridgeValsetByTimestampMap.Set(ctx, validatorTimestamp, *bridgeValidatorSet)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting bridge valset by timestamp: ", "error", err)
+		return err
 	}
 
 	valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))

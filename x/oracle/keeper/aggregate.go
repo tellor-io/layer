@@ -191,3 +191,22 @@ func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp tim
 
 	return time.Unix(mostRecent, 0), nil
 }
+
+func (k Keeper) GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []types.Aggregate {
+	iter, err := k.Aggregates.Indexes.BlockHeight.MatchExact(ctx, height)
+	if err != nil {
+		panic(err)
+	}
+
+	kvs, err := indexes.CollectKeyValues(ctx, k.Aggregates, iter)
+	if err != nil {
+		panic(err)
+	}
+
+	reports := make([]types.Aggregate, len(kvs))
+	for i, kv := range kvs {
+		reports[i] = kv.Value
+	}
+
+	return reports
+}
