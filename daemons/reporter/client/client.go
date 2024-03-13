@@ -165,6 +165,12 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	}
 	txf := newFactory(c.cosmosCtx)
 
+	c.logger.Info("@SubmitReport")
+	c.logger.Info("account name", "accountName", accountName)
+	c.logger.Info("from address", "fromAddr", fromAddr.String())
+	c.logger.Info("keyring backend", "keyringBackend", c.cosmosCtx.Keyring.Backend())
+	c.logger.Info("keyring dir", "keyringDir", c.cosmosCtx.KeyringDir)
+
 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
 	if err != nil {
 		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %v", err)

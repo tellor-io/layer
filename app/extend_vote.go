@@ -147,7 +147,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		// }
 		// return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	} else {
-		h.logger.Info("Reports found for block height", "blockHeight", blockHeight)
+		h.logger.Info("Reports were found for block height", "blockHeight", blockHeight)
 		valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
 		if err != nil {
 			return nil, err
@@ -340,13 +340,13 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	// define keyring backend and the path to the keystore dir
-	krBackend := keyring.BackendTest
-	krDir := os.ExpandEnv("$HOME/.layer")
-	h.logger.Info("Keyring dir:", "dir", krDir)
+	krBackend := keyring.BackendOS
 	keyName := h.GetKeyName()
 	if keyName == "" {
 		return nil, fmt.Errorf("key name not found")
 	}
+	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
+	h.logger.Info("Keyring dir:", "dir", krDir)
 
 	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
 	if err != nil {
@@ -407,12 +407,12 @@ func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	h.logger.Info("@GetOperatorAddress - extend_vote.go")
 	// define keyring backend and the path to the keystore dir
-	krBackend := keyring.BackendTest
-	krDir := os.ExpandEnv("$HOME/.layer")
 	keyName := h.GetKeyName()
 	if keyName == "" {
 		return "", fmt.Errorf("key name not found")
 	}
+	krBackend := keyring.BackendOS
+	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
 
 	h.logger.Info("Keyring dir:", "dir", krDir)
 

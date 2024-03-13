@@ -15,20 +15,20 @@ go build ./cmd/layerd
 echo "Initializing the chain..."
 ./layerd init layer --chain-id layer
 
-
-# Add a validator account alice
-echo "Adding validator accounts..."
-echo "alice..."
-./layerd keys add alice --keyring-backend test
-echo "bill..."
-./layerd keys add bill --keyring-backend test
-
 # Init two different chain nodes with two different folders
 echo "Initializing chain nodes..."
 echo "alice..."
 ./layerd init alicemoniker --chain-id layer --home ~/.layer/alice
 echo "bill..."
 ./layerd init billmoniker --chain-id layer --home ~/.layer/bill
+
+# Add a validator account alice
+echo "Adding validator accounts..."
+echo "alice..."
+./layerd keys add alice --keyring-backend os --home ~/.layer/alice
+echo "bill..."
+./layerd keys add bill --keyring-backend os --home ~/.layer/bill
+
 
 # Update vote_extensions_enable_height in genesis.json
 echo "Updating vote_extensions_enable_height in genesis.json..."
@@ -42,13 +42,13 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/bill/co
 # Create a tx to give alice loyas to stake
 echo "Adding genesis accounts..."
 echo "alice..."
-./layerd genesis add-genesis-account $(layerd keys show alice -a --keyring-backend test)  10000000000000loya --keyring-backend test --home ~/.layer/alice
+./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend os --home ~/.layer/alice)  10000000000000loya --keyring-backend os --home ~/.layer/alice
 echo "bill..."
-./layerd genesis add-genesis-account $(layerd keys show bill -a --keyring-backend test) 10000000000000loya --keyring-backend test --home ~/.layer/bill
+./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 10000000000000loya --keyring-backend os --home ~/.layer/bill
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx alice..."
-./layerd genesis gentx alice 1000000000000loya --chain-id layer --keyring-backend test --home ~/.layer/alice --keyring-dir ~/.layer
+./layerd genesis gentx alice 1000000000000loya --chain-id layer --keyring-backend os --home ~/.layer/alice --keyring-dir ~/.layer/alice
 
 # Add the transactions to the genesis block:q
 echo "Collecting gentxs..."

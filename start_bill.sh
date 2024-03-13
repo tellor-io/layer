@@ -40,7 +40,7 @@ echo "Configuration files copied and ports updated."
 
 # Obtain Node ID of the first node
 echo "Obtaining node ID of the first node..."
-NODE_ID_1=$(layerd tendermint show-node-id --home $NODE1_HOME_DIR)
+NODE_ID_1=$(./layerd tendermint show-node-id --home $NODE1_HOME_DIR)
 echo "Node ID of the first node: $NODE_ID_1"
 
 # Listen address and port for the first node (adjust if necessary)
@@ -59,12 +59,13 @@ echo "Seeds/persistent_peers set."
 
 # send tokens from alice to bill:
 echo "Sending tokens from alice to bill..."
-layerd tx bank send $(layerd keys show alice -a --keyring-backend test) $(layerd keys show bill -a --keyring-backend test) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer --keyring-backend test
+# ./layerd tx bank send $(./layerd keys show alice -a --keyring-backend test) $(layerd keys show bill -a --keyring-backend test) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer --keyring-backend test
+./layerd tx bank send $(./layerd keys show alice -a --keyring-backend os --home ~/.layer/alice) $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer/alice --keyring-backend os
 
 
 # get bill's validator pubkey
 echo "Getting bill's validator pubkey..."
-BILL_VAL_PUBKEY=$(layerd tendermint show-validator --home $NODE2_HOME_DIR)
+BILL_VAL_PUBKEY=$(./layerd tendermint show-validator --home $NODE2_HOME_DIR)
 BILL_VAL_PUBKEY=$(echo "$BILL_VAL_PUBKEY" | jq -r '.key')
 echo "Bill's validator pubkey: $BILL_VAL_PUBKEY"
 
@@ -93,8 +94,10 @@ echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 # Stake Bill as a validator
 echo "Staking bill as a validator..."
 # layerd tx staking create-validator $NODE2_HOME_DIR/config/validator.json --from bill --keyring-backend test --keyring-dir $HOME/.layer/ --chain-id layer
-layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend test --keyring-dir ~/.layer/ --chain-id layer
+./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend os --keyring-dir ~/.layer/bill --chain-id layer --home ~/.layer/bill
 
 # Start the second node
 echo "Starting the second node..."
 ./layerd start --home $NODE2_HOME_DIR --api.enable
+
+
