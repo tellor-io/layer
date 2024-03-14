@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -39,6 +40,7 @@ func (s *E2ETestSuite) TestInitialMint() {
 	// fmt.Println("balance after calling initGenesis with 500k: ", balance)
 	// require.Equal(mintAmount, balance.Amount)
 }
+
 
 func (s *E2ETestSuite) TestTransfer() {
 	require := s.Require()
@@ -183,29 +185,41 @@ func (s *E2ETestSuite) TestTransfer() {
 
 // }
 
+
+
 func (s *E2ETestSuite) TestValidateCycleList() {
-	_ = sdk.BeginBlocker(s.app.BeginBlocker)
-	currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	fmt.Println("currentQuery block 0: ", currentQuery)
-	fmt.Println("current block height: ", s.ctx.BlockHeight())
-	_ = sdk.EndBlocker(s.app.EndBlocker)
+	require := s.Require()
 
-	//advance 1 block
+	currentTime := s.ctx.BlockTime()
+	fmt.Println(currentTime)
+	s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second))
+	newTime := s.ctx.BlockTime()
+	fmt.Println(newTime)
+
+	// block 0
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	firstQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NotEmpty(firstQuery)
+	require.Equal(s.ctx.BlockHeight(), int64(0))
+
+	// block 1
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_ = sdk.BeginBlocker(s.app.BeginBlocker)
-	currentQuery = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	fmt.Println("currentQuery block 1: ", currentQuery)
-	fmt.Println("current block height: ", s.ctx.BlockHeight())
-	_ = sdk.EndBlocker(s.app.EndBlocker)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	require.Equal(s.ctx.BlockHeight(), int64(1))
+	secondQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 
-	//advance 1 block
+	require.NotEqual(firstQuery, secondQuery)
+
+	// block 2
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	currentQuery = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	fmt.Println("currentQuery block 2: ", currentQuery)
-	fmt.Println("current block height: ", s.ctx.BlockHeight())
-	err := sdk.EndBlocker(s.app.EndBlocker)
-	fmt.Println("err: ", err) // 0x101e2e970
-
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	require.Equal(s.ctx.BlockHeight(), int64(2))
+	thirdQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NotEqual(firstQuery, thirdQuery)
+	require.NotEqual(secondQuery, thirdQuery)
 }
 
 func (s *E2ETestSuite) TestSubmit() {

@@ -65,7 +65,7 @@ func (k Keeper) IsReporterStaked(ctx sdk.Context, reporter sdk.ValAddress) (int6
 	return votingPower, validator.IsBonded()
 }
 
-// tODO: double check this
+// tODO: double check this // no longer needed ?
 func (k Keeper) VerifySignature(ctx sdk.Context, reporter string, value, signature string) bool {
 	addr, err := sdk.AccAddressFromBech32(reporter)
 	if err != nil {
