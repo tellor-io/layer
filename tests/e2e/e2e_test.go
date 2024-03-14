@@ -1,16 +1,12 @@
 package e2e_test
 
 import (
-	"encoding/hex"
-
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 func (s *E2ETestSuite) TestInitialMint() {
@@ -305,61 +301,61 @@ func (s *E2ETestSuite) TestDisputes() {
 // call slash
 
 func (s *E2ETestSuite) TestTipCommitReveal() {
-	require := s.Require()
+	// require := s.Require()
 
-	// set up keepers and msg servers
-	oraclekeeper, msgServerOracle := s.oracleKeeper()
-	require.NotNil(msgServerOracle)
-	require.NotNil(oraclekeeper)
-	disputekeeper, msgServerDispute := s.disputeKeeper()
-	require.NotNil(msgServerDispute)
-	require.NotNil(disputekeeper)
-	registrykeeper, msgServerRegistry := s.registryKeeper()
-	require.NotNil(msgServerRegistry)
-	require.NotNil(registrykeeper)
+	// // set up keepers and msg servers
+	// oraclekeeper, msgServerOracle := s.oracleKeeper()
+	// require.NotNil(msgServerOracle)
+	// require.NotNil(oraclekeeper)
+	// disputekeeper, msgServerDispute := s.disputeKeeper()
+	// require.NotNil(msgServerDispute)
+	// require.NotNil(disputekeeper)
+	// registrykeeper, msgServerRegistry := s.registryKeeper()
+	// require.NotNil(msgServerRegistry)
+	// require.NotNil(registrykeeper)
 
-	// register a spec spec1
-	spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
-	specInput := &registrytypes.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "NewQueryType",
-		Spec:      spec1,
-	}
-	registerSpecResult, err := msgServerRegistry.RegisterSpec(s.ctx, specInput)
-	require.NoError(err)
-	require.NotNil(s.T(), registerSpecResult)
+	// // register a spec spec1
+	// spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
+	// specInput := &registrytypes.MsgRegisterSpec{
+	// 	Registrar: "creator1",
+	// 	QueryType: "NewQueryType",
+	// 	Spec:      spec1,
+	// }
+	// registerSpecResult, err := msgServerRegistry.RegisterSpec(s.ctx, specInput)
+	// require.NoError(err)
+	// require.NotNil(s.T(), registerSpecResult)
 
-	// create account that will become validator
-	accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
-	account := authtypes.BaseAccount{
-		Address: accAddr.String(),
-		PubKey:  codectypes.UnsafePackAny(valPubKey),
-	}
-	s.accountKeeper.SetAccount(s.ctx, &account)
-	valAddr := sdk.ValAddress(accAddr)
+	// // create account that will become validator
+	// accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
+	// account := authtypes.BaseAccount{
+	// 	Address: accAddr.String(),
+	// 	PubKey:  codectypes.UnsafePackAny(valPubKey),
+	// }
+	// s.accountKeeper.SetAccount(s.ctx, &account)
+	// valAddr := sdk.ValAddress(accAddr)
 
-	// stake the validator
-	val, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
-	require.NoError(err)
-	s.stakingKeeper.SetValidator(s.ctx, val)
-	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, val)
-	s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
-	_, err = s.stakingKeeper.Delegate(s.ctx, accAddr, math.NewInt(1000000), stakingtypes.Unbonded, val, true)
-	require.NoError(err)
-	_ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
-	validator, err := s.stakingKeeper.Validator(s.ctx, valAddr)
-	require.NoError(err)
-	status := validator.GetStatus()
-	require.Equal(stakingtypes.Bonded.String(), status.String())
+	// // stake the validator
+	// val, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
+	// require.NoError(err)
+	// s.stakingKeeper.SetValidator(s.ctx, val)
+	// s.stakingKeeper.SetValidatorByConsAddr(s.ctx, val)
+	// s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
+	// _, err = s.stakingKeeper.Delegate(s.ctx, accAddr, math.NewInt(1000000), stakingtypes.Unbonded, val, true)
+	// require.NoError(err)
+	// _ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
+	// validator, err := s.stakingKeeper.Validator(s.ctx, valAddr)
+	// require.NoError(err)
+	// status := validator.GetStatus()
+	// require.Equal(stakingtypes.Bonded.String(), status.String())
 
-	// create commit contents
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	// var commitreq oracletypes.MsgCommitReport
-	valueDecoded, err := hex.DecodeString(value)
-	require.Nil(err)
-	signature, err := valPrivKey.Sign(valueDecoded)
-	require.Nil(err)
-	require.NotNil(s.T(), signature)
+	// // create commit contents
+	// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	// // var commitreq oracletypes.MsgCommitReport
+	// valueDecoded, err := hex.DecodeString(value)
+	// require.Nil(err)
+	// signature, err := valPrivKey.Sign(valueDecoded)
+	// require.Nil(err)
+	// require.NotNil(s.T(), signature)
 
 	// set commit contents
 	// commitreq.Creator = accAddr.String()

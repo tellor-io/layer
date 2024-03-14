@@ -213,6 +213,7 @@ func (s *KeeperTestSuite) TestCommitWithMissingQueryData() {
 }
 
 func (s *KeeperTestSuite) TestCommitWithMissingHash() {
+	require := s.Require()
 
 	// commit with no hash
 	queryData := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -220,7 +221,7 @@ func (s *KeeperTestSuite) TestCommitWithMissingHash() {
 	commitreq.QueryData = queryData
 	commitreq.Creator = Addr.String()
 	_, err := s.msgServer.CommitReport(s.ctx, &commitreq) // no error
-	fmt.Println(err)
+	require.NoError(err)
 }
 
 // todo: check emitted events

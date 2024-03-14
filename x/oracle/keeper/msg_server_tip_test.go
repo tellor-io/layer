@@ -74,7 +74,7 @@ func (s *KeeperTestSuite) TestTipWithInvalidQueryData() {
 		QueryData: queryData,
 		Amount:    tip,
 	}
-	require.Panics(func() { _, _ = s.msgServer.Tip(s.ctx, &msg) }, "invalid query data should panic")
+	_, err := s.msgServer.Tip(s.ctx, &msg)
+	require.Error(err)
+	// require.Panics(func() { _, _ = s.msgServer.Tip(s.ctx, &msg) }, "invalid query data should panic")
 }
-
-

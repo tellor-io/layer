@@ -19,12 +19,8 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/stretchr/testify/suite"
 
@@ -33,12 +29,15 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -54,11 +53,10 @@ import (
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/utils"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	// _ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	// _ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
@@ -66,7 +64,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
+
+	// _ "github.com/cosmos/cosmos-sdk/x/staking"
 
 	testutils "github.com/tellor-io/layer/tests"
 	"github.com/tellor-io/layer/x/dispute"
@@ -96,7 +95,7 @@ type E2ETestSuite struct {
 	disputekeeper  disputekeeper.Keeper
 	registrykeeper registrykeeper.Keeper
 	mintkeeper     mintkeeper.Keeper
-	reporterkeeper reporterkeeper.Keeper
+	// reporterkeeper reporterkeeper.Keeper
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
@@ -193,7 +192,7 @@ func (s *E2ETestSuite) SetupTest() {
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
-	app, err := sims.SetupWithConfiguration(
+	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				testutils.AuthModule(),
@@ -241,20 +240,20 @@ func (s *E2ETestSuite) newKeysWithTokens() (sdk.AccAddress, cryptotypes.PrivKey,
 	return Addr, PrivKey, PubKey
 }
 
-func (s *E2ETestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
-	vals, err := s.stakingKeeper.GetAllValidators(s.ctx)
-	s.Require().NoError(err)
-	valAddr, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
-	s.Require().NoError(err)
-	return disputetypes.MicroReport{
-		Reporter:  sdk.AccAddress(valAddr).String(),
-		Power:     vals[0].GetConsensusPower(vals[0].GetBondedTokens()),
-		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
-	}, valAddr
+// func (s *E2ETestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
+// 	vals, err := s.stakingKeeper.GetAllValidators(s.ctx)
+// 	s.Require().NoError(err)
+// 	valAddr, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
+// 	s.Require().NoError(err)
+// 	return disputetypes.MicroReport{
+// 		Reporter:  sdk.AccAddress(valAddr).String(),
+// 		Power:     vals[0].GetConsensusPower(vals[0].GetBondedTokens()),
+// 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+// 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+// 		Timestamp: 1696516597,
+// 	}, valAddr
 
-}
+// }
 
 func (s *E2ETestSuite) CreateAccountsWithTokens(numofAccs int, amountOfTokens int64) []sdk.AccAddress {
 	privKeys := CreateRandomPrivateKeys(numofAccs)
