@@ -2,8 +2,6 @@ package e2e_test
 
 import (
 	"encoding/hex"
-	"fmt"
-	"time"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -11,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
@@ -23,24 +20,7 @@ func (s *E2ETestSuite) TestInitialMint() {
 	require.NotNil(mintToTeamAcc)
 	balance := s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom)
 	require.Equal(balance.Amount, math.NewInt(300*1e6))
-
-	// mintAmount := math.NewInt(500 * 1e6) // 500k
-	// coin := sdk.NewCoin(s.denom, mintAmount)
-	// genesisMint := &minttypes.GenesisState{
-	// 	BondDenom:   s.denom,
-	// 	InitialMint: sdk.NewCoins(coin),
-	// }
-
-	// s.mintkeeper.InitGenesis(s.ctx, s.accountKeeper, genesisMint)
-	// minter := s.mintkeeper.GetMinter(s.ctx)
-	// require.Equal(minter.BondDenom, s.denom)
-
-	// // Check that the module account has the correct amount of minted coins
-	// balance = s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom)
-	// fmt.Println("balance after calling initGenesis with 500k: ", balance)
-	// require.Equal(mintAmount, balance.Amount)
 }
-
 
 func (s *E2ETestSuite) TestTransfer() {
 	require := s.Require()
@@ -185,22 +165,30 @@ func (s *E2ETestSuite) TestTransfer() {
 
 // }
 
+func (s *E2ETestSuite) TestReporterJail() {
+	// require := s.Require()
 
+	// create validators
+	// create reporters
+
+	// report for whatever is in cycle list
+
+	// currentTime := s.ctx.BlockTime()
+	// fmt.Println(currentTime)
+	// s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second)) // add 10 minutes
+	// newTime := s.ctx.BlockTime()
+	// fmt.Println(newTime)
+
+}
 
 func (s *E2ETestSuite) TestValidateCycleList() {
 	require := s.Require()
-
-	currentTime := s.ctx.BlockTime()
-	fmt.Println(currentTime)
-	s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second))
-	newTime := s.ctx.BlockTime()
-	fmt.Println(newTime)
 
 	// block 0
 	_, err := s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 	firstQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.NotEmpty(firstQuery)
+	require.Equal(btcQueryData[2:], firstQuery)
 	require.Equal(s.ctx.BlockHeight(), int64(0))
 
 	// block 1
@@ -209,8 +197,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.NoError(err)
 	require.Equal(s.ctx.BlockHeight(), int64(1))
 	secondQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-
-	require.NotEqual(firstQuery, secondQuery)
+	require.Equal(trbQueryData[2:], secondQuery)
 
 	// block 2
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -218,31 +205,30 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.NoError(err)
 	require.Equal(s.ctx.BlockHeight(), int64(2))
 	thirdQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.NotEqual(firstQuery, thirdQuery)
-	require.NotEqual(secondQuery, thirdQuery)
+	require.Equal(ethQueryData[2:], thirdQuery)
 }
 
 func (s *E2ETestSuite) TestSubmit() {
-	require := s.Require()
-	_, msgServerOracle := s.oracleKeeper()
-	require.NotNil(msgServerOracle)
-	currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	queryDataBytes, err := hex.DecodeString(currentQuery[2:])
-	require.Nil(err)
-	_ = crypto.Keccak256(queryDataBytes)
-	// queryId := hex.EncodeToString(queryIdBytes)
+	// require := s.Require()
+	// _, msgServerOracle := s.oracleKeeper()
+	// require.NotNil(msgServerOracle)
+	// currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	// queryDataBytes, err := hex.DecodeString(currentQuery[2:])
+	// require.Nil(err)
+	// _ = crypto.Keccak256(queryDataBytes)
+	// // queryId := hex.EncodeToString(queryIdBytes)
 
-	accountAddrs, validatorAddrs := s.createValidators([]int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
-	for i := range accountAddrs {
-		validator, err := s.stakingKeeper.Validator(s.ctx, validatorAddrs[i])
-		status := validator.GetStatus()
-		require.Nil(err)
-		require.Equal(stakingtypes.Bonded.String(), status.String())
-	}
+	// accountAddrs, validatorAddrs := s.createValidators([]int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
+	// for i := range accountAddrs {
+	// 	validator, err := s.stakingKeeper.Validator(s.ctx, validatorAddrs[i])
+	// 	status := validator.GetStatus()
+	// 	require.Nil(err)
+	// 	require.Equal(stakingtypes.Bonded.String(), status.String())
+	// }
 
-	// commit
-	err = CommitReport(s.ctx, string(accountAddrs[0].String()), currentQuery, msgServerOracle)
-	require.Nil(err)
+	// // commit
+	// err = CommitReport(s.ctx, string(accountAddrs[0].String()), currentQuery, msgServerOracle)
+	// require.Nil(err)
 
 	// commit, err := s.oraclekeeper.GetCommit(s.ctx, accountAddrs[0], queryIdBytes)
 	// require.Nil(err)

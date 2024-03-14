@@ -49,9 +49,12 @@ import (
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+
+	// reportertypes "github.com/tellor-io/layer/x/reporter/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/utils"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -93,6 +96,7 @@ type E2ETestSuite struct {
 	disputekeeper  disputekeeper.Keeper
 	registrykeeper registrykeeper.Keeper
 	mintkeeper     mintkeeper.Keeper
+	reporterkeeper reporterkeeper.Keeper
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
@@ -177,6 +181,9 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 	suite.mintkeeper = mintkeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
 	)
+	// suite.reporterkeeper = reporterkeeper.NewKeeper(
+	// 	appCodec, suite.fetchStoreKey(reportertypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.oraclekeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	// )
 }
 
 func (s *E2ETestSuite) SetupTest() {
@@ -247,6 +254,16 @@ func (s *E2ETestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) 
 		Timestamp: 1696516597,
 	}, valAddr
 
+}
+
+func (s *E2ETestSuite) CreateAccountsWithTokens(numofAccs int, amountOfTokens int64) []sdk.AccAddress {
+	privKeys := CreateRandomPrivateKeys(numofAccs)
+	accs := make([]sdk.AccAddress, numofAccs)
+	for i, pk := range privKeys {
+		accs[i] = sdk.AccAddress(pk.PubKey().Address())
+		s.mintTokens(accs[i], sdk.NewCoin(s.denom, math.NewInt(amountOfTokens)))
+	}
+	return accs
 }
 
 func (s *E2ETestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
