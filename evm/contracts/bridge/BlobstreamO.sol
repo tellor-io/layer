@@ -33,18 +33,16 @@ struct OracleAttestationData {
 /// @dev The relay relies on a set of signers to attest to some event on
 /// Tellor Layer. These signers are the validator set, who sign over every
 /// block. At least 2/3 of the voting power of the current
-/// view of the validator set must sign off on new relayed events. 
+/// view of the validator set must sign off on new relayed events.
 contract BlobstreamO is ECDSA {
     /*Storage*/
     bytes32 public lastValidatorSetCheckpoint; ///Domain-separated commitment to the latest validator set.
     uint256 public powerThreshold; /// Voting power required to submit a new update.
-    uint256 public validatorNonce; /// Nonce for bridge events. Must be incremented sequentially.
     uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
     uint256 public unbondingPeriod; /// Time period after which a validator can withdraw their stake.
     address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
     /*Events*/
     event ValidatorSetUpdated(
-        uint256 indexed _nonce,
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         bytes32 _validatorSetHash
@@ -53,7 +51,6 @@ contract BlobstreamO is ECDSA {
     /*Errors*/
     error InsufficientVotingPower();
     error InvalidSignature();
-    error InvalidValidatorSetNonce();
     error MalformedCurrentValidatorSet();
     error NotGuardian();
     error StaleValidatorSet();
@@ -62,21 +59,18 @@ contract BlobstreamO is ECDSA {
     error NotConsensusValue();
 
     /*Functions*/
-    /// @param _nonce Initial event nonce.
     /// @param _powerThreshold Initial voting power that is needed to approve operations
     /// @param _validatorTimestamp Timestamp of the block where validator set is updated.
     /// @param _unbondingPeriod Time period after which a validator can withdraw their stake.
     /// @param _validatorSetCheckpoint Initial checkpoint of the validator set.
     /// @param _guardian Guardian address.
     constructor(
-        uint256 _nonce,
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         uint256 _unbondingPeriod,
         bytes32 _validatorSetCheckpoint,
         address _guardian
     ) {
-        validatorNonce = _nonce;
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         unbondingPeriod = _unbondingPeriod;
@@ -86,12 +80,10 @@ contract BlobstreamO is ECDSA {
 
     /// @notice This function is called by the guardian to reset the validator set
     /// only if it becomes stale.
-    /// @param _nonce Nonce.
     /// @param _powerThreshold Amount of voting power needed to approve operations.
     /// @param _validatorTimestamp The timestamp of the block where validator set is updated.
     /// @param _validatorSetCheckpoint The hash of the validator set.
     function guardianResetValidatorSet(
-        uint256 _nonce,
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         bytes32 _validatorSetCheckpoint
@@ -102,7 +94,6 @@ contract BlobstreamO is ECDSA {
         if (block.timestamp - validatorTimestamp < unbondingPeriod) {
             revert ValidatorSetNotStale();
         }
-        validatorNonce = _nonce;
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
@@ -131,7 +122,6 @@ contract BlobstreamO is ECDSA {
         );
         if (
             _domainSeparateValidatorSetHash(
-                validatorNonce,
                 powerThreshold,
                 validatorTimestamp,
                 _currentValidatorSetHash
@@ -141,7 +131,6 @@ contract BlobstreamO is ECDSA {
         }
 
         bytes32 _newCheckpoint = _domainSeparateValidatorSetHash(
-            validatorNonce + 1,
             _newPowerThreshold,
             _newValidatorTimestamp,
             _newValidatorSetHash
@@ -155,9 +144,7 @@ contract BlobstreamO is ECDSA {
         lastValidatorSetCheckpoint = _newCheckpoint;
         powerThreshold = _newPowerThreshold;
         validatorTimestamp = _newValidatorTimestamp;
-        validatorNonce++;
         emit ValidatorSetUpdated(
-            validatorNonce,
             _newPowerThreshold,
             _newValidatorTimestamp,
             _newValidatorSetHash
@@ -254,13 +241,11 @@ contract BlobstreamO is ECDSA {
     }
 
     /// @dev A hash of all relevant information about the validator set.
-    /// @param _nonce Nonce.
     /// @param _powerThreshold Amount of voting power needed to approve operations. (2/3 of total)
     /// @param _validatorTimestamp The timestamp of the block where validator set is updated.
     /// @param _validatorSetHash Validator set hash.
     /// @return The domain separated hash of the validator set.
     function _domainSeparateValidatorSetHash(
-        uint256 _nonce,
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         bytes32 _validatorSetHash
@@ -269,7 +254,6 @@ contract BlobstreamO is ECDSA {
             keccak256(
                 abi.encode(
                     VALIDATOR_SET_HASH_DOMAIN_SEPARATOR,
-                    _nonce,
                     _powerThreshold,
                     _validatorTimestamp,
                     _validatorSetHash
@@ -292,7 +276,6 @@ contract BlobstreamO is ECDSA {
         );
         if (
             _domainSeparateValidatorSetHash(
-                validatorNonce,
                 powerThreshold,
                 validatorTimestamp,
                 _currentValidatorSetHash

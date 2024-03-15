@@ -10,8 +10,8 @@ const abiCoder = new ethers.utils.AbiCoder();
 
 describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
-    let bridge, valPower, accounts, validators, powers, initialValAddrs, 
-        initialPowers, nonce, threshold, valCheckpoint, valTimestamp, guardian,
+    let bridge, valPower, accounts, validators, powers, initialValAddrs,
+        initialPowers, threshold, valCheckpoint, valTimestamp, guardian,
         bridgeCaller;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
 
@@ -20,14 +20,13 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         guardian = accounts[10]
         initialValAddrs = [accounts[1].address, accounts[2].address]
         initialPowers = [1, 2]
-        nonce = 1
         threshold = 2
         blocky = await h.getBlock()
         valTimestamp = blocky.timestamp - 2
-        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold, valTimestamp)
+        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, threshold, valTimestamp)
 
         const Bridge = await ethers.getContractFactory("BlobstreamO");
-        bridge = await Bridge.deploy(nonce, threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint, guardian.address);
+        bridge = await Bridge.deploy(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint, guardian.address);
         await bridge.deployed();
 
         const BridgeCaller = await ethers.getContractFactory("BridgeCaller");
@@ -36,22 +35,20 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
     });
 
     it("constructor", async function () {
-        assert.equal(await bridge.validatorNonce(), nonce)
         assert.equal(await bridge.powerThreshold(), threshold)
         assert.equal(await bridge.validatorTimestamp(), valTimestamp)
         assert.equal(await bridge.unbondingPeriod(), UNBONDING_PERIOD)
         assert.equal(await bridge.lastValidatorSetCheckpoint(), valCheckpoint)
     })
 
-    it("updateValidatorSet", async function() {
+    it("updateValidatorSet", async function () {
         newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
-        newNonce = nonce + 1
         blocky = await h.getBlock()
         newValTimestamp = blocky.timestamp - 1
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newNonce, newThreshold, newValTimestamp)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newThreshold, newValTimestamp)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
@@ -59,7 +56,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         await bridge.updateValidatorSet(newValHash, newThreshold, newValTimestamp, currentValSetArray, sigStructArray);
     })
 
-    it("verifyOracleData", async function() {
+    it("verifyOracleData", async function () {
         queryId = h.hash("myquery")
         value = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
@@ -68,41 +65,41 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         attestTimestamp = timestamp + 1
         previousTimestamp = 0
         nextTimestamp = 0
-        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold, valTimestamp)
+        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, threshold, valTimestamp)
 
         dataDigest = await h.getDataDigest(
-            queryId, 
-            value, 
-            timestamp, 
-            aggregatePower, 
-            previousTimestamp, 
-            nextTimestamp, 
+            queryId,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
             valCheckpoint,
             attestTimestamp
         )
-        
+
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(dataDigest))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(dataDigest))
         sigStructArray = await h.getSigStructArray([sig1, sig2])
         oracleDataStruct = await h.getOracleDataStruct(
-            queryId, 
-            value, 
-            timestamp, 
-            aggregatePower, 
-            previousTimestamp, 
-            nextTimestamp, 
+            queryId,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
             attestTimestamp
         )
 
         await bridge.verifyOracleData(
-            oracleDataStruct, 
-            currentValSetArray, 
+            oracleDataStruct,
+            currentValSetArray,
             sigStructArray
         )
     })
 
-    it("verifyConsensusOracleData", async function() {
+    it("verifyConsensusOracleData", async function () {
         queryId = h.hash("myquery")
         value = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
@@ -111,15 +108,15 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         attestTimestamp = timestamp + 1
         previousTimestamp = 0
         nextTimestamp = 0
-        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold, valTimestamp)
+        valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, threshold, valTimestamp)
 
         dataDigest = await h.getDataDigest(
-            queryId, 
-            value, 
-            timestamp, 
-            aggregatePower, 
-            previousTimestamp, 
-            nextTimestamp, 
+            queryId,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
             valCheckpoint,
             attestTimestamp
         )
@@ -129,18 +126,18 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(dataDigest))
         sigStructArray = await h.getSigStructArray([sig1, sig2])
         oracleDataStruct = await h.getOracleDataStruct(
-            queryId, 
-            value, 
-            timestamp, 
-            aggregatePower, 
-            previousTimestamp, 
-            nextTimestamp, 
+            queryId,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
             attestTimestamp
         )
 
         await bridge.verifyConsensusOracleData(
-            oracleDataStruct, 
-            currentValSetArray, 
+            oracleDataStruct,
+            currentValSetArray,
             sigStructArray
         )
 
@@ -149,10 +146,9 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
-        newNonce = nonce + 1
         blocky = await h.getBlock()
         newValTimestamp = blocky.timestamp - 1
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newNonce, newThreshold, newValTimestamp)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newThreshold, newValTimestamp)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sigStructArray = await h.getSigStructArray([sig1, sig2])
@@ -169,12 +165,12 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         valCheckpoint2 = newValCheckpoint
 
         dataDigest2 = await h.getDataDigest(
-            queryId, 
-            value2, 
-            timestamp2, 
-            aggregatePower2, 
-            previousTimestamp2, 
-            nextTimestamp2, 
+            queryId,
+            value2,
+            timestamp2,
+            aggregatePower2,
+            previousTimestamp2,
+            nextTimestamp2,
             valCheckpoint2,
             attestTimestamp2
         )
@@ -185,57 +181,55 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         sig3 = await accounts[3].signMessage(ethers.utils.arrayify(dataDigest2))
         sigStructArray2 = await h.getSigStructArray([sig1, sig2, sig3])
         oracleDataStruct2 = await h.getOracleDataStruct(
-            queryId, 
-            value2, 
-            timestamp2, 
-            aggregatePower2, 
-            previousTimestamp2, 
-            nextTimestamp2, 
+            queryId,
+            value2,
+            timestamp2,
+            aggregatePower2,
+            previousTimestamp2,
+            nextTimestamp2,
             attestTimestamp2
         )
         await bridge.verifyOracleData(
-            oracleDataStruct2, 
-            currentValSetArray2, 
+            oracleDataStruct2,
+            currentValSetArray2,
             sigStructArray2
         )
 
         await h.expectThrow(bridge.verifyConsensusOracleData(
-            oracleDataStruct2, 
-            currentValSetArray2, 
+            oracleDataStruct2,
+            currentValSetArray2,
             sigStructArray2
         ))
     })
 
-    it("guardianResetValidatorSet", async function() {
+    it("guardianResetValidatorSet", async function () {
         newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
-        newNonce = nonce + 1
         blocky = await h.getBlock()
         newValTimestamp = blocky.timestamp - 1
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newNonce, newThreshold, newValTimestamp)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newThreshold, newValTimestamp)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sigStructArray = await h.getSigStructArray([sig1, sig2])
-        await h.expectThrow(bridge.connect(guardian).guardianResetValidatorSet(newNonce, newThreshold, newValTimestamp, newValCheckpoint));
+        await h.expectThrow(bridge.connect(guardian).guardianResetValidatorSet(newThreshold, newValTimestamp, newValCheckpoint));
 
         await h.advanceTime(UNBONDING_PERIOD + 1)
 
-        await h.expectThrow(bridge.guardianResetValidatorSet(newNonce, newThreshold, newValTimestamp, newValCheckpoint));
-        await bridge.connect(guardian).guardianResetValidatorSet(newNonce, newThreshold, newValTimestamp, newValCheckpoint);
+        await h.expectThrow(bridge.guardianResetValidatorSet(newThreshold, newValTimestamp, newValCheckpoint));
+        await bridge.connect(guardian).guardianResetValidatorSet(newThreshold, newValTimestamp, newValCheckpoint);
     })
 
-    it("updateValidatorSet twice", async function() {
+    it("updateValidatorSet twice", async function () {
         newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
-        newNonce = nonce + 1
         blocky = await h.getBlock()
         newValTimestamp = blocky.timestamp - 1
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newNonce, newThreshold, newValTimestamp)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newThreshold, newValTimestamp)
         newDigest = await h.getEthSignedMessageHash(newValCheckpoint)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
@@ -247,10 +241,9 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         newPowers2 = [4, 5, 6, 7]
         newThreshold2 = 15
         newValHash2 = await h.calculateValHash(newValAddrs2, newPowers2)
-        newNonce2 = newNonce + 1
         blocky = await h.getBlock()
         newValTimestamp2 = blocky.timestamp - 1
-        newValCheckpoint2 = h.calculateValCheckpoint(newValAddrs2, newPowers2, newNonce2, newThreshold2, newValTimestamp2)
+        newValCheckpoint2 = h.calculateValCheckpoint(newValAddrs2, newPowers2, newThreshold2, newValTimestamp2)
         newDigest2 = await h.getEthSignedMessageHash(newValCheckpoint2)
         currentValSetArray2 = await h.getValSetStructArray(newValAddrs, newPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint2))
@@ -258,9 +251,9 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         sig3 = await accounts[3].signMessage(ethers.utils.arrayify(newValCheckpoint2))
         sigStructArray2 = await h.getSigStructArray([sig1, sig2, sig3])
         await bridge.updateValidatorSet(newValHash2, newThreshold2, newValTimestamp2, currentValSetArray2, sigStructArray2);
-    })   
+    })
 
-    it("alternating validator set updates and verify oracle data", async function() {
+    it("alternating validator set updates and verify oracle data", async function () {
         // verify oracle data 
         queryId1 = h.hash("eth-usd")
         value1 = abiCoder.encode(["uint256"], [2000])
@@ -270,15 +263,15 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         attestTimestamp1 = timestamp1 + 1
         previousTimestamp1 = 0
         nextTimestamp1 = 0
-        valCheckpoint1 = h.calculateValCheckpoint(initialValAddrs, initialPowers, nonce, threshold, valTimestamp)
+        valCheckpoint1 = h.calculateValCheckpoint(initialValAddrs, initialPowers, threshold, valTimestamp)
 
         dataDigest1 = await h.getDataDigest(
-            queryId1, 
-            value1, 
-            timestamp1, 
-            aggregatePower1, 
-            previousTimestamp1, 
-            nextTimestamp1, 
+            queryId1,
+            value1,
+            timestamp1,
+            aggregatePower1,
+            previousTimestamp1,
+            nextTimestamp1,
             valCheckpoint1,
             attestTimestamp1
         )
@@ -288,18 +281,18 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(dataDigest1))
         sigStructArray1 = await h.getSigStructArray([sig1, sig2])
         oracleDataStruct1 = await h.getOracleDataStruct(
-            queryId1, 
-            value1, 
-            timestamp1, 
-            aggregatePower1, 
-            previousTimestamp1, 
-            nextTimestamp1, 
+            queryId1,
+            value1,
+            timestamp1,
+            aggregatePower1,
+            previousTimestamp1,
+            nextTimestamp1,
             attestTimestamp1
         )
 
         await bridge.verifyOracleData(
-            oracleDataStruct1, 
-            currentValSetArray1, 
+            oracleDataStruct1,
+            currentValSetArray1,
             sigStructArray1
         )
 
@@ -308,10 +301,9 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
-        newNonce = nonce + 1
         blocky = await h.getBlock()
         newValTimestamp = blocky.timestamp - 1
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newNonce, newThreshold, newValTimestamp)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newPowers, newThreshold, newValTimestamp)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sigStructArray = await h.getSigStructArray([sig1, sig2])
@@ -328,12 +320,12 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         valCheckpoint2 = newValCheckpoint
 
         dataDigest2 = await h.getDataDigest(
-            queryId1, 
-            value2, 
-            timestamp2, 
-            aggregatePower2, 
-            previousTimestamp2, 
-            nextTimestamp2, 
+            queryId1,
+            value2,
+            timestamp2,
+            aggregatePower2,
+            previousTimestamp2,
+            nextTimestamp2,
             valCheckpoint2,
             attestTimestamp2
         )
@@ -344,18 +336,18 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         sig3 = await accounts[3].signMessage(ethers.utils.arrayify(dataDigest2))
         sigStructArray2 = await h.getSigStructArray([sig1, sig2, sig3])
         oracleDataStruct2 = await h.getOracleDataStruct(
-            queryId1, 
-            value2, 
-            timestamp2, 
-            aggregatePower2, 
-            previousTimestamp2, 
-            nextTimestamp2, 
+            queryId1,
+            value2,
+            timestamp2,
+            aggregatePower2,
+            previousTimestamp2,
+            nextTimestamp2,
             attestTimestamp2
         )
 
         await bridge.verifyOracleData(
-            oracleDataStruct2, 
-            currentValSetArray2, 
+            oracleDataStruct2,
+            currentValSetArray2,
             sigStructArray2
         )
 
@@ -364,16 +356,15 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         newPowers2 = [4, 5, 6, 7]
         newThreshold2 = 15
         newValHash2 = await h.calculateValHash(newValAddrs2, newPowers2)
-        newNonce2 = newNonce + 1
         blocky = await h.getBlock()
         newValTimestamp2 = blocky.timestamp - 1
-        newValCheckpoint2 = h.calculateValCheckpoint(newValAddrs2, newPowers2, newNonce2, newThreshold2, newValTimestamp2)
+        newValCheckpoint2 = h.calculateValCheckpoint(newValAddrs2, newPowers2, newThreshold2, newValTimestamp2)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint2))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint2))
         sig3 = await accounts[3].signMessage(ethers.utils.arrayify(newValCheckpoint2))
         sigStructArray2 = await h.getSigStructArray([sig1, sig2, sig3])
         await bridge.updateValidatorSet(newValHash2, newThreshold2, newValTimestamp2, currentValSetArray2, sigStructArray2);
-        
+
         // verify oracle data
         value3 = abiCoder.encode(["uint256"], [4000])
         blocky = await h.getBlock()
@@ -385,12 +376,12 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         valCheckpoint3 = newValCheckpoint2
 
         dataDigest3 = await h.getDataDigest(
-            queryId1, 
-            value3, 
-            timestamp3, 
-            aggregatePower3, 
-            previousTimestamp3, 
-            nextTimestamp3, 
+            queryId1,
+            value3,
+            timestamp3,
+            aggregatePower3,
+            previousTimestamp3,
+            nextTimestamp3,
             valCheckpoint3,
             attestTimestamp3
         )
@@ -402,23 +393,23 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         sig4 = await accounts[7].signMessage(ethers.utils.arrayify(dataDigest3))
         sigStructArray3 = await h.getSigStructArray([sig1, sig2, sig3, sig4])
         oracleDataStruct3 = await h.getOracleDataStruct(
-            queryId1, 
-            value3, 
-            timestamp3, 
-            aggregatePower3, 
-            previousTimestamp3, 
-            nextTimestamp3, 
+            queryId1,
+            value3,
+            timestamp3,
+            aggregatePower3,
+            previousTimestamp3,
+            nextTimestamp3,
             attestTimestamp3
         )
 
         await bridge.verifyOracleData(
-            oracleDataStruct3, 
-            currentValSetArray3, 
+            oracleDataStruct3,
+            currentValSetArray3,
             sigStructArray3
         )
     })
 
-    it("update validator set to 100+ validators", async function() {
+    it("update validator set to 100+ validators", async function () {
         nVals = 158
         let wallets = []
         for (i = 0; i < nVals; i++) {
@@ -434,10 +425,9 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         newValHash = await h.calculateValHash(newValAddrs, newValPowers)
 
         newThreshold = Math.ceil(nVals * 2 / 3)
-        newNonce = nonce + 1
         blocky = await h.getBlock()
         newValTimestamp = blocky.timestamp - 1
-        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newValPowers, newNonce, newThreshold, newValTimestamp)
+        newValCheckpoint = h.calculateValCheckpoint(newValAddrs, newValPowers, newThreshold, newValTimestamp)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await accounts[1].signMessage(ethers.utils.arrayify(newValCheckpoint))
         sig2 = await accounts[2].signMessage(ethers.utils.arrayify(newValCheckpoint))
@@ -453,14 +443,14 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         attestTimestamp1 = timestamp1 + 1
         previousTimestamp1 = 0
         nextTimestamp1 = 0
-        
+
         dataDigest1 = await h.getDataDigest(
-            queryId1, 
-            value1, 
-            timestamp1, 
-            aggregatePower1, 
-            previousTimestamp1, 
-            nextTimestamp1, 
+            queryId1,
+            value1,
+            timestamp1,
+            aggregatePower1,
+            previousTimestamp1,
+            nextTimestamp1,
             newValCheckpoint,
             attestTimestamp1
         )
@@ -472,28 +462,28 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         }
         sigStructArray1 = await h.getSigStructArray(sigs)
         oracleDataStruct1 = await h.getOracleDataStruct(
-            queryId1, 
-            value1, 
-            timestamp1, 
-            aggregatePower1, 
-            previousTimestamp1, 
-            nextTimestamp1, 
+            queryId1,
+            value1,
+            timestamp1,
+            aggregatePower1,
+            previousTimestamp1,
+            nextTimestamp1,
             attestTimestamp1
         )
 
         await bridge.verifyOracleData(
-            oracleDataStruct1, 
-            currentValSetArray1, 
+            oracleDataStruct1,
+            currentValSetArray1,
             sigStructArray1
         )
 
         await bridgeCaller.verifyAndSaveOracleData(
-            oracleDataStruct1, 
-            currentValSetArray1, 
+            oracleDataStruct1,
+            currentValSetArray1,
             sigStructArray1
         )
 
     })
-        
+
 
 })
