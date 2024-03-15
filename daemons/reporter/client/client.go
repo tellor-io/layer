@@ -144,7 +144,7 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	}
 	c.logger.Info("SubmitReport", "next query id in cycle list", hex.EncodeToString(qid))
 	// needed to wait because it kept missing the query
-	time.Sleep(2 * time.Second)
+	// time.Sleep(2 * time.Second)
 	value, err := c.median(ctx, strings.ToLower(response.Querydata))
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %v", err)

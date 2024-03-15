@@ -19,11 +19,11 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("invalid query data: %s", err))
 	}
 
-	currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
-	tip := k.GetQueryTip(ctx, queryId)
-	if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
-		return nil, status.Error(codes.Unavailable, "query data does not have tips/not in cycle")
-	}
+	// currentCycleQuery := k.GetCurrentQueryInCycleList(ctx)
+	// tip := k.GetQueryTip(ctx, queryId)
+	// if currentCycleQuery != msg.QueryData && tip.Amount.IsZero() {
+	// 	return nil, status.Error(codes.Unavailable, "query data does not have tips/not in cycle")
+	// }
 
 	reporter := sdk.MustAccAddressFromBech32(msg.Creator)
 

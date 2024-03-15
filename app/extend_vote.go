@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"os"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
+	"github.com/tellor-io/layer/utils"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
@@ -30,6 +32,7 @@ type OracleKeeper interface {
 	GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []oracletypes.Aggregate
+	GetDataBeforePublic(ctx sdk.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
 }
 
 type BridgeKeeper interface {
@@ -154,17 +157,40 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		}
 		for _, aggReport := range reports {
 			currentTime := time.Now()
-			ts := currentTime.Unix() + 1
-			reportTime, err := h.oracleKeeper.GetTimestampBefore(ctx, []byte(aggReport.QueryId), time.Unix(ts, 0))
+			ts := currentTime.Unix() + 100
+			// get dataBefore
+			queryId, err := utils.QueryIDFromString(aggReport.QueryId)
 			if err != nil {
+				h.logger.Error("Failed to get query id from string", "error", err)
+				panic(err)
+			} else {
+				h.logger.Info("Query ID from string", "queryId", queryId)
+			}
+			h.logger.Info("getting data before")
+			dataBefore, err := h.oracleKeeper.GetDataBeforePublic(ctx, queryId, time.Unix(ts, 0))
+			if err != nil {
+				h.logger.Error("Failed to get data before", "error", err)
+				h.logger.Info("dataBefore", "dataBefore", dataBefore)
 				return nil, err
+			}
+			h.logger.Info("getting timestamp before for report time")
+			reportTime, err := h.oracleKeeper.GetTimestampBefore(ctx, queryId, time.Unix(ts, 0))
+			if err != nil {
+				h.logger.Error("Failed to get timestamp before", "error", err)
+				h.logger.Info("reportTime", "reportTime", reportTime)
+				return nil, err
+			} else {
+				h.logger.Info("Report time", "reportTime", reportTime)
 			}
 			// report, err := h.oracleKeeper.GetAggregateReport(ctx, []byte(aggReport.QueryId), ts)
 			// if err != nil {
 			// 	return nil, err
 			// }
+			h.logger.Info("getting timestamp before current report")
 			tsBefore, _ := h.oracleKeeper.GetTimestampBefore(ctx, []byte(aggReport.QueryId), reportTime)
+			h.logger.Info("getting timestamp after current report")
 			tsAfter, _ := h.oracleKeeper.GetTimestampAfter(ctx, []byte(aggReport.QueryId), reportTime)
+			h.logger.Info("encoding oracle attestation data")
 			oracleAttestationHash, err := h.EncodeOracleAttestationData(
 				aggReport.QueryId,
 				aggReport.AggregateValue,
@@ -179,13 +205,16 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 				return nil, err
 			}
 			// sign the oracleAttestationHash
+			h.logger.Info("signing oracle attestation hash")
 			sig, err := h.SignMessage(oracleAttestationHash)
 			if err != nil {
 				return nil, err
 			}
+			h.logger.Info("Signature generated", "sig", hex.EncodeToString(sig))
 			oracleAttestation := OracleAttestation{
 				Attestation: sig,
 			}
+			h.logger.Info("appending oracle attestation to vote extension")
 			voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
 		}
 	}
@@ -256,6 +285,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
 
 	// Convert queryId to bytes32
+	h.logger.Info("encoding queryId to bytes32")
 	queryIdBytes, err := hex.DecodeString(queryId)
 	if err != nil {
 		return nil, err
@@ -264,24 +294,38 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	copy(queryIdBytes32[:], queryIdBytes)
 
 	// Convert value to bytes
+	h.logger.Info("encoding value to bytes")
 	valueBytes, err := hex.DecodeString(value)
 	if err != nil {
 		return nil, err
 	}
 
 	// Convert timestamp to uint64
-	timestampUint64 := uint64(timestamp)
+	h.logger.Info("encoding timestamp to uint64")
+	// timestampUint64 := uint64(timestamp)
+	// h.logger.Info("timestamps", "timestampUint64", timestampUint64, "timestamp", timestamp)
+	//convert timestamp to bigInt
+	timestampUint64 := new(big.Int)
+	timestampUint64.SetInt64(timestamp)
+	h.logger.Info("timestampUint64", "timestampUint64", timestampUint64)
 
 	// Convert aggregatePower to uint64
-	aggregatePowerUint64 := uint64(aggregatePower)
+	h.logger.Info("encoding aggregatePower to uint64")
+	aggregatePowerUint64 := new(big.Int)
+	aggregatePowerUint64.SetInt64(aggregatePower)
 
 	// Convert previousTimestamp to uint64
-	previousTimestampUint64 := uint64(previousTimestamp)
+	h.logger.Info("encoding previousTimestamp to uint64")
+	previousTimestampUint64 := new(big.Int)
+	previousTimestampUint64.SetInt64(previousTimestamp)
 
 	// Convert nextTimestamp to uint64
-	nextTimestampUint64 := uint64(nextTimestamp)
+	h.logger.Info("encoding nextTimestamp to uint64")
+	nextTimestampUint64 := new(big.Int)
+	nextTimestampUint64.SetInt64(nextTimestamp)
 
 	// Convert valsetCheckpoint to bytes32
+	h.logger.Info("encoding valsetCheckpoint to bytes32")
 	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
 	if err != nil {
 		return nil, err
@@ -290,22 +334,28 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
 
 	// Convert attestationTimestamp to uint64
-	attestationTimestampUint64 := uint64(attestationTimestamp)
+	h.logger.Info("encoding attestationTimestamp to uint64")
+	attestationTimestampUint64 := new(big.Int)
+	attestationTimestampUint64.SetInt64(attestationTimestamp)
 
 	// Prepare Encoding
+	h.logger.Info("preparing encoding")
 	Bytes32Type, err := abi.NewType("bytes32", "", nil)
 	if err != nil {
 		return nil, err
 	}
+	h.logger.Info("encoding oracle attestation data")
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
 		return nil, err
 	}
+	h.logger.Info("encoding oracle attestation data")
 	BytesType, err := abi.NewType("bytes", "", nil)
 	if err != nil {
 		return nil, err
 	}
 
+	h.logger.Info("preparing arguments")
 	arguments := abi.Arguments{
 		{Type: Bytes32Type},
 		{Type: Bytes32Type},
@@ -318,7 +368,67 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 		{Type: Uint256Type},
 	}
 
+	// remove all of this
+	argsDomainSep := abi.Arguments{{Type: Bytes32Type}}
+	argsQueryId := abi.Arguments{{Type: Bytes32Type}}
+	argsValue := abi.Arguments{{Type: BytesType}}
+	argsTimestamp := abi.Arguments{{Type: Uint256Type}}
+	argsAggregatePower := abi.Arguments{{Type: Uint256Type}}
+	argsPreviousTimestamp := abi.Arguments{{Type: Uint256Type}}
+	argsNextTimestamp := abi.Arguments{{Type: Uint256Type}}
+	argsValsetCheckpoint := abi.Arguments{{Type: Bytes32Type}}
+	argsAttestationTimestamp := abi.Arguments{{Type: Uint256Type}}
+
+	h.logger.Info("encoding domain separator")
+	domainSepEncoded, err := argsDomainSep.Pack(domainSepBytes32)
+	if err != nil {
+		h.logger.Error("failed to encode domain separator", "domainSepBytes", domainSepEncoded)
+		return nil, err
+	}
+	h.logger.Info("encoding queryId")
+	queryIdEncoded, err := argsQueryId.Pack(queryIdBytes32)
+	if err != nil {
+		h.logger.Error("failed to encode queryId", "queryIdBytes", queryIdEncoded)
+	}
+	h.logger.Info("encoding value")
+	valueEncoded, err := argsValue.Pack(valueBytes)
+	if err != nil {
+		h.logger.Error("failed to encode value", "valueBytes", valueEncoded)
+	}
+	h.logger.Info("encoding timestamp")
+	timestampEncoded, err := argsTimestamp.Pack(timestampUint64)
+	if err != nil {
+		h.logger.Error("failed to encode timestamp", "timestampEncoded", timestampEncoded)
+		h.logger.Error("error", "error", err)
+	}
+	h.logger.Info("encoding aggregatePower")
+	aggregatePowerEncoded, err := argsAggregatePower.Pack(aggregatePowerUint64)
+	if err != nil {
+		h.logger.Error("failed to encode aggregatePower", "aggregatePowerUint64", aggregatePowerEncoded)
+	}
+	h.logger.Info("encoding previousTimestamp")
+	previousTimestampEncoded, err := argsPreviousTimestamp.Pack(previousTimestampUint64)
+	if err != nil {
+		h.logger.Error("failed to encode previousTimestamp", "previousTimestampUint64", previousTimestampEncoded)
+	}
+	h.logger.Info("encoding nextTimestamp")
+	nextTimestampEncoded, err := argsNextTimestamp.Pack(nextTimestampUint64)
+	if err != nil {
+		h.logger.Error("failed to encode nextTimestamp", "nextTimestampUint64", nextTimestampEncoded)
+	}
+	h.logger.Info("encoding valsetCheckpoint")
+	valsetCheckpointEncoded, err := argsValsetCheckpoint.Pack(valsetCheckpointBytes32)
+	if err != nil {
+		h.logger.Error("failed to encode valsetCheckpoint", "valsetCheckpointBytes32", valsetCheckpointEncoded)
+	}
+	h.logger.Info("encoding attestationTimestamp")
+	attestationTimestampEncoded, err := argsAttestationTimestamp.Pack(attestationTimestampUint64)
+	if err != nil {
+		h.logger.Error("failed to encode attestationTimestamp", "attestationTimestampUint64", attestationTimestampEncoded)
+	}
+
 	// Encode the data
+	h.logger.Info("encoding data")
 	encodedData, err := arguments.Pack(
 		domainSepBytes32,
 		queryIdBytes32,
@@ -334,6 +444,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 		return nil, err
 	}
 
+	h.logger.Info("hashing encoded data")
 	oracleAttestationHash := crypto.Keccak256(encodedData)
 	return oracleAttestationHash, nil
 }

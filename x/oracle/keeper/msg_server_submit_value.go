@@ -41,12 +41,12 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	}
 	currentBlock := ctx.BlockHeight()
 	// check if value is being revealed in the one block after commit
-	if currentBlock-1 != commitValue.Block {
-		return nil, types.ErrMissedCommitRevealWindow
-	}
-	// if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
-	// 	return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
+	// if currentBlock-1 != commitValue.Block {
+	// 	return nil, types.ErrMissedCommitRevealWindow
 	// }
+	if commitValue.Block < ctx.BlockHeight()-5 || commitValue.Block > ctx.BlockHeight() {
+		return nil, status.Error(codes.InvalidArgument, "missed block height window to reveal")
+	}
 
 	commit := utils.CalculateCommitment(msg.Value, msg.Salt)
 	if commit != commitValue.Report.Hash {

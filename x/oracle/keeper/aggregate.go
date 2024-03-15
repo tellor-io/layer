@@ -22,6 +22,7 @@ import (
 // Rewards are allocated to the reporters based on the query tip amount, and time-based rewards are also
 // allocated to the reporters.
 func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
+	k.Logger(ctx).Info("@SetAggregatedReport")
 	// Get the current block height of the blockchain.
 	currentHeight := ctx.BlockHeight()
 
@@ -110,6 +111,8 @@ func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
 	report.Height = ctx.BlockHeight()
 
 	// TODO: handle error
+	k.Logger(ctx).Info("queryId", "queryId", queryId)
+	k.Logger(ctx).Info("currentTimestamp", "currentTimestamp", currentTimestamp)
 	err = k.Aggregates.Set(ctx, collections.Join(queryId, currentTimestamp), *report)
 	if err != nil {
 		panic(err)
@@ -137,6 +140,10 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 	}
 
 	return mostRecent, nil
+}
+
+func (k Keeper) GetDataBeforePublic(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+	return k.getDataBefore(ctx, queryId, timestamp)
 }
 
 func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) *types.Aggregate {

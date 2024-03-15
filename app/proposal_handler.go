@@ -215,6 +215,7 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 				queryId := injectedVoteExtTx.OracleAttestations.QueryIds[i]
 				attestation := injectedVoteExtTx.OracleAttestations.Attestations[i]
 				timestamp := injectedVoteExtTx.OracleAttestations.Timestamps[i]
+				h.logger.Info("Setting oracle attestation", "operatorAddress", operatorAddress, "queryId", queryId, "attestation", attestation, "timestamp", timestamp)
 				err := h.bridgeKeeper.SetOracleAttestation(ctx, operatorAddress, queryId, uint64(timestamp), attestation)
 				if err != nil {
 					return nil, err
@@ -407,9 +408,9 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 				queryId := attestation.QueryId
 				queryIds = append(queryIds, queryId)
 
-				attestations = append(attestations, string(attestation.Attestation))
+				attestations = append(attestations, hex.EncodeToString(attestation.Attestation))
 				timestamps = append(timestamps, int64(attestation.Timestamp))
-				h.logger.Info("Oracle attestation added to proposal", "queryId", queryId, "attestation", string(attestation.Attestation), "timestamp", attestation.Timestamp)
+				h.logger.Info("Oracle attestation added to proposal", "queryId", queryId, "attestation", hex.EncodeToString(attestation.Attestation), "timestamp", attestation.Timestamp)
 			}
 		}
 	}
