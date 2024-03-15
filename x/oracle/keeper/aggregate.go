@@ -92,6 +92,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) error {
 }
 
 func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) {
+	k.Logger(ctx).Info("@SetAggregate", "report", report)
 	report.QueryId = regtypes.Remove0xPrefix(report.QueryId)
 	queryId, err := utils.QueryIDFromString(report.QueryId)
 	if err != nil {

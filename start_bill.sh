@@ -3,6 +3,8 @@
 # Stop execution if any command fails
 set -e
 
+KEYRING_BACKEND="os"
+
 # Define paths to the node directories
 echo "Defining paths..."
 NODE1_HOME_DIR="$HOME/.layer/alice"
@@ -58,9 +60,9 @@ echo "Seeds/persistent_peers set."
 
 
 # send tokens from alice to bill:
-echo "Sending tokens from alice to bill..."
+# echo "Sending tokens from alice to bill..."
 # ./layerd tx bank send $(./layerd keys show alice -a --keyring-backend test) $(layerd keys show bill -a --keyring-backend test) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer --keyring-backend test
-./layerd tx bank send $(./layerd keys show alice -a --keyring-backend os --home ~/.layer/alice) $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer/alice --keyring-backend os
+# ./layerd tx bank send $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer/alice --keyring-backend $KEYRING_BACKEND
 
 
 # get bill's validator pubkey
@@ -94,7 +96,7 @@ echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 # Stake Bill as a validator
 echo "Staking bill as a validator..."
 # layerd tx staking create-validator $NODE2_HOME_DIR/config/validator.json --from bill --keyring-backend test --keyring-dir $HOME/.layer/ --chain-id layer
-./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend os --keyring-dir ~/.layer/bill --chain-id layer --home ~/.layer/bill
+./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id layer --home ~/.layer/bill
 
 # Start the second node
 echo "Starting the second node..."

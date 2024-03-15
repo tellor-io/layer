@@ -170,6 +170,7 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	c.logger.Info("from address", "fromAddr", fromAddr.String())
 	c.logger.Info("keyring backend", "keyringBackend", c.cosmosCtx.Keyring.Backend())
 	c.logger.Info("keyring dir", "keyringDir", c.cosmosCtx.KeyringDir)
+	c.logger.Info("cosmos context input", "c.cosmosCtx.Input", c.cosmosCtx.Input)
 
 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
 	if err != nil {

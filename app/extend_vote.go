@@ -340,7 +340,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	// define keyring backend and the path to the keystore dir
-	krBackend := keyring.BackendOS
+	krBackend := keyring.BackendTest
 	keyName := h.GetKeyName()
 	if keyName == "" {
 		return nil, fmt.Errorf("key name not found")
@@ -408,18 +408,48 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	h.logger.Info("@GetOperatorAddress - extend_vote.go")
 	// define keyring backend and the path to the keystore dir
 	keyName := h.GetKeyName()
+	h.logger.Info("keyName:", "keyName", keyName)
 	if keyName == "" {
 		return "", fmt.Errorf("key name not found")
 	}
-	krBackend := keyring.BackendOS
+	krBackend := keyring.BackendTest
+	h.logger.Info("keyring backend:", "krBackend", krBackend)
 	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
 
 	h.logger.Info("Keyring dir:", "dir", krDir)
 
-	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
+	userInput := os.Stdin
+	// userInput := os.Stdin
+	h.logger.Info("userInput:", "userInput", userInput)
+
+	kr, err := keyring.New("layer", krBackend, krDir, userInput, h.codec)
 	if err != nil {
 		fmt.Printf("Failed to create keyring: %v\n", err)
 		return "", err
+	}
+
+	// print kr info
+	h.logger.Info("Keyring info:", "kr", kr)
+	h.logger.Info("Keyring backend:", "kr.Backend()", kr.Backend())
+
+	// list all keys
+	krlist, err := kr.List()
+	if err != nil {
+		fmt.Printf("Failed to list keys: %v\n", err)
+		return "", err
+	}
+	if len(krlist) == 0 {
+		h.logger.Info("No keys found in keyring")
+	}
+	// log all keys
+	for _, k := range krlist {
+		h.logger.Info("name: ", "name", k.Name)
+		h.logger.Info("type: ", "type", k.GetType())
+		// h.logger.Info("item", "item", k.Item)
+		pubkey, _ := k.GetPubKey()
+		h.logger.Info("pubkey", "pubkey", pubkey.String())
+		address, _ := k.GetAddress()
+		h.logger.Info("address", "address", address.String())
 	}
 
 	// Fetch the operator key from the keyring.

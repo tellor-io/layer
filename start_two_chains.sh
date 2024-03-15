@@ -3,6 +3,9 @@
 # Stop execution if any command fails
 set -e
 
+KEYRING_BACKEND="os"
+PASSWORD="password"
+
 # Remove old test chains (if present)
 echo "Removing old test chain data..."
 rm -rf ~/.layer
@@ -25,9 +28,9 @@ echo "bill..."
 # Add a validator account alice
 echo "Adding validator accounts..."
 echo "alice..."
-./layerd keys add alice --keyring-backend os --home ~/.layer/alice
+./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "bill..."
-./layerd keys add bill --keyring-backend os --home ~/.layer/bill
+./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 
 
 # Update vote_extensions_enable_height in genesis.json
@@ -42,17 +45,24 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/bill/co
 # Create a tx to give alice loyas to stake
 echo "Adding genesis accounts..."
 echo "alice..."
-./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend os --home ~/.layer/alice)  10000000000000loya --keyring-backend os --home ~/.layer/alice
+./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice)  10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "bill..."
-./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 10000000000000loya --keyring-backend os --home ~/.layer/bill
+./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+# ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 10000000000000loya --keyring-backend os --home ~/.layer/bill
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx alice..."
-./layerd genesis gentx alice 1000000000000loya --chain-id layer --keyring-backend os --home ~/.layer/alice --keyring-dir ~/.layer/alice
+./layerd genesis gentx alice 1000000000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
 
 # Add the transactions to the genesis block:q
 echo "Collecting gentxs..."
 ./layerd genesis collect-gentxs --home ~/.layer/alice
+
+# Export alice key from os backend and import to test backend
+echo "Exporting alice key..."
+echo $PASSWORD | ./layerd keys export alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice > ~/Desktop/alice_keyfile
+echo "Importing alice key to test backend..."
+echo $PASSWORD | ./layerd keys import alice ~/Desktop/alice_keyfile --keyring-backend test --home ~/.layer/alice
 
 echo "Start chain..."
 ./layerd start --home ~/.layer/alice --api.enable
