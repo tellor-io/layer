@@ -2,19 +2,18 @@ package integration_test
 
 import (
 	"encoding/hex"
+	"strings"
 	"testing"
 	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
-	"github.com/cosmos/cosmos-sdk/x/gov"
-
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 
@@ -106,6 +105,7 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 
 // test tipping, reporting and allocation of rewards
 func (s *IntegrationTestSuite) TestTippingReporting() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 
 	addr := s.newKeysWithTokens()
@@ -136,9 +136,10 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	commit, reveal := report(newReporter.String(), value, salt, hash, ethQueryData)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = msgServer.SubmitValue(s.ctx, &reveal)
 	s.Nil(err)
+	// advance time to expire the query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryId)})
@@ -201,9 +202,9 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 }
 
 func (s *IntegrationTestSuite) TestMedianReports() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 	tipper := s.newKeysWithTokens()
-	s.ctx = s.ctx.WithBlockHeight(2)
 
 	reporters := []struct {
 		name          string
@@ -263,12 +264,13 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			commit, reveal := report(newReporter.String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.CommitReport(s.ctx, &commit)
 			s.Nil(err)
-			_, err = msgServer.SubmitValue(s.ctx.WithBlockHeight(s.ctx.BlockHeight()+1), &reveal)
+			_, err = msgServer.SubmitValue(s.ctx, &reveal)
 			s.Nil(err)
 		})
 	}
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.app.EndBlocker(s.ctx)
+	// advance time to expire query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypass time to expire query so it can be aggregated
+	s.app.EndBlocker(s.ctx)                                             // EndBlocker aggregates reports
 	// check median
 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
@@ -297,13 +299,14 @@ func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, ty
 func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	// Get supported queries
-	resp, err := s.oraclekeeper.Params.Get(s.ctx)
+	resp, err := s.oraclekeeper.GetCyclelist(s.ctx)
 	s.NoError(err)
-	s.Equal(resp.CycleList, []string{ethQueryData[2:], btcQueryData[2:], trbQueryData[2:]})
-	fakeQueryData := "000001"
-	msgContent := &types.MsgUpdateParams{
+	s.Equal(resp, []string{trbQueryData[2:], ethQueryData[2:], btcQueryData[2:]})
+
+	matic := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	msgContent := &types.MsgUpdateCyclelist{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Params:    types.Params{CycleList: []string{fakeQueryData}},
+		Cyclelist: []string{matic},
 	}
 	proposal1, err := s.govKeeper.SubmitProposal(s.ctx, []sdk.Msg{msgContent}, "", "test", "description", accs[0], false)
 	s.NoError(err)
@@ -329,9 +332,9 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal1.Id)
 	s.NoError(err)
 	s.True(proposal1.Status == v1.StatusPassed)
-	resp, err = s.oraclekeeper.Params.Get(s.ctx)
+	resp, err = s.oraclekeeper.GetCyclelist(s.ctx)
 	s.NoError(err)
-	s.Equal(resp.CycleList, []string{fakeQueryData})
+	s.Equal([]string{strings.ToLower(matic)}, resp)
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
@@ -547,11 +550,12 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	// commit report with query data not in cycle list and has no tip
 	commit, _ = report(reporterAddr.String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
-	s.ErrorContains(err, "query does not have tips and is not in cycle")
+	s.ErrorContains(err, "query not part of cyclelist")
 }
 
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 	repAccs := s.CreateAccountsWithTokens(2, 100*1e6)
@@ -590,15 +594,19 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	reporterPower := int64(1)
 	value := []string{"000001"}
 	reports := testutil.GenerateReports(repAccs[1:], value, []int64{reporterPower}, hex.EncodeToString(queryId))
-
-	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), s.ctx.BlockHeight()), reports[0])
+	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
+	query.HasRevealedReports = true
+	s.Nil(s.oraclekeeper.Query.Set(s.ctx, queryId, query))
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
+	s.Nil(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
 	// delegation shares should increase after reporting
 	delAfter, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
 	s.Nil(err)
-	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares should the tip added") // 1000 - 2% tip
+	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares plus the tip added") // 1000 - 2% tip
 }
 
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
@@ -649,9 +657,13 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	reporterPower := int64(2) // normalize by sdk.DefaultPowerReduction
 	value := []string{"000001"}
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAcc}, value, []int64{reporterPower}, hex.EncodeToString(queryId))
-
-	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), s.ctx.BlockHeight()), reports[0])
+	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
+	query.HasRevealedReports = true
+	s.oraclekeeper.Query.Set(s.ctx, queryId, query)
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
+	s.Nil(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
 	// delegation shares should increase after reporting

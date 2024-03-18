@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -10,8 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+	regTypes "github.com/tellor-io/layer/x/registry/types"
 )
+
+var offset = time.Second * 2
 
 type (
 	Keeper struct {
@@ -22,19 +28,20 @@ type (
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
+		Schema         collections.Schema
+		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                                      // key: reporter, queryid
+		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                       // key: queryId, tipper
+		TotalTips      collections.Item[math.Int]                                                                           // keep track of the total tips
+		Aggregates     collections.Map[collections.Pair[[]byte, int64], types.Aggregate]                                    // key: queryId, timestamp
+		Nonces         collections.Map[[]byte, uint64]                                                                      // key: queryId
+		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
+		QuerySequnecer collections.Sequence
+		Query          *collections.IndexedMap[[]byte, types.QueryMeta, queryMetaIndex]
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
-		Schema     collections.Schema
-		Commits    collections.Map[collections.Pair[[]byte, []byte], types.CommitReport]                               // key: reporter, queryid
-		CurrentTip collections.Map[[]byte, math.Int]                                                                   // key: queryId
-		Tips       *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                      // key: queryId, tipper
-		TotalTips  collections.Item[math.Int]                                                                          // keep track of the total tips
-		Aggregates collections.Map[collections.Pair[[]byte, int64], types.Aggregate]                                   // key: queryId, timestamp
-		Nonces     collections.Map[[]byte, uint64]                                                                     // key: queryId
-		Reports    *collections.IndexedMap[collections.Triple[[]byte, []byte, int64], types.MicroReport, reportsIndex] // key: queryId, reporter, blockHeight
-		CycleIndex collections.Item[int64]                                                                             // keep track of the current cycle
-
-		authority string
+		authority          string
+		Cyclelist          collections.Map[[]byte, string]
+		CyclelistSequencer collections.Sequence
 	}
 )
 
@@ -65,8 +72,7 @@ func NewKeeper(
 
 		authority: authority,
 
-		Commits:    collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), codec.CollValue[types.CommitReport](cdc)),
-		CurrentTip: collections.NewMap(sb, types.CurrentTipPrefix, "current_tip", collections.BytesKey, sdk.IntValue),
+		Commits: collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Commit](cdc)),
 		Tips: collections.NewIndexedMap(sb,
 			types.TipsPrefix,
 			"tips",
@@ -80,11 +86,20 @@ func NewKeeper(
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",
-			collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Int64Key),
+			collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key),
 			codec.CollValue[types.MicroReport](cdc),
 			NewReportsIndex(sb),
 		),
-		CycleIndex: collections.NewItem(sb, types.CycleIndexPrefix, "cycle_index", collections.Int64Value),
+		QuerySequnecer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
+		Query: collections.NewIndexedMap(sb,
+			types.QueryTipPrefix,
+			"query",
+			collections.BytesKey,
+			codec.CollValue[types.QueryMeta](cdc),
+			NewQueryIndex(sb),
+		),
+		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.StringValue),
+		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
 	}
 
 	schema, err := sb.Build()
@@ -107,4 +122,32 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func HashQueryData(queryData []byte) []byte {
 	return crypto.Keccak256(queryData)
+}
+
+// initialize query for a given query data
+func (k Keeper) initializeQuery(ctx context.Context, querydata string) (types.QueryMeta, error) {
+	// initialize query tip first time
+
+	queryDataBytes, err := utils.QueryBytesFromString(querydata)
+	if err != nil {
+		return types.QueryMeta{}, err
+	}
+	queryType, _, err := regTypes.DecodeQueryType(queryDataBytes)
+	if err != nil {
+		return types.QueryMeta{}, err
+	}
+	dataSpec, err := k.GetDataSpec(sdk.UnwrapSDKContext(ctx), queryType)
+	if err != nil {
+		return types.QueryMeta{}, err
+	}
+	id, err := k.QuerySequnecer.Next(ctx)
+	if err != nil {
+		return types.QueryMeta{}, err
+	}
+	query := types.QueryMeta{
+		Id:                    id,
+		RegistrySpecTimeframe: dataSpec.ReportBufferWindow,
+		QueryId:               HashQueryData(queryDataBytes),
+	}
+	return query, nil
 }

@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, queryData []byte, power, block int64) error {
+func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power int64, incycle bool) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
@@ -37,11 +37,17 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, val string, q
 		QueryId:         hex.EncodeToString(queryId),
 		Value:           val,
 		AggregateMethod: dataSpec.AggregationMethod,
-		BlockNumber:     block,
 		Timestamp:       ctx.BlockTime(),
+		Cyclelist:       incycle,
 	}
 
-	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), ctx.BlockHeight()), report)
+	query.HasRevealedReports = true
+	err = k.Query.Set(ctx, queryId, query)
+	if err != nil {
+		return err
+	}
+
+	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
 }
 
 func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {

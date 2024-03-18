@@ -53,7 +53,8 @@ func OracleKeeper(t testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.Re
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	// Initialize params
-	k.SetParams(ctx, types.DefaultParams())
+	require.Nil(t, k.SetParams(ctx, types.DefaultParams()))
+	require.Nil(t, k.GenesisCycleList(ctx, types.InitialCycleList()))
 
 	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, ctx
 }

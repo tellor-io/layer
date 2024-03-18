@@ -1,11 +1,12 @@
 package oracle
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
 	"github.com/tellor-io/layer/x/oracle/keeper"
 )
 
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
+func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	// Rotate through the cycle list and set the current query index
 	return k.RotateQueries(ctx)
 }

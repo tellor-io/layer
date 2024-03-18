@@ -12,7 +12,7 @@ import (
 
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport
-	queryId, err := utils.QueryIDFromString(qId)
+	queryId, err := utils.QueryBytesFromString(qId)
 	if err != nil {
 		panic(fmt.Sprintf("failed to decode query ID string: %v", err))
 	}

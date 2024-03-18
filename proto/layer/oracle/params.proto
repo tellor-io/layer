@@ -9,9 +9,8 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  repeated string cycle_list = 1;
 
-  string minStakeAmount = 2 [
+  string minStakeAmount = 1 [
     (gogoproto.moretags) = "yaml:\"min_stake_amount\"",
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",

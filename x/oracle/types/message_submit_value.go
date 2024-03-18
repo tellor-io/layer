@@ -59,8 +59,5 @@ func (msg *MsgSubmitValue) GetSignerAndValidateMsg() (sdk.AccAddress, error) {
 	if msg.Value == "" {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
 	}
-	if msg.Salt == "" {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "salt cannot be empty")
-	}
 	return addr, nil
 }

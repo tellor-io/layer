@@ -18,4 +18,7 @@ var (
 	ErrReporterJailed              = sdkerrors.Register(ModuleName, 1106, "reporter is jailed")
 	ErrNoAvailableReports          = sdkerrors.Register(ModuleName, 1107, "no available reports")
 	ErrNoReportsToAggregate        = sdkerrors.Register(ModuleName, 1108, "no reports to aggregate")
+	ErrQueryNotFound               = sdkerrors.Register(ModuleName, 1109, "query not found")
+	ErrNoTipsNotInCycle            = sdkerrors.Register(ModuleName, 1110, "no tips not in cycle")
+	ErrInvalidQueryData            = sdkerrors.Register(ModuleName, 1111, "invalid query data")
 )

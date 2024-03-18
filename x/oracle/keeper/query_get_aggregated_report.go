@@ -14,7 +14,7 @@ func (k Keeper) GetAggregatedReport(goCtx context.Context, req *types.QueryGetCu
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	queryId, err := utils.QueryIDFromString(req.QueryId)
+	queryId, err := utils.QueryBytesFromString(req.QueryId)
 	if err != nil {
 		panic(err)
 	}

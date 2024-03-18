@@ -12,7 +12,7 @@ func QueryIDFromData(queryData []byte) []byte {
 }
 
 func QueryIDFromDataString(queryData string) ([]byte, error) {
-	bz, err := hex.DecodeString(Remove0xPrefix(queryData))
+	bz, err := QueryBytesFromString(queryData)
 	if err != nil {
 		return nil, err
 	}
@@ -20,10 +20,12 @@ func QueryIDFromDataString(queryData string) ([]byte, error) {
 	return QueryIDFromData(bz), nil
 }
 
-func QueryIDFromString(queryID string) ([]byte, error) {
-	return hex.DecodeString(Remove0xPrefix(queryID))
+// converts a hex string to bytes (query data or query ID)
+func QueryBytesFromString(query string) ([]byte, error) {
+	return hex.DecodeString(Remove0xPrefix(query))
 }
 
+// Remove0xPrefix removes the '0x' prefix from a hex string and returns the result in lower case.
 func Remove0xPrefix(hexString string) string {
 	if has0xPrefix(hexString) {
 		hexString = hexString[2:]

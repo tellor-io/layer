@@ -25,7 +25,7 @@ func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (
 }
 
 func (k Keeper) GetQueryTip(ctx sdk.Context, queryId []byte) (math.Int, error) {
-	tip, err := k.CurrentTip.Get(ctx, queryId)
+	tip, err := k.Query.Get(ctx, queryId)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return math.ZeroInt(), nil
@@ -33,15 +33,7 @@ func (k Keeper) GetQueryTip(ctx sdk.Context, queryId []byte) (math.Int, error) {
 			return math.Int{}, err
 		}
 	}
-	return tip, nil
-}
-
-func (k Keeper) SetQueryTip(ctx sdk.Context, queryId []byte, tip math.Int) error {
-	existingTip, err := k.GetQueryTip(ctx, queryId)
-	if err != nil {
-		return err
-	}
-	return k.CurrentTip.Set(ctx, queryId, existingTip.Add(tip))
+	return tip.Amount, nil
 }
 
 func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) (types.UserTipTotal, error) {
