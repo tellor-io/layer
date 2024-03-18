@@ -24,8 +24,8 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 		QueryId:         queryIdStr,
 		AggregateMethod: "weighted-median",
 		Value:           value,
-		BlockNumber:     s.ctx.BlockHeight(),
 		Timestamp:       s.ctx.BlockTime(),
+		Cyclelist:       true,
 	}
 	expectedReports := types.Reports{
 		MicroReports: []*types.MicroReport{MicroReport},

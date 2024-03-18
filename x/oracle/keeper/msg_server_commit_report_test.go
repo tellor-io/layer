@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -13,11 +14,13 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/oracle/utils"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string) {
+func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, string) {
 	// get the current query in cycle list
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 	// value 100000000000000000000 in hex
@@ -33,7 +36,7 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 		math.NewInt(1_000_000),
 		nil,
 	)
-
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
 
 	var commitreq = types.MsgCommitReport{
@@ -42,16 +45,20 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 		Hash:      hash,
 	}
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.NoError(err)
+	s.Nil(err)
 
 	_hexxy, err := hex.DecodeString(queryData)
 	s.Nil(err)
 
-	commitValue, err := s.oracleKeeper.Commits.Get(s.ctx, collections.Join(addr.Bytes(), keeper.HashQueryData(_hexxy)))
-	s.NoError(err)
+	qId := keeper.HashQueryData(_hexxy)
+	query, err := s.oracleKeeper.Query.Get(s.ctx, qId)
+	s.Nil(err)
+	s.NotNil(query)
+	commitValue, err := s.oracleKeeper.Commits.Get(s.ctx, collections.Join(addr.Bytes(), query.Id))
+	s.Nil(err)
 	s.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
-	s.Equal(commitValue.Report.Creator, addr.String())
-	return stakedReporter, salt
+	s.Equal(commitValue.Reporter, addr.String())
+	return stakedReporter, salt, queryData
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
@@ -71,6 +78,8 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 		math.NewInt(1_000_000),
 		nil,
 	)
+
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
 
 	var commitreq = types.MsgCommitReport{
@@ -79,10 +88,11 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 		Hash:      hash,
 	}
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "query does not have tips and is not in cycle")
+	s.ErrorContains(err, "query not part of cyclelist")
 }
 
 func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 	// commit query in cycle list
 	queryData1, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
@@ -100,6 +110,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 		math.NewInt(1_000_000),
 		nil,
 	)
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
 
 	var commitreq = types.MsgCommitReport{
@@ -181,6 +192,7 @@ func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 		math.NewInt(1), // below the min stake amount
 		nil,
 	)
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(&stakedReporter, nil)
 
 	var commitreq = types.MsgCommitReport{
@@ -190,7 +202,7 @@ func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 	}
 
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "reporter has 1, required 1000000: not enough stake")
+	s.ErrorContains(err, "reporter has 1, required amount is 1000000: not enough stake")
 }
 
 func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
@@ -281,5 +293,3 @@ func (s *KeeperTestSuite) TestCommitWithMissingHash() {
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq) // no error
 	s.ErrorContains(err, "hash field cannot be empty")
 }
-
-// // todo: check emitted events
