@@ -1,12 +1,20 @@
 package e2e_test
 
 import (
+	"fmt"
+	"math/big"
+	"math/rand"
+	"strconv"
+
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 )
 
 func (s *E2ETestSuite) TestInitialMint() {
@@ -31,10 +39,10 @@ func (s *E2ETestSuite) TestTransfer() {
 		PrivateKey secp256k1.PrivKey
 		Account    sdk.AccAddress
 	}
-	accounts := make([]Accounts, 0, 10)
+	accounts := make([]Accounts, 0, 5)
 
 	// transfer from team to 10 accounts
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		privKey := secp256k1.GenPrivKey()
 		accountAddress := sdk.AccAddress(privKey.PubKey().Address())
 		account := authtypes.BaseAccount{
@@ -52,24 +60,35 @@ func (s *E2ETestSuite) TestTransfer() {
 		}
 	}
 
+	// transfer 1000 tokens from team to all 5 accounts
 	for _, acc := range accounts {
 		startBalance := s.bankKeeper.GetBalance(s.ctx, acc.Account, s.denom).Amount
 		err := s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, minttypes.MintToTeam, acc.Account, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1000))))
 		require.NoError(err)
 		require.Equal(startBalance.Add(math.NewInt(1000)), s.bankKeeper.GetBalance(s.ctx, acc.Account, s.denom).Amount)
 	}
-	expectedTeamBalance := math.NewInt(300*1e6 - 1000*10)
+	expectedTeamBalance := math.NewInt(300*1e6 - 1000*5)
 	require.Equal(expectedTeamBalance, s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom).Amount)
 
-	//transfer from account 0 to account 1
+	// transfer from account 0 to account 1
 	s.bankKeeper.SendCoins(s.ctx, accounts[0].Account, accounts[1].Account, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1000))))
 	require.Equal(math.NewInt(0), s.bankKeeper.GetBalance(s.ctx, accounts[0].Account, s.denom).Amount)
 	require.Equal(math.NewInt(2000), s.bankKeeper.GetBalance(s.ctx, accounts[1].Account, s.denom).Amount)
 
-	//transfer from account 2 to team
+	// transfer from account 2 to team
 	s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, accounts[2].Account, minttypes.MintToTeam, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1000))))
 	require.Equal(math.NewInt(0), s.bankKeeper.GetBalance(s.ctx, accounts[2].Account, s.denom).Amount)
 	require.Equal(expectedTeamBalance.Add(math.NewInt(1000)), s.bankKeeper.GetBalance(s.ctx, mintToTeamAcc, s.denom).Amount)
+
+	// try to transfer more than balance from account 3 to 4
+	err := s.bankKeeper.SendCoins(s.ctx, accounts[3].Account, accounts[4].Account, sdk.NewCoins(sdk.NewCoin(s.denom, math.NewInt(1001))))
+	require.Error(err)
+	require.Equal(s.bankKeeper.GetBalance(s.ctx, accounts[3].Account, s.denom).Amount, math.NewInt(1000))
+	require.Equal(s.bankKeeper.GetBalance(s.ctx, accounts[4].Account, s.denom).Amount, math.NewInt(1000))
+}
+
+func (s *E2ETestSuite) TestBecomeValidator() {
+
 }
 
 // func (s *E2ETestSuite) TestStakeTokens() {
@@ -161,12 +180,78 @@ func (s *E2ETestSuite) TestTransfer() {
 
 // }
 
-func (s *E2ETestSuite) TestReporterJail() {
-	// require := s.Require()
+func (s *E2ETestSuite) TestReporterAndValidator() {
+	require := s.Require()
+	//// Create Validator Accounts
+	numAccounts := 10
+	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
+	_ = new(big.Int).Mul(big.NewInt(1000), base)
+	// make addresses
+	testAddresses := simtestutil.CreateIncrementalAccounts(numAccounts)
+	// mint 50k tokens to minter account and send to each address
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(500000))
+	for _, addr := range testAddresses {
+		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, addr, sdk.NewCoins(initCoins)))
+	}
+	// get val address for each test address
+	valAddresses := simtestutil.ConvertAddrsToValAddrs(testAddresses)
+	// create pub keys for each address
+	pubKeys := simtestutil.CreateTestPubKeys(numAccounts)
+	// set each account with proper keepers
+	for i, pubKey := range pubKeys {
+		s.accountKeeper.NewAccountWithAddress(s.ctx, testAddresses[i])
+		validator, err := stakingtypes.NewValidator(valAddresses[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
+		require.NoError(err)
+		s.stakingKeeper.SetValidator(s.ctx, validator)
+		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+		randomNumber := rand.Intn(500000-100000+1) + 1 // random number from 1 to 50k as amount delegated for stake
+		fmt.Println(randomNumber)
+		s.stakingKeeper.Delegate(s.ctx, testAddresses[i], math.NewInt(int64(randomNumber)), stakingtypes.Unbonded, validator, true)
+		// call hooks for distribution init
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, testAddresses[i], valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, testAddresses[i], valBz)
+		require.NoError(err)
+	}
+
+	_, err := s.stakingKeeper.EndBlocker(s.ctx)
+	s.NoError(err)
+
+	// check that everyone is a bonded validator
+	validatorSet, err := s.stakingKeeper.GetAllValidators(s.ctx)
+	require.NoError(err)
+	fmt.Println("validator set: ", validatorSet)
+
+	// s.reporterkeeper.JailReporter()
+
+	// for _, val := range validatorSet {
+	// 	// fmt.Println("validator: ", val)
+	// 	// skVal, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(val.GetOperator()))
+	// 	// status := skVal.GetStatus()
+	// 	// // require.Nil(err)
+	// 	// require.Equal(stakingtypes.Bonded.String(), status.String())
+	// }
 
 	// create validators
-	// create reporters
 
+	// // create reporters
+	// createReportMsg := &reportertypes.MsgCreateReporter{
+	// 	Reporter:
+	// 	Amount:
+	// 	TokenOrigins:
+	// 	Commission:
+	// }
+	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	require.NotNil(reporterMsgServer)
+	// _, err = reporterMsgServer.CreateReporter(s.ctx, createReporterMsg)
 	// report for whatever is in cycle list
 
 	// currentTime := s.ctx.BlockTime()

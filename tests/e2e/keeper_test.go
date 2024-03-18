@@ -48,11 +48,10 @@ import (
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
-
-	// reportertypes "github.com/tellor-io/layer/x/reporter/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/utils"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
 	// _ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -64,6 +63,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
+	_ "github.com/tellor-io/layer/x/reporter/module"
 
 	// _ "github.com/cosmos/cosmos-sdk/x/staking"
 
@@ -95,7 +95,7 @@ type E2ETestSuite struct {
 	disputekeeper  disputekeeper.Keeper
 	registrykeeper registrykeeper.Keeper
 	mintkeeper     mintkeeper.Keeper
-	// reporterkeeper reporterkeeper.Keeper
+	reporterkeeper reporterkeeper.Keeper
 
 	accountKeeper  authkeeper.AccountKeeper
 	bankKeeper     bankkeeper.BaseKeeper
@@ -181,8 +181,7 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
 	)
 	// suite.reporterkeeper = reporterkeeper.NewKeeper(
-	// 	appCodec, suite.fetchStoreKey(reportertypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.oraclekeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	// )
+	// 	appCodec, suite.fetchStoreKey(reportertypes.StoreKey),
 }
 
 func (s *E2ETestSuite) SetupTest() {
@@ -206,6 +205,7 @@ func (s *E2ETestSuite) SetupTest() {
 				testutils.DisputeModule(),
 				testutils.RegistryModule(),
 				testutils.MintModule(),
+				testutils.ReporterModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),
@@ -213,7 +213,7 @@ func (s *E2ETestSuite) SetupTest() {
 		testutils.DefaultStartUpConfig(),
 		&s.accountKeeper, &s.bankKeeper, &s.stakingKeeper, &s.slashingKeeper,
 		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.oraclekeeper,
-		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.distrKeeper, &s.mintkeeper)
+		&s.disputekeeper, &s.registrykeeper, &s.govKeeper, &s.distrKeeper, &s.mintkeeper, &s.reporterkeeper)
 
 	s.NoError(err)
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
