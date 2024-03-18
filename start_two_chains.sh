@@ -65,4 +65,4 @@ echo "Importing alice key to test backend..."
 echo $PASSWORD | ./layerd keys import alice ~/Desktop/alice_keyfile --keyring-backend test --home ~/.layer/alice
 
 echo "Start chain..."
-./layerd start --home ~/.layer/alice --api.enable
+./layerd start --home ~/.layer/alice --api.enable --api.swagger

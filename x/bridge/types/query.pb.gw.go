@@ -87,19 +87,26 @@ func local_request_Query_GetValidatorCheckpoint_0(ctx context.Context, marshaler
 
 }
 
-var (
-	filter_Query_GetValidatorCheckpointParams_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_Query_GetValidatorCheckpointParams_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetValidatorCheckpointParamsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetValidatorCheckpointParams_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Timestamp, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
 	}
 
 	msg, err := client.GetValidatorCheckpointParams(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -111,11 +118,22 @@ func local_request_Query_GetValidatorCheckpointParams_0(ctx context.Context, mar
 	var protoReq QueryGetValidatorCheckpointParamsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetValidatorCheckpointParams_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Timestamp, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
 	}
 
 	msg, err := server.GetValidatorCheckpointParams(ctx, &protoReq)
@@ -123,19 +141,26 @@ func local_request_Query_GetValidatorCheckpointParams_0(ctx context.Context, mar
 
 }
 
-var (
-	filter_Query_GetValidatorTimestampByIndex_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_Query_GetValidatorTimestampByIndex_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetValidatorTimestampByIndexRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["index"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "index")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetValidatorTimestampByIndex_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Index, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "index", err)
 	}
 
 	msg, err := client.GetValidatorTimestampByIndex(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -147,11 +172,22 @@ func local_request_Query_GetValidatorTimestampByIndex_0(ctx context.Context, mar
 	var protoReq QueryGetValidatorTimestampByIndexRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["index"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "index")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetValidatorTimestampByIndex_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Index, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "index", err)
 	}
 
 	msg, err := server.GetValidatorTimestampByIndex(ctx, &protoReq)
@@ -159,19 +195,26 @@ func local_request_Query_GetValidatorTimestampByIndex_0(ctx context.Context, mar
 
 }
 
-var (
-	filter_Query_GetValsetSigs_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_Query_GetValsetSigs_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetValsetSigsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetValsetSigs_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Timestamp, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
 	}
 
 	msg, err := client.GetValsetSigs(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -183,11 +226,22 @@ func local_request_Query_GetValsetSigs_0(ctx context.Context, marshaler runtime.
 	var protoReq QueryGetValsetSigsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetValsetSigs_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.Timestamp, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
 	}
 
 	msg, err := server.GetValsetSigs(ctx, &protoReq)
@@ -195,19 +249,37 @@ func local_request_Query_GetValsetSigs_0(ctx context.Context, marshaler runtime.
 
 }
 
-var (
-	filter_Query_GetOracleAttestations_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_Query_GetOracleAttestations_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetOracleAttestationsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["queryId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetOracleAttestations_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.QueryId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+	}
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
+	}
+
+	protoReq.Timestamp, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
 	}
 
 	msg, err := client.GetOracleAttestations(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -219,11 +291,33 @@ func local_request_Query_GetOracleAttestations_0(ctx context.Context, marshaler 
 	var protoReq QueryGetOracleAttestationsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["queryId"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetOracleAttestations_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.QueryId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+	}
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
+	}
+
+	protoReq.Timestamp, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
 	}
 
 	msg, err := server.GetOracleAttestations(ctx, &protoReq)
@@ -231,19 +325,26 @@ func local_request_Query_GetOracleAttestations_0(ctx context.Context, marshaler 
 
 }
 
-var (
-	filter_Query_GetEvmAddressByValidatorAddress_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
-)
-
 func request_Query_GetEvmAddressByValidatorAddress_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetEvmAddressByValidatorAddressRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["validatorAddress"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validatorAddress")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetEvmAddressByValidatorAddress_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.ValidatorAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validatorAddress", err)
 	}
 
 	msg, err := client.GetEvmAddressByValidatorAddress(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -255,11 +356,22 @@ func local_request_Query_GetEvmAddressByValidatorAddress_0(ctx context.Context, 
 	var protoReq QueryGetEvmAddressByValidatorAddressRequest
 	var metadata runtime.ServerMetadata
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["validatorAddress"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validatorAddress")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_GetEvmAddressByValidatorAddress_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.ValidatorAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validatorAddress", err)
 	}
 
 	msg, err := server.GetEvmAddressByValidatorAddress(ctx, &protoReq)
@@ -662,21 +774,21 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "bridge", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetEvmValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_evm_validators"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetEvmValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "bridge", "get_evm_validators"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetValidatorCheckpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_validator_checkpoint"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetValidatorCheckpoint_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "bridge", "get_validator_checkpoint"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetValidatorCheckpointParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_validator_checkpoint_params"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetValidatorCheckpointParams_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_validator_checkpoint_params", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetValidatorTimestampByIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_validator_timestamp_by_index"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetValidatorTimestampByIndex_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_validator_timestamp_by_index", "index"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetValsetSigs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_valset_sigs"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetValsetSigs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_valset_sigs", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetOracleAttestations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_oracle_attestations"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetOracleAttestations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "bridge", "get_oracle_attestations", "queryId", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetEvmAddressByValidatorAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "bridge", "get_evm_address_by_validator_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetEvmAddressByValidatorAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_evm_address_by_validator_address", "validatorAddress"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

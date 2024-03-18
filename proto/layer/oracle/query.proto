@@ -140,9 +140,6 @@ message QueryGetTimeBasedRewardsRequest {}
 
 message QueryGetTimeBasedRewardsResponse {
   cosmos.base.v1beta1.Coin reward = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-<<<<<<< HEAD
-}
-=======
 }
 
 message QueryCurrentCyclelistQueryRequest {}
@@ -151,4 +148,3 @@ message QueryCurrentCyclelistQueryResponse {
   string querydata = 1;
 }
 
->>>>>>> e179445934b645ef99bf4482610894be972eaabc

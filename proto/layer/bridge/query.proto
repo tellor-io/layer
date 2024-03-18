@@ -14,37 +14,37 @@ service Query {
   
   // Parameters queries the parameters of the module.
   rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/params";
+    option (google.api.http).get = "/layer/bridge/params";
   
   }
   
   // Queries a list of GetEvmValidators items.
   rpc GetEvmValidators (QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_evm_validators";
+    option (google.api.http).get = "/layer/bridge/get_evm_validators";
   }
 
   rpc GetValidatorCheckpoint (QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_checkpoint";
+    option (google.api.http).get = "/layer/bridge/get_validator_checkpoint";
   }
 
   rpc GetValidatorCheckpointParams (QueryGetValidatorCheckpointParamsRequest) returns (QueryGetValidatorCheckpointParamsResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_checkpoint_params";
+    option (google.api.http).get = "/layer/bridge/get_validator_checkpoint_params/{timestamp}";
   }
 
   rpc GetValidatorTimestampByIndex (QueryGetValidatorTimestampByIndexRequest) returns (QueryGetValidatorTimestampByIndexResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_validator_timestamp_by_index";
+    option (google.api.http).get = "/layer/bridge/get_validator_timestamp_by_index/{index}";
   }
 
   rpc GetValsetSigs (QueryGetValsetSigsRequest) returns (QueryGetValsetSigsResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_valset_sigs";
+    option (google.api.http).get = "/layer/bridge/get_valset_sigs/{timestamp}";
   }
 
   rpc GetOracleAttestations (QueryGetOracleAttestationsRequest) returns (QueryGetOracleAttestationsResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_oracle_attestations";
+    option (google.api.http).get = "/layer/bridge/get_oracle_attestations/{queryId}/{timestamp}";
   }
 
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
-    option (google.api.http).get = "/tellor-io/layer/bridge/get_evm_address_by_validator_address";
+    option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.

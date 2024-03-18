@@ -20,3 +20,5 @@ faucet:
 validators:
 - name: alice
   bonded: 100000000loya
+build:
+  main: ./layerd
