@@ -38,6 +38,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
 					{Account: "reporter"},
+					{Account: "tips_escrow_pool"},
 				},
 			}),
 		}

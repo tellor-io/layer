@@ -800,6 +800,7 @@ func (k Keeper) AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.Acc
 			if err != nil {
 				return err
 			}
+			// todo: move coins to escrow instead
 			newShares, err := k.stakingKeeper.Delegate(ctx, key, _share.TruncateInt(), stakingtypes.Bonded, val, false) // ignore dust???
 			if err != nil {
 				return err
@@ -880,5 +881,48 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, recipients []
 			return err
 		}
 	}
+	return nil
+}
+
+func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error {
+	reporter, err := k.Reporters.Get(ctx, reporterAddr)
+	if err != nil {
+		return err
+	}
+	// Calculate commission
+	commission := math.LegacyNewDecFromInt(reward).Mul(reporter.Commission.Rate)
+
+	// Calculate net reward
+	netReward := math.LegacyNewDecFromInt(reward).Sub(commission)
+
+	// Calculate each delegator's share (including the reporter as a self-delegator)
+	repAddr, err := sdk.AccAddressFromBech32(reporter.Reporter)
+	if err != nil {
+		return err
+	}
+	delAddrs, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return err
+	}
+	defer delAddrs.Close()
+	for ; delAddrs.Valid(); delAddrs.Next() {
+		key, err := delAddrs.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		del, err := k.Delegators.Get(ctx, key)
+		if err != nil {
+			return err
+		}
+		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(reporter.TotalTokens))
+		if key.Equals(repAddr) {
+			delegatorShare = delegatorShare.Add(commission)
+		}
+		err = k.DelegatorTips.Set(ctx, key, delegatorShare.TruncateInt())
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

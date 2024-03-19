@@ -3917,51 +3917,13 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
-  layer.daemons.ExchangePrice:
-    type: object
-    properties:
-      exchange_id:
-        type: string
-      price:
-        type: string
-        format: uint64
-      last_update_time:
-        type: string
-        format: date-time
-    title: ExchangePrice represents a specific exchange's market price
-  layer.daemons.MarketPriceUpdate:
-    type: object
-    properties:
-      market_id:
-        type: integer
-        format: int64
-      exchange_prices:
-        type: array
-        items:
-          type: object
-          properties:
-            exchange_id:
-              type: string
-            price:
-              type: string
-              format: uint64
-            last_update_time:
-              type: string
-              format: date-time
-          title: ExchangePrice represents a specific exchange's market price
-    title: MarketPriceUpdate represents an update to a single market
-  layer.daemons.UpdateMarketPricesResponse:
-    type: object
-    description: >-
-      UpdateMarketPricesResponse is a response message for updating market
-      prices.
   layer.registry.ABIComponent:
     type: object
     properties:
       name:
         type: string
         title: name
-      type:
+      field_type:
         type: string
         title: type
       nested_component:
@@ -4019,18 +3981,6 @@ definitions:
     description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
   layer.registry.MsgUpdateDataSpecResponse:
     type: object
-  cosmos.base.v1beta1.DecCoin:
-    type: object
-    properties:
-      denom:
-        type: string
-      amount:
-        type: string
-    description: |-
-      DecCoin defines a token with a denomination and a decimal amount.
-
-      NOTE: The amount field is an Dec which implements the custom method
-      signatures required by gogoproto.
   cosmos.staking.v1beta1.Commission:
     type: object
     properties:
@@ -4058,6 +4008,100 @@ definitions:
         format: date-time
         description: update_time is the last time the commission rate was changed.
     description: Commission defines commission parameters for a given validator.
+  layer.reporter.MsgCreateReporterResponse:
+    type: object
+  layer.reporter.MsgDelegateReporterResponse:
+    type: object
+    description: >-
+      MsgDelegateReporterResponse defines the response structure for executing a
+      MsgDelegateReporter message.
+  layer.reporter.MsgUndelegateReporterResponse:
+    type: object
+  layer.reporter.MsgUnjailReporterResponse:
+    type: object
+    description: MsgUnjailReporterResponse defines the Msg/UnjailReporter response type.
+  layer.reporter.MsgUpdateParamsResponse:
+    type: object
+    description: |-
+      MsgUpdateParamsResponse defines the response structure for executing a
+      MsgUpdateParams message.
+  layer.reporter.MsgWithdrawDelegatorRewardResponse:
+    type: object
+    properties:
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
+      response type.
+  layer.reporter.MsgWithdrawReporterCommissionResponse:
+    type: object
+    properties:
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: |-
+      MsgWithdrawReporterCommissionResponse defines the
+      Msg/WithdrawReporterCommission response type.
+  layer.reporter.MsgWithdrawTipResponse:
+    type: object
+  layer.reporter.Params:
+    type: object
+    properties:
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate, adopted from staking module, is the minimum
+          commission rate a reporter can their delegators
+    description: Params defines the parameters for the module.
+  layer.reporter.TokenOrigin:
+    type: object
+    properties:
+      validator_address:
+        type: string
+        title: >-
+          validator_address is the address of the validator that tokens in
+          staking are delegated to
+      amount:
+        type: string
+        title: >-
+          amount is the amount of tokens to be delegated to a reporter from a
+          delegation in staking
+    title: TokenOrigin is a message to store the origin of a token
+  cosmos.base.v1beta1.DecCoin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      DecCoin defines a token with a denomination and a decimal amount.
+
+      NOTE: The amount field is an Dec which implements the custom method
+      signatures required by gogoproto.
   layer.reporter.OracleReporter:
     type: object
     properties:
@@ -4105,15 +4149,6 @@ definitions:
         format: date-time
         title: jailed_until is the time the reporter is jailed until
     title: OracleReporter is the struct that holds the data for a reporter
-  layer.reporter.Params:
-    type: object
-    properties:
-      min_commission_rate:
-        type: string
-        title: >-
-          min_commission_rate, adopted from staking module, is the minimum
-          commission rate a reporter can their delegators
-    description: Params defines the parameters for the module.
   layer.reporter.QueryDelegationRewardsResponse:
     type: object
     properties:
@@ -4384,74 +4419,3 @@ definitions:
     description: |-
       ReporterOutstandingRewards represents outstanding (un-withdrawn) rewards
       for a reporter inexpensive to track, allows simple sanity checks.
-  layer.reporter.MsgCreateReporterResponse:
-    type: object
-  layer.reporter.MsgDelegateReporterResponse:
-    type: object
-    description: >-
-      MsgDelegateReporterResponse defines the response structure for executing a
-      MsgDelegateReporter message.
-  layer.reporter.MsgUndelegateReporterResponse:
-    type: object
-  layer.reporter.MsgUnjailReporterResponse:
-    type: object
-    description: MsgUnjailReporterResponse defines the Msg/UnjailReporter response type.
-  layer.reporter.MsgUpdateParamsResponse:
-    type: object
-    description: |-
-      MsgUpdateParamsResponse defines the response structure for executing a
-      MsgUpdateParams message.
-  layer.reporter.MsgWithdrawDelegatorRewardResponse:
-    type: object
-    properties:
-      amount:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-    description: |-
-      MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
-      response type.
-  layer.reporter.MsgWithdrawReporterCommissionResponse:
-    type: object
-    properties:
-      amount:
-        type: array
-        items:
-          type: object
-          properties:
-            denom:
-              type: string
-            amount:
-              type: string
-          description: |-
-            Coin defines a token with a denomination and an amount.
-
-            NOTE: The amount field is an Int which implements the custom method
-            signatures required by gogoproto.
-    description: |-
-      MsgWithdrawReporterCommissionResponse defines the
-      Msg/WithdrawReporterCommission response type.
-  layer.reporter.TokenOrigin:
-    type: object
-    properties:
-      validator_address:
-        type: string
-        title: >-
-          validator_address is the address of the validator that tokens in
-          staking are delegated to
-      amount:
-        type: string
-        title: >-
-          amount is the amount of tokens to be delegated to a reporter from a
-          delegation in staking
-    title: TokenOrigin is a message to store the origin of a token

@@ -19,6 +19,7 @@ type (
 		storeService                   store.KVStoreService
 		Params                         collections.Item[types.Params]
 		Reporters                      collections.Map[sdk.AccAddress, types.OracleReporter]
+		DelegatorTips                  collections.Map[sdk.AccAddress, math.Int]
 		Delegators                     *collections.IndexedMap[sdk.AccAddress, types.Delegation, ReporterDelegatorsIndex]
 		TokenOrigin                    collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], math.Int]
 		ReportersAccumulatedCommission collections.Map[sdk.ValAddress, types.ReporterAccumulatedCommission]
@@ -73,6 +74,7 @@ func NewKeeper(
 		logger:                         logger,
 		stakingKeeper:                  stakingKeeper,
 		bankKeeper:                     bankKeeper,
+		DelegatorTips:                  collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", sdk.AccAddressKey, sdk.IntValue),
 	}
 	schema, err := sb.Build()
 	if err != nil {

@@ -19,20 +19,6 @@ type ReporterKeeper struct {
 	mock.Mock
 }
 
-// AllocateRewardsToStake provides a mock function with given fields: ctx, reporterAddr, reward
-func (_m *ReporterKeeper) AllocateRewardsToStake(ctx context.Context, reporterAddr types.AccAddress, reward math.Int) error {
-	ret := _m.Called(ctx, reporterAddr, reward)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int) error); ok {
-		r0 = rf(ctx, reporterAddr, reward)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // AllocateTokensToReporter provides a mock function with given fields: ctx, reporterAddr, tokens
 func (_m *ReporterKeeper) AllocateTokensToReporter(ctx context.Context, reporterAddr types.ValAddress, tokens types.DecCoins) error {
 	ret := _m.Called(ctx, reporterAddr, tokens)
@@ -40,6 +26,20 @@ func (_m *ReporterKeeper) AllocateTokensToReporter(ctx context.Context, reporter
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, types.ValAddress, types.DecCoins) error); ok {
 		r0 = rf(ctx, reporterAddr, tokens)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward
+func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.Int) error {
+	ret := _m.Called(ctx, reporterAddr, reward)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int) error); ok {
+		r0 = rf(ctx, reporterAddr, reward)
 	} else {
 		r0 = ret.Error(0)
 	}

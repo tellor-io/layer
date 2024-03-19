@@ -3,7 +3,6 @@ package keeper
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -17,7 +16,7 @@ type ReportersReportCount struct {
 
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
-// Finally, it sends the allocated rewards to the appropriate module based on the source of the reward.
+// Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
 func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateReporter, reward math.Int, toStake bool) error {
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
@@ -44,7 +43,7 @@ func (k Keeper) AllocateRewards(ctx sdk.Context, reporters []*types.AggregateRep
 	if toStake {
 		allocateReward = k.AllocateTip
 		from = types.ModuleName
-		to = stakingtypes.BondedPoolName
+		to = reportertypes.TipsEscrowPool
 	} else {
 		allocateReward = k.AllocateTBR
 		from = minttypes.TimeBasedRewards
@@ -88,5 +87,5 @@ func (k Keeper) AllocateTBR(ctx sdk.Context, addr []byte, amount math.Int) error
 }
 
 func (k Keeper) AllocateTip(ctx sdk.Context, addr []byte, amount math.Int) error {
-	return k.reporterKeeper.AllocateRewardsToStake(ctx, addr, amount)
+	return k.reporterKeeper.DivvyingTips(ctx, addr, amount)
 }
