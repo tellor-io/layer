@@ -30,7 +30,7 @@ func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDat
 		return nil, err
 	}
 
-	if err := k.Keeper.hooks.AfterDataSpecUpdated(ctx, req.QueryType, req.Spec); err != nil {
+	if err := k.Keeper.Hooks().AfterDataSpecUpdated(ctx, req.QueryType, req.Spec); err != nil {
 		return nil, err
 	}
 

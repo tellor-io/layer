@@ -180,6 +180,11 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 			suite.reporterkeeper.Hooks(),
 		),
 	)
+	suite.registrykeeper.SetHooks(
+		registrytypes.NewMultiRegistryHooks(
+			suite.oraclekeeper.Hooks(),
+		),
+	)
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
