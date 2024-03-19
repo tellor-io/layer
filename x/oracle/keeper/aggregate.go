@@ -46,7 +46,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 			if err != nil {
 				return err
 			}
-
+			// there should always be at least one report otherwise how did the query set hasrevealedreports to true
 			if reports[0].AggregateMethod == "weighted-median" {
 				// Calculate the aggregated report.
 				aggrFunc = k.WeightedMedian
@@ -67,18 +67,16 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 					return err
 				}
 				query.Amount = math.ZeroInt()
-				err = k.Query.Set(ctx, query.QueryId, query)
-				if err != nil {
-					return err
-				}
 			}
 			// Add reporters to the tbr payment list.
-			// incyclelist, err := k.Cyclelist.Has(ctx, queryIdBytes)
-			// if err != nil {
-			// 	return err
-			// }
 			if reports[0].Cyclelist {
 				reportersToPay = append(reportersToPay, report.Reporters...)
+			}
+			// add paid field instead
+			query.HasRevealedReports = false
+			err = k.Query.Set(ctx, query.QueryId, query)
+			if err != nil {
+				return err
 			}
 		}
 	}

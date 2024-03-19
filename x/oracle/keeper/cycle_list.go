@@ -37,8 +37,8 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 	max := len(q)
 	switch {
-	case n == uint64(max):
-		return k.CyclelistSequencer.Set(ctx, 1)
+	case n == uint64(max-1):
+		return k.CyclelistSequencer.Set(ctx, 0)
 	default:
 		return nil
 	}

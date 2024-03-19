@@ -82,6 +82,8 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 			return nil, err
 		}
 		query.Id = nextId
+		// reset query fields when generating next id
+		query.HasRevealedReports = false
 		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
 		err = k.Query.Set(ctx, queryId, query)
 		if err != nil {
