@@ -66,13 +66,14 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 				if err != nil {
 					return err
 				}
+				// zero out the amount in the query
 				query.Amount = math.ZeroInt()
 			}
 			// Add reporters to the tbr payment list.
 			if reports[0].Cyclelist {
 				reportersToPay = append(reportersToPay, report.Reporters...)
 			}
-			// add paid field instead
+
 			query.HasRevealedReports = false
 			err = k.Query.Set(ctx, query.QueryId, query)
 			if err != nil {
