@@ -73,7 +73,7 @@ getValsetSigs = async (timestamp) => {
     for (i = 0; i < sigsResponse.length; i++) {
       if (sigsResponse[i].length == 130) {
         sigs.push({
-          v: 27,
+          v: 28,
           r:
             '0x' + sigsResponse[i].slice(2, 66),
           s:
@@ -91,6 +91,65 @@ getValsetSigs = async (timestamp) => {
     return sigs
   } catch (error) {
     console.log(error)
+  }
+}
+
+getValsetSigs2 = async (timestamp, valset, digest) => {
+  const url = "http://localhost:1317/layer/bridge/get_valset_sigs/" + timestamp;
+  try {
+    const response = await axios.get(url);
+    const sigsResponse = response.data.signatures;
+    const sigs = [];
+    // get sha256 hash of the message
+    // const digestArrayified = ethers.utils.arrayify(digest);
+    // messageHash = ethers.utils.sha256Hash(digestArrayified);
+    const messageHash = ethers.utils.sha256(digest);
+    for (let i = 0; i < sigsResponse.length; i++) {
+      const signature = sigsResponse[i];
+      if (signature.length === 130) {
+        // try v = 27
+        let v = 27;
+        let r = '0x' + signature.slice(2, 66);
+        let s = '0x' + signature.slice(66, 130);
+        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+          r: r,
+          s: s,
+          v: v,
+        });
+        console.log("recoveredAddress27", recoveredAddress)
+        // check if recovered address matches the validator address
+        if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
+          // try v = 28 if v = 27 did not match
+          v = 28;
+          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+            r: r,
+            s: s,
+            v: v,
+          });
+          console.log("recoveredAddress28", recoveredAddress)
+          if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
+            // If neither worked, use default values
+            v = 0;
+            r = '0x0000000000000000000000000000000000000000000000000000000000000000';
+            s = '0x0000000000000000000000000000000000000000000000000000000000000000';
+          }
+        }
+        sigs.push({
+          v: v,
+          r: '0x' + signature.slice(2, 66),
+          s: '0x' + signature.slice(66, 130),
+        });
+      } else {
+        sigs.push({
+          v: 0,
+          r: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          s: '0x0000000000000000000000000000000000000000000000000000000000000000',
+        });
+      }
+    }
+    return sigs;
+  } catch (error) {
+    console.log(error);
   }
 }
 
@@ -324,5 +383,6 @@ module.exports = {
   getValsetCheckpointParams,
   getValset,
   getValsetSigs,
+  getValsetSigs2
 };
 

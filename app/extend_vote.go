@@ -48,6 +48,7 @@ type BridgeKeeper interface {
 	GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
 	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
 	SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error
+	GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
 }
 
 type StakingKeeper interface {
@@ -617,88 +618,122 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signa
 		h.logger.Error("failed to get latest checkpoint timestamp", "error", err)
 		return nil, 0, err
 	}
-	// get the latest validator set signatures
-	latestValsetSignatures, err := h.bridgeKeeper.GetValidatorSetSignaturesFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
-	if err != nil {
-		h.logger.Error("failed to get latest validator set signatures", "error", err)
-		return nil, 0, err
-	}
-	// get the latest validator set
-	latestValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, latestCheckpointTimestamp.Timestamp)
-	if err != nil {
-		h.logger.Error("failed to get latest validator set", "error", err)
-		return nil, 0, err
-	}
-	// get operator address
+	// // get the latest validator set signatures
+	// latestValsetSignatures, err := h.bridgeKeeper.GetValidatorSetSignaturesFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
+	// if err != nil {
+	// 	h.logger.Error("failed to get latest validator set signatures", "error", err)
+	// 	return nil, 0, err
+	// }
+	// // get the latest validator set
+	// latestValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, latestCheckpointTimestamp.Timestamp)
+	// if err != nil {
+	// 	h.logger.Error("failed to get latest validator set", "error", err)
+	// 	return nil, 0, err
+	// }
+	// // get operator address
+	// operatorAddress, err := h.GetOperatorAddress()
+	// if err != nil {
+	// 	h.logger.Error("failed to get operator address", "error", err)
+	// 	return nil, 0, err
+	// }
+
+	// // get evm address by operator
+	// evmAddress, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
+	// if err != nil {
+	// 	h.logger.Error("failed to get evm address by operator", "error", err)
+	// 	return nil, 0, err
+	// }
+
+	// // get validator's index in the latest validator set
+	// valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, latestValset)
+	// if valIndex < 0 {
+	// 	h.logger.Error("validator not found in latest validator set", "error", err)
+	// 	return nil, 0, err
+	// }
+
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
 		h.logger.Error("failed to get operator address", "error", err)
 		return nil, 0, err
 	}
-
-	// get evm address by operator
-	evmAddress, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
+	didSign, valIndex, err := h.bridgeKeeper.GetValidatorDidSignCheckpoint(ctx, operatorAddress, latestCheckpointTimestamp.Timestamp)
 	if err != nil {
-		h.logger.Error("failed to get evm address by operator", "error", err)
+		h.logger.Error("failed to get validator did sign checkpoint", "error", err)
 		return nil, 0, err
 	}
-
-	// get validator's index in the latest validator set
-	valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, latestValset)
-	if valIndex < 0 {
-		h.logger.Error("validator not found in latest validator set", "error", err)
-		return nil, 0, err
-	}
-
-	// check for signature at index
-	if len(latestValsetSignatures.Signatures) > valIndex {
-		sig := latestValsetSignatures.Signatures[valIndex]
-		if len(sig) > 0 {
-			h.logger.Info("Signature found at index", "index", valIndex)
-			return nil, 0, nil
-		} else {
-			// check previous valset for inclusion
-			if latestCheckpointIdx > 0 {
-				previousCheckpointTimestamp, err := h.bridgeKeeper.GetValidatorTimestampByIdxFromStorage(ctx, latestCheckpointIdx-1)
-				if err != nil {
-					h.logger.Error("failed to get previous checkpoint timestamp", "error", err)
-					return nil, 0, err
-				}
-				previousValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, previousCheckpointTimestamp.Timestamp)
-				if err != nil {
-					h.logger.Error("failed to get previous validator set", "error", err)
-					return nil, 0, err
-				}
-				// check if validator is included in previous valset
-				valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, previousValset)
-				if valIndex < 0 {
-					h.logger.Error("validator not found in previous validator set", "error", err)
-					return nil, 0, nil
-				}
-				// sign the latest checkpoint
-				checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
-				if err != nil {
-					h.logger.Error("failed to get checkpoint params", "error", err)
-					return nil, 0, err
-				}
-				checkpoint := checkpointParams.Checkpoint
-				checkpointString := hex.EncodeToString(checkpoint)
-				signature, err := h.EncodeAndSignMessage(checkpointString)
-				if err != nil {
-					h.logger.Error("failed to encode and sign message", "error", err)
-					return nil, 0, err
-				}
-				h.logger.Info("Signature generated", "signature", hex.EncodeToString(signature))
-				return signature, latestCheckpointTimestamp.Timestamp, nil
-			} else {
-				h.logger.Info("No previous valset found")
-				return nil, 0, nil
-			}
-		}
-	} else {
-		h.logger.Info("No signature found at index", "index", valIndex)
+	if didSign {
+		h.logger.Info("Validator already signed checkpoint", "operatorAddress", operatorAddress, "checkpointTimestamp", latestCheckpointTimestamp.Timestamp)
 		return nil, 0, nil
+	} else if valIndex < 0 {
+		h.logger.Error("Validator not found in previous validator set", "operatorAddress", operatorAddress, "checkpointTimestamp", latestCheckpointTimestamp.Timestamp)
+		return nil, 0, nil
+	} else {
+		// sign the latest checkpoint
+		checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
+		if err != nil {
+			h.logger.Error("failed to get checkpoint params", "error", err)
+			return nil, 0, err
+		}
+		checkpoint := checkpointParams.Checkpoint
+		checkpointString := hex.EncodeToString(checkpoint)
+		signature, err := h.EncodeAndSignMessage(checkpointString)
+		if err != nil {
+			h.logger.Error("failed to encode and sign message", "error", err)
+			return nil, 0, err
+		}
+		h.logger.Info("Signature generated", "signature", hex.EncodeToString(signature))
+		return signature, latestCheckpointTimestamp.Timestamp, nil
 	}
+
+	// // check for signature at index
+	// if len(latestValsetSignatures.Signatures) > valIndex {
+	// 	sig := latestValsetSignatures.Signatures[valIndex]
+	// 	if len(sig) > 0 {
+	// 		h.logger.Info("Signature found at index", "index", valIndex)
+	// 		return nil, 0, nil
+	// 	} else {
+	// 		// check previous valset for inclusion
+	// 		if latestCheckpointIdx > 0 {
+	// 			previousCheckpointTimestamp, err := h.bridgeKeeper.GetValidatorTimestampByIdxFromStorage(ctx, latestCheckpointIdx-1)
+	// 			if err != nil {
+	// 				h.logger.Error("failed to get previous checkpoint timestamp", "error", err)
+	// 				return nil, 0, err
+	// 			}
+	// 			previousValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, previousCheckpointTimestamp.Timestamp)
+	// 			if err != nil {
+	// 				h.logger.Error("failed to get previous validator set", "error", err)
+	// 				return nil, 0, err
+	// 			}
+	// 			// check if validator is included in previous valset
+	// 			valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, previousValset)
+	// 			if valIndex < 0 {
+	// 				h.logger.Error("validator not found in previous validator set", "error", err)
+	// 				return nil, 0, nil
+	// 			}
+	// 			// sign the latest checkpoint
+	// 			checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
+	// 			if err != nil {
+	// 				h.logger.Error("failed to get checkpoint params", "error", err)
+	// 				return nil, 0, err
+	// 			}
+	// 			checkpoint := checkpointParams.Checkpoint
+	// 			checkpointString := hex.EncodeToString(checkpoint)
+	// 			signature, err := h.EncodeAndSignMessage(checkpointString)
+	// 			if err != nil {
+	// 				h.logger.Error("failed to encode and sign message", "error", err)
+	// 				return nil, 0, err
+	// 			}
+	// 			h.logger.Info("Signature generated", "signature", hex.EncodeToString(signature))
+	// 			return signature, latestCheckpointTimestamp.Timestamp, nil
+	// 		} else {
+	// 			h.logger.Info("No previous valset found")
+	// 			return nil, 0, nil
+	// 		}
+	// 	}
+	// } else {
+	// 	h.logger.Info("No signature found at index", "index", valIndex)
+	// 	return nil, 0, nil
+	// }
 }
 
 func (h *VoteExtHandler) GetValidatorIndexInValset(ctx sdk.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {

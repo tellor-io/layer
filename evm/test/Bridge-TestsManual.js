@@ -493,6 +493,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         console.log("valsetTimestamp0: ", vts0)
         console.log("valsetCheckpointParams0: ", vp0)
 
+        console.log("deploying bridge...")
         const Bridge = await ethers.getContractFactory("BlobstreamO");
         bridge = await Bridge.deploy(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address);
 
@@ -505,9 +506,27 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         console.log("valSet0: ", valSet0)
         console.log("valSet1: ", valSet1)
 
-        vsigs1 = await h.getValsetSigs(vp1.timestamp)
-        vsigs1.pop()
+        vsigs1old = await h.getValsetSigs(vp1.timestamp)
+        vsigs1 = await h.getValsetSigs2(vp1.timestamp, valSet0, vp1.checkpoint)
         console.log("valsetSigs1: ", vsigs1)
+        console.log("valsetSigs1old: ", vsigs1old)
+
+
+        // addrRecovered0 = await bridge.verifySig2(vp1.checkpoint, vsigs1)
+        // console.log("addrRecovered0: ", addrRecovered0)
+
+        // console.log("using old sig")
+        // addrRecovered0 = await bridge.verifySig2(vp1.checkpoint, vsigs1old)
+
+        // vsigs1[0]["v"] = 27
+        // console.log("getting 27, vsigs1: ", vsigs1)
+        // addrRecovered27 = await bridge.verifySig2(vp1.checkpoint, vsigs1)
+        // console.log("addrRecovered27: ", addrRecovered27)
+
+        // vsigs1[0]["v"] = 28
+        // addrRecovered28 = await bridge.verifySig2(vp1.checkpoint, vsigs1)
+        // console.log("addrRecovered28: ", addrRecovered28)
+
 
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
     })

@@ -43,6 +43,7 @@ type (
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
 		OracleAttestationsMap        collections.Map[string, types.OracleAttestations]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
+		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -69,6 +70,7 @@ func NewKeeper(
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
 		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
@@ -245,6 +247,14 @@ func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *ty
 		// TODO: handle error?
 	}
 	if valsetIdx.Index == 0 {
+		// TODO: no need to set signatures for the first valset
+		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
+		err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting bridge valset signatures: ", "error", err)
+			return err
+		}
+
 		return nil
 	}
 	previousValsetTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, valsetIdx.Index-1)
@@ -362,6 +372,11 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	err = k.LatestCheckpointIdx.Set(ctx, checkpointIdx)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting latest checkpoint index: ", "error", err)
+		return nil, err
+	}
+	err = k.ValsetTimestampToIdxMap.Set(ctx, validatorTimestamp, checkpointIdx)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting valset timestamp to index: ", "error", err)
 		return nil, err
 	}
 	return checkpoint, nil
@@ -566,10 +581,31 @@ func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 		return err
 	}
-	// get the last saved bridge validator set
-	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	// // get the last saved bridge validator set
+	// lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	// if err != nil {
+	// 	k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+	// 	return err
+	// }
+	// get the valset index by timestamp
+	valsetIdx, err := k.ValsetTimestampToIdxMap.Get(ctx, timestamp)
 	if err != nil {
-		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+		k.Logger(ctx).Info("Error getting valset index by timestamp", "error", err)
+		return err
+	}
+	if valsetIdx.Index == 0 {
+		k.Logger(ctx).Warn("Valset index is 0")
+		return nil
+	}
+	previousIndex := valsetIdx.Index - 1
+	previousValsetTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, previousIndex)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting previous valset timestamp", "error", err)
+		return err
+	}
+	previousValset, err := k.BridgeValsetByTimestampMap.Get(ctx, previousValsetTimestamp.Timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting previous valset", "error", err)
 		return err
 	}
 	// decode the signature hex
@@ -580,7 +616,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string
 	}
 	// set the signature in the valset signatures array by finding the index of the operator address
 	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
-	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
+	for i, val := range previousValset.BridgeValidatorSet {
 		if val.EthereumAddress == ethAddressHex {
 			valsetSigs.SetSignature(i, signatureBytes)
 		}
@@ -699,4 +735,56 @@ func (k Keeper) GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error) {
 		return 0, err
 	}
 	return checkpointIdx.Index, nil
+}
+
+func (k Keeper) GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error) {
+	k.Logger(ctx).Info("@GetValidatorDidSignCheckpoint", "msg", "getting validator did sign checkpoint")
+	// get the valset index by timestamp
+	valsetIdx, err := k.ValsetTimestampToIdxMap.Get(ctx, checkpointTimestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting valset index by timestamp", "error", err)
+		return false, -1, err
+	}
+	if valsetIdx.Index == 0 {
+		k.Logger(ctx).Warn("Valset index is 0")
+		return false, -1, nil
+	}
+	// get previous valset
+	previousIndex := valsetIdx.Index - 1
+	previousValsetTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, previousIndex)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting previous valset timestamp", "error", err)
+		return false, -1, err
+	}
+	previousValset, err := k.BridgeValsetByTimestampMap.Get(ctx, previousValsetTimestamp.Timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting previous valset", "error", err)
+		return false, -1, err
+	}
+	// get the evm address associated with the operator address
+	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddr)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
+		return false, -1, err
+	}
+	// get the valset signatures array by timestamp
+	valsetSigs, err := k.BridgeValsetSignaturesMap.Get(ctx, checkpointTimestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting bridge valset signatures", "error", err)
+		return false, -1, err
+	}
+	// get the index of the evm address in the previous valset
+	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
+	for i, val := range previousValset.BridgeValidatorSet {
+		if val.EthereumAddress == ethAddressHex {
+			// check if the signature exists
+			if len(valsetSigs.Signatures[i]) != 0 {
+				k.Logger(ctx).Info("Validator did sign checkpoint", "operatorAddr", operatorAddr, "checkpointTimestamp", checkpointTimestamp, "signature", hex.EncodeToString(valsetSigs.Signatures[i]))
+				return true, int64(i), nil
+			} else {
+				return false, int64(i), nil
+			}
+		}
+	}
+	return false, -1, nil
 }

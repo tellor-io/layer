@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
+import "hardhat/console.sol";
 
 struct Validator {
     address addr;
@@ -313,6 +314,21 @@ contract BlobstreamO is ECDSA {
         Signature calldata _sig
     ) internal pure returns (bool) {
         bytes32 digest_eip191 = sha256(abi.encodePacked(_digest));
+        address recovered = ECDSA.recover(
+            digest_eip191,
+            _sig.v,
+            _sig.r,
+            _sig.s
+        );
+        console.log("Recovered: %s", recovered);
         return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
+    }
+
+    function verifySig2(
+        bytes32 _digest,
+        Signature calldata _sig
+    ) external pure returns (address recovered) {
+        bytes32 digest_eip191 = sha256(abi.encodePacked(_digest));
+        recovered = ecrecover(digest_eip191, _sig.v, _sig.r, _sig.s);
     }
 }

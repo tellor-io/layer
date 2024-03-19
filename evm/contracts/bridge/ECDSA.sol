@@ -3,6 +3,8 @@
 
 pragma solidity ^0.8.20;
 
+import "hardhat/console.sol";
+
 /**
  * @dev Elliptic Curve Digital Signature Algorithm (ECDSA) operations.
  *
@@ -53,7 +55,10 @@ contract ECDSA {
      * - with https://web3js.readthedocs.io/en/v1.3.4/web3-eth-accounts.html#sign[Web3.js]
      * - with https://docs.ethers.io/v5/api/signer/#Signer-signMessage[ethers]
      */
-    function tryRecover(bytes32 hash, bytes memory signature) internal pure returns (address, RecoverError, bytes32) {
+    function tryRecover(
+        bytes32 hash,
+        bytes memory signature
+    ) internal pure returns (address, RecoverError, bytes32) {
         if (signature.length == 65) {
             bytes32 r;
             bytes32 s;
@@ -68,7 +73,11 @@ contract ECDSA {
             }
             return tryRecover(hash, v, r, s);
         } else {
-            return (address(0), RecoverError.InvalidSignatureLength, bytes32(signature.length));
+            return (
+                address(0),
+                RecoverError.InvalidSignatureLength,
+                bytes32(signature.length)
+            );
         }
     }
 
@@ -86,8 +95,14 @@ contract ECDSA {
      * this is by receiving a hash of the original message (which may otherwise
      * be too long), and then calling {MessageHashUtils-toEthSignedMessageHash} on it.
      */
-    function recover(bytes32 hash, bytes memory signature) internal pure returns (address) {
-        (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(hash, signature);
+    function recover(
+        bytes32 hash,
+        bytes memory signature
+    ) internal pure returns (address) {
+        (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
+            hash,
+            signature
+        );
         _throwError(error, errorArg);
         return recovered;
     }
@@ -97,9 +112,16 @@ contract ECDSA {
      *
      * See https://eips.ethereum.org/EIPS/eip-2098[ERC-2098 short signatures]
      */
-    function tryRecover(bytes32 hash, bytes32 r, bytes32 vs) internal pure returns (address, RecoverError, bytes32) {
+    function tryRecover(
+        bytes32 hash,
+        bytes32 r,
+        bytes32 vs
+    ) internal pure returns (address, RecoverError, bytes32) {
         unchecked {
-            bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+            bytes32 s = vs &
+                bytes32(
+                    0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+                );
             // We do not check for an overflow here since the shift operation results in 0 or 1.
             uint8 v = uint8((uint256(vs) >> 255) + 27);
             return tryRecover(hash, v, r, s);
@@ -109,8 +131,16 @@ contract ECDSA {
     /**
      * @dev Overload of {ECDSA-recover} that receives the `r and `vs` short-signature fields separately.
      */
-    function recover(bytes32 hash, bytes32 r, bytes32 vs) internal pure returns (address) {
-        (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(hash, r, vs);
+    function recover(
+        bytes32 hash,
+        bytes32 r,
+        bytes32 vs
+    ) internal pure returns (address) {
+        (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
+            hash,
+            r,
+            vs
+        );
         _throwError(error, errorArg);
         return recovered;
     }
@@ -134,7 +164,10 @@ contract ECDSA {
         // with 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - s1 and flip v from 27 to 28 or
         // vice versa. If your library also generates signatures with 0/1 for v instead 27/28, add 27 to v to accept
         // these malleable signatures as well.
-        if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+        if (
+            uint256(s) >
+            0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0
+        ) {
             return (address(0), RecoverError.InvalidSignatureS, s);
         }
 
@@ -151,8 +184,18 @@ contract ECDSA {
      * @dev Overload of {ECDSA-recover} that receives the `v`,
      * `r` and `s` signature fields separately.
      */
-    function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal pure returns (address) {
-        (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(hash, v, r, s);
+    function recover(
+        bytes32 hash,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal pure returns (address) {
+        (address recovered, RecoverError error, bytes32 errorArg) = tryRecover(
+            hash,
+            v,
+            r,
+            s
+        );
         _throwError(error, errorArg);
         return recovered;
     }
@@ -172,7 +215,7 @@ contract ECDSA {
         }
     }
 
-        /**
+    /**
      * @dev Returns the keccak256 digest of an ERC-191 signed data with version
      * `0x45` (`personal_sign` messages).
      *
@@ -186,7 +229,9 @@ contract ECDSA {
      *
      * See {ECDSA-recover}.
      */
-    function toEthSignedMessageHash(bytes32 messageHash) internal pure returns (bytes32 digest) {
+    function toEthSignedMessageHash(
+        bytes32 messageHash
+    ) internal pure returns (bytes32 digest) {
         /// @solidity memory-safe-assembly
         assembly {
             mstore(0x00, "\x19Ethereum Signed Message:\n32") // 32 is the bytes-length of messageHash
