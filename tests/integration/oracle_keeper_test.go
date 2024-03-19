@@ -25,6 +25,8 @@ import (
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
+// testtipquerynotincyclelisttwodelegators
+
 func (s *IntegrationTestSuite) oracleKeeper() (queryClient types.QueryClient, msgServer types.MsgServer) {
 	types.RegisterQueryServer(s.queryHelper, s.oraclekeeper)
 	types.RegisterInterfaces(s.interfaceRegistry)

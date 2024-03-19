@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *E2ETestSuite) TestInitialMint() {
@@ -180,16 +180,17 @@ func (s *E2ETestSuite) TestBecomeValidator() {
 
 // }
 
-func (s *E2ETestSuite) TestReporterAndValidator() {
+func (s *E2ETestSuite) TestStaking() {
 	require := s.Require()
-	//// Create Validator Accounts
-	numAccounts := 10
+
+	// Create Validator Accounts
+	numValidators := 10
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
 	_ = new(big.Int).Mul(big.NewInt(1000), base)
 	// make addresses
-	testAddresses := simtestutil.CreateIncrementalAccounts(numAccounts)
+	testAddresses := simtestutil.CreateIncrementalAccounts(numValidators)
 	// mint 50k tokens to minter account and send to each address
-	initCoins := sdk.NewCoin(s.denom, math.NewInt(500000))
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(5000*1e6))
 	for _, addr := range testAddresses {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, addr, sdk.NewCoins(initCoins)))
@@ -197,7 +198,8 @@ func (s *E2ETestSuite) TestReporterAndValidator() {
 	// get val address for each test address
 	valAddresses := simtestutil.ConvertAddrsToValAddrs(testAddresses)
 	// create pub keys for each address
-	pubKeys := simtestutil.CreateTestPubKeys(numAccounts)
+	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
+
 	// set each account with proper keepers
 	for i, pubKey := range pubKeys {
 		s.accountKeeper.NewAccountWithAddress(s.ctx, testAddresses[i])
@@ -206,9 +208,11 @@ func (s *E2ETestSuite) TestReporterAndValidator() {
 		s.stakingKeeper.SetValidator(s.ctx, validator)
 		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
 		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
-		randomNumber := rand.Intn(500000-100000+1) + 1 // random number from 1 to 50k as amount delegated for stake
-		fmt.Println(randomNumber)
-		s.stakingKeeper.Delegate(s.ctx, testAddresses[i], math.NewInt(int64(randomNumber)), stakingtypes.Unbonded, validator, true)
+
+		randomStakeAmount := rand.Intn(5000-1000+1) + 1000
+		require.True(randomStakeAmount >= 1000 && randomStakeAmount <= 5000, "randomStakeAmount is not within the expected range")
+		_, err = s.stakingKeeper.Delegate(s.ctx, testAddresses[i], math.NewInt(int64(randomStakeAmount)*1e6), stakingtypes.Unbonded, validator, true)
+		require.NoError(err)
 		// call hooks for distribution init
 		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
@@ -228,38 +232,91 @@ func (s *E2ETestSuite) TestReporterAndValidator() {
 	// check that everyone is a bonded validator
 	validatorSet, err := s.stakingKeeper.GetAllValidators(s.ctx)
 	require.NoError(err)
-	fmt.Println("validator set: ", validatorSet)
+	for _, val := range validatorSet {
+		status := val.GetStatus()
+		require.Equal(stakingtypes.Bonded.String(), status.String())
+	}
 
-	// s.reporterkeeper.JailReporter()
+	// create 3 delegators
+	const (
+		reporter     = "reporter"
+		delegatorI   = "delegator1"
+		delegatorII  = "delegator2"
+		delegatorIII = "delegator3"
+	)
 
-	// for _, val := range validatorSet {
-	// 	// fmt.Println("validator: ", val)
-	// 	// skVal, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(val.GetOperator()))
-	// 	// status := skVal.GetStatus()
-	// 	// // require.Nil(err)
-	// 	// require.Equal(stakingtypes.Bonded.String(), status.String())
-	// }
+	type Delegator struct {
+		delegatorAddress sdk.AccAddress
+		validator        stakingtypes.Validator
+		tokenAmount      math.Int
+	}
 
-	// create validators
+	numDelegators := 4
+	// create random private keys for each delegator
+	delegatorPrivateKeys := make([]secp256k1.PrivKey, numDelegators)
+	for i := 0; i < numDelegators; i++ {
+		pk := secp256k1.GenPrivKey()
+		delegatorPrivateKeys[i] = *pk
+	}
+	// turn private keys into accounts
+	delegatorAccounts := make([]sdk.AccAddress, numDelegators)
+	for i, pk := range delegatorPrivateKeys {
+		delegatorAccounts[i] = sdk.AccAddress(pk.PubKey().Address())
+		// give each account tokens
+		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, delegatorAccounts[i], sdk.NewCoins(initCoins)))
+	}
+	// define each delegator
+	delegators := map[string]Delegator{
+		reporter:     {delegatorAddress: delegatorAccounts[0], validator: validatorSet[1], tokenAmount: math.NewInt(100 * 1e6)},
+		delegatorI:   {delegatorAddress: delegatorAccounts[1], validator: validatorSet[1], tokenAmount: math.NewInt(100 * 1e6)},
+		delegatorII:  {delegatorAddress: delegatorAccounts[2], validator: validatorSet[1], tokenAmount: math.NewInt(100 * 1e6)},
+		delegatorIII: {delegatorAddress: delegatorAccounts[3], validator: validatorSet[2], tokenAmount: math.NewInt(100 * 1e6)},
+	}
+	// delegate to validators
+	for _, del := range delegators {
+		_, err := s.stakingKeeper.Delegate(s.ctx, del.delegatorAddress, del.tokenAmount, stakingtypes.Unbonded, del.validator, true)
+		require.NoError(err)
+	}
 
-	// // create reporters
-	// createReportMsg := &reportertypes.MsgCreateReporter{
-	// 	Reporter:
-	// 	Amount:
-	// 	TokenOrigins:
-	// 	Commission:
-	// }
-	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
-	require.NotNil(reporterMsgServer)
-	// _, err = reporterMsgServer.CreateReporter(s.ctx, createReporterMsg)
-	// report for whatever is in cycle list
+	// set up reporter module msgServer
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	require.NotNil(msgServerReporter)
+	// define reporter params
+	var createReporterMsg reportertypes.MsgCreateReporter
+	reporterAddress := delegators[reporter].delegatorAddress.String()
+	amount := math.NewInt(100 * 1e6)
+	source := reportertypes.TokenOrigin{ValidatorAddress: validatorSet[1].GetOperator(), Amount: math.NewInt(100 * 1e6)}
+	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+	// fill in createReporterMsg
+	createReporterMsg.Reporter = reporterAddress
+	createReporterMsg.Amount = amount
+	createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&source}
+	createReporterMsg.Commission = &commission
+	// create reporter through msg server
+	_, err = msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
+	require.NoError(err)
+	// check that reporter was created correctly
+	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
+	require.NoError(err)
+	require.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	require.Equal(oracleReporter.TotalTokens, math.NewInt(100*1e6))
+	require.Equal(oracleReporter.Jailed, false)
 
-	// currentTime := s.ctx.BlockTime()
-	// fmt.Println(currentTime)
-	// s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second)) // add 10 minutes
-	// newTime := s.ctx.BlockTime()
-	// fmt.Println(newTime)
-
+	// delegate to reporter
+	source = reportertypes.TokenOrigin{ValidatorAddress: validatorSet[1].GetOperator(), Amount: math.NewInt(25 * 1e6)}
+	delegation := reportertypes.NewMsgDelegateReporter(
+		delegators[delegatorI].delegatorAddress.String(),
+		delegators[reporter].delegatorAddress.String(),
+		math.NewInt(25*1e6),
+		[]*reportertypes.TokenOrigin{&source},
+	)
+	_, err = msgServerReporter.DelegateReporter(s.ctx, delegation)
+	require.NoError(err)
+	delegationReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
+	require.NoError(err)
+	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.String())
 }
 
 func (s *E2ETestSuite) TestValidateCycleList() {
@@ -268,8 +325,8 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	// block 0
 	_, err := s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	firstQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.Equal(btcQueryData[2:], firstQuery)
+	firstInCycle := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.Equal(btcQueryData[2:], firstInCycle)
 	require.Equal(s.ctx.BlockHeight(), int64(0))
 
 	// block 1
@@ -277,17 +334,23 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 	require.Equal(s.ctx.BlockHeight(), int64(1))
-	secondQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.Equal(trbQueryData[2:], secondQuery)
+	secondInCycle := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.Equal(trbQueryData[2:], secondInCycle)
 
 	// block 2
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 	require.Equal(s.ctx.BlockHeight(), int64(2))
-	thirdQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.Equal(ethQueryData[2:], thirdQuery)
+	thirdInCycle := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.Equal(ethQueryData[2:], thirdInCycle)
 }
+
+// currentTime := s.ctx.BlockTime()
+// fmt.Println(currentTime)
+// s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second)) // add 10 minutes
+// newTime := s.ctx.BlockTime()
+// fmt.Println(newTime)
 
 func (s *E2ETestSuite) TestSubmit() {
 	// require := s.Require()
