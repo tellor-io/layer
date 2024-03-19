@@ -660,6 +660,7 @@ func (m *MsgUnjailReporterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnjailReporterResponse proto.InternalMessageInfo
 
+// MsgWithdrawTip defines the Msg/WithdrawTip request type.
 type MsgWithdrawTip struct {
 	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
 	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
@@ -712,6 +713,7 @@ func (m *MsgWithdrawTip) GetValidatorAddress() string {
 	return ""
 }
 
+// MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
 type MsgWithdrawTipResponse struct {
 }
 
@@ -862,6 +864,7 @@ type MsgClient interface {
 	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
+	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ...grpc.CallOption) (*MsgWithdrawTipResponse, error)
 }
 
@@ -964,6 +967,7 @@ type MsgServer interface {
 	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
+	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error)
 }
 

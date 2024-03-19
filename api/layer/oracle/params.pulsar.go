@@ -14,62 +14,14 @@ import (
 	sync "sync"
 )
 
-var _ protoreflect.List = (*_Params_1_list)(nil)
-
-type _Params_1_list struct {
-	list *[]string
-}
-
-func (x *_Params_1_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_Params_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
-}
-
-func (x *_Params_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_Params_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_Params_1_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message Params at list field CycleList as it is not of Message kind"))
-}
-
-func (x *_Params_1_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_Params_1_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
-}
-
-func (x *_Params_1_list) IsValid() bool {
-	return x.list != nil
-}
-
 var (
 	md_Params                protoreflect.MessageDescriptor
-	fd_Params_cycle_list     protoreflect.FieldDescriptor
 	fd_Params_minStakeAmount protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_oracle_params_proto_init()
 	md_Params = File_layer_oracle_params_proto.Messages().ByName("Params")
-	fd_Params_cycle_list = md_Params.Fields().ByName("cycle_list")
 	fd_Params_minStakeAmount = md_Params.Fields().ByName("minStakeAmount")
 }
 
@@ -138,12 +90,6 @@ func (x *fastReflection_Params) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.CycleList) != 0 {
-		value := protoreflect.ValueOfList(&_Params_1_list{list: &x.CycleList})
-		if !f(fd_Params_cycle_list, value) {
-			return
-		}
-	}
 	if x.MinStakeAmount != "" {
 		value := protoreflect.ValueOfString(x.MinStakeAmount)
 		if !f(fd_Params_minStakeAmount, value) {
@@ -165,8 +111,6 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.oracle.Params.cycle_list":
-		return len(x.CycleList) != 0
 	case "layer.oracle.Params.minStakeAmount":
 		return x.MinStakeAmount != ""
 	default:
@@ -185,8 +129,6 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.oracle.Params.cycle_list":
-		x.CycleList = nil
 	case "layer.oracle.Params.minStakeAmount":
 		x.MinStakeAmount = ""
 	default:
@@ -205,12 +147,6 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.oracle.Params.cycle_list":
-		if len(x.CycleList) == 0 {
-			return protoreflect.ValueOfList(&_Params_1_list{})
-		}
-		listValue := &_Params_1_list{list: &x.CycleList}
-		return protoreflect.ValueOfList(listValue)
 	case "layer.oracle.Params.minStakeAmount":
 		value := x.MinStakeAmount
 		return protoreflect.ValueOfString(value)
@@ -234,10 +170,6 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.oracle.Params.cycle_list":
-		lv := value.List()
-		clv := lv.(*_Params_1_list)
-		x.CycleList = *clv.list
 	case "layer.oracle.Params.minStakeAmount":
 		x.MinStakeAmount = value.Interface().(string)
 	default:
@@ -260,12 +192,6 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Params.cycle_list":
-		if x.CycleList == nil {
-			x.CycleList = []string{}
-		}
-		value := &_Params_1_list{list: &x.CycleList}
-		return protoreflect.ValueOfList(value)
 	case "layer.oracle.Params.minStakeAmount":
 		panic(fmt.Errorf("field minStakeAmount of message layer.oracle.Params is not mutable"))
 	default:
@@ -281,9 +207,6 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Params.cycle_list":
-		list := []string{}
-		return protoreflect.ValueOfList(&_Params_1_list{list: &list})
 	case "layer.oracle.Params.minStakeAmount":
 		return protoreflect.ValueOfString("")
 	default:
@@ -355,12 +278,6 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if len(x.CycleList) > 0 {
-			for _, s := range x.CycleList {
-				l = len(s)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
 		l = len(x.MinStakeAmount)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -399,16 +316,7 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.MinStakeAmount)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MinStakeAmount)))
 			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.CycleList) > 0 {
-			for iNdEx := len(x.CycleList) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.CycleList[iNdEx])
-				copy(dAtA[i:], x.CycleList[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CycleList[iNdEx])))
-				i--
-				dAtA[i] = 0xa
-			}
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -460,38 +368,6 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CycleList", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.CycleList = append(x.CycleList, string(dAtA[iNdEx:postIndex]))
-				iNdEx = postIndex
-			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinStakeAmount", wireType)
 				}
@@ -577,8 +453,7 @@ type Params struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CycleList      []string `protobuf:"bytes,1,rep,name=cycle_list,json=cycleList,proto3" json:"cycle_list,omitempty"`
-	MinStakeAmount string   `protobuf:"bytes,2,opt,name=minStakeAmount,proto3" json:"minStakeAmount,omitempty"`
+	MinStakeAmount string `protobuf:"bytes,1,opt,name=minStakeAmount,proto3" json:"minStakeAmount,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -601,13 +476,6 @@ func (*Params) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_params_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Params) GetCycleList() []string {
-	if x != nil {
-		return x.CycleList
-	}
-	return nil
-}
-
 func (x *Params) GetMinStakeAmount() string {
 	if x != nil {
 		return x.MinStakeAmount
@@ -623,11 +491,9 @@ var file_layer_oracle_params_proto_rawDesc = []byte{
 	0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
-	0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x9d, 0x01, 0x0a, 0x06, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x5f, 0x6c,
-	0x69, 0x73, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65,
-	0x4c, 0x69, 0x73, 0x74, 0x12, 0x6e, 0x0a, 0x0e, 0x6d, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x65,
-	0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x46, 0xc8, 0xde,
+	0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7e, 0x0a, 0x06, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x12, 0x6e, 0x0a, 0x0e, 0x6d, 0x69, 0x6e, 0x53, 0x74, 0x61, 0x6b, 0x65,
+	0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x46, 0xc8, 0xde,
 	0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
 	0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xf2, 0xde, 0x1f, 0x17, 0x79,
 	0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6d, 0x69, 0x6e, 0x5f, 0x73, 0x74, 0x61, 0x6b, 0x65, 0x5f, 0x61,

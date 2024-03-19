@@ -40,6 +40,8 @@ service Msg {
 
   // UnjailReporter defines a method to unjail a jailed reporter.
   rpc UnjailReporter(MsgUnjailReporter) returns (MsgUnjailReporterResponse);
+
+  // WithdrawTip defines a method to withdraw tip from a reporter module.
   rpc WithdrawTip(MsgWithdrawTip) returns (MsgWithdrawTipResponse);
 }
 

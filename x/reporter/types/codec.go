@@ -15,8 +15,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateParams{},
 		&MsgWithdrawDelegatorReward{},
 		&MsgWithdrawReporterCommission{},
-	)
-	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgWithdrawTip{},
 	)
 	// this line is used by starport scaffolding # 3
