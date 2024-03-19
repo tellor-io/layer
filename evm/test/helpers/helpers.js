@@ -19,6 +19,81 @@ getLatestBlockNumber = async () => {
   }
 }
 
+getValsetTimestampByIndex = async (index) => {
+  url = "http://localhost:1317/layer/bridge/get_validator_timestamp_by_index/" + index
+  try {
+    const response = await axios.get(url)
+    timestamp = response.data.timestamp
+    return timestamp
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getValsetCheckpointParams = async (timestamp) => {
+  url = "http://localhost:1317/layer/bridge/get_validator_checkpoint_params/" + timestamp
+  try {
+    const response = await axios.get(url)
+    checkpointParams = {
+      checkpoint: '0x' + response.data.checkpoint,
+      valsetHash: '0x' + response.data.valsetHash,
+      timestamp: response.data.timestamp,
+      powerThreshold: response.data.powerThreshold
+    }
+    return checkpointParams
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getValset = async (timestamp) => {
+  url = "http://localhost:1317/layer/bridge/get_valset_by_timestamp/" + timestamp
+  try {
+    const response = await axios.get(url)
+    valsetResponse = response.data.bridgeValidatorSet
+    valset = []
+    for (i = 0; i < valsetResponse.length; i++) {
+      valset.push({
+        addr: '0x' + valsetResponse[i].ethereumAddress,
+        power: valsetResponse[i].power
+      })
+    }
+    return valset
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getValsetSigs = async (timestamp) => {
+  url = "http://localhost:1317/layer/bridge/get_valset_sigs/" + timestamp
+  try {
+    const response = await axios.get(url)
+    sigsResponse = response.data.signatures
+    sigs = []
+    for (i = 0; i < sigsResponse.length; i++) {
+      if (sigsResponse[i].length == 130) {
+        sigs.push({
+          v: 27,
+          r:
+            '0x' + sigsResponse[i].slice(2, 66),
+          s:
+            '0x' + sigsResponse[i].slice(66, 130)
+        })
+      } else {
+        sigs.push({
+          v: 0,
+          r: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          s: '0x0000000000000000000000000000000000000000000000000000000000000000'
+        })
+      }
+
+    }
+    return sigs
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 
 getValidatorSet = async (height) => {
   url = "http://localhost:1317/layer/bridge/blockvalidators?height=" + height
@@ -244,5 +319,10 @@ module.exports = {
   getValSetStructArray,
   getSigStructArray,
   getOracleDataStruct,
-  getDataDigest
+  getDataDigest,
+  getValsetTimestampByIndex,
+  getValsetCheckpointParams,
+  getValset,
+  getValsetSigs,
 };
+

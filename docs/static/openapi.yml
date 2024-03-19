@@ -237,6 +237,51 @@ paths:
           format: int64
       tags:
         - Query
+  /layer/bridge/get_valset_by_timestamp/{timestamp}:
+    get:
+      operationId: LayerBridgeGetValsetByTimestamp
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              bridgeValidatorSet:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ethereumAddress:
+                      type: string
+                    power:
+                      type: string
+                      format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: timestamp
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /layer/bridge/get_valset_sigs/{timestamp}:
     get:
       operationId: LayerBridgeGetValsetSigs
@@ -2336,6 +2381,12 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  layer.bridge.MsgRegisterOperatorPubkeyResponse:
+    type: object
+  layer.bridge.MsgSubmitBridgeValsetSignatureResponse:
+    type: object
+  layer.bridge.MsgSubmitOracleAttestationResponse:
+    type: object
   layer.bridge.BridgeValidator:
     type: object
     properties:
@@ -2396,6 +2447,19 @@ definitions:
       timestamp:
         type: string
         format: int64
+  layer.bridge.QueryGetValsetByTimestampResponse:
+    type: object
+    properties:
+      bridgeValidatorSet:
+        type: array
+        items:
+          type: object
+          properties:
+            ethereumAddress:
+              type: string
+            power:
+              type: string
+              format: uint64
   layer.bridge.QueryGetValsetSigsResponse:
     type: object
     properties:
@@ -2410,12 +2474,6 @@ definitions:
         description: params holds all the parameters of this module.
         type: object
     description: QueryParamsResponse is response type for the Query/Params RPC method.
-  layer.bridge.MsgRegisterOperatorPubkeyResponse:
-    type: object
-  layer.bridge.MsgSubmitBridgeValsetSignatureResponse:
-    type: object
-  layer.bridge.MsgSubmitOracleAttestationResponse:
-    type: object
   layer.daemons.ExchangePrice:
     type: object
     properties:

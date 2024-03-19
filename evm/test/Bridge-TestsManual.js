@@ -6,6 +6,7 @@ const web3 = require('web3');
 const { prependOnceListener } = require("process");
 const BN = ethers.BigNumber.from
 const abiCoder = new ethers.utils.AbiCoder();
+const axios = require('axios');
 
 
 describe("BlobstreamO - Manual Function and e2e Tests", function () {
@@ -483,6 +484,32 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
             sigStructArray1
         )
 
+    })
+
+    it.only("query layer api, deploy and verify with real params", async function () {
+        // get val timestamp from api: http://localhost:1317/layer/bridge/get_validator_timestamp_by_index/0
+        vts0 = await h.getValsetTimestampByIndex(0)
+        vp0 = await h.getValsetCheckpointParams(vts0)
+        console.log("valsetTimestamp0: ", vts0)
+        console.log("valsetCheckpointParams0: ", vp0)
+
+        const Bridge = await ethers.getContractFactory("BlobstreamO");
+        bridge = await Bridge.deploy(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address);
+
+        vts1 = await h.getValsetTimestampByIndex(1)
+        vp1 = await h.getValsetCheckpointParams(vts1)
+        console.log("valsetTimestamp1: ", vts1)
+        console.log("valsetCheckpointParams1: ", vp1)
+        valSet0 = await h.getValset(vp0.timestamp)
+        valSet1 = await h.getValset(vp1.timestamp)
+        console.log("valSet0: ", valSet0)
+        console.log("valSet1: ", valSet1)
+
+        vsigs1 = await h.getValsetSigs(vp1.timestamp)
+        vsigs1.pop()
+        console.log("valsetSigs1: ", vsigs1)
+
+        await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
     })
 
 

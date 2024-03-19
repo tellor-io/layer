@@ -195,7 +195,7 @@ contract BlobstreamO is ECDSA {
                 continue;
             }
             // Check that the current validator has signed off on the hash.
-            if (!_verifySig(_currentValidators[i].addr, _digest, _sigs[i])) {
+            if (!_verifySig2(_currentValidators[i].addr, _digest, _sigs[i])) {
                 revert InvalidSignature();
             }
             _cumulativePower += _currentValidators[i].power;
@@ -304,6 +304,15 @@ contract BlobstreamO is ECDSA {
         Signature calldata _sig
     ) internal pure returns (bool) {
         bytes32 digest_eip191 = ECDSA.toEthSignedMessageHash(_digest);
+        return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
+    }
+
+    function _verifySig2(
+        address _signer,
+        bytes32 _digest,
+        Signature calldata _sig
+    ) internal pure returns (bool) {
+        bytes32 digest_eip191 = sha256(abi.encodePacked(_digest));
         return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
     }
 }

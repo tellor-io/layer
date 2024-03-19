@@ -46,6 +46,10 @@ service Query {
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
   }
+
+  rpc GetValsetByTimestamp (QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
+    option (google.api.http).get = "/layer/bridge/get_valset_by_timestamp/{timestamp}";
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -138,4 +142,12 @@ message QueryGetEvmAddressByValidatorAddressRequest {
 
 message QueryGetEvmAddressByValidatorAddressResponse {
   string evmAddress = 1;
+}
+
+message QueryGetValsetByTimestampRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValsetByTimestampResponse {
+  repeated BridgeValidator bridgeValidatorSet = 1;
 }

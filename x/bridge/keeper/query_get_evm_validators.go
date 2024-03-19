@@ -9,17 +9,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetEvmAddressByValidatorAddress(goCtx context.Context, req *types.QueryGetEvmAddressByValidatorAddressRequest) (*types.QueryGetEvmAddressByValidatorAddressResponse, error) {
+func (k Keeper) GetEvmValidators(goCtx context.Context, req *types.QueryGetEvmValidatorsRequest) (*types.QueryGetEvmValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	ethAddress, err := k.GetEVMAddressByOperator(ctx, req.ValidatorAddress)
+	ethAddresses, err := k.GetCurrentValidatorsEVMCompatible(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to get eth address")
+		return nil, status.Error(codes.Internal, "failed to get current validators")
+	}
+	ethAddressesStr := make([]string, len(ethAddresses))
+	for i, ethAddresses := range ethAddresses {
+		ethAddressesStr[i] = ethAddresses.EthereumAddress
 	}
 
-	return &types.QueryGetEvmAddressByValidatorAddressResponse{EvmAddress: ethAddress}, nil
+	return &types.QueryGetEvmValidatorsResponse{BridgeValidatorSet: ethAddresses}, nil
 }

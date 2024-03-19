@@ -64,5 +64,11 @@ echo $PASSWORD | ./layerd keys export alice --keyring-backend $KEYRING_BACKEND -
 echo "Importing alice key to test backend..."
 echo $PASSWORD | ./layerd keys import alice ~/Desktop/alice_keyfile --keyring-backend test --home ~/.layer/alice
 
+# Export bill key from os backend and import to test backend
+echo "Exporting bill key..."
+echo $PASSWORD | ./layerd keys export bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill > ~/Desktop/bill_keyfile
+echo "Importing bill key to test backend..."
+echo $PASSWORD | ./layerd keys import bill ~/Desktop/bill_keyfile --keyring-backend test --home ~/.layer/bill
+
 echo "Start chain..."
 ./layerd start --home ~/.layer/alice --api.enable --api.swagger

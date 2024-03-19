@@ -239,20 +239,31 @@ func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *ty
 		return err
 	}
 
-	valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
+	valsetIdx, err := k.LatestCheckpointIdx.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
+		// TODO: handle error?
+	}
+	if valsetIdx.Index == 0 {
+		return nil
+	}
+	previousValsetTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, valsetIdx.Index-1)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting previous valset timestamp: ", "error", err)
+		return err
+	}
+	previousValset, err := k.BridgeValsetByTimestampMap.Get(ctx, previousValsetTimestamp.Timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting previous valset: ", "error", err)
+		return err
+	}
+
+	valsetSigs := types.NewBridgeValsetSignatures(len(previousValset.BridgeValidatorSet))
 	err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting bridge valset signatures: ", "error", err)
 		return err
 	}
-
-	// Emit EventTypeBridgeValidatorSetUpdated event
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeBridgeValidatorSetUpdated, // Assuming types.EventTypeBridgeValidatorSetUpdated is the constant for the event type
-			sdk.NewAttribute(types.AttributeKeyValidatorSetCheckpoint, fmt.Sprintf("%x", checkpoint)),
-		),
-	)
 
 	return nil
 }
