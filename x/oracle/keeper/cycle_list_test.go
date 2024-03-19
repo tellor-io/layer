@@ -17,18 +17,23 @@ func (s *KeeperTestSuite) TestRotateQueries() {
 	// require := s.Require()
 
 	// fmt.Println(s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
+	// currentBlockHeight := s.
 	// require.Equal(ethQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
+
 	// _ = s.oracleKeeper.RotateQueries(s.ctx)
+
 	// fmt.Println(s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	// require.Equal(btcQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	// _ = s.oracleKeeper.RotateQueries(s.ctx)
+
 	// fmt.Println(s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	// require.Equal(trbQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	// _ = s.oracleKeeper.RotateQueries(s.ctx)
+
 	// fmt.Println(s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 	// require.Equal(ethQueryData, s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx))
 
-	// Rotate queries
+	// // Rotate queries
 	// queries := s.oracleKeeper.GetCycleList(s.ctx)
 	// for i := 0; i < 10; i++ {
 	// 	// Rotate queries
