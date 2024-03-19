@@ -60,10 +60,11 @@ func NewReportsIndex(sb *collections.SchemaBuilder) reportsIndex {
 
 type queryMetaIndex struct {
 	HasReveals *indexes.Multi[bool, []byte, types.QueryMeta]
+	QueryType  *indexes.Multi[string, []byte, types.QueryMeta]
 }
 
 func (a queryMetaIndex) IndexesList() []collections.Index[[]byte, types.QueryMeta] {
-	return []collections.Index[[]byte, types.QueryMeta]{a.HasReveals}
+	return []collections.Index[[]byte, types.QueryMeta]{a.HasReveals, a.QueryType}
 }
 
 func NewQueryIndex(sb *collections.SchemaBuilder) queryMetaIndex {
@@ -73,6 +74,13 @@ func NewQueryIndex(sb *collections.SchemaBuilder) queryMetaIndex {
 			collections.BoolKey, collections.BytesKey,
 			func(_ []byte, v types.QueryMeta) (bool, error) {
 				return v.HasRevealedReports, nil
+			},
+		),
+		QueryType: indexes.NewMulti(
+			sb, types.QueryTypeIndexPrefix, "query_by_type",
+			collections.StringKey, collections.BytesKey,
+			func(_ []byte, v types.QueryMeta) (string, error) {
+				return v.QueryType, nil
 			},
 		),
 	}

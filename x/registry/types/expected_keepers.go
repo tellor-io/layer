@@ -17,3 +17,7 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
 }
+
+type RegistryHooks interface {
+	AfterDataSpecUpdated(ctx context.Context, querytype string, dataspec DataSpec) error
+}

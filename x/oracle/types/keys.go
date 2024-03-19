@@ -43,6 +43,7 @@ var (
 	NextInListPrefix            = collections.NewPrefix(15)
 	QueryRevealedIdsIndexPrefix = collections.NewPrefix(16)
 	CyclelistPrefix             = collections.NewPrefix(17)
+	QueryTypeIndexPrefix        = collections.NewPrefix(18)
 )
 
 func KeyPrefix(p string) []byte {

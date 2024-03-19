@@ -21,6 +21,7 @@ type (
 		Params       collections.Item[types.Params]
 		SpecRegistry collections.Map[string, types.DataSpec]
 		Schema       collections.Schema
+		hooks        types.RegistryHooks
 
 		authority string
 	}
@@ -60,4 +61,12 @@ func (k Keeper) GetAuthority() string {
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k *Keeper) SetHooks(sh types.RegistryHooks) {
+	if k.hooks != nil {
+		panic("cannot set registry hooks twice")
+	}
+
+	k.hooks = sh
 }

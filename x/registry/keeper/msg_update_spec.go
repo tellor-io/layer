@@ -16,8 +16,10 @@ func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDat
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	// normalize query type
+	req.QueryType = strings.ToLower(req.QueryType)
 	// check if the query type exists
-	querytypeExists, err := k.Keeper.HasSpec(ctx, strings.ToLower(req.QueryType))
+	querytypeExists, err := k.Keeper.HasSpec(ctx, req.QueryType)
 	if err != nil {
 		return nil, err
 	}
@@ -25,6 +27,10 @@ func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDat
 		return nil, errorsmod.Wrapf(types.ErrInvalidSpec, "data spec not registered for query type: %s", req.QueryType)
 	}
 	if err := k.Keeper.SetDataSpec(ctx, req.QueryType, req.Spec); err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.hooks.AfterDataSpecUpdated(ctx, req.QueryType, req.Spec); err != nil {
 		return nil, err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -150,4 +151,24 @@ func (k Keeper) initializeQuery(ctx context.Context, querydata string) (types.Qu
 		QueryId:               HashQueryData(queryDataBytes),
 	}
 	return query, nil
+}
+
+func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe time.Duration) error {
+	iter, err := k.Query.Indexes.QueryType.MatchExact(ctx, queryType)
+	if err != nil {
+		return err
+	}
+
+	queries, err := indexes.CollectValues(ctx, k.Query, iter)
+	if err != nil {
+		return err
+	}
+	for _, query := range queries {
+		query.RegistrySpecTimeframe = newTimeframe
+		err = k.Query.Set(ctx, query.QueryId, query)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -28,4 +28,5 @@ message QueryMeta {
   ];
   bool hasRevealedReports = 5;
   bytes query_id = 6;
+  string query_type = 7;
 }

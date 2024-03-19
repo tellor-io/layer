@@ -38,3 +38,7 @@ type ReporterKeeper interface {
 	AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error
 	Reporter(ctx context.Context, repAddress sdk.AccAddress) (*reportertypes.OracleReporter, error)
 }
+
+type RegistryHooks interface {
+	AfterDataSpecUpdated(ctx context.Context, querytype string, dataspec rktypes.DataSpec) error
+}

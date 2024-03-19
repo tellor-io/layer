@@ -709,6 +709,12 @@ func New(
 		),
 	)
 
+	app.RegistryKeeper.SetHooks(
+		registrymoduletypes.NewMultiRegistryHooks(
+			app.OracleKeeper.Hooks(),
+		),
+	)
+
 	/**** Module Options ****/
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
