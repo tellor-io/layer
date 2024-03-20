@@ -16,6 +16,8 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         bridgeCaller;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
 
+    const ETH_USD_QUERY_ID = "0x83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+
     beforeEach(async function () {
         accounts = await ethers.getSigners();
         guardian = accounts[10]
@@ -529,6 +531,30 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
 
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
+
+        currentEthUsdVal = await h.getCurrentAggregateReport(ETH_USD_QUERY_ID)
+        console.log("currentEthUsdVal: ", currentEthUsdVal)
+
+        dataBefore = await h.getDataBefore(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp)
+        console.log("dataBefore: ", dataBefore)
+
+        currentEthUsdVal.report.previousTimestamp = dataBefore.timestamp
+        console.log("currentEthUsdVal: ", currentEthUsdVal)
+        dataDigest = await h.domainSeparateOracleAttestationData(currentEthUsdVal, vp1.checkpoint)
+        console.log("dataDigest: ", dataDigest)
+
+        // oAttestations = await h.getOracleAttestations(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp, valSet1, dataDigest)
+        oAttestations = await h.getOracleAttestationsCheat(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp)
+        oAttestations[0].v = 27
+        console.log("oAttestations: ", oAttestations)
+        await bridge.verifyOracleData(
+            currentEthUsdVal,
+            valSet1,
+            oAttestations,
+        )
+
+
+
     })
 
 

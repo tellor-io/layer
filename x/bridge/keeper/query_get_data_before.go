@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -10,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetCurrentAggregateReport(goCtx context.Context, req *types.QueryGetCurrentAggregateReportRequest) (*types.QueryGetCurrentAggregateReportResponse, error) {
+func (k Keeper) GetDataBefore(goCtx context.Context, req *types.QueryGetDataBeforeRequest) (*types.QueryGetDataBeforeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -21,9 +22,12 @@ func (k Keeper) GetCurrentAggregateReport(goCtx context.Context, req *types.Quer
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid query id")
 	}
-	aggregate, timestamp := k.oracleKeeper.GetCurrentAggregateReport(ctx, queryIdBytes)
+	aggregate, timestamp, err := k.oracleKeeper.GetAggregateBefore(ctx, queryIdBytes, time.Unix(req.Timestamp, 0))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to get aggregate before")
+	}
 	if aggregate == nil {
-		return nil, status.Error(codes.NotFound, "aggregate not found")
+		return nil, status.Error(codes.NotFound, "aggregate before not found")
 	}
 	timeUnix := timestamp.Unix()
 
@@ -50,7 +54,7 @@ func (k Keeper) GetCurrentAggregateReport(goCtx context.Context, req *types.Quer
 		Height:               aggregate.Height,
 	}
 
-	return &types.QueryGetCurrentAggregateReportResponse{
+	return &types.QueryGetDataBeforeResponse{
 		Aggregate: &bridgeAggregate,
 		Timestamp: uint64(timeUnix),
 	}, nil

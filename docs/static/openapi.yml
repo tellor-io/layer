@@ -4,6 +4,157 @@ info:
   name: ''
   description: ''
 paths:
+  /layer/bridge/get_current_aggregate_report/{queryId}:
+    get:
+      operationId: LayerBridgeGetCurrentAggregateReport
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              aggregate:
+                type: object
+                properties:
+                  queryId:
+                    type: string
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                  flagged:
+                    type: boolean
+                  nonce:
+                    type: string
+                    format: int64
+                  aggregateReportIndex:
+                    type: string
+                    format: int64
+                  height:
+                    type: string
+                    format: int64
+              timestamp:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/bridge/get_data_before/{queryId}/{timestamp}:
+    get:
+      operationId: LayerBridgeGetDataBefore
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              aggregate:
+                type: object
+                properties:
+                  queryId:
+                    type: string
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                  flagged:
+                    type: boolean
+                  nonce:
+                    type: string
+                    format: int64
+                  aggregateReportIndex:
+                    type: string
+                    format: int64
+                  height:
+                    type: string
+                    format: int64
+              timestamp:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryId
+          in: path
+          required: true
+          type: string
+        - name: timestamp
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
   /layer/bridge/get_evm_address_by_validator_address/{validatorAddress}:
     get:
       operationId: LayerBridgeGetEvmAddressByValidatorAddress
@@ -2387,6 +2538,50 @@ definitions:
     type: object
   layer.bridge.MsgSubmitOracleAttestationResponse:
     type: object
+  layer.bridge.Aggregate:
+    type: object
+    properties:
+      queryId:
+        type: string
+      aggregateValue:
+        type: string
+      aggregateReporter:
+        type: string
+      reporterPower:
+        type: string
+        format: int64
+      standardDeviation:
+        type: number
+        format: double
+      reporters:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+            power:
+              type: string
+              format: int64
+      flagged:
+        type: boolean
+      nonce:
+        type: string
+        format: int64
+      aggregateReportIndex:
+        type: string
+        format: int64
+      height:
+        type: string
+        format: int64
+  layer.bridge.AggregateReporter:
+    type: object
+    properties:
+      reporter:
+        type: string
+      power:
+        type: string
+        format: int64
   layer.bridge.BridgeValidator:
     type: object
     properties:
@@ -2398,6 +2593,90 @@ definitions:
   layer.bridge.Params:
     type: object
     description: Params defines the parameters for the module.
+  layer.bridge.QueryGetCurrentAggregateReportResponse:
+    type: object
+    properties:
+      aggregate:
+        type: object
+        properties:
+          queryId:
+            type: string
+          aggregateValue:
+            type: string
+          aggregateReporter:
+            type: string
+          reporterPower:
+            type: string
+            format: int64
+          standardDeviation:
+            type: number
+            format: double
+          reporters:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                power:
+                  type: string
+                  format: int64
+          flagged:
+            type: boolean
+          nonce:
+            type: string
+            format: int64
+          aggregateReportIndex:
+            type: string
+            format: int64
+          height:
+            type: string
+            format: int64
+      timestamp:
+        type: string
+        format: uint64
+  layer.bridge.QueryGetDataBeforeResponse:
+    type: object
+    properties:
+      aggregate:
+        type: object
+        properties:
+          queryId:
+            type: string
+          aggregateValue:
+            type: string
+          aggregateReporter:
+            type: string
+          reporterPower:
+            type: string
+            format: int64
+          standardDeviation:
+            type: number
+            format: double
+          reporters:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                power:
+                  type: string
+                  format: int64
+          flagged:
+            type: boolean
+          nonce:
+            type: string
+            format: int64
+          aggregateReportIndex:
+            type: string
+            format: int64
+          height:
+            type: string
+            format: int64
+      timestamp:
+        type: string
+        format: uint64
   layer.bridge.QueryGetEvmAddressByValidatorAddressResponse:
     type: object
     properties:

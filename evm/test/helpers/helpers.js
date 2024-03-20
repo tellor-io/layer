@@ -153,6 +153,140 @@ getValsetSigs2 = async (timestamp, valset, digest) => {
   }
 }
 
+getCurrentAggregateReport = async (queryId) => {
+  const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
+  url = "http://localhost:1317/layer/bridge/get_current_aggregate_report/" + formattedQueryId
+  try {
+    const response = await axios.get(url)
+    agg = response.data.aggregate
+    ts = response.data.timestamp
+    reportData = {
+      value: "0x" + agg.aggregateValue,
+      timestamp: ts,
+      aggregatePower: agg.reporterPower,
+      previousTimestamp: 0,
+      nextTimestamp: 0
+    }
+    oracleAttestationData = {
+      queryId: '0x' + formattedQueryId,
+      report: reportData,
+      attestTimestamp: ts
+    }
+    return oracleAttestationData
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getDataBefore = async (queryId, timestamp) => {
+  const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
+  url = "http://localhost:1317/layer/bridge/get_data_before/" + formattedQueryId + "/" + timestamp
+  try {
+    const response = await axios.get(url)
+    agg = response.data.aggregate
+    ts = response.data.timestamp
+    reportData = {
+      value: "0x" + agg.aggregateValue,
+      timestamp: ts,
+      aggregatePower: agg.reporterPower,
+      previousTimestamp: 0,
+      nextTimestamp: 0
+    }
+    return reportData
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getOracleAttestations = async (queryId, timestamp, valset, digest) => {
+  const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
+  const messageHash = ethers.utils.sha256(digest);
+  url = "http://localhost:1317/layer/bridge/get_oracle_attestations/" + formattedQueryId + "/" + timestamp
+  try {
+    const response = await axios.get(url)
+    attestsResponse = response.data.attestations
+    attestations = []
+    for (i = 0; i < attestsResponse.length; i++) {
+      attestation = attestsResponse[i]
+      if (attestation.length == 130) {
+        // try v = 27
+        let v = 27
+        let r = '0x' + attestation.slice(2, 66)
+        let s = '0x' + attestation.slice(66, 130)
+        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+          r: r,
+          s: s,
+          v: v
+        })
+        if (recoveredAddress.toLowerCase() != valset[i].addr.toLowerCase()) {
+          v = 28
+          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+            r: r,
+            s: s,
+            v: v
+          })
+          if (recoveredAddress.toLowerCase() != valset[i].addr.toLowerCase()) {
+            v = 0;
+            r = '0x0000000000000000000000000000000000000000000000000000000000000000';
+            s = '0x0000000000000000000000000000000000000000000000000000000000000000';
+          }
+        }
+        attestations.push({
+          v: v,
+          r: r,
+          s: s
+        })
+      } else {
+        attestations.push({
+          v: 0,
+          r: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          s: '0x0000000000000000000000000000000000000000000000000000000000000000'
+        })
+      }
+    }
+    return attestations
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getOracleAttestationsCheat = async (queryId, timestamp) => {
+  const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
+  url = "http://localhost:1317/layer/bridge/get_oracle_attestations/" + formattedQueryId + "/" + timestamp
+  try {
+    const response = await axios.get(url)
+    attestsResponse = response.data.attestations
+    attestations = []
+    for (i = 0; i < attestsResponse.length; i++) {
+      attestation = attestsResponse[i]
+      if (attestation.length == 130) {
+        let v = 28
+        let r = '0x' + attestation.slice(2, 66)
+        let s = '0x' + attestation.slice(66, 130)
+        attestations.push({
+          v: v,
+          r: r,
+          s: s
+        })
+      } else {
+        attestations.push({
+          v: 0,
+          r: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          s: '0x0000000000000000000000000000000000000000000000000000000000000000'
+        })
+      }
+    }
+    return attestations
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+
+
+
+
+
 
 getValidatorSet = async (height) => {
   url = "http://localhost:1317/layer/bridge/blockvalidators?height=" + height
@@ -219,6 +353,26 @@ getDataDigest = (queryId, value, timestamp, aggregatePower, previousTimestamp, n
   const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
   enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"],
     [DOMAIN_SEPARATOR, queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, blockTimestamp])
+  return hash(enc)
+}
+
+domainSeparateOracleAttestationData = (attestationData, valCheckpoint) => {
+  const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
+  enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"],
+    [DOMAIN_SEPARATOR, attestationData.queryId, attestationData.report.value, attestationData.report.timestamp, attestationData.report.aggregatePower, attestationData.report.previousTimestamp, attestationData.report.nextTimestamp, valCheckpoint, attestationData.attestTimestamp])
+
+  // print everything
+  console.log("DOMAIN_SEPARATOR", DOMAIN_SEPARATOR)
+  console.log("attestationData.queryId", attestationData.queryId)
+  console.log("attestationData.report.value", attestationData.report.value)
+  console.log("attestationData.report.timestamp", attestationData.report.timestamp)
+  console.log("attestationData.report.aggregatePower", attestationData.report.aggregatePower)
+  console.log("attestationData.report.previousTimestamp", attestationData.report.previousTimestamp)
+  console.log("attestationData.report.nextTimestamp", attestationData.report.nextTimestamp)
+  console.log("valCheckpoint", valCheckpoint)
+  console.log("attestationData.attestTimestamp", attestationData.attestTimestamp)
+  console.log("dataDigest", hash(enc))
+  console.log("enc", enc)
   return hash(enc)
 }
 
@@ -383,6 +537,11 @@ module.exports = {
   getValsetCheckpointParams,
   getValset,
   getValsetSigs,
-  getValsetSigs2
+  getValsetSigs2,
+  getCurrentAggregateReport,
+  getDataBefore,
+  getOracleAttestations,
+  getOracleAttestationsCheat,
+  domainSeparateOracleAttestationData
 };
 

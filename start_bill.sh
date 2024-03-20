@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# clear the terminal
+clear
+
 # Stop execution if any command fails
 set -e
 

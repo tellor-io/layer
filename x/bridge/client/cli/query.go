@@ -31,6 +31,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdGetEvmAddressByValidatorAddress())
 	cmd.AddCommand(CmdGetValsetByTimestamp())
 	cmd.AddCommand(CmdGetCurrentAggregateReport())
+	cmd.AddCommand(CmdGetDataBefore())
 
 	// this line is used by starport scaffolding # 1
 
