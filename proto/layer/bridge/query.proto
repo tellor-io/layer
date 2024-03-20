@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "layer/bridge/params.proto";
+import "layer/oracle/aggregate.proto";
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
@@ -49,6 +50,10 @@ service Query {
 
   rpc GetValsetByTimestamp (QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
     option (google.api.http).get = "/layer/bridge/get_valset_by_timestamp/{timestamp}";
+  }
+
+  rpc GetCurrentAggregateReport (QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
+    option (google.api.http).get = "/layer/bridge/get_current_aggregate_report/{queryId}";
   }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -151,3 +156,13 @@ message QueryGetValsetByTimestampRequest {
 message QueryGetValsetByTimestampResponse {
   repeated BridgeValidator bridgeValidatorSet = 1;
 }
+
+message QueryGetCurrentAggregateReportRequest {
+  string queryId = 1;
+}
+
+message QueryGetCurrentAggregateReportResponse {
+  layer.oracle.Aggregate aggregate = 1;
+  uint64 timestamp = 2;
+}
+

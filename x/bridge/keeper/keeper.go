@@ -15,6 +15,7 @@ import (
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -47,6 +48,7 @@ type (
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
+		oracleKeeper   types.OracleKeeper
 	}
 )
 
@@ -55,6 +57,7 @@ func NewKeeper(
 	storeService storetypes.KVStoreService,
 	stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
+	oracleKeeper types.OracleKeeper,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
@@ -74,6 +77,7 @@ func NewKeeper(
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
+		oracleKeeper:   oracleKeeper,
 	}
 
 	schema, err := sb.Build()
@@ -518,6 +522,7 @@ func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.B
 }
 
 func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error) {
+	k.Logger(ctx).Info("@EVMAddressFromSignature")
 	message := "TellorLayer: Initial bridge daemon signature"
 	// convert message to bytes
 	msgBytes := []byte(message)
@@ -549,7 +554,35 @@ func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (s
 	recoveredAddr := crypto.PubkeyToAddress(*sigPublicKey)
 
 	k.Logger(ctx).Info("Recovered Address:", recoveredAddr.Hex())
+	k.Logger(ctx).Info("sigHexString", sigHexString)
 	return recoveredAddr.Hex(), nil
+}
+
+func (k Keeper) RecoverETHAddress(ctx sdk.Context, msg []byte, sig []byte, signer []byte) ([]byte, uint8, error) {
+	k.Logger(ctx).Info("@RecoverETHAddress")
+	for i := uint8(0); i < 2; i++ {
+		msgDoubleHashBytes32 := sha256.Sum256(msg)
+		msgDoubleHashBytes := msgDoubleHashBytes32[:]
+		pubuc, err := crypto.SigToPub(msgDoubleHashBytes, append(sig, byte(i)))
+		if err != nil {
+			return nil, 0, err
+		}
+		pub := crypto.CompressPubkey(pubuc)
+		var tmp [33]byte
+		copy(tmp[:], pub)
+
+		k.Logger(ctx).Info("V:", "v", 27+i)
+		k.Logger(ctx).Info("sig:", "sig", hex.EncodeToString(append(sig, byte(i))))
+		k.Logger(ctx).Info("Recovered Address:", "addr", crypto.PubkeyToAddress(*pubuc).Hex())
+		k.Logger(ctx).Info("string(signer)", "signer", string(signer))
+		k.Logger(ctx).Info("string(secp256k1.PubKey(tmp[:]).Address())", "signer", string(secp256k1.PubKey(tmp[:]).Address()))
+
+		if string(signer) == string(secp256k1.PubKey(tmp[:]).Address()) {
+			return crypto.PubkeyToAddress(*pubuc).Bytes(), 27 + i, nil
+		}
+
+	}
+	return nil, 0, fmt.Errorf("no match address found")
 }
 
 func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error {

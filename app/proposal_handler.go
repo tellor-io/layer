@@ -1,12 +1,14 @@
 package app
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -303,6 +305,24 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 			operatorAddresses = append(operatorAddresses, operatorAddress)
 			evmAddresses = append(evmAddresses, evmAddress)
 			h.logger.Info("EVM address from initial sig", "evmAddress", evmAddress)
+
+			// test RecoverETHAddress function
+			message := "TellorLayer: Initial bridge daemon signature"
+			// convert message to bytes
+			msgBytes := []byte(message)
+			// hash message
+			msgHashBytes32 := sha256.Sum256(msgBytes)
+			// convert [32]byte to []byte
+			msgHashBytes := msgHashBytes32[:]
+			// remove last byte from signature
+			sigBytes := voteExt.InitialSignature.Signature[:len(voteExt.InitialSignature.Signature)-1]
+			var valAddr bytes.HexBytes = vote.Validator.Address
+			evmAddressRecBytes, v, err := h.bridgeKeeper.RecoverETHAddress(ctx, msgHashBytes, sigBytes, valAddr)
+			if err != nil {
+				h.logger.Error("failed to recover eth address from initial sig", "error", err)
+				// return nil, nil, err
+			}
+			h.logger.Info("EVM address recovered from initial sig", "evmAddressRecBytes", hex.EncodeToString(evmAddressRecBytes), "v", v)
 		}
 	}
 

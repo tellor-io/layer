@@ -218,3 +218,16 @@ func (k Keeper) GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []ty
 
 	return reports
 }
+
+func (k Keeper) GetCurrentAggregateReport(ctx sdk.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		aggregate = &value
+		timestamp = time.Unix(key.K2(), 0)
+		return true, nil
+	})
+	if err != nil {
+		panic(err) // Handle the error appropriately
+	}
+	return aggregate, timestamp
+}

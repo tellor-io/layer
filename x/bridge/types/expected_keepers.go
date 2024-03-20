@@ -2,9 +2,11 @@ package types
 
 import (
 	context "context"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 type StakingKeeper interface {
@@ -28,4 +30,8 @@ type AccountKeeper interface {
 type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
+}
+
+type OracleKeeper interface {
+	GetCurrentAggregateReport(ctx sdk.Context, queryId []byte) (aggregate *oracletypes.Aggregate, timestamp time.Time)
 }

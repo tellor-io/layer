@@ -589,6 +589,7 @@ func New(
 		runtime.NewKVStoreService(keys[bridgemoduletypes.StoreKey]),
 		app.StakingKeeper,
 		app.SlashingKeeper,
+		app.OracleKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
 	app.ReporterKeeper = reportermodulekeeper.NewKeeper(

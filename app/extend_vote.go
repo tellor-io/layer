@@ -49,6 +49,7 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
 	SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error
 	GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
+	RecoverETHAddress(ctx sdk.Context, msg []byte, sig []byte, signer []byte) ([]byte, uint8, error)
 }
 
 type StakingKeeper interface {
