@@ -29,6 +29,7 @@ type QueryClient interface {
 	GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error)
 	GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(ctx context.Context, in *QueryGetValsetByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValsetByTimestampResponse, error)
+	GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error)
 }
 
 type queryClient struct {
@@ -120,6 +121,15 @@ func (c *queryClient) GetValsetByTimestamp(ctx context.Context, in *QueryGetVals
 	return out, nil
 }
 
+func (c *queryClient) GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error) {
+	out := new(QueryGetCurrentAggregateReportResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetCurrentAggregateReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -135,6 +145,7 @@ type QueryServer interface {
 	GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error)
 	GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error)
+	GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -168,6 +179,9 @@ func (UnimplementedQueryServer) GetEvmAddressByValidatorAddress(context.Context,
 }
 func (UnimplementedQueryServer) GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValsetByTimestamp not implemented")
+}
+func (UnimplementedQueryServer) GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentAggregateReport not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -344,6 +358,24 @@ func _Query_GetValsetByTimestamp_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCurrentAggregateReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCurrentAggregateReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCurrentAggregateReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetCurrentAggregateReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCurrentAggregateReport(ctx, req.(*QueryGetCurrentAggregateReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -386,6 +418,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetValsetByTimestamp",
 			Handler:    _Query_GetValsetByTimestamp_Handler,
+		},
+		{
+			MethodName: "GetCurrentAggregateReport",
+			Handler:    _Query_GetCurrentAggregateReport_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
