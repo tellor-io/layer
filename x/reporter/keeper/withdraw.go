@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layer "github.com/tellor-io/layer/types"
+	layertypes "github.com/tellor-io/layer/types"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
@@ -206,7 +207,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		return err
 	}
 
-	totalTokens := sdk.DefaultPowerReduction.MulRaw(power)
+	totalTokens := layertypes.PowerReduction.MulRaw(power)
 	for _, del := range firstValue.TokenOrigins {
 		delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
 		delAddr, err := sdk.AccAddressFromBech32(del.DelegatorAddress)

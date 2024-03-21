@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	reptypes "github.com/tellor-io/layer/x/reporter/types"
 )
@@ -250,7 +251,7 @@ func (k Keeper) GetReporterPower(ctx sdk.Context, voter string) (math.Int, error
 		}
 		return math.Int{}, err
 	}
-	return reporter.TotalTokens.Quo(sdk.DefaultPowerReduction), nil
+	return reporter.TotalTokens.Quo(layertypes.PowerReduction), nil
 }
 
 func (k Keeper) GetAccountBalance(ctx sdk.Context, voter string) (math.Int, error) {
@@ -356,7 +357,7 @@ func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalToken
 
 	// Calculate and allocate tokens based on each person's share of the total power
 	tokenDistribution := make(map[string]math.Int)
-	scalingFactor := math.NewInt(1_000_000) //TODO: use sdk.DefaultPowerReduction
+	scalingFactor := layertypes.PowerReduction
 	totalShare := math.ZeroInt()
 	for voter, power := range powers {
 		share := power.Mul(scalingFactor).Quo(totalPower)

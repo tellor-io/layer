@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
@@ -184,7 +185,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	if err != nil {
 		return err
 	}
-	amount := sdk.TokensFromConsensusPower(report.Power, sdk.DefaultPowerReduction)
+	amount := math.NewInt(report.Power).Mul(layertypes.PowerReduction)
 	slashAmount := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
 	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmount.TruncateInt())
 	if err != nil {

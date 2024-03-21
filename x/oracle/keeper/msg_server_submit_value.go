@@ -15,6 +15,7 @@ import (
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -43,7 +44,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporter.TotalTokens, params.MinStakeAmount)
 	}
 
-	votingPower := reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64()
+	votingPower := reporter.TotalTokens.Quo(layertypes.PowerReduction).Int64()
 	// decode query data hex string to bytes
 	msg.QueryData = utils.Remove0xPrefix(msg.QueryData)
 	qDataBytes, err := hex.DecodeString(msg.QueryData)
