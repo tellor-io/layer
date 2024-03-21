@@ -15,8 +15,8 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 		return nil, types.ErrInvalidFeeDenom.Wrapf("wrong fee denom: %s, expected: %s", msg.Fee.Denom, layer.BondDenom)
 	}
 
-	if msg.Fee.Amount.LT(layer.TenPercent) {
-		return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s dosen't meet minimum fee required", msg.Fee.Amount)
+	if msg.Fee.Amount.LT(layer.OnePercent) {
+		return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s doesn't meet minimum fee required", msg.Fee.Amount)
 	}
 	dispute := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
 

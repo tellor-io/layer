@@ -307,9 +307,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 	if err != nil {
 		return err
 	}
-	// How does second round of dispute fee work?
-	// If fee is not paid then doubling the burnAmount means reducing the fee total?
-	// Reducing the fee total means that feeTotal - burnAmount could be zero and the fee payers don't get anything from the feePaid or who gets what is not clear
+
 	return nil
 }
 

@@ -904,7 +904,13 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			del.Amount = source.Amount
 			del.Reporter = repAcc.String()
 			// call hooks :todo
+			if err := k.BeforeDelegationCreated(ctx, reporter); err != nil {
+				return err
+			}
 			if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
+				return err
+			}
+			if err := k.AfterDelegationModified(ctx, delAddr, repAcc.Bytes(), del.Amount); err != nil {
 				return err
 			}
 			vals, err := k.GetBondedValidators(ctx, 1)
@@ -929,9 +935,16 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			continue
 		}
 		// if delegator exists, add tokens to it
-		del.Amount = del.Amount.Add(source.Amount)
 		// call hooks :todo
+		if err := k.BeforeDelegationModified(ctx, delAddr, del, reporter); err != nil {
+			return err
+		}
+		del.Amount = del.Amount.Add(source.Amount)
+
 		if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
+			return err
+		}
+		if err := k.AfterDelegationModified(ctx, delAddr, repAcc.Bytes(), del.Amount); err != nil {
 			return err
 		}
 		// get token origin and see if it still exists

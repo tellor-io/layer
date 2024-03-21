@@ -223,16 +223,17 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.app = app
 }
 
-func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
+func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount math.Int) {
 	ctx := s.ctx
 	// s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
-	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(amount)))
-	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(amount)))
+	coins := sdk.NewCoins(sdk.NewCoin(s.denom, amount))
+	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, coins))
+	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, coins))
 }
 
 func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
 	Addr := sample.AccAddressBytes()
-	s.mintTokens(Addr, sdk.NewCoin(s.denom, math.NewInt(1_000_000)))
+	s.mintTokens(Addr, math.NewInt(1_000_000))
 	return Addr
 }
 
@@ -350,7 +351,7 @@ func (s *IntegrationTestSuite) CreateAccountsWithTokens(numofAccs int, amountOfT
 	accs := make([]sdk.AccAddress, numofAccs)
 	for i, pk := range privKeys {
 		accs[i] = sdk.AccAddress(pk.PubKey().Address())
-		s.mintTokens(accs[i], sdk.NewCoin(s.denom, math.NewInt(amountOfTokens)))
+		s.mintTokens(accs[i], math.NewInt(amountOfTokens))
 	}
 	return accs
 }
