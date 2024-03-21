@@ -21,6 +21,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
@@ -555,6 +556,7 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
+	require := s.Require()
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
@@ -603,13 +605,31 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
-	// delegation shares should increase after reporting
+
+	// check that tip is in escrow
+	escrowAcct := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
+	require.NotNil(escrowAcct)
+	escrowBalance := s.bankKeeper.GetBalance(s.ctx, escrowAcct, s.denom)
+	require.NotNil(escrowBalance)
+	twoPercent := sdk.NewCoin(s.denom, tipAmount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
+	require.Equal(tipAmount.Sub(twoPercent.Amount), escrowBalance.Amount)
+
+	// withdraw tip
+	// create reporterMsgServer
+	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: repAcc.String(), ValidatorAddress: valAddr.String()})
+	require.NoError(err)
+
+	// delegation shares should increase after reporting and escrow balance should go nback to 0
 	delAfter, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
 	s.Nil(err)
 	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares plus the tip added") // 1000 - 2% tip
+	escrowBalance = s.bankKeeper.GetBalance(s.ctx, escrowAcct, s.denom)
+	s.True(escrowBalance.IsZero())
 }
 
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
+	require := s.Require()
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 	accs := s.CreateAccountsWithTokens(3, 100*1e6)
@@ -666,11 +686,31 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
-	// delegation shares should increase after reporting
+
+	// check tip escrow account
+	escrowAcct := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
+	require.NotNil(escrowAcct)
+	escrowBalance := s.bankKeeper.GetBalance(s.ctx, escrowAcct, s.denom)
+	require.NotNil(escrowBalance)
+	twoPercent := sdk.NewCoin(s.denom, tipAmount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
+	require.Equal(tipAmount.Sub(twoPercent.Amount), escrowBalance.Amount)
+
+	// withdraw self delegation from tip escrow
+	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: delegator1.String(), ValidatorAddress: valAddr.String()})
+	require.NoError(err)
+
+	// delegation shares should increase after reporting and withdrawing
 	del1After, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr)
 	s.Nil(err)
 	// 980 = 1000 - 2% tip, 980 / 2 = 490 for each delegator but with 50 percent commission for the reporter would be 490 + (490 / 2) = 735
 	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(735))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
+
+	// withdraw del2 delegation from tip escrow
+	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: delegator2.String(), ValidatorAddress: valAddr.String()})
+	require.NoError(err)
+
+	// 980 - 735 = 245
 	del2After, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr)
 	s.Nil(err)
 	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(245))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
