@@ -2,11 +2,11 @@ syntax = "proto3";
 package layer.dispute;
 
 import "layer/dispute/dispute.proto";
+import "layer/oracle/micro_report.proto";
 
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
 message DisputeParams {
-  
-  MicroReport report = 1; 
-  DisputeCategory category = 2; 
+  layer.oracle.MicroReport report = 1;
+  DisputeCategory category = 2;
 }

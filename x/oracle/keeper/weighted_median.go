@@ -66,6 +66,9 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) (*t
 	weightedStdDev := math.Sqrt(sumWeightedSquaredDiffs / float64(totalReporterPower.Int64()))
 	medianReport.StandardDeviation = weightedStdDev
 
-	k.SetAggregate(ctx, &medianReport)
+	err := k.SetAggregate(ctx, &medianReport)
+	if err != nil {
+		return nil, err
+	}
 	return &medianReport, nil
 }

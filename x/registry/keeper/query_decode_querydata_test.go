@@ -19,7 +19,7 @@ func TestDecodeQuerydata(t *testing.T) {
 			AggregationMethod: "weighted-median",
 			ResponseValueType: "uint256",
 			AbiComponents: []*types.ABIComponent{
-				{Name: "test", Type: "string"},
+				{Name: "test", FieldType: "string"},
 			},
 		},
 	})

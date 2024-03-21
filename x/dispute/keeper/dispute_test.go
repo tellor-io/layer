@@ -1,7 +1,7 @@
 package keeper_test
 
 func (s *KeeperTestSuite) TestGetOpenDisputes() {
-	require := s.Require()
-	res := s.disputeKeeper.GetOpenDisputeIds(s.ctx)
-	require.Nil(res.Ids)
+	res, err := s.disputeKeeper.GetOpenDisputeIds(s.ctx)
+	s.Nil(err)
+	s.Nil(res.Ids)
 }

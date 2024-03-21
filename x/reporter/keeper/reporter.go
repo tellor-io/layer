@@ -13,7 +13,7 @@ import (
 )
 
 func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddress, originAmounts []*types.TokenOrigin, amount math.Int) error {
-	var _amt = math.ZeroInt()
+	_amt := math.ZeroInt()
 	for _, origin := range originAmounts {
 		_amt = _amt.Add(origin.Amount)
 	}
@@ -87,11 +87,19 @@ func (k Keeper) UpdateOrRemoveReporter(ctx context.Context, key sdk.AccAddress, 
 }
 
 func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], srcAmount math.Int, amt math.Int) (err error) {
-	if srcAmount.LTE(amt) {
+	// amount is the current staked amount in staking mod
+	// so if current amount is zero remove the source
+	if amt.IsZero() {
 		return k.TokenOrigin.Remove(ctx, key)
 	}
-	srcAmount = srcAmount.Sub(amt)
-	return k.TokenOrigin.Set(ctx, key, srcAmount)
+	return k.TokenOrigin.Set(ctx, key, amt)
+}
+
+func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], currentAmount math.Int, newAmount math.Int) error {
+	if newAmount.GTE(currentAmount) {
+		return k.TokenOrigin.Remove(ctx, key)
+	}
+	return k.TokenOrigin.Set(ctx, key, currentAmount.Sub(newAmount))
 }
 
 func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (*types.OracleReporter, error) {
@@ -103,4 +111,21 @@ func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (*types.Or
 		return nil, err
 	}
 	return &reporter, nil
+}
+
+func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
+	totalPower := math.ZeroInt()
+	iter, err := k.Reporters.Iterate(ctx, nil)
+	if err != nil {
+		return math.Int{}, err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		reporter, err := iter.Value()
+		if err != nil {
+			return math.Int{}, err
+		}
+		totalPower = totalPower.Add(reporter.TotalTokens)
+	}
+	return totalPower, nil
 }

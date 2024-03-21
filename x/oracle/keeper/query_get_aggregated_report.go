@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -15,14 +14,17 @@ func (k Keeper) GetAggregatedReport(goCtx context.Context, req *types.QueryGetCu
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	queryId, err := utils.QueryIDFromString(req.QueryId)
+	queryId, err := utils.QueryBytesFromString(req.QueryId)
 	if err != nil {
 		panic(err)
 	}
 
-	mostRecent := k.GetCurrentValueForQueryId(goCtx, queryId)
+	mostRecent, err := k.GetCurrentValueForQueryId(goCtx, queryId)
+	if err != nil {
+		return nil, err
+	}
 	if mostRecent == nil {
-		return nil, fmt.Errorf("no available timestamps")
+		return nil, types.ErrNoAvailableReports.Wrapf("no reports available for query id %s", req.QueryId)
 	}
 	return &types.QueryGetAggregatedReportResponse{Report: mostRecent}, nil
 }

@@ -3,21 +3,20 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// Exponent for the denomination (e.g., 6 for 1 trb = 1e6 loya)
-	oneTRB := math.NewInt(1_000_000)
-	if msg.Fee.IsLT(sdk.NewCoin(sdk.DefaultBondDenom, oneTRB)) {
-		return nil, types.ErrMinimumTRBrequired
+
+	if msg.Fee.Denom != layer.BondDenom {
+		return nil, types.ErrInvalidFeeDenom.Wrapf("wrong fee denom: %s, expected: %s", msg.Fee.Denom, layer.BondDenom)
 	}
-	if msg.Fee.Denom != sdk.DefaultBondDenom {
-		return nil, types.ErrInvalidFeeDenom
+
+	if msg.Fee.Amount.LT(layer.OnePercent) {
+		return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s doesn't meet minimum fee required", msg.Fee.Amount)
 	}
 	dispute := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
 

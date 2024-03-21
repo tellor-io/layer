@@ -18,3 +18,19 @@ message TokenOrigin {
     (gogoproto.nullable) = false
   ];
 }
+
+message TokenOriginInfo {
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// reporter's snapshot of delegators' sources pre unbonding
+message DelegationsPreUpdate {
+  // token_origin is the origin of the tokens that are about to be updated
+  repeated TokenOriginInfo token_origins = 1;
+}

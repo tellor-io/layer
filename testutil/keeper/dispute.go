@@ -15,10 +15,13 @@ import (
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/dispute/keeper"
+	"github.com/tellor-io/layer/x/dispute/mocks"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func DisputeKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+func DisputeKeeper(t testing.TB) (
+	keeper.Keeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context,
+) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -37,16 +40,21 @@ func DisputeKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 		memStoreKey,
 		"DisputeParams",
 	)
+
+	accountKeeper := new(mocks.AccountKeeper)
+	bankKeeper := new(mocks.BankKeeper)
+	oracleKeeper := new(mocks.OracleKeeper)
+	reporterKeeper := new(mocks.ReporterKeeper)
+
 	k := keeper.NewKeeper(
 		cdc,
 		storeKey,
 		memStoreKey,
 		paramsSubspace,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
+		accountKeeper,
+		bankKeeper,
+		oracleKeeper,
+		reporterKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
@@ -54,5 +62,5 @@ func DisputeKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx
+	return k, oracleKeeper, reporterKeeper, accountKeeper, bankKeeper, ctx
 }

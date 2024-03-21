@@ -59,7 +59,6 @@ func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sd
 }
 
 func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	// TODO: check context to see how this is called in sdk!!!
 	// reflect changes only when token/power decreases
 	// update the reporter tokens and the delegator's tokens to reflect the new power numbers
 	// also need to update the token origins to reflect the new changes when the delegator's tokens are updated
@@ -86,18 +85,18 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 		}
 		// update token origin if the staked amount becomes less than what is written in the token origin struct
 		if tokenAmount.LT(sourced) {
+			delegator, err := h.k.Delegators.Get(ctx, delAddr)
+			if err != nil {
+				return err
+			}
+			repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
+
 			// get the difference in the token change to reduce delegation and reporter tokens by.
 			diff := sourced.Sub(tokenAmount)
 			if err := h.k.UpdateOrRemoveSource(ctx, collections.Join(delAddr, valAddr), sourced, tokenAmount); err != nil {
 				return err
 			}
 
-			// update delegator
-			delegator, err := h.k.Delegators.Get(ctx, delAddr)
-			if err != nil {
-				return err
-			}
-			repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
 			// update reporter
 			reporter, err := h.k.Reporters.Get(ctx, repAddr)
 			if err != nil {
@@ -124,6 +123,36 @@ func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
 }
 
 // AfterConsensusPubKeyUpdate triggers the functions to rotate the signing-infos also sets address pubkey relation.
-func (h Hooks) AfterConsensusPubKeyUpdate(_ context.Context, oldPubKey, newPubKey cryptotypes.PubKey, _ sdk.Coin) error {
+func (h Hooks) AfterConsensusPubKeyUpdate(_ context.Context, _, _ cryptotypes.PubKey, _ sdk.Coin) error {
 	return nil
+}
+
+func (k Keeper) GetTokenSourcesForReporter(ctx context.Context, repAddr sdk.AccAddress) (types.DelegationsPreUpdate, error) {
+	delegators, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return types.DelegationsPreUpdate{}, err
+	}
+
+	var tokenSources []*types.TokenOriginInfo
+	for ; delegators.Valid(); delegators.Next() {
+		key, err := delegators.PrimaryKey()
+		if err != nil {
+			return types.DelegationsPreUpdate{}, err
+		}
+		rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](key)
+		err = k.TokenOrigin.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value sdkmath.Int) (bool, error) {
+			tokenSources = append(tokenSources, &types.TokenOriginInfo{
+				DelegatorAddress: key.K1().String(),
+				ValidatorAddress: key.K2().String(),
+				Amount:           value,
+			})
+			return false, nil
+		})
+		if err != nil {
+			return types.DelegationsPreUpdate{}, err
+		}
+	}
+	return types.DelegationsPreUpdate{
+		TokenOrigins: tokenSources,
+	}, nil
 }

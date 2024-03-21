@@ -10,15 +10,18 @@ import (
 )
 
 // send a reporter to jail
-func (k Keeper) JailReporter(ctx context.Context, reporter types.OracleReporter, jailDuration int64) error {
+func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration int64) error {
+	reporter, err := k.Reporters.Get(ctx, reporterAddr)
+	if err != nil {
+		return err
+	}
 	if reporter.Jailed {
 		return types.ErrReporterJailed.Wrapf("cannot jail already jailed reporter, %v", reporter)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	reporter.JailedUntil = sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration))
 	reporter.Jailed = true
-	reporterAddr := sdk.MustAccAddressFromBech32(reporter.GetReporter())
-	err := k.Reporters.Set(ctx, reporterAddr, reporter)
+	err = k.Reporters.Set(ctx, reporterAddr, reporter)
 	if err != nil {
 		return err
 	}

@@ -10,19 +10,28 @@ import (
 func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	dispute := k.Keeper.GetDisputeById(ctx, msg.Id)
+	dispute, err := k.Keeper.GetDisputeById(ctx, msg.Id)
+	if err != nil {
+		return nil, err
+	}
 	if dispute.DisputeStatus != types.Voting {
 		return nil, types.ErrDisputeNotInVotingState
 	}
 
 	// Get vote by disputeId
-	vote := k.Keeper.GetVote(ctx, msg.Id)
+	vote, err := k.Keeper.GetVote(ctx, msg.Id)
+	if err != nil {
+		return nil, err
+	}
 	if vote.VoteStart.IsZero() {
 		return nil, types.ErrVoteDoesNotExist
 	}
 
 	// Check if voter has already voted
-	voter := k.Keeper.GetVoterVote(ctx, msg.Voter, msg.Id)
+	voter, err := k.Keeper.GetVoterVote(ctx, msg.Voter, msg.Id)
+	if err != nil {
+		return nil, err
+	}
 	if voter.Voter != "" {
 		return nil, types.ErrVoterHasAlreadyVoted
 	}
@@ -32,9 +41,18 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		return nil, types.ErrVotingPeriodEnded
 	}
 
-	k.Keeper.SetTally(ctx, msg.Id, msg.Vote, msg.Voter)
-	k.Keeper.SetVoterVote(ctx, msg)
-	k.Keeper.AppendVoters(ctx, msg.Id, msg.Voter)
+	err = k.Keeper.SetTally(ctx, msg.Id, msg.Vote, msg.Voter)
+	if err != nil {
+		return nil, err
+	}
+	err = k.Keeper.SetVoterVote(ctx, msg)
+	if err != nil {
+		return nil, err
+	}
+	err = k.Keeper.AppendVoters(ctx, msg.Id, msg.Voter)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgVoteResponse{}, nil
 }
