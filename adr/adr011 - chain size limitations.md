@@ -20,7 +20,13 @@ Layer is limited in many ways:
 
 ## Alternative Approaches
 
-### altApproach1
+### Cap number of reporters (like validators)
+
+You could cap the number of reporters at the total level.  This problem is that we would then be forcing anyone who wants to report to stake a large amount or tip a validator who potentially doesn't care about their small data point (the LINK problem of no one supporting your illiquid coin).  If you want to use it purely optimistically, you shouldn't need to worry about having too much stake.  
+
+#### Cap number of reporters per report
+
+You could take only the top 150 (for example) reports.  That way only the top guys would get rewards on the big queries, but the lesser people would still be able to compete on the lesser reported/illiquid/or optimistic queries.  
 
 
 ## Issues / Notes on Implementation
