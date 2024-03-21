@@ -2,11 +2,12 @@
 package dispute
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	_ "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
+	oracle "github.com/tellor-io/layer/api/layer/oracle"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -114,42 +115,42 @@ func (x *_Dispute_15_list) IsValid() bool {
 }
 
 var (
-	md_Dispute                   protoreflect.MessageDescriptor
-	fd_Dispute_hashId            protoreflect.FieldDescriptor
-	fd_Dispute_disputeId         protoreflect.FieldDescriptor
-	fd_Dispute_disputeCategory   protoreflect.FieldDescriptor
-	fd_Dispute_disputeFee        protoreflect.FieldDescriptor
-	fd_Dispute_disputeStatus     protoreflect.FieldDescriptor
-	fd_Dispute_disputeStartTime  protoreflect.FieldDescriptor
-	fd_Dispute_disputeEndTime    protoreflect.FieldDescriptor
-	fd_Dispute_disputeStartBlock protoreflect.FieldDescriptor
-	fd_Dispute_disputeRound      protoreflect.FieldDescriptor
-	fd_Dispute_slashAmount       protoreflect.FieldDescriptor
-	fd_Dispute_burnAmount        protoreflect.FieldDescriptor
-	fd_Dispute_reportEvidence    protoreflect.FieldDescriptor
-	fd_Dispute_feePayers         protoreflect.FieldDescriptor
-	fd_Dispute_feeTotal          protoreflect.FieldDescriptor
-	fd_Dispute_prevDisputeIds    protoreflect.FieldDescriptor
+	md_Dispute                     protoreflect.MessageDescriptor
+	fd_Dispute_hash_id             protoreflect.FieldDescriptor
+	fd_Dispute_dispute_id          protoreflect.FieldDescriptor
+	fd_Dispute_dispute_category    protoreflect.FieldDescriptor
+	fd_Dispute_dispute_fee         protoreflect.FieldDescriptor
+	fd_Dispute_dispute_status      protoreflect.FieldDescriptor
+	fd_Dispute_dispute_start_time  protoreflect.FieldDescriptor
+	fd_Dispute_dispute_end_time    protoreflect.FieldDescriptor
+	fd_Dispute_dispute_start_block protoreflect.FieldDescriptor
+	fd_Dispute_dispute_round       protoreflect.FieldDescriptor
+	fd_Dispute_slash_amount        protoreflect.FieldDescriptor
+	fd_Dispute_burn_amount         protoreflect.FieldDescriptor
+	fd_Dispute_report_evidence     protoreflect.FieldDescriptor
+	fd_Dispute_fee_payers          protoreflect.FieldDescriptor
+	fd_Dispute_fee_total           protoreflect.FieldDescriptor
+	fd_Dispute_prev_dispute_ids    protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_dispute_dispute_proto_init()
 	md_Dispute = File_layer_dispute_dispute_proto.Messages().ByName("Dispute")
-	fd_Dispute_hashId = md_Dispute.Fields().ByName("hashId")
-	fd_Dispute_disputeId = md_Dispute.Fields().ByName("disputeId")
-	fd_Dispute_disputeCategory = md_Dispute.Fields().ByName("disputeCategory")
-	fd_Dispute_disputeFee = md_Dispute.Fields().ByName("disputeFee")
-	fd_Dispute_disputeStatus = md_Dispute.Fields().ByName("disputeStatus")
-	fd_Dispute_disputeStartTime = md_Dispute.Fields().ByName("disputeStartTime")
-	fd_Dispute_disputeEndTime = md_Dispute.Fields().ByName("disputeEndTime")
-	fd_Dispute_disputeStartBlock = md_Dispute.Fields().ByName("disputeStartBlock")
-	fd_Dispute_disputeRound = md_Dispute.Fields().ByName("disputeRound")
-	fd_Dispute_slashAmount = md_Dispute.Fields().ByName("slashAmount")
-	fd_Dispute_burnAmount = md_Dispute.Fields().ByName("burnAmount")
-	fd_Dispute_reportEvidence = md_Dispute.Fields().ByName("reportEvidence")
-	fd_Dispute_feePayers = md_Dispute.Fields().ByName("feePayers")
-	fd_Dispute_feeTotal = md_Dispute.Fields().ByName("feeTotal")
-	fd_Dispute_prevDisputeIds = md_Dispute.Fields().ByName("prevDisputeIds")
+	fd_Dispute_hash_id = md_Dispute.Fields().ByName("hash_id")
+	fd_Dispute_dispute_id = md_Dispute.Fields().ByName("dispute_id")
+	fd_Dispute_dispute_category = md_Dispute.Fields().ByName("dispute_category")
+	fd_Dispute_dispute_fee = md_Dispute.Fields().ByName("dispute_fee")
+	fd_Dispute_dispute_status = md_Dispute.Fields().ByName("dispute_status")
+	fd_Dispute_dispute_start_time = md_Dispute.Fields().ByName("dispute_start_time")
+	fd_Dispute_dispute_end_time = md_Dispute.Fields().ByName("dispute_end_time")
+	fd_Dispute_dispute_start_block = md_Dispute.Fields().ByName("dispute_start_block")
+	fd_Dispute_dispute_round = md_Dispute.Fields().ByName("dispute_round")
+	fd_Dispute_slash_amount = md_Dispute.Fields().ByName("slash_amount")
+	fd_Dispute_burn_amount = md_Dispute.Fields().ByName("burn_amount")
+	fd_Dispute_report_evidence = md_Dispute.Fields().ByName("report_evidence")
+	fd_Dispute_fee_payers = md_Dispute.Fields().ByName("fee_payers")
+	fd_Dispute_fee_total = md_Dispute.Fields().ByName("fee_total")
+	fd_Dispute_prev_dispute_ids = md_Dispute.Fields().ByName("prev_dispute_ids")
 }
 
 var _ protoreflect.Message = (*fastReflection_Dispute)(nil)
@@ -219,91 +220,91 @@ func (x *fastReflection_Dispute) Interface() protoreflect.ProtoMessage {
 func (x *fastReflection_Dispute) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.HashId) != 0 {
 		value := protoreflect.ValueOfBytes(x.HashId)
-		if !f(fd_Dispute_hashId, value) {
+		if !f(fd_Dispute_hash_id, value) {
 			return
 		}
 	}
 	if x.DisputeId != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.DisputeId)
-		if !f(fd_Dispute_disputeId, value) {
+		if !f(fd_Dispute_dispute_id, value) {
 			return
 		}
 	}
 	if x.DisputeCategory != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.DisputeCategory))
-		if !f(fd_Dispute_disputeCategory, value) {
+		if !f(fd_Dispute_dispute_category, value) {
 			return
 		}
 	}
 	if x.DisputeFee != "" {
 		value := protoreflect.ValueOfString(x.DisputeFee)
-		if !f(fd_Dispute_disputeFee, value) {
+		if !f(fd_Dispute_dispute_fee, value) {
 			return
 		}
 	}
 	if x.DisputeStatus != 0 {
 		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.DisputeStatus))
-		if !f(fd_Dispute_disputeStatus, value) {
+		if !f(fd_Dispute_dispute_status, value) {
 			return
 		}
 	}
 	if x.DisputeStartTime != nil {
 		value := protoreflect.ValueOfMessage(x.DisputeStartTime.ProtoReflect())
-		if !f(fd_Dispute_disputeStartTime, value) {
+		if !f(fd_Dispute_dispute_start_time, value) {
 			return
 		}
 	}
 	if x.DisputeEndTime != nil {
 		value := protoreflect.ValueOfMessage(x.DisputeEndTime.ProtoReflect())
-		if !f(fd_Dispute_disputeEndTime, value) {
+		if !f(fd_Dispute_dispute_end_time, value) {
 			return
 		}
 	}
 	if x.DisputeStartBlock != int64(0) {
 		value := protoreflect.ValueOfInt64(x.DisputeStartBlock)
-		if !f(fd_Dispute_disputeStartBlock, value) {
+		if !f(fd_Dispute_dispute_start_block, value) {
 			return
 		}
 	}
 	if x.DisputeRound != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.DisputeRound)
-		if !f(fd_Dispute_disputeRound, value) {
+		if !f(fd_Dispute_dispute_round, value) {
 			return
 		}
 	}
 	if x.SlashAmount != "" {
 		value := protoreflect.ValueOfString(x.SlashAmount)
-		if !f(fd_Dispute_slashAmount, value) {
+		if !f(fd_Dispute_slash_amount, value) {
 			return
 		}
 	}
 	if x.BurnAmount != "" {
 		value := protoreflect.ValueOfString(x.BurnAmount)
-		if !f(fd_Dispute_burnAmount, value) {
+		if !f(fd_Dispute_burn_amount, value) {
 			return
 		}
 	}
 	if x.ReportEvidence != nil {
 		value := protoreflect.ValueOfMessage(x.ReportEvidence.ProtoReflect())
-		if !f(fd_Dispute_reportEvidence, value) {
+		if !f(fd_Dispute_report_evidence, value) {
 			return
 		}
 	}
 	if len(x.FeePayers) != 0 {
 		value := protoreflect.ValueOfList(&_Dispute_13_list{list: &x.FeePayers})
-		if !f(fd_Dispute_feePayers, value) {
+		if !f(fd_Dispute_fee_payers, value) {
 			return
 		}
 	}
 	if x.FeeTotal != "" {
 		value := protoreflect.ValueOfString(x.FeeTotal)
-		if !f(fd_Dispute_feeTotal, value) {
+		if !f(fd_Dispute_fee_total, value) {
 			return
 		}
 	}
 	if len(x.PrevDisputeIds) != 0 {
 		value := protoreflect.ValueOfList(&_Dispute_15_list{list: &x.PrevDisputeIds})
-		if !f(fd_Dispute_prevDisputeIds, value) {
+		if !f(fd_Dispute_prev_dispute_ids, value) {
 			return
 		}
 	}
@@ -322,35 +323,35 @@ func (x *fastReflection_Dispute) Range(f func(protoreflect.FieldDescriptor, prot
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Dispute) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.dispute.Dispute.hashId":
+	case "layer.dispute.Dispute.hash_id":
 		return len(x.HashId) != 0
-	case "layer.dispute.Dispute.disputeId":
+	case "layer.dispute.Dispute.dispute_id":
 		return x.DisputeId != uint64(0)
-	case "layer.dispute.Dispute.disputeCategory":
+	case "layer.dispute.Dispute.dispute_category":
 		return x.DisputeCategory != 0
-	case "layer.dispute.Dispute.disputeFee":
+	case "layer.dispute.Dispute.dispute_fee":
 		return x.DisputeFee != ""
-	case "layer.dispute.Dispute.disputeStatus":
+	case "layer.dispute.Dispute.dispute_status":
 		return x.DisputeStatus != 0
-	case "layer.dispute.Dispute.disputeStartTime":
+	case "layer.dispute.Dispute.dispute_start_time":
 		return x.DisputeStartTime != nil
-	case "layer.dispute.Dispute.disputeEndTime":
+	case "layer.dispute.Dispute.dispute_end_time":
 		return x.DisputeEndTime != nil
-	case "layer.dispute.Dispute.disputeStartBlock":
+	case "layer.dispute.Dispute.dispute_start_block":
 		return x.DisputeStartBlock != int64(0)
-	case "layer.dispute.Dispute.disputeRound":
+	case "layer.dispute.Dispute.dispute_round":
 		return x.DisputeRound != uint64(0)
-	case "layer.dispute.Dispute.slashAmount":
+	case "layer.dispute.Dispute.slash_amount":
 		return x.SlashAmount != ""
-	case "layer.dispute.Dispute.burnAmount":
+	case "layer.dispute.Dispute.burn_amount":
 		return x.BurnAmount != ""
-	case "layer.dispute.Dispute.reportEvidence":
+	case "layer.dispute.Dispute.report_evidence":
 		return x.ReportEvidence != nil
-	case "layer.dispute.Dispute.feePayers":
+	case "layer.dispute.Dispute.fee_payers":
 		return len(x.FeePayers) != 0
-	case "layer.dispute.Dispute.feeTotal":
+	case "layer.dispute.Dispute.fee_total":
 		return x.FeeTotal != ""
-	case "layer.dispute.Dispute.prevDisputeIds":
+	case "layer.dispute.Dispute.prev_dispute_ids":
 		return len(x.PrevDisputeIds) != 0
 	default:
 		if fd.IsExtension() {
@@ -368,35 +369,35 @@ func (x *fastReflection_Dispute) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Dispute) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.dispute.Dispute.hashId":
+	case "layer.dispute.Dispute.hash_id":
 		x.HashId = nil
-	case "layer.dispute.Dispute.disputeId":
+	case "layer.dispute.Dispute.dispute_id":
 		x.DisputeId = uint64(0)
-	case "layer.dispute.Dispute.disputeCategory":
+	case "layer.dispute.Dispute.dispute_category":
 		x.DisputeCategory = 0
-	case "layer.dispute.Dispute.disputeFee":
+	case "layer.dispute.Dispute.dispute_fee":
 		x.DisputeFee = ""
-	case "layer.dispute.Dispute.disputeStatus":
+	case "layer.dispute.Dispute.dispute_status":
 		x.DisputeStatus = 0
-	case "layer.dispute.Dispute.disputeStartTime":
+	case "layer.dispute.Dispute.dispute_start_time":
 		x.DisputeStartTime = nil
-	case "layer.dispute.Dispute.disputeEndTime":
+	case "layer.dispute.Dispute.dispute_end_time":
 		x.DisputeEndTime = nil
-	case "layer.dispute.Dispute.disputeStartBlock":
+	case "layer.dispute.Dispute.dispute_start_block":
 		x.DisputeStartBlock = int64(0)
-	case "layer.dispute.Dispute.disputeRound":
+	case "layer.dispute.Dispute.dispute_round":
 		x.DisputeRound = uint64(0)
-	case "layer.dispute.Dispute.slashAmount":
+	case "layer.dispute.Dispute.slash_amount":
 		x.SlashAmount = ""
-	case "layer.dispute.Dispute.burnAmount":
+	case "layer.dispute.Dispute.burn_amount":
 		x.BurnAmount = ""
-	case "layer.dispute.Dispute.reportEvidence":
+	case "layer.dispute.Dispute.report_evidence":
 		x.ReportEvidence = nil
-	case "layer.dispute.Dispute.feePayers":
+	case "layer.dispute.Dispute.fee_payers":
 		x.FeePayers = nil
-	case "layer.dispute.Dispute.feeTotal":
+	case "layer.dispute.Dispute.fee_total":
 		x.FeeTotal = ""
-	case "layer.dispute.Dispute.prevDisputeIds":
+	case "layer.dispute.Dispute.prev_dispute_ids":
 		x.PrevDisputeIds = nil
 	default:
 		if fd.IsExtension() {
@@ -414,52 +415,52 @@ func (x *fastReflection_Dispute) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Dispute) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.dispute.Dispute.hashId":
+	case "layer.dispute.Dispute.hash_id":
 		value := x.HashId
 		return protoreflect.ValueOfBytes(value)
-	case "layer.dispute.Dispute.disputeId":
+	case "layer.dispute.Dispute.dispute_id":
 		value := x.DisputeId
 		return protoreflect.ValueOfUint64(value)
-	case "layer.dispute.Dispute.disputeCategory":
+	case "layer.dispute.Dispute.dispute_category":
 		value := x.DisputeCategory
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "layer.dispute.Dispute.disputeFee":
+	case "layer.dispute.Dispute.dispute_fee":
 		value := x.DisputeFee
 		return protoreflect.ValueOfString(value)
-	case "layer.dispute.Dispute.disputeStatus":
+	case "layer.dispute.Dispute.dispute_status":
 		value := x.DisputeStatus
 		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
-	case "layer.dispute.Dispute.disputeStartTime":
+	case "layer.dispute.Dispute.dispute_start_time":
 		value := x.DisputeStartTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.dispute.Dispute.disputeEndTime":
+	case "layer.dispute.Dispute.dispute_end_time":
 		value := x.DisputeEndTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.dispute.Dispute.disputeStartBlock":
+	case "layer.dispute.Dispute.dispute_start_block":
 		value := x.DisputeStartBlock
 		return protoreflect.ValueOfInt64(value)
-	case "layer.dispute.Dispute.disputeRound":
+	case "layer.dispute.Dispute.dispute_round":
 		value := x.DisputeRound
 		return protoreflect.ValueOfUint64(value)
-	case "layer.dispute.Dispute.slashAmount":
+	case "layer.dispute.Dispute.slash_amount":
 		value := x.SlashAmount
 		return protoreflect.ValueOfString(value)
-	case "layer.dispute.Dispute.burnAmount":
+	case "layer.dispute.Dispute.burn_amount":
 		value := x.BurnAmount
 		return protoreflect.ValueOfString(value)
-	case "layer.dispute.Dispute.reportEvidence":
+	case "layer.dispute.Dispute.report_evidence":
 		value := x.ReportEvidence
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.dispute.Dispute.feePayers":
+	case "layer.dispute.Dispute.fee_payers":
 		if len(x.FeePayers) == 0 {
 			return protoreflect.ValueOfList(&_Dispute_13_list{})
 		}
 		listValue := &_Dispute_13_list{list: &x.FeePayers}
 		return protoreflect.ValueOfList(listValue)
-	case "layer.dispute.Dispute.feeTotal":
+	case "layer.dispute.Dispute.fee_total":
 		value := x.FeeTotal
 		return protoreflect.ValueOfString(value)
-	case "layer.dispute.Dispute.prevDisputeIds":
+	case "layer.dispute.Dispute.prev_dispute_ids":
 		if len(x.PrevDisputeIds) == 0 {
 			return protoreflect.ValueOfList(&_Dispute_15_list{})
 		}
@@ -485,37 +486,37 @@ func (x *fastReflection_Dispute) Get(descriptor protoreflect.FieldDescriptor) pr
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Dispute) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.dispute.Dispute.hashId":
+	case "layer.dispute.Dispute.hash_id":
 		x.HashId = value.Bytes()
-	case "layer.dispute.Dispute.disputeId":
+	case "layer.dispute.Dispute.dispute_id":
 		x.DisputeId = value.Uint()
-	case "layer.dispute.Dispute.disputeCategory":
+	case "layer.dispute.Dispute.dispute_category":
 		x.DisputeCategory = (DisputeCategory)(value.Enum())
-	case "layer.dispute.Dispute.disputeFee":
+	case "layer.dispute.Dispute.dispute_fee":
 		x.DisputeFee = value.Interface().(string)
-	case "layer.dispute.Dispute.disputeStatus":
+	case "layer.dispute.Dispute.dispute_status":
 		x.DisputeStatus = (DisputeStatus)(value.Enum())
-	case "layer.dispute.Dispute.disputeStartTime":
+	case "layer.dispute.Dispute.dispute_start_time":
 		x.DisputeStartTime = value.Message().Interface().(*timestamppb.Timestamp)
-	case "layer.dispute.Dispute.disputeEndTime":
+	case "layer.dispute.Dispute.dispute_end_time":
 		x.DisputeEndTime = value.Message().Interface().(*timestamppb.Timestamp)
-	case "layer.dispute.Dispute.disputeStartBlock":
+	case "layer.dispute.Dispute.dispute_start_block":
 		x.DisputeStartBlock = value.Int()
-	case "layer.dispute.Dispute.disputeRound":
+	case "layer.dispute.Dispute.dispute_round":
 		x.DisputeRound = value.Uint()
-	case "layer.dispute.Dispute.slashAmount":
+	case "layer.dispute.Dispute.slash_amount":
 		x.SlashAmount = value.Interface().(string)
-	case "layer.dispute.Dispute.burnAmount":
+	case "layer.dispute.Dispute.burn_amount":
 		x.BurnAmount = value.Interface().(string)
-	case "layer.dispute.Dispute.reportEvidence":
-		x.ReportEvidence = value.Message().Interface().(*MicroReport)
-	case "layer.dispute.Dispute.feePayers":
+	case "layer.dispute.Dispute.report_evidence":
+		x.ReportEvidence = value.Message().Interface().(*oracle.MicroReport)
+	case "layer.dispute.Dispute.fee_payers":
 		lv := value.List()
 		clv := lv.(*_Dispute_13_list)
 		x.FeePayers = *clv.list
-	case "layer.dispute.Dispute.feeTotal":
+	case "layer.dispute.Dispute.fee_total":
 		x.FeeTotal = value.Interface().(string)
-	case "layer.dispute.Dispute.prevDisputeIds":
+	case "layer.dispute.Dispute.prev_dispute_ids":
 		lv := value.List()
 		clv := lv.(*_Dispute_15_list)
 		x.PrevDisputeIds = *clv.list
@@ -539,53 +540,53 @@ func (x *fastReflection_Dispute) Set(fd protoreflect.FieldDescriptor, value prot
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Dispute) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.dispute.Dispute.disputeStartTime":
+	case "layer.dispute.Dispute.dispute_start_time":
 		if x.DisputeStartTime == nil {
 			x.DisputeStartTime = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.DisputeStartTime.ProtoReflect())
-	case "layer.dispute.Dispute.disputeEndTime":
+	case "layer.dispute.Dispute.dispute_end_time":
 		if x.DisputeEndTime == nil {
 			x.DisputeEndTime = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.DisputeEndTime.ProtoReflect())
-	case "layer.dispute.Dispute.reportEvidence":
+	case "layer.dispute.Dispute.report_evidence":
 		if x.ReportEvidence == nil {
-			x.ReportEvidence = new(MicroReport)
+			x.ReportEvidence = new(oracle.MicroReport)
 		}
 		return protoreflect.ValueOfMessage(x.ReportEvidence.ProtoReflect())
-	case "layer.dispute.Dispute.feePayers":
+	case "layer.dispute.Dispute.fee_payers":
 		if x.FeePayers == nil {
 			x.FeePayers = []*PayerInfo{}
 		}
 		value := &_Dispute_13_list{list: &x.FeePayers}
 		return protoreflect.ValueOfList(value)
-	case "layer.dispute.Dispute.prevDisputeIds":
+	case "layer.dispute.Dispute.prev_dispute_ids":
 		if x.PrevDisputeIds == nil {
 			x.PrevDisputeIds = []uint64{}
 		}
 		value := &_Dispute_15_list{list: &x.PrevDisputeIds}
 		return protoreflect.ValueOfList(value)
-	case "layer.dispute.Dispute.hashId":
-		panic(fmt.Errorf("field hashId of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.disputeId":
-		panic(fmt.Errorf("field disputeId of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.disputeCategory":
-		panic(fmt.Errorf("field disputeCategory of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.disputeFee":
-		panic(fmt.Errorf("field disputeFee of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.disputeStatus":
-		panic(fmt.Errorf("field disputeStatus of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.disputeStartBlock":
-		panic(fmt.Errorf("field disputeStartBlock of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.disputeRound":
-		panic(fmt.Errorf("field disputeRound of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.slashAmount":
-		panic(fmt.Errorf("field slashAmount of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.burnAmount":
-		panic(fmt.Errorf("field burnAmount of message layer.dispute.Dispute is not mutable"))
-	case "layer.dispute.Dispute.feeTotal":
-		panic(fmt.Errorf("field feeTotal of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.hash_id":
+		panic(fmt.Errorf("field hash_id of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.dispute_id":
+		panic(fmt.Errorf("field dispute_id of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.dispute_category":
+		panic(fmt.Errorf("field dispute_category of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.dispute_fee":
+		panic(fmt.Errorf("field dispute_fee of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.dispute_status":
+		panic(fmt.Errorf("field dispute_status of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.dispute_start_block":
+		panic(fmt.Errorf("field dispute_start_block of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.dispute_round":
+		panic(fmt.Errorf("field dispute_round of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.slash_amount":
+		panic(fmt.Errorf("field slash_amount of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.burn_amount":
+		panic(fmt.Errorf("field burn_amount of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.fee_total":
+		panic(fmt.Errorf("field fee_total of message layer.dispute.Dispute is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -599,39 +600,39 @@ func (x *fastReflection_Dispute) Mutable(fd protoreflect.FieldDescriptor) protor
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Dispute) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.dispute.Dispute.hashId":
+	case "layer.dispute.Dispute.hash_id":
 		return protoreflect.ValueOfBytes(nil)
-	case "layer.dispute.Dispute.disputeId":
+	case "layer.dispute.Dispute.dispute_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "layer.dispute.Dispute.disputeCategory":
+	case "layer.dispute.Dispute.dispute_category":
 		return protoreflect.ValueOfEnum(0)
-	case "layer.dispute.Dispute.disputeFee":
+	case "layer.dispute.Dispute.dispute_fee":
 		return protoreflect.ValueOfString("")
-	case "layer.dispute.Dispute.disputeStatus":
+	case "layer.dispute.Dispute.dispute_status":
 		return protoreflect.ValueOfEnum(0)
-	case "layer.dispute.Dispute.disputeStartTime":
+	case "layer.dispute.Dispute.dispute_start_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.dispute.Dispute.disputeEndTime":
+	case "layer.dispute.Dispute.dispute_end_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.dispute.Dispute.disputeStartBlock":
+	case "layer.dispute.Dispute.dispute_start_block":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.dispute.Dispute.disputeRound":
+	case "layer.dispute.Dispute.dispute_round":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "layer.dispute.Dispute.slashAmount":
+	case "layer.dispute.Dispute.slash_amount":
 		return protoreflect.ValueOfString("")
-	case "layer.dispute.Dispute.burnAmount":
+	case "layer.dispute.Dispute.burn_amount":
 		return protoreflect.ValueOfString("")
-	case "layer.dispute.Dispute.reportEvidence":
-		m := new(MicroReport)
+	case "layer.dispute.Dispute.report_evidence":
+		m := new(oracle.MicroReport)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.dispute.Dispute.feePayers":
+	case "layer.dispute.Dispute.fee_payers":
 		list := []*PayerInfo{}
 		return protoreflect.ValueOfList(&_Dispute_13_list{list: &list})
-	case "layer.dispute.Dispute.feeTotal":
+	case "layer.dispute.Dispute.fee_total":
 		return protoreflect.ValueOfString("")
-	case "layer.dispute.Dispute.prevDisputeIds":
+	case "layer.dispute.Dispute.prev_dispute_ids":
 		list := []uint64{}
 		return protoreflect.ValueOfList(&_Dispute_15_list{list: &list})
 	default:
@@ -1306,7 +1307,7 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.ReportEvidence == nil {
-					x.ReportEvidence = &MicroReport{}
+					x.ReportEvidence = &oracle.MicroReport{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ReportEvidence); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1490,662 +1491,20 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_MicroReport           protoreflect.MessageDescriptor
-	fd_MicroReport_reporter  protoreflect.FieldDescriptor
-	fd_MicroReport_power     protoreflect.FieldDescriptor
-	fd_MicroReport_queryId   protoreflect.FieldDescriptor
-	fd_MicroReport_value     protoreflect.FieldDescriptor
-	fd_MicroReport_timestamp protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_dispute_dispute_proto_init()
-	md_MicroReport = File_layer_dispute_dispute_proto.Messages().ByName("MicroReport")
-	fd_MicroReport_reporter = md_MicroReport.Fields().ByName("reporter")
-	fd_MicroReport_power = md_MicroReport.Fields().ByName("power")
-	fd_MicroReport_queryId = md_MicroReport.Fields().ByName("queryId")
-	fd_MicroReport_value = md_MicroReport.Fields().ByName("value")
-	fd_MicroReport_timestamp = md_MicroReport.Fields().ByName("timestamp")
-}
-
-var _ protoreflect.Message = (*fastReflection_MicroReport)(nil)
-
-type fastReflection_MicroReport MicroReport
-
-func (x *MicroReport) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MicroReport)(x)
-}
-
-func (x *MicroReport) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_dispute_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MicroReport_messageType fastReflection_MicroReport_messageType
-var _ protoreflect.MessageType = fastReflection_MicroReport_messageType{}
-
-type fastReflection_MicroReport_messageType struct{}
-
-func (x fastReflection_MicroReport_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MicroReport)(nil)
-}
-func (x fastReflection_MicroReport_messageType) New() protoreflect.Message {
-	return new(fastReflection_MicroReport)
-}
-func (x fastReflection_MicroReport_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MicroReport
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MicroReport) Descriptor() protoreflect.MessageDescriptor {
-	return md_MicroReport
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MicroReport) Type() protoreflect.MessageType {
-	return _fastReflection_MicroReport_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MicroReport) New() protoreflect.Message {
-	return new(fastReflection_MicroReport)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MicroReport) Interface() protoreflect.ProtoMessage {
-	return (*MicroReport)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MicroReport) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Reporter != "" {
-		value := protoreflect.ValueOfString(x.Reporter)
-		if !f(fd_MicroReport_reporter, value) {
-			return
-		}
-	}
-	if x.Power != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Power)
-		if !f(fd_MicroReport_power, value) {
-			return
-		}
-	}
-	if x.QueryId != "" {
-		value := protoreflect.ValueOfString(x.QueryId)
-		if !f(fd_MicroReport_queryId, value) {
-			return
-		}
-	}
-	if x.Value != "" {
-		value := protoreflect.ValueOfString(x.Value)
-		if !f(fd_MicroReport_value, value) {
-			return
-		}
-	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
-		if !f(fd_MicroReport_timestamp, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MicroReport) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.dispute.MicroReport.reporter":
-		return x.Reporter != ""
-	case "layer.dispute.MicroReport.power":
-		return x.Power != int64(0)
-	case "layer.dispute.MicroReport.queryId":
-		return x.QueryId != ""
-	case "layer.dispute.MicroReport.value":
-		return x.Value != ""
-	case "layer.dispute.MicroReport.timestamp":
-		return x.Timestamp != int64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MicroReport"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MicroReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MicroReport) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.dispute.MicroReport.reporter":
-		x.Reporter = ""
-	case "layer.dispute.MicroReport.power":
-		x.Power = int64(0)
-	case "layer.dispute.MicroReport.queryId":
-		x.QueryId = ""
-	case "layer.dispute.MicroReport.value":
-		x.Value = ""
-	case "layer.dispute.MicroReport.timestamp":
-		x.Timestamp = int64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MicroReport"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MicroReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MicroReport) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.dispute.MicroReport.reporter":
-		value := x.Reporter
-		return protoreflect.ValueOfString(value)
-	case "layer.dispute.MicroReport.power":
-		value := x.Power
-		return protoreflect.ValueOfInt64(value)
-	case "layer.dispute.MicroReport.queryId":
-		value := x.QueryId
-		return protoreflect.ValueOfString(value)
-	case "layer.dispute.MicroReport.value":
-		value := x.Value
-		return protoreflect.ValueOfString(value)
-	case "layer.dispute.MicroReport.timestamp":
-		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MicroReport"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MicroReport does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MicroReport) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.dispute.MicroReport.reporter":
-		x.Reporter = value.Interface().(string)
-	case "layer.dispute.MicroReport.power":
-		x.Power = value.Int()
-	case "layer.dispute.MicroReport.queryId":
-		x.QueryId = value.Interface().(string)
-	case "layer.dispute.MicroReport.value":
-		x.Value = value.Interface().(string)
-	case "layer.dispute.MicroReport.timestamp":
-		x.Timestamp = value.Int()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MicroReport"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MicroReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MicroReport) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.dispute.MicroReport.reporter":
-		panic(fmt.Errorf("field reporter of message layer.dispute.MicroReport is not mutable"))
-	case "layer.dispute.MicroReport.power":
-		panic(fmt.Errorf("field power of message layer.dispute.MicroReport is not mutable"))
-	case "layer.dispute.MicroReport.queryId":
-		panic(fmt.Errorf("field queryId of message layer.dispute.MicroReport is not mutable"))
-	case "layer.dispute.MicroReport.value":
-		panic(fmt.Errorf("field value of message layer.dispute.MicroReport is not mutable"))
-	case "layer.dispute.MicroReport.timestamp":
-		panic(fmt.Errorf("field timestamp of message layer.dispute.MicroReport is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MicroReport"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MicroReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MicroReport) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.dispute.MicroReport.reporter":
-		return protoreflect.ValueOfString("")
-	case "layer.dispute.MicroReport.power":
-		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.dispute.MicroReport.queryId":
-		return protoreflect.ValueOfString("")
-	case "layer.dispute.MicroReport.value":
-		return protoreflect.ValueOfString("")
-	case "layer.dispute.MicroReport.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MicroReport"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MicroReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MicroReport) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.MicroReport", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MicroReport) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MicroReport) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MicroReport) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MicroReport)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.Reporter)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Power != 0 {
-			n += 1 + runtime.Sov(uint64(x.Power))
-		}
-		l = len(x.QueryId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Value)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Timestamp != 0 {
-			n += 1 + runtime.Sov(uint64(x.Timestamp))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MicroReport)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.Timestamp != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
-			i--
-			dAtA[i] = 0x28
-		}
-		if len(x.Value) > 0 {
-			i -= len(x.Value)
-			copy(dAtA[i:], x.Value)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if len(x.QueryId) > 0 {
-			i -= len(x.QueryId)
-			copy(dAtA[i:], x.QueryId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if x.Power != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Power))
-			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.Reporter) > 0 {
-			i -= len(x.Reporter)
-			copy(dAtA[i:], x.Reporter)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reporter)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MicroReport)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MicroReport: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MicroReport: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Reporter = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Power", wireType)
-				}
-				x.Power = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Power |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.QueryId = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Value = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 5:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
-				}
-				x.Timestamp = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_PayerInfo              protoreflect.MessageDescriptor
-	fd_PayerInfo_payerAddress protoreflect.FieldDescriptor
-	fd_PayerInfo_amount       protoreflect.FieldDescriptor
-	fd_PayerInfo_fromBond     protoreflect.FieldDescriptor
+	md_PayerInfo               protoreflect.MessageDescriptor
+	fd_PayerInfo_payer_address protoreflect.FieldDescriptor
+	fd_PayerInfo_amount        protoreflect.FieldDescriptor
+	fd_PayerInfo_from_bond     protoreflect.FieldDescriptor
+	fd_PayerInfo_block_number  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_dispute_dispute_proto_init()
 	md_PayerInfo = File_layer_dispute_dispute_proto.Messages().ByName("PayerInfo")
-	fd_PayerInfo_payerAddress = md_PayerInfo.Fields().ByName("payerAddress")
+	fd_PayerInfo_payer_address = md_PayerInfo.Fields().ByName("payer_address")
 	fd_PayerInfo_amount = md_PayerInfo.Fields().ByName("amount")
-	fd_PayerInfo_fromBond = md_PayerInfo.Fields().ByName("fromBond")
+	fd_PayerInfo_from_bond = md_PayerInfo.Fields().ByName("from_bond")
+	fd_PayerInfo_block_number = md_PayerInfo.Fields().ByName("block_number")
 }
 
 var _ protoreflect.Message = (*fastReflection_PayerInfo)(nil)
@@ -2157,7 +1516,7 @@ func (x *PayerInfo) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PayerInfo) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_dispute_proto_msgTypes[2]
+	mi := &file_layer_dispute_dispute_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2215,19 +1574,25 @@ func (x *fastReflection_PayerInfo) Interface() protoreflect.ProtoMessage {
 func (x *fastReflection_PayerInfo) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.PayerAddress != "" {
 		value := protoreflect.ValueOfString(x.PayerAddress)
-		if !f(fd_PayerInfo_payerAddress, value) {
+		if !f(fd_PayerInfo_payer_address, value) {
 			return
 		}
 	}
-	if x.Amount != nil {
-		value := protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
+	if x.Amount != "" {
+		value := protoreflect.ValueOfString(x.Amount)
 		if !f(fd_PayerInfo_amount, value) {
 			return
 		}
 	}
 	if x.FromBond != false {
 		value := protoreflect.ValueOfBool(x.FromBond)
-		if !f(fd_PayerInfo_fromBond, value) {
+		if !f(fd_PayerInfo_from_bond, value) {
+			return
+		}
+	}
+	if x.BlockNumber != int64(0) {
+		value := protoreflect.ValueOfInt64(x.BlockNumber)
+		if !f(fd_PayerInfo_block_number, value) {
 			return
 		}
 	}
@@ -2246,12 +1611,14 @@ func (x *fastReflection_PayerInfo) Range(f func(protoreflect.FieldDescriptor, pr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_PayerInfo) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.dispute.PayerInfo.payerAddress":
+	case "layer.dispute.PayerInfo.payer_address":
 		return x.PayerAddress != ""
 	case "layer.dispute.PayerInfo.amount":
-		return x.Amount != nil
-	case "layer.dispute.PayerInfo.fromBond":
+		return x.Amount != ""
+	case "layer.dispute.PayerInfo.from_bond":
 		return x.FromBond != false
+	case "layer.dispute.PayerInfo.block_number":
+		return x.BlockNumber != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.PayerInfo"))
@@ -2268,12 +1635,14 @@ func (x *fastReflection_PayerInfo) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PayerInfo) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.dispute.PayerInfo.payerAddress":
+	case "layer.dispute.PayerInfo.payer_address":
 		x.PayerAddress = ""
 	case "layer.dispute.PayerInfo.amount":
-		x.Amount = nil
-	case "layer.dispute.PayerInfo.fromBond":
+		x.Amount = ""
+	case "layer.dispute.PayerInfo.from_bond":
 		x.FromBond = false
+	case "layer.dispute.PayerInfo.block_number":
+		x.BlockNumber = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.PayerInfo"))
@@ -2290,15 +1659,18 @@ func (x *fastReflection_PayerInfo) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_PayerInfo) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.dispute.PayerInfo.payerAddress":
+	case "layer.dispute.PayerInfo.payer_address":
 		value := x.PayerAddress
 		return protoreflect.ValueOfString(value)
 	case "layer.dispute.PayerInfo.amount":
 		value := x.Amount
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.dispute.PayerInfo.fromBond":
+		return protoreflect.ValueOfString(value)
+	case "layer.dispute.PayerInfo.from_bond":
 		value := x.FromBond
 		return protoreflect.ValueOfBool(value)
+	case "layer.dispute.PayerInfo.block_number":
+		value := x.BlockNumber
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.PayerInfo"))
@@ -2319,12 +1691,14 @@ func (x *fastReflection_PayerInfo) Get(descriptor protoreflect.FieldDescriptor) 
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PayerInfo) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.dispute.PayerInfo.payerAddress":
+	case "layer.dispute.PayerInfo.payer_address":
 		x.PayerAddress = value.Interface().(string)
 	case "layer.dispute.PayerInfo.amount":
-		x.Amount = value.Message().Interface().(*v1beta1.Coin)
-	case "layer.dispute.PayerInfo.fromBond":
+		x.Amount = value.Interface().(string)
+	case "layer.dispute.PayerInfo.from_bond":
 		x.FromBond = value.Bool()
+	case "layer.dispute.PayerInfo.block_number":
+		x.BlockNumber = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.PayerInfo"))
@@ -2345,15 +1719,14 @@ func (x *fastReflection_PayerInfo) Set(fd protoreflect.FieldDescriptor, value pr
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PayerInfo) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "layer.dispute.PayerInfo.payer_address":
+		panic(fmt.Errorf("field payer_address of message layer.dispute.PayerInfo is not mutable"))
 	case "layer.dispute.PayerInfo.amount":
-		if x.Amount == nil {
-			x.Amount = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-	case "layer.dispute.PayerInfo.payerAddress":
-		panic(fmt.Errorf("field payerAddress of message layer.dispute.PayerInfo is not mutable"))
-	case "layer.dispute.PayerInfo.fromBond":
-		panic(fmt.Errorf("field fromBond of message layer.dispute.PayerInfo is not mutable"))
+		panic(fmt.Errorf("field amount of message layer.dispute.PayerInfo is not mutable"))
+	case "layer.dispute.PayerInfo.from_bond":
+		panic(fmt.Errorf("field from_bond of message layer.dispute.PayerInfo is not mutable"))
+	case "layer.dispute.PayerInfo.block_number":
+		panic(fmt.Errorf("field block_number of message layer.dispute.PayerInfo is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.PayerInfo"))
@@ -2367,13 +1740,14 @@ func (x *fastReflection_PayerInfo) Mutable(fd protoreflect.FieldDescriptor) prot
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_PayerInfo) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.dispute.PayerInfo.payerAddress":
+	case "layer.dispute.PayerInfo.payer_address":
 		return protoreflect.ValueOfString("")
 	case "layer.dispute.PayerInfo.amount":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.dispute.PayerInfo.fromBond":
+		return protoreflect.ValueOfString("")
+	case "layer.dispute.PayerInfo.from_bond":
 		return protoreflect.ValueOfBool(false)
+	case "layer.dispute.PayerInfo.block_number":
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.PayerInfo"))
@@ -2447,12 +1821,15 @@ func (x *fastReflection_PayerInfo) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Amount != nil {
-			l = options.Size(x.Amount)
+		l = len(x.Amount)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.FromBond {
 			n += 2
+		}
+		if x.BlockNumber != 0 {
+			n += 1 + runtime.Sov(uint64(x.BlockNumber))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2483,6 +1860,11 @@ func (x *fastReflection_PayerInfo) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+		if x.BlockNumber != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
+			i--
+			dAtA[i] = 0x20
+		}
 		if x.FromBond {
 			i--
 			if x.FromBond {
@@ -2493,17 +1875,10 @@ func (x *fastReflection_PayerInfo) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x18
 		}
-		if x.Amount != nil {
-			encoded, err := options.Marshal(x.Amount)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.Amount) > 0 {
+			i -= len(x.Amount)
+			copy(dAtA[i:], x.Amount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -2599,7 +1974,7 @@ func (x *fastReflection_PayerInfo) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
 				}
-				var msglen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2609,27 +1984,23 @@ func (x *fastReflection_PayerInfo) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Amount == nil {
-					x.Amount = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.Amount = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 0 {
@@ -2651,6 +2022,25 @@ func (x *fastReflection_PayerInfo) ProtoMethods() *protoiface.Methods {
 					}
 				}
 				x.FromBond = bool(v != 0)
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
+				}
+				x.BlockNumber = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.BlockNumber |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2699,6 +2089,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// DisputeCategory defines the severity of a dispute.
 type DisputeCategory int32
 
 const (
@@ -2755,6 +2146,7 @@ func (DisputeCategory) EnumDescriptor() ([]byte, []int) {
 	return file_layer_dispute_dispute_proto_rawDescGZIP(), []int{0}
 }
 
+// DisputeStatus defines the status of a dispute.
 type DisputeStatus int32
 
 const (
@@ -2815,26 +2207,42 @@ func (DisputeStatus) EnumDescriptor() ([]byte, []int) {
 	return file_layer_dispute_dispute_proto_rawDescGZIP(), []int{1}
 }
 
+// Dispute defines a dispute.
 type Dispute struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	HashId            []byte                 `protobuf:"bytes,1,opt,name=hashId,proto3" json:"hashId,omitempty"`
-	DisputeId         uint64                 `protobuf:"varint,2,opt,name=disputeId,proto3" json:"disputeId,omitempty"`
-	DisputeCategory   DisputeCategory        `protobuf:"varint,3,opt,name=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"disputeCategory,omitempty"`
-	DisputeFee        string                 `protobuf:"bytes,4,opt,name=disputeFee,proto3" json:"disputeFee,omitempty"`
-	DisputeStatus     DisputeStatus          `protobuf:"varint,5,opt,name=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"disputeStatus,omitempty"`
-	DisputeStartTime  *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=disputeStartTime,proto3" json:"disputeStartTime,omitempty"`
-	DisputeEndTime    *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=disputeEndTime,proto3" json:"disputeEndTime,omitempty"`
-	DisputeStartBlock int64                  `protobuf:"varint,8,opt,name=disputeStartBlock,proto3" json:"disputeStartBlock,omitempty"`
-	DisputeRound      uint64                 `protobuf:"varint,9,opt,name=disputeRound,proto3" json:"disputeRound,omitempty"`
-	SlashAmount       string                 `protobuf:"bytes,10,opt,name=slashAmount,proto3" json:"slashAmount,omitempty"`
-	BurnAmount        string                 `protobuf:"bytes,11,opt,name=burnAmount,proto3" json:"burnAmount,omitempty"`
-	ReportEvidence    *MicroReport           `protobuf:"bytes,12,opt,name=reportEvidence,proto3" json:"reportEvidence,omitempty"`
-	FeePayers         []*PayerInfo           `protobuf:"bytes,13,rep,name=feePayers,proto3" json:"feePayers,omitempty"`
-	FeeTotal          string                 `protobuf:"bytes,14,opt,name=feeTotal,proto3" json:"feeTotal,omitempty"`
-	PrevDisputeIds    []uint64               `protobuf:"varint,15,rep,packed,name=prevDisputeIds,proto3" json:"prevDisputeIds,omitempty"`
+	// unique dispute hash identifier
+	HashId []byte `protobuf:"bytes,1,opt,name=hash_id,json=hashId,proto3" json:"hash_id,omitempty"`
+	// current dispute id
+	DisputeId uint64 `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+	// dispute severity level
+	DisputeCategory DisputeCategory `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
+	// cost to start dispute
+	DisputeFee string `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3" json:"dispute_fee,omitempty"`
+	// current dispute status
+	DisputeStatus DisputeStatus `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
+	// start time of the dispute that begins after dispute fee is fully paid
+	DisputeStartTime *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3" json:"dispute_start_time,omitempty"`
+	// end time that the dispute stop taking votes and creating new rounds
+	DisputeEndTime *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=dispute_end_time,json=disputeEndTime,proto3" json:"dispute_end_time,omitempty"`
+	// height of the block that started the dispute
+	DisputeStartBlock int64 `protobuf:"varint,8,opt,name=dispute_start_block,json=disputeStartBlock,proto3" json:"dispute_start_block,omitempty"`
+	// current dispute round
+	DisputeRound uint64 `protobuf:"varint,9,opt,name=dispute_round,json=disputeRound,proto3" json:"dispute_round,omitempty"`
+	// reporter's slashed amount
+	SlashAmount string `protobuf:"bytes,10,opt,name=slash_amount,json=slashAmount,proto3" json:"slash_amount,omitempty"`
+	// burn amount that will be divided in half and paid to voters and the other half burned
+	BurnAmount string `protobuf:"bytes,11,opt,name=burn_amount,json=burnAmount,proto3" json:"burn_amount,omitempty"`
+	// single report evidence
+	ReportEvidence *oracle.MicroReport `protobuf:"bytes,12,opt,name=report_evidence,json=reportEvidence,proto3" json:"report_evidence,omitempty"`
+	// fee payers that were involved in paying the dispute fee in order to start the dispute
+	FeePayers []*PayerInfo `protobuf:"bytes,13,rep,name=fee_payers,json=feePayers,proto3" json:"fee_payers,omitempty"`
+	// total fee paid tracked to know if dispute fee is fully paid to start dispute
+	FeeTotal string `protobuf:"bytes,14,opt,name=fee_total,json=feeTotal,proto3" json:"fee_total,omitempty"`
+	// list of dispute ids that preceded before this current round began
+	PrevDisputeIds []uint64 `protobuf:"varint,15,rep,packed,name=prev_dispute_ids,json=prevDisputeIds,proto3" json:"prev_dispute_ids,omitempty"`
 }
 
 func (x *Dispute) Reset() {
@@ -2934,7 +2342,7 @@ func (x *Dispute) GetBurnAmount() string {
 	return ""
 }
 
-func (x *Dispute) GetReportEvidence() *MicroReport {
+func (x *Dispute) GetReportEvidence() *oracle.MicroReport {
 	if x != nil {
 		return x.ReportEvidence
 	}
@@ -2962,87 +2370,29 @@ func (x *Dispute) GetPrevDisputeIds() []uint64 {
 	return nil
 }
 
-type MicroReport struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Reporter  string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Power     int64  `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
-	QueryId   string `protobuf:"bytes,3,opt,name=queryId,proto3" json:"queryId,omitempty"`
-	Value     string `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
-	Timestamp int64  `protobuf:"varint,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-}
-
-func (x *MicroReport) Reset() {
-	*x = MicroReport{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_dispute_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MicroReport) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MicroReport) ProtoMessage() {}
-
-// Deprecated: Use MicroReport.ProtoReflect.Descriptor instead.
-func (*MicroReport) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_dispute_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *MicroReport) GetReporter() string {
-	if x != nil {
-		return x.Reporter
-	}
-	return ""
-}
-
-func (x *MicroReport) GetPower() int64 {
-	if x != nil {
-		return x.Power
-	}
-	return 0
-}
-
-func (x *MicroReport) GetQueryId() string {
-	if x != nil {
-		return x.QueryId
-	}
-	return ""
-}
-
-func (x *MicroReport) GetValue() string {
-	if x != nil {
-		return x.Value
-	}
-	return ""
-}
-
-func (x *MicroReport) GetTimestamp() int64 {
-	if x != nil {
-		return x.Timestamp
-	}
-	return 0
-}
-
+// PayerInfo defines the payer info of a dispute
+// fee payer's info that was involved in paying the dispute fee in order to start the dispute
 type PayerInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	PayerAddress string        `protobuf:"bytes,1,opt,name=payerAddress,proto3" json:"payerAddress,omitempty"`
-	Amount       *v1beta1.Coin `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	FromBond     bool          `protobuf:"varint,3,opt,name=fromBond,proto3" json:"fromBond,omitempty"`
+	// fee payer's Account address
+	PayerAddress string `protobuf:"bytes,1,opt,name=payer_address,json=payerAddress,proto3" json:"payer_address,omitempty"`
+	// amount paid
+	Amount string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	// source of funds either from bond or free floating funds
+	FromBond bool `protobuf:"varint,3,opt,name=from_bond,json=fromBond,proto3" json:"from_bond,omitempty"`
+	// block number when this specific fee was paid
+	// keeping track of this in case the bond was used
+	// in order to reward the reporters' delegators in the future
+	BlockNumber int64 `protobuf:"varint,4,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 }
 
 func (x *PayerInfo) Reset() {
 	*x = PayerInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_dispute_proto_msgTypes[2]
+		mi := &file_layer_dispute_dispute_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3056,7 +2406,7 @@ func (*PayerInfo) ProtoMessage() {}
 
 // Deprecated: Use PayerInfo.ProtoReflect.Descriptor instead.
 func (*PayerInfo) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_dispute_proto_rawDescGZIP(), []int{2}
+	return file_layer_dispute_dispute_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *PayerInfo) GetPayerAddress() string {
@@ -3066,11 +2416,11 @@ func (x *PayerInfo) GetPayerAddress() string {
 	return ""
 }
 
-func (x *PayerInfo) GetAmount() *v1beta1.Coin {
+func (x *PayerInfo) GetAmount() string {
 	if x != nil {
 		return x.Amount
 	}
-	return nil
+	return ""
 }
 
 func (x *PayerInfo) GetFromBond() bool {
@@ -3080,133 +2430,139 @@ func (x *PayerInfo) GetFromBond() bool {
 	return false
 }
 
+func (x *PayerInfo) GetBlockNumber() int64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
 var File_layer_dispute_dispute_proto protoreflect.FileDescriptor
 
 var file_layer_dispute_dispute_proto_rawDesc = []byte{
 	0x0a, 0x1b, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f,
 	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0d, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x1a, 0x14, 0x67, 0x6f,
-	0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x1a, 0x1e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa1,
-	0x07, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x61,
-	0x73, 0x68, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x68, 0x61, 0x73, 0x68,
-	0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64,
-	0x12, 0x48, 0x0a, 0x0f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67,
-	0x6f, 0x72, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1e, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74,
-	0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x52, 0x0f, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x12, 0x4b, 0x0a, 0x0a, 0x64, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x46, 0x65, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b,
-	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
-	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d,
-	0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x46, 0x65, 0x65, 0x12, 0x42, 0x0a, 0x0d, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x44,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x0d, 0x64, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x50, 0x0a, 0x10, 0x64,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x18,
-	0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x10, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x4c, 0x0a,
-	0x0e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x45, 0x6e, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x18,
-	0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0e, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x45, 0x6e, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x2c, 0x0a, 0x11, 0x64,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
-	0x18, 0x08, 0x20, 0x01, 0x28, 0x03, 0x52, 0x11, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53,
-	0x74, 0x61, 0x72, 0x74, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x22, 0x0a, 0x0c, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x0c, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x4d, 0x0a,
-	0x0b, 0x73, 0x6c, 0x61, 0x73, 0x68, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x0a, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
-	0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52,
-	0x0b, 0x73, 0x6c, 0x61, 0x73, 0x68, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x4b, 0x0a, 0x0a,
-	0x62, 0x75, 0x72, 0x6e, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2,
-	0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x62,
-	0x75, 0x72, 0x6e, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x48, 0x0a, 0x0e, 0x72, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x0c, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x1a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
-	0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x42, 0x04, 0xc8,
-	0xde, 0x1f, 0x00, 0x52, 0x0e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x45, 0x76, 0x69, 0x64, 0x65,
-	0x6e, 0x63, 0x65, 0x12, 0x3c, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72, 0x73,
-	0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x50, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
-	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72,
-	0x73, 0x12, 0x47, 0x0a, 0x08, 0x66, 0x65, 0x65, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x0e, 0x20,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2f, 0x6d, 0x69, 0x63,
+	0x72, 0x6f, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
+	0xb3, 0x07, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68,
+	0x61, 0x73, 0x68, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x68, 0x61,
+	0x73, 0x68, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
+	0x65, 0x49, 0x64, 0x12, 0x49, 0x0a, 0x10, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x63,
+	0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1e, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x44, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x52, 0x0f, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x12, 0x4c,
+	0x0a, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x66, 0x65, 0x65, 0x18, 0x04, 0x20,
 	0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
 	0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74,
-	0x52, 0x08, 0x66, 0x65, 0x65, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x12, 0x26, 0x0a, 0x0e, 0x70, 0x72,
-	0x65, 0x76, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64, 0x73, 0x18, 0x0f, 0x20, 0x03,
-	0x28, 0x04, 0x52, 0x0e, 0x70, 0x72, 0x65, 0x76, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49,
-	0x64, 0x73, 0x22, 0x8d, 0x01, 0x0a, 0x0b, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14,
-	0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x70,
-	0x6f, 0x77, 0x65, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x14,
-	0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x22, 0x84, 0x01, 0x0a, 0x09, 0x50, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
-	0x12, 0x22, 0x0a, 0x0c, 0x70, 0x61, 0x79, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x61, 0x79, 0x65, 0x72, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
-	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1a, 0x0a,
-	0x08, 0x66, 0x72, 0x6f, 0x6d, 0x42, 0x6f, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x08, 0x66, 0x72, 0x6f, 0x6d, 0x42, 0x6f, 0x6e, 0x64, 0x2a, 0xc3, 0x01, 0x0a, 0x0f, 0x44, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x12, 0x31, 0x0a,
-	0x1c, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41, 0x54, 0x45, 0x47, 0x4f, 0x52,
-	0x59, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x1a,
-	0x0f, 0x8a, 0x9d, 0x20, 0x0b, 0x55, 0x6e, 0x73, 0x70, 0x65, 0x63, 0x69, 0x66, 0x69, 0x65, 0x64,
-	0x12, 0x29, 0x0a, 0x18, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41, 0x54, 0x45,
-	0x47, 0x4f, 0x52, 0x59, 0x5f, 0x57, 0x41, 0x52, 0x4e, 0x49, 0x4e, 0x47, 0x10, 0x01, 0x1a, 0x0b,
-	0x8a, 0x9d, 0x20, 0x07, 0x57, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x12, 0x25, 0x0a, 0x16, 0x44,
+	0x52, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x46, 0x65, 0x65, 0x12, 0x43, 0x0a, 0x0e,
+	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0e, 0x32, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x52, 0x0d, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x12, 0x52, 0x0a, 0x12, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x73, 0x74, 0x61,
+	0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90,
+	0xdf, 0x1f, 0x01, 0x52, 0x10, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72,
+	0x74, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x4e, 0x0a, 0x10, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x5f, 0x65, 0x6e, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f,
+	0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x45, 0x6e,
+	0x64, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x2e, 0x0a, 0x13, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x08, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x11, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74,
+	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x23, 0x0a, 0x0d, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x5f, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x64, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x4e, 0x0a, 0x0c, 0x73, 0x6c,
+	0x61, 0x73, 0x68, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2,
+	0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0b, 0x73,
+	0x6c, 0x61, 0x73, 0x68, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x4c, 0x0a, 0x0b, 0x62, 0x75,
+	0x72, 0x6e, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
+	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4,
+	0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x62, 0x75,
+	0x72, 0x6e, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x48, 0x0a, 0x0f, 0x72, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x5f, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x0c, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
+	0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x0e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x12, 0x3d, 0x0a, 0x0a, 0x66, 0x65, 0x65, 0x5f, 0x70, 0x61, 0x79, 0x65, 0x72, 0x73,
+	0x18, 0x0d, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x50, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x66, 0x65, 0x65, 0x50, 0x61, 0x79, 0x65, 0x72,
+	0x73, 0x12, 0x48, 0x0a, 0x09, 0x66, 0x65, 0x65, 0x5f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x0e,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e,
+	0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e,
+	0x74, 0x52, 0x08, 0x66, 0x65, 0x65, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x12, 0x28, 0x0a, 0x10, 0x70,
+	0x72, 0x65, 0x76, 0x5f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x73, 0x18,
+	0x0f, 0x20, 0x03, 0x28, 0x04, 0x52, 0x0e, 0x70, 0x72, 0x65, 0x76, 0x44, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x49, 0x64, 0x73, 0x22, 0xcf, 0x01, 0x0a, 0x09, 0x50, 0x61, 0x79, 0x65, 0x72, 0x49,
+	0x6e, 0x66, 0x6f, 0x12, 0x3d, 0x0a, 0x0d, 0x70, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x70, 0x61, 0x79, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
+	0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52,
+	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x72, 0x6f, 0x6d, 0x5f,
+	0x62, 0x6f, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x08, 0x66, 0x72, 0x6f, 0x6d,
+	0x42, 0x6f, 0x6e, 0x64, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e, 0x75,
+	0x6d, 0x62, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63,
+	0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x2a, 0xc3, 0x01, 0x0a, 0x0f, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x12, 0x31, 0x0a, 0x1c, 0x44,
 	0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41, 0x54, 0x45, 0x47, 0x4f, 0x52, 0x59, 0x5f,
-	0x4d, 0x49, 0x4e, 0x4f, 0x52, 0x10, 0x02, 0x1a, 0x09, 0x8a, 0x9d, 0x20, 0x05, 0x4d, 0x69, 0x6e,
-	0x6f, 0x72, 0x12, 0x25, 0x0a, 0x16, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41,
-	0x54, 0x45, 0x47, 0x4f, 0x52, 0x59, 0x5f, 0x4d, 0x41, 0x4a, 0x4f, 0x52, 0x10, 0x03, 0x1a, 0x09,
-	0x8a, 0x9d, 0x20, 0x05, 0x4d, 0x61, 0x6a, 0x6f, 0x72, 0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x2a,
-	0xe6, 0x01, 0x0a, 0x0d, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75,
-	0x73, 0x12, 0x27, 0x0a, 0x16, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41,
-	0x54, 0x55, 0x53, 0x5f, 0x50, 0x52, 0x45, 0x56, 0x4f, 0x54, 0x45, 0x10, 0x00, 0x1a, 0x0b, 0x8a,
-	0x9d, 0x20, 0x07, 0x50, 0x72, 0x65, 0x76, 0x6f, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x15, 0x44, 0x49,
-	0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x56, 0x4f, 0x54,
-	0x49, 0x4e, 0x47, 0x10, 0x01, 0x1a, 0x0a, 0x8a, 0x9d, 0x20, 0x06, 0x56, 0x6f, 0x74, 0x69, 0x6e,
-	0x67, 0x12, 0x29, 0x0a, 0x17, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41,
-	0x54, 0x55, 0x53, 0x5f, 0x52, 0x45, 0x53, 0x4f, 0x4c, 0x56, 0x45, 0x44, 0x10, 0x02, 0x1a, 0x0c,
-	0x8a, 0x9d, 0x20, 0x08, 0x52, 0x65, 0x73, 0x6f, 0x6c, 0x76, 0x65, 0x64, 0x12, 0x2d, 0x0a, 0x19,
-	0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55,
-	0x4e, 0x52, 0x45, 0x53, 0x4f, 0x4c, 0x56, 0x45, 0x44, 0x10, 0x03, 0x1a, 0x0e, 0x8a, 0x9d, 0x20,
-	0x0a, 0x55, 0x6e, 0x72, 0x65, 0x73, 0x6f, 0x6c, 0x76, 0x65, 0x64, 0x12, 0x25, 0x0a, 0x15, 0x44,
-	0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x46, 0x41,
-	0x49, 0x4c, 0x45, 0x44, 0x10, 0x04, 0x1a, 0x0a, 0x8a, 0x9d, 0x20, 0x06, 0x46, 0x61, 0x69, 0x6c,
-	0x65, 0x64, 0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x42, 0xa4, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x0c,
-	0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f,
-	0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c,
-	0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x1a, 0x0f, 0x8a,
+	0x9d, 0x20, 0x0b, 0x55, 0x6e, 0x73, 0x70, 0x65, 0x63, 0x69, 0x66, 0x69, 0x65, 0x64, 0x12, 0x29,
+	0x0a, 0x18, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41, 0x54, 0x45, 0x47, 0x4f,
+	0x52, 0x59, 0x5f, 0x57, 0x41, 0x52, 0x4e, 0x49, 0x4e, 0x47, 0x10, 0x01, 0x1a, 0x0b, 0x8a, 0x9d,
+	0x20, 0x07, 0x57, 0x61, 0x72, 0x6e, 0x69, 0x6e, 0x67, 0x12, 0x25, 0x0a, 0x16, 0x44, 0x49, 0x53,
+	0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41, 0x54, 0x45, 0x47, 0x4f, 0x52, 0x59, 0x5f, 0x4d, 0x49,
+	0x4e, 0x4f, 0x52, 0x10, 0x02, 0x1a, 0x09, 0x8a, 0x9d, 0x20, 0x05, 0x4d, 0x69, 0x6e, 0x6f, 0x72,
+	0x12, 0x25, 0x0a, 0x16, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x43, 0x41, 0x54, 0x45,
+	0x47, 0x4f, 0x52, 0x59, 0x5f, 0x4d, 0x41, 0x4a, 0x4f, 0x52, 0x10, 0x03, 0x1a, 0x09, 0x8a, 0x9d,
+	0x20, 0x05, 0x4d, 0x61, 0x6a, 0x6f, 0x72, 0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x2a, 0xe6, 0x01,
+	0x0a, 0x0d, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12,
+	0x27, 0x0a, 0x16, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55,
+	0x53, 0x5f, 0x50, 0x52, 0x45, 0x56, 0x4f, 0x54, 0x45, 0x10, 0x00, 0x1a, 0x0b, 0x8a, 0x9d, 0x20,
+	0x07, 0x50, 0x72, 0x65, 0x76, 0x6f, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x15, 0x44, 0x49, 0x53, 0x50,
+	0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x56, 0x4f, 0x54, 0x49, 0x4e,
+	0x47, 0x10, 0x01, 0x1a, 0x0a, 0x8a, 0x9d, 0x20, 0x06, 0x56, 0x6f, 0x74, 0x69, 0x6e, 0x67, 0x12,
+	0x29, 0x0a, 0x17, 0x44, 0x49, 0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55,
+	0x53, 0x5f, 0x52, 0x45, 0x53, 0x4f, 0x4c, 0x56, 0x45, 0x44, 0x10, 0x02, 0x1a, 0x0c, 0x8a, 0x9d,
+	0x20, 0x08, 0x52, 0x65, 0x73, 0x6f, 0x6c, 0x76, 0x65, 0x64, 0x12, 0x2d, 0x0a, 0x19, 0x44, 0x49,
+	0x53, 0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x52,
+	0x45, 0x53, 0x4f, 0x4c, 0x56, 0x45, 0x44, 0x10, 0x03, 0x1a, 0x0e, 0x8a, 0x9d, 0x20, 0x0a, 0x55,
+	0x6e, 0x72, 0x65, 0x73, 0x6f, 0x6c, 0x76, 0x65, 0x64, 0x12, 0x25, 0x0a, 0x15, 0x44, 0x49, 0x53,
+	0x50, 0x55, 0x54, 0x45, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x46, 0x41, 0x49, 0x4c,
+	0x45, 0x44, 0x10, 0x04, 0x1a, 0x0a, 0x8a, 0x9d, 0x20, 0x06, 0x46, 0x61, 0x69, 0x6c, 0x65, 0x64,
+	0x1a, 0x04, 0x88, 0xa3, 0x1e, 0x00, 0x42, 0xa4, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x0c, 0x44, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
+	0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58,
+	0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c,
+	0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3222,29 +2578,27 @@ func file_layer_dispute_dispute_proto_rawDescGZIP() []byte {
 }
 
 var file_layer_dispute_dispute_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_layer_dispute_dispute_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_layer_dispute_dispute_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_layer_dispute_dispute_proto_goTypes = []interface{}{
 	(DisputeCategory)(0),          // 0: layer.dispute.DisputeCategory
 	(DisputeStatus)(0),            // 1: layer.dispute.DisputeStatus
 	(*Dispute)(nil),               // 2: layer.dispute.Dispute
-	(*MicroReport)(nil),           // 3: layer.dispute.MicroReport
-	(*PayerInfo)(nil),             // 4: layer.dispute.PayerInfo
-	(*timestamppb.Timestamp)(nil), // 5: google.protobuf.Timestamp
-	(*v1beta1.Coin)(nil),          // 6: cosmos.base.v1beta1.Coin
+	(*PayerInfo)(nil),             // 3: layer.dispute.PayerInfo
+	(*timestamppb.Timestamp)(nil), // 4: google.protobuf.Timestamp
+	(*oracle.MicroReport)(nil),    // 5: layer.oracle.MicroReport
 }
 var file_layer_dispute_dispute_proto_depIdxs = []int32{
-	0, // 0: layer.dispute.Dispute.disputeCategory:type_name -> layer.dispute.DisputeCategory
-	1, // 1: layer.dispute.Dispute.disputeStatus:type_name -> layer.dispute.DisputeStatus
-	5, // 2: layer.dispute.Dispute.disputeStartTime:type_name -> google.protobuf.Timestamp
-	5, // 3: layer.dispute.Dispute.disputeEndTime:type_name -> google.protobuf.Timestamp
-	3, // 4: layer.dispute.Dispute.reportEvidence:type_name -> layer.dispute.MicroReport
-	4, // 5: layer.dispute.Dispute.feePayers:type_name -> layer.dispute.PayerInfo
-	6, // 6: layer.dispute.PayerInfo.amount:type_name -> cosmos.base.v1beta1.Coin
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	0, // 0: layer.dispute.Dispute.dispute_category:type_name -> layer.dispute.DisputeCategory
+	1, // 1: layer.dispute.Dispute.dispute_status:type_name -> layer.dispute.DisputeStatus
+	4, // 2: layer.dispute.Dispute.dispute_start_time:type_name -> google.protobuf.Timestamp
+	4, // 3: layer.dispute.Dispute.dispute_end_time:type_name -> google.protobuf.Timestamp
+	5, // 4: layer.dispute.Dispute.report_evidence:type_name -> layer.oracle.MicroReport
+	3, // 5: layer.dispute.Dispute.fee_payers:type_name -> layer.dispute.PayerInfo
+	6, // [6:6] is the sub-list for method output_type
+	6, // [6:6] is the sub-list for method input_type
+	6, // [6:6] is the sub-list for extension type_name
+	6, // [6:6] is the sub-list for extension extendee
+	0, // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_layer_dispute_dispute_proto_init() }
@@ -3266,18 +2620,6 @@ func file_layer_dispute_dispute_proto_init() {
 			}
 		}
 		file_layer_dispute_dispute_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MicroReport); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_dispute_dispute_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PayerInfo); i {
 			case 0:
 				return &v.state
@@ -3296,7 +2638,7 @@ func file_layer_dispute_dispute_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_dispute_dispute_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

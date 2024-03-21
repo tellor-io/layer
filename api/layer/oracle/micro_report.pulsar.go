@@ -15,15 +15,16 @@ import (
 )
 
 var (
-	md_MicroReport                 protoreflect.MessageDescriptor
-	fd_MicroReport_reporter        protoreflect.FieldDescriptor
-	fd_MicroReport_power           protoreflect.FieldDescriptor
-	fd_MicroReport_queryType       protoreflect.FieldDescriptor
-	fd_MicroReport_queryId         protoreflect.FieldDescriptor
-	fd_MicroReport_aggregateMethod protoreflect.FieldDescriptor
-	fd_MicroReport_value           protoreflect.FieldDescriptor
-	fd_MicroReport_blockNumber     protoreflect.FieldDescriptor
-	fd_MicroReport_timestamp       protoreflect.FieldDescriptor
+	md_MicroReport                  protoreflect.MessageDescriptor
+	fd_MicroReport_reporter         protoreflect.FieldDescriptor
+	fd_MicroReport_power            protoreflect.FieldDescriptor
+	fd_MicroReport_query_type       protoreflect.FieldDescriptor
+	fd_MicroReport_query_id         protoreflect.FieldDescriptor
+	fd_MicroReport_aggregate_method protoreflect.FieldDescriptor
+	fd_MicroReport_value            protoreflect.FieldDescriptor
+	fd_MicroReport_timestamp        protoreflect.FieldDescriptor
+	fd_MicroReport_cyclelist        protoreflect.FieldDescriptor
+	fd_MicroReport_block_number     protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -31,12 +32,13 @@ func init() {
 	md_MicroReport = File_layer_oracle_micro_report_proto.Messages().ByName("MicroReport")
 	fd_MicroReport_reporter = md_MicroReport.Fields().ByName("reporter")
 	fd_MicroReport_power = md_MicroReport.Fields().ByName("power")
-	fd_MicroReport_queryType = md_MicroReport.Fields().ByName("queryType")
-	fd_MicroReport_queryId = md_MicroReport.Fields().ByName("queryId")
-	fd_MicroReport_aggregateMethod = md_MicroReport.Fields().ByName("aggregateMethod")
+	fd_MicroReport_query_type = md_MicroReport.Fields().ByName("query_type")
+	fd_MicroReport_query_id = md_MicroReport.Fields().ByName("query_id")
+	fd_MicroReport_aggregate_method = md_MicroReport.Fields().ByName("aggregate_method")
 	fd_MicroReport_value = md_MicroReport.Fields().ByName("value")
-	fd_MicroReport_blockNumber = md_MicroReport.Fields().ByName("blockNumber")
 	fd_MicroReport_timestamp = md_MicroReport.Fields().ByName("timestamp")
+	fd_MicroReport_cyclelist = md_MicroReport.Fields().ByName("cyclelist")
+	fd_MicroReport_block_number = md_MicroReport.Fields().ByName("block_number")
 }
 
 var _ protoreflect.Message = (*fastReflection_MicroReport)(nil)
@@ -118,19 +120,19 @@ func (x *fastReflection_MicroReport) Range(f func(protoreflect.FieldDescriptor, 
 	}
 	if x.QueryType != "" {
 		value := protoreflect.ValueOfString(x.QueryType)
-		if !f(fd_MicroReport_queryType, value) {
+		if !f(fd_MicroReport_query_type, value) {
 			return
 		}
 	}
 	if x.QueryId != "" {
 		value := protoreflect.ValueOfString(x.QueryId)
-		if !f(fd_MicroReport_queryId, value) {
+		if !f(fd_MicroReport_query_id, value) {
 			return
 		}
 	}
 	if x.AggregateMethod != "" {
 		value := protoreflect.ValueOfString(x.AggregateMethod)
-		if !f(fd_MicroReport_aggregateMethod, value) {
+		if !f(fd_MicroReport_aggregate_method, value) {
 			return
 		}
 	}
@@ -140,15 +142,21 @@ func (x *fastReflection_MicroReport) Range(f func(protoreflect.FieldDescriptor, 
 			return
 		}
 	}
-	if x.BlockNumber != int64(0) {
-		value := protoreflect.ValueOfInt64(x.BlockNumber)
-		if !f(fd_MicroReport_blockNumber, value) {
-			return
-		}
-	}
 	if x.Timestamp != nil {
 		value := protoreflect.ValueOfMessage(x.Timestamp.ProtoReflect())
 		if !f(fd_MicroReport_timestamp, value) {
+			return
+		}
+	}
+	if x.Cyclelist != false {
+		value := protoreflect.ValueOfBool(x.Cyclelist)
+		if !f(fd_MicroReport_cyclelist, value) {
+			return
+		}
+	}
+	if x.BlockNumber != int64(0) {
+		value := protoreflect.ValueOfInt64(x.BlockNumber)
+		if !f(fd_MicroReport_block_number, value) {
 			return
 		}
 	}
@@ -171,18 +179,20 @@ func (x *fastReflection_MicroReport) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Reporter != ""
 	case "layer.oracle.MicroReport.power":
 		return x.Power != int64(0)
-	case "layer.oracle.MicroReport.queryType":
+	case "layer.oracle.MicroReport.query_type":
 		return x.QueryType != ""
-	case "layer.oracle.MicroReport.queryId":
+	case "layer.oracle.MicroReport.query_id":
 		return x.QueryId != ""
-	case "layer.oracle.MicroReport.aggregateMethod":
+	case "layer.oracle.MicroReport.aggregate_method":
 		return x.AggregateMethod != ""
 	case "layer.oracle.MicroReport.value":
 		return x.Value != ""
-	case "layer.oracle.MicroReport.blockNumber":
-		return x.BlockNumber != int64(0)
 	case "layer.oracle.MicroReport.timestamp":
 		return x.Timestamp != nil
+	case "layer.oracle.MicroReport.cyclelist":
+		return x.Cyclelist != false
+	case "layer.oracle.MicroReport.block_number":
+		return x.BlockNumber != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReport"))
@@ -203,18 +213,20 @@ func (x *fastReflection_MicroReport) Clear(fd protoreflect.FieldDescriptor) {
 		x.Reporter = ""
 	case "layer.oracle.MicroReport.power":
 		x.Power = int64(0)
-	case "layer.oracle.MicroReport.queryType":
+	case "layer.oracle.MicroReport.query_type":
 		x.QueryType = ""
-	case "layer.oracle.MicroReport.queryId":
+	case "layer.oracle.MicroReport.query_id":
 		x.QueryId = ""
-	case "layer.oracle.MicroReport.aggregateMethod":
+	case "layer.oracle.MicroReport.aggregate_method":
 		x.AggregateMethod = ""
 	case "layer.oracle.MicroReport.value":
 		x.Value = ""
-	case "layer.oracle.MicroReport.blockNumber":
-		x.BlockNumber = int64(0)
 	case "layer.oracle.MicroReport.timestamp":
 		x.Timestamp = nil
+	case "layer.oracle.MicroReport.cyclelist":
+		x.Cyclelist = false
+	case "layer.oracle.MicroReport.block_number":
+		x.BlockNumber = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReport"))
@@ -237,24 +249,27 @@ func (x *fastReflection_MicroReport) Get(descriptor protoreflect.FieldDescriptor
 	case "layer.oracle.MicroReport.power":
 		value := x.Power
 		return protoreflect.ValueOfInt64(value)
-	case "layer.oracle.MicroReport.queryType":
+	case "layer.oracle.MicroReport.query_type":
 		value := x.QueryType
 		return protoreflect.ValueOfString(value)
-	case "layer.oracle.MicroReport.queryId":
+	case "layer.oracle.MicroReport.query_id":
 		value := x.QueryId
 		return protoreflect.ValueOfString(value)
-	case "layer.oracle.MicroReport.aggregateMethod":
+	case "layer.oracle.MicroReport.aggregate_method":
 		value := x.AggregateMethod
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.MicroReport.value":
 		value := x.Value
 		return protoreflect.ValueOfString(value)
-	case "layer.oracle.MicroReport.blockNumber":
-		value := x.BlockNumber
-		return protoreflect.ValueOfInt64(value)
 	case "layer.oracle.MicroReport.timestamp":
 		value := x.Timestamp
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "layer.oracle.MicroReport.cyclelist":
+		value := x.Cyclelist
+		return protoreflect.ValueOfBool(value)
+	case "layer.oracle.MicroReport.block_number":
+		value := x.BlockNumber
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReport"))
@@ -279,18 +294,20 @@ func (x *fastReflection_MicroReport) Set(fd protoreflect.FieldDescriptor, value 
 		x.Reporter = value.Interface().(string)
 	case "layer.oracle.MicroReport.power":
 		x.Power = value.Int()
-	case "layer.oracle.MicroReport.queryType":
+	case "layer.oracle.MicroReport.query_type":
 		x.QueryType = value.Interface().(string)
-	case "layer.oracle.MicroReport.queryId":
+	case "layer.oracle.MicroReport.query_id":
 		x.QueryId = value.Interface().(string)
-	case "layer.oracle.MicroReport.aggregateMethod":
+	case "layer.oracle.MicroReport.aggregate_method":
 		x.AggregateMethod = value.Interface().(string)
 	case "layer.oracle.MicroReport.value":
 		x.Value = value.Interface().(string)
-	case "layer.oracle.MicroReport.blockNumber":
-		x.BlockNumber = value.Int()
 	case "layer.oracle.MicroReport.timestamp":
 		x.Timestamp = value.Message().Interface().(*timestamppb.Timestamp)
+	case "layer.oracle.MicroReport.cyclelist":
+		x.Cyclelist = value.Bool()
+	case "layer.oracle.MicroReport.block_number":
+		x.BlockNumber = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReport"))
@@ -320,16 +337,18 @@ func (x *fastReflection_MicroReport) Mutable(fd protoreflect.FieldDescriptor) pr
 		panic(fmt.Errorf("field reporter of message layer.oracle.MicroReport is not mutable"))
 	case "layer.oracle.MicroReport.power":
 		panic(fmt.Errorf("field power of message layer.oracle.MicroReport is not mutable"))
-	case "layer.oracle.MicroReport.queryType":
-		panic(fmt.Errorf("field queryType of message layer.oracle.MicroReport is not mutable"))
-	case "layer.oracle.MicroReport.queryId":
-		panic(fmt.Errorf("field queryId of message layer.oracle.MicroReport is not mutable"))
-	case "layer.oracle.MicroReport.aggregateMethod":
-		panic(fmt.Errorf("field aggregateMethod of message layer.oracle.MicroReport is not mutable"))
+	case "layer.oracle.MicroReport.query_type":
+		panic(fmt.Errorf("field query_type of message layer.oracle.MicroReport is not mutable"))
+	case "layer.oracle.MicroReport.query_id":
+		panic(fmt.Errorf("field query_id of message layer.oracle.MicroReport is not mutable"))
+	case "layer.oracle.MicroReport.aggregate_method":
+		panic(fmt.Errorf("field aggregate_method of message layer.oracle.MicroReport is not mutable"))
 	case "layer.oracle.MicroReport.value":
 		panic(fmt.Errorf("field value of message layer.oracle.MicroReport is not mutable"))
-	case "layer.oracle.MicroReport.blockNumber":
-		panic(fmt.Errorf("field blockNumber of message layer.oracle.MicroReport is not mutable"))
+	case "layer.oracle.MicroReport.cyclelist":
+		panic(fmt.Errorf("field cyclelist of message layer.oracle.MicroReport is not mutable"))
+	case "layer.oracle.MicroReport.block_number":
+		panic(fmt.Errorf("field block_number of message layer.oracle.MicroReport is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReport"))
@@ -347,19 +366,21 @@ func (x *fastReflection_MicroReport) NewField(fd protoreflect.FieldDescriptor) p
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MicroReport.power":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.oracle.MicroReport.queryType":
+	case "layer.oracle.MicroReport.query_type":
 		return protoreflect.ValueOfString("")
-	case "layer.oracle.MicroReport.queryId":
+	case "layer.oracle.MicroReport.query_id":
 		return protoreflect.ValueOfString("")
-	case "layer.oracle.MicroReport.aggregateMethod":
+	case "layer.oracle.MicroReport.aggregate_method":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MicroReport.value":
 		return protoreflect.ValueOfString("")
-	case "layer.oracle.MicroReport.blockNumber":
-		return protoreflect.ValueOfInt64(int64(0))
 	case "layer.oracle.MicroReport.timestamp":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "layer.oracle.MicroReport.cyclelist":
+		return protoreflect.ValueOfBool(false)
+	case "layer.oracle.MicroReport.block_number":
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReport"))
@@ -452,12 +473,15 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.BlockNumber != 0 {
-			n += 1 + runtime.Sov(uint64(x.BlockNumber))
-		}
 		if x.Timestamp != nil {
 			l = options.Size(x.Timestamp)
 			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Cyclelist {
+			n += 2
+		}
+		if x.BlockNumber != 0 {
+			n += 1 + runtime.Sov(uint64(x.BlockNumber))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -488,6 +512,21 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+		if x.BlockNumber != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
+			i--
+			dAtA[i] = 0x48
+		}
+		if x.Cyclelist {
+			i--
+			if x.Cyclelist {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x40
+		}
 		if x.Timestamp != nil {
 			encoded, err := options.Marshal(x.Timestamp)
 			if err != nil {
@@ -500,12 +539,7 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x42
-		}
-		if x.BlockNumber != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
-			i--
-			dAtA[i] = 0x38
+			dAtA[i] = 0x3a
 		}
 		if len(x.Value) > 0 {
 			i -= len(x.Value)
@@ -776,25 +810,6 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 				x.Value = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 7:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
-				}
-				x.BlockNumber = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.BlockNumber |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			case 8:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
 				}
@@ -830,6 +845,45 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 8:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Cyclelist", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Cyclelist = bool(v != 0)
+			case 9:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
+				}
+				x.BlockNumber = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.BlockNumber |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -878,19 +932,30 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// MicroReport represents data for a single report
 type MicroReport struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Reporter        string                 `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Power           int64                  `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
-	QueryType       string                 `protobuf:"bytes,3,opt,name=queryType,proto3" json:"queryType,omitempty"`
-	QueryId         string                 `protobuf:"bytes,4,opt,name=queryId,proto3" json:"queryId,omitempty"`
-	AggregateMethod string                 `protobuf:"bytes,5,opt,name=aggregateMethod,proto3" json:"aggregateMethod,omitempty"`
-	Value           string                 `protobuf:"bytes,6,opt,name=value,proto3" json:"value,omitempty"`
-	BlockNumber     int64                  `protobuf:"varint,7,opt,name=blockNumber,proto3" json:"blockNumber,omitempty"`
-	Timestamp       *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// reporter is the address of the reporter
+	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	// the power of the reporter based on total tokens normalized
+	Power int64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+	// string identifier of the data spec
+	QueryType string `protobuf:"bytes,3,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
+	// hash of the query data
+	QueryId string `protobuf:"bytes,4,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	// aggregate method to use for aggregating all the reports for the query id
+	AggregateMethod string `protobuf:"bytes,5,opt,name=aggregate_method,json=aggregateMethod,proto3" json:"aggregate_method,omitempty"`
+	// hex string of the response value
+	Value string `protobuf:"bytes,6,opt,name=value,proto3" json:"value,omitempty"`
+	// timestamp of when the report was created
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// indicates if the report's query id is in the cyclelist
+	Cyclelist bool `protobuf:"varint,8,opt,name=cyclelist,proto3" json:"cyclelist,omitempty"`
+	// block number of when the report was created
+	BlockNumber int64 `protobuf:"varint,9,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 }
 
 func (x *MicroReport) Reset() {
@@ -955,18 +1020,25 @@ func (x *MicroReport) GetValue() string {
 	return ""
 }
 
-func (x *MicroReport) GetBlockNumber() int64 {
-	if x != nil {
-		return x.BlockNumber
-	}
-	return 0
-}
-
 func (x *MicroReport) GetTimestamp() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Timestamp
 	}
 	return nil
+}
+
+func (x *MicroReport) GetCyclelist() bool {
+	if x != nil {
+		return x.Cyclelist
+	}
+	return false
+}
+
+func (x *MicroReport) GetBlockNumber() int64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
 }
 
 var File_layer_oracle_micro_report_proto protoreflect.FileDescriptor
@@ -975,39 +1047,41 @@ var file_layer_oracle_micro_report_proto_rawDesc = []byte{
 	0x0a, 0x1f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2f, 0x6d,
 	0x69, 0x63, 0x72, 0x6f, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x12, 0x0c, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x1a,
-	0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
-	0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x9d, 0x02, 0x0a, 0x0b, 0x4d, 0x69, 0x63, 0x72, 0x6f,
+	0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbf, 0x02, 0x0a, 0x0b, 0x4d, 0x69, 0x63, 0x72, 0x6f,
 	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74,
 	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74,
 	0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x1c, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72,
-	0x79, 0x54, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49,
-	0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64,
-	0x12, 0x28, 0x0a, 0x0f, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x74,
-	0x68, 0x6f, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x61, 0x67, 0x67, 0x72, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
-	0x12, 0x20, 0x0a, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18,
-	0x07, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62,
-	0x65, 0x72, 0x12, 0x42, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18,
-	0x08, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0xa2, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x10, 0x4d, 0x69, 0x63,
-	0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c,
-	0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c,
-	0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c,
-	0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x49, 0x64, 0x12, 0x29, 0x0a, 0x10, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f,
+	0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x61, 0x67,
+	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x14, 0x0a,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x12, 0x42, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x18, 0x07, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65,
+	0x6c, 0x69, 0x73, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c,
+	0x65, 0x6c, 0x69, 0x73, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e,
+	0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c, 0x6f,
+	0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x42, 0xa2, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x10, 0x4d,
+	0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65,
+	0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02,
+	0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61,
+	0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63,
+	0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d,
+	0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

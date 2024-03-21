@@ -3,8 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -20,65 +22,8 @@ func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coi
 }
 
 // Pay fee from validator's bond can only be called by the validator itself
-func (k Keeper) PayFromBond(ctx sdk.Context, delAddr sdk.AccAddress, fee sdk.Coin) error {
-	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
-	if err != nil {
-		return stakingtypes.ErrNoValidatorFound
-	}
-
-	// Check if validator has tokens to pay the fee
-	if fee.Amount.GT(validator.GetBondedTokens()) {
-		return fmt.Errorf("not enough stake to pay the fee")
-	}
-
-	// Deduct tokens from validator
-	validator, err = k.stakingKeeper.RemoveValidatorTokens(ctx, validator, fee.Amount)
-	if err != nil {
-		return err
-	}
-
-	// Send fee to module account
-	var poolName string
-	switch validator.GetStatus() {
-	case stakingtypes.Bonded:
-		poolName = stakingtypes.BondedPoolName
-	case stakingtypes.Unbonded, stakingtypes.Unbonding:
-		poolName = stakingtypes.NotBondedPoolName
-	default:
-		panic("invalid validator status")
-	}
-
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, poolName, types.ModuleName, sdk.NewCoins(fee)); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Refund coins to bonded pool
-func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) error {
-	// TODO: loophole bypassing redelegation MaxEntries check
-	// k.GetLastRefundBlockTime(ctx, delAddr)
-	// k.SetLastRefundBlockTime(ctx, delAddr, currentBlock)
-	delAddr := sdk.MustAccAddressFromBech32(refundTo)
-	validator, err := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(delAddr))
-	if err != nil {
-		return stakingtypes.ErrNoValidatorFound
-	}
-	validator, _, err = k.stakingKeeper.AddValidatorTokensAndShares(ctx, validator, fee.Amount)
-	if err != nil {
-		return err
-	}
-
-	if validator.IsBonded() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee)); err != nil {
-			return err
-		}
-	} else {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(fee)); err != nil {
-			return err
-		}
-	}
-	return nil
+func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin) error {
+	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount)
 }
 
 // Pay dispute fee
@@ -97,4 +42,27 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, from
 		}
 	}
 	return nil
+}
+
+// return slashed tokens when reporter either wins dispute or dispute is invalid
+func (k Keeper) ReturnSlashedTokens(ctx sdk.Context, dispute *types.Dispute) error {
+
+	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.ReportEvidence.Reporter, dispute.ReportEvidence.BlockNumber, dispute.SlashAmount)
+	if err != nil {
+		return err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dispute.SlashAmount))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
+}
+
+func (k Keeper) ReturnFeetoStake(ctx sdk.Context, repAddr string, height int64, remainingAmt math.Int) error {
+
+	err := k.reporterKeeper.ReturnSlashedTokens(ctx, repAddr, height, remainingAmt)
+	if err != nil {
+		return err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, remainingAmt))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
 }

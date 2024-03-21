@@ -168,19 +168,20 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		icatypes.ModuleName:            nil,
-		minttypes.TimeBasedRewards:     nil,
-		minttypes.MintToTeam:           nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		oraclemoduletypes.ModuleName:   {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		disputemoduletypes.ModuleName:  {authtypes.Minter, authtypes.Burner, authtypes.Staking},
-		reportermoduletypes.ModuleName: nil,
+		authtypes.FeeCollectorName:         nil,
+		distrtypes.ModuleName:              nil,
+		icatypes.ModuleName:                nil,
+		minttypes.TimeBasedRewards:         nil,
+		minttypes.MintToTeam:               nil,
+		minttypes.ModuleName:               {authtypes.Minter},
+		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                {authtypes.Burner},
+		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		oraclemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		disputemoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		reportermoduletypes.ModuleName:     nil,
+		reportermoduletypes.TipsEscrowPool: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
@@ -557,15 +558,23 @@ func New(
 	)
 	registryModule := registrymodule.NewAppModule(appCodec, app.RegistryKeeper, app.AccountKeeper, app.BankKeeper)
 
+	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
+		logger,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper,
+		app.BankKeeper,
+	)
+	reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
+
 	app.OracleKeeper = oraclemodulekeeper.NewKeeper(
 		appCodec,
-		keys[oraclemoduletypes.StoreKey],
-		keys[oraclemoduletypes.MemStoreKey],
+		runtime.NewKVStoreService(keys[oraclemoduletypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
-		app.DistrKeeper,
-		app.StakingKeeper,
 		app.RegistryKeeper,
+		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	oracleModule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper)
@@ -579,8 +588,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.OracleKeeper,
-		app.SlashingKeeper,
-		app.StakingKeeper,
+		app.ReporterKeeper,
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -600,7 +608,7 @@ func New(
 		app.StakingKeeper,
 		app.BankKeeper,
 	)
-	reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
+	// reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
@@ -742,6 +750,11 @@ func New(
 	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
 	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
 	app.BaseApp.SetPreBlocker(prepareProposalHandler.PreBlocker)
+	app.RegistryKeeper.SetHooks(
+		registrymoduletypes.NewMultiRegistryHooks(
+			app.OracleKeeper.Hooks(),
+		),
+	)
 
 	/**** Module Options ****/
 	// NOTE: Any module instantiated in the module manager that is later modified
@@ -953,8 +966,8 @@ func (app *App) Name() string { return app.BaseApp.Name() }
 func (app *App) GetBaseApp() *baseapp.BaseApp { return app.BaseApp }
 
 // BeginBlocker application updates every begin block
-func (a *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	return a.mm.BeginBlock(ctx)
+func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return app.mm.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block

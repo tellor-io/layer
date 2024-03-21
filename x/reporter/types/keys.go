@@ -13,6 +13,8 @@ const (
 	MemStoreKey = "mem_reporter"
 
 	Denom = "loya"
+
+	TipsEscrowPool = "tips_escrow_pool"
 )
 
 var (
@@ -26,6 +28,9 @@ var (
 	DelegatorStartingInfoPrefix         = collections.NewPrefix(17)
 	ReporterHistoricalRewardsPrefix     = collections.NewPrefix(18)
 	ReporterDisputeEventPrefix          = collections.NewPrefix(19)
+	ReporterDelegatorsIndexPrefix       = collections.NewPrefix(20)
+	TokenOriginSnapshotPrefix           = collections.NewPrefix(21)
+	DelegatorTipsPrefix                 = collections.NewPrefix(22)
 )
 
 func KeyPrefix(p string) []byte {

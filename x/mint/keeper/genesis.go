@@ -22,7 +22,10 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 }
 
 func (k Keeper) InitialMint(ctx sdk.Context, gen *types.GenesisState) {
-	k.bankKeeper.MintCoins(ctx, types.ModuleName, gen.InitialMint)
+	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, gen.InitialMint); err != nil {
+		panic(err)
+	}
+
 	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.MintToTeam, gen.InitialMint); err != nil {
 		panic(err)
 	}

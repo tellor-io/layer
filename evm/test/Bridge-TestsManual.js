@@ -498,6 +498,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         console.log("deploying bridge...")
         const Bridge = await ethers.getContractFactory("BlobstreamO");
         bridge = await Bridge.deploy(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address);
+        await bridge.deployed();
 
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
@@ -545,7 +546,8 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
         // oAttestations = await h.getOracleAttestations(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp, valSet1, dataDigest)
         oAttestations = await h.getOracleAttestationsCheat(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp)
-        oAttestations[0].v = 27
+        oAttestations[0].v = 28
+        oAttestations[1].v = 27
         console.log("oAttestations: ", oAttestations)
         await bridge.verifyOracleData(
             currentEthUsdVal,

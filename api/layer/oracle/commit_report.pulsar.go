@@ -13,18 +13,20 @@ import (
 )
 
 var (
-	md_Commit         protoreflect.MessageDescriptor
-	fd_Commit_creator protoreflect.FieldDescriptor
-	fd_Commit_queryId protoreflect.FieldDescriptor
-	fd_Commit_hash    protoreflect.FieldDescriptor
+	md_Commit          protoreflect.MessageDescriptor
+	fd_Commit_reporter protoreflect.FieldDescriptor
+	fd_Commit_queryId  protoreflect.FieldDescriptor
+	fd_Commit_hash     protoreflect.FieldDescriptor
+	fd_Commit_incycle  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_oracle_commit_report_proto_init()
 	md_Commit = File_layer_oracle_commit_report_proto.Messages().ByName("Commit")
-	fd_Commit_creator = md_Commit.Fields().ByName("creator")
+	fd_Commit_reporter = md_Commit.Fields().ByName("reporter")
 	fd_Commit_queryId = md_Commit.Fields().ByName("queryId")
 	fd_Commit_hash = md_Commit.Fields().ByName("hash")
+	fd_Commit_incycle = md_Commit.Fields().ByName("incycle")
 }
 
 var _ protoreflect.Message = (*fastReflection_Commit)(nil)
@@ -92,9 +94,9 @@ func (x *fastReflection_Commit) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Commit) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Creator != "" {
-		value := protoreflect.ValueOfString(x.Creator)
-		if !f(fd_Commit_creator, value) {
+	if x.Reporter != "" {
+		value := protoreflect.ValueOfString(x.Reporter)
+		if !f(fd_Commit_reporter, value) {
 			return
 		}
 	}
@@ -107,6 +109,12 @@ func (x *fastReflection_Commit) Range(f func(protoreflect.FieldDescriptor, proto
 	if x.Hash != "" {
 		value := protoreflect.ValueOfString(x.Hash)
 		if !f(fd_Commit_hash, value) {
+			return
+		}
+	}
+	if x.Incycle != false {
+		value := protoreflect.ValueOfBool(x.Incycle)
+		if !f(fd_Commit_incycle, value) {
 			return
 		}
 	}
@@ -125,12 +133,14 @@ func (x *fastReflection_Commit) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Commit) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.oracle.Commit.creator":
-		return x.Creator != ""
+	case "layer.oracle.Commit.reporter":
+		return x.Reporter != ""
 	case "layer.oracle.Commit.queryId":
 		return len(x.QueryId) != 0
 	case "layer.oracle.Commit.hash":
 		return x.Hash != ""
+	case "layer.oracle.Commit.incycle":
+		return x.Incycle != false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Commit"))
@@ -147,12 +157,14 @@ func (x *fastReflection_Commit) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Commit) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.oracle.Commit.creator":
-		x.Creator = ""
+	case "layer.oracle.Commit.reporter":
+		x.Reporter = ""
 	case "layer.oracle.Commit.queryId":
 		x.QueryId = nil
 	case "layer.oracle.Commit.hash":
 		x.Hash = ""
+	case "layer.oracle.Commit.incycle":
+		x.Incycle = false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Commit"))
@@ -169,8 +181,8 @@ func (x *fastReflection_Commit) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Commit) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.oracle.Commit.creator":
-		value := x.Creator
+	case "layer.oracle.Commit.reporter":
+		value := x.Reporter
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.Commit.queryId":
 		value := x.QueryId
@@ -178,6 +190,9 @@ func (x *fastReflection_Commit) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "layer.oracle.Commit.hash":
 		value := x.Hash
 		return protoreflect.ValueOfString(value)
+	case "layer.oracle.Commit.incycle":
+		value := x.Incycle
+		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Commit"))
@@ -198,12 +213,14 @@ func (x *fastReflection_Commit) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Commit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.oracle.Commit.creator":
-		x.Creator = value.Interface().(string)
+	case "layer.oracle.Commit.reporter":
+		x.Reporter = value.Interface().(string)
 	case "layer.oracle.Commit.queryId":
 		x.QueryId = value.Bytes()
 	case "layer.oracle.Commit.hash":
 		x.Hash = value.Interface().(string)
+	case "layer.oracle.Commit.incycle":
+		x.Incycle = value.Bool()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Commit"))
@@ -224,12 +241,14 @@ func (x *fastReflection_Commit) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Commit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Commit.creator":
-		panic(fmt.Errorf("field creator of message layer.oracle.Commit is not mutable"))
+	case "layer.oracle.Commit.reporter":
+		panic(fmt.Errorf("field reporter of message layer.oracle.Commit is not mutable"))
 	case "layer.oracle.Commit.queryId":
 		panic(fmt.Errorf("field queryId of message layer.oracle.Commit is not mutable"))
 	case "layer.oracle.Commit.hash":
 		panic(fmt.Errorf("field hash of message layer.oracle.Commit is not mutable"))
+	case "layer.oracle.Commit.incycle":
+		panic(fmt.Errorf("field incycle of message layer.oracle.Commit is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Commit"))
@@ -243,12 +262,14 @@ func (x *fastReflection_Commit) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Commit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Commit.creator":
+	case "layer.oracle.Commit.reporter":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.Commit.queryId":
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.Commit.hash":
 		return protoreflect.ValueOfString("")
+	case "layer.oracle.Commit.incycle":
+		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Commit"))
@@ -318,7 +339,7 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Creator)
+		l = len(x.Reporter)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -329,6 +350,9 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 		l = len(x.Hash)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Incycle {
+			n += 2
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -359,6 +383,16 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+		if x.Incycle {
+			i--
+			if x.Incycle {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x20
+		}
 		if len(x.Hash) > 0 {
 			i -= len(x.Hash)
 			copy(dAtA[i:], x.Hash)
@@ -373,10 +407,10 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.Creator) > 0 {
-			i -= len(x.Creator)
-			copy(dAtA[i:], x.Creator)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
+		if len(x.Reporter) > 0 {
+			i -= len(x.Reporter)
+			copy(dAtA[i:], x.Reporter)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reporter)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -431,7 +465,7 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -459,7 +493,7 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Creator = string(dAtA[iNdEx:postIndex])
+				x.Reporter = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -527,475 +561,11 @@ func (x *fastReflection_Commit) ProtoMethods() *protoiface.Methods {
 				}
 				x.Hash = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_CommitReport        protoreflect.MessageDescriptor
-	fd_CommitReport_report protoreflect.FieldDescriptor
-	fd_CommitReport_block  protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_oracle_commit_report_proto_init()
-	md_CommitReport = File_layer_oracle_commit_report_proto.Messages().ByName("CommitReport")
-	fd_CommitReport_report = md_CommitReport.Fields().ByName("report")
-	fd_CommitReport_block = md_CommitReport.Fields().ByName("block")
-}
-
-var _ protoreflect.Message = (*fastReflection_CommitReport)(nil)
-
-type fastReflection_CommitReport CommitReport
-
-func (x *CommitReport) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_CommitReport)(x)
-}
-
-func (x *CommitReport) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_oracle_commit_report_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_CommitReport_messageType fastReflection_CommitReport_messageType
-var _ protoreflect.MessageType = fastReflection_CommitReport_messageType{}
-
-type fastReflection_CommitReport_messageType struct{}
-
-func (x fastReflection_CommitReport_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_CommitReport)(nil)
-}
-func (x fastReflection_CommitReport_messageType) New() protoreflect.Message {
-	return new(fastReflection_CommitReport)
-}
-func (x fastReflection_CommitReport_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_CommitReport
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_CommitReport) Descriptor() protoreflect.MessageDescriptor {
-	return md_CommitReport
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_CommitReport) Type() protoreflect.MessageType {
-	return _fastReflection_CommitReport_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_CommitReport) New() protoreflect.Message {
-	return new(fastReflection_CommitReport)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_CommitReport) Interface() protoreflect.ProtoMessage {
-	return (*CommitReport)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_CommitReport) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Report != nil {
-		value := protoreflect.ValueOfMessage(x.Report.ProtoReflect())
-		if !f(fd_CommitReport_report, value) {
-			return
-		}
-	}
-	if x.Block != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Block)
-		if !f(fd_CommitReport_block, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_CommitReport) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.oracle.CommitReport.report":
-		return x.Report != nil
-	case "layer.oracle.CommitReport.block":
-		return x.Block != int64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitReport"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitReport) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.oracle.CommitReport.report":
-		x.Report = nil
-	case "layer.oracle.CommitReport.block":
-		x.Block = int64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitReport"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_CommitReport) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.oracle.CommitReport.report":
-		value := x.Report
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.oracle.CommitReport.block":
-		value := x.Block
-		return protoreflect.ValueOfInt64(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitReport"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitReport does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitReport) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.oracle.CommitReport.report":
-		x.Report = value.Message().Interface().(*Commit)
-	case "layer.oracle.CommitReport.block":
-		x.Block = value.Int()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitReport"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitReport) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.oracle.CommitReport.report":
-		if x.Report == nil {
-			x.Report = new(Commit)
-		}
-		return protoreflect.ValueOfMessage(x.Report.ProtoReflect())
-	case "layer.oracle.CommitReport.block":
-		panic(fmt.Errorf("field block of message layer.oracle.CommitReport is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitReport"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_CommitReport) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.oracle.CommitReport.report":
-		m := new(Commit)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.oracle.CommitReport.block":
-		return protoreflect.ValueOfInt64(int64(0))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitReport"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitReport does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_CommitReport) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.CommitReport", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_CommitReport) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitReport) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_CommitReport) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_CommitReport) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*CommitReport)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.Report != nil {
-			l = options.Size(x.Report)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Block != 0 {
-			n += 1 + runtime.Sov(uint64(x.Block))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*CommitReport)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.Block != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Block))
-			i--
-			dAtA[i] = 0x10
-		}
-		if x.Report != nil {
-			encoded, err := options.Marshal(x.Report)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*CommitReport)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CommitReport: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CommitReport: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Report", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.Report == nil {
-					x.Report = &Commit{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Report); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 2:
+			case 4:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Block", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Incycle", wireType)
 				}
-				x.Block = 0
+				var v int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1005,505 +575,12 @@ func (x *fastReflection_CommitReport) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Block |= int64(b&0x7F) << shift
+					v |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var _ protoreflect.List = (*_CommitsByHeight_1_list)(nil)
-
-type _CommitsByHeight_1_list struct {
-	list *[]*Commit
-}
-
-func (x *_CommitsByHeight_1_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_CommitsByHeight_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_CommitsByHeight_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Commit)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_CommitsByHeight_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*Commit)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_CommitsByHeight_1_list) AppendMutable() protoreflect.Value {
-	v := new(Commit)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_CommitsByHeight_1_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_CommitsByHeight_1_list) NewElement() protoreflect.Value {
-	v := new(Commit)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_CommitsByHeight_1_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_CommitsByHeight         protoreflect.MessageDescriptor
-	fd_CommitsByHeight_commits protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_oracle_commit_report_proto_init()
-	md_CommitsByHeight = File_layer_oracle_commit_report_proto.Messages().ByName("CommitsByHeight")
-	fd_CommitsByHeight_commits = md_CommitsByHeight.Fields().ByName("commits")
-}
-
-var _ protoreflect.Message = (*fastReflection_CommitsByHeight)(nil)
-
-type fastReflection_CommitsByHeight CommitsByHeight
-
-func (x *CommitsByHeight) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_CommitsByHeight)(x)
-}
-
-func (x *CommitsByHeight) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_oracle_commit_report_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_CommitsByHeight_messageType fastReflection_CommitsByHeight_messageType
-var _ protoreflect.MessageType = fastReflection_CommitsByHeight_messageType{}
-
-type fastReflection_CommitsByHeight_messageType struct{}
-
-func (x fastReflection_CommitsByHeight_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_CommitsByHeight)(nil)
-}
-func (x fastReflection_CommitsByHeight_messageType) New() protoreflect.Message {
-	return new(fastReflection_CommitsByHeight)
-}
-func (x fastReflection_CommitsByHeight_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_CommitsByHeight
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_CommitsByHeight) Descriptor() protoreflect.MessageDescriptor {
-	return md_CommitsByHeight
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_CommitsByHeight) Type() protoreflect.MessageType {
-	return _fastReflection_CommitsByHeight_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_CommitsByHeight) New() protoreflect.Message {
-	return new(fastReflection_CommitsByHeight)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_CommitsByHeight) Interface() protoreflect.ProtoMessage {
-	return (*CommitsByHeight)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_CommitsByHeight) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Commits) != 0 {
-		value := protoreflect.ValueOfList(&_CommitsByHeight_1_list{list: &x.Commits})
-		if !f(fd_CommitsByHeight_commits, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_CommitsByHeight) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.oracle.CommitsByHeight.commits":
-		return len(x.Commits) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitsByHeight"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitsByHeight does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitsByHeight) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.oracle.CommitsByHeight.commits":
-		x.Commits = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitsByHeight"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitsByHeight does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_CommitsByHeight) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.oracle.CommitsByHeight.commits":
-		if len(x.Commits) == 0 {
-			return protoreflect.ValueOfList(&_CommitsByHeight_1_list{})
-		}
-		listValue := &_CommitsByHeight_1_list{list: &x.Commits}
-		return protoreflect.ValueOfList(listValue)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitsByHeight"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitsByHeight does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitsByHeight) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.oracle.CommitsByHeight.commits":
-		lv := value.List()
-		clv := lv.(*_CommitsByHeight_1_list)
-		x.Commits = *clv.list
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitsByHeight"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitsByHeight does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitsByHeight) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.oracle.CommitsByHeight.commits":
-		if x.Commits == nil {
-			x.Commits = []*Commit{}
-		}
-		value := &_CommitsByHeight_1_list{list: &x.Commits}
-		return protoreflect.ValueOfList(value)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitsByHeight"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitsByHeight does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_CommitsByHeight) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.oracle.CommitsByHeight.commits":
-		list := []*Commit{}
-		return protoreflect.ValueOfList(&_CommitsByHeight_1_list{list: &list})
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.CommitsByHeight"))
-		}
-		panic(fmt.Errorf("message layer.oracle.CommitsByHeight does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_CommitsByHeight) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.CommitsByHeight", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_CommitsByHeight) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_CommitsByHeight) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_CommitsByHeight) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_CommitsByHeight) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*CommitsByHeight)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if len(x.Commits) > 0 {
-			for _, e := range x.Commits {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*CommitsByHeight)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Commits) > 0 {
-			for iNdEx := len(x.Commits) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.Commits[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0xa
-			}
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*CommitsByHeight)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CommitsByHeight: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: CommitsByHeight: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Commits", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Commits = append(x.Commits, &Commit{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Commits[len(x.Commits)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
+				x.Incycle = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1557,9 +634,10 @@ type Commit struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Creator string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	QueryId []byte `protobuf:"bytes,2,opt,name=queryId,proto3" json:"queryId,omitempty"`
-	Hash    string `protobuf:"bytes,3,opt,name=hash,proto3" json:"hash,omitempty"`
+	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	QueryId  []byte `protobuf:"bytes,2,opt,name=queryId,proto3" json:"queryId,omitempty"`
+	Hash     string `protobuf:"bytes,3,opt,name=hash,proto3" json:"hash,omitempty"`
+	Incycle  bool   `protobuf:"varint,4,opt,name=incycle,proto3" json:"incycle,omitempty"`
 }
 
 func (x *Commit) Reset() {
@@ -1582,9 +660,9 @@ func (*Commit) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_commit_report_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Commit) GetCreator() string {
+func (x *Commit) GetReporter() string {
 	if x != nil {
-		return x.Creator
+		return x.Reporter
 	}
 	return ""
 }
@@ -1603,82 +681,11 @@ func (x *Commit) GetHash() string {
 	return ""
 }
 
-type CommitReport struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Report *Commit `protobuf:"bytes,1,opt,name=report,proto3" json:"report,omitempty"`
-	Block  int64   `protobuf:"varint,2,opt,name=block,proto3" json:"block,omitempty"`
-}
-
-func (x *CommitReport) Reset() {
-	*x = CommitReport{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_oracle_commit_report_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CommitReport) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CommitReport) ProtoMessage() {}
-
-// Deprecated: Use CommitReport.ProtoReflect.Descriptor instead.
-func (*CommitReport) Descriptor() ([]byte, []int) {
-	return file_layer_oracle_commit_report_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *CommitReport) GetReport() *Commit {
+func (x *Commit) GetIncycle() bool {
 	if x != nil {
-		return x.Report
+		return x.Incycle
 	}
-	return nil
-}
-
-func (x *CommitReport) GetBlock() int64 {
-	if x != nil {
-		return x.Block
-	}
-	return 0
-}
-
-type CommitsByHeight struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Commits []*Commit `protobuf:"bytes,1,rep,name=commits,proto3" json:"commits,omitempty"`
-}
-
-func (x *CommitsByHeight) Reset() {
-	*x = CommitsByHeight{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_oracle_commit_report_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CommitsByHeight) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CommitsByHeight) ProtoMessage() {}
-
-// Deprecated: Use CommitsByHeight.ProtoReflect.Descriptor instead.
-func (*CommitsByHeight) Descriptor() ([]byte, []int) {
-	return file_layer_oracle_commit_report_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *CommitsByHeight) GetCommits() []*Commit {
-	if x != nil {
-		return x.Commits
-	}
-	return nil
+	return false
 }
 
 var File_layer_oracle_commit_report_proto protoreflect.FileDescriptor
@@ -1688,32 +695,25 @@ var file_layer_oracle_commit_report_proto_rawDesc = []byte{
 	0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x12, 0x0c, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
 	0x1a, 0x15, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2f, 0x74,
-	0x78, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x50, 0x0a, 0x06, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
-	0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x18, 0x0a, 0x07, 0x71,
-	0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x22, 0x52, 0x0a, 0x0c, 0x43, 0x6f, 0x6d,
-	0x6d, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x2c, 0x0a, 0x06, 0x72, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52,
-	0x06, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x22, 0x41, 0x0a,
-	0x0f, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x42, 0x79, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74,
-	0x12, 0x2e, 0x0a, 0x07, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x14, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x07, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x73,
-	0x42, 0xa3, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f,
-	0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x11, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
-	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c,
-	0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a,
-	0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x78, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x6c, 0x0a, 0x06, 0x43, 0x6f, 0x6d, 0x6d, 0x69,
+	0x74, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x18, 0x0a,
+	0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07,
+	0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61, 0x73, 0x68, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x12, 0x18, 0x0a, 0x07, 0x69,
+	0x6e, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x69, 0x6e,
+	0x63, 0x79, 0x63, 0x6c, 0x65, 0x42, 0xa3, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x11, 0x43, 0x6f, 0x6d, 0x6d,
+	0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c,
+	0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c,
+	0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65,
+	0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1728,20 +728,16 @@ func file_layer_oracle_commit_report_proto_rawDescGZIP() []byte {
 	return file_layer_oracle_commit_report_proto_rawDescData
 }
 
-var file_layer_oracle_commit_report_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_layer_oracle_commit_report_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_layer_oracle_commit_report_proto_goTypes = []interface{}{
-	(*Commit)(nil),          // 0: layer.oracle.Commit
-	(*CommitReport)(nil),    // 1: layer.oracle.CommitReport
-	(*CommitsByHeight)(nil), // 2: layer.oracle.CommitsByHeight
+	(*Commit)(nil), // 0: layer.oracle.Commit
 }
 var file_layer_oracle_commit_report_proto_depIdxs = []int32{
-	0, // 0: layer.oracle.CommitReport.report:type_name -> layer.oracle.Commit
-	0, // 1: layer.oracle.CommitsByHeight.commits:type_name -> layer.oracle.Commit
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_layer_oracle_commit_report_proto_init() }
@@ -1763,30 +759,6 @@ func file_layer_oracle_commit_report_proto_init() {
 				return nil
 			}
 		}
-		file_layer_oracle_commit_report_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CommitReport); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_oracle_commit_report_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CommitsByHeight); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1794,7 +766,7 @@ func file_layer_oracle_commit_report_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_oracle_commit_report_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

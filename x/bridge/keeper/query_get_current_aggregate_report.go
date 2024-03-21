@@ -45,7 +45,7 @@ func (k Keeper) GetCurrentAggregateReport(goCtx context.Context, req *types.Quer
 		StandardDeviation:    aggregate.StandardDeviation,
 		Reporters:            convertedReporters,
 		Flagged:              aggregate.Flagged,
-		Nonce:                aggregate.Nonce,
+		Nonce:                int64(aggregate.Nonce),
 		AggregateReportIndex: aggregate.AggregateReportIndex,
 		Height:               aggregate.Height,
 	}

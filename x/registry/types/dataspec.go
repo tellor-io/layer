@@ -16,8 +16,8 @@ func GenesisDataSpec() DataSpec {
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
-			{Name: "asset", Type: "string"},
-			{Name: "currency", Type: "string"},
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
 		},
 		AggregationMethod: "weighted-median",
 		Registrar:         "genesis",
@@ -62,13 +62,13 @@ func (d DataSpec) MakeArgMarshaller() []abi.ArgumentMarshaling {
 	for _, cmp := range d.AbiComponents {
 		_argMrsh := abi.ArgumentMarshaling{
 			Name: cmp.Name,
-			Type: cmp.Type,
+			Type: cmp.FieldType,
 		}
-		if cmp.Type == "tuple" || cmp.Type == "tuple[]" {
+		if cmp.FieldType == "tuple" || cmp.FieldType == "tuple[]" {
 			for _, cmp2 := range cmp.NestedComponent {
 				_argMrsh_ := abi.ArgumentMarshaling{
 					Name: cmp2.Name,
-					Type: cmp2.Type,
+					Type: cmp2.FieldType,
 				}
 				_argMrsh.Components = append(_argMrsh.Components, _argMrsh_)
 			}

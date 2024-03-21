@@ -13,19 +13,19 @@ func TestTupleListEncoding(t *testing.T) {
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
-			{Name: "metric", Type: "string"},
-			{Name: "currency", Type: "string"},
-			{Name: "collection", Type: "tuple[]",
+			{Name: "metric", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+			{Name: "collection", FieldType: "tuple[]",
 				NestedComponent: []*ABIComponent{
-					{Name: "chainName", Type: "string"},
-					{Name: "collectionAddress", Type: "address"},
+					{Name: "chainName", FieldType: "string"},
+					{Name: "collectionAddress", FieldType: "address"},
 				},
 			},
-			{Name: "tokens", Type: "tuple[]",
+			{Name: "tokens", FieldType: "tuple[]",
 				NestedComponent: []*ABIComponent{
-					{Name: "chainName", Type: "string"},
-					{Name: "tokenName", Type: "string"},
-					{Name: "tokenAddress", Type: "address"},
+					{Name: "chainName", FieldType: "string"},
+					{Name: "tokenName", FieldType: "string"},
+					{Name: "tokenAddress", FieldType: "address"},
 				},
 			},
 		},
@@ -65,11 +65,11 @@ func TestTupleDataSpecEncoding(t *testing.T) {
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
-			{Name: "tupletest", Type: "tuple",
+			{Name: "tupletest", FieldType: "tuple",
 				NestedComponent: []*ABIComponent{
-					{Name: "num1", Type: "uint256"},
-					{Name: "num2", Type: "uint256"},
-					{Name: "text", Type: "string"},
+					{Name: "num1", FieldType: "uint256"},
+					{Name: "num2", FieldType: "uint256"},
+					{Name: "text", FieldType: "string"},
 				},
 			},
 		},
@@ -104,8 +104,8 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
-					{Name: "asset", Type: "string"},
-					{Name: "currency", Type: "string"},
+					{Name: "asset", FieldType: "string"},
+					{Name: "currency", FieldType: "string"},
 				},
 				AggregationMethod: "weighted-median",
 			},
@@ -119,8 +119,8 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
-					{Name: "asset", Type: "string"},
-					{Name: "currency", Type: "string"},
+					{Name: "asset", FieldType: "string"},
+					{Name: "currency", FieldType: "string"},
 				},
 				AggregationMethod: "weighted-median",
 			},
@@ -134,8 +134,8 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
-					{Name: "asset", Type: "string"},
-					{Name: "currency", Type: "string"},
+					{Name: "asset", FieldType: "string"},
+					{Name: "currency", FieldType: "string"},
 				},
 				AggregationMethod: "weighted-median",
 			},
@@ -149,8 +149,8 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
-					{Name: "address", Type: "string"},
-					{Name: "timestamp", Type: "uint256"},
+					{Name: "address", FieldType: "string"},
+					{Name: "timestamp", FieldType: "uint256"},
 				},
 				AggregationMethod: "weighted-mode",
 			},
@@ -164,9 +164,9 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
-					{Name: "chainId", Type: "uint256"},
-					{Name: "contractAddress", Type: "address"},
-					{Name: "timestamp", Type: "uint256"},
+					{Name: "chainId", FieldType: "uint256"},
+					{Name: "contractAddress", FieldType: "address"},
+					{Name: "timestamp", FieldType: "uint256"},
 				},
 				AggregationMethod: "weighted-mode",
 			},
@@ -180,7 +180,7 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "uint256",
 				AbiComponents: []*ABIComponent{
-					{Name: "phantom", Type: "bytes"},
+					{Name: "phantom", FieldType: "bytes"},
 				},
 				AggregationMethod: "weighted-median",
 			},
@@ -194,7 +194,7 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
-					{Name: "", Type: "bytes"},
+					{Name: "", FieldType: "bytes"},
 				},
 				AggregationMethod: "weighted-mode",
 			},
@@ -208,8 +208,8 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
-					{Name: "", Type: "uint256"},
-					{Name: "", Type: "uint256[]"},
+					{Name: "", FieldType: "uint256"},
+					{Name: "", FieldType: "uint256[]"},
 				},
 				AggregationMethod: "weighted-mode",
 			},
@@ -223,8 +223,8 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
-					{Name: "", Type: "string"},
-					{Name: "", Type: "string[]"},
+					{Name: "", FieldType: "string"},
+					{Name: "", FieldType: "string[]"},
 				},
 				AggregationMethod: "weighted-mode",
 			},
@@ -238,9 +238,9 @@ func TestMixedEncoding(t *testing.T) {
 			DataSpec{
 				ResponseValueType: "string",
 				AbiComponents: []*ABIComponent{
-					{Name: "", Type: "uint256"},
-					{Name: "", Type: "address"},
-					{Name: "", Type: "bytes"},
+					{Name: "", FieldType: "uint256"},
+					{Name: "", FieldType: "address"},
+					{Name: "", FieldType: "bytes"},
 				},
 				AggregationMethod: "weighted-mode",
 			},

@@ -29,6 +29,20 @@ func (_m *BankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderMo
 	return r0
 }
 
+// SendCoinsFromModuleToModule provides a mock function with given fields: ctx, senderModule, recipientModule, amt
+func (_m *BankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderModule string, recipientModule string, amt types.Coins) error {
+	ret := _m.Called(ctx, senderModule, recipientModule, amt)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, types.Coins) error); ok {
+		r0 = rf(ctx, senderModule, recipientModule, amt)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SpendableCoins provides a mock function with given fields: _a0, _a1
 func (_m *BankKeeper) SpendableCoins(_a0 context.Context, _a1 types.AccAddress) types.Coins {
 	ret := _m.Called(_a0, _a1)

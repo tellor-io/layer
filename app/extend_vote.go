@@ -21,7 +21,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
-	"github.com/tellor-io/layer/utils"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
@@ -161,7 +160,8 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 			currentTime := time.Now()
 			ts := currentTime.Unix() + 100
 			// get dataBefore
-			queryId, err := utils.QueryIDFromString(aggReport.QueryId)
+			// queryId, err := utils.QueryIDFromString(aggReport.QueryId)
+			queryId, err := hex.DecodeString(aggReport.QueryId)
 			if err != nil {
 				h.logger.Error("Failed to get query id from string", "error", err)
 				panic(err)

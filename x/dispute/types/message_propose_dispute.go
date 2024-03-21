@@ -4,13 +4,14 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 const TypeMsgProposeDispute = "propose_dispute"
 
 var _ sdk.Msg = &MsgProposeDispute{}
 
-func NewMsgProposeDispute(creator string, report *MicroReport, disputeCategory DisputeCategory, fee sdk.Coin, payFromBond bool) *MsgProposeDispute {
+func NewMsgProposeDispute(creator string, report *oracletypes.MicroReport, disputeCategory DisputeCategory, fee sdk.Coin, payFromBond bool) *MsgProposeDispute {
 	return &MsgProposeDispute{
 		Creator:         creator,
 		Report:          report,

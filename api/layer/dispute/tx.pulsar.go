@@ -7,6 +7,7 @@ import (
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
+	oracle "github.com/tellor-io/layer/api/layer/oracle"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -234,7 +235,7 @@ func (x *fastReflection_MsgProposeDispute) Set(fd protoreflect.FieldDescriptor, 
 	case "layer.dispute.MsgProposeDispute.creator":
 		x.Creator = value.Interface().(string)
 	case "layer.dispute.MsgProposeDispute.report":
-		x.Report = value.Message().Interface().(*MicroReport)
+		x.Report = value.Message().Interface().(*oracle.MicroReport)
 	case "layer.dispute.MsgProposeDispute.disputeCategory":
 		x.DisputeCategory = (DisputeCategory)(value.Enum())
 	case "layer.dispute.MsgProposeDispute.fee":
@@ -263,7 +264,7 @@ func (x *fastReflection_MsgProposeDispute) Mutable(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "layer.dispute.MsgProposeDispute.report":
 		if x.Report == nil {
-			x.Report = new(MicroReport)
+			x.Report = new(oracle.MicroReport)
 		}
 		return protoreflect.ValueOfMessage(x.Report.ProtoReflect())
 	case "layer.dispute.MsgProposeDispute.fee":
@@ -293,7 +294,7 @@ func (x *fastReflection_MsgProposeDispute) NewField(fd protoreflect.FieldDescrip
 	case "layer.dispute.MsgProposeDispute.creator":
 		return protoreflect.ValueOfString("")
 	case "layer.dispute.MsgProposeDispute.report":
-		m := new(MicroReport)
+		m := new(oracle.MicroReport)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.dispute.MsgProposeDispute.disputeCategory":
 		return protoreflect.ValueOfEnum(0)
@@ -579,7 +580,7 @@ func (x *fastReflection_MsgProposeDispute) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Report == nil {
-					x.Report = &MicroReport{}
+					x.Report = &oracle.MicroReport{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Report); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -2947,11 +2948,11 @@ type MsgProposeDispute struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Creator         string          `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	Report          *MicroReport    `protobuf:"bytes,2,opt,name=report,proto3" json:"report,omitempty"`
-	DisputeCategory DisputeCategory `protobuf:"varint,3,opt,name=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"disputeCategory,omitempty"`
-	Fee             *v1beta1.Coin   `protobuf:"bytes,4,opt,name=fee,proto3" json:"fee,omitempty"`
-	PayFromBond     bool            `protobuf:"varint,5,opt,name=payFromBond,proto3" json:"payFromBond,omitempty"`
+	Creator         string              `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Report          *oracle.MicroReport `protobuf:"bytes,2,opt,name=report,proto3" json:"report,omitempty"`
+	DisputeCategory DisputeCategory     `protobuf:"varint,3,opt,name=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"disputeCategory,omitempty"`
+	Fee             *v1beta1.Coin       `protobuf:"bytes,4,opt,name=fee,proto3" json:"fee,omitempty"`
+	PayFromBond     bool                `protobuf:"varint,5,opt,name=payFromBond,proto3" json:"payFromBond,omitempty"`
 }
 
 func (x *MsgProposeDispute) Reset() {
@@ -2981,7 +2982,7 @@ func (x *MsgProposeDispute) GetCreator() string {
 	return ""
 }
 
-func (x *MsgProposeDispute) GetReport() *MicroReport {
+func (x *MsgProposeDispute) GetReport() *oracle.MicroReport {
 	if x != nil {
 		return x.Report
 	}
@@ -3209,12 +3210,14 @@ var file_layer_dispute_tx_proto_rawDesc = []byte{
 	0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1b, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69,
 	0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x8e, 0x02, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x50, 0x72, 0x6f, 0x70, 0x6f,
-	0x73, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65,
-	0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61,
-	0x74, 0x6f, 0x72, 0x12, 0x32, 0x0a, 0x06, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
-	0x75, 0x74, 0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
+	0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0x2f, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8d, 0x02, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x50, 0x72, 0x6f, 0x70,
+	0x6f, 0x73, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72,
+	0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65,
+	0x61, 0x74, 0x6f, 0x72, 0x12, 0x31, 0x0a, 0x06, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61,
+	0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
 	0x06, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x48, 0x0a, 0x0f, 0x64, 0x69, 0x73, 0x70, 0x75,
 	0x74, 0x65, 0x43, 0x61, 0x74, 0x65, 0x67, 0x6f, 0x72, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e,
 	0x32, 0x1e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
@@ -3305,12 +3308,12 @@ var file_layer_dispute_tx_proto_goTypes = []interface{}{
 	(*MsgAddFeeToDisputeResponse)(nil), // 4: layer.dispute.MsgAddFeeToDisputeResponse
 	(*MsgVote)(nil),                    // 5: layer.dispute.MsgVote
 	(*MsgVoteResponse)(nil),            // 6: layer.dispute.MsgVoteResponse
-	(*MicroReport)(nil),                // 7: layer.dispute.MicroReport
+	(*oracle.MicroReport)(nil),         // 7: layer.oracle.MicroReport
 	(DisputeCategory)(0),               // 8: layer.dispute.DisputeCategory
 	(*v1beta1.Coin)(nil),               // 9: cosmos.base.v1beta1.Coin
 }
 var file_layer_dispute_tx_proto_depIdxs = []int32{
-	7, // 0: layer.dispute.MsgProposeDispute.report:type_name -> layer.dispute.MicroReport
+	7, // 0: layer.dispute.MsgProposeDispute.report:type_name -> layer.oracle.MicroReport
 	8, // 1: layer.dispute.MsgProposeDispute.disputeCategory:type_name -> layer.dispute.DisputeCategory
 	9, // 2: layer.dispute.MsgProposeDispute.fee:type_name -> cosmos.base.v1beta1.Coin
 	9, // 3: layer.dispute.MsgAddFeeToDispute.amount:type_name -> cosmos.base.v1beta1.Coin

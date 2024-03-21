@@ -23,10 +23,14 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 
 	var totalTips types.UserTipTotal
 	if req.QueryData == "" {
-		totalTips = k.GetUserTips(ctx, tipper)
+		// if query data is not provide, return total tips for the tipper on all queries
+		totalTips, err := k.GetUserTips(ctx, tipper)
+		if err != nil {
+			return nil, err
+		}
 		return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 	}
-
+	// if query data is provided, return total tips for the tipper on the specific query
 	queryId, err := utils.QueryIDFromDataString(req.QueryData)
 	if err != nil {
 		return nil, err
@@ -40,7 +44,7 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 		}
 		return nil, err
 	}
-	totalTips.Total = sdk.NewCoin(types.DefaultBondDenom, tip)
+	totalTips.Total = tip
 
 	return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 }

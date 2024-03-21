@@ -203,8 +203,8 @@ func (x *fastReflection_Aggregate) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.Nonce != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Nonce)
+	if x.Nonce != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Nonce)
 		if !f(fd_Aggregate_nonce, value) {
 			return
 		}
@@ -251,7 +251,7 @@ func (x *fastReflection_Aggregate) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.oracle.Aggregate.flagged":
 		return x.Flagged != false
 	case "layer.oracle.Aggregate.nonce":
-		return x.Nonce != int64(0)
+		return x.Nonce != uint64(0)
 	case "layer.oracle.Aggregate.aggregateReportIndex":
 		return x.AggregateReportIndex != int64(0)
 	case "layer.oracle.Aggregate.height":
@@ -287,7 +287,7 @@ func (x *fastReflection_Aggregate) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.Aggregate.flagged":
 		x.Flagged = false
 	case "layer.oracle.Aggregate.nonce":
-		x.Nonce = int64(0)
+		x.Nonce = uint64(0)
 	case "layer.oracle.Aggregate.aggregateReportIndex":
 		x.AggregateReportIndex = int64(0)
 	case "layer.oracle.Aggregate.height":
@@ -334,7 +334,7 @@ func (x *fastReflection_Aggregate) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfBool(value)
 	case "layer.oracle.Aggregate.nonce":
 		value := x.Nonce
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.Aggregate.aggregateReportIndex":
 		value := x.AggregateReportIndex
 		return protoreflect.ValueOfInt64(value)
@@ -378,7 +378,7 @@ func (x *fastReflection_Aggregate) Set(fd protoreflect.FieldDescriptor, value pr
 	case "layer.oracle.Aggregate.flagged":
 		x.Flagged = value.Bool()
 	case "layer.oracle.Aggregate.nonce":
-		x.Nonce = value.Int()
+		x.Nonce = value.Uint()
 	case "layer.oracle.Aggregate.aggregateReportIndex":
 		x.AggregateReportIndex = value.Int()
 	case "layer.oracle.Aggregate.height":
@@ -456,7 +456,7 @@ func (x *fastReflection_Aggregate) NewField(fd protoreflect.FieldDescriptor) pro
 	case "layer.oracle.Aggregate.flagged":
 		return protoreflect.ValueOfBool(false)
 	case "layer.oracle.Aggregate.nonce":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.Aggregate.aggregateReportIndex":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "layer.oracle.Aggregate.height":
@@ -911,7 +911,7 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Nonce |= int64(b&0x7F) << shift
+					x.Nonce |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1508,7 +1508,7 @@ type Aggregate struct {
 	StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
 	Reporters            []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
 	Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
-	Nonce                int64                `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Nonce                uint64               `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
 	AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
 	Height               int64                `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
 }
@@ -1582,7 +1582,7 @@ func (x *Aggregate) GetFlagged() bool {
 	return false
 }
 
-func (x *Aggregate) GetNonce() int64 {
+func (x *Aggregate) GetNonce() uint64 {
 	if x != nil {
 		return x.Nonce
 	}
@@ -1669,7 +1669,7 @@ var file_layer_oracle_aggregate_proto_rawDesc = []byte{
 	0x52, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x66,
 	0x6c, 0x61, 0x67, 0x67, 0x65, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x66, 0x6c,
 	0x61, 0x67, 0x67, 0x65, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x18, 0x08,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12, 0x32, 0x0a, 0x14, 0x61,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12, 0x32, 0x0a, 0x14, 0x61,
 	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e,
 	0x64, 0x65, 0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52, 0x14, 0x61, 0x67, 0x67, 0x72, 0x65,
 	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12,

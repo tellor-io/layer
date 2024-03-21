@@ -1,0 +1,23 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - errorlint
+    - gofmt
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - lll
+    - misspell
+    - revive
+    - staticcheck
+    - typecheck
+    - unused
+    - whitespace
+linters-settings:
+  revive:
+    rules:
+      - name: duplicated-imports
+        severity: warning
+        disabled: false

@@ -22,7 +22,10 @@ func (k Keeper) GetCurrentTip(goCtx context.Context, req *types.QueryGetCurrentT
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid query data")
 	}
-	tips := k.GetQueryTip(ctx, queryId)
+	tips, err := k.GetQueryTip(ctx, queryId)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.QueryGetCurrentTipResponse{Tips: &types.Tips{
 		QueryData: req.QueryData, // TODO: avoid returning the same data as the request

@@ -1,56 +1,71 @@
 syntax = "proto3";
 package layer.dispute;
 
-import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
-import "google/protobuf/timestamp.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "layer/oracle/micro_report.proto";
 
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
+// Dispute defines a dispute.
 message Dispute {
-  
-  bytes hashId = 1; 
-  uint64 disputeId = 2; 
-  DisputeCategory disputeCategory = 3; 
-  string disputeFee = 4 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+  // unique dispute hash identifier
+  bytes hash_id = 1;
+  // current dispute id
+  uint64 dispute_id = 2;
+  // dispute severity level
+  DisputeCategory dispute_category = 3;
+  // cost to start dispute
+  string dispute_fee = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
-  DisputeStatus disputeStatus = 5; 
-  google.protobuf.Timestamp  disputeStartTime = 6 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
-  google.protobuf.Timestamp  disputeEndTime = 7 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true]; 
-  int64 disputeStartBlock = 8; 
-  uint64 disputeRound = 9; 
-  string slashAmount = 10 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable) = false
   ];
-  string burnAmount = 11 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+  // current dispute status
+  DisputeStatus dispute_status = 5;
+  // start time of the dispute that begins after dispute fee is fully paid
+  google.protobuf.Timestamp dispute_start_time = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  // end time that the dispute stop taking votes and creating new rounds
+  google.protobuf.Timestamp dispute_end_time = 7 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  // height of the block that started the dispute
+  int64 dispute_start_block = 8;
+  // current dispute round
+  uint64 dispute_round = 9;
+  // reporter's slashed amount
+  string slash_amount = 10 [
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
-  MicroReport reportEvidence = 12 [(gogoproto.nullable) = false];
-  repeated PayerInfo feePayers = 13 [(gogoproto.nullable) = false]; 
-  string feeTotal = 14 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.nullable) = false
+  ];
+  // burn amount that will be divided in half and paid to voters and the other half burned
+  string burn_amount = 11 [
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
-  repeated uint64 prevDisputeIds = 15; 
+    (gogoproto.nullable) = false
+  ];
+  // single report evidence
+  layer.oracle.MicroReport report_evidence = 12 [(gogoproto.nullable) = false];
+  // fee payers that were involved in paying the dispute fee in order to start the dispute
+  repeated PayerInfo fee_payers = 13 [(gogoproto.nullable) = false];
+  // total fee paid tracked to know if dispute fee is fully paid to start dispute
+  string fee_total = 14 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // list of dispute ids that preceded before this current round began
+  repeated uint64 prev_dispute_ids = 15;
 }
 
-message MicroReport {
-  string reporter = 1;
-  int64 power = 2;
-  string queryId = 3; 
-  string value = 4; 
-  int64 timestamp = 5; 
-}
-
+// DisputeCategory defines the severity of a dispute.
 enum DisputeCategory {
   option (gogoproto.goproto_enum_prefix) = false;
 
@@ -64,6 +79,7 @@ enum DisputeCategory {
   DISPUTE_CATEGORY_MAJOR = 3 [(gogoproto.enumvalue_customname) = "Major"];
 }
 
+// DisputeStatus defines the status of a dispute.
 enum DisputeStatus {
   option (gogoproto.goproto_enum_prefix) = false;
 
@@ -79,8 +95,21 @@ enum DisputeStatus {
   DISPUTE_STATUS_FAILED = 4 [(gogoproto.enumvalue_customname) = "Failed"];
 }
 
+// PayerInfo defines the payer info of a dispute
+// fee payer's info that was involved in paying the dispute fee in order to start the dispute
 message PayerInfo {
-  string payerAddress = 1;
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
-  bool fromBond = 3;
+  // fee payer's Account address
+  string payer_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount paid
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // source of funds either from bond or free floating funds
+  bool from_bond = 3;
+  // block number when this specific fee was paid
+  // keeping track of this in case the bond was used
+  // in order to reward the reporters' delegators in the future
+  int64 block_number = 4;
 }

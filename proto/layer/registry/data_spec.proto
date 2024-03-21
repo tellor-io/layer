@@ -13,7 +13,7 @@ message ABIComponent {
   // name
   string name = 1;
   // type
-  string type = 2;
+  string field_type = 2;
   // consider taking this recursion out and make it once only
   repeated ABIComponent nested_component = 3;
 }
