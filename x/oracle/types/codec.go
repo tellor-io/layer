@@ -12,6 +12,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCommitReport{}, "oracle/CommitReport", nil)
 	cdc.RegisterConcrete(&MsgTip{}, "oracle/Tip", nil)
 	cdc.RegisterConcrete(&MsgUpdateParams{}, "oracle/UpdateParams", nil)
+	cdc.RegisterConcrete(&MsgUpdateCyclelist{}, "oracle/UpdateCyclelist", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -27,6 +28,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgUpdateCyclelist{},
 	)
 	// this line is used by starport scaffolding # 3
 

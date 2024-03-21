@@ -19,7 +19,7 @@ func SimulateMsgUndelegateReporter(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgUndelegateReporter{
-			Delegator: simAccount.Address.String(),
+			DelegatorAddress: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the UndelegateReporter simulation

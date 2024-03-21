@@ -13,7 +13,7 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// fetch delegation
-	delAddr := sdk.MustAccAddressFromBech32(msg.Delegator)
+	delAddr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	delegation, err := k.Delegators.Get(ctx, delAddr)
 	if err != nil {
 		return nil, err
@@ -30,11 +30,12 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 		if err != nil {
 			return nil, err
 		}
-		_source, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+		currentSourceAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
 		if err != nil {
 			return nil, err
 		}
-		if err := k.UpdateOrRemoveSource(ctx, collections.Join(delAddr, valAddr), _source, source.Amount); err != nil {
+		err = k.UndelegateSource(ctx, collections.Join(delAddr, valAddr), currentSourceAmt, source.Amount)
+		if err != nil {
 			return nil, err
 		}
 		reducedbyAmount = reducedbyAmount.Add(source.Amount)

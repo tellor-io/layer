@@ -17,13 +17,13 @@ func TestMsgUndelegateReporter_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: MsgUndelegateReporter{
-				Delegator: "invalid_address",
+				DelegatorAddress: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgUndelegateReporter{
-				Delegator: sample.AccAddress(),
+				DelegatorAddress: sample.AccAddress(),
 			},
 		},
 	}

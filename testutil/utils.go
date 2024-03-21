@@ -1,7 +1,6 @@
 package testutil
 
 import (
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"math"
@@ -11,15 +10,9 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-func GenerateRandomAddress() sdk.AccAddress {
-	randBytes := make([]byte, 20)
-	rand.Read(randBytes)
-	return sdk.AccAddress(randBytes)
-}
-
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport
-	queryId, err := utils.QueryIDFromString(qId)
+	queryId, err := utils.QueryBytesFromString(qId)
 	if err != nil {
 		panic(fmt.Sprintf("failed to decode query ID string: %v", err))
 	}

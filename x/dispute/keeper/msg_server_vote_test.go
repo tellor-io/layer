@@ -3,41 +3,46 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/mock"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestVote() {
-	require := s.Require()
 	// Add dispute
-	s.TestMsgProposeDisputeFromAccount()
-	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)), nil)
-	s.oracleKeeper.On("GetUserTips", mock.Anything, mock.Anything).Return(oracletypes.UserTipTotal{Address: "", Total: sdk.NewCoin("trb", math.NewInt(1))})
-	s.stakingKeeper.On("GetLastTotalPower", mock.Anything).Return(math.NewInt(1), nil)
-	s.bankKeeper.On("GetSupply", mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)), nil)
-	s.oracleKeeper.On("GetTotalTips", mock.Anything, mock.Anything).Return(sdk.NewCoin("trb", math.NewInt(1)))
+	addr := s.TestMsgProposeDisputeFromAccount()
+
+	// mock dependency modules
+	s.bankKeeper.On("GetBalance", s.ctx, addr, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
+	s.oracleKeeper.On("GetUserTips", s.ctx, addr).Return(oracletypes.UserTipTotal{Address: addr.String(), Total: math.NewInt(1)}, nil)
+	s.bankKeeper.On("GetSupply", s.ctx, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
+	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
+	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
+
 	voteMsg := types.MsgVote{
-		Voter: Addr.String(),
+		Voter: addr.String(),
 		Id:    1,
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	}
 	// vote should have started
-	_, err := s.msgServer.Vote(s.goCtx, &voteMsg)
-	require.NoError(err)
+	_, err := s.msgServer.Vote(s.ctx, &voteMsg)
+	s.NoError(err)
 
-	_, err = s.msgServer.Vote(s.goCtx, &voteMsg)
-	require.Error(err)
+	_, err = s.msgServer.Vote(s.ctx, &voteMsg)
+	s.Error(err)
 
-	voterVote := s.disputeKeeper.GetVoterVote(s.ctx, Addr.String(), 1)
-	require.Equal(voterVote.Voter, Addr.String())
-	require.Equal(voterVote.Id, uint64(1))
-	require.Equal(voterVote.Vote, types.VoteEnum_VOTE_SUPPORT)
+	voterVote, err := s.disputeKeeper.GetVoterVote(s.ctx, addr.String(), 1)
+	s.NoError(err)
+
+	s.Equal(voterVote.Voter, addr.String())
+	s.Equal(voterVote.Id, uint64(1))
+	s.Equal(voterVote.Vote, types.VoteEnum_VOTE_SUPPORT)
 
 	// start voting, this method is check on beginblock
-	vote := s.disputeKeeper.GetVote(s.ctx, 1)
-	require.NotNil(vote)
-	require.Equal(vote.Voters, []string{Addr.String()})
-	require.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
-	require.Equal(vote.Id, uint64(1))
+	vote, err := s.disputeKeeper.GetVote(s.ctx, 1)
+	s.NoError(err)
+	s.NotNil(vote)
+	s.Equal(vote.Voters, []string{addr.String()})
+	s.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
+	s.Equal(vote.Id, uint64(1))
 }

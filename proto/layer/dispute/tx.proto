@@ -6,6 +6,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "layer/dispute/dispute.proto";
+import "layer/oracle/micro_report.proto";
 
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
@@ -19,7 +20,7 @@ service Msg {
 message MsgProposeDispute {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  MicroReport report = 2;
+  layer.oracle.MicroReport report = 2;
   DisputeCategory disputeCategory = 3;
   cosmos.base.v1beta1.Coin fee = 4 [(gogoproto.nullable) = false];
   bool payFromBond = 5;

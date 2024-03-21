@@ -125,7 +125,13 @@ func initRootCmd(
 		app.DefaultNodeHome,
 		newApp,
 		appExport,
-		addModuleInitFlags,
+		func(cmd *cobra.Command) {
+			addModuleInitFlags(cmd)
+
+			if option.startCmdCustomizer != nil {
+				option.startCmdCustomizer(cmd)
+			}
+		},
 	)
 
 	// add keybase, auxiliary RPC, query, and tx child commands

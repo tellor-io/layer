@@ -34,7 +34,17 @@ var (
 	NoncesPrefix     = collections.NewPrefix(7)
 	TotalTipsPrefix  = collections.NewPrefix(8)
 
-	CycleIndexPrefix = collections.NewPrefix(9)
+	QuerySeqPrefix              = collections.NewPrefix(9)
+	QueryTipPrefix              = collections.NewPrefix(10)
+	ReportsIdIndexPrefix        = collections.NewPrefix(11)
+	QueryCyclePrefix            = collections.NewPrefix(12)
+	CycleSeqPrefix              = collections.NewPrefix(13)
+	QueryTipPrefix2             = collections.NewPrefix(14)
+	NextInListPrefix            = collections.NewPrefix(15)
+	QueryRevealedIdsIndexPrefix = collections.NewPrefix(16)
+	CyclelistPrefix             = collections.NewPrefix(17)
+	QueryTypeIndexPrefix        = collections.NewPrefix(18)
+	AggregatesHeightIndexPrefix = collections.NewPrefix(19)
 )
 
 func KeyPrefix(p string) []byte {

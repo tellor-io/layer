@@ -47,7 +47,8 @@ func ReporterKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.B
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 
 	// Initialize params
-	k.SetParams(ctx, types.DefaultParams())
+	err := k.Params.Set(ctx, types.DefaultParams())
+	require.NoError(t, err)
 
 	return k, sk, bk, ctx
 }

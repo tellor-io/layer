@@ -30,8 +30,7 @@ type (
 		accountKeeper  types.AccountKeeper
 		bankKeeper     types.BankKeeper
 		oracleKeeper   types.OracleKeeper
-		slashingKeeper types.SlashingKeeper
-		stakingKeeper  types.StakingKeeper
+		reporterKeeper types.ReporterKeeper
 	}
 )
 
@@ -44,8 +43,7 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	oracleKeeper types.OracleKeeper,
-	slashingKeeper types.SlashingKeeper,
-	stakingKeeper types.StakingKeeper,
+	reporterKeeper types.ReporterKeeper,
 ) Keeper {
 	// set KeyTable if it has not already been set
 	if !ps.HasKeyTable() {
@@ -61,8 +59,7 @@ func NewKeeper(
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		oracleKeeper:   oracleKeeper,
-		slashingKeeper: slashingKeeper,
-		stakingKeeper:  stakingKeeper,
+		reporterKeeper: reporterKeeper,
 	}
 }
 

@@ -13,6 +13,7 @@
 For more in-depth information about Layer, checkout the [TellorLayer - tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf).
 
 ## Tests
+
 To run all tests:
 `go test -v ./...`
 
@@ -57,3 +58,7 @@ Check out our issues log here on Github or feel free to reach out anytime [info@
 ## Copyright
 
 Tellor Inc. 2022 
+
+### Tools
+
+1. Install [golangci-lint](https://golangci-lint.run/usage/install/) 1.55.2

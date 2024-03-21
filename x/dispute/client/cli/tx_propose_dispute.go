@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/cobra"
 	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 var _ = strconv.Itoa(0)
@@ -31,7 +32,7 @@ func CmdProposeDispute() *cobra.Command {
 		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			fs := cmd.Flags()
-			argReport := new(types.MicroReport)
+			argReport := new(oracletypes.MicroReport)
 			err = json.Unmarshal([]byte(args[0]), argReport)
 			if err != nil {
 				return err

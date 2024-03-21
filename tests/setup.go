@@ -37,7 +37,8 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "gov", Permissions: []string{"burner"}},
 					{Account: "nft"},
-					// {Account: "tips_escrow_pool"},
+					{Account: "reporter"},
+					{Account: "tips_escrow_pool"},
 				},
 			}),
 		}

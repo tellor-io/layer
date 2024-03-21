@@ -116,7 +116,7 @@ func convertToArgumentMarshaling(comp ABIComponent) abi.ArgumentMarshaling {
 
 	return abi.ArgumentMarshaling{
 		Name:       comp.Name,
-		Type:       comp.Type,
+		Type:       comp.FieldType,
 		Components: nestedArgMarshallings,
 	}
 }

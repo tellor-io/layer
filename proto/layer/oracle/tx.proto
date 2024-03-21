@@ -20,6 +20,7 @@ service Msg {
   rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
   rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
   rpc Tip(MsgTip) returns (MsgTipResponse);
+  rpc UpdateCyclelist(MsgUpdateCyclelist) returns (MsgUpdateCyclelistResponse);
 }
 
 
@@ -67,3 +68,17 @@ message MsgTip {
 }
 
 message MsgTipResponse {}
+
+// MsgUpdateCycleRequest is the Msg/UpdateCycle request type.
+message MsgUpdateCyclelist {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/oracle/MsgUpdateCyclelist";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // list of query data hex strings
+  repeated string cyclelist = 2;
+}
+
+// MsgUpdateCycleResponse defines the Msg/UpdateCycle response type.
+message MsgUpdateCyclelistResponse {}

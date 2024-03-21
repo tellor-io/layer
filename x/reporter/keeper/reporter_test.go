@@ -13,7 +13,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func TestUpdateOrRemoveSource(t *testing.T) {
+func TestUndelegateSource(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 
 	// Create a test key
@@ -25,8 +25,8 @@ func TestUpdateOrRemoveSource(t *testing.T) {
 	err := k.TokenOrigin.Set(ctx, key, math.NewInt(100))
 	require.NoError(t, err)
 
-	// Call the updateOrRemoveSource function with a reduction amount of 50
-	err = k.UpdateOrRemoveSource(ctx, key, math.NewInt(100), math.NewInt(50))
+	// Call the updateOrRemoveSource function with a reduced amount of 50
+	err = k.UndelegateSource(ctx, key, math.NewInt(100), math.NewInt(50))
 	require.NoError(t, err)
 
 	// Check if the token origin was updated correctly
@@ -34,8 +34,8 @@ func TestUpdateOrRemoveSource(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, math.NewInt(50), updatedTokenOrigin)
 
-	// Call the updateOrRemoveSource function with a reduction amount of 60
-	err = k.UpdateOrRemoveSource(ctx, key, updatedTokenOrigin, math.NewInt(60))
+	// Call the updateOrRemoveSource function with a reduced amount of 60
+	err = k.UndelegateSource(ctx, key, updatedTokenOrigin, math.NewInt(60))
 	require.NoError(t, err)
 
 	// Check if the token origin was removed

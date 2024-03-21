@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"testing"
 	"time"
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/math"
+	"github.com/tellor-io/layer/testutil/sample"
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,7 +20,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -30,7 +31,6 @@ import (
 	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -50,9 +50,7 @@ import (
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
@@ -60,29 +58,27 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
 
+	_ "github.com/tellor-io/layer/x/dispute"
+	_ "github.com/tellor-io/layer/x/oracle"
 	_ "github.com/tellor-io/layer/x/registry/module"
 	_ "github.com/tellor-io/layer/x/reporter/module"
 
-	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
-	"github.com/tellor-io/layer/x/oracle"
 
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-	"testing"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	integration "github.com/tellor-io/layer/tests"
 )
 
 const (
-	ethQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	btcQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	trbQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	ethQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	btcQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	trbQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 )
 
 type IntegrationTestSuite struct {
@@ -103,7 +99,6 @@ type IntegrationTestSuite struct {
 	appCodec       codec.Codec
 	authConfig     *authmodulev1.Module
 
-	queryHelper       *baseapp.QueryServiceTestHelper
 	interfaceRegistry codectypes.InterfaceRegistry
 	fetchStoreKey     func(string) storetypes.StoreKey
 
@@ -168,22 +163,35 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	suite.distrKeeper = distrkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+
+	suite.reporterkeeper = reporterkeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(reportertypes.StoreKey).(*storetypes.KVStoreKey)), log.NewNopLogger(), authtypes.NewModuleAddress(govtypes.ModuleName).String(), suite.stakingKeeper, suite.bankKeeper,
+	)
+
 	suite.oraclekeeper = oraclekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.registrykeeper, suite.reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	suite.disputekeeper = disputekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.slashingKeeper, suite.stakingKeeper,
+		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.reporterkeeper,
+	)
+	suite.stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			suite.reporterkeeper.Hooks(),
+		),
+	)
+	suite.registrykeeper.SetHooks(
+		registrytypes.NewMultiRegistryHooks(
+			suite.oraclekeeper.Hooks(),
+		),
 	)
 }
 
 func (s *IntegrationTestSuite) SetupTest() {
-	dispute.AppWiringSetup()
-	oracle.AppWiringSetup()
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
-	app, err := sims.SetupWithConfiguration(
+	app, err := simtestutil.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				integration.AuthModule(),
@@ -210,70 +218,53 @@ func (s *IntegrationTestSuite) SetupTest() {
 	s.ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
 	s.fetchStoreKey = app.UnsafeFindStoreKey
 
-	s.queryHelper = baseapp.NewQueryServerTestHelper(s.ctx, s.interfaceRegistry)
 	s.denom = sdk.DefaultBondDenom
 	s.initKeepersWithmAccPerms(make(map[string]bool))
 	s.app = app
 }
 
-func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
+func (s *IntegrationTestSuite) mintTokens(addr sdk.AccAddress, amount math.Int) {
 	ctx := s.ctx
 	// s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
-	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, sdk.NewCoins(amount)))
-	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(amount)))
+	coins := sdk.NewCoins(sdk.NewCoin(s.denom, amount))
+	s.NoError(s.bankKeeper.MintCoins(ctx, authtypes.Minter, coins))
+	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, coins))
 }
 
 func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
-	PrivKey := secp256k1.GenPrivKey()
-	PubKey := PrivKey.PubKey()
-	Addr := sdk.AccAddress(PubKey.Address())
-	s.mintTokens(Addr, sdk.NewCoin(s.denom, math.NewInt(1000000)))
+	Addr := sample.AccAddressBytes()
+	s.mintTokens(Addr, math.NewInt(1_000_000))
 	return Addr
 }
 
-func (s *IntegrationTestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
-	vals, err := s.stakingKeeper.GetAllValidators(s.ctx)
-	s.Require().NoError(err)
-	valAddr, err := sdk.ValAddressFromBech32(vals[0].OperatorAddress)
-	s.Require().NoError(err)
-	return disputetypes.MicroReport{
-		Reporter:  sdk.AccAddress(valAddr).String(),
-		Power:     vals[0].GetConsensusPower(vals[0].GetBondedTokens()),
-		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: 1696516597,
-	}, valAddr
+// func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+// 	ctx := s.ctx
+// 	acctNum := len(powers)
+// 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
+// 	amount := new(big.Int).Mul(big.NewInt(1000), base)
+// 	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
+// 	addrs := s.addTestAddrs(math.NewIntFromBigInt(amount), testAddrs)
+// 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+// 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
-}
+// 	for i, pk := range pks {
+// 		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
 
-func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	ctx := s.ctx
-	acctNum := len(powers)
-	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
-	amount := new(big.Int).Mul(big.NewInt(1000), base)
-	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-	pks := simtestutil.CreateTestPubKeys(acctNum)
+// 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
+// 		s.NoError(err)
+// 		s.stakingKeeper.SetValidator(ctx, val)
+// 		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
+// 		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+// 		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+// 	}
 
-	for i, pk := range pks {
-		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
+// 	_, err := s.stakingKeeper.EndBlocker(ctx)
+// 	s.NoError(err)
 
-		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
-		s.NoError(err)
-		s.stakingKeeper.SetValidator(ctx, val)
-		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
-	}
+// 	return addrs, valAddrs
+// }
 
-	_, err := s.stakingKeeper.EndBlocker(ctx)
-	s.NoError(err)
-
-	return addrs, valAddrs
-}
-
-func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
+func (s *IntegrationTestSuite) addTestAddrs(accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
 	initCoins := sdk.NewCoin(s.denom, accAmt)
 	for _, addr := range testAddrs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
@@ -284,8 +275,8 @@ func (s *IntegrationTestSuite) addTestAddrs(accNum int, accAmt math.Int, testAdd
 }
 
 type ModuleAccs struct {
-	staking authtypes.AccountI
-	dispute authtypes.AccountI
+	staking sdk.AccountI
+	dispute sdk.AccountI
 }
 
 func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
@@ -295,16 +286,16 @@ func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
 	}
 }
 
-func CreateRandomPrivateKeys(accNum int) []secp256k1.PrivKey {
-	testAddrs := make([]secp256k1.PrivKey, accNum)
+func CreateRandomPrivateKeys(accNum int) []ed25519.PrivKey {
+	testAddrs := make([]ed25519.PrivKey, accNum)
 	for i := 0; i < accNum; i++ {
-		pk := secp256k1.GenPrivKey()
+		pk := ed25519.GenPrivKey()
 		testAddrs[i] = *pk
 	}
 	return testAddrs
 }
 
-func (s *IntegrationTestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []sdk.AccAddress {
+func (s *IntegrationTestSuite) convertToAccAddress(priv []ed25519.PrivKey) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, len(priv))
 	for i, pk := range priv {
 		testAddrs[i] = sdk.AccAddress(pk.PubKey().Address())
@@ -312,14 +303,14 @@ func (s *IntegrationTestSuite) convertToAccAddress(priv []secp256k1.PrivKey) []s
 	return testAddrs
 }
 
-func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []secp256k1.PrivKey) {
+func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []ed25519.PrivKey) {
 	ctx := s.ctx
 	acctNum := len(powers)
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
 	amount := new(big.Int).Mul(big.NewInt(1000), base)
 	privKeys := CreateRandomPrivateKeys(acctNum)
 	testAddrs := s.convertToAccAddress(privKeys)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
+	addrs := s.addTestAddrs(math.NewIntFromBigInt(amount), testAddrs)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 
 	for i, pk := range privKeys {
@@ -331,18 +322,22 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 		s.accountKeeper.SetAccount(s.ctx, &account)
 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk.PubKey(), stakingtypes.Description{})
 		s.NoError(err)
-		s.stakingKeeper.SetValidator(ctx, val)
-		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+		s.NoError(s.stakingKeeper.SetValidator(ctx, val))
+		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(ctx, val))
+		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val))
+		_, err = s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+		s.NoError(err)
 		// call hooks for distribution init
 		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 		if err != nil {
 			panic(err)
 		}
 		err = s.distrKeeper.Hooks().AfterValidatorCreated(ctx, valBz)
+		s.NoError(err)
 		err = s.distrKeeper.Hooks().BeforeDelegationCreated(ctx, addrs[i], valBz)
+		s.NoError(err)
 		err = s.distrKeeper.Hooks().AfterDelegationModified(ctx, addrs[i], valBz)
+		s.NoError(err)
 	}
 
 	_, err := s.stakingKeeper.EndBlocker(ctx)
@@ -356,7 +351,7 @@ func (s *IntegrationTestSuite) CreateAccountsWithTokens(numofAccs int, amountOfT
 	accs := make([]sdk.AccAddress, numofAccs)
 	for i, pk := range privKeys {
 		accs[i] = sdk.AccAddress(pk.PubKey().Address())
-		s.mintTokens(accs[i], sdk.NewCoin(s.denom, math.NewInt(amountOfTokens)))
+		s.mintTokens(accs[i], math.NewInt(amountOfTokens))
 	}
 	return accs
 }

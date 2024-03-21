@@ -4,52 +4,65 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k Keeper) SortPayerInfo(feePayers []types.PayerInfo) (fromAcc, fromBond []types.PayerInfo) {
-	for _, payer := range feePayers {
-		if payer.FromBond {
-			fromBond = append(fromBond, payer)
-		} else {
-			fromAcc = append(fromAcc, payer)
-		}
-	}
-	return
-}
-
-func (k Keeper) RefundDisputeFeeToAccount(ctx sdk.Context, fromAcc []types.PayerInfo) error {
+func (k Keeper) RefundDisputeFee(ctx sdk.Context, feePayers []types.PayerInfo, remainingAmt math.Int) error {
 	var outputs []banktypes.Output
 
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	totalAmount := sdk.NewCoins()
+	initialTotalAmount := math.ZeroInt()
 
-	// Calculate total amount and prepare outputs
-	for _, recipient := range fromAcc {
-		burn := recipient.Amount.Amount.MulRaw(1).QuoRaw(20)
-		recipient.Amount.Amount = recipient.Amount.Amount.Sub(burn)
-		totalAmount = totalAmount.Add(sdk.NewCoins(recipient.Amount)...)
-		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), sdk.NewCoins(recipient.Amount)))
+	for _, recipient := range feePayers {
+		initialTotalAmount = initialTotalAmount.Add(recipient.Amount)
 	}
 
+	accInputTotal := math.ZeroInt()
+	// Calculate total amount and prepare outputs
+	for _, recipient := range feePayers {
+		amt := math.LegacyNewDecFromInt(recipient.Amount).Quo(math.LegacyNewDecFromInt(initialTotalAmount))
+		amt = amt.MulInt(remainingAmt)
+
+		coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
+		if !recipient.FromBond {
+			accInputTotal = accInputTotal.Add(amt.TruncateInt())
+			outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), coins))
+		} else {
+			if err := k.ReturnFeetoStake(ctx, recipient.PayerAddress, recipient.BlockNumber, amt.TruncateInt()); err != nil {
+				return err
+			}
+		}
+
+	}
 	// Prepare input
-	inputs := banktypes.NewInput(moduleAddress, totalAmount)
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, accInputTotal)))
 
 	// Perform the InputOutputCoins operation
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }
 
-func (k Keeper) RefundDisputeFeeToBond(ctx sdk.Context, fromBond []types.PayerInfo) error {
-	for _, recipient := range fromBond {
-		burn := recipient.Amount.Amount.MulRaw(1).QuoRaw(20)
-		recipient.Amount.Amount = recipient.Amount.Amount.Sub(burn)
-		if err := k.RefundToBond(ctx, recipient.PayerAddress, recipient.Amount); err != nil {
-			panic(err)
+func (k Keeper) RewardReporterBondToFeePayers(ctx sdk.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
+	totalFeesPaid := math.ZeroInt()
+	for _, reporter := range feePayers {
+		totalFeesPaid = totalFeesPaid.Add(reporter.Amount)
+	}
+	for _, reporter := range feePayers {
+		amt := reporter.Amount.Quo(totalFeesPaid).Mul(reporterBond)
+		if reporter.FromBond {
+			if err := k.reporterKeeper.ReturnSlashedTokens(ctx, reporter.PayerAddress, reporter.BlockNumber, amt); err != nil {
+				return err
+			}
+		} else {
+			if err := k.reporterKeeper.AddAmountToStake(ctx, reporter.PayerAddress, amt); err != nil {
+				return err
+			}
 		}
 	}
-	return nil
-}
 
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reporterBond)))
+}
 func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
 		return totalAmount, nil
@@ -58,10 +71,13 @@ func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.
 	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
 	for voter, share := range tokenDistribution {
-		reward := sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, share))
+		if share.IsZero() {
+			continue
+		}
+		reward := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, share))
 		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(voter), reward))
 	}
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, totalAmount)))
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, totalAmount)))
 	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }

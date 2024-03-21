@@ -5,10 +5,10 @@ import (
 )
 
 func (s *KeeperTestSuite) TestGetParams() {
-	require := s.Require()
 	params := types.DefaultParams()
 
 	s.oracleKeeper.SetParams(s.ctx, params)
-
-	require.EqualValues(params, s.oracleKeeper.GetParams(s.ctx))
+	p, err := s.oracleKeeper.GetParams(s.ctx)
+	s.NoError(err)
+	s.EqualValues(params, p)
 }

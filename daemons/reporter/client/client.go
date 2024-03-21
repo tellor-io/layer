@@ -2,27 +2,24 @@ package client
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
-	"strings"
 	"time"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/flags"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-	helper "github.com/tellor-io/layer/lib/prices"
-	"github.com/tellor-io/layer/utils"
+
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
@@ -33,9 +30,14 @@ type Client struct {
 	AccountName string
 	// Query clients
 	OracleQueryClient oracletypes.QueryClient
-	cosmosCtx         client.Context
-	MarketParams      []pricefeedtypes.MarketParam
-	MarketToExchange  *pricefeedservertypes.MarketToExchangePrices
+	StakingClient     stakingtypes.QueryClient
+	ReporterClient    reportertypes.QueryClient
+
+	cosmosCtx        client.Context
+	MarketParams     []pricefeedtypes.MarketParam
+	MarketToExchange *pricefeedservertypes.MarketToExchangePrices
+
+	accAddr sdk.AccAddress
 	// logger is the logger for the daemon.
 	logger log.Logger
 }
@@ -78,16 +80,27 @@ func (c *Client) Start(
 
 	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
 	c.OracleQueryClient = oracletypes.NewQueryClient(queryConn)
+	c.StakingClient = stakingtypes.NewQueryClient(queryConn)
+	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
 
 	ticker := time.NewTicker(time.Second)
 	stop := make(chan bool)
 
-	s := &SubTaskRunnerImpl{}
+	// get account
+	accountName := c.AccountName
+	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
+	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
+	if err != nil {
+		panic(fmt.Errorf("error getting address from keyring: %v", err))
+	}
+	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
+	c.accAddr = c.cosmosCtx.GetFromAddress()
+
 	StartReporterDaemonTaskLoop(
 		c,
 		ctx,
 		c.cosmosCtx,
-		s,
+		&SubTaskRunnerImpl{},
 		flags,
 		ticker,
 		stop,
@@ -105,6 +118,11 @@ func StartReporterDaemonTaskLoop(
 	ticker *time.Ticker,
 	stop <-chan bool,
 ) {
+	if err := client.CreateReporter(ctx); err != nil {
+		client.logger.Error("Error creating reporter: %w", err)
+		panic(err)
+	}
+
 	for {
 		select {
 		case <-ticker.C:
@@ -123,29 +141,66 @@ func StartReporterDaemonTaskLoop(
 	}
 }
 
-func (c *Client) SubmitReport(ctx context.Context) error {
-	accountName := c.AccountName
-	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
-	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
-	if err != nil {
-		panic(fmt.Errorf("error getting address from keyring: %v", err))
-	}
-	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
-	accAddr := c.cosmosCtx.GetFromAddress()
-	c.logger.Info("SubmitReport", "Account address to sign messages", accAddr.String())
+// MsgCreateReporter creates a staked reporter
+func (c *Client) CreateReporter(ctx context.Context) error {
+	for {
+		latestHeight, err := c.LatestBlockHeight(ctx)
+		if err != nil {
+			c.logger.Error("Error getting latest block height: %v", err)
+			panic(err)
+		}
 
-	response, err := c.OracleQueryClient.CurrentCyclelistQuery(ctx, &oracletypes.QueryCurrentCyclelistQueryRequest{})
-	if err != nil {
-		return fmt.Errorf("error calling 'CurrentCyclelistQuery': %v", err)
+		if latestHeight < 1 {
+			time.Sleep(time.Second)
+		} else {
+			break
+		}
 	}
-	qid, err := utils.QueryIDFromDataString(response.Querydata)
-	if err != nil {
-		c.logger.Error("error getting query id from data string: %v", err)
+
+	// get reporter
+	req := &reportertypes.QueryReporterRequest{ReporterAddress: c.accAddr.String()}
+	reporter, err := c.ReporterClient.Reporter(ctx, req)
+	if err == nil {
+		return nil
 	}
-	c.logger.Info("SubmitReport", "next query id in cycle list", hex.EncodeToString(qid))
-	// needed to wait because it kept missing the query
-	time.Sleep(2 * time.Second)
-	value, err := c.median(ctx, strings.ToLower(response.Querydata))
+
+	c.logger.Info("ReporterDaemon", "reporter address", reporter.GetReporter())
+
+	// just getting the first validator, should probably require user to specify validator/s when creating reporter
+	valreq := &stakingtypes.QueryDelegatorValidatorsRequest{
+		DelegatorAddr: c.accAddr.String(),
+		Pagination:    nil,
+	}
+	resp, err := c.StakingClient.DelegatorValidators(ctx, valreq)
+	if err != nil {
+		return err
+	}
+	val := resp.Validators[0]
+
+	c.logger.Info("ReporterDaemon", "staked tokens source validator", val.GetOperator())
+	// stake reporter transaction, reporter is alice
+
+	// should make this configurable by user :todo
+	// staking 1 TRB
+	amtToStake := math.NewInt(1_000_000) // one TRB
+	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), time.Now())
+	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: amtToStake}
+	msgCreateReporter := &reportertypes.MsgCreateReporter{
+		Reporter:     c.accAddr.String(),
+		Amount:       amtToStake,
+		TokenOrigins: []*reportertypes.TokenOrigin{&source},
+		Commission:   &commission,
+	}
+	return c.sendTx(ctx, msgCreateReporter, nil)
+}
+
+func (c *Client) SubmitReport(ctx context.Context) error {
+	querydata, err := c.CurrentQuery(ctx)
+	if err != nil {
+		return fmt.Errorf("error calling 'CurrentQuery': %v", err)
+	}
+	value, err := c.median(querydata)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %v", err)
 	}
@@ -159,194 +214,28 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 
 	// ***********************MsgCommitReport***************************
 	msgCommit := &oracletypes.MsgCommitReport{
-		Creator:   accAddr.String(),
-		QueryData: response.Querydata,
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
 		Hash:      hash,
 	}
-	txf := newFactory(c.cosmosCtx)
 
-	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, accAddr)
+	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
 	if err != nil {
 		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %v", err)
 	}
-	txf = txf.WithSequence(seq)
-	txf, err = txf.Prepare(c.cosmosCtx)
+	err = c.sendTx(ctx, msgCommit, &seq)
 	if err != nil {
-		return fmt.Errorf("error preparing transaction during 'MsgCommitReport': %v", err)
+		return fmt.Errorf("error generating 'MsgCommitReport': %v", err)
 	}
-
-	txn, err := txf.BuildUnsignedTx(msgCommit)
-	if err != nil {
-		return fmt.Errorf("error building 'MsgCommitReport' unsigned transaction: %v", err)
-	}
-	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-		return fmt.Errorf("error when signing 'MsgCommitReport' transaction: %v", err)
-	}
-
-	txBytes, err := c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
-	if err != nil {
-		return fmt.Errorf("error encoding 'MsgCommitReport' transaction: %v", err)
-	}
-	res, err := c.cosmosCtx.BroadcastTx(txBytes)
-	if err := handleBroadcastResult(res, err); err != nil {
-		return fmt.Errorf("error broadcasting 'MsgCommitReport' transaction after 'handleBroadcastResult': %v", err)
-	}
-	txnResult, err := c.WaitForTx(ctx, res.TxHash)
-	if err != nil {
-		return fmt.Errorf("error waiting for 'MsgCommitReport' transaction: %v", err)
-	}
-	c.logger.Info("CommitReportTxResult", "TxResult", txnResult)
 
 	// ***********************MsgSubmitValue***************************
 	msgSubmit := &oracletypes.MsgSubmitValue{
-		Creator:   accAddr.String(),
-		QueryData: response.Querydata,
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
 		Value:     value,
 		Salt:      salt,
 	}
-	// increment sequence by 1 for next transaction
-	seq += 1
-	txf = txf.WithSequence(seq)
-	txf, err = txf.Prepare(c.cosmosCtx)
-	if err != nil {
-		return fmt.Errorf("error preparing transaction during 'MsgCommitReport': %v", err)
-	}
-
-	txn, err = txf.BuildUnsignedTx(msgSubmit)
-	if err != nil {
-		return fmt.Errorf("error building 'MsgSubmitValue' unsigned transaction: %v", err)
-	}
-	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-		return fmt.Errorf("error when signing 'MsgSubmitValue' transaction: %v", err)
-	}
-	txBytes, err = c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
-	if err != nil {
-		return fmt.Errorf("error encoding 'MsgSubmitValue' transaction: %v", err)
-	}
-	// broadcast to a CometBFT node
-	res, err = c.cosmosCtx.BroadcastTx(txBytes)
-	if err := handleBroadcastResult(res, err); err != nil {
-		return fmt.Errorf("error broadcasting 'MsgSubmitValue' transaction after 'handleBroadcastResult': %v", err)
-	}
-	txnResult, err = c.WaitForTx(ctx, res.TxHash)
-	if err != nil {
-		return fmt.Errorf("error waiting for 'MsgSubmitValue' transaction: %v", err)
-	}
-	c.logger.Info("SubmitValueTxResult", "TxResult", txnResult)
-	return nil
-}
-
-func newFactory(clientCtx client.Context) tx.Factory {
-	return tx.Factory{}.
-		WithChainID(clientCtx.ChainID).
-		WithKeybase(clientCtx.Keyring).
-		WithGasAdjustment(1.1).
-		WithGas(defaultGas).
-		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
-		WithAccountRetriever(clientCtx.AccountRetriever).
-		WithTxConfig(clientCtx.TxConfig)
-}
-
-func (c *Client) median(ctx context.Context, querydata string) (string, error) {
-	params := c.MarketParams
-	prices := c.MarketToExchange
-	mapping := prices.GetValidMedianPrices(params, time.Now())
-	fmt.Println("Mapping:", mapping)
-
-	mapQueryDataToMarketParams := make(map[string]pricefeedtypes.MarketParam)
-	for _, marketParam := range c.MarketParams {
-		mapQueryDataToMarketParams[strings.ToLower(marketParam.QueryData)] = marketParam
-	}
-	mp, found := mapQueryDataToMarketParams[querydata]
-	if !found {
-		return "", fmt.Errorf("no market param found for query data: %s", querydata)
-	}
-	mv := c.MarketToExchange.GetValidMedianPrices([]pricefeedtypes.MarketParam{mp}, time.Now())
-	val, found := mv[mp.Id]
-	if !found {
-		return "", fmt.Errorf("no median values found for query data: %s", querydata)
-	}
-
-	value, err := helper.EncodePrice(float64(val), mp.Exponent)
-	if err != nil {
-		return "", err
-	}
-	return value, nil
-}
-
-func handleBroadcastResult(resp *sdk.TxResponse, err error) error {
-	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			return fmt.Errorf("make sure that your account has enough balance")
-		}
-		return err
-	}
-
-	if resp.Code > 0 {
-		return fmt.Errorf("error code: '%d' msg: '%s'", resp.Code, resp.RawLog)
-	}
-	return nil
-}
-func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx, error) {
-	bz, err := hex.DecodeString(hash)
-	if err != nil {
-		return nil, fmt.Errorf("unable to decode tx hash '%s'; err: %v", hash, err)
-	}
-	for {
-		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
-		if err != nil {
-			if strings.Contains(err.Error(), "not found") {
-				// Tx not found, wait for next block and try again
-				err := c.WaitForNextBlock(ctx)
-				if err != nil {
-					return nil, fmt.Errorf("waiting for next block: err: %v", err)
-				}
-				continue
-			}
-			return nil, fmt.Errorf("fetching tx '%s'; err: %v", hash, err)
-		}
-		// Tx found
-		return resp, nil
-	}
-}
-
-func (c Client) WaitForNextBlock(ctx context.Context) error {
-	return c.WaitForNBlocks(ctx, 1)
-}
-func (c Client) WaitForNBlocks(ctx context.Context, n int64) error {
-	start, err := c.LatestBlockHeight(ctx)
-	if err != nil {
-		return err
-	}
-	return c.WaitForBlockHeight(ctx, start+n)
-}
-func (c Client) LatestBlockHeight(ctx context.Context) (int64, error) {
-	resp, err := c.Status(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return resp.SyncInfo.LatestBlockHeight, nil
-}
-
-func (c Client) Status(ctx context.Context) (*cmttypes.ResultStatus, error) {
-	return c.cosmosCtx.Client.Status(ctx)
-}
-func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		latestHeight, err := c.LatestBlockHeight(ctx)
-		if err != nil {
-			return err
-		}
-		if latestHeight >= h {
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("timeout exceeded waiting for block, err: %v", ctx.Err())
-		case <-ticker.C:
-		}
-	}
+	// no need to call GetAccountNumberSequence here, just increment sequence by 1 for next transaction
+	seq++
+	return c.sendTx(ctx, msgSubmit, &seq)
 }

@@ -5,8 +5,6 @@ package mocks
 import (
 	context "context"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -17,13 +15,13 @@ type BankKeeper struct {
 	mock.Mock
 }
 
-// BurnCoins provides a mock function with given fields: ctx, moduleName, amt
-func (_m *BankKeeper) BurnCoins(ctx context.Context, moduleName string, amt types.Coins) error {
-	ret := _m.Called(ctx, moduleName, amt)
+// BurnCoins provides a mock function with given fields: ctx, moduleName, amounts
+func (_m *BankKeeper) BurnCoins(ctx context.Context, moduleName string, amounts types.Coins) error {
+	ret := _m.Called(ctx, moduleName, amounts)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, types.Coins) error); ok {
-		r0 = rf(ctx, moduleName, amt)
+		r0 = rf(ctx, moduleName, amounts)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -45,48 +43,6 @@ func (_m *BankKeeper) GetBalance(ctx context.Context, addr types.AccAddress, den
 	return r0
 }
 
-// GetSupply provides a mock function with given fields: ctx, denom
-func (_m *BankKeeper) GetSupply(ctx context.Context, denom string) types.Coin {
-	ret := _m.Called(ctx, denom)
-
-	var r0 types.Coin
-	if rf, ok := ret.Get(0).(func(context.Context, string) types.Coin); ok {
-		r0 = rf(ctx, denom)
-	} else {
-		r0 = ret.Get(0).(types.Coin)
-	}
-
-	return r0
-}
-
-// HasBalance provides a mock function with given fields: ctx, addr, amt
-func (_m *BankKeeper) HasBalance(ctx context.Context, addr types.AccAddress, amt types.Coin) bool {
-	ret := _m.Called(ctx, addr, amt)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, types.Coin) bool); ok {
-		r0 = rf(ctx, addr, amt)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// InputOutputCoins provides a mock function with given fields: ctx, inputs, outputs
-func (_m *BankKeeper) InputOutputCoins(ctx context.Context, inputs banktypes.Input, outputs []banktypes.Output) error {
-	ret := _m.Called(ctx, inputs, outputs)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, banktypes.Input, []banktypes.Output) error); ok {
-		r0 = rf(ctx, inputs, outputs)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // SendCoinsFromAccountToModule provides a mock function with given fields: ctx, senderAddr, recipientModule, amt
 func (_m *BankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAddr types.AccAddress, recipientModule string, amt types.Coins) error {
 	ret := _m.Called(ctx, senderAddr, recipientModule, amt)
@@ -94,20 +50,6 @@ func (_m *BankKeeper) SendCoinsFromAccountToModule(ctx context.Context, senderAd
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, string, types.Coins) error); ok {
 		r0 = rf(ctx, senderAddr, recipientModule, amt)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SendCoinsFromModuleToAccount provides a mock function with given fields: ctx, senderModule, recipientAddr, amt
-func (_m *BankKeeper) SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr types.AccAddress, amt types.Coins) error {
-	ret := _m.Called(ctx, senderModule, recipientAddr, amt)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, types.AccAddress, types.Coins) error); ok {
-		r0 = rf(ctx, senderModule, recipientAddr, amt)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -124,22 +66,6 @@ func (_m *BankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderMod
 		r0 = rf(ctx, senderModule, recipientModule, amt)
 	} else {
 		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SpendableCoins provides a mock function with given fields: ctx, addr
-func (_m *BankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
-	ret := _m.Called(ctx, addr)
-
-	var r0 types.Coins
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) types.Coins); ok {
-		r0 = rf(ctx, addr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.Coins)
-		}
 	}
 
 	return r0

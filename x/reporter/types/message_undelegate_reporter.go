@@ -10,13 +10,13 @@ var _ sdk.Msg = &MsgUndelegateReporter{}
 
 func NewMsgUndelegateReporter(delegator string, tokenOrigin []*TokenOrigin) *MsgUndelegateReporter {
 	return &MsgUndelegateReporter{
-		Delegator:    delegator,
-		TokenOrigins: tokenOrigin,
+		DelegatorAddress: delegator,
+		TokenOrigins:     tokenOrigin,
 	}
 }
 
 func (msg *MsgUndelegateReporter) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Delegator)
+	_, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid delegator address (%s)", err)
 	}

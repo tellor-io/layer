@@ -3,116 +3,146 @@ package keeper
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 // tally votes
-func (k Keeper) Tally(ctx sdk.Context, ids []uint64) {
+func (k Keeper) Tally(ctx sdk.Context, ids []uint64) error {
 	for _, id := range ids {
-		k.TallyVote(ctx, id)
+		if err := k.TallyVote(ctx, id); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // Execute the transfer of fee after the vote on a dispute is complete
-func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) {
-	dispute := k.GetDisputeById(ctx, id)
-	if dispute == nil {
-		return
+func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
+	dispute, err := k.GetDisputeById(ctx, id)
+	if err != nil {
+		return err
 	}
 	var voters []string
 	for _, id := range dispute.PrevDisputeIds {
-		voters = append(voters, k.GetVote(ctx, id).Voters...)
+		v, err := k.GetVote(ctx, id)
+		if err != nil {
+			return err
+		}
+		voters = append(voters, v.Voters...)
 	}
-	vote := k.GetVote(ctx, id)
+	vote, err := k.GetVote(ctx, id)
+	if err != nil {
+		return err
+	}
 	if vote.Executed || dispute.DisputeStatus != types.Resolved {
-		return
+		ctx.Logger().Info("can't execute vote, reason either vote has already executed: %v, or dispute not resolved: %v", vote.Executed, dispute.DisputeStatus)
+		return nil
 	}
+	// amount of dispute fee to return to fee payers or give to reporter
 	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
-	// the burnAmount %5 of disputeFee, half of which is burned and the other half is distributed to the voters
+	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
 	halfBurnAmount := dispute.BurnAmount.QuoRaw(2)
 	voterReward := halfBurnAmount
 	if len(voters) == 0 {
+		// if no voters, burn the entire burnAmount
 		halfBurnAmount = dispute.BurnAmount
+		// non voters get nothing
 		voterReward = math.ZeroInt()
 	}
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
+		// distribute the voterRewardunt equally among the voters and transfer it to their accounts
 		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
-			panic(err)
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
+			return err
 		}
-		// refund all fees to each dispute fee payer and restore validator bond/power
-		// burn dispute fee then pay back the remaining dispute fee to the fee payers
-		fromAcc, fromBond := k.SortPayerInfo(dispute.FeePayers)
-		if err := k.RefundDisputeFeeToAccount(ctx, fromAcc); err != nil {
-			panic(err)
+		// refund the remaining dispute fee to the fee payers according to their payment method
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn); err != nil {
+			return err
 		}
-		if err := k.RefundDisputeFeeToBond(ctx, fromBond); err != nil {
-			panic(err)
-		}
-		if err := k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(types.DefaultBondDenom, dispute.SlashAmount)); err != nil {
-			panic(err)
+		// stake the slashed tokens back into the bonded pool for the reporter
+		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+			return err
 		}
 		vote.Executed = true
-		k.SetVote(ctx, id, vote)
+		if err := k.SetVote(ctx, id, vote); err != nil {
+			return err
+		}
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
 		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
-			panic(err)
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
+			return err
+		}
+		// refund the remaining dispute fee to the fee payers according to their payment method
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn); err != nil {
+			return err
 		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
-		reporterSlashAmount := dispute.SlashAmount.QuoRaw(int64(len(dispute.FeePayers)))
-		for _, disputer := range dispute.FeePayers {
-			if err := k.RefundToBond(ctx, disputer.PayerAddress, sdk.NewCoin(types.DefaultBondDenom, reporterSlashAmount)); err != nil {
-				panic(err)
-			}
+		if err := k.RewardReporterBondToFeePayers(ctx, dispute.FeePayers, dispute.SlashAmount); err != nil {
+			return err
 		}
+
 		vote.Executed = true
-		k.SetVote(ctx, id, vote)
+		if err := k.SetVote(ctx, id, vote); err != nil {
+			return err
+		}
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
 		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
-			panic(err)
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
+			return err
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
-		if err := k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(types.DefaultBondDenom, dispute.SlashAmount.Add(disputeFeeMinusBurn))); err != nil {
-			panic(err)
+		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusBurn)
+		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+			return err
 		}
 		vote.Executed = true
-		k.SetVote(ctx, id, vote)
-	default:
+		if err := k.SetVote(ctx, id, vote); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (k Keeper) ExecuteVotes(ctx sdk.Context, ids []uint64) {
+func (k Keeper) ExecuteVotes(ctx sdk.Context, ids []uint64) error {
 	for _, id := range ids {
-		k.ExecuteVote(ctx, id)
+		err := k.ExecuteVote(ctx, id)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // set disputes to resolved if adding rounds has been exhausted
 // check if disputes can be removed due to expiration prior to commencing vote
-func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) []uint64 {
-	openDisputes := k.GetOpenDisputeIds(ctx)
+func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) ([]uint64, error) {
+	openDisputes, err := k.GetOpenDisputeIds(ctx)
+	if err != nil {
+		return nil, err
+	}
 	var expiredDisputes []uint64 // disputes that failed to begin vote (ie fee unpaid in full)
 	var activeDisputes []uint64
 
 	for _, disputeId := range openDisputes.Ids {
 		// get dispute by id
-		dispute := k.GetDisputeById(ctx, disputeId)
+		dispute, err := k.GetDisputeById(ctx, disputeId)
+		if err != nil {
+			return nil, err
+		}
 
 		if ctx.BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
 			// append to expired list
@@ -124,11 +154,17 @@ func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) []uint64 {
 	}
 	// update active disputes list
 	openDisputes.Ids = activeDisputes
-	k.SetOpenDisputeIds(ctx, openDisputes)
+	err = k.SetOpenDisputeIds(ctx, openDisputes)
+	if err != nil {
+		return nil, err
+	}
 	for _, disputeId := range expiredDisputes {
 		// set dispute status to expired
-		k.SetDisputeStatus(ctx, disputeId, types.Failed)
+		err := k.SetDisputeStatus(ctx, disputeId, types.Failed)
+		if err != nil {
+			return nil, err
+		}
 	}
 	// return active list
-	return activeDisputes
+	return activeDisputes, nil
 }
