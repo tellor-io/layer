@@ -6,16 +6,27 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
+// MicroReport represents data for a single report
 message MicroReport {
+  // reporter is the address of the reporter
   string reporter = 1;
+  // the power of the reporter based on total tokens normalized
   int64 power = 2;
-  string queryType = 3;
-  string queryId = 4;
-  string aggregateMethod = 5;
+  // string identifier of the data spec
+  string query_type = 3;
+  // hash of the query data
+  string query_id = 4;
+  // aggregate method to use for aggregating all the reports for the query id
+  string aggregate_method = 5;
+  // hex string of the response value
   string value = 6;
+  // timestamp of when the report was created
   google.protobuf.Timestamp timestamp = 7 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
+  // indicates if the report's query id is in the cyclelist
   bool cyclelist = 8;
+  // block number of when the report was created
+  int64 block_number = 9;
 }

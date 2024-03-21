@@ -29,7 +29,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Tips struct {
 	// queryData is the query data that was tipped
 	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
-	// amount is the amount that was tipped
+	// the amount that was tipped
 	Amount cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
 	// totalTips is the total amount of tips for this query data so far
 	TotalTips cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=total_tips,json=totalTips,proto3,customtype=cosmossdk.io/math.Int" json:"total_tips"`

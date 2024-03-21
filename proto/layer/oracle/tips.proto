@@ -11,7 +11,7 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 message Tips {
   // queryData is the query data that was tipped
   string query_data = 1;
-  // amount is the amount that was tipped
+  // the amount that was tipped
   string amount = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",

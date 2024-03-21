@@ -97,9 +97,8 @@ message MsgDelegateReporterResponse {}
 
 // MsgUndelegateReporter defines the Msg/UndelegateReporter request type.
 message MsgUndelegateReporter {
-  option (cosmos.msg.v1.signer) = "delegator";
-  string delegator = 1;
-
+  option (cosmos.msg.v1.signer) = "delegator_address";
+  string delegator_address = 1;
   // token_origin is the token origin to undelegate from. If empty, all token origins are undelegated,
   // else the amount field will be the amount to undelegate from the specified token origin.
   repeated TokenOrigin token_origins = 2;

@@ -4067,6 +4067,7 @@ definitions:
       Msg/WithdrawReporterCommission response type.
   layer.reporter.MsgWithdrawTipResponse:
     type: object
+    description: MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
   layer.reporter.Params:
     type: object
     properties:

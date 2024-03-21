@@ -5,6 +5,7 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "layer/oracle/micro_report.proto";
 
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
@@ -38,7 +39,7 @@ message Dispute {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
-  MicroReport reportEvidence = 12 [(gogoproto.nullable) = false];
+  layer.oracle.MicroReport reportEvidence = 12 [(gogoproto.nullable) = false];
   repeated PayerInfo feePayers = 13 [(gogoproto.nullable) = false];
   string feeTotal = 14 [
     (cosmos_proto.scalar) = "cosmos.Int",
@@ -46,21 +47,6 @@ message Dispute {
     (gogoproto.nullable) = false
   ];
   repeated uint64 prevDisputeIds = 15;
-}
-
-// TODO: remove this duplicate
-message MicroReport {
-  string reporter = 1;
-  int64 power = 2;
-  string query_type = 3;
-  string query_id = 4;
-  string aggregate_method = 5;
-  string value = 6;
-  int64 block_number = 7;
-  google.protobuf.Timestamp timestamp = 8 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
 }
 
 enum DisputeCategory {
@@ -93,6 +79,11 @@ enum DisputeStatus {
 
 message PayerInfo {
   string payerAddress = 1;
-  cosmos.base.v1beta1.Coin amount = 2 [(gogoproto.nullable) = false];
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
   bool fromBond = 3;
+  int64 block_number = 4;
 }
