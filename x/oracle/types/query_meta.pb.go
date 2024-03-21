@@ -45,7 +45,7 @@ type QueryMeta struct {
 	HasRevealedReports bool `protobuf:"varint,5,opt,name=has_revealed_reports,json=hasRevealedReports,proto3" json:"has_revealed_reports,omitempty"`
 	// unique id of the query according to the data spec
 	QueryId []byte `protobuf:"bytes,6,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	// sttring identifier of the data spec
+	// string identifier of the data spec
 	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
 
