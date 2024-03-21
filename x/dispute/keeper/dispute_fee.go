@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layertypes "github.com/tellor-io/layer/types"
@@ -52,5 +53,16 @@ func (k Keeper) ReturnSlashedTokens(ctx sdk.Context, dispute *types.Dispute) err
 	}
 
 	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dispute.SlashAmount))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
+}
+
+func (k Keeper) ReturnFeetoStake(ctx sdk.Context, repAddr string, height int64, remainingAmt math.Int) error {
+
+	err := k.reporterKeeper.ReturnSlashedTokens(ctx, repAddr, height, remainingAmt)
+	if err != nil {
+		return err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, remainingAmt))
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
 }

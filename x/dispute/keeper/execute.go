@@ -9,49 +9,40 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k Keeper) SortPayerInfo(feePayers []types.PayerInfo) (fromAcc, fromBond []types.PayerInfo) {
-	for _, payer := range feePayers {
-		if payer.FromBond {
-			fromBond = append(fromBond, payer)
-		} else {
-			fromAcc = append(fromAcc, payer)
-		}
-	}
-	return fromAcc, fromBond
-}
-
-func (k Keeper) RefundDisputeFeeToAccount(ctx sdk.Context, fromAcc []types.PayerInfo) error {
+func (k Keeper) RefundDisputeFee(ctx sdk.Context, feePayers []types.PayerInfo, remainingAmt math.Int) error {
 	var outputs []banktypes.Output
 
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	totalAmount := sdk.NewCoins()
+	initialTotalAmount := math.ZeroInt()
 
-	// Calculate total amount and prepare outputs
-	for _, recipient := range fromAcc {
-		burn := recipient.Amount.MulRaw(1).QuoRaw(20)
-		recipient.Amount = recipient.Amount.Sub(burn)
-		totalAmount = totalAmount.Add(sdk.NewCoins(sdk.NewCoin(layer.BondDenom, recipient.Amount))...)
-		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), sdk.NewCoins(sdk.NewCoin(layer.BondDenom, recipient.Amount))))
+	for _, recipient := range feePayers {
+		initialTotalAmount = initialTotalAmount.Add(recipient.Amount)
 	}
 
+	accInputTotal := math.ZeroInt()
+	// Calculate total amount and prepare outputs
+	for _, recipient := range feePayers {
+		amt := math.LegacyNewDecFromInt(recipient.Amount).Quo(math.LegacyNewDecFromInt(initialTotalAmount))
+		amt = amt.MulInt(remainingAmt)
+
+		coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
+		if !recipient.FromBond {
+			accInputTotal = accInputTotal.Add(amt.TruncateInt())
+			outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), coins))
+		} else {
+			if err := k.ReturnFeetoStake(ctx, recipient.PayerAddress, recipient.BlockNumber, amt.TruncateInt()); err != nil {
+				return err
+			}
+		}
+
+	}
 	// Prepare input
-	inputs := banktypes.NewInput(moduleAddress, totalAmount)
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, accInputTotal)))
 
 	// Perform the InputOutputCoins operation
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }
 
-func (k Keeper) RefundDisputeFeeToBond(ctx sdk.Context, fromBond []types.PayerInfo) error {
-	// for every reporter refund dispute fee to their bond
-	for _, recipient := range fromBond {
-		burn := recipient.Amount.MulRaw(1).QuoRaw(20)
-		recipient.Amount = recipient.Amount.Sub(burn)
-		if err := k.reporterKeeper.ReturnSlashedTokens(ctx, recipient.PayerAddress, recipient.BlockNumber, recipient.Amount); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 func (k Keeper) RewardReporterBondToFeePayers(ctx sdk.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
 	totalFeesPaid := math.ZeroInt()
 	for _, reporter := range feePayers {

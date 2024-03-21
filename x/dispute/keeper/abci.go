@@ -10,8 +10,7 @@ import (
 // tally votes
 func (k Keeper) Tally(ctx sdk.Context, ids []uint64) error {
 	for _, id := range ids {
-		err := k.TallyVote(ctx, id)
-		if err != nil {
+		if err := k.TallyVote(ctx, id); err != nil {
 			return err
 		}
 	}
@@ -37,20 +36,23 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		return err
 	}
 	if vote.Executed || dispute.DisputeStatus != types.Resolved {
-		ctx.Logger().Info("can't execute vote, reason either vote has already executed: %v, or dispute status: %v", vote.Executed, dispute.DisputeStatus)
+		ctx.Logger().Info("can't execute vote, reason either vote has already executed: %v, or dispute not resolved: %v", vote.Executed, dispute.DisputeStatus)
 		return nil
 	}
+	// amount of dispute fee to return to fee payers or give to reporter
 	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
-	// the burnAmount %5 of disputeFee, half of which is burned and the other half is distributed to the voters
+	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
 	halfBurnAmount := dispute.BurnAmount.QuoRaw(2)
 	voterReward := halfBurnAmount
 	if len(voters) == 0 {
+		// if no voters, burn the entire burnAmount
 		halfBurnAmount = dispute.BurnAmount
+		// non voters get nothing
 		voterReward = math.ZeroInt()
 	}
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// divide the remaining burnAmount equally among the voters and transfer it to their accounts
+		// distribute the voterRewardunt equally among the voters and transfer it to their accounts
 		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
 		if err != nil {
 			return err
@@ -59,15 +61,11 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			return err
 		}
-		// refund all fees to each dispute fee payer and restore validator bond/power
-		// burn dispute fee then pay back the remaining dispute fee to the fee payers
-		fromAcc, fromBond := k.SortPayerInfo(dispute.FeePayers)
-		if err := k.RefundDisputeFeeToAccount(ctx, fromAcc); err != nil {
+		// refund the remaining dispute fee to the fee payers according to their payment method
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn); err != nil {
 			return err
 		}
-		if err := k.RefundDisputeFeeToBond(ctx, fromBond); err != nil {
-			return err
-		}
+		// stake the slashed tokens back into the bonded pool for the reporter
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
@@ -84,7 +82,10 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			return err
 		}
-		// todo: dispute fee?
+		// refund the remaining dispute fee to the fee payers according to their payment method
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn); err != nil {
+			return err
+		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
 		if err := k.RewardReporterBondToFeePayers(ctx, dispute.FeePayers, dispute.SlashAmount); err != nil {
 			return err

@@ -35,6 +35,6 @@ message QueryMeta {
   bool has_revealed_reports = 5;
   // unique id of the query according to the data spec
   bytes query_id = 6;
-  // sttring identifier of the data spec
+  // string identifier of the data spec
   string query_type = 7;
 }
