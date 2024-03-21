@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "layer/bridge/params.proto";
+import "layer/oracle/aggregate.proto";
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
@@ -58,6 +59,10 @@ service Query {
   rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
     option (google.api.http).get = "/layer/bridge/get_data_before/{queryId}/{timestamp}";
   }
+
+  // rpc GetCurrentAggregateReportTest (QueryGetCurrentAggregateReportTestRequest) returns (QueryGetCurrentAggregateReportTestResponse) {
+  //   option (google.api.http).get = "/layer/bridge/get_current_aggregate_report_test/{queryId}";
+  // }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -194,6 +199,15 @@ message QueryGetDataBeforeRequest {
 }
 
 message QueryGetDataBeforeResponse {
-  Aggregate aggregate = 1;
+  layer.oracle.Aggregate aggregate = 1;
   uint64 timestamp = 2;
 }
+
+// message QueryGetCurrentAggregateReportTestRequest {
+//   string queryId = 1;
+// }
+
+// message QueryGetCurrentAggregateReportTestResponse {
+//   layer.oracle.Aggregate aggregate = 1;
+//   uint64 timestamp = 2;
+// }

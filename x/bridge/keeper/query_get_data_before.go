@@ -31,31 +31,32 @@ func (k Keeper) GetDataBefore(goCtx context.Context, req *types.QueryGetDataBefo
 	}
 	timeUnix := timestamp.Unix()
 
-	// convert oracletypes.Reporters to bridgetypes.Reporters
-	convertedReporters := make([]*types.AggregateReporter, len(aggregate.Reporters))
-	for i, reporter := range aggregate.Reporters {
-		convertedReporters[i] = &types.AggregateReporter{
-			Reporter: reporter.Reporter,
-			Power:    reporter.Power,
-		}
-	}
+	// // convert oracletypes.Reporters to bridgetypes.Reporters
+	// convertedReporters := make([]*types.AggregateReporter, len(aggregate.Reporters))
+	// for i, reporter := range aggregate.Reporters {
+	// 	convertedReporters[i] = &types.AggregateReporter{
+	// 		Reporter: reporter.Reporter,
+	// 		Power:    reporter.Power,
+	// 	}
+	// }
 
-	// convert oracletypes.Aggregate to bridgetypes.Aggregate
-	bridgeAggregate := types.Aggregate{
-		QueryId:              req.QueryId,
-		AggregateValue:       aggregate.AggregateValue,
-		AggregateReporter:    aggregate.AggregateReporter,
-		ReporterPower:        aggregate.ReporterPower,
-		StandardDeviation:    aggregate.StandardDeviation,
-		Reporters:            convertedReporters,
-		Flagged:              aggregate.Flagged,
-		Nonce:                aggregate.Nonce,
-		AggregateReportIndex: aggregate.AggregateReportIndex,
-		Height:               aggregate.Height,
-	}
+	// // convert oracletypes.Aggregate to bridgetypes.Aggregate
+	// bridgeAggregate := types.Aggregate{
+	// 	QueryId:              req.QueryId,
+	// 	AggregateValue:       aggregate.AggregateValue,
+	// 	AggregateReporter:    aggregate.AggregateReporter,
+	// 	ReporterPower:        aggregate.ReporterPower,
+	// 	StandardDeviation:    aggregate.StandardDeviation,
+	// 	Reporters:            convertedReporters,
+	// 	Flagged:              aggregate.Flagged,
+	// 	Nonce:                aggregate.Nonce,
+	// 	AggregateReportIndex: aggregate.AggregateReportIndex,
+	// 	Height:               aggregate.Height,
+	// }
 
 	return &types.QueryGetDataBeforeResponse{
-		Aggregate: &bridgeAggregate,
+		Aggregate: aggregate,
+		// Aggregate: &bridgeAggregate,
 		Timestamp: uint64(timeUnix),
 	}, nil
 }

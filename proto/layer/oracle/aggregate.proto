@@ -8,7 +8,6 @@ import "layer/oracle/aggregate_reporter.proto";
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message Aggregate {
-  
   string queryId = 1; 
   string aggregateValue = 2; 
   string aggregateReporter = 3; 
