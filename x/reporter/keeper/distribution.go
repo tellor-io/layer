@@ -11,7 +11,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
@@ -749,139 +748,8 @@ func (k Keeper) BeforeReporterDisputed(ctx context.Context, valAddr sdk.ValAddre
 	return k.updateReporterDisputeFraction(ctx, valAddr, fraction)
 }
 
-func (k Keeper) AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error {
-	reporter, err := k.Reporters.Get(ctx, reporterAddr)
-	if err != nil {
-		return err
-	}
-	// Calculate commission
-	commission := math.LegacyNewDecFromInt(reward).Mul(reporter.Commission.Rate)
-
-	// Calculate net reward
-	netReward := math.LegacyNewDecFromInt(reward).Sub(commission)
-
-	// Calculate each delegator's share (including the reporter as a self-delegator)
-	repAddr, err := sdk.AccAddressFromBech32(reporter.Reporter)
-	if err != nil {
-		return err
-	}
-	delAddrs, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
-	if err != nil {
-		return err
-	}
-	defer delAddrs.Close()
-	for ; delAddrs.Valid(); delAddrs.Next() {
-		key, err := delAddrs.PrimaryKey()
-		if err != nil {
-			return err
-		}
-		del, err := k.Delegators.Get(ctx, key)
-		if err != nil {
-			return err
-		}
-		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(reporter.TotalTokens))
-		if key.Equals(repAddr) {
-			delegatorShare = delegatorShare.Add(commission)
-		}
-		rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](key)
-		iter, err := k.TokenOrigin.Iterate(ctx, rng)
-		if err != nil {
-			return err
-		}
-		delegatorSources, err := iter.KeyValues()
-		if err != nil {
-			return err
-		}
-		bondedShares := math.ZeroInt()
-		for _, source := range delegatorSources {
-			srcAmt := source.Value
-			_share := delegatorShare.Mul(math.LegacyNewDecFromInt(srcAmt)).Quo(math.LegacyNewDecFromInt(del.Amount))
-			val, err := k.stakingKeeper.GetValidator(ctx, source.Key.K2())
-			if err != nil {
-				return err
-			}
-			// todo: move coins to escrow instead
-			newShares, err := k.stakingKeeper.Delegate(ctx, key, _share.TruncateInt(), stakingtypes.Bonded, val, false) // ignore dust???
-			if err != nil {
-				return err
-			}
-			source.Value = source.Value.Sub(newShares.TruncateInt())
-			if err := k.TokenOrigin.Set(ctx, collections.Join(source.Key.K1(), source.Key.K2()), source.Value); err != nil {
-				return err
-			}
-			bondedShares = bondedShares.Add(newShares.TruncateInt())
-		}
-		if bondedShares.IsPositive() {
-			del.Amount = del.Amount.Add(bondedShares)
-			if err := k.Delegators.Set(ctx, key, del); err != nil {
-				return err
-			}
-		}
-
-	}
-	reporter.TotalTokens = reporter.TotalTokens.Add(reward)
-	if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// allocate reward as stake to an address that isn't a reporter, that stakes with a validator
-// get all the validators and delegate to them as much as possible
-// is there a limit to how much you can delegate to a validator?
-func (k Keeper) allocateRewardsToStake(ctx context.Context, val stakingtypes.Validator, addr sdk.AccAddress, reward math.Int) (math.LegacyDec, error) {
-	newShares, err := k.stakingKeeper.Delegate(ctx, addr, reward, stakingtypes.Bonded, val, false)
-	if err != nil {
-		return math.LegacyDec{}, err
-	}
-	return newShares, nil
-}
-
-func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, recipients []disputetypes.PayerInfo, reward math.Int) error {
-	totalAmt := math.ZeroInt()
-	for _, recipient := range recipients {
-		totalAmt = totalAmt.Add(recipient.Amount.Amount)
-	}
-	unbondedAddrs := make([]disputetypes.PayerInfo, 0)
-	for _, recipient := range recipients {
-		amt := recipient.Amount.Amount.Quo(totalAmt).Mul(reward)
-		addr, err := sdk.AccAddressFromBech32(recipient.PayerAddress)
-		if err != nil {
-			return err
-		}
-		err = k.AllocateRewardsToStake(ctx, addr, amt)
-		if err != nil {
-			if errors.Is(err, collections.ErrNotFound) {
-				unbondedAddrs = append(unbondedAddrs, recipient)
-			} else {
-				return err
-			}
-		}
-	}
-	if len(unbondedAddrs) == 0 {
-		return nil
-	}
-	// allocate to unbonded addresses
-	// get list of validators
-	validators, err := k.stakingKeeper.GetValidators(ctx, uint32(len(unbondedAddrs)))
-	if err != nil {
-		return err
-	}
-	// for each validator, delegate as much as possible
-	for i, val := range validators {
-		payer := unbondedAddrs[i]
-		amt := payer.Amount.Amount.Quo(totalAmt).Mul(reward)
-		addr, err := sdk.AccAddressFromBech32(payer.PayerAddress)
-		if err != nil {
-			return err
-		}
-		_, err = k.allocateRewardsToStake(ctx, val, addr, amt)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (k Keeper) GetTokenOriginsAtHeight(ctx context.Context, repAddr sdk.AccAddress, height int64) (types.DelegationsPreUpdate, error) {
+	return k.TokenOriginSnapshot.Get(ctx, collections.Join(repAddr, height))
 }
 
 func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error {
@@ -924,5 +792,266 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 		}
 	}
 
+	return nil
+}
+
+func (k Keeper) returnSlashedTokens(ctx context.Context, repAddr sdk.AccAddress, blockHeight int64, _ math.Int) error {
+
+	snapshot, err := k.GetTokenOriginsAtHeight(ctx, repAddr, blockHeight)
+	if err != nil {
+		return err
+	}
+	// amt should be equal to sum of snapshot origins
+	// var totalAmt = math.ZeroInt()
+	for _, source := range snapshot.TokenOrigins {
+		// totalAmt = totalAmt.Add(source.Amount)
+		valAddr, err := sdk.ValAddressFromBech32(source.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+		var val stakingtypes.Validator
+		val, err = k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				return err
+			}
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			if len(vals) == 0 {
+				return errors.New("no validators found in staking module to return tokens to")
+			}
+			val = vals[0]
+		}
+		delAddr, err := sdk.AccAddressFromBech32(source.DelegatorAddress)
+		if err != nil {
+			return err
+		}
+
+		_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Unbonded, val, false)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	// assert totalAmt == amt
+	return nil
+}
+
+func (k Keeper) GetBondedValidators(ctx context.Context, max uint32) ([]stakingtypes.Validator, error) {
+	validators := make([]stakingtypes.Validator, max)
+
+	iterator, err := k.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+
+	i := 0
+	for ; iterator.Valid() && i < int(max); iterator.Next() {
+		address := iterator.Value()
+		validator, err := k.stakingKeeper.GetValidator(ctx, address)
+		if err != nil {
+			return nil, fmt.Errorf("validator record not found for address: %X", address)
+		}
+
+		if validator.IsBonded() {
+			validators[i] = validator
+			i++
+		}
+	}
+
+	return validators[:i], nil // trim
+}
+
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, height int64, reward math.Int) error {
+	repAcc, err := sdk.AccAddressFromBech32(reporterAddr)
+	if err != nil {
+		return err
+	}
+	reporter, err := k.Reporters.Get(ctx, repAcc)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		return k.returnSlashedTokens(ctx, repAcc, height, reward)
+	}
+
+	snapshot, err := k.GetTokenOriginsAtHeight(ctx, repAcc, height)
+	if err != nil {
+		return err
+	}
+
+	for _, source := range snapshot.TokenOrigins {
+		// attempt to get delegation in reporter module first
+		valAddr, err := sdk.ValAddressFromBech32(source.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+		delAddr, err := sdk.AccAddressFromBech32(source.DelegatorAddress)
+		if err != nil {
+			return err
+		}
+		del, err := k.Delegators.Get(ctx, delAddr)
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+			// if delegator no longer exists, create a new one and
+			// delegate tokens to a randomly selected bonded validator
+			del.Amount = source.Amount
+			del.Reporter = repAcc.String()
+			// call hooks :todo
+			if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
+				return err
+			}
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			// this should never happen since chains need validators to run
+			if len(vals) == 0 {
+				return errors.New("no validators found in staking module to return tokens to")
+			}
+			newVal, err := sdk.ValAddressFromBech32(vals[0].GetOperator())
+			if err != nil {
+				return err
+			}
+			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr, newVal), source.Amount); err != nil {
+				return err
+			}
+			_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, vals[0], false)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		// if delegator exists, add tokens to it
+		del.Amount = del.Amount.Add(source.Amount)
+		// call hooks :todo
+		if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
+			return err
+		}
+		// get token origin and see if it still exists
+		prevAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+			/*
+				// you can try the same previous validator even though it doesn't exist in tokenorigin store
+				// or just directly use go for a random bonded validator
+				// validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+				// if err != nil {
+				// 	if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				// 		return err
+				// 	}
+				// }
+				// if err != nil || !validator.IsBonded() {
+				// 	vals, err := k.GetBondedValidators(ctx, 1)
+				// 	if err != nil {
+				// 		return err
+				// 	}
+				// 	validator = vals[0]
+				// 	valAddr, err = sdk.ValAddressFromBech32(validator.GetOperator())
+				// 	if err != nil {
+				// 		return err
+				// 	}
+
+				// }
+			*/
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			randoValidator := vals[0]
+			randoValAddr, err := sdk.ValAddressFromBech32(randoValidator.GetOperator())
+			if err != nil {
+				return err
+			}
+			// should probably make sure the random validator is not in tokenOrigin store first
+			// to avoid overwriting
+			randoAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, randoValAddr))
+			if err != nil {
+				if !errors.Is(err, collections.ErrNotFound) {
+					return err
+				}
+			}
+			if randoAmt.IsNil() {
+				randoAmt = math.ZeroInt()
+			}
+			randoAmt = randoAmt.Add(source.Amount)
+			// if token origin no longer exists, set it
+			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), randoAmt); err != nil {
+				return err
+			}
+			_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, randoValidator, false)
+			if err != nil {
+				return err
+			}
+			continue
+
+		}
+		// at this stage the validator exists in tokenorigin store meaning key(delagator, validator) exists
+		// first we see if stored validator is bonded
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				return err
+			}
+		}
+		if err != nil || !validator.IsBonded() {
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			validator = vals[0]
+			valAddr, err = sdk.ValAddressFromBech32(validator.GetOperator())
+			if err != nil {
+				return err
+			}
+			// double check to make sure the random validator is not in tokenOrigin store first
+			prevAmt, err = k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+			if err != nil {
+				if !errors.Is(err, collections.ErrNotFound) {
+					return err
+				}
+			}
+		}
+		if prevAmt.IsNil() {
+			prevAmt = math.ZeroInt()
+		}
+		prevAmt = prevAmt.Add(source.Amount)
+		if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), prevAmt); err != nil {
+			return err
+		}
+		_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, validator, false)
+		if err != nil {
+			return err
+		}
+		continue
+
+	}
+	reporter.TotalTokens = reporter.TotalTokens.Add(reward)
+	return k.Reporters.Set(ctx, repAcc, reporter)
+}
+
+func (k Keeper) AddAmountToStake(ctx context.Context, addr string, amt math.Int) error {
+	acc, err := sdk.AccAddressFromBech32(addr)
+	if err != nil {
+		return err
+	}
+	vals, err := k.GetBondedValidators(ctx, 1)
+	if err != nil {
+		return err
+	}
+	validator := vals[0]
+
+	_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, validator, false)
+	if err != nil {
+		return err
+	}
 	return nil
 }

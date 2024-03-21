@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -25,6 +26,7 @@ type StakingKeeper interface {
 	Unbond(
 		ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec,
 	) (amount math.Int, err error)
+	ValidatorsPowerStoreIterator(ctx context.Context) (store.Iterator, error)
 	// Methods imported from account should be defined here
 }
 

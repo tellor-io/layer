@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/binary"
-	"errors"
 	"fmt"
+	gomath "math"
 	"math/big"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 // Get dispute by dispute id
@@ -30,7 +32,7 @@ func (k Keeper) GetDisputeById(ctx sdk.Context, id uint64) (*types.Dispute, erro
 }
 
 // Get dispute by reporter key
-func (k Keeper) GetDisputeByReporter(ctx sdk.Context, r types.MicroReport, c types.DisputeCategory) *types.Dispute {
+func (k Keeper) GetDisputeByReporter(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) *types.Dispute {
 	store := k.disputeStore(ctx)
 	key := []byte(k.ReporterKey(ctx, r, c))
 	bz := store.Get(key)
@@ -70,7 +72,7 @@ func (k Keeper) GetOpenDisputeIds(ctx sdk.Context) (types.OpenDisputes, error) {
 }
 
 // Generate hash id
-func (k Keeper) HashId(ctx sdk.Context, r types.MicroReport, c types.DisputeCategory) [32]byte {
+func (k Keeper) HashId(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) [32]byte {
 	params := types.DisputeParams{
 		Report:   &r,
 		Category: c,
@@ -79,7 +81,7 @@ func (k Keeper) HashId(ctx sdk.Context, r types.MicroReport, c types.DisputeCate
 }
 
 // Make a reporter key by combining reporter address and a hash of dispute params
-func (k Keeper) ReporterKey(ctx sdk.Context, r types.MicroReport, c types.DisputeCategory) string {
+func (k Keeper) ReporterKey(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) string {
 	return fmt.Sprintf("%s:%x", r.Reporter, k.HashId(ctx, r, c))
 }
 
@@ -124,9 +126,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	if err != nil {
 		return err
 	}
-	if disputeFee.IsZero() {
-		return errors.New("error calculating dispute fee")
-	}
+
 	feeList := make([]types.PayerInfo, 0)
 
 	if msg.Fee.Amount.GT(disputeFee) {
@@ -149,8 +149,9 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		ReportEvidence: *msg.Report,
 		FeePayers: append(feeList, types.PayerInfo{
 			PayerAddress: msg.Creator,
-			Amount:       msg.Fee,
+			Amount:       msg.Fee.Amount,
 			FromBond:     msg.PayFromBond,
+			BlockNumber:  ctx.BlockHeight(),
 		}),
 		FeeTotal:       msg.Fee.Amount,
 		PrevDisputeIds: []uint64{disputeId},
@@ -176,25 +177,10 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 }
 
 // Slash and jail reporter
-func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report types.MicroReport, category types.DisputeCategory) error {
+func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory) error {
 	reporterAddr := sdk.MustAccAddressFromBech32(report.Reporter)
 
-	// k.Slash(ctx, sdk.ValAddress(accAddress), report.Power, k.GetSlashPercentage(category))
-	var jailDuration int64
-	switch category {
-	case types.Warning:
-		// jail for 0 seconds, forces validator to unjail manually
-		jailDuration = 0
-	case types.Minor:
-		// jail for 10 minutes
-		jailDuration = 600
-	case types.Major:
-		// TODO: jail duration should be until dispute ends
-	default:
-		return types.ErrInvalidDisputeCategory.Wrapf("wrong category selected: %s", category)
-	}
-
-	slashFactor, err := k.GetSlashPercentage(category)
+	slashFactor, jailDuration, err := k.GetSlashPercentageAndJailDuration(category)
 	if err != nil {
 		return err
 	}
@@ -204,7 +190,15 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report types.MicroReport, 
 	if err != nil {
 		return err
 	}
-	return k.reporterKeeper.JailReporter(ctx, reporterAddr, jailDuration)
+	return k.jailReporter(ctx, reporterAddr, jailDuration)
+}
+
+func (k Keeper) jailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration int64) error {
+	// noop for major duration, reporter is removed from store so no need to jail
+	if jailDuration == gomath.MaxInt64 {
+		return nil
+	}
+	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration)
 }
 
 // Store open dispute ids in the store
@@ -219,41 +213,41 @@ func (k Keeper) SetOpenDisputeIds(ctx sdk.Context, ids types.OpenDisputes) error
 }
 
 // Get percentage of slash amount based on category
-func (k Keeper) GetSlashPercentage(category types.DisputeCategory) (math.LegacyDec, error) {
+func (k Keeper) GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, int64, error) {
 	switch category {
 	case types.Warning:
-		return math.LegacyNewDecWithPrec(1, 2), nil // 1%
+		return math.LegacyNewDecWithPrec(1, 2), 0, nil // 1%
 	case types.Minor:
-		return math.LegacyNewDecWithPrec(5, 2), nil // 5%
+		return math.LegacyNewDecWithPrec(5, 2), 600, nil // 5%
 	case types.Major:
-		return math.LegacyNewDecWithPrec(1, 0), nil // 100%
+		return math.LegacyNewDecWithPrec(1, 0), gomath.MaxInt64, nil // 100%
 	default:
-		return math.LegacyDec{}, errors.New("invalid dispute category")
+		return math.LegacyDec{}, 0, types.ErrInvalidDisputeCategory
 	}
 }
 
 // Get dispute fee
-func (k Keeper) GetDisputeFee(ctx sdk.Context, rep string, category types.DisputeCategory) (math.Int, error) {
-	reporterAddr := sdk.MustAccAddressFromBech32(rep)
+func (k Keeper) GetDisputeFee(ctx sdk.Context, repAddr string, category types.DisputeCategory) (math.Int, error) {
+	reporterAddr := sdk.MustAccAddressFromBech32(repAddr)
 	reporter, err := k.reporterKeeper.Reporter(ctx, reporterAddr)
 	if err != nil {
 		return math.Int{}, err
 	}
 
 	stake := reporter.TotalTokens
-	fee := math.ZeroInt()
 	switch category {
 	case types.Warning:
 		// calculate 1 percent of bond
-		fee = stake.MulRaw(1).QuoRaw(100)
+		return stake.MulRaw(1).QuoRaw(100), nil
 	case types.Minor:
 		// calculate 5 percent of bond
-		fee = stake.MulRaw(5).QuoRaw(100)
+		return stake.MulRaw(5).QuoRaw(100), nil
 	case types.Major:
 		// calculate 100 percent of bond
-		fee = stake
+		return stake, nil
+	default:
+		return math.Int{}, types.ErrInvalidDisputeCategory
 	}
-	return fee, nil
 }
 
 // Update existing dispute when conditions are met

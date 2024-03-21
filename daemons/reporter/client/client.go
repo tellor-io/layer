@@ -43,12 +43,11 @@ type Client struct {
 }
 
 func NewClient(clctx client.Context, logger log.Logger, accountName string) *Client {
-	c := &Client{
+	return &Client{
 		AccountName: accountName,
 		cosmosCtx:   clctx,
 		logger:      logger,
 	}
-	return c
 }
 
 func (c *Client) Start(

@@ -3,7 +3,6 @@ package keeper
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
@@ -69,7 +68,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		if err := k.RefundDisputeFeeToBond(ctx, fromBond); err != nil {
 			return err
 		}
-		if err := k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(layer.BondDenom, dispute.SlashAmount)); err != nil {
+		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
 		vote.Executed = true
@@ -85,14 +84,12 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			return err
 		}
+		// todo: dispute fee?
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
-		if err := k.reporterKeeper.RewardReporterBondToFeePayers(ctx, dispute.FeePayers, dispute.SlashAmount); err != nil {
+		if err := k.RewardReporterBondToFeePayers(ctx, dispute.FeePayers, dispute.SlashAmount); err != nil {
 			return err
 		}
-		// send coins to the staking module bonded pool
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))); err != nil {
-			return err
-		}
+
 		vote.Executed = true
 		if err := k.SetVote(ctx, id, vote); err != nil {
 			return err
@@ -107,14 +104,14 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 			return err
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
-		if err := k.RefundToBond(ctx, dispute.ReportEvidence.Reporter, sdk.NewCoin(layer.BondDenom, dispute.SlashAmount.Add(disputeFeeMinusBurn))); err != nil {
+		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusBurn)
+		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
 		vote.Executed = true
 		if err := k.SetVote(ctx, id, vote); err != nil {
 			return err
 		}
-	default:
 	}
 	return nil
 }

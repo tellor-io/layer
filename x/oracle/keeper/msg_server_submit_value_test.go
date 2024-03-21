@@ -49,6 +49,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, strin
 		Value:           value,
 		Timestamp:       s.ctx.BlockTime(),
 		Cyclelist:       true,
+		BlockNumber:     s.ctx.BlockHeight(),
 	}
 	expectedReport := types.QueryGetReportsbyQidResponse{
 		Reports: types.Reports{

@@ -37,11 +37,11 @@ type OracleKeeper interface {
 }
 
 type ReporterKeeper interface {
-	AllocateRewardsToStake(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error
 	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int) error
 	Reporter(ctx context.Context, repAddr sdk.AccAddress) (*reportertypes.OracleReporter, error)
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration int64) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
-	RewardReporterBondToFeePayers(ctx context.Context, recipients []PayerInfo, reward math.Int) error
 	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error
+	ReturnSlashedTokens(ctx context.Context, repAddr string, blockHeight int64, amt math.Int) error
+	AddAmountToStake(ctx context.Context, addr string, amt math.Int) error
 }

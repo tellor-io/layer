@@ -39,6 +39,7 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.Q
 		AggregateMethod: dataSpec.AggregationMethod,
 		Timestamp:       ctx.BlockTime(),
 		Cyclelist:       incycle,
+		BlockNumber:     ctx.BlockHeight(),
 	}
 
 	query.HasRevealedReports = true

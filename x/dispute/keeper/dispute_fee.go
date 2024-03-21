@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -24,18 +25,6 @@ func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sd
 	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount)
 }
 
-// Refund coins to bonded pool
-func (k Keeper) RefundToBond(ctx sdk.Context, refundTo string, fee sdk.Coin) error {
-	reporterAddr, err := sdk.AccAddressFromBech32(refundTo)
-	if err != nil {
-		return err
-	}
-	if err := k.reporterKeeper.AllocateRewardsToStake(ctx, reporterAddr, fee.Amount); err != nil {
-		return err
-	}
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(fee))
-}
-
 // Pay dispute fee
 func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool) error {
 	proposer := sdk.MustAccAddressFromBech32(sender)
@@ -52,4 +41,16 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, from
 		}
 	}
 	return nil
+}
+
+// return slashed tokens when reporter either wins dispute or dispute is invalid
+func (k Keeper) ReturnSlashedTokens(ctx sdk.Context, dispute *types.Dispute) error {
+
+	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.ReportEvidence.Reporter, dispute.ReportEvidence.BlockNumber, dispute.SlashAmount)
+	if err != nil {
+		return err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dispute.SlashAmount))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
 }

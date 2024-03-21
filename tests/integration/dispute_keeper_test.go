@@ -29,7 +29,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.NoError(err)
 
 	// assemble report with reporter to dispute
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:  repAcc.String(),
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
@@ -107,7 +107,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	_, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
 	s.NoError(err)
 
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:    repAcc.String(),
 		Power:       100,
 		QueryId:     "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
@@ -159,7 +159,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	_, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
 	s.NoError(err)
 
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:  repAcc.String(),
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
@@ -253,7 +253,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	reporter, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
 	s.NoError(err)
 
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:  repAcc.String(),
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
@@ -331,7 +331,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	}
 	_, err = oracleServer.Tip(s.ctx, &msg)
 	s.Nil(err)
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:  repAcc.String(),
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
@@ -444,7 +444,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	_, err = oracleServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:  repAcc.String(),
 		Power:     100,
 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",

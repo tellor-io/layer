@@ -35,20 +35,19 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	}
 	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
 		PayerAddress: msg.Creator,
-		Amount:       msg.Amount,
+		Amount:       msg.Amount.Amount,
 		FromBond:     msg.PayFromBond,
+		BlockNumber:  ctx.BlockHeight(),
 	})
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory)
-		if err != nil {
+		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory); err != nil {
 			return nil, err
 		}
 		// begin voting immediately
 		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
-		err = k.Keeper.SetStartVote(ctx, dispute.DisputeId)
-		if err != nil {
+		if err := k.Keeper.SetStartVote(ctx, dispute.DisputeId); err != nil {
 			return nil, err
 		}
 	}

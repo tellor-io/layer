@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -26,7 +27,11 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if err != nil {
 		return nil, err
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, shares, stakingtypes.Unbonding, val, false)
+
+	if !val.IsBonded() {
+		return nil, errors.New("chosen validator must be bonded")
+	}
+	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, shares, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}

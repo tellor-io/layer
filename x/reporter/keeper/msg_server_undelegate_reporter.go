@@ -13,7 +13,7 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// fetch delegation
-	delAddr := sdk.MustAccAddressFromBech32(msg.Delegator)
+	delAddr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	delegation, err := k.Delegators.Get(ctx, delAddr)
 	if err != nil {
 		return nil, err
