@@ -325,7 +325,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	s.True(len(disputerBefore) == 0)
 
 	// mint tokens to voters
-	s.mintTokens(disputer, sdk.NewCoin(s.denom, math.NewInt(100_000_000)))
+	s.mintTokens(disputer, math.NewInt(100_000_000))
 	oracleServer := oracleKeeper.NewMsgServerImpl(s.oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
@@ -445,7 +445,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	s.NoError(err)
 
 	// tip to capture other group of voters 25% of the total power
-	s.mintTokens(disputer, sdk.NewCoin(s.denom, math.NewInt(100_000_000)))
+	s.mintTokens(disputer, math.NewInt(100_000_000))
 	oracleServer := oracleKeeper.NewMsgServerImpl(s.oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
