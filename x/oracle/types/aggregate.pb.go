@@ -38,6 +38,7 @@ type Aggregate struct {
 	Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
 	Nonce                uint64               `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
 	AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
+	Height               int64                `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
 }
 
 func (m *Aggregate) Reset()         { *m = Aggregate{} }
@@ -132,6 +133,13 @@ func (m *Aggregate) GetNonce() uint64 {
 func (m *Aggregate) GetAggregateReportIndex() int64 {
 	if m != nil {
 		return m.AggregateReportIndex
+	}
+	return 0
+}
+
+func (m *Aggregate) GetHeight() int64 {
+	if m != nil {
+		return m.Height
 	}
 	return 0
 }
@@ -237,6 +245,11 @@ func (m *Aggregate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Height != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x50
+	}
 	if m.AggregateReportIndex != 0 {
 		i = encodeVarintAggregate(dAtA, i, uint64(m.AggregateReportIndex))
 		i--
@@ -390,6 +403,9 @@ func (m *Aggregate) Size() (n int) {
 	}
 	if m.AggregateReportIndex != 0 {
 		n += 1 + sovAggregate(uint64(m.AggregateReportIndex))
+	}
+	if m.Height != 0 {
+		n += 1 + sovAggregate(uint64(m.Height))
 	}
 	return n
 }
@@ -658,6 +674,25 @@ func (m *Aggregate) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.AggregateReportIndex |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

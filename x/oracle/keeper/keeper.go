@@ -32,17 +32,17 @@ type (
 		Schema         collections.Schema
 		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                                      // key: reporter, queryid
 		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                       // key: queryId, tipper
-		TotalTips      collections.Item[math.Int]                                                                           // keep track of the total tips
-		Aggregates     collections.Map[collections.Pair[[]byte, int64], types.Aggregate]                                    // key: queryId, timestamp
+		TotalTips      collections.Item[math.Int]                                                                           // keep track of the total tips                                  // key: queryId, timestamp
 		Nonces         collections.Map[[]byte, uint64]                                                                      // key: queryId
 		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
 		QuerySequnecer collections.Sequence
 		Query          *collections.IndexedMap[[]byte, types.QueryMeta, queryMetaIndex]
 		// the address capable of executing a MsgUpdateParams message. Typically, this
-		// should be the x/gov module account.
-		authority          string
+		// should be the x/gov module account.                           // key: reporter, queryid                                                                       // keep track of the total tips
+		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, int64], types.Aggregate, aggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
 		Cyclelist          collections.Map[[]byte, string]
 		CyclelistSequencer collections.Sequence
+		authority          string
 	}
 )
 
@@ -82,8 +82,8 @@ func NewKeeper(
 			NewTipsIndex(sb),
 		),
 		TotalTips:  collections.NewItem(sb, types.TotalTipsPrefix, "total_tips", sdk.IntValue),
-		Aggregates: collections.NewMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc)),
 		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
+		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc), NewAggregatesIndex(sb)),
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",

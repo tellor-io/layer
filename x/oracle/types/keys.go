@@ -44,6 +44,7 @@ var (
 	QueryRevealedIdsIndexPrefix = collections.NewPrefix(16)
 	CyclelistPrefix             = collections.NewPrefix(17)
 	QueryTypeIndexPrefix        = collections.NewPrefix(18)
+	AggregatesHeightIndexPrefix = collections.NewPrefix(19)
 )
 
 func KeyPrefix(p string) []byte {
