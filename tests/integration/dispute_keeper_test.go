@@ -1,10 +1,13 @@
 package integration_test
 
 import (
+	"bytes"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracleKeeper "github.com/tellor-io/layer/x/oracle/keeper"
@@ -408,12 +411,20 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	addrs := []sdk.AccAddress{repAcc, disputer, delegators[1], delegators[2]}
 	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, v.Voters, twoPercentBurn)
 	for i := range votersBalanceBefore {
-		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
-		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))
+		// voterBal := votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
+		voterBal := votersBalanceBefore[i].AddAmount(votersReward[addrs[i].String()])
+		if bytes.Equal(disputer, addrs[i]) {
+			// disputer gets the dispute fee they paid minus the 5% burn for a one rounder dispute
+			voterBal = voterBal.AddAmount(disputeFee.Sub(fivePercentBurn))
+		}
+		s.Equal(voterBal, votersBalanceAfter[i])
 	}
 	disputerDelgation, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, disputer)
 	s.NoError(err)
 	s.True(disputerDelgation.Equal(math.NewInt(1_000_000)))
+
+	// get module account balance
+	s.bankKeeper.Balances.Get(s.ctx, collections.Join(authtypes.NewModuleAddress(types.ModuleName), s.denom))
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
