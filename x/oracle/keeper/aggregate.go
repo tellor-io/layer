@@ -137,6 +137,10 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 	return mostRecent, nil
 }
 
+func (k Keeper) GetDataBeforePublic(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+	return k.getDataBefore(ctx, queryId, timestamp)
+}
+
 func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
 	var mostRecent *types.Aggregate
@@ -154,7 +158,7 @@ func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (
 }
 
 func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestamp.Unix()).Descending()
 	var mostRecent int64
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		mostRecent = key.K2()
@@ -173,7 +177,7 @@ func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp ti
 }
 
 func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartInclusive(timestamp.Unix())
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartExclusive(timestamp.Unix())
 	var mostRecent int64
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		mostRecent = key.K2()
@@ -189,4 +193,63 @@ func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp tim
 	}
 
 	return time.Unix(mostRecent, 0), nil
+}
+
+func (k Keeper) GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []types.Aggregate {
+	iter, err := k.Aggregates.Indexes.BlockHeight.MatchExact(ctx, height)
+	if err != nil {
+		panic(err)
+	}
+
+	kvs, err := indexes.CollectKeyValues(ctx, k.Aggregates, iter)
+	if err != nil {
+		panic(err)
+	}
+
+	reports := make([]types.Aggregate, len(kvs))
+	for i, kv := range kvs {
+		reports[i] = kv.Value
+	}
+
+	return reports
+}
+
+func (k Keeper) GetCurrentAggregateReport(ctx sdk.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		aggregate = &value
+		timestamp = time.Unix(key.K2(), 0)
+		return true, nil
+	})
+	if err != nil {
+		panic(err) // Handle the error appropriately
+	}
+	return aggregate, timestamp
+}
+
+func (k Keeper) GetAggregateBefore(ctx sdk.Context, queryId []byte, timestampBefore time.Time) (aggregate *types.Aggregate, timestamp time.Time, err error) {
+	// Convert the timestampBefore to Unix time and create a range that ends just before this timestamp
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestampBefore.Unix()).Descending()
+
+	var mostRecent *types.Aggregate
+	var mostRecentTimestamp int64
+
+	// Walk through the aggregates in descending order to find the most recent one before timestampBefore
+	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		mostRecent = &value
+		mostRecentTimestamp = key.K2()
+		return true, nil // Stop after the first (most recent) match
+	})
+
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	if mostRecent == nil {
+		return nil, time.Time{}, fmt.Errorf("no aggregate report found before timestamp %v for query id %s", timestampBefore, hex.EncodeToString(queryId))
+	}
+
+	// Convert the Unix timestamp back to time.Time
+	timestamp = time.Unix(mostRecentTimestamp, 0)
+	return mostRecent, timestamp, nil
 }

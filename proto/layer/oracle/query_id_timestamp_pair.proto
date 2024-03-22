@@ -1,0 +1,13 @@
+syntax = "proto3";
+package layer.oracle;
+
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
+
+message QueryIdTimestampPair {
+	string queryId = 1;
+	int64 timestamp = 2;
+}
+
+message QueryIdTimestampPairsArray {
+	repeated QueryIdTimestampPair pairs = 1;
+}

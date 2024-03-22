@@ -105,6 +105,8 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	"github.com/spf13/cast"
+	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
+	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	"github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
@@ -127,6 +129,10 @@ import (
 
 	_ "github.com/tellor-io/layer/app/config"
 
+	bridgemodule "github.com/tellor-io/layer/x/bridge"
+	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
+	bridgemoduletypes "github.com/tellor-io/layer/x/bridge/types"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	"github.com/tellor-io/layer/docs"
@@ -135,14 +141,12 @@ import (
 	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
-	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
 	daemonserver "github.com/tellor-io/layer/daemons/server"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
 	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
-	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
@@ -243,6 +247,7 @@ type App struct {
 
 	DisputeKeeper disputemodulekeeper.Keeper
 
+	BridgeKeeper   bridgemodulekeeper.Keeper
 	ReporterKeeper reportermodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
@@ -311,6 +316,7 @@ func New(
 		oraclemoduletypes.StoreKey,
 		registrymoduletypes.StoreKey,
 		disputemoduletypes.StoreKey,
+		bridgemoduletypes.StoreKey,
 		reportermoduletypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
@@ -583,6 +589,25 @@ func New(
 		app.ReporterKeeper,
 	)
 	disputeModule := disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper)
+
+	app.BridgeKeeper = bridgemodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[bridgemoduletypes.StoreKey]),
+		app.StakingKeeper,
+		app.SlashingKeeper,
+		app.OracleKeeper,
+	)
+	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
+	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
+		logger,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper,
+		app.BankKeeper,
+	)
+	// reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
@@ -710,6 +735,14 @@ func New(
 		),
 	)
 
+	voteExtHandler := NewVoteExtHandler(app.Logger(), app.AppCodec(), app.OracleKeeper, app.BridgeKeeper)
+	app.BaseApp.SetExtendVoteHandler(voteExtHandler.ExtendVoteHandler)
+	app.BaseApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtensionHandler)
+
+	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
+	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
+	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
+	app.BaseApp.SetPreBlocker(prepareProposalHandler.PreBlocker)
 	app.RegistryKeeper.SetHooks(
 		registrymoduletypes.NewMultiRegistryHooks(
 			app.OracleKeeper.Hooks(),
@@ -748,6 +781,7 @@ func New(
 		oracleModule,
 		registryModule,
 		disputeModule,
+		bridgeModule,
 		reporterModule,
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
@@ -794,6 +828,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
 		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/beginBlockers
 	)
@@ -821,6 +856,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
 		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
@@ -853,6 +889,7 @@ func New(
 		oraclemoduletypes.ModuleName,
 		registrymoduletypes.ModuleName,
 		disputemoduletypes.ModuleName,
+		bridgemoduletypes.ModuleName,
 		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
@@ -942,6 +979,15 @@ func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.
 	if err != nil {
 		return nil, err
 	}
+
+	// cp := app.GetConsensusParams(ctx)
+	// cp.Abci = &protocmt.ABCIParams{
+	// 	VoteExtensionsEnableHeight: 2,
+	// }
+	// err = app.StoreConsensusParams(ctx, cp)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 

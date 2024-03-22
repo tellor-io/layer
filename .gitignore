@@ -6,3 +6,7 @@ release/
 .DS_Store
 layerd
 .hypothesis
+evm/artifacts
+evm/cache
+evm/node_modules
+evm/package-lock.json
