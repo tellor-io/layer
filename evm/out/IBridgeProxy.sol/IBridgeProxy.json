@@ -1,0 +1,359 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "name": "pauseBridge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpauseBridge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_newImplementation",
+          "type": "address"
+        }
+      ],
+      "name": "updateImplementation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "pauseBridge()": "7dd0480f",
+    "paused()": "5c975abb",
+    "unpauseBridge()": "a82f143c",
+    "updateImplementation(address)": "025b22bc"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"pauseBridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpauseBridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newImplementation\",\"type\":\"address\"}],\"name\":\"updateImplementation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/interfaces/IBridgeProxy.sol\":\"IBridgeProxy\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/interfaces/IBridgeProxy.sol\":{\"keccak256\":\"0xcf480f55412e2def11c75b8f21562e8ca30093c4e8109e773b6077eab5c35a09\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b627d70c3d025fec674d0afb25568464abcc69f82c698981a34c6c5879b5e40a\",\"dweb:/ipfs/Qmd1g3hRG7RWkQxgAhVUEXKU7tvCNeZeReR76hZPRwnZPT\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.3+commit.8d00100c"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "pauseBridge"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "paused",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "unpauseBridge"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_newImplementation",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "updateImplementation"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":forge-std/=lib/forge-std/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/interfaces/IBridgeProxy.sol": "IBridgeProxy"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/interfaces/IBridgeProxy.sol": {
+        "keccak256": "0xcf480f55412e2def11c75b8f21562e8ca30093c4e8109e773b6077eab5c35a09",
+        "urls": [
+          "bzz-raw://b627d70c3d025fec674d0afb25568464abcc69f82c698981a34c6c5879b5e40a",
+          "dweb:/ipfs/Qmd1g3hRG7RWkQxgAhVUEXKU7tvCNeZeReR76hZPRwnZPT"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/interfaces/IBridgeProxy.sol",
+    "id": 8240,
+    "exportedSymbols": {
+      "IBridgeProxy": [
+        8239
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "32:245:21",
+    "nodes": [
+      {
+        "id": 8222,
+        "nodeType": "PragmaDirective",
+        "src": "32:22:21",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".3"
+        ]
+      },
+      {
+        "id": 8239,
+        "nodeType": "ContractDefinition",
+        "src": "56:221:21",
+        "nodes": [
+          {
+            "id": 8227,
+            "nodeType": "FunctionDefinition",
+            "src": "85:42:21",
+            "nodes": [],
+            "functionSelector": "5c975abb",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "paused",
+            "nameLocation": "94:6:21",
+            "parameters": {
+              "id": 8223,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "100:2:21"
+            },
+            "returnParameters": {
+              "id": 8226,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 8225,
+                  "mutability": "mutable",
+                  "name": "",
+                  "nameLocation": "-1:-1:-1",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 8227,
+                  "src": "121:4:21",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 8224,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "121:4:21",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "120:6:21"
+            },
+            "scope": 8239,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 8232,
+            "nodeType": "FunctionDefinition",
+            "src": "132:67:21",
+            "nodes": [],
+            "functionSelector": "025b22bc",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "updateImplementation",
+            "nameLocation": "141:20:21",
+            "parameters": {
+              "id": 8230,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 8229,
+                  "mutability": "mutable",
+                  "name": "_newImplementation",
+                  "nameLocation": "170:18:21",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 8232,
+                  "src": "162:26:21",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 8228,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "162:7:21",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "161:28:21"
+            },
+            "returnParameters": {
+              "id": 8231,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "198:0:21"
+            },
+            "scope": 8239,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 8235,
+            "nodeType": "FunctionDefinition",
+            "src": "204:32:21",
+            "nodes": [],
+            "functionSelector": "7dd0480f",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "pauseBridge",
+            "nameLocation": "213:11:21",
+            "parameters": {
+              "id": 8233,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "224:2:21"
+            },
+            "returnParameters": {
+              "id": 8234,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "235:0:21"
+            },
+            "scope": 8239,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 8238,
+            "nodeType": "FunctionDefinition",
+            "src": "241:34:21",
+            "nodes": [],
+            "functionSelector": "a82f143c",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "unpauseBridge",
+            "nameLocation": "250:13:21",
+            "parameters": {
+              "id": 8236,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "263:2:21"
+            },
+            "returnParameters": {
+              "id": 8237,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "274:0:21"
+            },
+            "scope": 8239,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          8239
+        ],
+        "name": "IBridgeProxy",
+        "nameLocation": "66:12:21",
+        "scope": 8240
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 21
+}

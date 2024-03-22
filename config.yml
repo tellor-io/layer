@@ -8,6 +8,7 @@ accounts:
   coins:
   - 10000token
   - 100000000stake
+  - 100000000loya
 client:
   openapi:
     path: docs/static/openapi.yml
@@ -19,3 +20,5 @@ faucet:
 validators:
 - name: alice
   bonded: 100000000loya
+build:
+  main: ./layerd

@@ -1,0 +1,767 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_implementation",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "implementation",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pauseBridge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paused",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unpauseBridge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_newImplementation",
+          "type": "address"
+        }
+      ],
+      "name": "updateImplementation",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x608060405234801561001057600080fd5b5060405161020138038061020183398101604081905261002f91610054565b600080546001600160a01b0319166001600160a01b0392909216919091179055610082565b600060208284031215610065578081fd5b81516001600160a01b038116811461007b578182fd5b9392505050565b610170806100916000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c8063025b22bc1461005c5780635c60da1b1461008e5780635c975abb146100be5780637dd0480f146100e2578063a82f143c146100fa575b600080fd5b61008c61006a36600461010c565b600080546001600160a01b0319166001600160a01b0392909216919091179055565b005b6000546100a1906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b6000546100d290600160a01b900460ff1681565b60405190151581526020016100b5565b61008c6000805460ff60a01b1916600160a01b179055565b61008c6000805460ff60a01b19169055565b60006020828403121561011d578081fd5b81356001600160a01b0381168114610133578182fd5b939250505056fea26469706673582212205d8576ddcde12048d233ebf08382b5d939dc504b6634ad92b07de2871a5be94064736f6c63430008030033",
+    "sourceMap": "120:495:22:-:0;;;236:86;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;283:14;:32;;-1:-1:-1;;;;;;283:32:22;-1:-1:-1;;;;;283:32:22;;;;;;;;;;120:495;;14:310:26;;137:2;125:9;116:7;112:23;108:32;105:2;;;158:6;150;143:22;105:2;189:16;;-1:-1:-1;;;;;234:31:26;;224:42;;214:2;;285:6;277;270:22;214:2;313:5;95:229;-1:-1:-1;;;95:229:26:o;:::-;120:495:22;;;;;;",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x608060405234801561001057600080fd5b50600436106100575760003560e01c8063025b22bc1461005c5780635c60da1b1461008e5780635c975abb146100be5780637dd0480f146100e2578063a82f143c146100fa575b600080fd5b61008c61006a36600461010c565b600080546001600160a01b0319166001600160a01b0392909216919091179055565b005b6000546100a1906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b6000546100d290600160a01b900460ff1681565b60405190151581526020016100b5565b61008c6000805460ff60a01b1916600160a01b179055565b61008c6000805460ff60a01b19169055565b60006020828403121561011d578081fd5b81356001600160a01b0381168114610133578182fd5b939250505056fea26469706673582212205d8576ddcde12048d233ebf08382b5d939dc504b6634ad92b07de2871a5be94064736f6c63430008030033",
+    "sourceMap": "120:495:22:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;328:128;;;;;;:::i;:::-;414:14;:35;;-1:-1:-1;;;;;;414:35:22;-1:-1:-1;;;;;414:35:22;;;;;;;;;;328:128;;;167:29;;;;;-1:-1:-1;;;;;167:29:22;;;;;;-1:-1:-1;;;;;489:32:26;;;;471:51;;459:2;444:18;167:29:22;;;;;;;;202:27;;;;;-1:-1:-1;;;202:27:22;;;;;;;;;698:14:26;;691:22;673:41;;661:2;646:18;202:27:22;628:92:26;462:71:22;513:6;:13;;-1:-1:-1;;;;513:13:22;-1:-1:-1;;;513:13:22;;;462:71;;539:74;601:5;592:14;;-1:-1:-1;;;;592:14:22;;;539:74;;14:306:26;;126:2;114:9;105:7;101:23;97:32;94:2;;;147:6;139;132:22;94:2;178:23;;-1:-1:-1;;;;;230:31:26;;220:42;;210:2;;281:6;273;266:22;210:2;309:5;84:236;-1:-1:-1;;;84:236:26:o",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "implementation()": "5c60da1b",
+    "pauseBridge()": "7dd0480f",
+    "paused()": "5c975abb",
+    "unpauseBridge()": "a82f143c",
+    "updateImplementation(address)": "025b22bc"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_implementation\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"implementation\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"pauseBridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paused\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"unpauseBridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newImplementation\",\"type\":\"address\"}],\"name\":\"updateImplementation\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/testing/BridgeProxyMock.sol\":\"BridgeProxyMock\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":forge-std/=lib/forge-std/src/\"]},\"sources\":{\"src/interfaces/IBridgeProxy.sol\":{\"keccak256\":\"0xcf480f55412e2def11c75b8f21562e8ca30093c4e8109e773b6077eab5c35a09\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://b627d70c3d025fec674d0afb25568464abcc69f82c698981a34c6c5879b5e40a\",\"dweb:/ipfs/Qmd1g3hRG7RWkQxgAhVUEXKU7tvCNeZeReR76hZPRwnZPT\"]},\"src/testing/BridgeProxyMock.sol\":{\"keccak256\":\"0x4a483dd7ad9ec5f0cc3cd92d533a0a77daa95b61132ac94ed5edcaa469701455\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://ed374fd97385d1ba8405603640bfec26f4661c015f143a9e03ab1cae4c7df0c5\",\"dweb:/ipfs/QmQjtKuWhoqqZSimpd8kyoJ8hRUn4DuGsKFZPQx7vMshWj\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.3+commit.8d00100c"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_implementation",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "implementation",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "pauseBridge"
+        },
+        {
+          "inputs": [],
+          "stateMutability": "view",
+          "type": "function",
+          "name": "paused",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ]
+        },
+        {
+          "inputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "unpauseBridge"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "_newImplementation",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function",
+          "name": "updateImplementation"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":forge-std/=lib/forge-std/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "src/testing/BridgeProxyMock.sol": "BridgeProxyMock"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "src/interfaces/IBridgeProxy.sol": {
+        "keccak256": "0xcf480f55412e2def11c75b8f21562e8ca30093c4e8109e773b6077eab5c35a09",
+        "urls": [
+          "bzz-raw://b627d70c3d025fec674d0afb25568464abcc69f82c698981a34c6c5879b5e40a",
+          "dweb:/ipfs/Qmd1g3hRG7RWkQxgAhVUEXKU7tvCNeZeReR76hZPRwnZPT"
+        ],
+        "license": "MIT"
+      },
+      "src/testing/BridgeProxyMock.sol": {
+        "keccak256": "0x4a483dd7ad9ec5f0cc3cd92d533a0a77daa95b61132ac94ed5edcaa469701455",
+        "urls": [
+          "bzz-raw://ed374fd97385d1ba8405603640bfec26f4661c015f143a9e03ab1cae4c7df0c5",
+          "dweb:/ipfs/QmQjtKuWhoqqZSimpd8kyoJ8hRUn4DuGsKFZPQx7vMshWj"
+        ],
+        "license": "MIT"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "src/testing/BridgeProxyMock.sol",
+    "id": 8291,
+    "exportedSymbols": {
+      "BridgeProxyMock": [
+        8290
+      ],
+      "IBridgeProxy": [
+        8239
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "32:585:22",
+    "nodes": [
+      {
+        "id": 8241,
+        "nodeType": "PragmaDirective",
+        "src": "32:22:22",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "0.8",
+          ".3"
+        ]
+      },
+      {
+        "id": 8243,
+        "nodeType": "ImportDirective",
+        "src": "56:62:22",
+        "nodes": [],
+        "absolutePath": "src/interfaces/IBridgeProxy.sol",
+        "file": "../interfaces/IBridgeProxy.sol",
+        "nameLocation": "-1:-1:-1",
+        "scope": 8291,
+        "sourceUnit": 8240,
+        "symbolAliases": [
+          {
+            "foreign": {
+              "id": 8242,
+              "name": "IBridgeProxy",
+              "nodeType": "Identifier",
+              "overloadedDeclarations": [],
+              "src": "65:12:22",
+              "typeDescriptions": {}
+            },
+            "nameLocation": "-1:-1:-1"
+          }
+        ],
+        "unitAlias": ""
+      },
+      {
+        "id": 8290,
+        "nodeType": "ContractDefinition",
+        "src": "120:495:22",
+        "nodes": [
+          {
+            "id": 8247,
+            "nodeType": "VariableDeclaration",
+            "src": "167:29:22",
+            "nodes": [],
+            "constant": false,
+            "functionSelector": "5c60da1b",
+            "mutability": "mutable",
+            "name": "implementation",
+            "nameLocation": "182:14:22",
+            "scope": 8290,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_address",
+              "typeString": "address"
+            },
+            "typeName": {
+              "id": 8246,
+              "name": "address",
+              "nodeType": "ElementaryTypeName",
+              "src": "167:7:22",
+              "stateMutability": "nonpayable",
+              "typeDescriptions": {
+                "typeIdentifier": "t_address",
+                "typeString": "address"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 8250,
+            "nodeType": "VariableDeclaration",
+            "src": "202:27:22",
+            "nodes": [],
+            "baseFunctions": [
+              8227
+            ],
+            "constant": false,
+            "functionSelector": "5c975abb",
+            "mutability": "mutable",
+            "name": "paused",
+            "nameLocation": "223:6:22",
+            "overrides": {
+              "id": 8249,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "214:8:22"
+            },
+            "scope": 8290,
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_bool",
+              "typeString": "bool"
+            },
+            "typeName": {
+              "id": 8248,
+              "name": "bool",
+              "nodeType": "ElementaryTypeName",
+              "src": "202:4:22",
+              "typeDescriptions": {
+                "typeIdentifier": "t_bool",
+                "typeString": "bool"
+              }
+            },
+            "visibility": "public"
+          },
+          {
+            "id": 8260,
+            "nodeType": "FunctionDefinition",
+            "src": "236:86:22",
+            "nodes": [],
+            "body": {
+              "id": 8259,
+              "nodeType": "Block",
+              "src": "273:49:22",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 8257,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 8255,
+                      "name": "implementation",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 8247,
+                      "src": "283:14:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 8256,
+                      "name": "_implementation",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 8252,
+                      "src": "300:15:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "283:32:22",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 8258,
+                  "nodeType": "ExpressionStatement",
+                  "src": "283:32:22"
+                }
+              ]
+            },
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "parameters": {
+              "id": 8253,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 8252,
+                  "mutability": "mutable",
+                  "name": "_implementation",
+                  "nameLocation": "256:15:22",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 8260,
+                  "src": "248:23:22",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 8251,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "248:7:22",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "247:25:22"
+            },
+            "returnParameters": {
+              "id": 8254,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "273:0:22"
+            },
+            "scope": 8290,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          },
+          {
+            "id": 8271,
+            "nodeType": "FunctionDefinition",
+            "src": "328:128:22",
+            "nodes": [],
+            "body": {
+              "id": 8270,
+              "nodeType": "Block",
+              "src": "404:52:22",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 8268,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 8266,
+                      "name": "implementation",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 8247,
+                      "src": "414:14:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "id": 8267,
+                      "name": "_newImplementation",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 8262,
+                      "src": "431:18:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_address",
+                        "typeString": "address"
+                      }
+                    },
+                    "src": "414:35:22",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 8269,
+                  "nodeType": "ExpressionStatement",
+                  "src": "414:35:22"
+                }
+              ]
+            },
+            "baseFunctions": [
+              8232
+            ],
+            "functionSelector": "025b22bc",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "updateImplementation",
+            "nameLocation": "337:20:22",
+            "overrides": {
+              "id": 8264,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "395:8:22"
+            },
+            "parameters": {
+              "id": 8263,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 8262,
+                  "mutability": "mutable",
+                  "name": "_newImplementation",
+                  "nameLocation": "366:18:22",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 8271,
+                  "src": "358:26:22",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 8261,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "358:7:22",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "357:28:22"
+            },
+            "returnParameters": {
+              "id": 8265,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "404:0:22"
+            },
+            "scope": 8290,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 8280,
+            "nodeType": "FunctionDefinition",
+            "src": "462:71:22",
+            "nodes": [],
+            "body": {
+              "id": 8279,
+              "nodeType": "Block",
+              "src": "503:30:22",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 8277,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 8275,
+                      "name": "paused",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 8250,
+                      "src": "513:6:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "hexValue": "74727565",
+                      "id": 8276,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "bool",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "522:4:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      },
+                      "value": "true"
+                    },
+                    "src": "513:13:22",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 8278,
+                  "nodeType": "ExpressionStatement",
+                  "src": "513:13:22"
+                }
+              ]
+            },
+            "baseFunctions": [
+              8235
+            ],
+            "functionSelector": "7dd0480f",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "pauseBridge",
+            "nameLocation": "471:11:22",
+            "overrides": {
+              "id": 8273,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "494:8:22"
+            },
+            "parameters": {
+              "id": 8272,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "482:2:22"
+            },
+            "returnParameters": {
+              "id": 8274,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "503:0:22"
+            },
+            "scope": 8290,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          },
+          {
+            "id": 8289,
+            "nodeType": "FunctionDefinition",
+            "src": "539:74:22",
+            "nodes": [],
+            "body": {
+              "id": 8288,
+              "nodeType": "Block",
+              "src": "582:31:22",
+              "nodes": [],
+              "statements": [
+                {
+                  "expression": {
+                    "id": 8286,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "id": 8284,
+                      "name": "paused",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 8250,
+                      "src": "592:6:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "hexValue": "66616c7365",
+                      "id": 8285,
+                      "isConstant": false,
+                      "isLValue": false,
+                      "isPure": true,
+                      "kind": "bool",
+                      "lValueRequested": false,
+                      "nodeType": "Literal",
+                      "src": "601:5:22",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bool",
+                        "typeString": "bool"
+                      },
+                      "value": "false"
+                    },
+                    "src": "592:14:22",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "id": 8287,
+                  "nodeType": "ExpressionStatement",
+                  "src": "592:14:22"
+                }
+              ]
+            },
+            "baseFunctions": [
+              8238
+            ],
+            "functionSelector": "a82f143c",
+            "implemented": true,
+            "kind": "function",
+            "modifiers": [],
+            "name": "unpauseBridge",
+            "nameLocation": "548:13:22",
+            "overrides": {
+              "id": 8282,
+              "nodeType": "OverrideSpecifier",
+              "overrides": [],
+              "src": "573:8:22"
+            },
+            "parameters": {
+              "id": 8281,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "561:2:22"
+            },
+            "returnParameters": {
+              "id": 8283,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "582:0:22"
+            },
+            "scope": 8290,
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [
+          {
+            "baseName": {
+              "id": 8244,
+              "name": "IBridgeProxy",
+              "nodeType": "IdentifierPath",
+              "referencedDeclaration": 8239,
+              "src": "148:12:22"
+            },
+            "id": 8245,
+            "nodeType": "InheritanceSpecifier",
+            "src": "148:12:22"
+          }
+        ],
+        "contractDependencies": [
+          8239
+        ],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "linearizedBaseContracts": [
+          8290,
+          8239
+        ],
+        "name": "BridgeProxyMock",
+        "nameLocation": "129:15:22",
+        "scope": 8291
+      }
+    ],
+    "license": "MIT"
+  },
+  "id": 22
+}

@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package layer.bridge;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "layer/bridge/params.proto";
+import "layer/oracle/aggregate.proto";
+
+option go_package = "github.com/tellor-io/layer/x/bridge/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  
+  // Parameters queries the parameters of the module.
+  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/layer/bridge/params";
+  
+  }
+  
+  // Queries a list of GetEvmValidators items.
+  rpc GetEvmValidators (QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
+    option (google.api.http).get = "/layer/bridge/get_evm_validators";
+  }
+
+  rpc GetValidatorCheckpoint (QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
+    option (google.api.http).get = "/layer/bridge/get_validator_checkpoint";
+  }
+
+  rpc GetValidatorCheckpointParams (QueryGetValidatorCheckpointParamsRequest) returns (QueryGetValidatorCheckpointParamsResponse) {
+    option (google.api.http).get = "/layer/bridge/get_validator_checkpoint_params/{timestamp}";
+  }
+
+  rpc GetValidatorTimestampByIndex (QueryGetValidatorTimestampByIndexRequest) returns (QueryGetValidatorTimestampByIndexResponse) {
+    option (google.api.http).get = "/layer/bridge/get_validator_timestamp_by_index/{index}";
+  }
+
+  rpc GetValsetSigs (QueryGetValsetSigsRequest) returns (QueryGetValsetSigsResponse) {
+    option (google.api.http).get = "/layer/bridge/get_valset_sigs/{timestamp}";
+  }
+
+  rpc GetOracleAttestations (QueryGetOracleAttestationsRequest) returns (QueryGetOracleAttestationsResponse) {
+    option (google.api.http).get = "/layer/bridge/get_oracle_attestations/{queryId}/{timestamp}";
+  }
+
+  rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
+    option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
+  }
+
+  rpc GetValsetByTimestamp (QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
+    option (google.api.http).get = "/layer/bridge/get_valset_by_timestamp/{timestamp}";
+  }
+
+  rpc GetCurrentAggregateReport (QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
+    option (google.api.http).get = "/layer/bridge/get_current_aggregate_report/{queryId}";
+  }
+
+  rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
+    option (google.api.http).get = "/layer/bridge/get_data_before/{queryId}/{timestamp}";
+  }
+
+  // rpc GetCurrentAggregateReportTest (QueryGetCurrentAggregateReportTestRequest) returns (QueryGetCurrentAggregateReportTestResponse) {
+  //   option (google.api.http).get = "/layer/bridge/get_current_aggregate_report_test/{queryId}";
+  // }
+}
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryGetEvmValidatorsRequest {}
+
+message QueryGetEvmValidatorsResponse {
+  repeated BridgeValidator bridgeValidatorSet = 1;
+}
+
+message QueryGetValidatorCheckpointRequest {}
+
+message QueryGetValidatorCheckpointResponse {
+  string validatorCheckpoint = 1;
+}
+
+message BridgeValidator {
+  string ethereumAddress = 1;
+  uint64 power = 2;
+}
+
+message BridgeValidatorSet {
+  repeated BridgeValidator bridgeValidatorSet = 1;
+}
+
+message BridgeValidatorSetParams {
+  BridgeValidatorSet bridgeValidatorSet = 1;
+  int64 validatorTimestamp = 2;
+  int64 validatorPowerThreshold = 3;
+  bytes validatorSetHash = 4;
+  bytes validatorCheckpoint = 5;
+}
+
+message BridgeValidatorSetCheckpointParams {
+  int64 validatorTimestamp = 1;
+  int64 validatorPowerThreshold = 2;
+  bytes validatorSetHash = 3;
+}
+
+message BridgeValidatorSetCheckpoint {
+  bytes validatorCheckpoint = 1;
+}
+
+message QueryGetValidatorCheckpointParamsRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValidatorCheckpointParamsResponse {
+  string checkpoint = 1;
+  string valsetHash = 2;
+  int64 timestamp = 3;
+  int64 powerThreshold = 4;
+}
+
+message QueryGetValidatorTimestampByIndexRequest {
+  int64 index = 1;
+}
+
+message QueryGetValidatorTimestampByIndexResponse {
+  int64 timestamp = 1;
+}
+
+message QueryGetValsetSigsRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValsetSigsResponse {
+  repeated string signatures = 1;
+}
+
+message QueryGetOracleAttestationsRequest {
+  string queryId = 1;
+  int64 timestamp = 2;
+}
+
+message QueryGetOracleAttestationsResponse {
+  repeated string attestations = 1;
+}
+
+message QueryGetEvmAddressByValidatorAddressRequest {
+  string validatorAddress = 1;
+}
+
+message QueryGetEvmAddressByValidatorAddressResponse {
+  string evmAddress = 1;
+}
+
+message QueryGetValsetByTimestampRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValsetByTimestampResponse {
+  repeated BridgeValidator bridgeValidatorSet = 1;
+}
+
+message QueryGetCurrentAggregateReportRequest {
+  string queryId = 1;
+}
+
+message QueryGetCurrentAggregateReportResponse {
+  Aggregate aggregate = 1;
+  uint64 timestamp = 2;
+}
+
+message Aggregate {
+  
+  string queryId = 1; 
+  string aggregateValue = 2; 
+  string aggregateReporter = 3; 
+  int64 reporterPower = 4; 
+  double standardDeviation = 5;
+  repeated AggregateReporter reporters = 6; 
+  bool flagged = 7;
+  int64 nonce = 8;
+  int64 aggregateReportIndex = 9;
+  int64 height = 10;
+}
+
+message AggregateReporter {
+  string reporter = 1; 
+  int64 power = 2; 
+}
+
+message QueryGetDataBeforeRequest {
+  string queryId = 1;
+  int64 timestamp = 2;
+}
+
+message QueryGetDataBeforeResponse {
+  layer.oracle.Aggregate aggregate = 1;
+  uint64 timestamp = 2;
+}
+
+// message QueryGetCurrentAggregateReportTestRequest {
+//   string queryId = 1;
+// }
+
+// message QueryGetCurrentAggregateReportTestResponse {
+//   layer.oracle.Aggregate aggregate = 1;
+//   uint64 timestamp = 2;
+// }
