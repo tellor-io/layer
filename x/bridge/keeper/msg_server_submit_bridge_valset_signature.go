@@ -13,8 +13,6 @@ import (
 func (k msgServer) SubmitBridgeValsetSignature(ctx context.Context, msg *types.MsgSubmitBridgeValsetSignature) (*types.MsgSubmitBridgeValsetSignatureResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	k.Keeper.Logger(sdkCtx).Info("@FuncSubmitBridgeValsetSignature", "msg", msg)
-
 	operatorAddr, err := convertPrefix(msg.Creator, "tellorvaloper")
 	if err != nil {
 		k.Keeper.Logger(sdkCtx).Error("failed to convert operator address prefix", "error", err)

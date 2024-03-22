@@ -11,29 +11,14 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// from staking module:
-// // ValAddress defines a wrapper around bytes meant to present a validator's
-// // operator. When marshaled to a string or JSON, it uses Bech32.
-// type ValAddress []byte
-
 func (k msgServer) RegisterOperatorPubkey(ctx context.Context, msg *types.MsgRegisterOperatorPubkey) (*types.MsgRegisterOperatorPubkeyResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	k.Keeper.Logger(sdkCtx).Info("@FuncRegisterOperatorPubkey", "msg", msg)
-
-	// operatorAddr1, err := sdk.ValAddressFromBech32(msg.Creator)
-	// if err != nil {
-	// 	k.Keeper.Logger(sdkCtx).Error("failed to get operator address", "error", err)
-	// 	return nil, status.Error(codes.InvalidArgument, err.Error())
-	// }
-	// k.Keeper.Logger(sdkCtx).Info("operator address 1", "address", operatorAddr1)
 
 	operatorAddr2, err := convertPrefix(msg.Creator, "tellorvaloper")
 	if err != nil {
 		k.Keeper.Logger(sdkCtx).Error("failed to convert operator address prefix", "error", err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	k.Keeper.Logger(sdkCtx).Info("operator address 2", "address", operatorAddr2)
 
 	operatorValAddr, err := sdk.ValAddressFromBech32(operatorAddr2)
 	if err != nil {
@@ -60,14 +45,6 @@ func (k msgServer) RegisterOperatorPubkey(ctx context.Context, msg *types.MsgReg
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	k.Keeper.Logger(sdkCtx).Info("eth address", "address", ethAddress)
-
-	// // Ensure the pubkey is not already registered
-	// if k.GetOperatorPubKey(sdkCtx, msg.PubKey) {
-	// 	return nil, status.Error(codes.AlreadyExists, "pubkey is already registered")
-	// }
-
-	// // Add the pubkey to the store
-	// k.SetOperatorPubKey(sdkCtx, msg.PubKey, msg.Creator)
 
 	error := k.Keeper.SetEVMAddressByOperator(sdkCtx, operatorAddr2, ethAddress)
 	if error != nil {

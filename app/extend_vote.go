@@ -13,7 +13,6 @@ import (
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cosbytes "github.com/cometbft/cometbft/libs/bytes"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,7 +47,6 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
 	SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error
 	GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
-	RecoverETHAddress(ctx sdk.Context, msg []byte, sig []byte, signer []byte) ([]byte, uint8, error)
 }
 
 type StakingKeeper interface {
@@ -93,20 +91,7 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 	}
 }
 
-// type Aggregate struct {
-//     QueryId              string               `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
-//     AggregateValue       string               `protobuf:"bytes,2,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
-//     AggregateReporter    string               `protobuf:"bytes,3,opt,name=aggregateReporter,proto3" json:"aggregateReporter,omitempty"`
-//     ReporterPower        int64                `protobuf:"varint,4,opt,name=reporterPower,proto3" json:"reporterPower,omitempty"`
-//     StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
-//     Reporters            []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
-//     Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
-//     Nonce                int64                `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
-//     AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
-// }
-
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	h.logger.Info("@BridgeExtendVoteHandler called", "req", req)
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
@@ -126,32 +111,13 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSignature := InitialSignature{
 			Signature: initialSig,
 		}
-		// voteExt := BridgeVoteExtension{
-		// 	InitialSignature: initialSignature,
-		// }
 		voteExt.InitialSignature = initialSignature
-		bz, err := json.Marshal(voteExt)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
-		}
-		h.logger.Info("Vote extension data", "voteExt", string(bz))
-		// return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 	// logic for generating oracle sigs and including them via vote extensions
 	blockHeight := ctx.BlockHeight() - 1
 	reports := h.oracleKeeper.GetAggregatedReportsByHeight(ctx, int64(blockHeight))
-	// voteExt := BridgeVoteExtension{}
 	// iterate through reports and generate sigs
-	if len(reports) == 0 {
-		h.logger.Info("No reports found for block height", "blockHeight", blockHeight)
-		// voteExt := BridgeVoteExtension{}
-		// bz, err := json.Marshal(voteExt)
-		// if err != nil {
-		// 	return nil, fmt.Errorf("failed to marshal empty vote extension: %w", err)
-		// }
-		// return &abci.ResponseExtendVote{VoteExtension: bz}, nil
-	} else {
-		h.logger.Info("Reports were found for block height", "blockHeight", blockHeight)
+	if len(reports) > 0 {
 		valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
 		if err != nil {
 			return nil, err
@@ -159,50 +125,24 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		for _, aggReport := range reports {
 			currentTime := time.Now()
 			ts := currentTime.Unix() + 100
-			// get dataBefore
-			// queryId, err := utils.QueryIDFromString(aggReport.QueryId)
 			queryId, err := hex.DecodeString(aggReport.QueryId)
 			if err != nil {
-				h.logger.Error("Failed to get query id from string", "error", err)
 				panic(err)
-			} else {
-				h.logger.Info("Query ID from string", "queryId", queryId)
 			}
-			h.logger.Info("getting data before")
-			dataBefore, err := h.oracleKeeper.GetDataBeforePublic(ctx, queryId, time.Unix(ts, 0))
-			if err != nil {
-				h.logger.Error("Failed to get data before", "error", err)
-				h.logger.Info("dataBefore", "dataBefore", dataBefore)
-				return nil, err
-			}
-			h.logger.Info("getting timestamp before for report time")
 			reportTime, err := h.oracleKeeper.GetTimestampBefore(ctx, queryId, time.Unix(ts, 0))
 			if err != nil {
-				h.logger.Error("Failed to get timestamp before", "error", err)
-				h.logger.Info("reportTime", "reportTime", reportTime)
 				return nil, err
-			} else {
-				h.logger.Info("Report time", "reportTime", reportTime)
 			}
-			// report, err := h.oracleKeeper.GetAggregateReport(ctx, []byte(aggReport.QueryId), ts)
-			// if err != nil {
-			// 	return nil, err
-			// }
-			h.logger.Info("getting timestamp before current report")
 			tsBefore, err := h.oracleKeeper.GetTimestampBefore(ctx, queryId, reportTime)
 			if err != nil {
-				h.logger.Info("Failed to get timestamp before", "error", err)
 				// set to 0
 				tsBefore = time.Unix(0, 0)
 			}
-			h.logger.Info("getting timestamp after current report")
 			tsAfter, err := h.oracleKeeper.GetTimestampAfter(ctx, queryId, reportTime)
 			if err != nil {
-				h.logger.Info("Failed to get timestamp after", "error", err)
 				// set to 0
 				tsAfter = time.Unix(0, 0)
 			}
-			h.logger.Info("encoding oracle attestation data")
 			oracleAttestationHash, err := h.EncodeOracleAttestationData(
 				aggReport.QueryId,
 				aggReport.AggregateValue,
@@ -217,18 +157,15 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 				return nil, err
 			}
 			// sign the oracleAttestationHash
-			h.logger.Info("signing oracle attestation hash")
 			sig, err := h.SignMessage(oracleAttestationHash)
 			if err != nil {
 				return nil, err
 			}
-			h.logger.Info("Signature generated", "sig", hex.EncodeToString(sig))
 			oracleAttestation := OracleAttestation{
 				Attestation: sig,
 				QueryId:     aggReport.QueryId,
 				Timestamp:   uint64(reportTime.Unix()),
 			}
-			h.logger.Info("appending oracle attestation to vote extension")
 			voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
 		}
 	}
@@ -294,8 +231,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	valsetCheckpoint string,
 	attestationTimestamp int64,
 ) ([]byte, error) {
-	h.logger.Info("@EncodeOracleAttestationData - extend_vote.go")
-	// NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR := []byte("tellorNewReport")
+	// domainSeparator is bytes "tellorNewReport"
 	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
 	NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR, err := hex.DecodeString(domainSep)
 	if err != nil {
@@ -305,19 +241,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	var domainSepBytes32 [32]byte
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
 
-	// print everything
-	h.logger.Info("domainSepBytes32", "domainSepBytes32", hex.EncodeToString(domainSepBytes32[:]))
-	h.logger.Info("queryId", "queryId", queryId)
-	h.logger.Info("value", "value", value)
-	h.logger.Info("timestamp", "timestamp", fmt.Sprintf("%d", timestamp))
-	h.logger.Info("aggregatePower", "aggregatePower", fmt.Sprintf("%d", aggregatePower))
-	h.logger.Info("previousTimestamp", "previousTimestamp", fmt.Sprintf("%d", previousTimestamp))
-	h.logger.Info("nextTimestamp", "nextTimestamp", fmt.Sprintf("%d", nextTimestamp))
-	h.logger.Info("valsetCheckpoint", "valsetCheckpoint", valsetCheckpoint)
-	h.logger.Info("attestationTimestamp", "attestationTimestamp", fmt.Sprintf("%d", attestationTimestamp))
-
 	// Convert queryId to bytes32
-	h.logger.Info("encoding queryId to bytes32")
 	queryIdBytes, err := hex.DecodeString(queryId)
 	if err != nil {
 		return nil, err
@@ -326,38 +250,28 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	copy(queryIdBytes32[:], queryIdBytes)
 
 	// Convert value to bytes
-	h.logger.Info("encoding value to bytes")
 	valueBytes, err := hex.DecodeString(value)
 	if err != nil {
 		return nil, err
 	}
 
 	// Convert timestamp to uint64
-	h.logger.Info("encoding timestamp to uint64")
-	// timestampUint64 := uint64(timestamp)
-	// h.logger.Info("timestamps", "timestampUint64", timestampUint64, "timestamp", timestamp)
-	//convert timestamp to bigInt
 	timestampUint64 := new(big.Int)
 	timestampUint64.SetInt64(timestamp)
-	h.logger.Info("timestampUint64", "timestampUint64", timestampUint64)
 
 	// Convert aggregatePower to uint64
-	h.logger.Info("encoding aggregatePower to uint64")
 	aggregatePowerUint64 := new(big.Int)
 	aggregatePowerUint64.SetInt64(aggregatePower)
 
 	// Convert previousTimestamp to uint64
-	h.logger.Info("encoding previousTimestamp to uint64")
 	previousTimestampUint64 := new(big.Int)
 	previousTimestampUint64.SetInt64(previousTimestamp)
 
 	// Convert nextTimestamp to uint64
-	h.logger.Info("encoding nextTimestamp to uint64")
 	nextTimestampUint64 := new(big.Int)
 	nextTimestampUint64.SetInt64(nextTimestamp)
 
 	// Convert valsetCheckpoint to bytes32
-	h.logger.Info("encoding valsetCheckpoint to bytes32")
 	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
 	if err != nil {
 		return nil, err
@@ -366,28 +280,23 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
 
 	// Convert attestationTimestamp to uint64
-	h.logger.Info("encoding attestationTimestamp to uint64")
 	attestationTimestampUint64 := new(big.Int)
 	attestationTimestampUint64.SetInt64(attestationTimestamp)
 
 	// Prepare Encoding
-	h.logger.Info("preparing encoding")
 	Bytes32Type, err := abi.NewType("bytes32", "", nil)
 	if err != nil {
 		return nil, err
 	}
-	h.logger.Info("encoding oracle attestation data")
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
 		return nil, err
 	}
-	h.logger.Info("encoding oracle attestation data")
 	BytesType, err := abi.NewType("bytes", "", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	h.logger.Info("preparing arguments")
 	arguments := abi.Arguments{
 		{Type: Bytes32Type},
 		{Type: Bytes32Type},
@@ -400,67 +309,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 		{Type: Uint256Type},
 	}
 
-	// remove all of this
-	argsDomainSep := abi.Arguments{{Type: Bytes32Type}}
-	argsQueryId := abi.Arguments{{Type: Bytes32Type}}
-	argsValue := abi.Arguments{{Type: BytesType}}
-	argsTimestamp := abi.Arguments{{Type: Uint256Type}}
-	argsAggregatePower := abi.Arguments{{Type: Uint256Type}}
-	argsPreviousTimestamp := abi.Arguments{{Type: Uint256Type}}
-	argsNextTimestamp := abi.Arguments{{Type: Uint256Type}}
-	argsValsetCheckpoint := abi.Arguments{{Type: Bytes32Type}}
-	argsAttestationTimestamp := abi.Arguments{{Type: Uint256Type}}
-
-	h.logger.Info("encoding domain separator")
-	domainSepEncoded, err := argsDomainSep.Pack(domainSepBytes32)
-	if err != nil {
-		h.logger.Error("failed to encode domain separator", "domainSepBytes", domainSepEncoded)
-		return nil, err
-	}
-	h.logger.Info("encoding queryId")
-	queryIdEncoded, err := argsQueryId.Pack(queryIdBytes32)
-	if err != nil {
-		h.logger.Error("failed to encode queryId", "queryIdBytes", queryIdEncoded)
-	}
-	h.logger.Info("encoding value")
-	valueEncoded, err := argsValue.Pack(valueBytes)
-	if err != nil {
-		h.logger.Error("failed to encode value", "valueBytes", valueEncoded)
-	}
-	h.logger.Info("encoding timestamp")
-	timestampEncoded, err := argsTimestamp.Pack(timestampUint64)
-	if err != nil {
-		h.logger.Error("failed to encode timestamp", "timestampEncoded", timestampEncoded)
-		h.logger.Error("error", "error", err)
-	}
-	h.logger.Info("encoding aggregatePower")
-	aggregatePowerEncoded, err := argsAggregatePower.Pack(aggregatePowerUint64)
-	if err != nil {
-		h.logger.Error("failed to encode aggregatePower", "aggregatePowerUint64", aggregatePowerEncoded)
-	}
-	h.logger.Info("encoding previousTimestamp")
-	previousTimestampEncoded, err := argsPreviousTimestamp.Pack(previousTimestampUint64)
-	if err != nil {
-		h.logger.Error("failed to encode previousTimestamp", "previousTimestampUint64", previousTimestampEncoded)
-	}
-	h.logger.Info("encoding nextTimestamp")
-	nextTimestampEncoded, err := argsNextTimestamp.Pack(nextTimestampUint64)
-	if err != nil {
-		h.logger.Error("failed to encode nextTimestamp", "nextTimestampUint64", nextTimestampEncoded)
-	}
-	h.logger.Info("encoding valsetCheckpoint")
-	valsetCheckpointEncoded, err := argsValsetCheckpoint.Pack(valsetCheckpointBytes32)
-	if err != nil {
-		h.logger.Error("failed to encode valsetCheckpoint", "valsetCheckpointBytes32", valsetCheckpointEncoded)
-	}
-	h.logger.Info("encoding attestationTimestamp")
-	attestationTimestampEncoded, err := argsAttestationTimestamp.Pack(attestationTimestampUint64)
-	if err != nil {
-		h.logger.Error("failed to encode attestationTimestamp", "attestationTimestampUint64", attestationTimestampEncoded)
-	}
-
 	// Encode the data
-	h.logger.Info("encoding data")
 	encodedData, err := arguments.Pack(
 		domainSepBytes32,
 		queryIdBytes32,
@@ -476,9 +325,7 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 		return nil, err
 	}
 
-	h.logger.Info("hashing encoded data")
 	oracleAttestationHash := crypto.Keccak256(encodedData)
-	h.logger.Info("oracleAttestationHash", "oracleAttestationHash", hex.EncodeToString(oracleAttestationHash))
 	return oracleAttestationHash, nil
 }
 
@@ -490,7 +337,6 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 		return nil, fmt.Errorf("key name not found")
 	}
 	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
-	h.logger.Info("Keyring dir:", "dir", krDir)
 
 	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
 	if err != nil {
@@ -508,26 +354,13 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 		fmt.Println("name: ", k.Name)
 	}
 
-	// Fetch the operator key from the keyring.
-	info, err := kr.Key(keyName)
-	if err != nil {
-		fmt.Printf("Failed to get operator key: %v\n", err)
-		return nil, err
-	}
-	// Output the public key associated with the operator key.
-	key, _ := info.GetPubKey()
-	keyAddrStr := key.Address().String()
-	fmt.Println("Operator Public Key:", keyAddrStr)
-
 	// sign message
 	// tempmsg := []byte("hello")
-	sig, pubKeyReturned, err := kr.Sign(keyName, msg, 1)
+	sig, _, err := kr.Sign(keyName, msg, 1)
 	if err != nil {
 		fmt.Printf("Failed to sign message: %v\n", err)
 		return nil, err
 	}
-	h.logger.Info("Signature:", "sig", cosbytes.HexBytes(sig).String())
-	h.logger.Info("Public Key:", pubKeyReturned.Address().String())
 	return sig, nil
 }
 
@@ -549,32 +382,21 @@ func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
 }
 
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
-	h.logger.Info("@GetOperatorAddress - extend_vote.go")
 	// define keyring backend and the path to the keystore dir
 	keyName := h.GetKeyName()
-	h.logger.Info("keyName:", "keyName", keyName)
 	if keyName == "" {
 		return "", fmt.Errorf("key name not found")
 	}
 	krBackend := keyring.BackendTest
-	h.logger.Info("keyring backend:", "krBackend", krBackend)
 	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
 
-	h.logger.Info("Keyring dir:", "dir", krDir)
-
 	userInput := os.Stdin
-	// userInput := os.Stdin
-	h.logger.Info("userInput:", "userInput", userInput)
 
 	kr, err := keyring.New("layer", krBackend, krDir, userInput, h.codec)
 	if err != nil {
 		fmt.Printf("Failed to create keyring: %v\n", err)
 		return "", err
 	}
-
-	// print kr info
-	h.logger.Info("Keyring info:", "kr", kr)
-	h.logger.Info("Keyring backend:", "kr.Backend()", kr.Backend())
 
 	// list all keys
 	krlist, err := kr.List()
@@ -585,16 +407,6 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	if len(krlist) == 0 {
 		h.logger.Info("No keys found in keyring")
 	}
-	// log all keys
-	for _, k := range krlist {
-		h.logger.Info("name: ", "name", k.Name)
-		h.logger.Info("type: ", "type", k.GetType())
-		// h.logger.Info("item", "item", k.Item)
-		pubkey, _ := k.GetPubKey()
-		h.logger.Info("pubkey", "pubkey", pubkey.String())
-		address, _ := k.GetAddress()
-		h.logger.Info("address", "address", address.String())
-	}
 
 	// Fetch the operator key from the keyring.
 	info, err := kr.Key(keyName)
@@ -604,10 +416,6 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	}
 	// Output the public key associated with the operator key.
 	key, _ := info.GetPubKey()
-	keyAddrStr := key.Address().String()
-	pubkeystr := key.String()
-	h.logger.Info("@pubkeystr:", "pubkeystr", pubkeystr)
-	h.logger.Info("Operator Public Key:", "keyAddrStr", keyAddrStr)
 
 	// Convert the operator's public key to a Bech32 validator address
 	config := sdk.GetConfig()
@@ -616,7 +424,6 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to convert operator public key to Bech32 validator address: %w", err)
 	}
-	h.logger.Info("Operator Validator Address:", "bech32ValAddr", bech32ValAddr)
 	return bech32ValAddr, nil
 }
 
@@ -625,19 +432,15 @@ func (h *VoteExtHandler) GetKeyName() string {
 	homeDir := viper.GetString("home")
 	// if home is global/alice, then the key name is alice
 	if homeDir == globalHome+"/alice" {
-		h.logger.Info("@keyname - alice")
 		return "alice"
 	} else if homeDir == globalHome+"/bill" {
-		h.logger.Info("@keyname - bill")
 		return "bill"
 	} else {
-		h.logger.Info("@keyname - empty")
 		return ""
 	}
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signature []byte, timestamp uint64, err error) {
-	h.logger.Info("@CheckAndSignValidatorCheckpoint - extend_vote.go")
 	// get latest checkpoint index
 	latestCheckpointIdx, err := h.bridgeKeeper.GetLatestCheckpointIndex(ctx)
 	if err != nil {
@@ -650,38 +453,6 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signa
 		h.logger.Error("failed to get latest checkpoint timestamp", "error", err)
 		return nil, 0, err
 	}
-	// // get the latest validator set signatures
-	// latestValsetSignatures, err := h.bridgeKeeper.GetValidatorSetSignaturesFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
-	// if err != nil {
-	// 	h.logger.Error("failed to get latest validator set signatures", "error", err)
-	// 	return nil, 0, err
-	// }
-	// // get the latest validator set
-	// latestValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, latestCheckpointTimestamp.Timestamp)
-	// if err != nil {
-	// 	h.logger.Error("failed to get latest validator set", "error", err)
-	// 	return nil, 0, err
-	// }
-	// // get operator address
-	// operatorAddress, err := h.GetOperatorAddress()
-	// if err != nil {
-	// 	h.logger.Error("failed to get operator address", "error", err)
-	// 	return nil, 0, err
-	// }
-
-	// // get evm address by operator
-	// evmAddress, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
-	// if err != nil {
-	// 	h.logger.Error("failed to get evm address by operator", "error", err)
-	// 	return nil, 0, err
-	// }
-
-	// // get validator's index in the latest validator set
-	// valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, latestValset)
-	// if valIndex < 0 {
-	// 	h.logger.Error("validator not found in latest validator set", "error", err)
-	// 	return nil, 0, err
-	// }
 
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
@@ -694,10 +465,8 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signa
 		return nil, 0, err
 	}
 	if didSign {
-		h.logger.Info("Validator already signed checkpoint", "operatorAddress", operatorAddress, "checkpointTimestamp", latestCheckpointTimestamp.Timestamp)
 		return nil, 0, nil
 	} else if valIndex < 0 {
-		h.logger.Error("Validator not found in previous validator set", "operatorAddress", operatorAddress, "checkpointTimestamp", latestCheckpointTimestamp.Timestamp)
 		return nil, 0, nil
 	} else {
 		// sign the latest checkpoint
@@ -713,59 +482,8 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signa
 			h.logger.Error("failed to encode and sign message", "error", err)
 			return nil, 0, err
 		}
-		h.logger.Info("Signature generated", "signature", hex.EncodeToString(signature))
 		return signature, latestCheckpointTimestamp.Timestamp, nil
 	}
-
-	// // check for signature at index
-	// if len(latestValsetSignatures.Signatures) > valIndex {
-	// 	sig := latestValsetSignatures.Signatures[valIndex]
-	// 	if len(sig) > 0 {
-	// 		h.logger.Info("Signature found at index", "index", valIndex)
-	// 		return nil, 0, nil
-	// 	} else {
-	// 		// check previous valset for inclusion
-	// 		if latestCheckpointIdx > 0 {
-	// 			previousCheckpointTimestamp, err := h.bridgeKeeper.GetValidatorTimestampByIdxFromStorage(ctx, latestCheckpointIdx-1)
-	// 			if err != nil {
-	// 				h.logger.Error("failed to get previous checkpoint timestamp", "error", err)
-	// 				return nil, 0, err
-	// 			}
-	// 			previousValset, err := h.bridgeKeeper.GetBridgeValsetByTimestamp(ctx, previousCheckpointTimestamp.Timestamp)
-	// 			if err != nil {
-	// 				h.logger.Error("failed to get previous validator set", "error", err)
-	// 				return nil, 0, err
-	// 			}
-	// 			// check if validator is included in previous valset
-	// 			valIndex, err := h.GetValidatorIndexInValset(ctx, evmAddress, previousValset)
-	// 			if valIndex < 0 {
-	// 				h.logger.Error("validator not found in previous validator set", "error", err)
-	// 				return nil, 0, nil
-	// 			}
-	// 			// sign the latest checkpoint
-	// 			checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
-	// 			if err != nil {
-	// 				h.logger.Error("failed to get checkpoint params", "error", err)
-	// 				return nil, 0, err
-	// 			}
-	// 			checkpoint := checkpointParams.Checkpoint
-	// 			checkpointString := hex.EncodeToString(checkpoint)
-	// 			signature, err := h.EncodeAndSignMessage(checkpointString)
-	// 			if err != nil {
-	// 				h.logger.Error("failed to encode and sign message", "error", err)
-	// 				return nil, 0, err
-	// 			}
-	// 			h.logger.Info("Signature generated", "signature", hex.EncodeToString(signature))
-	// 			return signature, latestCheckpointTimestamp.Timestamp, nil
-	// 		} else {
-	// 			h.logger.Info("No previous valset found")
-	// 			return nil, 0, nil
-	// 		}
-	// 	}
-	// } else {
-	// 	h.logger.Info("No signature found at index", "index", valIndex)
-	// 	return nil, 0, nil
-	// }
 }
 
 func (h *VoteExtHandler) GetValidatorIndexInValset(ctx sdk.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {

@@ -13,8 +13,6 @@ import (
 func (k msgServer) SubmitOracleAttestation(ctx context.Context, msg *types.MsgSubmitOracleAttestation) (*types.MsgSubmitOracleAttestationResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	k.Keeper.Logger(sdkCtx).Info("@FuncSubmitOracleAttestation", "msg", msg)
-
 	operatorAddr, err := convertPrefix(msg.Creator, "tellorvaloper")
 	if err != nil {
 		k.Keeper.Logger(sdkCtx).Error("failed to convert operator address prefix", "error", err)

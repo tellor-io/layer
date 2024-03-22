@@ -152,6 +152,5 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) EndBlock(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	am.keeper.CompareBridgeValidators(sdkCtx)
-	am.keeper.Logger(ctx).Info("bridge EndBlock")
 	return nil
 }

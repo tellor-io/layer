@@ -15,7 +15,6 @@ import (
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -140,14 +139,12 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx sdk.Context) (*types.Bri
 
 // function for loading last saved bridge validator set and comparing it to current set
 func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
-	k.Logger(ctx).Info("@CompareBridgeValidators", "msg", "comparing bridge validators")
 	// load current validator set in EVM compatible format
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No current validator set found")
 		return false, err
 	}
-	k.Logger(ctx).Info("@COMPARE", "msg", "setting bridge validator params")
 
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {
@@ -165,10 +162,8 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 		return false, err
 	}
 	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) {
-		k.Logger(ctx).Info("Bridge validator set has not changed")
-		return true, nil
+		return false, nil
 	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 {
-		k.Logger(ctx).Info("Power diff is less than 5%")
 		return false, nil
 	} else {
 		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
@@ -181,25 +176,11 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 			k.Logger(ctx).Info("Error setting bridge validator params: ", "error", error)
 			return false, error
 		}
-		k.Logger(ctx).Info("Bridge validator set updated")
-		for i, validator := range lastSavedBridgeValidators.BridgeValidatorSet {
-			k.Logger(ctx).Info("Last saved bridge validator ", "savedVal", validator.EthereumAddress)
-			k.Logger(ctx).Info("i ", "i", i)
-		}
-		for i, validator := range currentValidatorSetEVMCompatible.BridgeValidatorSet {
-			k.Logger(ctx).Info("Current bridge validator ", i, ": ", validator.EthereumAddress+" "+fmt.Sprint(validator.Power))
-		}
-		// err = k.BridgeValsetByTimestampMap.Set(ctx, uint64(ctx.BlockTime().Unix()), *currentValidatorSetEVMCompatible)
-		// if err != nil {
-		// 	k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
-		// 	return false, err
-		// }
 		return true, nil
 	}
 }
 
 func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *types.BridgeValidatorSet) error {
-	k.Logger(ctx).Info("@SetBridgeValidatorParams", "msg", "setting bridge validator params")
 	var totalPower uint64
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
@@ -221,11 +202,6 @@ func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *ty
 		k.Logger(ctx).Info("Error calculating validator set checkpoint: ", "error", err)
 		return err
 	}
-
-	k.Logger(ctx).Info("@SetBridgeValidatorParams", "powerThreshold", fmt.Sprint(powerThreshold))
-	k.Logger(ctx).Info("SetBridgeValidatorParams", "validatorTimestamp", fmt.Sprint(validatorTimestamp))
-	k.Logger(ctx).Info("SetBridgeValidatorParams", "validatorSetHash", fmt.Sprintf("%x", validatorSetHash))
-	k.Logger(ctx).Info("SetBridgeValidatorParams", "checkpoint", fmt.Sprintf("%x", checkpoint))
 
 	// Set the validator checkpoint
 	checkpointType := types.ValidatorCheckpoint{
@@ -288,8 +264,6 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	validatorTimestamp uint64,
 	validatorSetHash []byte,
 ) ([]byte, error) {
-	k.Logger(ctx).Info("@CalculateValidatorSetCheckpoint", "msg", "calculating validator set checkpoint")
-
 	// Define the domain separator for the validator set hash, fixed size 32 bytes
 	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
 	var domainSeparatorFixSize [32]byte
@@ -335,12 +309,6 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	}
 
 	checkpoint := crypto.Keccak256(encodedCheckpointData)
-
-	k.Logger(ctx).Info("DOMAIN_SEPARATOR", "DOMAIN_SEPARATOR", fmt.Sprintf("%x", domainSeparatorFixSize))
-	k.Logger(ctx).Info("POWER_THRESHOLD", "POWER_THRESHOLD", fmt.Sprint(powerThreshold))
-	k.Logger(ctx).Info("VALIDATOR_TIMESTAMP", "VALIDATOR_TIMESTAMP", fmt.Sprint(validatorTimestamp))
-	k.Logger(ctx).Info("encodedData", "encodedData", fmt.Sprintf("%x", encodedCheckpointData))
-	k.Logger(ctx).Info("checkpoint", "checkpoint", fmt.Sprintf("%x", checkpoint))
 
 	// save checkpoint params
 	checkpointParams := types.ValidatorCheckpointParams{
@@ -433,7 +401,6 @@ func (k Keeper) GetOracleAttestationsFromStorage(ctx sdk.Context, queryId string
 }
 
 func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
-	k.Logger(ctx).Info("@EncodeAndHashValidatorSet", "msg", "encoding and hashing validator set")
 	// Define Go equivalent of the Solidity Validator struct
 	type Validator struct {
 		Addr  common.Address
@@ -443,8 +410,6 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.B
 	// Convert validatorSet to a slice of the Validator struct defined above
 	var validators []Validator
 	for _, v := range validatorSet.BridgeValidatorSet {
-		k.Logger(ctx).Info("EthereumAddress", "EthereumAddress", v.EthereumAddress)
-		k.Logger(ctx).Info("Power", "Power", fmt.Sprint(v.Power))
 		addr := common.HexToAddress(v.EthereumAddress)
 		power := big.NewInt(0).SetUint64(v.Power)
 		validators = append(validators, Validator{Addr: addr, Power: power})
@@ -492,10 +457,6 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.B
 	// Hash the encoded bytes
 	valSetHash := crypto.Keccak256(finalEncoded)
 
-	// print finalEncoded string
-	k.Logger(ctx).Info("finalEncoded valset", "finalEncoded", fmt.Sprintf("%x", finalEncoded))
-	// valsethash string
-	k.Logger(ctx).Info("valsethash", "valsethash", fmt.Sprintf("%x", valSetHash))
 	return finalEncoded, valSetHash, nil
 }
 
@@ -522,7 +483,6 @@ func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.B
 }
 
 func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error) {
-	k.Logger(ctx).Info("@EVMAddressFromSignature")
 	message := "TellorLayer: Initial bridge daemon signature"
 	// convert message to bytes
 	msgBytes := []byte(message)
@@ -553,40 +513,10 @@ func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (s
 	// Get the address
 	recoveredAddr := crypto.PubkeyToAddress(*sigPublicKey)
 
-	k.Logger(ctx).Info("Recovered Address:", recoveredAddr.Hex())
-	k.Logger(ctx).Info("sigHexString", sigHexString)
 	return recoveredAddr.Hex(), nil
 }
 
-func (k Keeper) RecoverETHAddress(ctx sdk.Context, msg []byte, sig []byte, signer []byte) ([]byte, uint8, error) {
-	k.Logger(ctx).Info("@RecoverETHAddress")
-	for i := uint8(0); i < 2; i++ {
-		msgDoubleHashBytes32 := sha256.Sum256(msg)
-		msgDoubleHashBytes := msgDoubleHashBytes32[:]
-		pubuc, err := crypto.SigToPub(msgDoubleHashBytes, append(sig, byte(i)))
-		if err != nil {
-			return nil, 0, err
-		}
-		pub := crypto.CompressPubkey(pubuc)
-		var tmp [33]byte
-		copy(tmp[:], pub)
-
-		k.Logger(ctx).Info("V:", "v", 27+i)
-		k.Logger(ctx).Info("sig:", "sig", hex.EncodeToString(append(sig, byte(i))))
-		k.Logger(ctx).Info("Recovered Address:", "addr", crypto.PubkeyToAddress(*pubuc).Hex())
-		k.Logger(ctx).Info("string(signer)", "signer", string(signer))
-		k.Logger(ctx).Info("string(secp256k1.PubKey(tmp[:]).Address())", "signer", string(secp256k1.PubKey(tmp[:]).Address()))
-
-		if string(signer) == string(secp256k1.PubKey(tmp[:]).Address()) {
-			return crypto.PubkeyToAddress(*pubuc).Bytes(), 27 + i, nil
-		}
-
-	}
-	return nil, 0, fmt.Errorf("no match address found")
-}
-
 func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error {
-	k.Logger(ctx).Info("@SetEVMAddressByOperator", "msg", "setting EVM address by operator")
 	evmAddrBytes := common.HexToAddress(evmAddr).Bytes()
 	evmAddrType := types.EVMAddress{
 		EVMAddress: evmAddrBytes,
@@ -601,7 +531,6 @@ func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, ev
 }
 
 func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string, timestamp uint64, signature string) error {
-	k.Logger(ctx).Info("@SetBridgeValsetSignature", "msg", "setting bridge valset signature")
 	// get the bridge valset signatures array by timestamp
 	valsetSigs, err := k.BridgeValsetSignaturesMap.Get(ctx, timestamp)
 	if err != nil {
@@ -614,12 +543,6 @@ func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 		return err
 	}
-	// // get the last saved bridge validator set
-	// lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-	// if err != nil {
-	// 	k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
-	// 	return err
-	// }
 	// get the valset index by timestamp
 	valsetIdx, err := k.ValsetTimestampToIdxMap.Get(ctx, timestamp)
 	if err != nil {
@@ -664,7 +587,6 @@ func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string
 }
 
 func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error {
-	k.Logger(ctx).Info("@SetOracleAttestation", "msg", "setting oracle attestation")
 	// get the key by taking keccak256 hash of queryid and timestamp
 	key := hex.EncodeToString(crypto.Keccak256([]byte(queryId + fmt.Sprint(timestamp))))
 	// check if map for this key exists, otherwise create a new map
@@ -729,7 +651,6 @@ func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, qu
 }
 
 func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error) {
-	k.Logger(ctx).Info("@GetEVMAddressByOperator", "msg", "getting EVM address by operator")
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
@@ -741,7 +662,6 @@ func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string)
 }
 
 func (k Keeper) SetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
-	k.Logger(ctx).Info("@SetBridgeValsetByTimestamp", "msg", "setting bridge valset by timestamp")
 	err := k.BridgeValsetByTimestampMap.Set(ctx, timestamp, bridgeValset)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
@@ -751,7 +671,6 @@ func (k Keeper) SetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64, br
 }
 
 func (k Keeper) GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*types.BridgeValidatorSet, error) {
-	k.Logger(ctx).Info("@GetBridgeValsetByTimestamp", "msg", "getting bridge valset by timestamp")
 	bridgeValset, err := k.BridgeValsetByTimestampMap.Get(ctx, timestamp)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting bridge valset by timestamp", "error", err)
@@ -761,7 +680,6 @@ func (k Keeper) GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*
 }
 
 func (k Keeper) GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error) {
-	k.Logger(ctx).Info("@GetLatestCheckpointIndex", "msg", "getting latest checkpoint index")
 	checkpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting latest checkpoint index", "error", err)
@@ -771,7 +689,6 @@ func (k Keeper) GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error) {
 }
 
 func (k Keeper) GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error) {
-	k.Logger(ctx).Info("@GetValidatorDidSignCheckpoint", "msg", "getting validator did sign checkpoint")
 	// get the valset index by timestamp
 	valsetIdx, err := k.ValsetTimestampToIdxMap.Get(ctx, checkpointTimestamp)
 	if err != nil {
