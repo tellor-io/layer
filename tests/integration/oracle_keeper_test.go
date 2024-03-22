@@ -140,7 +140,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	_, err = msgServer.SubmitValue(s.ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryId)})
@@ -270,7 +270,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 		})
 	}
 	// advance time to expire query and aggregate report
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypass time to expire query so it can be aggregated
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
 	s.app.EndBlocker(s.ctx)                                             // EndBlocker aggregates reports
 	// check median
 	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
@@ -602,7 +602,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.Nil(s.oraclekeeper.Query.Set(s.ctx, queryId, query))
 	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
 	s.Nil(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
 
@@ -683,7 +683,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.oraclekeeper.Query.Set(s.ctx, queryId, query)
 	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
 	s.Nil(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 3)) // bypassing offset that expires time to commit/reveal
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
 
