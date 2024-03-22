@@ -488,7 +488,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
     })
 
-    it.only("query layer api, deploy and verify with real params", async function () {
+    it("query layer api, deploy and verify with real params", async function () {
         // get val timestamp from api: http://localhost:1317/layer/bridge/get_validator_timestamp_by_index/0
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
@@ -559,5 +559,187 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
     })
 
+    it("signing exploration", async function () {
+        signerAcct = accounts[5]
+        console.log("signerAcct.address: ", signerAcct.address)
+        msg1 = h.hash("msg1")
+        msg2 = h.hash("msg2")
+        msg3 = h.hash("msg3")
+        msg4 = h.hash("msg4")
+        msg5 = h.hash("msg5")
+
+        console.log("msg1: ", msg1)
+
+        sig1flat = await signerAcct.signMessage(ethers.utils.arrayify(msg1))
+        sig2flat = await signerAcct.signMessage(ethers.utils.arrayify(msg2))
+        sig3flat = await signerAcct.signMessage(ethers.utils.arrayify(msg3))
+        sig4flat = await signerAcct.signMessage(ethers.utils.arrayify(msg4))
+        sig5flat = await signerAcct.signMessage(ethers.utils.arrayify(msg5))
+
+        sig1 = ethers.utils.splitSignature(sig1flat)
+        sig2 = ethers.utils.splitSignature(sig2flat)
+        sig3 = ethers.utils.splitSignature(sig3flat)
+        sig4 = ethers.utils.splitSignature(sig4flat)
+        sig5 = ethers.utils.splitSignature(sig5flat)
+
+        console.log("sig1: ", sig1)
+        console.log("sig2: ", sig2)
+        console.log("sig3: ", sig3)
+        console.log("sig4: ", sig4)
+        console.log("sig5: ", sig5)
+
+
+        recovered1_27 = ethers.utils.recoverAddress(msg1, {
+            r: sig1.r,
+            s: sig1.s,
+            v: 27
+          });
+        recovered1_28 = ethers.utils.recoverAddress(msg1, {
+            r: sig1.r,
+            s: sig1.s,
+            v: 28
+          });
+
+        recovered2_27 = ethers.utils.recoverAddress(msg2, {
+            r: sig2.r,
+            s: sig2.s,
+            v: 27
+          });
+        recovered2_28 = ethers.utils.recoverAddress(msg2, {
+            r: sig2.r,
+            s: sig2.s,
+            v: 28
+          });
+
+        recovered3_27 = ethers.utils.recoverAddress(msg3, {
+            r: sig3.r,
+            s: sig3.s,
+            v: 27
+          });
+        recovered3_28 = ethers.utils.recoverAddress(msg3, {
+            r: sig3.r,
+            s: sig3.s,
+            v: 28
+          });
+
+        recovered4_27 = ethers.utils.recoverAddress(msg4, {
+            r: sig4.r,
+            s: sig4.s,
+            v: 27
+          });
+        recovered4_28 = ethers.utils.recoverAddress(msg4, {
+            r: sig4.r,
+            s: sig4.s,
+            v: 28
+          });
+
+        recovered5_27 = ethers.utils.recoverAddress(msg5, {
+            r: sig5.r,
+            s: sig5.s,
+            v: 27
+          });
+        recovered5_28 = ethers.utils.recoverAddress(msg5, {
+            r: sig5.r,
+            s: sig5.s,
+            v: 28
+          });
+
+        console.log("msg 1 original v: ", sig1.v)
+        console.log("recovered1_27: ", recovered1_27)
+        console.log("recovered1_28: ", recovered1_28)
+        
+        console.log("msg 2 original v: ", sig2.v)
+        console.log("recovered2_27: ", recovered2_27)
+        console.log("recovered2_28: ", recovered2_28)
+
+        console.log("msg 3 original v: ", sig3.v)
+        console.log("recovered3_27: ", recovered3_27)
+        console.log("recovered3_28: ", recovered3_28)
+
+        console.log("msg 4 original v: ", sig4.v)
+        console.log("recovered4_27: ", recovered4_27)
+        console.log("recovered4_28: ", recovered4_28)
+
+        console.log("msg 5 original v: ", sig5.v)
+        console.log("recovered5_27: ", recovered5_27)
+        console.log("recovered5_28: ", recovered5_28)
+
+        console.log(ethers.utils.recoverAddress(msg1, sig1flat))
+
+        console.log("ethers.utils.recoverAddress(await h.getEthSignedMessageHash(msg1), sig1flat): ", ethers.utils.recoverAddress(await h.getEthSignedMessageHash(msg1), sig1flat))
+        
+        
+
+
+    })
+
+    it.only("simulate cosmos evm address derivation", async function () {
+        signerAcct = accounts[3]
+        console.log("signerAcct.address: ", signerAcct.address)
+
+        msg1 = h.hash("msg1")
+        msg2 = h.hash("msg2")
+
+        console.log("msg1: ", msg1)
+        console.log("msg2: ", msg2)
+
+        sig1flat = await signerAcct.signMessage(ethers.utils.arrayify(msg1))
+        sig2flat = await signerAcct.signMessage(ethers.utils.arrayify(msg2))
+
+        sig1 = ethers.utils.splitSignature(sig1flat)
+        sig2 = ethers.utils.splitSignature(sig2flat)
+
+        console.log("sig1: ", sig1)
+        console.log("sig2: ", sig2)
+
+        sig1v27 = {
+            r: sig1.r,
+            s: sig1.s,
+            v: 27
+        }
+        sig1v28 = {
+            r: sig1.r,
+            s: sig1.s,
+            v: 28
+        }
+
+        sig2v27 = {
+            r: sig2.r,
+            s: sig2.s,
+            v: 27
+        }
+        sig2v28 = {
+            r: sig2.r,
+            s: sig2.s,
+            v: 28
+        }
+
+        recovered1_27 = ethers.utils.recoverAddress(await h.getEthSignedMessageHash(msg1), sig1v27);
+        recovered1_28 = ethers.utils.recoverAddress(await h.getEthSignedMessageHash(msg1), sig1v28);
+
+        recovered2_27 = ethers.utils.recoverAddress(await h.getEthSignedMessageHash(msg2), sig2v27);
+        recovered2_28 = ethers.utils.recoverAddress(await h.getEthSignedMessageHash(msg2), sig2v28);
+
+        console.log("recovered1_27: ", recovered1_27)
+        console.log("recovered1_28: ", recovered1_28)
+        console.log("recovered2_27: ", recovered2_27)
+        console.log("recovered2_28: ", recovered2_28)
+
+        let realAddr;
+        if (recovered1_27 == recovered2_27 || recovered1_27 == recovered2_28) {
+            realAddr = recovered1_27;
+        } else if (recovered1_28 == recovered2_27 || recovered1_28 == recovered2_28) {
+            realAddr = recovered1_28;
+        } else {
+            console.log("no match")
+        }
+        console.log("realAddr: ", realAddr)
+
+        if (realAddr == signerAcct.address) {
+            console.log("SUCCESS!")
+        } else {
+            console.log("FAILURE!")
+        }
+    })
 
 })
