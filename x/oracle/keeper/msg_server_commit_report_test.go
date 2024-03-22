@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -292,4 +293,39 @@ func (s *KeeperTestSuite) TestCommitWithMissingHash() {
 	}
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq) // no error
 	s.ErrorContains(err, "hash field cannot be empty")
+}
+
+func (s *KeeperTestSuite) TestCommitExpiredQuery() {
+	require := s.Require()
+
+	queryInCycle, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(trbQueryData[2:], queryInCycle)
+
+	ethQueryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+
+	// Commit report transaction
+	salt, err := utils.Salt(32)
+	s.Nil(err)
+	hash := utils.CalculateCommitment(value, salt)
+
+	addr := sample.AccAddressBytes()
+
+	stakedReporter := reportertypes.NewOracleReporter(
+		addr.String(),
+		math.NewInt(1_000_000),
+		nil,
+	)
+
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+
+	var commitreq = types.MsgCommitReport{
+		Creator:   addr.String(),
+		QueryData: ethQueryData,
+		Hash:      hash,
+	}
+	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	fmt.Println(err)
 }
