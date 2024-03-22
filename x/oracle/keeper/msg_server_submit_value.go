@@ -78,10 +78,10 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 			return &types.MsgSubmitValueResponse{}, nil
 		}
 	}
-	// // if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
-	// if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
-	// 	return nil, errors.New("missed commit reveal window")
-	// }
+	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
+	if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
+		return nil, errors.New("missed commit reveal window")
+	}
 	genHash := oracleutils.CalculateCommitment(msg.Value, msg.Salt)
 	if genHash != commit.Hash {
 		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
