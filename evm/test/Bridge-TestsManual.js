@@ -488,7 +488,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
     })
 
-    it("query layer api, deploy and verify with real params", async function () {
+    it.only("query layer api, deploy and verify with real params", async function () {
         // get val timestamp from api: http://localhost:1317/layer/bridge/get_validator_timestamp_by_index/0
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
@@ -544,10 +544,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         dataDigest = await h.domainSeparateOracleAttestationData(currentEthUsdVal, vp1.checkpoint)
         console.log("dataDigest: ", dataDigest)
 
-        // oAttestations = await h.getOracleAttestations(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp, valSet1, dataDigest)
-        oAttestations = await h.getOracleAttestationsCheat(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp)
-        oAttestations[0].v = 28
-        oAttestations[1].v = 27
+        oAttestations = await h.getOracleAttestations(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp, valSet1, dataDigest)
         console.log("oAttestations: ", oAttestations)
         await bridge.verifyOracleData(
             currentEthUsdVal,
@@ -673,7 +670,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
     })
 
-    it.only("simulate cosmos evm address derivation", async function () {
+    it("simulate cosmos evm address derivation", async function () {
         signerAcct = accounts[3]
         console.log("signerAcct.address: ", signerAcct.address)
 
