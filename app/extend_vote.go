@@ -1,7 +1,6 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -18,6 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
@@ -38,6 +38,7 @@ type BridgeKeeper interface {
 	Logger(ctx context.Context) log.Logger
 	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
 	EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error)
+	EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error)
 	SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error
 	GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
 	SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string, timestamp uint64, signature string) error
@@ -68,7 +69,8 @@ type OracleAttestation struct {
 }
 
 type InitialSignature struct {
-	Signature []byte
+	SignatureA []byte
+	SignatureB []byte
 }
 
 type BridgeValsetSignature struct {
@@ -102,14 +104,15 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	if err != nil {
 		h.logger.Info("EVM address not found for operator address", "operatorAddress", operatorAddress)
 		h.logger.Info("Error message", "error", err)
-		initialSig, err := h.SignInitialMessage()
+		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)
 			return nil, err
 		}
 		// include the initial sig in the vote extension
 		initialSignature := InitialSignature{
-			Signature: initialSig,
+			SignatureA: initialSigA,
+			SignatureB: initialSigB,
 		}
 		voteExt.InitialSignature = initialSignature
 	}
@@ -194,31 +197,8 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	h.logger.Info("@VerifyVoteExtensionHandler", "req", req)
-	// logic for verifying oracle sigs
-	extension := req.GetVoteExtension()
-	// unmarshal vote extension
-	voteExt := BridgeVoteExtension{}
-	err := json.Unmarshal(extension, &voteExt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal vote extension: %w", err)
-	}
-	// check for initial sig
-	if len(voteExt.InitialSignature.Signature) > 0 {
-		// verify initial sig
-		sigHexString := hex.EncodeToString(voteExt.InitialSignature.Signature)
-		evmAddress, err := h.bridgeKeeper.EVMAddressFromSignature(ctx, sigHexString)
-		if err != nil {
-			return nil, err
-		}
-		h.logger.Info("EVM address from initial sig", "evmAddress", evmAddress)
-	}
-
-	if bytes.Equal(extension, []byte("vote extension data")) {
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
-	} else {
-		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
-	}
+	// TODO: implement the logic to verify the vote extension
+	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
 func (h *VoteExtHandler) EncodeOracleAttestationData(
@@ -364,21 +344,34 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	return sig, nil
 }
 
-func (h *VoteExtHandler) SignInitialMessage() ([]byte, error) {
-	message := "TellorLayer: Initial bridge daemon signature"
+func (h *VoteExtHandler) SignInitialMessage() ([]byte, []byte, error) {
+	messageA := "TellorLayer: Initial bridge signature A"
+	messageB := "TellorLayer: Initial bridge signature B"
+
 	// convert message to bytes
-	msgBytes := []byte(message)
+	msgBytesA := []byte(messageA)
+	msgBytesB := []byte(messageB)
+
 	// hash message
-	msgHashBytes32 := sha256.Sum256(msgBytes)
+	msgHashABytes32 := sha256.Sum256(msgBytesA)
+	msgHashBBytes32 := sha256.Sum256(msgBytesB)
+
 	// convert [32]byte to []byte
-	msgHashBytes := msgHashBytes32[:]
+	msgHashABytes := msgHashABytes32[:]
+	msgHashBBytes := msgHashBBytes32[:]
+
 	// sign message
-	sig, err := h.SignMessage(msgHashBytes)
+	sigA, err := h.SignMessage(msgHashABytes)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	sig = append(sig, 0)
-	return sig, nil
+	// sigA = append(sigA, 0)
+
+	sigB, err := h.SignMessage(msgHashBBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+	return sigA, sigB, nil
 }
 
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {

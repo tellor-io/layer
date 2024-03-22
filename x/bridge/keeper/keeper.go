@@ -483,7 +483,7 @@ func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.B
 }
 
 func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error) {
-	message := "TellorLayer: Initial bridge daemon signature"
+	message := "TellorLayer: Initial bridge signature A"
 	// convert message to bytes
 	msgBytes := []byte(message)
 	// hash message
@@ -514,6 +514,140 @@ func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (s
 	recoveredAddr := crypto.PubkeyToAddress(*sigPublicKey)
 
 	return recoveredAddr.Hex(), nil
+}
+
+func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error) {
+	k.Logger(ctx).Info("@EVMAddressFromSignatures")
+	k.Logger(ctx).Info("sigA", "sigA", hex.EncodeToString(sigA))
+	k.Logger(ctx).Info("sigB", "sigB", hex.EncodeToString(sigB))
+	msgA := "TellorLayer: Initial bridge signature A"
+	msgB := "TellorLayer: Initial bridge signature B"
+
+	// convert messages to bytes
+	msgBytesA := []byte(msgA)
+	msgBytesB := []byte(msgB)
+
+	// hash messages
+	msgHashBytes32A := sha256.Sum256(msgBytesA)
+	msgHashBytesA := msgHashBytes32A[:]
+
+	msgHashBytes32B := sha256.Sum256(msgBytesB)
+	msgHashBytesB := msgHashBytes32B[:]
+
+	// hash the hash, since the keyring signer automatically hashes the message
+	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
+	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
+
+	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
+	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
+
+	// append recovery id's to signatures
+	sigA00 := append(sigA, 0x00)
+	k.Logger(ctx).Info("sigA00", "sigA00", hex.EncodeToString(sigA00))
+	sigA01 := append(sigA, 0x01)
+	k.Logger(ctx).Info("sigA01", "sigA01", hex.EncodeToString(sigA01))
+	sigB00 := append(sigB, 0x00)
+	k.Logger(ctx).Info("sigB00", "sigB00", hex.EncodeToString(sigB00))
+	sigB01 := append(sigB, 0x01)
+	k.Logger(ctx).Info("sigB01", "sigB01", hex.EncodeToString(sigB01))
+
+	// recover evm addresses from signatures
+	recoveredAddrA00, err := k.recoverEvmAddressFromSig(ctx, sigA00, msgDoubleHashBytesA)
+	if err != nil {
+		k.Logger(ctx).Warn("Error recovering EVM address from signature A00", "error", err)
+		return common.Address{}, err
+	}
+	recoveredAddrA01, err := k.recoverEvmAddressFromSig(ctx, sigA01, msgDoubleHashBytesA)
+	if err != nil {
+		k.Logger(ctx).Warn("Error recovering EVM address from signature A01", "error", err)
+		return common.Address{}, err
+	}
+	recoveredAddrB00, err := k.recoverEvmAddressFromSig(ctx, sigB00, msgDoubleHashBytesB)
+	if err != nil {
+		k.Logger(ctx).Warn("Error recovering EVM address from signature B00", "error", err)
+		return common.Address{}, err
+	}
+	recoveredAddrB01, err := k.recoverEvmAddressFromSig(ctx, sigB01, msgDoubleHashBytesB)
+	if err != nil {
+		k.Logger(ctx).Warn("Error recovering EVM address from signature B01", "error", err)
+		return common.Address{}, err
+	}
+
+	// log everything. delete later
+	k.Logger(ctx).Info("Recovered EVM addresses", "A00", recoveredAddrA00.Hex(), "A01", recoveredAddrA01.Hex(), "B00", recoveredAddrB00.Hex(), "B01", recoveredAddrB01.Hex())
+	k.Logger(ctx).Info("signatures", "A00", hex.EncodeToString(sigA00), "A01", hex.EncodeToString(sigA01), "B00", hex.EncodeToString(sigB00), "B01", hex.EncodeToString(sigB01))
+	k.Logger(ctx).Info("original sigs", "A", hex.EncodeToString(sigA), "B", hex.EncodeToString(sigB))
+
+	addressesA, err := k.tryRecoverAddressWithBothIDs(ctx, sigA, msgDoubleHashBytesA)
+	if err != nil {
+		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
+		return common.Address{}, err
+	}
+	addressesB, err := k.tryRecoverAddressWithBothIDs(ctx, sigB, msgDoubleHashBytesB)
+	if err != nil {
+		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
+		return common.Address{}, err
+	}
+
+	// // log addresses. delete later
+	// k.Logger(ctx).Info("Addresses from both IDs", "A00", addressesA[0].Hex(), "A01", addressesA[1].Hex(), "B00", addressesB[0].Hex(), "B01", addressesB[1].Hex())
+
+	// // check if addresses match
+	// if bytes.Equal(recoveredAddrA00.Bytes(), recoveredAddrB00.Bytes()) || bytes.Equal(recoveredAddrA00.Bytes(), recoveredAddrB01.Bytes()) {
+	// 	k.Logger(ctx).Info("EVM addresses match", "address", recoveredAddrA00.Hex())
+	// 	return recoveredAddrA00, nil
+	// } else if bytes.Equal(recoveredAddrA01.Bytes(), recoveredAddrB00.Bytes()) || bytes.Equal(recoveredAddrA01.Bytes(), recoveredAddrB01.Bytes()) {
+	// 	k.Logger(ctx).Info("EVM addresses match", "address", recoveredAddrA01.Hex())
+	// 	return recoveredAddrA01, nil
+	// } else {
+	// 	k.Logger(ctx).Warn("EVM addresses do not match")
+	// 	return common.Address{}, fmt.Errorf("EVM addresses do not match")
+	// }
+
+	// check if addresses match
+	if bytes.Equal(addressesA[0].Bytes(), addressesB[0].Bytes()) || bytes.Equal(addressesA[0].Bytes(), addressesB[1].Bytes()) {
+		k.Logger(ctx).Info("EVM addresses match", "address", addressesA[0].Hex())
+		return addressesA[0], nil
+	} else if bytes.Equal(addressesA[1].Bytes(), addressesB[0].Bytes()) || bytes.Equal(addressesA[1].Bytes(), addressesB[1].Bytes()) {
+		k.Logger(ctx).Info("EVM addresses match", "address", addressesA[1].Hex())
+		return addressesA[1], nil
+	} else {
+		k.Logger(ctx).Warn("EVM addresses do not match")
+		return common.Address{}, fmt.Errorf("EVM addresses do not match")
+	}
+}
+
+func (k Keeper) recoverEvmAddressFromSig(ctx context.Context, sig []byte, msg []byte) (common.Address, error) {
+	k.Logger(ctx).Info("@recoverEvmAddressFromSig")
+	// recover pubkey
+	pubKey, err := crypto.SigToPub(msg, sig)
+	if err != nil {
+		return common.Address{}, err
+	}
+
+	// get address from pubkey
+	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
+	k.Logger(ctx).Info("sig", "sig", hex.EncodeToString(sig))
+	k.Logger(ctx).Info("msg", "msg", hex.EncodeToString(msg))
+	k.Logger(ctx).Info("Recovered EVM address", "address", recoveredAddr.Hex())
+
+	return recoveredAddr, nil
+}
+
+func (k Keeper) tryRecoverAddressWithBothIDs(ctx sdk.Context, sig []byte, msgHash []byte) ([]common.Address, error) {
+	k.Logger(ctx).Info("@tryRecoverAddressWithBothIDs")
+	var addrs []common.Address
+	for _, id := range []byte{0, 1} {
+		sigWithID := append(sig[:64], id)
+		k.Logger(ctx).Info("sigWithID", "sigWithID", hex.EncodeToString(sigWithID))
+		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
+		if err != nil {
+			return []common.Address{}, err
+		}
+		recoveredAddr := crypto.PubkeyToAddress(*pubKey)
+		addrs = append(addrs, recoveredAddr)
+	}
+	return addrs, nil
 }
 
 func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error {

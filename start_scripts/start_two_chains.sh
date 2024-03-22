@@ -73,5 +73,11 @@ echo $PASSWORD | ./layerd keys export bill --keyring-backend $KEYRING_BACKEND --
 echo "Importing bill key to test backend..."
 echo $PASSWORD | ./layerd keys import bill ~/Desktop/bill_keyfile --keyring-backend test --home ~/.layer/bill
 
+# Modify timeout_commit in config.toml for alice
+echo "Modifying timeout_commit in config.toml for alice..."
+sed -i '' 's/timeout_commit = "5s"/timeout_commit = "500ms"/' ~/.layer/alice/config/config.toml
+
+# sleep 30
+
 echo "Start chain..."
 ./layerd start --home ~/.layer/alice --api.enable --api.swagger

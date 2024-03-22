@@ -199,10 +199,11 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		}
 
 		// check for initial sig
-		if len(voteExt.InitialSignature.Signature) > 0 {
+		if len(voteExt.InitialSignature.SignatureA) > 0 {
 			// verify initial sig
-			sigHexString := hex.EncodeToString(voteExt.InitialSignature.Signature)
-			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignature(ctx, sigHexString)
+			// sigHexString := hex.EncodeToString(voteExt.InitialSignature.SignatureA)
+			// evmAddress, err := h.bridgeKeeper.EVMAddressFromSignature(ctx, sigHexString)
+			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB)
 			if err != nil {
 				h.logger.Error("failed to get evm address from initial sig", "error", err)
 				return nil, nil, err
@@ -215,7 +216,7 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 			}
 
 			operatorAddresses = append(operatorAddresses, operatorAddress)
-			evmAddresses = append(evmAddresses, evmAddress)
+			evmAddresses = append(evmAddresses, evmAddress.Hex())
 		}
 	}
 
