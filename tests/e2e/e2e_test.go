@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"math/rand"
 	"strconv"
+	"strings"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -224,6 +225,58 @@ func (s *E2ETestSuite) TestDelegate() {
 	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.String())
 }
 
+func (s *E2ETestSuite) TestValidateCycleList() {
+	require := s.Require()
+
+	// height 0
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	firstInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(strings.ToLower(ethQueryData[2:]), firstInCycle)
+	require.Equal(s.ctx.BlockHeight(), int64(0))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// height 1
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	require.Equal(s.ctx.BlockHeight(), int64(1))
+	secondInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(strings.ToLower(btcQueryData[2:]), secondInCycle)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// height 2
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	require.Equal(s.ctx.BlockHeight(), int64(2))
+	thirdInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(strings.ToLower(trbQueryData[2:]), thirdInCycle)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// loop through more times
+	list, err := s.oraclekeeper.GetCyclelist(s.ctx)
+	require.NoError(err)
+	for i := 0; i < 20; i++ {
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+		_, err = s.app.BeginBlocker(s.ctx)
+		require.NoError(err)
+
+		query, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+		require.NoError(err)
+		require.Contains(list, query)
+
+		_, err = s.app.EndBlocker(s.ctx)
+		require.NoError(err)
+	}
+}
+
 func (s *E2ETestSuite) TestStakeTokens() {
 	// require := s.Require()
 
@@ -313,34 +366,7 @@ func (s *E2ETestSuite) TestStakeTokens() {
 
 }
 
-func (s *E2ETestSuite) TestValidateCycleList() {
-	require := s.Require()
-
-	// block 0
-	_, err := s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-	firstInCycle := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.Equal(btcQueryData[2:], firstInCycle)
-	require.Equal(s.ctx.BlockHeight(), int64(0))
-
-	// block 1
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-	require.Equal(s.ctx.BlockHeight(), int64(1))
-	secondInCycle := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.Equal(trbQueryData[2:], secondInCycle)
-
-	// block 2
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-	require.Equal(s.ctx.BlockHeight(), int64(2))
-	thirdInCycle := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.Equal(ethQueryData[2:], thirdInCycle)
-}
-
-func (s *E2ETestSuite) TestSubmit() {
+func (s *E2ETestSuite) TestTipSubmit() {
 	// currentTime := s.ctx.BlockTime()
 	// fmt.Println(currentTime)
 	// s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second)) // add 10 minutes

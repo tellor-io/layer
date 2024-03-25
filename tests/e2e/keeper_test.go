@@ -63,15 +63,15 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
+	_ "github.com/tellor-io/layer/x/dispute"
+	_ "github.com/tellor-io/layer/x/mint"
+	_ "github.com/tellor-io/layer/x/oracle"
 	_ "github.com/tellor-io/layer/x/reporter/module"
 
 	// _ "github.com/cosmos/cosmos-sdk/x/staking"
 
 	testutils "github.com/tellor-io/layer/tests"
-	"github.com/tellor-io/layer/x/dispute"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
-	"github.com/tellor-io/layer/x/mint"
-	"github.com/tellor-io/layer/x/oracle"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	_ "github.com/tellor-io/layer/x/registry/module"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -172,10 +172,10 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.stakingKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.oraclekeeper = oraclekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(oracletypes.StoreKey), suite.fetchStoreKey(oracletypes.StoreKey), suite.accountKeeper, suite.bankKeeper, suite.distrKeeper, suite.stakingKeeper, suite.registrykeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.registrykeeper, suite.reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.disputekeeper = disputekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.slashingKeeper, suite.stakingKeeper,
+		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.reporterkeeper,
 	)
 	suite.mintkeeper = mintkeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
@@ -185,9 +185,7 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 }
 
 func (s *E2ETestSuite) SetupTest() {
-	dispute.AppWiringSetup()
-	oracle.AppWiringSetup()
-	mint.AppWiringSetup()
+
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
@@ -444,7 +442,7 @@ func encodeValue(number float64) string {
 }
 
 func (s *E2ETestSuite) oracleKeeper() (queryClient oracletypes.QueryClient, msgServer oracletypes.MsgServer) {
-	oracletypes.RegisterQueryServer(s.queryHelper, s.oraclekeeper)
+	oracletypes.RegisterQueryServer(s.queryHelper, &oracletypes.UnimplementedQueryServer{})
 	oracletypes.RegisterInterfaces(s.interfaceRegistry)
 	queryClient = oracletypes.NewQueryClient(s.queryHelper)
 	msgServer = oraclekeeper.NewMsgServerImpl(s.oraclekeeper)

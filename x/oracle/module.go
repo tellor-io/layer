@@ -31,6 +31,7 @@ var (
 	_ module.AppModule          = AppModule{}
 	_ module.AppModuleBasic     = AppModuleBasic{}
 	_ appmodule.HasBeginBlocker = AppModule{}
+	_ appmodule.HasEndBlocker   = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
