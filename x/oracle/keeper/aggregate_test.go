@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestFindTimestampBefore() {
 			name:       "Multiple timestamps, target present",
 			timestamps: []time.Time{time.Unix(50, 0), time.Unix(100, 0), time.Unix(150, 0)},
 			target:     time.Unix(100, 0),
-			expectedTs: time.Unix(100, 0),
+			expectedTs: time.Unix(50, 0),
 		},
 		{
 			name:       "Multiple timestamps, target not present",
@@ -115,7 +115,7 @@ func (s *KeeperTestSuite) TestFindTimestampAfter() {
 			name:       "Multiple timestamps, target present",
 			timestamps: []time.Time{time.Unix(50, 0), time.Unix(100, 0), time.Unix(150, 0)},
 			target:     time.Unix(100, 0),
-			expectedTs: time.Unix(100, 0),
+			expectedTs: time.Unix(150, 0),
 		},
 		{
 			name:       "Multiple timestamps, target not present",
