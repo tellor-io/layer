@@ -487,4 +487,55 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         )
 
     })
+
+    it.only("query layer api, deploy and verify with real params", async function () {
+        vts0 = await h.getValsetTimestampByIndex(0)
+        vp0 = await h.getValsetCheckpointParams(vts0)
+        console.log("valsetTimestamp0: ", vts0)
+        console.log("valsetCheckpointParams0: ", vp0)
+
+        console.log("deploying bridge...")
+        const Bridge = await ethers.getContractFactory("BlobstreamO");
+        bridge = await Bridge.deploy(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address);
+        await bridge.deployed();
+
+        vts1 = await h.getValsetTimestampByIndex(1)
+        vp1 = await h.getValsetCheckpointParams(vts1)
+        console.log("valsetTimestamp1: ", vts1)
+        console.log("valsetCheckpointParams1: ", vp1)
+        valSet0 = await h.getValset(vp0.timestamp)
+        valSet1 = await h.getValset(vp1.timestamp)
+        console.log("valSet0: ", valSet0)
+        console.log("valSet1: ", valSet1)
+
+        vsigs1old = await h.getValsetSigs(vp1.timestamp)
+        vsigs1 = await h.getValsetSigs2(vp1.timestamp, valSet0, vp1.checkpoint)
+        console.log("valsetSigs1: ", vsigs1)
+        console.log("valsetSigs1old: ", vsigs1old)
+
+
+        await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
+
+        currentEthUsdVal = await h.getCurrentAggregateReport(ETH_USD_QUERY_ID)
+        console.log("currentEthUsdVal: ", currentEthUsdVal)
+
+        dataBefore = await h.getDataBefore(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp)
+        console.log("dataBefore: ", dataBefore)
+
+        currentEthUsdVal.report.previousTimestamp = dataBefore.timestamp
+        console.log("currentEthUsdVal: ", currentEthUsdVal)
+        dataDigest = await h.domainSeparateOracleAttestationData(currentEthUsdVal, vp1.checkpoint)
+        console.log("dataDigest: ", dataDigest)
+
+        oAttestations = await h.getOracleAttestations(ETH_USD_QUERY_ID, currentEthUsdVal.report.timestamp, valSet1, dataDigest)
+        console.log("oAttestations: ", oAttestations)
+        await bridge.verifyOracleData(
+            currentEthUsdVal,
+            valSet1,
+            oAttestations,
+        )
+
+        
+    })
+
 })
