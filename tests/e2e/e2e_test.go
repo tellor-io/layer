@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -296,7 +295,7 @@ func (s *E2ETestSuite) TestTipCommitReveal() {
 	pubKey := simtestutil.CreateTestPubKeys(1)
 	// tell keepers about the new validator
 	s.accountKeeper.NewAccountWithAddress(s.ctx, testAccount[0])
-	validator, err := stakingtypes.NewValidator(testAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "first validator"})
+	validator, err := stakingtypes.NewValidator(testAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "created validator"})
 	require.NoError(err)
 	s.stakingKeeper.SetValidator(s.ctx, validator)
 	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
@@ -318,9 +317,9 @@ func (s *E2ETestSuite) TestTipCommitReveal() {
 	_, err = s.stakingKeeper.EndBlocker(s.ctx)
 	s.NoError(err)
 
-	validatorSet, err := s.stakingKeeper.GetAllValidators(s.ctx)
+	_, err = s.stakingKeeper.GetAllValidators(s.ctx)
 	require.NoError(err)
-	fmt.Println("validatorSet: ", validatorSet)
+	// fmt.Println("validatorSet: ", validatorSet)
 
 	//create a self delegated reporter from a different account
 	type Delegator struct {
@@ -329,24 +328,55 @@ func (s *E2ETestSuite) TestTipCommitReveal() {
 		tokenAmount      math.Int
 	}
 	pk := secp256k1.GenPrivKey()
-	delegatorAccount := sdk.AccAddress(pk.PubKey().Address())
-	// mint 5000*1e6 tokens for delegator
+	reporterAccount := sdk.AccAddress(pk.PubKey().Address())
+	// mint 5000*1e6 tokens for reporter
 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
-	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, delegatorAccount, sdk.NewCoins(initCoins)))
-	// delegate to validator so reporter can delegate to themselves
-	delegator := Delegator{delegatorAddress: delegatorAccount, validator: validator, tokenAmount: math.NewInt(2500 * 1e6)}
-	_, err = s.stakingKeeper.Delegate(s.ctx, delegator.delegatorAddress, delegator.tokenAmount, stakingtypes.Unbonded, delegator.validator, true)
+	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporterAccount, sdk.NewCoins(initCoins)))
+	// delegate to validator so reporterInfo can delegate to themselves
+	reporterInfo := Delegator{delegatorAddress: reporterAccount, validator: validator, tokenAmount: math.NewInt(5000 * 1e6)}
+	_, err = s.stakingKeeper.Delegate(s.ctx, reporterInfo.delegatorAddress, reporterInfo.tokenAmount, stakingtypes.Unbonded, reporterInfo.validator, true)
 	require.NoError(err)
 	// set up reporter module msgServer
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
 	require.NotNil(msgServerReporter)
-	// define reporter params
-	// var createReporterMsg reportertypes.MsgCreateReporter
-	// reporterAddress := delegator.delegatorAddress.String()
-	// amount := math.NewInt(100 * 1e6)
-	// source := reportertypes.TokenOrigin{ValidatorAddress: validator[1].GetOperator(), Amount: math.NewInt(100 * 1e6)}
-	// commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
-	// 	math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+	// define createReporterMsg params
+	var createReporterMsg reportertypes.MsgCreateReporter
+	reporterAddress := reporterInfo.delegatorAddress.String()
+	amount := math.NewInt(4999 * 1e6)
+	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4999 * 1e6)}
+	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+	// fill in createReporterMsg
+	createReporterMsg.Reporter = reporterAddress
+	createReporterMsg.Amount = amount
+	createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&source}
+	createReporterMsg.Commission = &commission
+	// send createreporter msg
+	_, err = msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
+	require.NoError(err)
+	// check that reporter was created correctly
+	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterInfo.delegatorAddress)
+	require.NoError(err)
+	require.Equal(reporter.Reporter, reporterInfo.delegatorAddress.String())
+	require.Equal(reporter.TotalTokens, math.NewInt(4999*1e6))
+	require.Equal(reporter.Jailed, false)
+	// define delegation source
+	source = reportertypes.TokenOrigin{ValidatorAddress: validator.GetOperator(), Amount: math.NewInt(1)}
+	delegationMsg := reportertypes.NewMsgDelegateReporter(
+		reporterInfo.delegatorAddress.String(),
+		reporterInfo.delegatorAddress.String(),
+		math.NewInt(1),
+		[]*reportertypes.TokenOrigin{&source},
+	)
+	_, err = s.stakingKeeper.Delegation(s.ctx, reporterInfo.delegatorAddress, valBz)
+	require.NoError(err)
+	// require.Equal(del.GetShares(), 100)
+	// self delegate as a reporter
+	_, err = msgServerReporter.DelegateReporter(s.ctx, delegationMsg)
+	require.NoError(err)
+	delegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterInfo.delegatorAddress)
+	require.NoError(err)
+	require.Equal(delegation.Reporter, reporterInfo.delegatorAddress.String())
 
 }
 
