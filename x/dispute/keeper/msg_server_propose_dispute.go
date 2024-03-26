@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
@@ -22,6 +23,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 
 	if dispute == nil {
 		// Set New Dispute
+		fmt.Println("Made it into if statement to create new dispute")
 		if err := k.Keeper.SetNewDispute(ctx, *msg); err != nil {
 			return nil, err
 		}

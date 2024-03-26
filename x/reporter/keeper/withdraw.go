@@ -19,6 +19,7 @@ import (
 func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
+		fmt.Println("Erroring out getting reporter in fee: ", err)
 		return err
 	}
 

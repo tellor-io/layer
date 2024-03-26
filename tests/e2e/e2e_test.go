@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,7 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
@@ -452,17 +455,196 @@ func (s *E2ETestSuite) TestTipSubmit() {
 
 func (s *E2ETestSuite) TestDisputes() {
 	require := s.Require()
+
+	numValidators := 10
+	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
+	_ = new(big.Int).Mul(big.NewInt(1000), base)
+	// make addresses
+	testAddresses := simtestutil.CreateIncrementalAccounts(numValidators)
+	// mint 50k tokens to minter account and send to each address
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(500000*1e6))
+	for _, addr := range testAddresses {
+		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, addr, sdk.NewCoins(initCoins)))
+	}
+	// get val address for each test address
+	valAddresses := simtestutil.ConvertAddrsToValAddrs(testAddresses)
+	// create pub keys for each address
+	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
+
+	// set each account with proper keepers
+	for i, pubKey := range pubKeys {
+		s.accountKeeper.NewAccountWithAddress(s.ctx, testAddresses[i])
+		validator, err := stakingtypes.NewValidator(valAddresses[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
+		require.NoError(err)
+		s.stakingKeeper.SetValidator(s.ctx, validator)
+		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+
+		_, err = s.stakingKeeper.Delegate(s.ctx, testAddresses[i], math.NewInt(500000*1e6), stakingtypes.Unbonded, validator, true)
+		require.NoError(err)
+		// call hooks for distribution init
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, testAddresses[i], valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, testAddresses[i], valBz)
+		require.NoError(err)
+	}
+
+	_, err := s.stakingKeeper.EndBlocker(s.ctx)
+	s.NoError(err)
+
+	// check that everyone is a bonded validator
+	validatorSet, err := s.stakingKeeper.GetAllValidators(s.ctx)
+	require.NoError(err)
+	for _, val := range validatorSet {
+		status := val.GetStatus()
+		require.Equal(stakingtypes.Bonded.String(), status.String())
+	}
+
+	// create 3 delegators
+	// const (
+	// 	reporter     = "reporter"
+	// 	delegatorI   = "delegator1"
+	// 	delegatorII  = "delegator2"
+	// 	delegatorIII = "delegator3"
+	// )
+
+	type Delegator struct {
+		delegatorAddress sdk.AccAddress
+		validator        stakingtypes.Validator
+		tokenAmount      math.Int
+	}
+
+	// numDelegators := 4
+	// // create random private keys for each delegator
+	// delegatorPrivateKeys := make([]secp256k1.PrivKey, numDelegators)
+	// for i := 0; i < numDelegators; i++ {
+	// 	pk := secp256k1.GenPrivKey()
+	// 	delegatorPrivateKeys[i] = *pk
+	// }
+	// // turn private keys into accounts
+	// delegatorAccounts := make([]sdk.AccAddress, numDelegators)
+	// for i, pk := range delegatorPrivateKeys {
+	// 	delegatorAccounts[i] = sdk.AccAddress(pk.PubKey().Address())
+	// 	// give each account tokens
+	// 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+	// 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporter, sdk.NewCoins(initCoins)))
+	// }
+
+	// Create Reporter Delegator Account
+	pk := secp256k1.GenPrivKey()
+	reporterAccountAddress := sdk.AccAddress(pk.PubKey().Address())
+	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporterAccountAddress, sdk.NewCoins(initCoins)))
+	reporterDelegator := Delegator{delegatorAddress: reporterAccountAddress, validator: validatorSet[1], tokenAmount: math.NewInt(1000 * 1e6)}
+
+	// delegate to validators
+	_, err = s.stakingKeeper.Delegate(s.ctx, reporterDelegator.delegatorAddress, reporterDelegator.tokenAmount, stakingtypes.Unbonded, reporterDelegator.validator, true)
+	require.NoError(err)
+	_, err = s.stakingKeeper.EndBlocker(s.ctx)
+	s.NoError(err)
+
+	// set up reporter module msgServer
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	require.NotNil(msgServerReporter)
+	// define reporter params
+
+	var createReporterMsg reportertypes.MsgCreateReporter
+	reporterAddress := reporterDelegator.delegatorAddress.String()
+	amount := math.NewInt(1000 * 1e6)
+	source := reportertypes.TokenOrigin{ValidatorAddress: validatorSet[1].GetOperator(), Amount: math.NewInt(1000 * 1e6)}
+	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+	// fill in createReporterMsg
+	createReporterMsg.Reporter = reporterAddress
+	createReporterMsg.Amount = amount
+	createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&source}
+	createReporterMsg.Commission = &commission
+	// create reporter through msg server
+	_, err = msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
+	require.NoError(err)
+	// check that reporter was created correctly
+	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterDelegator.delegatorAddress)
+	require.NoError(err)
+	require.Equal(oracleReporter.Reporter, reporterDelegator.delegatorAddress.String())
+	require.Equal(oracleReporter.TotalTokens, math.NewInt(1000*1e6))
+	require.Equal(oracleReporter.Jailed, false)
+	// create msg to add Reporter Delegate for oracleReporter
+	var delegateToOracleReporterMsg reportertypes.MsgDelegateReporter
+	delegateToOracleReporterMsg.Amount = math.NewInt(1000 * 1e6)
+	delegateToOracleReporterMsg.Delegator = oracleReporter.Reporter
+	delegateToOracleReporterMsg.Reporter = oracleReporter.Reporter
+	delegateToOracleReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&source}
+	_, err = msgServerReporter.DelegateReporter(s.ctx, &delegateToOracleReporterMsg)
+	require.NoError(err)
+
+	var createValidatorReporterMsg reportertypes.MsgCreateReporter
+	createValidatorReporterMsg.Reporter = sdk.AccAddress(validatorSet[0].GetOperator()).String()
+	createValidatorReporterMsg.Amount = math.NewInt(1000 * 1e6)
+	createValidatorReporterMsg.Commission = &commission
+	valSource := reportertypes.TokenOrigin{ValidatorAddress: validatorSet[0].GetOperator(), Amount: math.NewInt(1000 * 1e6)}
+	createValidatorReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&valSource}
+
+	_, err = s.stakingKeeper.EndBlocker(s.ctx)
+	s.NoError(err)
+
+	//create reporter object using msg server
+	_, err = msgServerReporter.CreateReporter(s.ctx, &createValidatorReporterMsg)
+	require.NoError(err)
+	valReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, sdk.AccAddress(validatorSet[0].GetOperator()))
+	require.NoError(err)
+	require.Equal(valReporter.Reporter, sdk.AccAddress(validatorSet[0].GetOperator()).String())
+	require.Equal(valReporter.TotalTokens, math.NewInt(100*1e6))
+	require.Equal(valReporter.Jailed, false)
+
+	var delegateToValReporterMsg reportertypes.MsgDelegateReporter
+	delegateToValReporterMsg.Amount = math.NewInt(100 * 1e6)
+	delegateToValReporterMsg.Delegator = valReporter.Reporter
+	delegateToValReporterMsg.Reporter = valReporter.Reporter
+	delegateToValReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&valSource}
+	_, err = msgServerReporter.DelegateReporter(s.ctx, &delegateToValReporterMsg)
+	require.NoError(err)
+
+	// Get Dispute Keeper msgServer
 	_, msgServerDispute := s.disputeKeeper()
 	require.NotNil(msgServerDispute)
 
-	// // create dispute
-	// var disputeReq disputetypes.MsgDispute
-	// var disputeRes disputetypes.MsgDisputeResponse
-	// disputeReq.Creator = accountAddrs[0].String()
-	// disputeReq.QueryId = currentQuery.QueryId
-	// disputeReq.DisputeType = "query"
-	// disputeReq.DisputeId = "1"
-	// disputeReq.Value = ""
+	bondedTokensBefore := math.NewInt(oracleReporter.TotalTokens.Int64())
+	onePercent := bondedTokensBefore.Mul(math.NewInt(1)).Quo(math.NewInt(100))
+	disputeFee := sdk.NewCoin(s.denom, onePercent)
+	slashAmount := disputeFee.Amount
+	timestamp := time.Now()
+
+	// create dispute
+	report := oracletypes.MicroReport{
+		Reporter:  oracleReporter.Reporter,
+		Power:     oracleReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: timestamp,
+	}
+
+	// MAKE SURE TO ACTUALLY SUBMIT THIS AS A REPORT FOR TESTING PURPOSES
+
+	_, err = msgServerDispute.ProposeDispute(s.ctx, &disputetypes.MsgProposeDispute{
+		Creator:         valReporter.Reporter,
+		Report:          &report,
+		DisputeCategory: disputetypes.Warning,
+		Fee:             disputeFee,
+		PayFromBond:     true,
+	})
+	require.NoError(err)
+
+	updatedReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterDelegator.delegatorAddress)
+	require.NoError(err)
+	require.Equal(math.NewInt(updatedReporter.TotalTokens.Int64()), bondedTokensBefore.Sub(slashAmount).Sub(disputeFee.Amount))
+	require.True(updatedReporter.GetJailed())
 }
 
 // get delegation

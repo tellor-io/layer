@@ -127,6 +127,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	if err != nil {
 		return err
 	}
+	fmt.Println("Made it passed getting dispute fee")
 
 	feeList := make([]types.PayerInfo, 0)
 
@@ -159,17 +160,20 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	}
 	// Pay the dispute fee
 	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
+		fmt.Println("ERROR paying dispute fee: ", err)
 		return err
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
 		if err := k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory); err != nil {
+			fmt.Println("ERROR slashing and jailing reporter: ", err)
 			return err
 		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
 		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
 		if err := k.SetStartVote(ctx, dispute.DisputeId); err != nil { // starting voting immediately
+			fmt.Println("ERROR starting vote: ", err)
 			return err
 		}
 	}

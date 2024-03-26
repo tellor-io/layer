@@ -152,7 +152,7 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 // App Wiring Setup
 // ----------------------------------------------------------------------------
 
-func AppWiringSetup() {
+func init() {
 	appmodule.Register(&mintmodulev1.Module{},
 		appmodule.Provide(ProvideModule))
 
