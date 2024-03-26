@@ -2,14 +2,34 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
-	// require := s.Require()
+	require := s.Require()
 
+	queryId, err := utils.QueryIDFromDataString(ethQueryData)
+	s.NoError(err)
+	aggregate, err := s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, queryId)
+	require.NoError(err)
+	fmt.Println(aggregate)
+
+	s.TestSubmitValue()
+	aggregate, err = s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, queryId)
+	require.NoError(err)
+	fmt.Println(aggregate)
+
+	aggReportRequest := &types.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryId),
+	}
+
+	response, err := s.oracleKeeper.GetAggregatedReport(s.ctx, aggReportRequest)
+	require.NoError(err)
+	require.NotNil(response)
 	// // get validator info for expectedAggregate
 	// validatorData, err := s.stakingKeeper.Validator(s.ctx, sdk.ValAddress(Addr.String()))
 	// require.Nil(err)
@@ -87,6 +107,6 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReportNoAvailableTimestamps() {
 	s.TestSubmitValue()
 
 	_, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: queryId})
-	require.ErrorContains(err, "no available timestamps")
+	require.ErrorContains(err, "no available reports")
 
 }

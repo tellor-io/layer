@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -86,13 +87,66 @@ func (s *E2ETestSuite) TestTransferAfterMint() {
 	require.Equal(s.bankKeeper.GetBalance(s.ctx, accounts[4].Account, s.denom).Amount, math.NewInt(1000))
 }
 
-func (s *E2ETestSuite) TestDelegate() {
+func (s *E2ETestSuite) TestValidateCycleList() {
+	require := s.Require()
+
+	// height 0
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	firstInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(strings.ToLower(ethQueryData[2:]), firstInCycle)
+	require.Equal(s.ctx.BlockHeight(), int64(0))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// height 1
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	require.Equal(s.ctx.BlockHeight(), int64(1))
+	secondInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(strings.ToLower(btcQueryData[2:]), secondInCycle)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// height 2
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	require.Equal(s.ctx.BlockHeight(), int64(2))
+	thirdInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.Equal(strings.ToLower(trbQueryData[2:]), thirdInCycle)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// loop through more times
+	list, err := s.oraclekeeper.GetCyclelist(s.ctx)
+	require.NoError(err)
+	for i := 0; i < 20; i++ {
+		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+		_, err = s.app.BeginBlocker(s.ctx)
+		require.NoError(err)
+
+		query, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+		require.NoError(err)
+		require.Contains(list, query)
+
+		_, err = s.app.EndBlocker(s.ctx)
+		require.NoError(err)
+	}
+}
+
+func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require := s.Require()
 
 	// Create Validator Accounts
 	numValidators := 10
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
 	_ = new(big.Int).Mul(big.NewInt(1000), base)
+
 	// make addresses
 	testAddresses := simtestutil.CreateIncrementalAccounts(numValidators)
 	// mint 50k tokens to minter account and send to each address
@@ -210,7 +264,7 @@ func (s *E2ETestSuite) TestDelegate() {
 	require.Equal(oracleReporter.TotalTokens, math.NewInt(100*1e6))
 	require.Equal(oracleReporter.Jailed, false)
 
-	// delegate to reporter
+	// define delegation source
 	source = reportertypes.TokenOrigin{ValidatorAddress: validatorSet[1].GetOperator(), Amount: math.NewInt(25 * 1e6)}
 	delegation := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
@@ -218,6 +272,7 @@ func (s *E2ETestSuite) TestDelegate() {
 		math.NewInt(25*1e6),
 		[]*reportertypes.TokenOrigin{&source},
 	)
+	// self delegate as reporter
 	_, err = msgServerReporter.DelegateReporter(s.ctx, delegation)
 	require.NoError(err)
 	delegationReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
@@ -225,56 +280,74 @@ func (s *E2ETestSuite) TestDelegate() {
 	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.String())
 }
 
-func (s *E2ETestSuite) TestValidateCycleList() {
+func (s *E2ETestSuite) TestTipCommitReveal() {
 	require := s.Require()
 
-	// height 0
-	_, err := s.app.BeginBlocker(s.ctx)
+	// create a validator
+	// create account that will become a validator
+	testAccount := simtestutil.CreateIncrementalAccounts(1)
+	// mint 5000*1e6tokens for validator
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(5000*1e8))
+	require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, testAccount[0], sdk.NewCoins(initCoins)))
+	// get val address
+	testAccountValAddrs := simtestutil.ConvertAddrsToValAddrs(testAccount)
+	// create pub key for validator
+	pubKey := simtestutil.CreateTestPubKeys(1)
+	// tell keepers about the new validator
+	s.accountKeeper.NewAccountWithAddress(s.ctx, testAccount[0])
+	validator, err := stakingtypes.NewValidator(testAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "first validator"})
 	require.NoError(err)
-	firstInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	s.stakingKeeper.SetValidator(s.ctx, validator)
+	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+	s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+	// self delegate from validator account to itself
+	_, err = s.stakingKeeper.Delegate(s.ctx, testAccount[0], math.NewInt(int64(4000)*1e8), stakingtypes.Unbonded, validator, true)
 	require.NoError(err)
-	require.Equal(strings.ToLower(ethQueryData[2:]), firstInCycle)
-	require.Equal(s.ctx.BlockHeight(), int64(0))
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
-
-	// height 1
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-	require.Equal(s.ctx.BlockHeight(), int64(1))
-	secondInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.NoError(err)
-	require.Equal(strings.ToLower(btcQueryData[2:]), secondInCycle)
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
-
-	// height 2
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-	require.Equal(s.ctx.BlockHeight(), int64(2))
-	thirdInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.NoError(err)
-	require.Equal(strings.ToLower(trbQueryData[2:]), thirdInCycle)
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
-
-	// loop through more times
-	list, err := s.oraclekeeper.GetCyclelist(s.ctx)
-	require.NoError(err)
-	for i := 0; i < 20; i++ {
-		s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-		_, err = s.app.BeginBlocker(s.ctx)
-		require.NoError(err)
-
-		query, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-		require.NoError(err)
-		require.Contains(list, query)
-
-		_, err = s.app.EndBlocker(s.ctx)
-		require.NoError(err)
+	// call hooks for distribution init
+	valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		panic(err)
 	}
+	err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
+	require.NoError(err)
+	err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, testAccount[0], valBz)
+	require.NoError(err)
+	err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, testAccount[0], valBz)
+	require.NoError(err)
+	_, err = s.stakingKeeper.EndBlocker(s.ctx)
+	s.NoError(err)
+
+	validatorSet, err := s.stakingKeeper.GetAllValidators(s.ctx)
+	require.NoError(err)
+	fmt.Println("validatorSet: ", validatorSet)
+
+	//create a self delegated reporter from a different account
+	type Delegator struct {
+		delegatorAddress sdk.AccAddress
+		validator        stakingtypes.Validator
+		tokenAmount      math.Int
+	}
+	pk := secp256k1.GenPrivKey()
+	delegatorAccount := sdk.AccAddress(pk.PubKey().Address())
+	// mint 5000*1e6 tokens for delegator
+	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, delegatorAccount, sdk.NewCoins(initCoins)))
+	// delegate to validator so reporter can delegate to themselves
+	delegator := Delegator{delegatorAddress: delegatorAccount, validator: validator, tokenAmount: math.NewInt(2500 * 1e6)}
+	_, err = s.stakingKeeper.Delegate(s.ctx, delegator.delegatorAddress, delegator.tokenAmount, stakingtypes.Unbonded, delegator.validator, true)
+	require.NoError(err)
+	// set up reporter module msgServer
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	require.NotNil(msgServerReporter)
+	// define reporter params
+	// var createReporterMsg reportertypes.MsgCreateReporter
+	// reporterAddress := delegator.delegatorAddress.String()
+	// amount := math.NewInt(100 * 1e6)
+	// source := reportertypes.TokenOrigin{ValidatorAddress: validator[1].GetOperator(), Amount: math.NewInt(100 * 1e6)}
+	// commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+	// 	math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+
 }
 
 func (s *E2ETestSuite) TestStakeTokens() {
@@ -468,122 +541,122 @@ func (s *E2ETestSuite) TestDisputes() {
 // get delegation
 // call slash
 
-func (s *E2ETestSuite) TestTipCommitReveal() {
-	// require := s.Require()
+// func (s *E2ETestSuite) TestTipCommitReveal() {
+// require := s.Require()
 
-	// // set up keepers and msg servers
-	// oraclekeeper, msgServerOracle := s.oracleKeeper()
-	// require.NotNil(msgServerOracle)
-	// require.NotNil(oraclekeeper)
-	// disputekeeper, msgServerDispute := s.disputeKeeper()
-	// require.NotNil(msgServerDispute)
-	// require.NotNil(disputekeeper)
-	// registrykeeper, msgServerRegistry := s.registryKeeper()
-	// require.NotNil(msgServerRegistry)
-	// require.NotNil(registrykeeper)
+// // set up keepers and msg servers
+// oraclekeeper, msgServerOracle := s.oracleKeeper()
+// require.NotNil(msgServerOracle)
+// require.NotNil(oraclekeeper)
+// disputekeeper, msgServerDispute := s.disputeKeeper()
+// require.NotNil(msgServerDispute)
+// require.NotNil(disputekeeper)
+// registrykeeper, msgServerRegistry := s.registryKeeper()
+// require.NotNil(msgServerRegistry)
+// require.NotNil(registrykeeper)
 
-	// // register a spec spec1
-	// spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
-	// specInput := &registrytypes.MsgRegisterSpec{
-	// 	Registrar: "creator1",
-	// 	QueryType: "NewQueryType",
-	// 	Spec:      spec1,
-	// }
-	// registerSpecResult, err := msgServerRegistry.RegisterSpec(s.ctx, specInput)
-	// require.NoError(err)
-	// require.NotNil(s.T(), registerSpecResult)
+// // register a spec spec1
+// spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
+// specInput := &registrytypes.MsgRegisterSpec{
+// 	Registrar: "creator1",
+// 	QueryType: "NewQueryType",
+// 	Spec:      spec1,
+// }
+// registerSpecResult, err := msgServerRegistry.RegisterSpec(s.ctx, specInput)
+// require.NoError(err)
+// require.NotNil(s.T(), registerSpecResult)
 
-	// // create account that will become validator
-	// accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
-	// account := authtypes.BaseAccount{
-	// 	Address: accAddr.String(),
-	// 	PubKey:  codectypes.UnsafePackAny(valPubKey),
-	// }
-	// s.accountKeeper.SetAccount(s.ctx, &account)
-	// valAddr := sdk.ValAddress(accAddr)
+// // create account that will become validator
+// accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
+// account := authtypes.BaseAccount{
+// 	Address: accAddr.String(),
+// 	PubKey:  codectypes.UnsafePackAny(valPubKey),
+// }
+// s.accountKeeper.SetAccount(s.ctx, &account)
+// valAddr := sdk.ValAddress(accAddr)
 
-	// // stake the validator
-	// val, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
-	// require.NoError(err)
-	// s.stakingKeeper.SetValidator(s.ctx, val)
-	// s.stakingKeeper.SetValidatorByConsAddr(s.ctx, val)
-	// s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
-	// _, err = s.stakingKeeper.Delegate(s.ctx, accAddr, math.NewInt(1000000), stakingtypes.Unbonded, val, true)
-	// require.NoError(err)
-	// _ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
-	// validator, err := s.stakingKeeper.Validator(s.ctx, valAddr)
-	// require.NoError(err)
-	// status := validator.GetStatus()
-	// require.Equal(stakingtypes.Bonded.String(), status.String())
+// // stake the validator
+// val, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
+// require.NoError(err)
+// s.stakingKeeper.SetValidator(s.ctx, val)
+// s.stakingKeeper.SetValidatorByConsAddr(s.ctx, val)
+// s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
+// _, err = s.stakingKeeper.Delegate(s.ctx, accAddr, math.NewInt(1000000), stakingtypes.Unbonded, val, true)
+// require.NoError(err)
+// _ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
+// validator, err := s.stakingKeeper.Validator(s.ctx, valAddr)
+// require.NoError(err)
+// status := validator.GetStatus()
+// require.Equal(stakingtypes.Bonded.String(), status.String())
 
-	// // create commit contents
-	// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	// // var commitreq oracletypes.MsgCommitReport
-	// valueDecoded, err := hex.DecodeString(value)
-	// require.Nil(err)
-	// signature, err := valPrivKey.Sign(valueDecoded)
-	// require.Nil(err)
-	// require.NotNil(s.T(), signature)
+// // create commit contents
+// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+// // var commitreq oracletypes.MsgCommitReport
+// valueDecoded, err := hex.DecodeString(value)
+// require.Nil(err)
+// signature, err := valPrivKey.Sign(valueDecoded)
+// require.Nil(err)
+// require.NotNil(s.T(), signature)
 
-	// set commit contents
-	// commitreq.Creator = accAddr.String()
-	// commitreq.QueryData = queryData.QueryData
-	// commitreq.Hash = hex.EncodeToString(signature)
+// set commit contents
+// commitreq.Creator = accAddr.String()
+// commitreq.QueryData = queryData.QueryData
+// commitreq.Hash = hex.EncodeToString(signature)
 
-	// // commit report
-	// _, err = msgServerOracle.CommitReport(s.ctx, &commitreq)
-	// require.Nil(err)
-	// _hexxy, _ := hex.DecodeString(queryData.QueryData)
+// // commit report
+// _, err = msgServerOracle.CommitReport(s.ctx, &commitreq)
+// require.Nil(err)
+// _hexxy, _ := hex.DecodeString(queryData.QueryData)
 
-	// // get commit value
-	// commitValue, err := s.oraclekeeper.GetCommit(s.ctx, sdk.AccAddress(valAddr), keeper.HashQueryData(_hexxy))
-	// fmt.Println("commitValue: ", commitValue)
-	// require.Nil(err)
-	// require.NotNil(s.T(), commitValue)
+// // get commit value
+// commitValue, err := s.oraclekeeper.GetCommit(s.ctx, sdk.AccAddress(valAddr), keeper.HashQueryData(_hexxy))
+// fmt.Println("commitValue: ", commitValue)
+// require.Nil(err)
+// require.NotNil(s.T(), commitValue)
 
-	// // verify commit
-	// ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
-	// require.Equal(true, s.oraclekeeper.VerifySignature(s.ctx, accAddr.String(), value, commitValue.Report.Hash))
-	// require.Equal(commitValue.Report.Creator, accAddr.String())
+// // verify commit
+// ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
+// require.Equal(true, s.oraclekeeper.VerifySignature(s.ctx, accAddr.String(), value, commitValue.Report.Hash))
+// require.Equal(commitValue.Report.Creator, accAddr.String())
 
-	// reportFromQiD, err := s.oraclekeeper.GetReportsbyQid(ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
-	// require.Nil(err)
-	// fmt.Println("reportFromQiD: ", reportFromQiD) // empty right now ?
+// reportFromQiD, err := s.oraclekeeper.GetReportsbyQid(ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
+// require.Nil(err)
+// fmt.Println("reportFromQiD: ", reportFromQiD) // empty right now ?
 
-	// var submitreq oracletypes.MsgSubmitValue
-	// var submitres oracletypes.MsgSubmitValueResponse
-	// // forward block by 1 and reveal value
-	// height := s.ctx.BlockHeight() + 1
-	// s.ctx = s.ctx.WithBlockHeight(height)
-	// // Submit value transaction with value revealed, this checks if the value is correctly signed
-	// submitreq.Creator = accAddr.String()
-	// submitreq.QueryData = queryData.QueryData
-	// submitreq.Value = value
-	// res, err := msgServerOracle.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
-	// require.Equal(&submitres, res)
-	// require.Nil(err)
-	// report, err := oraclekeeper.GetReportsbyQid(s.ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
-	// require.Nil(err)
-	// fmt.Println("report: ", report)
-	// expectedPower := sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction)
+// var submitreq oracletypes.MsgSubmitValue
+// var submitres oracletypes.MsgSubmitValueResponse
+// // forward block by 1 and reveal value
+// height := s.ctx.BlockHeight() + 1
+// s.ctx = s.ctx.WithBlockHeight(height)
+// // Submit value transaction with value revealed, this checks if the value is correctly signed
+// submitreq.Creator = accAddr.String()
+// submitreq.QueryData = queryData.QueryData
+// submitreq.Value = value
+// res, err := msgServerOracle.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
+// require.Equal(&submitres, res)
+// require.Nil(err)
+// report, err := oraclekeeper.GetReportsbyQid(s.ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
+// require.Nil(err)
+// fmt.Println("report: ", report)
+// expectedPower := sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction)
 
-	// microReport := oracletypes.MicroReport{
-	// 	Reporter:        accAddr.String(),
-	// 	Power:           expectedPower,
-	// 	QueryType:       "NewQueryType",
-	// 	QueryId:         registerQueryResult.QueryId,
-	// 	AggregateMethod: "weighted-median",
-	// 	Value:           value,
-	// 	BlockNumber:     s.ctx.BlockHeight(),
-	// 	Timestamp:       s.ctx.BlockTime(),
-	// }
-	// expectedReport := oracletypes.QueryGetReportsbyQidResponse{
-	// 	Reports: oracletypes.Reports{
-	// 		MicroReports: []*oracletypes.MicroReport{&microReport},
-	// 	},
-	// }
-	// require.Equal(&expectedReport, report)
+// microReport := oracletypes.MicroReport{
+// 	Reporter:        accAddr.String(),
+// 	Power:           expectedPower,
+// 	QueryType:       "NewQueryType",
+// 	QueryId:         registerQueryResult.QueryId,
+// 	AggregateMethod: "weighted-median",
+// 	Value:           value,
+// 	BlockNumber:     s.ctx.BlockHeight(),
+// 	Timestamp:       s.ctx.BlockTime(),
+// }
+// expectedReport := oracletypes.QueryGetReportsbyQidResponse{
+// 	Reports: oracletypes.Reports{
+// 		MicroReports: []*oracletypes.MicroReport{&microReport},
+// 	},
+// }
+// require.Equal(&expectedReport, report)
 
-	// create dispute
-	// var disputeReq disputetypes.MsgDispute
-}
+// create dispute
+// var disputeReq disputetypes.MsgDispute
+// }

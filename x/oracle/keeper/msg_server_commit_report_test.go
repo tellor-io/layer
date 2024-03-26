@@ -22,7 +22,7 @@ import (
 func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, string) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
-	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx) // eth/usd
 	s.Nil(err)
 	// value 100000000000000000000 in hex
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
