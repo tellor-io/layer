@@ -40,6 +40,7 @@ message MsgAddFeeToDisputeResponse {}
 
 message MsgVote {
   option (cosmos.msg.v1.signer) = "voter";
+  option (cosmos.msg.v1.signer) = "voter";
   string voter = 1;
   uint64 id = 2;
   VoteEnum vote = 3;
@@ -52,3 +53,4 @@ enum VoteEnum {
   VOTE_SUPPORT = 1;
   VOTE_AGAINST = 2;
 }
+

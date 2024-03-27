@@ -126,6 +126,7 @@ func HashQueryData(queryData []byte) []byte {
 }
 
 // initialize query for a given query data
+// change querydata to bytes
 func (k Keeper) initializeQuery(ctx context.Context, querydata string) (types.QueryMeta, error) {
 	// initialize query tip first time
 

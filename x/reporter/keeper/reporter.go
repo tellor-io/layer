@@ -43,10 +43,12 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 		if err != nil {
 			return err
 		}
-		// check if the validator has enough tokens bonded with validator, this would be the sum
+		// check if the delegator has enough tokens bonded with validator, this would be the sum
 		// of what is currently delegated to reporter plus the amount being added in this transaction
+		// todo: further documentation
 		sum := tokenSource.Add(origin.Amount)
-		if validator.TokensFromShares(delegation.GetShares()).TruncateInt().LT(sum) {
+		tokensFromShares := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
+		if tokensFromShares.LTE(sum) {
 			return errorsmod.Wrapf(types.ErrInsufficientTokens, "insufficient tokens bonded with validator %v", valAddr)
 		}
 		tokenSource = sum

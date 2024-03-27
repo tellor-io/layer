@@ -3,7 +3,6 @@ package mint
 import (
 	"time"
 
-	cosmosmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/mint/keeper"
@@ -29,26 +28,26 @@ func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time)
 		return nil
 	}
 
-	toMintCoin, err := minter.CalculateBlockProvision(currentTime, *minter.PreviousBlockTime)
-	if err != nil {
-		return err
-	}
-	toMintCoins := sdk.NewCoins(toMintCoin)
+	// toMintCoin, err := minter.CalculateBlockProvision(currentTime, *minter.PreviousBlockTime)
+	// if err != nil {
+	// 	return err
+	// }
+	// toMintCoins := sdk.NewCoins(toMintCoin)
 	// mint coins double half going to team and half to oracle
-	err = k.MintCoins(ctx, toMintCoins.MulInt(cosmosmath.NewInt(2)))
-	if err != nil {
-		return err
-	}
+	// err = k.MintCoins(ctx, toMintCoins.MulInt(cosmosmath.NewInt(2)))
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = k.SendCoinsToTeam(ctx, toMintCoins)
-	if err != nil {
-		return err
-	}
+	// err = k.SendCoinsToTeam(ctx, toMintCoins)
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = k.SendCoinsToOracle(ctx, toMintCoins)
-	if err != nil {
-		return err
-	}
+	// err = k.SendCoinsToOracle(ctx, toMintCoins)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
