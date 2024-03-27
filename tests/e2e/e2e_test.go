@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"encoding/hex"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -13,7 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
@@ -279,7 +284,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.String())
 }
 
-func (s *E2ETestSuite) TestTipCommitReveal() {
+func (s *E2ETestSuite) TestBasicReporting() {
 	require := s.Require()
 
 	// create a validator
@@ -332,16 +337,16 @@ func (s *E2ETestSuite) TestTipCommitReveal() {
 	// mint 5000*1e6 tokens for reporter
 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporterAccount, sdk.NewCoins(initCoins)))
-	// delegate to validator so reporterInfo can delegate to themselves
-	reporterInfo := Delegator{delegatorAddress: reporterAccount, validator: validator, tokenAmount: math.NewInt(5000 * 1e6)}
-	_, err = s.stakingKeeper.Delegate(s.ctx, reporterInfo.delegatorAddress, reporterInfo.tokenAmount, stakingtypes.Unbonded, reporterInfo.validator, true)
+	// delegate to validator so reporterDelforVal can delegate to themselves
+	reporterDelforVal := Delegator{delegatorAddress: reporterAccount, validator: validator, tokenAmount: math.NewInt(5000 * 1e6)}
+	_, err = s.stakingKeeper.Delegate(s.ctx, reporterDelforVal.delegatorAddress, reporterDelforVal.tokenAmount, stakingtypes.Unbonded, reporterDelforVal.validator, true)
 	require.NoError(err)
 	// set up reporter module msgServer
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
 	require.NotNil(msgServerReporter)
 	// define createReporterMsg params
 	var createReporterMsg reportertypes.MsgCreateReporter
-	reporterAddress := reporterInfo.delegatorAddress.String()
+	reporterAddress := reporterDelforVal.delegatorAddress.String()
 	amount := math.NewInt(4999 * 1e6)
 	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4999 * 1e6)}
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
@@ -354,30 +359,74 @@ func (s *E2ETestSuite) TestTipCommitReveal() {
 	// send createreporter msg
 	_, err = msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
 	require.NoError(err)
-	// check that reporter was created correctly
-	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterInfo.delegatorAddress)
+	// check that reporter was created in Reporters collections
+	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterDelforVal.delegatorAddress)
 	require.NoError(err)
-	require.Equal(reporter.Reporter, reporterInfo.delegatorAddress.String())
+	require.Equal(reporter.Reporter, reporterDelforVal.delegatorAddress.String())
 	require.Equal(reporter.TotalTokens, math.NewInt(4999*1e6))
 	require.Equal(reporter.Jailed, false)
-	// define delegation source
-	source = reportertypes.TokenOrigin{ValidatorAddress: validator.GetOperator(), Amount: math.NewInt(1)}
-	delegationMsg := reportertypes.NewMsgDelegateReporter(
-		reporterInfo.delegatorAddress.String(),
-		reporterInfo.delegatorAddress.String(),
-		math.NewInt(1),
-		[]*reportertypes.TokenOrigin{&source},
-	)
-	_, err = s.stakingKeeper.Delegation(s.ctx, reporterInfo.delegatorAddress, valBz)
+	// check on reporter in Delegators collections
+	delegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterDelforVal.delegatorAddress)
 	require.NoError(err)
-	// require.Equal(del.GetShares(), 100)
-	// self delegate as a reporter
-	_, err = msgServerReporter.DelegateReporter(s.ctx, delegationMsg)
-	require.NoError(err)
-	delegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterInfo.delegatorAddress)
-	require.NoError(err)
-	require.Equal(delegation.Reporter, reporterInfo.delegatorAddress.String())
+	require.Equal(delegation.Reporter, reporterDelforVal.delegatorAddress.String())
+	require.Equal(delegation.Amount, math.NewInt(4999*1e6))
 
+	// Report
+	// setup oracle msgServer
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
+	require.NotNil(oracleMsgServer)
+	// cases:
+	// 1: commit/reveal for cycle list
+	// 2: immediate reveal for cycle list
+	// 3: commit/reveal for tipped query
+	// 4: immediate reveal for tipped query
+	queryInCycleList, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	// create hash for commit
+	salt, err := oracleutils.Salt(32)
+	require.NoError(err)
+	value := encodeValue(4500)
+	hash := oracleutils.CalculateCommitment(value, salt)
+	// create commit msg
+	commit := oracletypes.MsgCommitReport{
+		Creator:   reporter.Reporter,
+		QueryData: queryInCycleList,
+		Hash:      hash,
+	}
+	// send commit tx
+	commitResponse, err := oracleMsgServer.CommitReport(s.ctx, &commit)
+	require.NoError(err)
+	require.NotNil(commitResponse)
+	commitHeight := s.ctx.BlockHeight()
+	require.Equal(int64(0), commitHeight)
+	// advance 1 block
+	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
+	// create reveal msg
+	reveal := oracletypes.MsgSubmitValue{
+		Creator:   reporter.Reporter,
+		QueryData: queryInCycleList,
+		Value:     value,
+		Salt:      salt,
+	}
+	// send reveal tx
+	revealResponse, err := oracleMsgServer.SubmitValue(s.ctx, &reveal)
+	require.NoError(err)
+	require.NotNil(revealResponse)
+	// advance time and block height to expire the query and aggregate report
+	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+	// s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	// check aggregated report
+	queryId, err := utils.QueryIDFromDataString(queryInCycleList)
+	s.NoError(err)
+
+	getAggReportRequest := oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryId),
+	}
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	require.NoError(err)
+	require.NotNil(res)
 }
 
 func (s *E2ETestSuite) TestStakeTokens() {
