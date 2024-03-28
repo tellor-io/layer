@@ -2,6 +2,7 @@ package median
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -54,7 +55,7 @@ func (s *medianServer) GetAllMedianValues(ctx context.Context, req *types.GetAll
 
 func (s *medianServer) GetMedianValue(ctx context.Context, req *types.GetMedianValueRequest) (*types.GetMedianValueResponse, error) {
 	// check if query data exists in map
-	mp, found := s.queryDataTomarketParams[req.QueryData]
+	mp, found := s.queryDataTomarketParams[hex.EncodeToString(req.QueryData)]
 	if !found {
 		return nil, fmt.Errorf("no market param found for query data: %s", req.QueryData)
 	}

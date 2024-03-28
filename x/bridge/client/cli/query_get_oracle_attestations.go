@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -32,7 +33,12 @@ func CmdGetOracleAttestations() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetOracleAttestationsRequest{QueryId: queryId, Timestamp: timestamp}
+			qIdBz, err := utils.QueryBytesFromString(queryId)
+			if err != nil {
+				return err
+			}
+
+			params := &types.QueryGetOracleAttestationsRequest{QueryId: qIdBz, Timestamp: timestamp}
 
 			res, err := queryClient.GetOracleAttestations(cmd.Context(), params)
 			if err != nil {

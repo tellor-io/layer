@@ -1,23 +1,23 @@
 package keeper
 
 import (
+	"context"
 	"errors"
 	"math"
 	"math/big"
 	"sort"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) (*types.Aggregate, error) {
+func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error) {
 	var medianReport types.Aggregate
 	values := make(map[string]*big.Int)
 
 	for _, r := range reports {
 		val, ok := new(big.Int).SetString(r.Value, 16)
 		if !ok {
-			ctx.Logger().Error("WeightedMedian", "error", "failed to parse value")
+			k.Logger(ctx).Error("WeightedMedian", "error", "failed to parse value")
 			return nil, errors.New("failed to parse value")
 		}
 		values[r.Reporter] = val

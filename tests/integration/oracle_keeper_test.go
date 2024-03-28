@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"encoding/hex"
-	"strings"
 	"testing"
 	"time"
 
@@ -40,8 +39,7 @@ func (s *IntegrationTestSuite) TestTipping() {
 	_, err := msgServer.Tip(s.ctx, &msg)
 	s.NoError(err)
 
-	queryId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
+	queryId := utils.QueryIDFromData(ethQueryData)
 
 	tips, err := s.oraclekeeper.GetQueryTip(s.ctx, queryId)
 	s.NoError(err)
@@ -67,8 +65,8 @@ func (s *IntegrationTestSuite) TestTipping() {
 	s.Equal(userTips.Total, tips)
 
 	// tip different query
-	btcQueryId, err := utils.QueryIDFromDataString(btcQueryData)
-	s.NoError(err)
+	btcQueryId := utils.QueryIDFromData(btcQueryData)
+
 	_, err = msgServer.Tip(s.ctx, &types.MsgTip{QueryData: btcQueryData, Tipper: addr.String(), Amount: tip})
 	s.NoError(err)
 	tips, err = s.oraclekeeper.GetQueryTip(s.ctx, btcQueryId)
@@ -121,8 +119,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	_, err := msgServer.Tip(s.ctx, &msg)
 	s.NoError(err)
 
-	queryId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
+	queryId := utils.QueryIDFromData(ethQueryData)
 
 	tips, err := s.oraclekeeper.GetQueryTip(s.ctx, queryId)
 	s.NoError(err)
@@ -143,7 +140,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
 	s.Nil(err)
-	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryId)})
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: queryId})
 	s.Nil(err)
 	s.Equal(res.Report.AggregateReporter, newReporter.String())
 	// tip should be 0 after aggregated report
@@ -273,7 +270,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
 	s.app.EndBlocker(s.ctx)                                             // EndBlocker aggregates reports
 	// check median
-	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	s.Nil(err)
 	expectedMedianReporterIndex := 4
@@ -282,7 +279,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
 }
 
-func report(creator, value, salt, hash, qdata string) (types.MsgCommitReport, types.MsgSubmitValue) {
+func report(creator, value, salt, hash string, qdata []byte) (types.MsgCommitReport, types.MsgSubmitValue) {
 	commit := types.MsgCommitReport{
 		Creator:   creator,
 		QueryData: qdata,
@@ -302,12 +299,12 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	// Get supported queries
 	resp, err := s.oraclekeeper.GetCyclelist(s.ctx)
 	s.NoError(err)
-	s.Equal(resp, []string{trbQueryData[2:], ethQueryData[2:], btcQueryData[2:]})
+	s.Equal(resp, [][]byte{trbQueryData, ethQueryData, btcQueryData})
 
-	matic := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	matic, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	msgContent := &types.MsgUpdateCyclelist{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		Cyclelist: []string{matic},
+		Cyclelist: [][]byte{matic},
 	}
 	proposal1, err := s.govKeeper.SubmitProposal(s.ctx, []sdk.Msg{msgContent}, "", "test", "description", accs[0], false)
 	s.NoError(err)
@@ -335,7 +332,7 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	s.True(proposal1.Status == v1.StatusPassed)
 	resp, err = s.oraclekeeper.GetCyclelist(s.ctx)
 	s.NoError(err)
-	s.Equal([]string{strings.ToLower(matic)}, resp)
+	s.Equal([][]byte{matic}, resp)
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
@@ -346,21 +343,20 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	s.NoError(err)
 
 	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
-	qId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
+	qId := utils.QueryIDFromData(ethQueryData)
 	value := []string{"000001"}
 
 	reporterPower := int64(1)
 	addr, err := createReporter(s.ctx, 1, s.reporterkeeper)
 	s.NoError(err)
 
-	reports := testutil.GenerateReports([]sdk.AccAddress{addr}, value, []int64{reporterPower}, hex.EncodeToString(qId))
+	reports := testutil.GenerateReports([]sdk.AccAddress{addr}, value, []int64{reporterPower}, qId)
 
 	bal1 := s.bankKeeper.GetBalance(s.ctx, addr, s.denom)
 
 	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
 	s.NoError(err)
-	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	s.NoError(err)
 	s.Equal(res.Report.AggregateReportIndex, int64(0), "single report should be at index 0")
 
@@ -386,8 +382,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
 	s.NoError(err)
 
-	qId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
+	qId := utils.QueryIDFromData(ethQueryData)
+
 	value := []string{"000001", "000002"}
 	reporterPower1 := int64(1)
 	reporterPower2 := int64(2)
@@ -399,7 +395,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err)
 
 	// generate 2 reports for ethQueryData
-	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2}, value, []int64{reporterPower1, reporterPower2}, hex.EncodeToString(qId))
+	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2}, value, []int64{reporterPower1, reporterPower2}, qId)
 
 	testCases := []struct {
 		name                 string
@@ -426,7 +422,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports)
 	s.NoError(err)
 
-	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
@@ -465,9 +461,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(err)
 
 	// generate 4 reports for ethQueryData
-	qId, err := utils.QueryIDFromDataString(ethQueryData)
-	s.NoError(err)
-	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2, reporterAddr3}, values, []int64{reporterPower1, reporterPower2, reporterPower3}, hex.EncodeToString(qId))
+	qId := utils.QueryIDFromData(ethQueryData)
+	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2, reporterAddr3}, values, []int64{reporterPower1, reporterPower2, reporterPower3}, qId)
 
 	testCases := []struct {
 		name                 string
@@ -500,7 +495,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	}
 	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
 
-	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, _ := s.oraclekeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
 	tbr, _ := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
 	s.NoError(err)
@@ -524,8 +519,8 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	// accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	queryData1, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
-	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	queryData3 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	queryData3, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	msg := types.MsgTip{
 		Tipper:    tipper.String(),
 		QueryData: queryData2,
@@ -570,9 +565,8 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	valAddr := valAddrs[0]
 	delegators := repAccs[1:]
 
-	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	queryId, err := utils.QueryIDFromDataString(queryData)
-	s.Nil(err)
+	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	queryId := utils.QueryIDFromData(queryData)
 
 	// tip. Using msgServer.Tip to handle the transfers and burning of tokens
 	msg := types.MsgTip{
@@ -580,7 +574,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 		QueryData: queryData,
 		Amount:    sdk.NewCoin(s.denom, tipAmount),
 	}
-	_, err = msgServer.Tip(s.ctx, &msg)
+	_, err := msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 
 	// create createReporterStakedWithValidator handles the delegation and staking plus the reporter creation
@@ -595,7 +589,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 
 	reporterPower := int64(1)
 	value := []string{"000001"}
-	reports := testutil.GenerateReports(repAccs[1:], value, []int64{reporterPower}, hex.EncodeToString(queryId))
+	reports := testutil.GenerateReports(repAccs[1:], value, []int64{reporterPower}, queryId)
 	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
@@ -644,9 +638,8 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	delegator1 := accs[1]
 	delegator2 := accs[2]
 
-	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	queryId, err := utils.QueryIDFromDataString(queryData)
-	s.Nil(err)
+	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	queryId := utils.QueryIDFromData(queryData)
 
 	// tip. Using msgServer.Tip to handle the transfers and burning of tokens
 	msg := types.MsgTip{
@@ -654,7 +647,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 		QueryData: queryData,
 		Amount:    sdk.NewCoin(s.denom, tipAmount),
 	}
-	_, err = msgServer.Tip(s.ctx, &msg)
+	_, err := msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 
 	// create createReporterStakedWithValidator handles the delegation and staking plus the reporter creation with 50 percent commission
@@ -676,7 +669,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 
 	reporterPower := int64(2) // normalize by sdk.DefaultPowerReduction
 	value := []string{"000001"}
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAcc}, value, []int64{reporterPower}, hex.EncodeToString(queryId))
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAcc}, value, []int64{reporterPower}, queryId)
 	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true

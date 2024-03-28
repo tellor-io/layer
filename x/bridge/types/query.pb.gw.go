@@ -260,15 +260,15 @@ func request_Query_GetOracleAttestations_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	val, ok = pathParams["timestamp"]
@@ -298,15 +298,15 @@ func local_request_Query_GetOracleAttestations_0(ctx context.Context, marshaler 
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	val, ok = pathParams["timestamp"]
@@ -444,15 +444,15 @@ func request_Query_GetCurrentAggregateReport_0(ctx context.Context, marshaler ru
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := client.GetCurrentAggregateReport(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -471,15 +471,15 @@ func local_request_Query_GetCurrentAggregateReport_0(ctx context.Context, marsha
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := server.GetCurrentAggregateReport(ctx, &protoReq)
@@ -498,15 +498,15 @@ func request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	val, ok = pathParams["timestamp"]
@@ -536,15 +536,15 @@ func local_request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	val, ok = pathParams["timestamp"]
@@ -1099,15 +1099,15 @@ var (
 
 	pattern_Query_GetValsetSigs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_valset_sigs", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetOracleAttestations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "bridge", "get_oracle_attestations", "queryId", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetOracleAttestations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "bridge", "get_oracle_attestations", "query_id", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetEvmAddressByValidatorAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_evm_address_by_validator_address", "validatorAddress"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetValsetByTimestamp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_valset_by_timestamp", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetCurrentAggregateReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_current_aggregate_report", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetCurrentAggregateReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_current_aggregate_report", "query_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "bridge", "get_data_before", "queryId", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "bridge", "get_data_before", "query_id", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

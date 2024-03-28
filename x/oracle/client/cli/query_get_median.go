@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 	mediantypes "github.com/tellor-io/layer/daemons/server/types"
+	"github.com/tellor-io/layer/utils"
 )
 
 var _ = strconv.Itoa(0)
@@ -26,7 +27,12 @@ func CmdGetMedianValue() *cobra.Command {
 
 			queryClient := mediantypes.NewMedianValuesServiceClient(clientCtx)
 
-			params := &mediantypes.GetMedianValueRequest{QueryData: argQueryData}
+			qData, err := utils.QueryBytesFromString(argQueryData)
+			if err != nil {
+				return err
+			}
+
+			params := &mediantypes.GetMedianValueRequest{QueryData: qData}
 
 			res, err := queryClient.GetMedianValue(cmd.Context(), params)
 			if err != nil {

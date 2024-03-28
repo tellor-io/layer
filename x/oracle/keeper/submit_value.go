@@ -1,12 +1,12 @@
 package keeper
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/oracle/utils"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +29,12 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.Q
 	if err := dataSpec.ValidateValue(val); err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to validate value: %v", err))
 	}
-	queryId := HashQueryData(queryData)
+	queryId := utils.QueryIDFromData(queryData)
 	report := types.MicroReport{
 		Reporter:        reporter.String(),
 		Power:           power,
 		QueryType:       queryType,
-		QueryId:         hex.EncodeToString(queryId),
+		QueryId:         queryId,
 		Value:           val,
 		AggregateMethod: dataSpec.AggregationMethod,
 		Timestamp:       ctx.BlockTime(),
@@ -53,7 +53,7 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.Q
 
 func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {
 	// calculate commitment
-	calculatedCommit := utils.CalculateCommitment(value, salt)
+	calculatedCommit := oracleutils.CalculateCommitment(value, salt)
 	// compare calculated commitment with the one stored
 	return calculatedCommit == hash
 }

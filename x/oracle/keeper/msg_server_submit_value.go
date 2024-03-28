@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
 	"errors"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -16,8 +15,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	layertypes "github.com/tellor-io/layer/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
@@ -46,12 +43,8 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 
 	votingPower := reporter.TotalTokens.Quo(layertypes.PowerReduction).Int64()
 	// decode query data hex string to bytes
-	msg.QueryData = utils.Remove0xPrefix(msg.QueryData)
-	qDataBytes, err := hex.DecodeString(msg.QueryData)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
-	}
-	queryId := utils.QueryIDFromData(qDataBytes)
+
+	queryId := utils.QueryIDFromData(msg.QueryData)
 
 	query, err := k.Keeper.Query.Get(ctx, queryId)
 	if err != nil {
@@ -70,8 +63,8 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 			if err != nil {
 				return nil, err
 			}
-			incycle = msg.QueryData == cycleQuery
-			err = k.directReveal(ctx, query, qDataBytes, msg.Value, reporterAddr, votingPower, incycle)
+			incycle = bytes.Equal(msg.QueryData, cycleQuery)
+			err = k.directReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, incycle)
 			if err != nil {
 				return nil, err
 			}
@@ -88,7 +81,7 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	}
 	incycle = commit.Incycle
 
-	err = k.setValue(ctx, reporterAddr, query, msg.Value, qDataBytes, votingPower, incycle)
+	err = k.setValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
 	if err != nil {
 		return nil, err
 	}

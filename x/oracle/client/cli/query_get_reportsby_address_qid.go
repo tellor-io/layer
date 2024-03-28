@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -27,10 +28,15 @@ func CmdGetReportsbyAddressQid() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
+			qIdBz, err := utils.QueryBytesFromString(reqQid)
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryGetReportsbyReporterQidRequest{
 
 				Reporter: reqAddress,
-				QueryId:  reqQid,
+				QueryId:  qIdBz,
 			}
 
 			res, err := queryClient.GetReportsbyReporterQid(cmd.Context(), params)

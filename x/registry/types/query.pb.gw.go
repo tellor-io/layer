@@ -116,15 +116,15 @@ func request_Query_DecodeQuerydata_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["querydata"]
+	val, ok = pathParams["query_data"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "querydata")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.Querydata, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "querydata", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := client.DecodeQuerydata(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -143,15 +143,15 @@ func local_request_Query_DecodeQuerydata_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["querydata"]
+	val, ok = pathParams["query_data"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "querydata")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.Querydata, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "querydata", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := server.DecodeQuerydata(ctx, &protoReq)
@@ -581,7 +581,7 @@ var (
 
 	pattern_Query_GetDataSpec_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "get_data_spec", "query_type"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DecodeQuerydata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "decode_querydata", "querydata"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DecodeQuerydata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "decode_querydata", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GenerateQuerydata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "registry", "generate_querydata", "querytype", "parameters"}, "", runtime.AssumeColonVerbOpt(false)))
 

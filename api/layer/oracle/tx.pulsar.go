@@ -960,8 +960,8 @@ func (x *fastReflection_MsgSubmitValue) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
+	if len(x.QueryData) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryData)
 		if !f(fd_MsgSubmitValue_query_data, value) {
 			return
 		}
@@ -996,7 +996,7 @@ func (x *fastReflection_MsgSubmitValue) Has(fd protoreflect.FieldDescriptor) boo
 	case "layer.oracle.MsgSubmitValue.creator":
 		return x.Creator != ""
 	case "layer.oracle.MsgSubmitValue.query_data":
-		return x.QueryData != ""
+		return len(x.QueryData) != 0
 	case "layer.oracle.MsgSubmitValue.value":
 		return x.Value != ""
 	case "layer.oracle.MsgSubmitValue.salt":
@@ -1020,7 +1020,7 @@ func (x *fastReflection_MsgSubmitValue) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.MsgSubmitValue.creator":
 		x.Creator = ""
 	case "layer.oracle.MsgSubmitValue.query_data":
-		x.QueryData = ""
+		x.QueryData = nil
 	case "layer.oracle.MsgSubmitValue.value":
 		x.Value = ""
 	case "layer.oracle.MsgSubmitValue.salt":
@@ -1046,7 +1046,7 @@ func (x *fastReflection_MsgSubmitValue) Get(descriptor protoreflect.FieldDescrip
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.MsgSubmitValue.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.MsgSubmitValue.value":
 		value := x.Value
 		return protoreflect.ValueOfString(value)
@@ -1076,7 +1076,7 @@ func (x *fastReflection_MsgSubmitValue) Set(fd protoreflect.FieldDescriptor, val
 	case "layer.oracle.MsgSubmitValue.creator":
 		x.Creator = value.Interface().(string)
 	case "layer.oracle.MsgSubmitValue.query_data":
-		x.QueryData = value.Interface().(string)
+		x.QueryData = value.Bytes()
 	case "layer.oracle.MsgSubmitValue.value":
 		x.Value = value.Interface().(string)
 	case "layer.oracle.MsgSubmitValue.salt":
@@ -1125,7 +1125,7 @@ func (x *fastReflection_MsgSubmitValue) NewField(fd protoreflect.FieldDescriptor
 	case "layer.oracle.MsgSubmitValue.creator":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MsgSubmitValue.query_data":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.MsgSubmitValue.value":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MsgSubmitValue.salt":
@@ -1357,7 +1357,7 @@ func (x *fastReflection_MsgSubmitValue) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1367,23 +1367,25 @@ func (x *fastReflection_MsgSubmitValue) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
+				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryData == nil {
+					x.QueryData = []byte{}
+				}
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -1926,8 +1928,8 @@ func (x *fastReflection_MsgCommitReport) Range(f func(protoreflect.FieldDescript
 			return
 		}
 	}
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
+	if len(x.QueryData) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryData)
 		if !f(fd_MsgCommitReport_query_data, value) {
 			return
 		}
@@ -1956,7 +1958,7 @@ func (x *fastReflection_MsgCommitReport) Has(fd protoreflect.FieldDescriptor) bo
 	case "layer.oracle.MsgCommitReport.creator":
 		return x.Creator != ""
 	case "layer.oracle.MsgCommitReport.query_data":
-		return x.QueryData != ""
+		return len(x.QueryData) != 0
 	case "layer.oracle.MsgCommitReport.hash":
 		return x.Hash != ""
 	default:
@@ -1978,7 +1980,7 @@ func (x *fastReflection_MsgCommitReport) Clear(fd protoreflect.FieldDescriptor) 
 	case "layer.oracle.MsgCommitReport.creator":
 		x.Creator = ""
 	case "layer.oracle.MsgCommitReport.query_data":
-		x.QueryData = ""
+		x.QueryData = nil
 	case "layer.oracle.MsgCommitReport.hash":
 		x.Hash = ""
 	default:
@@ -2002,7 +2004,7 @@ func (x *fastReflection_MsgCommitReport) Get(descriptor protoreflect.FieldDescri
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.MsgCommitReport.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.MsgCommitReport.hash":
 		value := x.Hash
 		return protoreflect.ValueOfString(value)
@@ -2029,7 +2031,7 @@ func (x *fastReflection_MsgCommitReport) Set(fd protoreflect.FieldDescriptor, va
 	case "layer.oracle.MsgCommitReport.creator":
 		x.Creator = value.Interface().(string)
 	case "layer.oracle.MsgCommitReport.query_data":
-		x.QueryData = value.Interface().(string)
+		x.QueryData = value.Bytes()
 	case "layer.oracle.MsgCommitReport.hash":
 		x.Hash = value.Interface().(string)
 	default:
@@ -2074,7 +2076,7 @@ func (x *fastReflection_MsgCommitReport) NewField(fd protoreflect.FieldDescripto
 	case "layer.oracle.MsgCommitReport.creator":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MsgCommitReport.query_data":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.MsgCommitReport.hash":
 		return protoreflect.ValueOfString("")
 	default:
@@ -2293,7 +2295,7 @@ func (x *fastReflection_MsgCommitReport) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2303,23 +2305,25 @@ func (x *fastReflection_MsgCommitReport) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
+				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryData == nil {
+					x.QueryData = []byte{}
+				}
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -2830,8 +2834,8 @@ func (x *fastReflection_MsgTip) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
+	if len(x.QueryData) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryData)
 		if !f(fd_MsgTip_query_data, value) {
 			return
 		}
@@ -2860,7 +2864,7 @@ func (x *fastReflection_MsgTip) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.oracle.MsgTip.tipper":
 		return x.Tipper != ""
 	case "layer.oracle.MsgTip.query_data":
-		return x.QueryData != ""
+		return len(x.QueryData) != 0
 	case "layer.oracle.MsgTip.amount":
 		return x.Amount != nil
 	default:
@@ -2882,7 +2886,7 @@ func (x *fastReflection_MsgTip) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.MsgTip.tipper":
 		x.Tipper = ""
 	case "layer.oracle.MsgTip.query_data":
-		x.QueryData = ""
+		x.QueryData = nil
 	case "layer.oracle.MsgTip.amount":
 		x.Amount = nil
 	default:
@@ -2906,7 +2910,7 @@ func (x *fastReflection_MsgTip) Get(descriptor protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.MsgTip.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.MsgTip.amount":
 		value := x.Amount
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
@@ -2933,7 +2937,7 @@ func (x *fastReflection_MsgTip) Set(fd protoreflect.FieldDescriptor, value proto
 	case "layer.oracle.MsgTip.tipper":
 		x.Tipper = value.Interface().(string)
 	case "layer.oracle.MsgTip.query_data":
-		x.QueryData = value.Interface().(string)
+		x.QueryData = value.Bytes()
 	case "layer.oracle.MsgTip.amount":
 		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
@@ -2981,7 +2985,7 @@ func (x *fastReflection_MsgTip) NewField(fd protoreflect.FieldDescriptor) protor
 	case "layer.oracle.MsgTip.tipper":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MsgTip.query_data":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.MsgTip.amount":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
@@ -3208,7 +3212,7 @@ func (x *fastReflection_MsgTip) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3218,23 +3222,25 @@ func (x *fastReflection_MsgTip) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
+				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryData == nil {
+					x.QueryData = []byte{}
+				}
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -3666,7 +3672,7 @@ func (x *fastReflection_MsgTipResponse) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_MsgUpdateCyclelist_2_list)(nil)
 
 type _MsgUpdateCyclelist_2_list struct {
-	list *[]string
+	list *[][]byte
 }
 
 func (x *_MsgUpdateCyclelist_2_list) Len() int {
@@ -3677,17 +3683,17 @@ func (x *_MsgUpdateCyclelist_2_list) Len() int {
 }
 
 func (x *_MsgUpdateCyclelist_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
+	return protoreflect.ValueOfBytes((*x.list)[i])
 }
 
 func (x *_MsgUpdateCyclelist_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
+	valueUnwrapped := value.Bytes()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_MsgUpdateCyclelist_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
+	valueUnwrapped := value.Bytes()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
@@ -3701,8 +3707,8 @@ func (x *_MsgUpdateCyclelist_2_list) Truncate(n int) {
 }
 
 func (x *_MsgUpdateCyclelist_2_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
 }
 
 func (x *_MsgUpdateCyclelist_2_list) IsValid() bool {
@@ -3911,7 +3917,7 @@ func (x *fastReflection_MsgUpdateCyclelist) Mutable(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "layer.oracle.MsgUpdateCyclelist.cyclelist":
 		if x.Cyclelist == nil {
-			x.Cyclelist = []string{}
+			x.Cyclelist = [][]byte{}
 		}
 		value := &_MsgUpdateCyclelist_2_list{list: &x.Cyclelist}
 		return protoreflect.ValueOfList(value)
@@ -3933,7 +3939,7 @@ func (x *fastReflection_MsgUpdateCyclelist) NewField(fd protoreflect.FieldDescri
 	case "layer.oracle.MsgUpdateCyclelist.authority":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MsgUpdateCyclelist.cyclelist":
-		list := []string{}
+		list := [][]byte{}
 		return protoreflect.ValueOfList(&_MsgUpdateCyclelist_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -4009,8 +4015,8 @@ func (x *fastReflection_MsgUpdateCyclelist) ProtoMethods() *protoiface.Methods {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if len(x.Cyclelist) > 0 {
-			for _, s := range x.Cyclelist {
-				l = len(s)
+			for _, b := range x.Cyclelist {
+				l = len(b)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
@@ -4144,7 +4150,7 @@ func (x *fastReflection_MsgUpdateCyclelist) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Cyclelist", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -4154,23 +4160,23 @@ func (x *fastReflection_MsgUpdateCyclelist) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Cyclelist = append(x.Cyclelist, string(dAtA[iNdEx:postIndex]))
+				x.Cyclelist = append(x.Cyclelist, make([]byte, postIndex-iNdEx))
+				copy(x.Cyclelist[len(x.Cyclelist)-1], dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -4656,7 +4662,7 @@ type MsgSubmitValue struct {
 	unknownFields protoimpl.UnknownFields
 
 	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	QueryData string `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData []byte `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	Value     string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
 	Salt      string `protobuf:"bytes,4,opt,name=salt,proto3" json:"salt,omitempty"` // hex encoded 32 bytes salt
 }
@@ -4688,11 +4694,11 @@ func (x *MsgSubmitValue) GetCreator() string {
 	return ""
 }
 
-func (x *MsgSubmitValue) GetQueryData() string {
+func (x *MsgSubmitValue) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
-	return ""
+	return nil
 }
 
 func (x *MsgSubmitValue) GetValue() string {
@@ -4741,7 +4747,7 @@ type MsgCommitReport struct {
 	unknownFields protoimpl.UnknownFields
 
 	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	QueryData string `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData []byte `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	Hash      string `protobuf:"bytes,3,opt,name=hash,proto3" json:"hash,omitempty"` // hex encoded sha256 of "salt:value"
 }
 
@@ -4772,11 +4778,11 @@ func (x *MsgCommitReport) GetCreator() string {
 	return ""
 }
 
-func (x *MsgCommitReport) GetQueryData() string {
+func (x *MsgCommitReport) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
-	return ""
+	return nil
 }
 
 func (x *MsgCommitReport) GetHash() string {
@@ -4818,7 +4824,7 @@ type MsgTip struct {
 	unknownFields protoimpl.UnknownFields
 
 	Tipper    string        `protobuf:"bytes,1,opt,name=tipper,proto3" json:"tipper,omitempty"`
-	QueryData string        `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData []byte        `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	Amount    *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
@@ -4849,11 +4855,11 @@ func (x *MsgTip) GetTipper() string {
 	return ""
 }
 
-func (x *MsgTip) GetQueryData() string {
+func (x *MsgTip) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
-	return ""
+	return nil
 }
 
 func (x *MsgTip) GetAmount() *v1beta1.Coin {
@@ -4898,7 +4904,7 @@ type MsgUpdateCyclelist struct {
 	// authority is the address that controls the module (defaults to x/gov unless overwritten).
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// list of query data hex strings
-	Cyclelist []string `protobuf:"bytes,2,rep,name=cyclelist,proto3" json:"cyclelist,omitempty"`
+	Cyclelist [][]byte `protobuf:"bytes,2,rep,name=cyclelist,proto3" json:"cyclelist,omitempty"`
 }
 
 func (x *MsgUpdateCyclelist) Reset() {
@@ -4928,7 +4934,7 @@ func (x *MsgUpdateCyclelist) GetAuthority() string {
 	return ""
 }
 
-func (x *MsgUpdateCyclelist) GetCyclelist() []string {
+func (x *MsgUpdateCyclelist) GetCyclelist() [][]byte {
 	if x != nil {
 		return x.Cyclelist
 	}
@@ -4994,7 +5000,7 @@ var file_layer_oracle_tx_proto_rawDesc = []byte{
 	0x6c, 0x75, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1d, 0x0a,
 	0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x14, 0x0a, 0x05,
+	0x0c, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x14, 0x0a, 0x05,
 	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c,
 	0x75, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x61, 0x6c, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x04, 0x73, 0x61, 0x6c, 0x74, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65,
@@ -5003,7 +5009,7 @@ var file_layer_oracle_tx_proto_rawDesc = []byte{
 	0x0a, 0x0f, 0x4d, 0x73, 0x67, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72,
 	0x74, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x71,
-	0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52,
 	0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x68, 0x61,
 	0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x68, 0x61, 0x73, 0x68, 0x3a, 0x0c,
 	0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x19, 0x0a, 0x17,
@@ -5011,7 +5017,7 @@ var file_layer_oracle_tx_proto_rawDesc = []byte{
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x85, 0x01, 0x0a, 0x06, 0x4d, 0x73, 0x67, 0x54,
 	0x69, 0x70, 0x12, 0x16, 0x0a, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x06, 0x74, 0x69, 0x70, 0x70, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09,
+	0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09,
 	0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
 	0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
@@ -5024,7 +5030,7 @@ var file_layer_oracle_tx_proto_rawDesc = []byte{
 	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
 	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
 	0x12, 0x1c, 0x0a, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20,
-	0x03, 0x28, 0x09, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x3a, 0x34,
+	0x03, 0x28, 0x0c, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x3a, 0x34,
 	0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x8a, 0xe7,
 	0xb0, 0x2a, 0x21, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x78, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c,
 	0x65, 0x2f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x79, 0x63, 0x6c, 0x65,
