@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -284,6 +285,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.String())
 }
 
+// todo: claim tbr/tips for these reports
 func (s *E2ETestSuite) TestBasicReporting() {
 	require := s.Require()
 
@@ -322,10 +324,6 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	_, err = s.stakingKeeper.EndBlocker(s.ctx)
 	s.NoError(err)
 
-	_, err = s.stakingKeeper.GetAllValidators(s.ctx)
-	require.NoError(err)
-	// fmt.Println("validatorSet: ", validatorSet)
-
 	//create a self delegated reporter from a different account
 	type Delegator struct {
 		delegatorAddress sdk.AccAddress
@@ -347,8 +345,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// define createReporterMsg params
 	var createReporterMsg reportertypes.MsgCreateReporter
 	reporterAddress := reporterDelforVal.delegatorAddress.String()
-	amount := math.NewInt(4999 * 1e6)
-	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4999 * 1e6)}
+	amount := math.NewInt(4000 * 1e6)
+	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4000 * 1e6)}
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
 	// fill in createReporterMsg
@@ -363,379 +361,228 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterDelforVal.delegatorAddress)
 	require.NoError(err)
 	require.Equal(reporter.Reporter, reporterDelforVal.delegatorAddress.String())
-	require.Equal(reporter.TotalTokens, math.NewInt(4999*1e6))
+	require.Equal(reporter.TotalTokens, math.NewInt(4000*1e6))
 	require.Equal(reporter.Jailed, false)
 	// check on reporter in Delegators collections
 	delegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterDelforVal.delegatorAddress)
 	require.NoError(err)
 	require.Equal(delegation.Reporter, reporterDelforVal.delegatorAddress.String())
-	require.Equal(delegation.Amount, math.NewInt(4999*1e6))
+	require.Equal(delegation.Amount, math.NewInt(4000*1e6))
 
 	// Report
 	// setup oracle msgServer
-	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
-	require.NotNil(oracleMsgServer)
-	// cases:
-	// 1: commit/reveal for cycle list
-	// 2: immediate reveal for cycle list
-	// 3: commit/reveal for tipped query
-	// 4: immediate reveal for tipped query
-	queryInCycleList, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
+	require.NotNil(msgServerOracle)
+	// case 1: commit/reveal for cycle list
+	queryInCycleList1, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
 	// create hash for commit
-	salt, err := oracleutils.Salt(32)
+	saltEth, err := oracleutils.Salt(32)
 	require.NoError(err)
-	value := encodeValue(4500)
-	hash := oracleutils.CalculateCommitment(value, salt)
-	// create commit msg
-	commit := oracletypes.MsgCommitReport{
+	valueEth := encodeValue(4500)
+	hashEth := oracleutils.CalculateCommitment(valueEth, saltEth)
+	// create commitEth msg
+	commitEth := oracletypes.MsgCommitReport{
 		Creator:   reporter.Reporter,
-		QueryData: queryInCycleList,
-		Hash:      hash,
+		QueryData: queryInCycleList1,
+		Hash:      hashEth,
 	}
 	// send commit tx
-	commitResponse, err := oracleMsgServer.CommitReport(s.ctx, &commit)
+	commitResponseEth, err := msgServerOracle.CommitReport(s.ctx, &commitEth)
 	require.NoError(err)
-	require.NotNil(commitResponse)
+	require.NotNil(commitResponseEth)
 	commitHeight := s.ctx.BlockHeight()
 	require.Equal(int64(0), commitHeight)
 	// advance 1 block
-	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
+	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1) // height 1
 	// create reveal msg
-	reveal := oracletypes.MsgSubmitValue{
+	revealEth := oracletypes.MsgSubmitValue{
 		Creator:   reporter.Reporter,
-		QueryData: queryInCycleList,
-		Value:     value,
-		Salt:      salt,
+		QueryData: queryInCycleList1,
+		Value:     valueEth,
+		Salt:      saltEth,
 	}
 	// send reveal tx
-	revealResponse, err := oracleMsgServer.SubmitValue(s.ctx, &reveal)
+	revealResponseEth, err := msgServerOracle.SubmitValue(s.ctx, &revealEth)
 	require.NoError(err)
-	require.NotNil(revealResponse)
+	require.NotNil(revealResponseEth)
 	// advance time and block height to expire the query and aggregate report
-	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
-	// s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	// check aggregated report
-	queryId, err := utils.QueryIDFromDataString(queryInCycleList)
+	// get queryId for GetAggregatedReportRequest
+	queryIdEth, err := utils.QueryIDFromDataString(queryInCycleList1)
 	s.NoError(err)
-
-	getAggReportRequest := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryId),
+	// check that aggregated report is stored
+	getAggReportRequestEth := oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryIdEth),
 	}
-	res, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	resultEth, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestEth)
 	require.NoError(err)
-	require.NotNil(res)
+	require.Equal(resultEth.Report.Height, int64(1))
+	require.Equal(resultEth.Report.AggregateReportIndex, int64(0))
+	require.Equal(resultEth.Report.AggregateValue, encodeValue(4500))
+	require.Equal(resultEth.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(resultEth.Report.QueryId, hex.EncodeToString(queryIdEth))
+	require.Equal(int64(4000), resultEth.Report.ReporterPower)
+
+	// case 2: submit without committing for cycle list
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1) // height 2
+	// get new cycle list query data
+	queryInCycleList2, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	require.NotEqual(queryInCycleList1, queryInCycleList2)
+	// create reveal message
+	valueBtc := encodeValue(100_000)
+	require.NoError(err)
+	revealBtc := oracletypes.MsgSubmitValue{
+		Creator:   reporter.Reporter,
+		QueryData: queryInCycleList2,
+		Value:     valueBtc,
+	}
+	// send reveal message
+	revealResponseBtc, err := msgServerOracle.SubmitValue(s.ctx, &revealBtc)
+	require.NoError(err)
+	require.NotNil(revealResponseBtc)
+	// advance time and block height to expire the query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+	// get queryId for GetAggregatedReportRequest
+	queryIdBtc, err := utils.QueryIDFromDataString(queryInCycleList2)
+	s.NoError(err)
+	// create get aggregated report query
+	getAggReportRequestBtc := oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryIdBtc),
+	}
+	// check that aggregated report is stored correctly
+	resultBtc, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestBtc)
+	require.NoError(err)
+	require.Equal(int64(0), resultBtc.Report.AggregateReportIndex)
+	require.Equal(encodeValue(100_000), resultBtc.Report.AggregateValue)
+	require.Equal(reporter.Reporter, resultBtc.Report.AggregateReporter)
+	require.Equal(hex.EncodeToString(queryIdBtc), resultBtc.Report.QueryId)
+	require.Equal(int64(4000), resultBtc.Report.ReporterPower)
+	require.Equal(int64(2), resultBtc.Report.Height)
+
+	// case 3: commit/reveal for tipped query
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1) // height 3
+	// create tip msg
+	tipAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))
+	msgTip := oracletypes.MsgTip{
+		Tipper:    reporter.Reporter,
+		QueryData: queryInCycleList1,
+		Amount:    tipAmount,
+	}
+	// send tip tx
+	tipRes, err := msgServerOracle.Tip(s.ctx, &msgTip)
+	require.NoError(err)
+	require.NotNil(tipRes)
+	// check that tip is in oracle module account
+	tipModuleAcct := s.accountKeeper.GetModuleAddress(oracletypes.ModuleName)
+	tipAcctBalance := s.bankKeeper.GetBalance(s.ctx, tipModuleAcct, sdk.DefaultBondDenom)
+	require.Equal(tipAcctBalance, tipAmount)
+	// create commit for tipped eth query
+	saltEth, err = oracleutils.Salt(32)
+	require.NoError(err)
+	valueEth = encodeValue(5000)
+	hashEth = oracleutils.CalculateCommitment(valueEth, saltEth)
+	commitEth = oracletypes.MsgCommitReport{
+		Creator:   reporter.Reporter,
+		QueryData: queryInCycleList1,
+		Hash:      hashEth,
+	}
+	// send commit tx
+	commitResponseEth, err = msgServerOracle.CommitReport(s.ctx, &commitEth)
+	require.NoError(err)
+	require.NotNil(commitResponseEth)
+	commitHeight = s.ctx.BlockHeight()
+	require.Equal(int64(3), commitHeight)
+	// advance 1 block
+	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1) // height 4
+	// create reveal msg
+	valueEth = encodeValue(5000)
+	revealEth = oracletypes.MsgSubmitValue{
+		Creator:   reporter.Reporter,
+		QueryData: queryInCycleList1,
+		Value:     valueEth,
+		Salt:      saltEth,
+	}
+	// send reveal tx
+	revealResponseEth, err = msgServerOracle.SubmitValue(s.ctx, &revealEth)
+	require.NoError(err)
+	require.NotNil(revealResponseEth)
+	// advance time and block height to expire the query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+	// create get aggreagted report query
+	getAggReportRequestEth = oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryIdEth),
+	}
+	// check that the aggregated report is stored correctly
+	resultEth, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestEth)
+	require.NoError(err)
+	require.Equal(resultEth.Report.AggregateReportIndex, int64(0))
+	require.Equal(resultEth.Report.AggregateValue, encodeValue(5000))
+	require.Equal(resultEth.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(hex.EncodeToString(queryIdEth), resultEth.Report.QueryId)
+	require.Equal(int64(4000), resultEth.Report.ReporterPower)
+	require.Equal(int64(4), resultEth.Report.Height)
+
+	// case 4: submit without committing for tipped query
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1) // height 5
+	// create tip msg
+	msgTip = oracletypes.MsgTip{
+		Tipper:    reporter.Reporter,
+		QueryData: trbQueryData,
+		Amount:    tipAmount,
+	}
+	// send tip tx
+	tipRes, err = msgServerOracle.Tip(s.ctx, &msgTip)
+	require.NoError(err)
+	require.NotNil(tipRes)
+	// check that tip is in oracle module account
+	tipModuleAcct = s.accountKeeper.GetModuleAddress(oracletypes.ModuleName)
+	tipAcctBalance = s.bankKeeper.GetBalance(s.ctx, tipModuleAcct, sdk.DefaultBondDenom)
+	require.Equal(tipAcctBalance, tipAmount)
+	// create submit msg
+	revealMsgTrb := oracletypes.MsgSubmitValue{
+		Creator:   reporter.Reporter,
+		QueryData: trbQueryData,
+		Value:     encodeValue(1_000_000),
+	}
+	// send submit msg
+	revealTrb, err := msgServerOracle.SubmitValue(s.ctx, &revealMsgTrb)
+	require.NoError(err)
+	require.NotNil(revealTrb)
+	// advance time and block height to expire the query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+	// get trb query id
+	queryIdTrb, err := utils.QueryIDFromDataString(trbQueryData)
+	s.NoError(err)
+	// create get aggregated report query
+	getAggReportRequestTrb := oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryIdTrb),
+	}
+	// query aggregated report
+	resultTrb, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestTrb)
+	require.NoError(err)
+	require.Equal(resultTrb.Report.AggregateReportIndex, int64(0))
+	require.Equal(resultTrb.Report.AggregateValue, encodeValue(1_000_000))
+	require.Equal(resultTrb.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(hex.EncodeToString(queryIdTrb), resultTrb.Report.QueryId)
+	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
+	require.Equal(int64(5), resultTrb.Report.Height)
 }
 
-func (s *E2ETestSuite) TestStakeTokens() {
-	// require := s.Require()
-
-	// accountAddrs, validatorAddrs := s.createValidators([]int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
-	// for i := range accountAddrs {
-	// 	validator, err := s.stakingKeeper.Validator(s.ctx, validatorAddrs[i])
-	// 	status := validator.GetStatus()
-	// 	require.Nil(err)
-	// 	require.Equal(stakingtypes.Bonded.String(), status.String())
-	// }
-
-	// // self-delegate
-	// val, err := s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	// require.Nil(err)
-	// power := val.GetConsensusPower(sdk.DefaultPowerReduction) // start with 10
-	// require.Equal(math.NewInt(10), math.NewInt(power))
-	// _, err = s.stakingKeeper.Delegate(s.ctx, accountAddrs[0], math.NewInt(10*1e6), stakingtypes.Unbonded, val, true) // delegate 10
-	// require.Nil(err)
-	// val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	// require.Nil(err)
-	// actualPower := val.GetConsensusPower(sdk.DefaultPowerReduction)                                                                  // 20
-	// expectedPower := math.NewInt(power).Add(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e6), sdk.DefaultPowerReduction))) // 20
-	// require.Equal(expectedPower, math.NewInt(actualPower))
-
-	// // undelegate 1 of self-delegated stake
-	// power = val.GetConsensusPower(sdk.DefaultPowerReduction) // 20
-	// sharesAmount, err := s.stakingKeeper.ValidateUnbondAmount(
-	// 	s.ctx, accountAddrs[1], validatorAddrs[0], math.NewInt(10*1e5),
-	// )
-	// require.Nil(err)
-	// _, _, err = s.stakingKeeper.Undelegate(s.ctx, accountAddrs[0], validatorAddrs[0], sharesAmount) // undelegate 1
-	// require.Nil(err)
-
-	// unbondingAmount, err := s.stakingKeeper.GetDelegatorUnbonding(s.ctx, accountAddrs[0])
-	// fmt.Println("unbondingAmount: ", unbondingAmount)
-	// require.Nil(err)
-	// currentTime := s.ctx.BlockTime()
-	// fmt.Println("current time: ", currentTime)
-	// unbondingDelegation, err := s.stakingKeeper.GetAllUnbondingDelegations(s.ctx, accountAddrs[0])
-	// require.Nil(err)
-	// fmt.Println("unbondingDelegation: ", unbondingDelegation)
-
-	// val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	// require.Nil(err)
-	// actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction)                                                                  // 19
-	// expectedPower = math.NewInt(power).Sub(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e5), sdk.DefaultPowerReduction))) // 19
-	// require.Equal(expectedPower, math.NewInt(actualPower))
-
-	// // delegate from validator 1 to validator 0
-	// val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	// require.Nil(err)
-	// power = val.GetConsensusPower(sdk.DefaultPowerReduction)                                                         // 19
-	// _, err = s.stakingKeeper.Delegate(s.ctx, accountAddrs[1], math.NewInt(10*1e6), stakingtypes.Unbonded, val, true) // delegate 10
-	// require.Nil(err)
-	// val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	// require.Nil(err)
-	// actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction)                                                                  // 29
-	// expectedPower = math.NewInt(power).Add(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e6), sdk.DefaultPowerReduction))) // 29
-	// require.Equal(expectedPower, math.NewInt(actualPower))
-
-	// // undelegate from validator 1 to validator 0
-	// power = val.GetConsensusPower(sdk.DefaultPowerReduction) // 29
-	// sharesAmount, err = s.stakingKeeper.ValidateUnbondAmount(
-	// 	s.ctx, accountAddrs[1], validatorAddrs[0], math.NewInt(10*1e5),
-	// )
-	// require.Nil(err)
-	// // sharesAmount = math.LegacyNewDecFromInt(math.NewInt(1))
-	// _, _, err = s.stakingKeeper.Undelegate(s.ctx, accountAddrs[1], validatorAddrs[0], sharesAmount)
-	// require.Nil(err)
-
-	// unbondingAmount, err = s.stakingKeeper.GetDelegatorUnbonding(s.ctx, accountAddrs[1])
-	// fmt.Println("unbondingAmount: ", unbondingAmount)
-	// require.Nil(err)
-	// currentTime = s.ctx.BlockTime()
-	// fmt.Println("current time: ", currentTime)
-	// unbondingDelegation, err = s.stakingKeeper.GetAllUnbondingDelegations(s.ctx, accountAddrs[1])
-	// require.Nil(err)
-	// fmt.Println("unbondingDelegation: ", unbondingDelegation)
-
-	// val, err = s.stakingKeeper.GetValidator(s.ctx, validatorAddrs[0])
-	// require.Nil(err)
-	// actualPower = val.GetConsensusPower(sdk.DefaultPowerReduction) // should be 28 ?
-	// fmt.Println("actual power: ", actualPower)
-	// expectedPower = math.NewInt(power).Sub(math.NewInt(sdk.TokensToConsensusPower(math.NewInt(10*1e5), sdk.DefaultPowerReduction))) // 28
-	// fmt.Println("expected power: ", expectedPower)
-	// require.Equal(expectedPower, math.NewInt(actualPower))
-
-}
-
-func (s *E2ETestSuite) TestTipSubmit() {
-	// currentTime := s.ctx.BlockTime()
-	// fmt.Println(currentTime)
-	// s.ctx = s.ctx.WithBlockTime(currentTime.Add(600 * time.Second)) // add 10 minutes
-	// newTime := s.ctx.BlockTime()
-	// fmt.Println(newTime)
-
-	// require := s.Require()
-	// _, msgServerOracle := s.oracleKeeper()
-	// require.NotNil(msgServerOracle)
-	// currentQuery := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
-	// queryDataBytes, err := hex.DecodeString(currentQuery[2:])
-	// require.Nil(err)
-	// _ = crypto.Keccak256(queryDataBytes)
-	// // queryId := hex.EncodeToString(queryIdBytes)
-
-	// accountAddrs, validatorAddrs := s.createValidators([]int64{10, 20, 30, 40, 50, 60, 70, 80, 90, 100})
-	// for i := range accountAddrs {
-	// 	validator, err := s.stakingKeeper.Validator(s.ctx, validatorAddrs[i])
-	// 	status := validator.GetStatus()
-	// 	require.Nil(err)
-	// 	require.Equal(stakingtypes.Bonded.String(), status.String())
-	// }
-
-	// // commit
-	// err = CommitReport(s.ctx, string(accountAddrs[0].String()), currentQuery, msgServerOracle)
-	// require.Nil(err)
-
-	// commit, err := s.oraclekeeper.GetCommit(s.ctx, accountAddrs[0], queryIdBytes)
-	// require.Nil(err)
-	// require.NotNil(commit)
-	// fmt.Println("commit: ", commit)
-
-	// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	// valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
-	// s.Nil(err)
-	// salt, err := utils.Salt(32)
-	// s.Nil(err)
-	// hash := utils.CalculateCommitment(string(valueDecoded), salt)
-	// s.Nil(err)
-	// // commit report with query data in cycle list
-	// commitreq := &oracletypes.MsgCommitReport{
-	// 	Creator:   accountAddrs[0].String(),
-	// 	QueryData: currentQuery,
-	// 	Hash:      hash,
-	// }
-	// _, err = msgServerOracle.CommitReport(s.ctx, commitreq)
-	// require.Nil(err)
-
-	// // submit
-	// var submitreq types.MsgSubmitValue
-	// var submitres types.MsgSubmitValueResponse
-
-	// height := s.ctx.BlockHeight() + 1
-	// s.ctx = s.ctx.WithBlockHeight(height)
-	// // Submit value transaction with value revealed, this checks if the value is correctly hashed
-	// submitreq.Creator = Addr.String()
-	// submitreq.QueryData = queryData
-	// submitreq.Value = value
-	// submitreq.Salt = salt
-	// res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	// require.Equal(&submitres, res)
-	// require.Nil(err)
-	// report, err := s.oracleKeeper.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"})
-	// require.Nil(err)
-	// microReport := types.MicroReport{
-	// 	Reporter:        Addr.String(),
-	// 	Power:           1000000000000,
-	// 	QueryType:       "SpotPrice",
-	// 	QueryId:         "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-	// 	AggregateMethod: "weighted-median",
-	// 	Value:           value,
-	// 	BlockNumber:     s.ctx.BlockHeight(),
-	// 	Timestamp:       s.ctx.BlockTime(),
-	// }
-	// expectedReport := types.QueryGetReportsbyQidResponse{
-	// 	Reports: types.Reports{
-	// 		MicroReports: []*types.MicroReport{&microReport},
-	// 	},
-	// }
-	// require.Equal(&expectedReport, report)
-
-}
+// todo: dispute test
 
 func (s *E2ETestSuite) TestDisputes() {
 	require := s.Require()
 	_, msgServerDispute := s.disputeKeeper()
 	require.NotNil(msgServerDispute)
 
-	// // create dispute
-	// var disputeReq disputetypes.MsgDispute
-	// var disputeRes disputetypes.MsgDisputeResponse
-	// disputeReq.Creator = accountAddrs[0].String()
-	// disputeReq.QueryId = currentQuery.QueryId
-	// disputeReq.DisputeType = "query"
-	// disputeReq.DisputeId = "1"
-	// disputeReq.Value = ""
 }
-
-// get delegation
-// call slash
-
-// func (s *E2ETestSuite) TestTipCommitReveal() {
-// require := s.Require()
-
-// // set up keepers and msg servers
-// oraclekeeper, msgServerOracle := s.oracleKeeper()
-// require.NotNil(msgServerOracle)
-// require.NotNil(oraclekeeper)
-// disputekeeper, msgServerDispute := s.disputeKeeper()
-// require.NotNil(msgServerDispute)
-// require.NotNil(disputekeeper)
-// registrykeeper, msgServerRegistry := s.registryKeeper()
-// require.NotNil(msgServerRegistry)
-// require.NotNil(registrykeeper)
-
-// // register a spec spec1
-// spec1 := registrytypes.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
-// specInput := &registrytypes.MsgRegisterSpec{
-// 	Registrar: "creator1",
-// 	QueryType: "NewQueryType",
-// 	Spec:      spec1,
-// }
-// registerSpecResult, err := msgServerRegistry.RegisterSpec(s.ctx, specInput)
-// require.NoError(err)
-// require.NotNil(s.T(), registerSpecResult)
-
-// // create account that will become validator
-// accAddr, valPrivKey, valPubKey := s.newKeysWithTokens()
-// account := authtypes.BaseAccount{
-// 	Address: accAddr.String(),
-// 	PubKey:  codectypes.UnsafePackAny(valPubKey),
-// }
-// s.accountKeeper.SetAccount(s.ctx, &account)
-// valAddr := sdk.ValAddress(accAddr)
-
-// // stake the validator
-// val, err := stakingtypes.NewValidator(valAddr.String(), valPubKey, stakingtypes.Description{})
-// require.NoError(err)
-// s.stakingKeeper.SetValidator(s.ctx, val)
-// s.stakingKeeper.SetValidatorByConsAddr(s.ctx, val)
-// s.stakingKeeper.SetValidatorByPowerIndex(s.ctx, val)
-// _, err = s.stakingKeeper.Delegate(s.ctx, accAddr, math.NewInt(1000000), stakingtypes.Unbonded, val, true)
-// require.NoError(err)
-// _ = sdk.EndBlocker(s.app.EndBlocker) // updates validator set
-// validator, err := s.stakingKeeper.Validator(s.ctx, valAddr)
-// require.NoError(err)
-// status := validator.GetStatus()
-// require.Equal(stakingtypes.Bonded.String(), status.String())
-
-// // create commit contents
-// value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-// // var commitreq oracletypes.MsgCommitReport
-// valueDecoded, err := hex.DecodeString(value)
-// require.Nil(err)
-// signature, err := valPrivKey.Sign(valueDecoded)
-// require.Nil(err)
-// require.NotNil(s.T(), signature)
-
-// set commit contents
-// commitreq.Creator = accAddr.String()
-// commitreq.QueryData = queryData.QueryData
-// commitreq.Hash = hex.EncodeToString(signature)
-
-// // commit report
-// _, err = msgServerOracle.CommitReport(s.ctx, &commitreq)
-// require.Nil(err)
-// _hexxy, _ := hex.DecodeString(queryData.QueryData)
-
-// // get commit value
-// commitValue, err := s.oraclekeeper.GetCommit(s.ctx, sdk.AccAddress(valAddr), keeper.HashQueryData(_hexxy))
-// fmt.Println("commitValue: ", commitValue)
-// require.Nil(err)
-// require.NotNil(s.T(), commitValue)
-
-// // verify commit
-// ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*2 + 1))
-// require.Equal(true, s.oraclekeeper.VerifySignature(s.ctx, accAddr.String(), value, commitValue.Report.Hash))
-// require.Equal(commitValue.Report.Creator, accAddr.String())
-
-// reportFromQiD, err := s.oraclekeeper.GetReportsbyQid(ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
-// require.Nil(err)
-// fmt.Println("reportFromQiD: ", reportFromQiD) // empty right now ?
-
-// var submitreq oracletypes.MsgSubmitValue
-// var submitres oracletypes.MsgSubmitValueResponse
-// // forward block by 1 and reveal value
-// height := s.ctx.BlockHeight() + 1
-// s.ctx = s.ctx.WithBlockHeight(height)
-// // Submit value transaction with value revealed, this checks if the value is correctly signed
-// submitreq.Creator = accAddr.String()
-// submitreq.QueryData = queryData.QueryData
-// submitreq.Value = value
-// res, err := msgServerOracle.SubmitValue(sdk.WrapSDKContext(s.ctx), &submitreq)
-// require.Equal(&submitres, res)
-// require.Nil(err)
-// report, err := oraclekeeper.GetReportsbyQid(s.ctx, &oracletypes.QueryGetReportsbyQidRequest{QueryId: registerQueryResult.QueryId})
-// require.Nil(err)
-// fmt.Println("report: ", report)
-// expectedPower := sdk.TokensToConsensusPower(math.NewInt(1000000), sdk.DefaultPowerReduction)
-
-// microReport := oracletypes.MicroReport{
-// 	Reporter:        accAddr.String(),
-// 	Power:           expectedPower,
-// 	QueryType:       "NewQueryType",
-// 	QueryId:         registerQueryResult.QueryId,
-// 	AggregateMethod: "weighted-median",
-// 	Value:           value,
-// 	BlockNumber:     s.ctx.BlockHeight(),
-// 	Timestamp:       s.ctx.BlockTime(),
-// }
-// expectedReport := oracletypes.QueryGetReportsbyQidResponse{
-// 	Reports: oracletypes.Reports{
-// 		MicroReports: []*oracletypes.MicroReport{&microReport},
-// 	},
-// }
-// require.Equal(&expectedReport, report)
-
-// create dispute
-// var disputeReq disputetypes.MsgDispute
-// }
