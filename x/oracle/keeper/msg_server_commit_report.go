@@ -63,6 +63,22 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	// bool to check if query is in cycle
 	incycle := msg.QueryData == cycleQuery
 
+	if !incycle {
+		k.Logger(ctx).Info("query not in cycle")
+	}
+
+	k.Logger(ctx).Info("Expiration", "exp", query.Expiration)
+	k.Logger(ctx).Info("BlockTime", "blocktime", ctx.BlockTime())
+	k.Logger(ctx).Info("offset", "offset", offset)
+
+	if query.Expiration.Before(ctx.BlockTime()) {
+		k.Logger(ctx).Info("query expired")
+	}
+
+	if query.Amount.IsZero() {
+		k.Logger(ctx).Info("query does not have tips and is not in cycle")
+	}
+
 	if query.Amount.IsZero() && query.Expiration.Before(ctx.BlockTime()) && !incycle {
 		return nil, types.ErrNoTipsNotInCycle.Wrapf("query does not have tips and is not in cycle")
 	}
@@ -84,7 +100,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		query.Id = nextId
 		// reset query fields when generating next id
 		query.HasRevealedReports = false
-		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
+		query.Expiration = ctx.BlockTime().Add(offset)
 		err = k.Query.Set(ctx, queryId, query)
 		if err != nil {
 			return nil, err
