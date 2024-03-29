@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"time"
 
 	gomath "math"
 
@@ -44,6 +45,9 @@ type (
 		OracleAttestationsMap        collections.Map[string, types.OracleAttestations]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
 		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
+		AttestSnapshotsByReportMap   collections.Map[string, types.AttestationSnapshots]
+		AttestSnapshotDataMap        collections.Map[string, types.AttestationSnapshotData]
+		SnapshotToAttestationsMap    collections.Map[string, types.OracleAttestations]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -73,6 +77,9 @@ func NewKeeper(
 		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
+		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.StringKey, codec.CollValue[types.AttestationSnapshots](cdc)),
+		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.StringKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
+		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
@@ -871,4 +878,208 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr stri
 		}
 	}
 	return false, -1, nil
+}
+
+func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.Time) error {
+	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
+		return err
+	}
+	// get the current validator checkpoint
+	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting validator checkpoint from storage", "error", err)
+		return err
+	}
+
+	tsBefore, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timestamp)
+	if err != nil {
+		tsBefore = time.Unix(0, 0)
+	}
+
+	tsAfter, err := k.oracleKeeper.GetTimestampAfter(ctx, queryId, timestamp)
+	if err != nil {
+		tsAfter = time.Unix(0, 0)
+	}
+
+	snapshotBytes, err := k.EncodeOracleAttestationData(
+		hex.EncodeToString(queryId),
+		aggReport.AggregateValue,
+		timestamp.Unix(),
+		aggReport.ReporterPower,
+		tsBefore.Unix(),
+		tsAfter.Unix(),
+		hex.EncodeToString(validatorCheckpoint.Checkpoint),
+		timestamp.Unix(),
+	)
+	if err != nil {
+		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
+		return err
+	}
+
+	// set snapshot by report
+	key := hex.EncodeToString(crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix()))))
+	// check if map for this key exists, otherwise create a new map
+	exists, err := k.AttestSnapshotsByReportMap.Has(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if attestation snapshots by report map exists", "error", err)
+		return err
+	}
+	if !exists {
+		attestationSnapshots := types.NewAttestationSnapshots()
+		err = k.AttestSnapshotsByReportMap.Set(ctx, key, *attestationSnapshots)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting attestation snapshots by report", "error", err)
+			return err
+		}
+	}
+	attestationSnapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting attestation snapshots by report", "error", err)
+		return err
+	}
+	// set the snapshot by report
+	attestationSnapshots.SetSnapshot(snapshotBytes)
+	err = k.AttestSnapshotsByReportMap.Set(ctx, key, attestationSnapshots)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting attestation snapshots by report", "error", err)
+		return err
+	}
+
+	// set snapshot to snapshot data map
+	snapshotData := types.AttestationSnapshotData{
+		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
+		AttestationTimestamp: timestamp.Unix(),
+		PrevReportTimestamp:  tsBefore.Unix(),
+		NextReportTimestamp:  tsAfter.Unix(),
+	}
+	err = k.AttestSnapshotDataMap.Set(ctx, hex.EncodeToString(snapshotBytes), snapshotData)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting attestation snapshot data", "error", err)
+		return err
+	}
+
+	// initialize snapshot to attestations map
+	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+		return err
+	}
+	oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
+	// set the map
+	err = k.SnapshotToAttestationsMap.Set(ctx, hex.EncodeToString(snapshotBytes), *oracleAttestations)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) EncodeOracleAttestationData(
+	queryId string,
+	value string,
+	timestamp int64,
+	aggregatePower int64,
+	previousTimestamp int64,
+	nextTimestamp int64,
+	valsetCheckpoint string,
+	attestationTimestamp int64,
+) ([]byte, error) {
+	// domainSeparator is bytes "tellorNewReport"
+	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR, err := hex.DecodeString(domainSep)
+	if err != nil {
+		return nil, err
+	}
+	// Convert domain separator to bytes32
+	var domainSepBytes32 [32]byte
+	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
+
+	// Convert queryId to bytes32
+	queryIdBytes, err := hex.DecodeString(queryId)
+	if err != nil {
+		return nil, err
+	}
+	var queryIdBytes32 [32]byte
+	copy(queryIdBytes32[:], queryIdBytes)
+
+	// Convert value to bytes
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert timestamp to uint64
+	timestampUint64 := new(big.Int)
+	timestampUint64.SetInt64(timestamp)
+
+	// Convert aggregatePower to uint64
+	aggregatePowerUint64 := new(big.Int)
+	aggregatePowerUint64.SetInt64(aggregatePower)
+
+	// Convert previousTimestamp to uint64
+	previousTimestampUint64 := new(big.Int)
+	previousTimestampUint64.SetInt64(previousTimestamp)
+
+	// Convert nextTimestamp to uint64
+	nextTimestampUint64 := new(big.Int)
+	nextTimestampUint64.SetInt64(nextTimestamp)
+
+	// Convert valsetCheckpoint to bytes32
+	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
+	if err != nil {
+		return nil, err
+	}
+	var valsetCheckpointBytes32 [32]byte
+	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
+
+	// Convert attestationTimestamp to uint64
+	attestationTimestampUint64 := new(big.Int)
+	attestationTimestampUint64.SetInt64(attestationTimestamp)
+
+	// Prepare Encoding
+	Bytes32Type, err := abi.NewType("bytes32", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	arguments := abi.Arguments{
+		{Type: Bytes32Type},
+		{Type: Bytes32Type},
+		{Type: BytesType},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Bytes32Type},
+		{Type: Uint256Type},
+	}
+
+	// Encode the data
+	encodedData, err := arguments.Pack(
+		domainSepBytes32,
+		queryIdBytes32,
+		valueBytes,
+		timestampUint64,
+		aggregatePowerUint64,
+		previousTimestampUint64,
+		nextTimestampUint64,
+		valsetCheckpointBytes32,
+		attestationTimestampUint64,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleAttestationHash := crypto.Keccak256(encodedData)
+	return oracleAttestationHash, nil
 }

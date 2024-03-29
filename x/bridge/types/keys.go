@@ -28,4 +28,7 @@ var (
 	OracleAttestationsMapKey        = collections.NewPrefix(8)  // Prefix for oracle_attestations_map key
 	BridgeValsetByTimestampMapKey   = collections.NewPrefix(9)  // Prefix for bridge_valset_by_timestamp_map key
 	ValsetTimestampToIdxMapKey      = collections.NewPrefix(10) // Prefix for valset_timestamp_to_idx_map key
+	AttestSnapshotsByReportMapKey   = collections.NewPrefix(11) // Prefix for attest_snapshots_by_report_map key
+	AttestSnapshotDataMapKey        = collections.NewPrefix(12) // Prefix for attest_snapshot_data_map key
+	SnapshotToAttestationsMapKey    = collections.NewPrefix(13) // Prefix for snapshot_to_attestations_map key
 )
