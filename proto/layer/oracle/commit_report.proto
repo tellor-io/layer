@@ -7,7 +7,7 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message Commit {
   string reporter = 1;
-  bytes queryId = 2;
+  bytes query_id = 2;
   string hash = 3;
   bool incycle = 4;
 }

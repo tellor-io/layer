@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -32,8 +33,13 @@ func CmdGetDataBefore() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
+			queryId, err := utils.QueryBytesFromString(reqQueryId)
+			if err != nil {
+				return err
+			}
+
 			params := &types.QueryGetDataBeforeRequest{
-				QueryId:   reqQueryId,
+				QueryId:   queryId,
 				Timestamp: reqTimestamp,
 			}
 

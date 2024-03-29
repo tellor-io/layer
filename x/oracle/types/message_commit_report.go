@@ -4,6 +4,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tellor-io/layer/utils"
 )
 
 const TypeMsgCommitReport = "commit_report"
@@ -11,9 +12,14 @@ const TypeMsgCommitReport = "commit_report"
 var _ sdk.Msg = &MsgCommitReport{}
 
 func NewMsgCommitReport(creator string, queryData string, hash string) *MsgCommitReport {
+	qDataBz, err := utils.QueryBytesFromString(queryData)
+	if err != nil {
+		panic(err)
+	}
+
 	return &MsgCommitReport{
 		Creator:   creator,
-		QueryData: queryData,
+		QueryData: qDataBz,
 		Hash:      hash,
 	}
 }
@@ -52,7 +58,7 @@ func (msg *MsgCommitReport) GetSignerAndValidateMsg() (sdk.AccAddress, error) {
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	if msg.QueryData == "" {
+	if len(msg.QueryData) == 0 {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data field cannot be empty")
 	}
 	if msg.Hash == "" {

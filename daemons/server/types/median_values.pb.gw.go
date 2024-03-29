@@ -67,7 +67,7 @@ func request_MedianValuesService_GetMedianValue_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
@@ -94,7 +94,7 @@ func local_request_MedianValuesService_GetMedianValue_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)

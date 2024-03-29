@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"encoding/hex"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -11,7 +13,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	for i := 0; i < 10; i++ {
 		reporters[i] = sample.AccAddressBytes()
 	}
-	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	// normal scenario
 	// list of reports
 	expectedReporter := reporters[3].String()
@@ -65,7 +67,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Report.AggregateReportIndex, int64(3), "report index is not correct")
 
 	// scenario where mode is not decided by most powerful reporter
-	qId2 := "a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac"
+	qId2, _ := hex.DecodeString("a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac")
 	expectedReporter = reporters[6].String()
 	reports = []types.MicroReport{
 		{

@@ -22,7 +22,7 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 	tipper := sdk.MustAccAddressFromBech32(req.Tipper)
 
 	var totalTips types.UserTipTotal
-	if req.QueryData == "" {
+	if len(req.QueryData) == 0 {
 		// if query data is not provide, return total tips for the tipper on all queries
 		totalTips, err := k.GetUserTips(ctx, tipper)
 		if err != nil {
@@ -31,12 +31,8 @@ func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTi
 		return &types.QueryGetUserTipTotalResponse{TotalTips: &totalTips}, nil
 	}
 	// if query data is provided, return total tips for the tipper on the specific query
-	queryId, err := utils.QueryIDFromDataString(req.QueryData)
-	if err != nil {
-		return nil, err
-	}
+	queryId := utils.QueryIDFromData(req.QueryData)
 
-	// TODO: figure out query id here
 	tip, err := k.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {

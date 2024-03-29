@@ -9,8 +9,8 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Tips is a struct that contains the query data and the amount it was tipped
 message Tips {
-  // queryData is the query data that was tipped
-  string query_data = 1;
+  // query_data is the query data that was tipped
+  bytes query_data = 1;
   // the amount that was tipped
   string amount = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",

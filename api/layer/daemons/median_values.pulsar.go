@@ -1440,8 +1440,8 @@ func (x *fastReflection_GetMedianValueRequest) Interface() protoreflect.ProtoMes
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_GetMedianValueRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
+	if len(x.QueryData) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryData)
 		if !f(fd_GetMedianValueRequest_query_data, value) {
 			return
 		}
@@ -1462,7 +1462,7 @@ func (x *fastReflection_GetMedianValueRequest) Range(f func(protoreflect.FieldDe
 func (x *fastReflection_GetMedianValueRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.daemons.GetMedianValueRequest.query_data":
-		return x.QueryData != ""
+		return len(x.QueryData) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.daemons.GetMedianValueRequest"))
@@ -1480,7 +1480,7 @@ func (x *fastReflection_GetMedianValueRequest) Has(fd protoreflect.FieldDescript
 func (x *fastReflection_GetMedianValueRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.daemons.GetMedianValueRequest.query_data":
-		x.QueryData = ""
+		x.QueryData = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.daemons.GetMedianValueRequest"))
@@ -1499,7 +1499,7 @@ func (x *fastReflection_GetMedianValueRequest) Get(descriptor protoreflect.Field
 	switch descriptor.FullName() {
 	case "layer.daemons.GetMedianValueRequest.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.daemons.GetMedianValueRequest"))
@@ -1521,7 +1521,7 @@ func (x *fastReflection_GetMedianValueRequest) Get(descriptor protoreflect.Field
 func (x *fastReflection_GetMedianValueRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.daemons.GetMedianValueRequest.query_data":
-		x.QueryData = value.Interface().(string)
+		x.QueryData = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.daemons.GetMedianValueRequest"))
@@ -1558,7 +1558,7 @@ func (x *fastReflection_GetMedianValueRequest) Mutable(fd protoreflect.FieldDesc
 func (x *fastReflection_GetMedianValueRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.daemons.GetMedianValueRequest.query_data":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.daemons.GetMedianValueRequest"))
@@ -1721,7 +1721,7 @@ func (x *fastReflection_GetMedianValueRequest) ProtoMethods() *protoiface.Method
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1731,23 +1731,25 @@ func (x *fastReflection_GetMedianValueRequest) ProtoMethods() *protoiface.Method
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
+				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryData == nil {
+					x.QueryData = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2355,7 +2357,7 @@ type GetMedianValueRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// query data to fetch prices for
-	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
 func (x *GetMedianValueRequest) Reset() {
@@ -2378,11 +2380,11 @@ func (*GetMedianValueRequest) Descriptor() ([]byte, []int) {
 	return file_layer_daemons_median_values_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GetMedianValueRequest) GetQueryData() string {
+func (x *GetMedianValueRequest) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
-	return ""
+	return nil
 }
 
 // GetMedianValueResponse is the response for the GetMedianValue rpc
@@ -2446,7 +2448,7 @@ var file_layer_daemons_median_values_proto_rawDesc = []byte{
 	0x6c, 0x75, 0x65, 0x73, 0x52, 0x0c, 0x6d, 0x65, 0x64, 0x69, 0x61, 0x6e, 0x56, 0x61, 0x6c, 0x75,
 	0x65, 0x73, 0x22, 0x36, 0x0a, 0x15, 0x47, 0x65, 0x74, 0x4d, 0x65, 0x64, 0x69, 0x61, 0x6e, 0x56,
 	0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x71,
-	0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
 	0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0x5a, 0x0a, 0x16, 0x47, 0x65,
 	0x74, 0x4d, 0x65, 0x64, 0x69, 0x61, 0x6e, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70,
 	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x40, 0x0a, 0x0d, 0x6d, 0x65, 0x64, 0x69, 0x61, 0x6e, 0x5f, 0x76,

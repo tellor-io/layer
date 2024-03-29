@@ -1,6 +1,7 @@
 package client
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
@@ -9,7 +10,7 @@ import (
 	"github.com/tellor-io/layer/lib/prices"
 )
 
-func (c *Client) median(querydata string) (string, error) {
+func (c *Client) median(querydata []byte) (string, error) {
 	params := c.MarketParams
 	exchPrices := c.MarketToExchange
 	mapping := exchPrices.GetValidMedianPrices(params, time.Now())
@@ -19,7 +20,9 @@ func (c *Client) median(querydata string) (string, error) {
 	for _, marketParam := range c.MarketParams {
 		mapQueryDataToMarketParams[strings.ToLower(marketParam.QueryData)] = marketParam
 	}
-	mp, found := mapQueryDataToMarketParams[querydata]
+
+	key := hex.EncodeToString(querydata)
+	mp, found := mapQueryDataToMarketParams[key]
 	if !found {
 		return "", fmt.Errorf("no market param found for query data: %s", querydata)
 	}

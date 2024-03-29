@@ -4,18 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GenerateQuerydata(goCtx context.Context, req *types.QueryGenerateQuerydataRequest) (*types.QueryGenerateQuerydataResponse, error) {
+func (k Keeper) GenerateQuerydata(ctx context.Context, req *types.QueryGenerateQuerydataRequest) (*types.QueryGenerateQuerydataResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	// fetch data spec from store
 	exists, err := k.HasSpec(ctx, req.Querytype)
 	if !exists {
@@ -31,5 +29,5 @@ func (k Keeper) GenerateQuerydata(goCtx context.Context, req *types.QueryGenerat
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to encode query data: %v", err))
 	}
 
-	return &types.QueryGenerateQuerydataResponse{Querydata: querydata}, nil
+	return &types.QueryGenerateQuerydataResponse{QueryData: querydata}, nil
 }

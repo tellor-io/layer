@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -24,21 +23,21 @@ func GenesisDataSpec() DataSpec {
 	}
 }
 
-func (d DataSpec) EncodeData(querytype, datafields string) (string, error) {
+func (d DataSpec) EncodeData(querytype, datafields string) ([]byte, error) {
 	argMarshller := d.MakeArgMarshaller()
 	args := MakeArguments(argMarshller)
 	interfacefields := MakePackdata(datafields, argMarshller)
 	encodedBytes, err := args.Pack(interfacefields...)
 	if err != nil {
-		return "", fmt.Errorf("Failed to pack arguments: %v", err)
+		return nil, fmt.Errorf("Failed to pack arguments: %v", err)
 	}
 
 	querydataBytes, err := EncodeWithQuerytype(querytype, encodedBytes)
 	if err != nil {
-		return "", fmt.Errorf("Failed to encode arguments: %v", err)
+		return nil, fmt.Errorf("Failed to encode arguments: %v", err)
 	}
 
-	return hex.EncodeToString(querydataBytes), nil
+	return querydataBytes, nil
 }
 
 func (d DataSpec) ValidateValue(value string) error {

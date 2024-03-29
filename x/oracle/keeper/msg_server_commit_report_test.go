@@ -11,23 +11,23 @@ import (
 
 	"github.com/tellor-io/layer/testutil/sample"
 
-	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/oracle/utils"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, string) {
+func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, []byte) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 	// value 100000000000000000000 in hex
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 
 	addr := sample.AccAddressBytes()
 
@@ -47,10 +47,7 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
-	_hexxy, err := hex.DecodeString(queryData)
-	s.Nil(err)
-
-	qId := keeper.HashQueryData(_hexxy)
+	qId := utils.QueryIDFromData(queryData)
 	query, err := s.oracleKeeper.Query.Get(s.ctx, qId)
 	s.Nil(err)
 	s.NotNil(query)
@@ -63,13 +60,13 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 
-	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryData, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	// Commit report transaction
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 
 	addr := sample.AccAddressBytes()
 
@@ -99,9 +96,9 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	// Commit report transaction
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 
 	addr := sample.AccAddressBytes()
 
@@ -123,7 +120,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	s.NoError(err)
 
 	// commit for query that was tipped
-	queryData2 := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	tip := sdk.NewCoin("loya", math.NewInt(1000))
 	_ = s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, addr, types.ModuleName, sdk.NewCoins(tip)).Return(nil)
 	// mock the 2% burn
@@ -147,43 +144,15 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 
 }
 
-func (s *KeeperTestSuite) TestCommitWithBadQueryData() {
-
-	// try to commit bad query data
-	queryData := "stupidQueryData"
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-
-	salt, err := utils.Salt(32)
-	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
-
-	addr := sample.AccAddressBytes()
-
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
-
-	var commitreq = types.MsgCommitReport{
-		Creator:   addr.String(),
-		QueryData: queryData,
-		Hash:      hash,
-	}
-	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "invalid query data")
-}
-
 func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 	// try to commit from unbonded reporter
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 
 	randomAddr := sample.AccAddressBytes()
 
@@ -211,9 +180,9 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 	s.Nil(err)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 
 	randomAddr := sample.AccAddressBytes()
 
@@ -244,9 +213,9 @@ func (s *KeeperTestSuite) TestCommitWithMissingCreator() {
 	s.Nil(err)
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 	s.Nil(err)
 
 	var commitreq = types.MsgCommitReport{
@@ -262,9 +231,9 @@ func (s *KeeperTestSuite) TestCommitWithMissingQueryData() {
 	// commit with no query data
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
-	salt, err := utils.Salt(32)
+	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
+	hash := oracleutils.CalculateCommitment(value, salt)
 	s.Nil(err)
 
 	addr := sample.AccAddressBytes()

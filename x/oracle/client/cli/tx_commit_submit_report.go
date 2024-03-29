@@ -12,8 +12,9 @@ import (
 	"github.com/spf13/cobra"
 	mediantypes "github.com/tellor-io/layer/daemons/server/types"
 	"github.com/tellor-io/layer/lib/prices"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/oracle/utils"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
 var _ = strconv.Itoa(0)
@@ -32,7 +33,12 @@ func CmdCommitSubmitReport() *cobra.Command {
 			}
 			queryClient := mediantypes.NewMedianValuesServiceClient(clientCtx)
 
-			params := &mediantypes.GetMedianValueRequest{QueryData: argQueryData}
+			queryDataBz, err := utils.QueryBytesFromString(argQueryData)
+			if err != nil {
+				return err
+			}
+
+			params := &mediantypes.GetMedianValueRequest{QueryData: queryDataBz}
 
 			medianValue, err := queryClient.GetMedianValue(cmd.Context(), params)
 			if err != nil {
@@ -59,12 +65,12 @@ func CmdCommitSubmitReport() *cobra.Command {
 			// 	return err
 			// }
 			// get hash
-			salt, err := utils.Salt(32)
+			salt, err := oracleutils.Salt(32)
 			if err != nil {
 				return err
 			}
 
-			commit := utils.CalculateCommitment(string(valueDecoded), salt)
+			commit := oracleutils.CalculateCommitment(string(valueDecoded), salt)
 
 			msg := types.NewMsgCommitReport(
 				clientCtx.GetFromAddress().String(),

@@ -1,28 +1,22 @@
 package testutil
 
 import (
-	"encoding/hex"
 	"fmt"
 	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, qId string) []oracletypes.MicroReport {
+func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, queryId []byte) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport
-	queryId, err := utils.QueryBytesFromString(qId)
-	if err != nil {
-		panic(fmt.Sprintf("failed to decode query ID string: %v", err))
-	}
 
 	for i, reporter := range reporters {
 		reports = append(reports, oracletypes.MicroReport{
 			Reporter: reporter.String(),
 			Value:    values[i],
 			Power:    powers[i],
-			QueryId:  hex.EncodeToString(queryId),
+			QueryId:  queryId,
 		})
 	}
 	return reports
