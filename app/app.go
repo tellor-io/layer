@@ -679,6 +679,8 @@ func New(
 						&daemontypes.GrpcClientImpl{},
 						marketParamsConfig,
 						indexPriceCache,
+						app.CreateQueryContext,
+						*app.StakingKeeper,
 					); err != nil {
 						panic(err)
 					}

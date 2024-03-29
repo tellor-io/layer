@@ -9,6 +9,8 @@ set -e
 KEYRING_BACKEND="os"
 PASSWORD="password"
 
+export LAYERD_NODE_HOME="$HOME/.layer/alice"
+
 # Remove old test chains (if present)
 echo "Removing old test chain data..."
 rm -rf ~/.layer
@@ -80,4 +82,4 @@ sed -i '' 's/timeout_commit = "5s"/timeout_commit = "500ms"/' ~/.layer/alice/con
 # sleep 30
 
 echo "Start chain..."
-./layerd start --home ~/.layer/alice --api.enable --api.swagger
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger

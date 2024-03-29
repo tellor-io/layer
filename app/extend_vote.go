@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"cosmossdk.io/log"
@@ -423,14 +424,14 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 func (h *VoteExtHandler) GetKeyName() string {
 	globalHome := os.ExpandEnv("$HOME/.layer")
 	homeDir := viper.GetString("home")
-	// if home is global/alice, then the key name is alice
-	if homeDir == globalHome+"/alice" {
-		return "alice"
-	} else if homeDir == globalHome+"/bill" {
-		return "bill"
-	} else {
-		return ""
+
+	// check if homeDir starts with globalHome and has a trailing name
+	if strings.HasPrefix(homeDir, globalHome+"/") {
+		// Extract the name after "/.layer/"
+		name := strings.TrimPrefix(homeDir, globalHome+"/")
+		return name
 	}
+	return ""
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signature []byte, timestamp uint64, err error) {
