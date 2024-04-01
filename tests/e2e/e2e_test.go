@@ -295,7 +295,6 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	fmt.Println("tbrModuleAccountBalance before beginblock block 0: ", tbrModuleAccountBalance)
 	fmt.Println("current block time before beginblock block 0: ", s.ctx.BlockTime())
 	// how to set current time so mintBlockProvisions doesnt read from 00:00 to now ?
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	//---------------------------------------------------------------------------
 	// Block 0
 	//---------------------------------------------------------------------------
