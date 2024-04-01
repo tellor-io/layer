@@ -6,10 +6,11 @@
 ## Changelog
 
 - 2024-03-28: initial version
+- 2024-04-01: revised for more discussion and align with data spec
 
 ## Context
 
-Tellor Tributes (TRB) is the tellor token.  It exists on Ethereum and cannot be changed.  It mints ~4k to the team each month and ~4k to the oracle contract for time based rewards.  When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer.  Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 1 hour window and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specifed deposit ID.  
+Tellor Tributes (TRB) is the tellor token.  It exists on Ethereum and cannot be changed.  It mints ~4k to the team each month and ~4k to the oracle contract for time based rewards.  When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer.  Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 1 hour window (this is allowed so that reporters are able to wait a certain amount of blocks before reporting so that the state of Etherum has reached a high level of finality) and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specifed deposit ID.  
 
 As an additional security meausure, the bridge contract will not allow more than 20% of the total supply on Layer to be bridged within a 12 hour period (the function will be locked).  This will be to ensure that someone does not bridge over a very large amount to stake/grief the network, manipulate votes, or grief the system via disputes without proper time to analyze the situation.  For the reverse direction, parties will burn TRB on Layer, the reporters will then report that it happened and then the bridge contract on Ethereum can use the tellor data as any other user, but this time reading burn events.  There will be similar limits in this direction and the bridge contract will also use the data optimistically (12 hours old) to further reduce attack vectors.  
 

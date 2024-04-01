@@ -9,19 +9,19 @@
 
 ## Context
 
-For some queryId's, it will take longer than one block to submit data after a tip.  Examples include manual questions (e.g. "who is the president") or data without API's (e.g. prediction market answers, some US govt data).  To solve this, we set a report time frame for each query type when registering.  For example, a string question could set the timeframe to take up to 5 hours for reports, giving all reporting parties a chance to see the question and formulate a response.  This ADR specifies how we are to handle the timing of tips, reporting commits, reveals, and restarts in case of unreported data.  
+For some queryId's, it will take longer than one block to submit data after a tip.  Examples include manual questions (e.g. "who is the president") or data without API's (e.g. prediction market answers, some US govt data).  To solve this, we set a report time frame for each query type when registering.  For example, a string question could set the time frame to take up to 5 hours for reports, giving all reporting parties a chance to see the question and formulate a response.  This ADR specifies how we are to handle the timing of tips, reporting commits, reveals, and restarts in case of unreported data.  
 
 
-The proposed solution is that the report time frame starts on the block after the tip is recieved.  If there is another tip that happens during the report time frame, it is added to the original tip.  If no data is reported throughout the timeframe, a new report time frame must be opened by another tip (it can be as small as one loya), and the previous unclaimed tip is added to the new tip.  
+The proposed solution is that the report time frame starts on the block after the tip is recieved.  If there is another tip that happens during the report time frame, it is added to the original tip.  If no data is reported throughout the time frame, a new report time frame must be opened by another tip (it can be as small as one loya), and the previous unclaimed tip is added to the new tip.  
 
-The commit reveal cycle is still intact and reveals can be anytime before reveal window is over, even in commit phase.  Note that this doesn't prevent mirroring if revealed during the commit phase, but it allows you to wait to reveal if you feel that mirroring is occuring. 
+The commit reveal cycle is still intact and reveals can be anytime before reveal window is over, even in the commit phase.  Note that this doesn't prevent mirroring if revealed during the commit phase, but it allows you to wait to reveal if you feel that mirroring is occuring. 
 
 
 ## Alternative Approaches
 
 ### time frame starts when first commit happens
 
-One approach would be to have shorter report time frames, but the window doesn't start right after the tip, but rather on the first report.  This would allow for queries that are not seeking consensus, to just have a tip with a short time frame, and then once one party reports, it is basically over and handled by disputes.  The issue we had with this is that it unties the time frame from the tip.  Usually if you tip, you want some certainty around when you get the data.  It also gives the false impression to the tipper that they should expect the data in some timeframe.  If you tip for a manual query and it has a time frame of one hour, you would expect it to be in one hour.  The time frame in our mind is tied to how long it should be expected to take reporters to get the data.  
+One approach would be to have shorter report time frames, but the window doesn't start right after the tip, but rather on the first report.  This would allow for queries that are not seeking consensus, to just have a tip with a short time frame, and then once one party reports, it is basically over and handled by disputes.  The issue we had with this is that it unties the time frame from the tip.  Usually if you tip, you want some certainty around when you get the data.  It also gives the false impression to the tipper that they should expect the data in some time frame.  If you tip for a manual query and it has a time frame of one hour, you would expect it to be reported in one hour.  The time frame in our mind is tied to how long it should be expected to take reporters to get the data.  
 
 ### time frame restarts if no one reports
 
@@ -33,7 +33,7 @@ I think the argument against is that the reason no one reported is that the tip 
 
 ### all reveals done in reveal window
 
-the problem here is that for longer time frames, reporters will need to wait until the right block and then have a limited time (right now 2 blocks) to reveal.  If they go down or need to maintain a long list of reveals to submit in the future, this could be computationally expensive.  In order to just allow the reporter to decide their comfort level in being mirrored (they have to split rewards with parties mirroring them), we allow reveals at any stage.  Not to mention, that large parties will not mirror smaller ones.  If a large party mirrors a smaller one, the smaller party can submit a bad value and dispute the larger party right away to make back their funds.  
+The problem here is that for longer time frames, reporters will need to wait until the right block and then have a limited time (right now 2 blocks) to reveal.  If they go down or need to maintain a long list of reveals to submit in the future, this could be computationally expensive.  In order to just allow the reporter to decide their comfort level in being mirrored (they have to split rewards with parties mirroring them), we allow reveals at any stage.  Not to mention, that large parties will not mirror smaller ones.  If a large party mirrors a smaller one, the smaller party can submit a bad value and dispute the larger party right away to make back their funds.  
 
 ### new tips start a new window
 

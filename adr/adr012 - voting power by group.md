@@ -7,6 +7,7 @@
 ## Changelog
 
 - 2024-02-27: initial version
+- 2024-04-01: 
 
 ## Context
 
@@ -17,7 +18,7 @@ For voting on disputes, who gets to say what a good value is?  The current split
 25% team
 25% token holders
 
-Most notable in the split are the asences such as validators and relayers.  The rationale for not including validators is the treatment of delegated tokens.  Currently delegated tokens are already counted twice (token holders and reporters they are delegated to).  If the validator was also able to use tokens delegated to themselves, you could essentially delegate tokens to yourself as a reporter and a validator and then triple your voting power.  We could choose between giving the power to reporters or validators in this case and we went with reporters for the same reason disputes can be started with delegated tokens from reporters and not validators; data reporting and quality is done by the reporters, chain operations are done by the validators. 
+Most notable in the split is the absence of validators and relayers.  The rationale for not including validators is the treatment of delegated tokens.  Currently delegated tokens are already counted twice (token holders and reporters they are delegated to).  If the validator was also able to use tokens delegated to themselves, you could essentially delegate tokens to yourself as a reporter and a validator and then triple your voting power.  We could choose between giving the power to reporters or validators in this case and we went with reporters for the same reason disputes can be started with delegated tokens from reporters and not validators; data reporting and quality is done by the reporters, chain operations are done by the validators. 
 
 
 
@@ -31,13 +32,17 @@ This is valid, however the attack method of tripling tokens by dual self degatio
 
 ### remove team
 
-A long term plan and short term option, the system could further decentralize by th
+A long term plan isto further decentralize the protocol by removing the team's voting weight on disputes. In the short term, as the protocol matures to team acts as a tie breaker.
 
-### different reporting calculation 
+### different reporter voting weight calculation 
 
 Instead of just using reporter weight as the percentage of total reporter stake, we could use a counting methodology similar to current tellor (each report counts as one vote, regardless of weight).  This has benefits of supporting smaller reporters as much as larger ones, as well as hardening over time as the voting power is non-transferrable.  
 
-The downside here is that votes are still sellable, you just need to sell your key.  This actually becomes dangerous as reporters who want to exit are incentivized to sell their voting power to attackers once they are unstaked.  You could fix this by also requiring them to be staked, but it only changes the attack cost, not the fact it exists as an exit strategy.  
+The downside here is that votes are still sellable, you just need to sell your private key.  This actually becomes dangerous as reporters who want to exit are incentivized to sell their voting power to attackers once they are unstaked.  You could fix this by also requiring them to be staked, but it only changes the attack cost, not the fact it exists as an exit strategy.  
+
+This is the case for users as well. Users do not have to stake and they earn voting weight by the amount of tips the provide. However, users are dissinsitivized from selling their private keys because doing so could trigger an attack to their own protocol (there is no guarantee an attacker that is willign to buy their keys will not attack them too). 
+
+Brenda Q--Should we decrease user voting power over time or reduce it if they stop tipping over two months???
 
 ### move to different goverance structure
 
