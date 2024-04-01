@@ -32,7 +32,7 @@ This is valid, however the attack method of tripling tokens by dual self degatio
 
 ### remove team
 
-A long term plan isto further decentralize the protocol by removing the team's voting weight on disputes. In the short term, as the protocol matures to team acts as a tie breaker.
+A long term plan is to further decentralize the protocol by removing the team's voting weight on disputes and exploring other governance structures. In the short term, as the protocol matures to team acts as a tie breaker.
 
 ### different reporter voting weight calculation 
 

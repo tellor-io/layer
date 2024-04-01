@@ -12,7 +12,7 @@
 
 ## Context
 
-In layer, when a user sends free floating tokens as a tip, the party(ies) that report for that queryId next cycle are given the tip.  Once reported for, these tips are locked in an escrow account that can be withdrawn to a reporter's stake at the same rates coupled with deposit stake (e.g. cannot change the validator set by more than 5% per 12 hours).  This is because of how tellor governance is structured, namely to prevent people from farming voting power.  
+In layer, when a user sends free floating tokens as a tip, the party(ies) that report for that queryId in the next cycle are given the tip.  Once reported for, these tips are locked in an escrow account that can be withdrawn to a reporter's stake at the same rates coupled with deposit stake (e.g. cannot change the validator set by more than 5% per 12 hours).  This is because of how tellor governance is structured, namely to prevent people from farming voting power.  
 
 If they were not locked, a party could tip a random query that only they know how to report for.  They could report, then tip those exact same tokens, thus looping them in order to look like there is ton of tip demand for this query.  The two methods to prevent this are a) a 2% fee on tips and b) locking the tip as a reporting stake.  Now if the party wishes to withdraw that tip, they will have to wait the 21 day unbonding period.  
 
