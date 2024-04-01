@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -289,6 +290,21 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 func (s *E2ETestSuite) TestBasicReporting() {
 	require := s.Require()
 
+	tbrModuleAccount := s.accountKeeper.GetModuleAddress(minttypes.TimeBasedRewards)
+	tbrModuleAccountBalance := s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance before beginblock block 0: ", tbrModuleAccountBalance)
+	fmt.Println("current block time before beginblock block 0: ", s.ctx.BlockTime())
+	// how to set current time so mintBlockProvisions doesnt read from 00:00 to now ?
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	//---------------------------------------------------------------------------
+	// Block 0
+	//---------------------------------------------------------------------------
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance after block 0 start: ", tbrModuleAccountBalance)
+	fmt.Println("current block time block 0 start: ", s.ctx.BlockTime())
+
 	// create a validator
 	// create account that will become a validator
 	testAccount := simtestutil.CreateIncrementalAccounts(1)
@@ -358,115 +374,173 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	_, err = msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
 	require.NoError(err)
 	// check that reporter was created in Reporters collections
-	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterDelforVal.delegatorAddress)
+	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(reporter.Reporter, reporterDelforVal.delegatorAddress.String())
+	require.Equal(reporter.Reporter, reporterAccount.String())
 	require.Equal(reporter.TotalTokens, math.NewInt(4000*1e6))
 	require.Equal(reporter.Jailed, false)
 	// check on reporter in Delegators collections
-	delegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterDelforVal.delegatorAddress)
+	delegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(delegation.Reporter, reporterDelforVal.delegatorAddress.String())
+	require.Equal(delegation.Reporter, reporterAccount.String())
 	require.Equal(delegation.Amount, math.NewInt(4000*1e6))
 
-	// Report
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance block 0 end: ", tbrModuleAccountBalance)
+	fmt.Println("current block time block 0 end: ", s.ctx.BlockTime())
+
 	// setup oracle msgServer
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
 	require.NotNil(msgServerOracle)
+
 	// case 1: commit/reveal for cycle list
+	//---------------------------------------------------------------------------
+	// Block 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	fmt.Println("current block time block 1 start: ", s.ctx.BlockTime())
+
+	// Report
+	balanceBeforeReport1 := s.bankKeeper.GetBalance(s.ctx, reporterAccount, sdk.DefaultBondDenom)
 	queryInCycleList1, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
 	// create hash for commit
-	saltEth, err := oracleutils.Salt(32)
+	salt1, err := oracleutils.Salt(32)
 	require.NoError(err)
-	valueEth := encodeValue(4500)
-	hashEth := oracleutils.CalculateCommitment(valueEth, saltEth)
-	// create commitEth msg
-	commitEth := oracletypes.MsgCommitReport{
+	value1 := encodeValue(4500)
+	hash1 := oracleutils.CalculateCommitment(value1, salt1)
+	// create commit1 msg
+	commit1 := oracletypes.MsgCommitReport{
 		Creator:   reporter.Reporter,
 		QueryData: queryInCycleList1,
-		Hash:      hashEth,
+		Hash:      hash1,
 	}
 	// send commit tx
-	commitResponseEth, err := msgServerOracle.CommitReport(s.ctx, &commitEth)
+	commitResponse1, err := msgServerOracle.CommitReport(s.ctx, &commit1)
 	require.NoError(err)
-	require.NotNil(commitResponseEth)
+	require.NotNil(commitResponse1)
 	commitHeight := s.ctx.BlockHeight()
-	require.Equal(int64(0), commitHeight)
-	// advance 1 block
-	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1) // height 1
+	require.Equal(int64(1), commitHeight)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 1: ", tbrModuleAccountBalance)
+	fmt.Println("current block time block 1 end: ", s.ctx.BlockTime())
+
+	//---------------------------------------------------------------------------
+	// Block 2
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	// err = mint.BeginBlocker(s.ctx, s.mintkeeper)
+	fmt.Println("current block time block 2 start: ", s.ctx.BlockTime())
 	// create reveal msg
-	revealEth := oracletypes.MsgSubmitValue{
+	reveal1 := oracletypes.MsgSubmitValue{
 		Creator:   reporter.Reporter,
 		QueryData: queryInCycleList1,
-		Value:     valueEth,
-		Salt:      saltEth,
+		Value:     value1,
+		Salt:      salt1,
 	}
 	// send reveal tx
-	revealResponseEth, err := msgServerOracle.SubmitValue(s.ctx, &revealEth)
+	revealResponse1, err := msgServerOracle.SubmitValue(s.ctx, &reveal1)
 	require.NoError(err)
-	require.NotNil(revealResponseEth)
+	require.NotNil(revealResponse1)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 2: ", tbrModuleAccountBalance)
 	// advance time and block height to expire the query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
+	fmt.Println("current block time block 2 after waiting for aggregate: ", s.ctx.BlockTime())
+
 	// get queryId for GetAggregatedReportRequest
-	queryIdEth, err := utils.QueryIDFromDataString(queryInCycleList1)
+	queryId1, err := utils.QueryIDFromDataString(queryInCycleList1)
 	s.NoError(err)
 	// check that aggregated report is stored
-	getAggReportRequestEth := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryIdEth),
+	getAggReportRequest1 := oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryId1),
 	}
-	resultEth, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestEth)
+	result1, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest1)
 	require.NoError(err)
-	require.Equal(resultEth.Report.Height, int64(1))
-	require.Equal(resultEth.Report.AggregateReportIndex, int64(0))
-	require.Equal(resultEth.Report.AggregateValue, encodeValue(4500))
-	require.Equal(resultEth.Report.AggregateReporter, reporter.Reporter)
-	require.Equal(resultEth.Report.QueryId, hex.EncodeToString(queryIdEth))
-	require.Equal(int64(4000), resultEth.Report.ReporterPower)
+	require.Equal(result1.Report.Height, int64(2))
+	require.Equal(result1.Report.AggregateReportIndex, int64(0))
+	require.Equal(result1.Report.AggregateValue, encodeValue(4500))
+	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(result1.Report.QueryId, hex.EncodeToString(queryId1))
+	require.Equal(int64(4000), result1.Report.ReporterPower)
+	// check tbr
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 3: ", tbrModuleAccountBalance)
+	balanceAfterReport1 := s.bankKeeper.GetBalance(s.ctx, reporterAccount, sdk.DefaultBondDenom)
+	tbr, err := s.oraclekeeper.GetTimeBasedRewards(s.ctx, &oracletypes.QueryGetTimeBasedRewardsRequest{})
+	require.NoError(err)
+	fmt.Println("tbr reward amount: ", tbr.Reward.Amount)
+	require.Equal(balanceBeforeReport1.Add(sdk.NewCoin(sdk.DefaultBondDenom, tbr.Reward.Amount)), balanceAfterReport1)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+	fmt.Println("current block time block 2 end: ", s.ctx.BlockTime())
 
 	// case 2: submit without committing for cycle list
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1) // height 2
+	//---------------------------------------------------------------------------
+	// Block 3
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	fmt.Println("block time block 3 start: ", s.ctx.BlockTime())
+	// err = mint.BeginBlocker(s.ctx, s.mintkeeper)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 4: ", tbrModuleAccountBalance)
 	// get new cycle list query data
 	queryInCycleList2, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
 	require.NotEqual(queryInCycleList1, queryInCycleList2)
 	// create reveal message
-	valueBtc := encodeValue(100_000)
+	value2 := encodeValue(100_000)
 	require.NoError(err)
-	revealBtc := oracletypes.MsgSubmitValue{
+	reveal2 := oracletypes.MsgSubmitValue{
 		Creator:   reporter.Reporter,
 		QueryData: queryInCycleList2,
-		Value:     valueBtc,
+		Value:     value2,
 	}
 	// send reveal message
-	revealResponseBtc, err := msgServerOracle.SubmitValue(s.ctx, &revealBtc)
+	revealResponse2, err := msgServerOracle.SubmitValue(s.ctx, &reveal2)
 	require.NoError(err)
-	require.NotNil(revealResponseBtc)
+	require.NotNil(revealResponse2)
 	// advance time and block height to expire the query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
-	queryIdBtc, err := utils.QueryIDFromDataString(queryInCycleList2)
+	queryId2, err := utils.QueryIDFromDataString(queryInCycleList2)
 	s.NoError(err)
 	// create get aggregated report query
-	getAggReportRequestBtc := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryIdBtc),
+	getAggReportRequest2 := oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryId2),
 	}
 	// check that aggregated report is stored correctly
-	resultBtc, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestBtc)
+	result2, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest2)
 	require.NoError(err)
-	require.Equal(int64(0), resultBtc.Report.AggregateReportIndex)
-	require.Equal(encodeValue(100_000), resultBtc.Report.AggregateValue)
-	require.Equal(reporter.Reporter, resultBtc.Report.AggregateReporter)
-	require.Equal(hex.EncodeToString(queryIdBtc), resultBtc.Report.QueryId)
-	require.Equal(int64(4000), resultBtc.Report.ReporterPower)
-	require.Equal(int64(2), resultBtc.Report.Height)
+	require.Equal(int64(0), result2.Report.AggregateReportIndex)
+	require.Equal(encodeValue(100_000), result2.Report.AggregateValue)
+	require.Equal(reporter.Reporter, result2.Report.AggregateReporter)
+	require.Equal(hex.EncodeToString(queryId2), result2.Report.QueryId)
+	require.Equal(int64(4000), result2.Report.ReporterPower)
+	require.Equal(int64(2), result2.Report.Height)
 
 	// case 3: commit/reveal for tipped query
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1) // height 3
+	//---------------------------------------------------------------------------
+	// Block 4
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	// err = mint.BeginBlocker(s.ctx, s.mintkeeper)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 3: ", tbrModuleAccountBalance)
 	// create tip msg
 	tipAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))
 	msgTip := oracletypes.MsgTip{
@@ -483,55 +557,80 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	tipAcctBalance := s.bankKeeper.GetBalance(s.ctx, tipModuleAcct, sdk.DefaultBondDenom)
 	require.Equal(tipAcctBalance, tipAmount)
 	// create commit for tipped eth query
-	saltEth, err = oracleutils.Salt(32)
+	salt1, err = oracleutils.Salt(32)
 	require.NoError(err)
-	valueEth = encodeValue(5000)
-	hashEth = oracleutils.CalculateCommitment(valueEth, saltEth)
-	commitEth = oracletypes.MsgCommitReport{
+	value1 = encodeValue(5000)
+	hash1 = oracleutils.CalculateCommitment(value1, salt1)
+	commit1 = oracletypes.MsgCommitReport{
 		Creator:   reporter.Reporter,
 		QueryData: queryInCycleList1,
-		Hash:      hashEth,
+		Hash:      hash1,
 	}
 	// send commit tx
-	commitResponseEth, err = msgServerOracle.CommitReport(s.ctx, &commitEth)
+	commitResponse1, err = msgServerOracle.CommitReport(s.ctx, &commit1)
 	require.NoError(err)
-	require.NotNil(commitResponseEth)
+	require.NotNil(commitResponse1)
 	commitHeight = s.ctx.BlockHeight()
 	require.Equal(int64(3), commitHeight)
-	// advance 1 block
-	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1) // height 4
+	//---------------------------------------------------------------------------
+	// Block 5
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	// err = mint.BeginBlocker(s.ctx, s.mintkeeper)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 4: ", tbrModuleAccountBalance)
 	// create reveal msg
-	valueEth = encodeValue(5000)
-	revealEth = oracletypes.MsgSubmitValue{
+	value1 = encodeValue(5000)
+	reveal1 = oracletypes.MsgSubmitValue{
 		Creator:   reporter.Reporter,
 		QueryData: queryInCycleList1,
-		Value:     valueEth,
-		Salt:      saltEth,
+		Value:     value1,
+		Salt:      salt1,
 	}
 	// send reveal tx
-	revealResponseEth, err = msgServerOracle.SubmitValue(s.ctx, &revealEth)
+	revealResponse1, err = msgServerOracle.SubmitValue(s.ctx, &reveal1)
 	require.NoError(err)
-	require.NotNil(revealResponseEth)
+	require.NotNil(revealResponse1)
 	// advance time and block height to expire the query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 	// create get aggreagted report query
-	getAggReportRequestEth = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryIdEth),
+	getAggReportRequest1 = oracletypes.QueryGetCurrentAggregatedReportRequest{
+		QueryId: hex.EncodeToString(queryId1),
 	}
 	// check that the aggregated report is stored correctly
-	resultEth, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestEth)
+	result1, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest1)
 	require.NoError(err)
-	require.Equal(resultEth.Report.AggregateReportIndex, int64(0))
-	require.Equal(resultEth.Report.AggregateValue, encodeValue(5000))
-	require.Equal(resultEth.Report.AggregateReporter, reporter.Reporter)
-	require.Equal(hex.EncodeToString(queryIdEth), resultEth.Report.QueryId)
-	require.Equal(int64(4000), resultEth.Report.ReporterPower)
-	require.Equal(int64(4), resultEth.Report.Height)
+	require.Equal(result1.Report.AggregateReportIndex, int64(0))
+	require.Equal(result1.Report.AggregateValue, encodeValue(5000))
+	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(hex.EncodeToString(queryId1), result1.Report.QueryId)
+	require.Equal(int64(4000), result1.Report.ReporterPower)
+	require.Equal(int64(4), result1.Report.Height)
+	// claim tip
+	// msgWithdrawTip := reportertypes.MsgWithdrawTip{
+	// 	DelegatorAddress: reporter.Reporter,
+	// 	ValidatorAddress: validator.OperatorAddress,
+	// }
+	// delegation1 := s.stakingKeeper.Delegation(s.ctx, reporter.reporter, validator.OperatorAddress)
+	// require.NotNil(delegation)
+	// _, err = msgServerReporter.WithdrawTip(s.ctx, &msgWithdrawTip)
+	// require.NoError(err)
+	// require.True(delegation.GetShares().Equal())
 
 	// case 4: submit without committing for tipped query
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1) // height 5
+	//---------------------------------------------------------------------------
+	// Block 6
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	// err = mint.BeginBlocker(s.ctx, s.mintkeeper)
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 5: ", tbrModuleAccountBalance)
 	// create tip msg
 	msgTip = oracletypes.MsgTip{
 		Tipper:    reporter.Reporter,
@@ -576,6 +675,17 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(hex.EncodeToString(queryIdTrb), resultTrb.Report.QueryId)
 	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
 	require.Equal(int64(5), resultTrb.Report.Height)
+	// claim tip
+	// check tip escrow account
+	escrowAcct := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
+	require.NotNil(escrowAcct)
+	escrowBalance := s.bankKeeper.GetBalance(s.ctx, escrowAcct, s.denom)
+	require.NotNil(escrowBalance)
+	// twoPercent := sdk.NewCoin(s.denom, tipAmount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
+	// require.Equal(tipAmount.Sub(twoPercent.Amount), escrowBalance.Amount)
+
+	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
+	fmt.Println("tbrModuleAccountBalance height 5: ", tbrModuleAccountBalance)
 }
 
 // todo: dispute test
