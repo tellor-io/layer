@@ -8,9 +8,9 @@ import (
 // Each attestation's snapshots are stored in a slice of bytes.
 type AttestationSnapshotData struct {
 	ValidatorCheckpoint  []byte `protobuf:"bytes,1,rep,name=validator_checkpoint,proto3"`
-	AttestationTimestamp int64  `protobuf:"int64,2,rep,name=attestation_timestamp,proto3"`
-	PrevReportTimestamp  int64  `protobuf:"int64,3,rep,name=prev_report_timestamp,proto3"`
-	NextReportTimestamp  int64  `protobuf:"int64,4,rep,name=next_report_timestamp,proto3"`
+	AttestationTimestamp int64  `protobuf:"varint,2,rep,name=attestation_timestamp,proto3"`
+	PrevReportTimestamp  int64  `protobuf:"varint,3,rep,name=prev_report_timestamp,proto3"`
+	NextReportTimestamp  int64  `protobuf:"varint,4,rep,name=next_report_timestamp,proto3"`
 }
 
 // Ensure AttestationSnapshotData implements proto.Message

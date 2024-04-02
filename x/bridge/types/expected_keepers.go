@@ -38,4 +38,5 @@ type OracleKeeper interface {
 	GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timestamp time.Time) (aggregate *oracletypes.Aggregate, err error)
 	GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
+	GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []oracletypes.Aggregate
 }
