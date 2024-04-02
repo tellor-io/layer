@@ -31,4 +31,5 @@ var (
 	AttestSnapshotsByReportMapKey   = collections.NewPrefix(11) // Prefix for attest_snapshots_by_report_map key
 	AttestSnapshotDataMapKey        = collections.NewPrefix(12) // Prefix for attest_snapshot_data_map key
 	SnapshotToAttestationsMapKey    = collections.NewPrefix(13) // Prefix for snapshot_to_attestations_map key
+	AttestRequestsByHeightMapKey    = collections.NewPrefix(14) // Prefix for attest_requests_by_height_map key
 )

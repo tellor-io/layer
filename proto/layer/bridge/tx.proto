@@ -9,6 +9,7 @@ service Msg {
     rpc RegisterOperatorPubkey (MsgRegisterOperatorPubkey) returns (MsgRegisterOperatorPubkeyResponse);
     rpc SubmitBridgeValsetSignature (MsgSubmitBridgeValsetSignature) returns (MsgSubmitBridgeValsetSignatureResponse);
     rpc SubmitOracleAttestation (MsgSubmitOracleAttestation) returns (MsgSubmitOracleAttestationResponse);
+    rpc RequestAttestations (MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
 }
 
 message MsgRegisterOperatorPubkey {
@@ -40,3 +41,13 @@ message MsgSubmitOracleAttestation {
 }
 
 message MsgSubmitOracleAttestationResponse {}
+
+message MsgRequestAttestations {
+    option (cosmos.msg.v1.signer) = "creator";
+
+    string creator = 1;
+    string queryId = 2;
+    string timestamp = 3;
+}
+
+message MsgRequestAttestationsResponse {}

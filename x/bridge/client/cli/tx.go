@@ -34,5 +34,6 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdRegisterOperatorPubkey())
 	cmd.AddCommand(CmdSubmitBridgeValsetSignature())
 	cmd.AddCommand(CmdSubmitOracleAttestation())
+	cmd.AddCommand(CmdRequestAttestations())
 	return cmd
 }

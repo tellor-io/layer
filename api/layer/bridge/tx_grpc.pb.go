@@ -21,6 +21,7 @@ type MsgClient interface {
 	RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterOperatorPubkey, opts ...grpc.CallOption) (*MsgRegisterOperatorPubkeyResponse, error)
 	SubmitBridgeValsetSignature(ctx context.Context, in *MsgSubmitBridgeValsetSignature, opts ...grpc.CallOption) (*MsgSubmitBridgeValsetSignatureResponse, error)
 	SubmitOracleAttestation(ctx context.Context, in *MsgSubmitOracleAttestation, opts ...grpc.CallOption) (*MsgSubmitOracleAttestationResponse, error)
+	RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error)
 }
 
 type msgClient struct {
@@ -58,6 +59,15 @@ func (c *msgClient) SubmitOracleAttestation(ctx context.Context, in *MsgSubmitOr
 	return out, nil
 }
 
+func (c *msgClient) RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error) {
+	out := new(MsgRequestAttestationsResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/RequestAttestations", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -65,6 +75,7 @@ type MsgServer interface {
 	RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error)
 	SubmitBridgeValsetSignature(context.Context, *MsgSubmitBridgeValsetSignature) (*MsgSubmitBridgeValsetSignatureResponse, error)
 	SubmitOracleAttestation(context.Context, *MsgSubmitOracleAttestation) (*MsgSubmitOracleAttestationResponse, error)
+	RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -80,6 +91,9 @@ func (UnimplementedMsgServer) SubmitBridgeValsetSignature(context.Context, *MsgS
 }
 func (UnimplementedMsgServer) SubmitOracleAttestation(context.Context, *MsgSubmitOracleAttestation) (*MsgSubmitOracleAttestationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitOracleAttestation not implemented")
+}
+func (UnimplementedMsgServer) RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RequestAttestations not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -148,6 +162,24 @@ func _Msg_SubmitOracleAttestation_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RequestAttestations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRequestAttestations)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RequestAttestations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/RequestAttestations",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RequestAttestations(ctx, req.(*MsgRequestAttestations))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +198,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitOracleAttestation",
 			Handler:    _Msg_SubmitOracleAttestation_Handler,
+		},
+		{
+			MethodName: "RequestAttestations",
+			Handler:    _Msg_RequestAttestations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
