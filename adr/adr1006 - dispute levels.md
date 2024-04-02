@@ -1,4 +1,4 @@
-# ADR 005: Dispute Levels
+# ADR 1006: Dispute Levels
 
 ## Authors
 

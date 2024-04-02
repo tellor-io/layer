@@ -18,6 +18,7 @@ Layer is limited in many ways:
     - How fast does our chain grow in size? 
 
 
+
 ## Alternative Approaches
 
 ### Cap number of reporters (like validators)

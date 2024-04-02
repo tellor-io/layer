@@ -1,4 +1,4 @@
-# ADR 006: Usage of Staked Tokens for Disputes
+# ADR 1007: Usage of Staked Tokens for Disputes
 
 ## Authors
 

@@ -1,4 +1,4 @@
-# ADR 003: Nonces for Bridging
+# ADR 2002: Nonces for Bridging
 
 ## Authors
 

@@ -1,4 +1,4 @@
-# ADR 012: voting power by group
+# ADR 1008: voting power by group
 
 ## Authors
 
@@ -7,7 +7,7 @@
 ## Changelog
 
 - 2024-02-27: initial version
-- 2024-04-01: 
+- 2024-04-01: clarified la
 
 ## Context
 
