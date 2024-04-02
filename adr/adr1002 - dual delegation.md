@@ -1,13 +1,14 @@
-# ADR 001: Dual Delegation
+# ADR 1002: Dual Delegation
 
 ## Authors
 
-@themandalore @brendaloya
+@themandalore 
+@brendaloya
 
 ## Changelog
 
 - 2024-02-21: initial version
-- 2024-04-01: 
+- 2024-04-01: added clarifications on dual delegation
 
 ## Context
 

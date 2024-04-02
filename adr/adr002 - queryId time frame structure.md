@@ -1,4 +1,4 @@
-# ADR 014: queryId time frame structure
+# ADR 002: queryId time frame structure
 ## Authors
 
 @themandalore
@@ -10,7 +10,6 @@
 ## Context
 
 For some queryId's, it will take longer than one block to submit data after a tip.  Examples include manual questions (e.g. "who is the president") or data without API's (e.g. prediction market answers, some US govt data).  To solve this, we set a report time frame for each query type when registering.  For example, a string question could set the time frame to take up to 5 hours for reports, giving all reporting parties a chance to see the question and formulate a response.  This ADR specifies how we are to handle the timing of tips, reporting commits, reveals, and restarts in case of unreported data.  
-
 
 The proposed solution is that the report time frame starts on the block after the tip is recieved.  If there is another tip that happens during the report time frame, it is added to the original tip.  If no data is reported throughout the time frame, a new report time frame must be opened by another tip (it can be as small as one loya), and the previous unclaimed tip is added to the new tip.  
 
