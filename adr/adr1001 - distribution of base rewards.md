@@ -1,16 +1,20 @@
-# ADR 009: Distribution of base rewards
+# ADR 1001: Distribution of base rewards
 
 ## Authors
 
 @themandalore
+@brendaloya
 
 ## Changelog
 
 - 2024-02-27: initial version
+- 2024-04-01: expanded on discussion
 
 ## Context
 
 Currently base (inflationary) rewards are split between reporters and validators on a 75/25 split.  75 percent of the inflationary reward (~3000 TRB/month) is given to reporters of the cycle list, proportionally to their reporting stake used in each aggregated query.  25 percent of the reward (~1000 TRB/month) is given to the validators as their base reward.  
+
+The split was chosen arbitrarily (and we may change it later) but with the goal of incentivizing a significantly larger amount of reporters since the validator set is capped. This split should incetivize validators to also become reporters but does not force them to. Keeping a clear distinction between the roles and not forcing validators to be reporters can allow cosmos validators to 'easily' become validators in Layer as well. 
 
 
 ## Alternative Approaches
@@ -29,7 +33,7 @@ The downside here is that there may be costs to being a validator (hardware, mem
 
 Another duty for the chain is relaying.  Although updating our prices on the tellor chain is important, it's ultimately meaningless if no one can get the data on their own chain.  Relaying is a trustless role, however as we know from current Tellor, covering gas costs to get data on-chain can be important.  One option could be to refund relayers for moving data to user chains.  
 
-The issue here is just in the book keeping and governance.  How do we know which chains to refund what amount?  We want to avoid a situation where parties are pushing data unnecessarily.  It could be an option to refund say 90% of gas costs, but this would mean that we are subsidizing more expensive chains more, something we may not want to incentivize.
+The issue here is in the book keeping and governance.  How do we know which chains to refund what amount?  We want to avoid a situation where parties are pushing data unnecessarily.  It could be an option to refund say 90% of gas costs, but this would mean that we are subsidizing more expensive chains more, something we may not want to incentivize.
 
 
 ## Issues / Notes on Implementation
