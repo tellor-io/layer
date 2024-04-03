@@ -1,11 +1,12 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"context"
+
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMode(ctx sdk.Context, reports []types.MicroReport) (*types.Aggregate, error) {
+func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error) {
 	if len(reports) == 0 {
 		return nil, types.ErrNoReportsToAggregate.Wrapf("can't aggregate empty reports")
 	}

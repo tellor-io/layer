@@ -38,7 +38,7 @@ message GetAllMedianValuesResponse {
 // GetMedianValuesRequest is the request for the GetMedianValues rpc
 message GetMedianValueRequest {
   // query data to fetch prices for
-  string query_data = 1;
+  bytes query_data = 1;
 }
 
 // GetMedianValueResponse is the response for the GetMedianValue rpc

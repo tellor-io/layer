@@ -41,7 +41,7 @@ service Query {
   }
 
   rpc GetOracleAttestations (QueryGetOracleAttestationsRequest) returns (QueryGetOracleAttestationsResponse) {
-    option (google.api.http).get = "/layer/bridge/get_oracle_attestations/{queryId}/{timestamp}";
+    option (google.api.http).get = "/layer/bridge/get_oracle_attestations/{query_id}/{timestamp}";
   }
 
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
@@ -53,15 +53,15 @@ service Query {
   }
 
   rpc GetCurrentAggregateReport (QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
-    option (google.api.http).get = "/layer/bridge/get_current_aggregate_report/{queryId}";
+    option (google.api.http).get = "/layer/bridge/get_current_aggregate_report/{query_id}";
   }
 
   rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
-    option (google.api.http).get = "/layer/bridge/get_data_before/{queryId}/{timestamp}";
+    option (google.api.http).get = "/layer/bridge/get_data_before/{query_id}/{timestamp}";
   }
 
   // rpc GetCurrentAggregateReportTest (QueryGetCurrentAggregateReportTestRequest) returns (QueryGetCurrentAggregateReportTestResponse) {
-  //   option (google.api.http).get = "/layer/bridge/get_current_aggregate_report_test/{queryId}";
+  //   option (google.api.http).get = "/layer/bridge/get_current_aggregate_report_test/{query_id}";
   // }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -141,7 +141,7 @@ message QueryGetValsetSigsResponse {
 }
 
 message QueryGetOracleAttestationsRequest {
-  string queryId = 1;
+  bytes query_id = 1;
   int64 timestamp = 2;
 }
 
@@ -166,7 +166,7 @@ message QueryGetValsetByTimestampResponse {
 }
 
 message QueryGetCurrentAggregateReportRequest {
-  string queryId = 1;
+  bytes query_id = 1;
 }
 
 message QueryGetCurrentAggregateReportResponse {
@@ -176,7 +176,7 @@ message QueryGetCurrentAggregateReportResponse {
 
 message Aggregate {
   
-  string queryId = 1; 
+  bytes query_id = 1; 
   string aggregateValue = 2; 
   string aggregateReporter = 3; 
   int64 reporterPower = 4; 
@@ -194,7 +194,7 @@ message AggregateReporter {
 }
 
 message QueryGetDataBeforeRequest {
-  string queryId = 1;
+  bytes query_id = 1;
   int64 timestamp = 2;
 }
 
@@ -204,7 +204,7 @@ message QueryGetDataBeforeResponse {
 }
 
 // message QueryGetCurrentAggregateReportTestRequest {
-//   string queryId = 1;
+//   bytes query_id = 1;
 // }
 
 // message QueryGetCurrentAggregateReportTestResponse {

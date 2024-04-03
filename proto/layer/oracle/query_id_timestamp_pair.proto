@@ -4,7 +4,7 @@ package layer.oracle;
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message QueryIdTimestampPair {
-	string queryId = 1;
+	bytes query_id = 1;
 	int64 timestamp = 2;
 }
 

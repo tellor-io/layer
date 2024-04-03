@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"encoding/hex"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +12,7 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, string) {
-	require := s.Require()
-
+func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byte) {
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	// Commit
 	stakedReporter, salt, queryData := s.TestCommitValue()
@@ -35,18 +32,15 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, strin
 	require.NoError(err)
 	require.Equal(&types.MsgSubmitValueResponse{}, res)
 
-	queryId, err := utils.QueryIDFromDataString(queryData)
-	require.NoError(err)
-	queryIdStr := hex.EncodeToString(queryId)
-
-	report, err := s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
-	require.NoError(err)
+	queryId := utils.QueryIDFromData(queryData)
+	report, err := s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryId})
+	s.Nil(err)
 
 	microReport := types.MicroReport{
 		Reporter:        stakedReporter.GetReporter(),
 		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryType:       "SpotPrice",
-		QueryId:         queryIdStr,
+		QueryId:         queryId,
 		AggregateMethod: "weighted-median",
 		Value:           value,
 		Timestamp:       s.ctx.BlockTime(),
@@ -60,7 +54,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, strin
 	}
 	require.Equal(&expectedReport, report)
 
-	return stakedReporter, queryIdStr
+	return stakedReporter, queryId
 }
 
 // Note: this test fails because logic allows for submit value with no commit
@@ -94,7 +88,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, strin
 func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 
 	// submit value with bad query data
-	badQueryData := "invalidQueryData"
+	badQueryData := []byte("stupidQueryData")
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	stakedReporter, salt, _ := s.TestCommitValue()
@@ -110,7 +104,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.ErrorContains(err, "failed to decode query data string")
+	s.ErrorContains(err, "collections: not found: key")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithBadValue() {

@@ -27,10 +27,8 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	}
 
 	// get query id bytes hash from query data
-	queryId, err := utils.QueryIDFromDataString(msg.QueryData)
-	if err != nil {
-		return nil, err
-	}
+	queryId := utils.QueryIDFromData(msg.QueryData)
+
 	// get query info for the query id
 	query, err := k.Keeper.Query.Get(ctx, queryId)
 	if err != nil {

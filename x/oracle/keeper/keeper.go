@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
@@ -40,7 +39,7 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.                           // key: reporter, queryid                                                                       // keep track of the total tips
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, int64], types.Aggregate, aggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
-		Cyclelist          collections.Map[[]byte, string]
+		Cyclelist          collections.Map[[]byte, []byte]
 		CyclelistSequencer collections.Sequence
 		authority          string
 	}
@@ -99,7 +98,7 @@ func NewKeeper(
 			codec.CollValue[types.QueryMeta](cdc),
 			NewQueryIndex(sb),
 		),
-		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.StringValue),
+		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
 		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
 	}
 
@@ -117,24 +116,16 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-func HashQueryData(queryData []byte) []byte {
-	return crypto.Keccak256(queryData)
+func (k Keeper) Logger(ctx context.Context) log.Logger {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // initialize query for a given query data
-// TODO: change querydata to bytes
-func (k Keeper) initializeQuery(ctx context.Context, querydata string) (types.QueryMeta, error) {
+func (k Keeper) initializeQuery(ctx context.Context, querydata []byte) (types.QueryMeta, error) {
 	// initialize query tip first time
 
-	queryDataBytes, err := utils.QueryBytesFromString(querydata)
-	if err != nil {
-		return types.QueryMeta{}, err
-	}
-	queryType, _, err := regTypes.DecodeQueryType(queryDataBytes)
+	queryType, _, err := regTypes.DecodeQueryType(querydata)
 	if err != nil {
 		return types.QueryMeta{}, err
 	}
@@ -149,7 +140,7 @@ func (k Keeper) initializeQuery(ctx context.Context, querydata string) (types.Qu
 	query := types.QueryMeta{
 		Id:                    id,
 		RegistrySpecTimeframe: dataSpec.ReportBufferWindow,
-		QueryId:               HashQueryData(queryDataBytes),
+		QueryId:               utils.QueryIDFromData(querydata),
 	}
 	return query, nil
 }

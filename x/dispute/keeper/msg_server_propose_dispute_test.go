@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"time"
 
 	"cosmossdk.io/math"
@@ -17,9 +18,10 @@ import (
 func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 	addr := sample.AccAddressBytes()
 	s.ctx = s.ctx.WithBlockTime(time.Now())
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:  addr.String(),
-		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
+		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
 		Power:     1,

@@ -35,7 +35,7 @@ type ValsetSignatures struct {
 type OracleAttestations struct {
 	OperatorAddresses []string `json:"operator_addresses"`
 	Attestations      []string `json:"attestations"`
-	QueryIds          []string `json:"query_ids"`
+	QueryIds          [][]byte `json:"query_ids"`
 	Timestamps        []int64  `json:"timestamps"`
 }
 
@@ -285,11 +285,11 @@ func (h *ProposalHandler) ValidatorOperatorAddressFromVote(ctx sdk.Context, vote
 	return operatorAddress, nil
 }
 
-func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []string, []string, []int64, error) {
+func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, [][]byte, []string, []int64, error) {
 	var attestations []string
 	var timestamps []int64
 	var operatorAddresses []string
-	var queryIds []string
+	var queryIds [][]byte
 
 	for _, vote := range commit.Votes {
 		extension := vote.GetVoteExtension()

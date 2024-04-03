@@ -1,7 +1,7 @@
 package mint
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"cosmossdk.io/math"
@@ -13,13 +13,15 @@ import (
 
 // BeginBlocker updates the inflation rate, annual provisions, and then mints
 // the block provision for the current block.
-func BeginBlocker(ctx sdk.Context, k keeper.Keeper) error {
+func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	currentTime := ctx.BlockTime()
-	if err := mintBlockProvision(ctx, k, currentTime); err != nil {
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentTime := sdkCtx.BlockTime()
+	if err := mintBlockProvision(sdkCtx, k, currentTime); err != nil {
 		return err
 	}
-	setPreviousBlockTime(ctx, k, currentTime)
+	setPreviousBlockTime(sdkCtx, k, currentTime)
 	return nil
 }
 

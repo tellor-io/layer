@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +20,7 @@ func (k Keeper) SetDataSpec(ctx sdk.Context, querytype string, dataspec types.Da
 // It converts the query type to lowercase before performing the retrieval.
 // If the DataSpec is found, it is returned along with a nil error.
 // If the DataSpec is not found, an empty DataSpec and an error are returned.
-func (k Keeper) GetSpec(ctx sdk.Context, querytype string) (types.DataSpec, error) {
+func (k Keeper) GetSpec(ctx context.Context, querytype string) (types.DataSpec, error) {
 	querytype = strings.ToLower(querytype)
 	return k.SpecRegistry.Get(ctx, querytype)
 }
@@ -28,7 +29,7 @@ func (k Keeper) GetSpec(ctx sdk.Context, querytype string) (types.DataSpec, erro
 // It returns true if the data specification exists, otherwise false.
 // It converts the query type parameter to lower case before, for keeping things consistent.
 // Returns an error if there was an issue checking the registry.
-func (k Keeper) HasSpec(ctx sdk.Context, querytype string) (bool, error) {
+func (k Keeper) HasSpec(ctx context.Context, querytype string) (bool, error) {
 	querytype = strings.ToLower(querytype)
 	return k.SpecRegistry.Has(ctx, querytype)
 }

@@ -20,5 +20,4 @@ var (
 	ErrNoReportsToAggregate        = sdkerrors.Register(ModuleName, 1108, "no reports to aggregate")
 	ErrQueryNotFound               = sdkerrors.Register(ModuleName, 1109, "query not found")
 	ErrNoTipsNotInCycle            = sdkerrors.Register(ModuleName, 1110, "no tips not in cycle")
-	ErrInvalidQueryData            = sdkerrors.Register(ModuleName, 1111, "invalid query data")
 )

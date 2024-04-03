@@ -44,7 +44,7 @@ message MsgUpdateParamsResponse {}
 message MsgSubmitValue {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string query_data = 2;
+  bytes query_data = 2;
   string value = 3;
   string salt = 4; // hex encoded 32 bytes salt
 }
@@ -54,7 +54,7 @@ message MsgSubmitValueResponse {}
 message MsgCommitReport {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  string query_data = 2;
+  bytes query_data = 2;
   string hash = 3; // hex encoded sha256 of "salt:value"
 }
 
@@ -63,7 +63,7 @@ message MsgCommitReportResponse {}
 message MsgTip {
   option (cosmos.msg.v1.signer) = "tipper";
   string tipper = 1;
-  string query_data = 2;
+  bytes query_data = 2;
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
@@ -77,7 +77,7 @@ message MsgUpdateCyclelist {
   // authority is the address that controls the module (defaults to x/gov unless overwritten).
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // list of query data hex strings
-  repeated string cyclelist = 2;
+  repeated bytes cyclelist = 2;
 }
 
 // MsgUpdateCycleResponse defines the Msg/UpdateCycle response type.

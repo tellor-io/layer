@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -38,14 +39,10 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 	if reporter.TotalTokens.LT(params.MinStakeAmount) {
 		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required amount is %s", reporter.TotalTokens, params.MinStakeAmount)
 	}
-	// normalize by removing 0x prefix and lowercasing
-	msg.QueryData = utils.Remove0xPrefix(msg.QueryData)
 
 	// get query id bytes hash from query data
-	queryId, err := utils.QueryIDFromDataString(msg.QueryData)
-	if err != nil {
-		return nil, types.ErrInvalidQueryData.Wrapf("invalid query data: %s", err)
-	}
+	queryId := utils.QueryIDFromData(msg.QueryData)
+
 	// get query info by query id
 	query, err := k.Keeper.Query.Get(ctx, queryId)
 	if err != nil {
@@ -61,7 +58,7 @@ func (k msgServer) CommitReport(goCtx context.Context, msg *types.MsgCommitRepor
 		return nil, err
 	}
 	// bool to check if query is in cycle
-	incycle := msg.QueryData == cycleQuery
+	incycle := bytes.Equal(msg.QueryData, cycleQuery)
 
 	if query.Amount.IsZero() && query.Expiration.Before(ctx.BlockTime()) && !incycle {
 		return nil, types.ErrNoTipsNotInCycle.Wrapf("query does not have tips and is not in cycle")

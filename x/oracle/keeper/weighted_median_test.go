@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"encoding/hex"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
@@ -8,7 +10,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestWeightedMedian() {
-	qId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	reporters := make([]sdk.AccAddress, 18)
 	for i := 0; i < 18; i++ {
 		reporters[i] = sample.AccAddressBytes()
@@ -43,7 +45,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 
 	// // special case A -- lower weighted median and upper weighted median are equal, powers are equal
 	// // calculates lower median
-	qId = "a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac"
+	qId, _ = hex.DecodeString("a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac")
 	currentReporters = reporters[5:9]
 	valuesInt = []int{10, 10, 20, 20}
 	values = testutil.IntToHex(valuesInt)
@@ -71,7 +73,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 
 	// special case B -- lower weighted median and upper weighted median are equal, powers are not all equal
 	// calculates lower median
-	qId = "48e9e2c732ba278de6ac88a3a57a5c5ba13d3d8370e709b3b98333a57876ca95"
+	qId, _ = hex.DecodeString("48e9e2c732ba278de6ac88a3a57a5c5ba13d3d8370e709b3b98333a57876ca95")
 	currentReporters = reporters[9:13]
 	valuesInt = []int{10, 10, 20, 20}
 	values = testutil.IntToHex(valuesInt)
@@ -98,7 +100,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Report.StandardDeviation, testutil.CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
 
 	// // 5 reporters with even weights, should be equal to normal median
-	qId = "907154958baee4fb0ce2bbe50728141ac76eb2dc1731b3d40f0890746dd07e62"
+	qId, _ = hex.DecodeString("907154958baee4fb0ce2bbe50728141ac76eb2dc1731b3d40f0890746dd07e62")
 	currentReporters = reporters[13:18]
 	valuesInt = []int{10, 20, 30, 40, 50}
 	values = testutil.IntToHex(valuesInt)

@@ -29,7 +29,7 @@ type BankKeeper interface {
 
 type RegistryKeeper interface {
 	// Methods imported from registry should be defined here
-	GetSpec(ctx sdk.Context, queryType string) (rktypes.DataSpec, error)
+	GetSpec(ctx context.Context, queryType string) (rktypes.DataSpec, error)
 }
 
 type ReporterKeeper interface {
