@@ -1,6 +1,7 @@
 package mint
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -34,6 +35,7 @@ func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time)
 		return err
 	}
 	toMintCoins := sdk.NewCoins(toMintCoin)
+	fmt.Println("a")
 	// mint coins double half going to team and half to oracle
 	err = k.MintCoins(ctx, toMintCoins.MulInt(math.NewInt(2)))
 	if err != nil {

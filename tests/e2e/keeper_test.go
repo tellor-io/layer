@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 	"time"
 
@@ -223,6 +224,49 @@ func (s *E2ETestSuite) SetupTest() {
 	s.app = app
 }
 
+func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+	require := s.Require()
+	// create account that will become a validator
+	accountsAddrs := simtestutil.CreateIncrementalAccounts(numValidators)
+	// mint numTrb for each validator
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(numTrb*1e6))
+	for _, acc := range accountsAddrs {
+		// mint to module
+		require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		// send from module to account
+		require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, acc, sdk.NewCoins(initCoins)))
+	}
+	// get val address for each account
+	validatorsAddrs := simtestutil.ConvertAddrsToValAddrs(accountsAddrs)
+	// create pub keys for validators
+	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
+	// set each account with proper keepers
+	for i, pubKey := range pubKeys {
+		s.accountKeeper.NewAccountWithAddress(s.ctx, accountsAddrs[i])
+		validator, err := stakingtypes.NewValidator(validatorsAddrs[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
+		require.NoError(err)
+		s.stakingKeeper.SetValidator(s.ctx, validator)
+		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
+		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+
+		_, err = s.stakingKeeper.Delegate(s.ctx, accountsAddrs[i], math.NewInt(numTrb*1e6), stakingtypes.Unbonded, validator, true)
+		require.NoError(err)
+		// call hooks for distribution init
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, accountsAddrs[i], valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, accountsAddrs[i], valBz)
+		require.NoError(err)
+	}
+
+	return accountsAddrs, validatorsAddrs
+}
+
 func (s *E2ETestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
 	ctx := s.ctx
 	s.accountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(addr))
@@ -263,39 +307,39 @@ func (s *E2ETestSuite) CreateAccountsWithTokens(numofAccs int, amountOfTokens in
 	return accs
 }
 
-func (s *E2ETestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	ctx := s.ctx
-	acctNum := len(powers)
-	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
-	amount := new(big.Int).Mul(big.NewInt(1000), base)
-	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-	pks := simtestutil.CreateTestPubKeys(acctNum)
+// func (s *E2ETestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+// 	ctx := s.ctx
+// 	acctNum := len(powers)
+// 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
+// 	amount := new(big.Int).Mul(big.NewInt(1000), base)
+// 	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
+// 	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
+// 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
+// 	pks := simtestutil.CreateTestPubKeys(acctNum)
 
-	for i, pk := range pks {
-		// account := authtypes.BaseAccount{
-		// 	Address:       testAddrs[i].String(),
-		// 	PubKey:        codectypes.UnsafePackAny(pk),
-		// 	AccountNumber: s.accountKeeper.NextAccountNumber(ctx),
-		// }
-		// s.accountKeeper.NewAccount(s.ctx, &account)
+// 	for i, pk := range pks {
+// 		// account := authtypes.BaseAccount{
+// 		// 	Address:       testAddrs[i].String(),
+// 		// 	PubKey:        codectypes.UnsafePackAny(pk),
+// 		// 	AccountNumber: s.accountKeeper.NextAccountNumber(ctx),
+// 		// }
+// 		// s.accountKeeper.NewAccount(s.ctx, &account)
 
-		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
+// 		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
 
-		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
-		s.NoError(err)
-		s.stakingKeeper.SetValidator(ctx, val)
-		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
-	}
+// 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
+// 		s.NoError(err)
+// 		s.stakingKeeper.SetValidator(ctx, val)
+// 		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
+// 		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
+// 		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+// 	}
 
-	_, err := s.stakingKeeper.EndBlocker(ctx)
-	s.NoError(err)
+// 	_, err := s.stakingKeeper.EndBlocker(ctx)
+// 	s.NoError(err)
 
-	return addrs, valAddrs
-}
+// 	return addrs, valAddrs
+// }
 
 func (s *E2ETestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
 	initCoins := sdk.NewCoin(s.denom, accAmt)
