@@ -13,6 +13,7 @@ import (
 )
 
 func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgRequestAttestations) (*types.MsgRequestAttestationsResponse, error) {
+	k.Keeper.Logger(sdk.UnwrapSDKContext(ctx)).Info("@RequestAttestations", "queryId", msg.QueryId, "timestamp", msg.Timestamp)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	queryId, err := hex.DecodeString(msg.QueryId)

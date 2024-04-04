@@ -36,6 +36,8 @@ echo "alice..."
 ./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "bill..."
 ./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
+echo "charlie..."
+./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 
 # Update vote_extensions_enable_height in genesis.json
@@ -53,6 +55,8 @@ echo "alice..."
 ./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice)  10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "bill..."
 ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+echo "charlie..."
+./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 # ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 10000000000000loya --keyring-backend os --home ~/.layer/bill
 
 # Create a tx to stake some loyas for alice

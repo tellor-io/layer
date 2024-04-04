@@ -5,9 +5,7 @@ import (
 )
 
 type AttestationRequest struct {
-	Snapshot  []byte `protobuf:"bytes,1,opt,name=snapshot,proto3"`
-	QueryId   []byte `protobuf:"bytes,2,opt,name=query_id,proto3"`
-	Timestamp uint64 `protobuf:"varint,3,opt,name=timestamp,proto3"`
+	Snapshot []byte `protobuf:"bytes,1,opt,name=snapshot,proto3"`
 }
 
 // AttestationRequests holds requests for attestations.

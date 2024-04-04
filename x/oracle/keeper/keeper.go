@@ -18,7 +18,7 @@ import (
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-var offset = time.Second * 8
+var offset = time.Second * 3
 
 type (
 	Keeper struct {

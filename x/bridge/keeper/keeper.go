@@ -793,6 +793,40 @@ func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, qu
 	return nil
 }
 
+func (k Keeper) SetOracleAttestation2(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error {
+	// get the evm address associated with the operator address
+	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
+		return err
+	}
+	// get the last saved bridge validator set
+	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+		return err
+	}
+	// set the signature in the oracle attestation map by finding the index of the operator address
+	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
+	snapshotHex := hex.EncodeToString(snapshot)
+	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
+		if val.EthereumAddress == ethAddressHex {
+			snapshotToSigsMap, err := k.SnapshotToAttestationsMap.Get(ctx, snapshotHex)
+			if err != nil {
+				k.Logger(ctx).Info("Error getting snapshot to attestations map", "error", err)
+				return err
+			}
+			snapshotToSigsMap.SetAttestation(i, sig)
+			err = k.SnapshotToAttestationsMap.Set(ctx, snapshotHex, snapshotToSigsMap)
+			if err != nil {
+				k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error) {
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
@@ -884,31 +918,35 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr stri
 
 func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
 	k.Logger(ctx).Info("@CreateNewReportSnapshots")
-	blockHeight := ctx.BlockHeight() - 1
-	if blockHeight > 0 {
-		reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
-		for _, report := range reports {
-			queryId, err := hex.DecodeString(report.QueryId)
-			if err != nil {
-				return err
-			}
-			timeNow := time.Now().Add(time.Second)
-			reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
-			if err != nil {
-				return nil
-			}
-			err = k.CreateSnapshot(ctx, queryId, reportTime)
-			if err != nil {
-				return err
-			}
+	blockHeight := ctx.BlockHeight()
+	k.Logger(ctx).Info("block height", "blockHeight", blockHeight)
+
+	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
+	k.Logger(ctx).Info("num reports", "reports", len(reports))
+	for _, report := range reports {
+		queryId, err := hex.DecodeString(report.QueryId)
+		if err != nil {
+			return err
+		}
+		timeNow := time.Now().Add(time.Second)
+		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
+		if err != nil {
+			return nil
+		}
+		err = k.CreateSnapshot(ctx, queryId, reportTime)
+		if err != nil {
+			return err
 		}
 	}
+
 	return nil
 }
 
 // Called with each new agg report and with new request for optimistic attestations
 func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.Time) error {
 	k.Logger(ctx).Info("@CreateSnapshot")
+	k.Logger(ctx).Info("queryId", "queryId", hex.EncodeToString(queryId))
+	k.Logger(ctx).Info("timestamp", "timestamp", fmt.Sprint(timestamp.Unix()))
 	k.Logger(ctx).Info("getting agg report...")
 	// GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error)
 	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
@@ -991,6 +1029,8 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		AttestationTimestamp: int64(timestamp.Unix()),
 		PrevReportTimestamp:  int64(tsBefore.Unix()),
 		NextReportTimestamp:  int64(tsAfter.Unix()),
+		QueryId:              queryId,
+		Timestamp:            int64(timestamp.Unix()),
 	}
 	k.Logger(ctx).Info("setting snapshot data...")
 	err = k.AttestSnapshotDataMap.Set(ctx, hex.EncodeToString(snapshotBytes), snapshotData)
@@ -1015,14 +1055,17 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		return err
 	}
 
+	k.Logger(ctx).Info("getting attestation requests by height...")
 	// add to attestation requests
 	blockHeight := uint64(ctx.BlockHeight())
+	k.Logger(ctx).Info("block height", "blockHeight", blockHeight)
 	exists, err = k.AttestRequestsByHeightMap.Has(ctx, blockHeight)
 	if err != nil {
 		k.Logger(ctx).Info("Error checking if attestation requests by height map exists", "error", err)
 		return err
 	}
 	if !exists {
+		k.Logger(ctx).Info("attestation requests by height map does not exist, creating new map...")
 		attestRequests := types.AttestationRequests{}
 		err = k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
 		if err != nil {
@@ -1036,9 +1079,7 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		return err
 	}
 	request := types.AttestationRequest{
-		Snapshot:  snapshotBytes,
-		QueryId:   queryId,
-		Timestamp: uint64(timestamp.Unix()),
+		Snapshot: snapshotBytes,
 	}
 	attestRequests.AddRequest(&request)
 	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)

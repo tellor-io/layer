@@ -47,8 +47,9 @@ type BridgeKeeper interface {
 	GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValidatorSet, error)
 	GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
 	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
-	SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error
 	GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
+	GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*bridgetypes.AttestationRequests, error)
+	SetOracleAttestation2(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error
 }
 
 type StakingKeeper interface {
@@ -64,8 +65,7 @@ type VoteExtHandler struct {
 }
 
 type OracleAttestation struct {
-	QueryId     string
-	Timestamp   uint64
+	Snapshot    []byte
 	Attestation []byte
 }
 
@@ -95,6 +95,7 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	h.logger.Info("@ExtendVoteHandler")
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
@@ -117,60 +118,31 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		}
 		voteExt.InitialSignature = initialSignature
 	}
-	// logic for generating oracle sigs and including them via vote extensions
+	// generate oracle attestations and include them via vote extensions
 	blockHeight := ctx.BlockHeight() - 1
-	reports := h.oracleKeeper.GetAggregatedReportsByHeight(ctx, int64(blockHeight))
-	// iterate through reports and generate sigs
-	if len(reports) > 0 {
-		valsetCheckpoint, err := h.bridgeKeeper.GetValidatorCheckpointFromStorage(ctx)
-		if err != nil {
+	// reports := h.oracleKeeper.GetAggregatedReportsByHeight(ctx, int64(blockHeight))
+	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
+	if err != nil {
+		if strings.Contains(err.Error(), "collections: not found") {
+			h.logger.Info("No attestation requests found for height", "height", blockHeight)
+		} else {
 			return nil, err
 		}
-		for _, aggReport := range reports {
-			currentTime := time.Now()
-			ts := currentTime.Unix() + 100
-			queryId, err := hex.DecodeString(aggReport.QueryId)
-			if err != nil {
-				panic(err)
+	} else {
+		snapshots := attestationRequests.Requests
+		// iterate through snapshots and generate sigs
+		if len(snapshots) > 0 {
+			for _, snapshot := range snapshots {
+				sig, err := h.SignMessage(snapshot.Snapshot)
+				if err != nil {
+					return nil, err
+				}
+				oracleAttestation := OracleAttestation{
+					Snapshot:    snapshot.Snapshot,
+					Attestation: sig,
+				}
+				voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
 			}
-			reportTime, err := h.oracleKeeper.GetTimestampBefore(ctx, queryId, time.Unix(ts, 0))
-			if err != nil {
-				return nil, err
-			}
-			tsBefore, err := h.oracleKeeper.GetTimestampBefore(ctx, queryId, reportTime)
-			if err != nil {
-				// set to 0
-				tsBefore = time.Unix(0, 0)
-			}
-			tsAfter, err := h.oracleKeeper.GetTimestampAfter(ctx, queryId, reportTime)
-			if err != nil {
-				// set to 0
-				tsAfter = time.Unix(0, 0)
-			}
-			oracleAttestationHash, err := h.EncodeOracleAttestationData(
-				aggReport.QueryId,
-				aggReport.AggregateValue,
-				reportTime.Unix(),
-				aggReport.ReporterPower,
-				tsBefore.Unix(),
-				tsAfter.Unix(),
-				hex.EncodeToString(valsetCheckpoint.Checkpoint),
-				reportTime.Unix(),
-			)
-			if err != nil {
-				return nil, err
-			}
-			// sign the oracleAttestationHash
-			sig, err := h.SignMessage(oracleAttestationHash)
-			if err != nil {
-				return nil, err
-			}
-			oracleAttestation := OracleAttestation{
-				Attestation: sig,
-				QueryId:     aggReport.QueryId,
-				Timestamp:   uint64(reportTime.Unix()),
-			}
-			voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
 		}
 	}
 	// include the valset sig in the vote extension
@@ -198,6 +170,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	h.logger.Info("@VerifyVoteExtensionHandler")
 	// TODO: implement the logic to verify the vote extension
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
