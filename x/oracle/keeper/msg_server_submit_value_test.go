@@ -13,6 +13,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byte) {
+	require := s.Require()
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	// Commit
 	stakedReporter, salt, queryData := s.TestCommitValue()

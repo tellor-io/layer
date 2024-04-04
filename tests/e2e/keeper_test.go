@@ -50,7 +50,6 @@ import (
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/utils"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 
@@ -395,34 +394,34 @@ func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorA
 	return nil
 }
 
-func CommitReport(ctx sdk.Context, accountAddr string, queryData string, msgServerOracle oracletypes.MsgServer) error {
-	// commit
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
-	if err != nil {
-		return err
-	}
-	salt, err := utils.Salt(32)
-	if err != nil {
-		return err
-	}
-	hash := utils.CalculateCommitment(string(valueDecoded), salt)
-	if err != nil {
-		return err
-	}
-	// commit report with query data in cycle list
-	commitreq := &oracletypes.MsgCommitReport{
-		Creator:   accountAddr,
-		QueryData: queryData,
-		Hash:      hash,
-	}
-	_, err = msgServerOracle.CommitReport(ctx, commitreq)
-	if err != nil {
-		return err
-	}
+// func CommitReport(ctx context.Context, accountAddr string, []queryData bytes, msgServerOracle oracletypes.MsgServer) error {
+// 	// commit
+// 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+// 	valueDecoded, err := hex.DecodeString(value) // convert hex value to bytes
+// 	if err != nil {
+// 		return err
+// 	}
+// 	salt, err := utils.Salt(32)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	hash := utils.CalculateCommitment(string(valueDecoded), salt)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	// commit report with query data in cycle list
+// 	commitreq := &oracletypes.MsgCommitReport{
+// 		Creator:   accountAddr,
+// 		QueryData: queryData,
+// 		Hash:      hash,
+// 	}
+// 	_, err = msgServerOracle.CommitReport(ctx, commitreq)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (s *E2ETestSuite) createValidatorAccs(powers []int64) []sdk.AccAddress {
 	ctx := s.ctx

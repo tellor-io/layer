@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -287,14 +286,12 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 }
 
 // todo: claim tbr/tips for these reports
-// todo: pull latest
 func (s *E2ETestSuite) TestBasicReporting() {
 	require := s.Require()
 
 	tbrModuleAccount := s.accountKeeper.GetModuleAddress(minttypes.TimeBasedRewards)
 	tbrModuleAccountBalance := s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	fmt.Println("tbrModuleAccountBalance before beginblock block 0: ", tbrModuleAccountBalance)
-	// how to set current time so mintBlockProvisions doesnt read from 00:00 to now ?
 
 	//---------------------------------------------------------------------------
 	// Height 0
@@ -307,18 +304,21 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create a validator
 	// create account that will become a validator
 	testAccount := simtestutil.CreateIncrementalAccounts(1)
+	fmt.Println("testAccount: ", testAccount[0].String())
 	// mint 5000*1e6tokens for validator
 	initCoins := sdk.NewCoin(s.denom, math.NewInt(5000*1e8))
 	require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, testAccount[0], sdk.NewCoins(initCoins)))
 	// get val address
 	testAccountValAddrs := simtestutil.ConvertAddrsToValAddrs(testAccount)
+	fmt.Println("testAccountValAddrs: ", testAccountValAddrs[0].String())
 	// create pub key for validator
 	pubKey := simtestutil.CreateTestPubKeys(1)
 	// tell keepers about the new validator
 	s.accountKeeper.NewAccountWithAddress(s.ctx, testAccount[0])
 	validator, err := stakingtypes.NewValidator(testAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "created validator"})
 	require.NoError(err)
+	fmt.Println("validator.OperatorAddress: ", validator.OperatorAddress)
 	s.stakingKeeper.SetValidator(s.ctx, validator)
 	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
 	s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
@@ -347,25 +347,28 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	}
 	pk := secp256k1.GenPrivKey()
 	reporterAccount := sdk.AccAddress(pk.PubKey().Address())
+	fmt.Println("reporterAccount: ", reporterAccount.String())
+	fmt.Println("reporter val address: ", sdk.ValAddress(reporterAccount).String())
 	// mint 5000*1e6 tokens for reporter
 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporterAccount, sdk.NewCoins(initCoins)))
-	// delegate to validator so reporterDelforVal can delegate to themselves
-	reporterDelforVal := Delegator{delegatorAddress: reporterAccount, validator: validator, tokenAmount: math.NewInt(5000 * 1e6)}
-	_, err = s.stakingKeeper.Delegate(s.ctx, reporterDelforVal.delegatorAddress, reporterDelforVal.tokenAmount, stakingtypes.Unbonded, reporterDelforVal.validator, true)
+	// delegate to validator so reporter can delegate to themselves
+	reporterDelToVal := Delegator{delegatorAddress: reporterAccount, validator: validator, tokenAmount: math.NewInt(5000 * 1e6)}
+	_, err = s.stakingKeeper.Delegate(s.ctx, reporterDelToVal.delegatorAddress, reporterDelToVal.tokenAmount, stakingtypes.Unbonded, reporterDelToVal.validator, true)
 	require.NoError(err)
 	// set up reporter module msgServer
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
 	require.NotNil(msgServerReporter)
 	// define createReporterMsg params
 	var createReporterMsg reportertypes.MsgCreateReporter
-	reporterAddress := reporterDelforVal.delegatorAddress.String()
+	reporterAddress := reporterDelToVal.delegatorAddress.String()
 	amount := math.NewInt(4000 * 1e6)
 	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4000 * 1e6)}
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
 	// fill in createReporterMsg
 	createReporterMsg.Reporter = reporterAddress
+	fmt.Println("reporterAddress: ", reporterAddress)
 	createReporterMsg.Amount = amount
 	createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&source}
 	createReporterMsg.Commission = &commission
@@ -383,8 +386,12 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.Equal(delegation.Reporter, reporterAccount.String())
 	require.Equal(delegation.Amount, math.NewInt(4000*1e6))
+	// check on reporter/validator delegation
+	skDelegation, err := s.stakingKeeper.Delegation(s.ctx, reporterAccount, valBz)
+	require.NoError(err)
+	require.Equal(skDelegation.GetDelegatorAddr(), reporterAccount.String())
+	require.Equal(skDelegation.GetValidatorAddr(), validator.GetOperator())
 
-	// todo: actual solution
 	// mintBlockProvisions is minting time based rewards from time zero to current time first time it is called
 	// sending the extra tbr to the validator before starting reporting
 	// s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, string(tbrModuleAccount), testAccount[0], sdk.NewCoins(tbrModuleAccountBalance))
@@ -434,7 +441,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Block 2
+	// Height 2
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -462,11 +469,11 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
-	queryId1, err := utils.QueryIDFromDataString(cycleListEth)
+	queryIdEth := utils.QueryIDFromData(cycleListEth)
 	s.NoError(err)
 	// check that aggregated report is stored
 	getAggReportRequest1 := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryId1),
+		QueryId: queryIdEth,
 	}
 	result1, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest1)
 	require.NoError(err)
@@ -474,7 +481,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.AggregateReportIndex, int64(0))
 	require.Equal(result1.Report.AggregateValue, encodeValue(4500))
 	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
-	require.Equal(result1.Report.QueryId, hex.EncodeToString(queryId1))
+	require.Equal(result1.Report.QueryId, queryIdEth)
 	require.Equal(int64(4000), result1.Report.ReporterPower)
 	// check tbr
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
@@ -482,8 +489,6 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	reporterModuleAccount := s.accountKeeper.GetModuleAddress(reportertypes.ModuleName)
 	reporterModuleAccountBalance := s.bankKeeper.GetBalance(s.ctx, reporterModuleAccount, sdk.DefaultBondDenom)
 	fmt.Println("reporterModuleAccountBalance height 2 end: ", reporterModuleAccountBalance)
-	balanceAfterReport1 := s.bankKeeper.GetBalance(s.ctx, reporterAccount, sdk.DefaultBondDenom)
-	fmt.Println("balance after report 1: ", balanceAfterReport1)
 
 	// case 2: submit without committing for cycle list
 	//---------------------------------------------------------------------------
@@ -495,11 +500,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	fmt.Println("tbrModuleAccountBalance height 3: ", tbrModuleAccountBalance)
 	// withdraw tbr
-	withdraw, err := s.reporterkeeper.WithdrawDelegationRewards(s.ctx, valBz, sdk.AccAddress(reporter.Reporter))
-	// require.NoError(err)
-	fmt.Println("err: ", err)
-	// require.NotNil(withdraw)
-	fmt.Println("withdraw: ", withdraw)
+	_, err = s.reporterkeeper.WithdrawDelegationRewards(s.ctx, sdk.ValAddress(reporterAccount), reporterAccount)
+	require.NoError(err)
+	// check on reporter balance
+
 	// get new cycle list query data
 	cycleListTrb, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
@@ -522,11 +526,11 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
-	queryId2, err := utils.QueryIDFromDataString(cycleListTrb)
+	queryIdTrb := utils.QueryIDFromData(cycleListTrb)
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest2 := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryId2),
+		QueryId: queryIdTrb,
 	}
 	// check that aggregated report is stored correctly
 	result2, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest2)
@@ -534,7 +538,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(int64(0), result2.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result2.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result2.Report.AggregateReporter)
-	require.Equal(hex.EncodeToString(queryId2), result2.Report.QueryId)
+	require.Equal(queryIdTrb, result2.Report.QueryId)
 	require.Equal(int64(4000), result2.Report.ReporterPower)
 	require.Equal(int64(3), result2.Report.Height)
 
@@ -549,7 +553,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	fmt.Println("tbrModuleAccountBalance height 4: ", tbrModuleAccountBalance)
 	// create tip msg
-	tipAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1))
+	tipAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))
 	msgTip := oracletypes.MsgTip{
 		Tipper:    reporter.Reporter,
 		QueryData: cycleListEth,
@@ -560,9 +564,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(tipRes)
 	// check that tip is in oracle module account
+	twoPercent := sdk.NewCoin(s.denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	tipModuleAcct := s.accountKeeper.GetModuleAddress(oracletypes.ModuleName)
 	tipAcctBalance := s.bankKeeper.GetBalance(s.ctx, tipModuleAcct, sdk.DefaultBondDenom)
-	require.Equal(tipAcctBalance, tipAmount)
+	require.Equal(tipAcctBalance, tipAmount.Sub(twoPercent))
 	// create commit for tipped eth query
 	salt1, err = oracleutils.Salt(32)
 	require.NoError(err)
@@ -582,7 +587,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 	//---------------------------------------------------------------------------
-	// Hieght 5
+	// Height 5
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -608,7 +613,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	// create get aggreagted report query
 	getAggReportRequest1 = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryId1),
+		QueryId: queryIdEth,
 	}
 	// check that the aggregated report is stored correctly
 	result1, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest1)
@@ -616,31 +621,29 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.AggregateReportIndex, int64(0))
 	require.Equal(result1.Report.AggregateValue, encodeValue(5000))
 	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
-	require.Equal(hex.EncodeToString(queryId1), result1.Report.QueryId)
+	require.Equal(queryIdEth, result1.Report.QueryId)
 	require.Equal(int64(4000), result1.Report.ReporterPower)
 	require.Equal(int64(5), result1.Report.Height)
-	// check that the tip is in tipescrow
+	// check that the tip is in tip escrow
 	tipEscrowAcct := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
-	tipEscrowBalance := s.bankKeeper.GetBalance(s.ctx, tipEscrowAcct, sdk.DefaultBondDenom)
-	require.NotNil(tipEscrowBalance)
-	twoPercent := sdk.NewCoin(s.denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
+	tipEscrowBalance := s.bankKeeper.GetBalance(s.ctx, tipEscrowAcct, sdk.DefaultBondDenom) // 98 loya
 	require.Equal(tipAmount.Amount.Sub(twoPercent.Amount), tipEscrowBalance.Amount)
 	// withdraw tip
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
-		DelegatorAddress: reporter.Reporter,
-		ValidatorAddress: validator.OperatorAddress,
+		DelegatorAddress: reporterAddress,
+		ValidatorAddress: sdk.ValAddress(reporterAccount).String(),
 	}
-	// delegation1 := s.stakingKeeper.Delegation(s.ctx, reporter.reporter, validator.OperatorAddress)
-	// require.NotNil(delegation)
+	fmt.Println("reporterAddress: ", reporterAddress)
+	fmt.Println("validatorAddress: ", sdk.ValAddress(reporterAccount).String())
 	_, err = msgServerReporter.WithdrawTip(s.ctx, &msgWithdrawTip)
 	require.NoError(err)
-	// require.True(delegation.GetShares().Equal())
+
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
 	// case 4: submit without committing for tipped query
 	//---------------------------------------------------------------------------
-	// Block 6
+	// Height 6
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -651,7 +654,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create tip msg
 	msgTip = oracletypes.MsgTip{
 		Tipper:    reporter.Reporter,
-		QueryData: trbQueryData,
+		QueryData: cycleListTrb,
 		Amount:    tipAmount,
 	}
 	// send tip tx
@@ -665,7 +668,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create submit msg
 	revealMsgTrb := oracletypes.MsgSubmitValue{
 		Creator:   reporter.Reporter,
-		QueryData: trbQueryData,
+		QueryData: cycleListTrb,
 		Value:     encodeValue(1_000_000),
 	}
 	// send submit msg
@@ -676,12 +679,9 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
-	// get trb query id
-	queryIdTrb, err := utils.QueryIDFromDataString(trbQueryData)
-	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequestTrb := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: hex.EncodeToString(queryIdTrb),
+		QueryId: queryIdTrb,
 	}
 	// query aggregated report
 	resultTrb, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestTrb)
@@ -689,7 +689,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(resultTrb.Report.AggregateReportIndex, int64(0))
 	require.Equal(resultTrb.Report.AggregateValue, encodeValue(1_000_000))
 	require.Equal(resultTrb.Report.AggregateReporter, reporter.Reporter)
-	require.Equal(hex.EncodeToString(queryIdTrb), resultTrb.Report.QueryId)
+	require.Equal(queryIdTrb, resultTrb.Report.QueryId)
 	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
 	require.Equal(int64(6), resultTrb.Report.Height)
 	// claim tip

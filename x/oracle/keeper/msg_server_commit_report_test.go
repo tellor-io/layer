@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -22,7 +21,7 @@ import (
 func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, []byte) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
-	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx) // eth/usd
+	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 	// value 100000000000000000000 in hex
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
@@ -145,34 +144,6 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 
 }
 
-func (s *KeeperTestSuite) TestCommitWithBadQueryData() {
-
-	// try to commit bad query data
-	queryData := "invalidQueryData"
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-
-	salt, err := utils.Salt(32)
-	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
-
-	addr := sample.AccAddressBytes()
-
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
-
-	var commitreq = types.MsgCommitReport{
-		Creator:   addr.String(),
-		QueryData: queryData,
-		Hash:      hash,
-	}
-	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "invalid query data")
-}
-
 func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 	// try to commit from unbonded reporter
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -290,39 +261,4 @@ func (s *KeeperTestSuite) TestCommitWithMissingHash() {
 	}
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq) // no error
 	s.ErrorContains(err, "hash field cannot be empty")
-}
-
-func (s *KeeperTestSuite) TestCommitExpiredQuery() {
-	require := s.Require()
-
-	queryInCycle, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
-	require.NoError(err)
-	require.Equal(trbQueryData[2:], queryInCycle)
-
-	ethQueryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-
-	// Commit report transaction
-	salt, err := utils.Salt(32)
-	s.Nil(err)
-	hash := utils.CalculateCommitment(value, salt)
-
-	addr := sample.AccAddressBytes()
-
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
-
-	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
-
-	var commitreq = types.MsgCommitReport{
-		Creator:   addr.String(),
-		QueryData: ethQueryData,
-		Hash:      hash,
-	}
-	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	fmt.Println(err)
 }

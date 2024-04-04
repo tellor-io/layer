@@ -27,17 +27,19 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 
 // mintBlockProvision mints the block provision for the current block.
 func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time) error {
+	if currentTime.IsZero() {
+		// return on invalid block time
+		return nil
+	}
 	minter := k.GetMinter(ctx)
 	if minter.PreviousBlockTime == nil {
 		return nil
 	}
-
 	toMintCoin, err := minter.CalculateBlockProvision(currentTime, *minter.PreviousBlockTime)
 	if err != nil {
 		return err
 	}
 	toMintCoins := sdk.NewCoins(toMintCoin)
-	fmt.Println("a")
 	// mint coins double half going to team and half to oracle
 	err = k.MintCoins(ctx, toMintCoins.MulInt(math.NewInt(2)))
 	if err != nil {
