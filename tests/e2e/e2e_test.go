@@ -304,21 +304,20 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create a validator
 	// create account that will become a validator
 	testAccount := simtestutil.CreateIncrementalAccounts(1)
-	fmt.Println("testAccount: ", testAccount[0].String())
+	fmt.Println("validator account address: ", testAccount[0].String())
 	// mint 5000*1e6tokens for validator
 	initCoins := sdk.NewCoin(s.denom, math.NewInt(5000*1e8))
 	require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, testAccount[0], sdk.NewCoins(initCoins)))
 	// get val address
 	testAccountValAddrs := simtestutil.ConvertAddrsToValAddrs(testAccount)
-	fmt.Println("testAccountValAddrs: ", testAccountValAddrs[0].String())
+	fmt.Println("validator val address: ", testAccountValAddrs[0].String())
 	// create pub key for validator
 	pubKey := simtestutil.CreateTestPubKeys(1)
 	// tell keepers about the new validator
 	s.accountKeeper.NewAccountWithAddress(s.ctx, testAccount[0])
 	validator, err := stakingtypes.NewValidator(testAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "created validator"})
 	require.NoError(err)
-	fmt.Println("validator.OperatorAddress: ", validator.OperatorAddress)
 	s.stakingKeeper.SetValidator(s.ctx, validator)
 	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
 	s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
@@ -347,8 +346,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	}
 	pk := secp256k1.GenPrivKey()
 	reporterAccount := sdk.AccAddress(pk.PubKey().Address())
-	fmt.Println("reporterAccount: ", reporterAccount.String())
-	fmt.Println("reporter val address: ", sdk.ValAddress(reporterAccount).String())
+	fmt.Println("reporter account address: ", reporterAccount.String())
+	fmt.Println("reporter validator address: ", sdk.ValAddress(reporterAccount).String())
 	// mint 5000*1e6 tokens for reporter
 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporterAccount, sdk.NewCoins(initCoins)))
@@ -368,7 +367,6 @@ func (s *E2ETestSuite) TestBasicReporting() {
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
 	// fill in createReporterMsg
 	createReporterMsg.Reporter = reporterAddress
-	fmt.Println("reporterAddress: ", reporterAddress)
 	createReporterMsg.Amount = amount
 	createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{&source}
 	createReporterMsg.Commission = &commission
@@ -489,6 +487,13 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	reporterModuleAccount := s.accountKeeper.GetModuleAddress(reportertypes.ModuleName)
 	reporterModuleAccountBalance := s.bankKeeper.GetBalance(s.ctx, reporterModuleAccount, sdk.DefaultBondDenom)
 	fmt.Println("reporterModuleAccountBalance height 2 end: ", reporterModuleAccountBalance)
+	// withdraw tbr
+	rewards, err := s.reporterkeeper.WithdrawDelegationRewards(s.ctx, sdk.ValAddress(reporterAccount), reporterAccount)
+	require.NoError(err)
+	require.Equal(len(rewards), 1)
+	require.Equal(rewards[0].Denom, s.denom)
+	fmt.Println("rewards[0].Amount: ", rewards[0].Amount)
+	// check on reporter balance
 
 	// case 2: submit without committing for cycle list
 	//---------------------------------------------------------------------------
@@ -499,10 +504,6 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	fmt.Println("tbrModuleAccountBalance height 3: ", tbrModuleAccountBalance)
-	// withdraw tbr
-	_, err = s.reporterkeeper.WithdrawDelegationRewards(s.ctx, sdk.ValAddress(reporterAccount), reporterAccount)
-	require.NoError(err)
-	// check on reporter balance
 
 	// get new cycle list query data
 	cycleListTrb, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -633,8 +634,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 		DelegatorAddress: reporterAddress,
 		ValidatorAddress: sdk.ValAddress(reporterAccount).String(),
 	}
-	fmt.Println("reporterAddress: ", reporterAddress)
-	fmt.Println("validatorAddress: ", sdk.ValAddress(reporterAccount).String())
+	fmt.Println("DelegatorAddress: reporterAddress,: ", reporterAddress)
+	fmt.Println("ValidatorAddress: sdk.ValAddress(reporterAccount).String(): ", sdk.ValAddress(reporterAccount).String())
 	_, err = msgServerReporter.WithdrawTip(s.ctx, &msgWithdrawTip)
 	require.NoError(err)
 
