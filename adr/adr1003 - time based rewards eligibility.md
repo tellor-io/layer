@@ -7,6 +7,7 @@
 ## Changelog
 
 - 2024-02-22: initial version
+- 20204-04-02: clarity
 
 ## Context
 
@@ -15,7 +16,7 @@ a) subsidizes users needing to tip
 b) provides a heart beat for the system in absence of tips (reporters are then around ready to report and we can all see they are reporting accurately)
 
 
-The issue in just distributing inflationary rewards to all reported data is that there becomes an incentive to report more (unneeded) data in order to increase the amount of rewards given to your reporter.  For instance if you have 10 reporters (equal weight) and they all report for BTC/USD, then they would split the inflationary rewards (if they have unequal weight it would be distributed based upon reporting weight).  The problem is what happens when one of those parties reports for TRB/BTC (imagine a query that only they support)?  For calculation purposes, let's say they report for 9 new queries that only they support.  If the inflation is split based on total reported queries, they had 9 reports and all other reporters (equal weight) also had 9, so our attacker would get 50% of the rewards.   
+The issue in just distributing inflationary rewards to all reported data is that there becomes an incentive to report more (unneeded) data in order to increase the amount of rewards given to your reporter.  For instance if you have 10 reporters (equal weight) and they all report for BTC/USD, then they would split the inflationary rewards (if they have unequal weight it would be distributed based upon reporting weight).  The problem is what happens when one of those parties reports for a query that only they support.  For calculation purposes, let's say they don't just do it for one, but report for 9 new queries that only they support.  If the inflation is split based on total reported queries, they had 9 reports(all ones they only support) and all other reporters (equal weight) also had 9 (just for BTC/USD).  Unfotunately if you split the time based reward by weight given, the attacker would get 50% of the rewards.   
 
 In order to prevent this we only give inflationary rewards to cycle list queries (queries that have been voted on by governance that everyone should support at a base level).  
 
@@ -32,7 +33,7 @@ An easy solution is to keep the inflation for validators and not reporters.  Thi
 
 ### only cycle rewards if consensus reached 
 
-A discussed option was to only provide inflationary rewards to queries that hit consnensus.  This sort of solves the problem, but there would still be the issue that some parties would want to support queries that had 66% support vs those with 100% support.  There would also be a race to submit for more things, (e.g. if I do more than everyone else I'll get more), which could be good, but it would fill up the chain unnecessarilty.  
+A discussed option was to only provide inflationary rewards to queries that hit consnensus.  This sort of solves the problem, but there would still be the issue that some parties would want to support queries that had 66% support vs those with 100% support. 
 
 ### weight only used once
 

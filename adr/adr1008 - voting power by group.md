@@ -3,11 +3,13 @@
 ## Authors
 
 @themandalore
+@brendaloya
 
 ## Changelog
 
 - 2024-02-27: initial version
-- 2024-04-01: clarified la
+- 2024-04-01: clarified language
+- 2024-04-02: added option on decreasing user vote power
 
 ## Context
 
@@ -20,7 +22,11 @@ For voting on disputes, who gets to say what a good value is?  The current split
 
 Most notable in the split is the absence of validators and relayers.  The rationale for not including validators is the treatment of delegated tokens.  Currently delegated tokens are already counted twice (token holders and reporters they are delegated to).  If the validator was also able to use tokens delegated to themselves, you could essentially delegate tokens to yourself as a reporter and a validator and then triple your voting power.  We could choose between giving the power to reporters or validators in this case and we went with reporters for the same reason disputes can be started with delegated tokens from reporters and not validators; data reporting and quality is done by the reporters, chain operations are done by the validators. 
 
+Additionally, we give delegated reporters multiple powers (token weight and reporter weight).  
 
+If A and B each have 100 tokens and A and B both delegate to B for reporting
+
+For voting - reporter weights go to B and the token weight portion also goes to B for 200, unless A votes.  If A votes, he gets his 100 and B gets 100.  (note this is standard for validator delegation and votes in the cosmos sdk)
 
 ## Alternative Approaches
 
@@ -42,7 +48,14 @@ The downside here is that votes are still sellable, you just need to sell your p
 
 This is the case for users as well. Users do not have to stake and they earn voting weight by the amount of tips the provide. However, users are dissinsitivized from selling their private keys because doing so could trigger an attack to their own protocol (there is no guarantee an attacker that is willign to buy their keys will not attack them too). 
 
-Brenda Q--Should we decrease user voting power over time or reduce it if they stop tipping over two months???
+
+### decrease user voting power over time
+
+One option is to reduce user voting power as the system matures.  So the risk is that a user will be big, gain a lot of power and then want to sell it once they no longer need it.  By reducing their power over time, this could remove this risk and give more credence to currently tipping parties.  
+
+The downside here is that the risk is still alive (you just have to sell it sooner) and it fails to recognize longevity.  If a user tips faithfully once a day for 2 years, should they have more or less power than a user who tips 10 times a day for a week? Obviously for voting, we'd prefer the former as they've been around tellor for a long time.  The good users here are ones that stay around.  
+
+Another way to fix the attack (buying vote power via tips) is to just have others also tip on subsequent vote rounds, so the system would always be safe if >50% of the power is honest; not to even mention a risk of a social fork. 
 
 ### move to different goverance structure
 
