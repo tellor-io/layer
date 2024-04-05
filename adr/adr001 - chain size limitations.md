@@ -3,21 +3,25 @@
 ## Authors
 
 @themandalore
+@brendaloya
 
 ## Changelog
 
 - 2024-02-21: initial version
 - 2024-04-02: formatting
+- 2024-04-01: clarity
 
 ## Context
 
-Layer is limited in many ways. This ADR is meant to go over the limits relating to each design decision.  
+Layer is limited in many ways. This ADR is meant to go over the limits relating to decisions that affect the size of the chain and the ability to bridge data efficiently.  
 
+## Chain 
 
 ### General State growth
 
-How fast does our chain grow in size? 
-What measures / designs are in place for pruning state? 
+    How fast does the chain grow in size? 
+    What measures / designs are in place for pruning state? 
+    Should we consider a data availability layer? Should we assume no-one needs data or verification passed prunning timeframe?
 
 ###  Blocksize limits
     
@@ -27,16 +31,23 @@ What measures / designs are in place for pruning state?
         - How many reporters can we fit in with one given queryId?
     How many transfers can fit into a block?
 
+## Bridge 
 
 ### Validator Size limits
 
-How many signatures can fit into ETH block? Do we expect ETH to be the main chain data is bridged to?
+    How many signatures can fit into ETH block? 
+    Do we expect ETH to be the main chain data is bridged to?
 
 ### Vote extension limits
 
-VoteExtension size limit - How many signatures can we add to vote extensions (queryId's aggregated x validators needed to hit 2/3 consnesns)?
+We have currently opted for implementing signing off on bridge data via vote extensions. However there are still a few unknowns? 
+    - What is the size limit for VoteExtension? Currently estimated at about 4MB.
+    - How many signatures can we add to vote extensions (queryId's aggregated x validators needed to hit 2/3 consensus)?
 
-If we don't use voteExtensions, how many signatures can we fit into a block (i.e. store them in the next block)
+If we don't use voteExtensions, 
+    - how many signatures can we fit into a block (i.e. store them in the next block)? 
+    - Should lanes be implemented? What is a good balance between data reports, transfers, and bridge signatures?
+
 
 ## Alternate approaches to state growth
 

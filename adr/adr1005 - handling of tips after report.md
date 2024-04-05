@@ -10,7 +10,7 @@
 
 - 2024-02-21: initial version
 - 2024-03-07: changed to escrow account vs stake
-- 2024-04-01: made the distiction clearer for tips not going into the reporter stake (we should discuss since your last update, did not match what I thought we decided on-BL.)
+- 2024-04-01: made the distinction clearer for tips not going into the reporter stake 
 - 2024-04-02: clarity / wording changes
 
 ## Context
