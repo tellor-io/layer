@@ -3,6 +3,7 @@ const { ethers, network } = require("hardhat");
 const BigNumber = ethers.BigNumber
 const BN = web3.utils.BN;
 const axios = require('axios')
+const { exec } = require("child_process");
 
 const hash = web3.utils.keccak256;
 var assert = require('assert');
@@ -64,37 +65,7 @@ getValset = async (timestamp) => {
   }
 }
 
-getValsetSigs = async (timestamp) => {
-  url = "http://localhost:1317/layer/bridge/get_valset_sigs/" + timestamp
-  try {
-    const response = await axios.get(url)
-    sigsResponse = response.data.signatures
-    sigs = []
-    for (i = 0; i < sigsResponse.length; i++) {
-      if (sigsResponse[i].length == 130) {
-        sigs.push({
-          v: 28,
-          r:
-            '0x' + sigsResponse[i].slice(2, 66),
-          s:
-            '0x' + sigsResponse[i].slice(66, 130)
-        })
-      } else {
-        sigs.push({
-          v: 0,
-          r: '0x0000000000000000000000000000000000000000000000000000000000000000',
-          s: '0x0000000000000000000000000000000000000000000000000000000000000000'
-        })
-      }
-
-    }
-    return sigs
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-getValsetSigs2 = async (timestamp, valset, digest) => {
+getValsetSigs = async (timestamp, valset, checkpoint) => {
   const url = "http://localhost:1317/layer/bridge/get_valset_sigs/" + timestamp;
   try {
     const response = await axios.get(url);
@@ -103,7 +74,7 @@ getValsetSigs2 = async (timestamp, valset, digest) => {
     // get sha256 hash of the message
     // const digestArrayified = ethers.utils.arrayify(digest);
     // messageHash = ethers.utils.sha256Hash(digestArrayified);
-    const messageHash = ethers.utils.sha256(digest);
+    const messageHash = ethers.utils.sha256(checkpoint);
     for (let i = 0; i < sigsResponse.length; i++) {
       const signature = sigsResponse[i];
       if (signature.length === 130) {
@@ -250,29 +221,76 @@ getOracleAttestations = async (queryId, timestamp, valset, digest) => {
   }
 }
 
-getOracleAttestationsCheat = async (queryId, timestamp) => {
+getSnapshotsByReport = async (queryId, timestamp) => {
   const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
-  url = "http://localhost:1317/layer/bridge/get_oracle_attestations/" + formattedQueryId + "/" + timestamp
+  url = "http://localhost:1317/layer/bridge/get_snapshots_by_report/" + formattedQueryId + "/" + timestamp
+  try {
+    const response = await axios.get(url)
+    snapshots = response.data.snapshots
+    return snapshots
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getAttestationDataBySnapshot = async (snapshot) => {
+  url = "http://localhost:1317/layer/bridge/get_attestation_data_by_snapshot/" + snapshot
+  try {
+    const response = await axios.get(url)
+    attestationDataReturned = response.data
+    attestationData = {
+      queryId: '0x' + attestationDataReturned.queryId,
+      report: {
+        value: '0x' + attestationDataReturned.aggregateValue,
+        timestamp: attestationDataReturned.timestamp,
+        aggregatePower: attestationDataReturned.aggregatePower,
+        previousTimestamp: attestationDataReturned.previousReportTimestamp,
+        nextTimestamp: attestationDataReturned.nextReportTimestamp
+      },
+      attestTimestamp: attestationDataReturned.attestationTimestamp
+    }
+    return attestationData
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+getAttestationsBySnapshot = async (snapshot, valset) => {
+  url = "http://localhost:1317/layer/bridge/get_attestations_by_snapshot/" + snapshot
+  const messageHash = ethers.utils.sha256('0x' + snapshot);
   try {
     const response = await axios.get(url)
     attestsResponse = response.data.attestations
     attestations = []
     for (i = 0; i < attestsResponse.length; i++) {
-      attestation = attestsResponse[i]
+      attestation = '0x' + attestsResponse[i]
       if (attestation.length == 130) {
-        let v = 28
+        // try v = 27
+        let v = 27
         let r = '0x' + attestation.slice(2, 66)
         let s = '0x' + attestation.slice(66, 130)
+        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+          r: r,
+          s: s,
+          v: v
+        })
+        if (recoveredAddress.toLowerCase() != valset[i].addr.toLowerCase()) {
+          v = 28
+          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+            r: r,
+            s: s,
+            v: v
+          })
+          if (recoveredAddress.toLowerCase() != valset[i].addr.toLowerCase()) {
+            v = 0;
+            r = '0x0000000000000000000000000000000000000000000000000000000000000000';
+            s = '0x0000000000000000000000000000000000000000000000000000000000000000';
+          }
+        }
         attestations.push({
           v: v,
           r: r,
           s: s
-        })
-      } else {
-        attestations.push({
-          v: 0,
-          r: '0x0000000000000000000000000000000000000000000000000000000000000000',
-          s: '0x0000000000000000000000000000000000000000000000000000000000000000'
         })
       }
     }
@@ -282,11 +300,26 @@ getOracleAttestationsCheat = async (queryId, timestamp) => {
   }
 }
 
+requestAttestations = async (queryId, timestamp) => {
+  try {
+    const shellCommand = '../layerd tx bridge request-attestations ' + queryId + ' ' + timestamp + ' --from charlie --chain-id layer --keyring-backend test --home ~/.layer/alice --yes'
+    const transactionResult = await execShellCommand(shellCommand)
+    console.log("transactionResult: ", transactionResult)
+  } catch (error) {
+    console.log("error: ", error)
+  }
+}
 
-
-
-
-
+execShellCommand = async (cmd) => {
+  return new Promise((resolve, reject) => {
+    exec(cmd, (error, stdout, stderr) => {
+      if (error) {
+        console.warn(error);
+      }
+      resolve(stdout ? stdout : stderr);
+    });
+  });
+}
 
 getValidatorSet = async (height) => {
   url = "http://localhost:1317/layer/bridge/blockvalidators?height=" + height
@@ -508,6 +541,10 @@ function fromWei(n) {
   return web3.utils.fromWei(n)
 }
 
+function sleep(s) {
+  return new Promise(resolve => setTimeout(resolve, s * 1000));
+}
+
 module.exports = {
   timeTarget: 240,
   hash,
@@ -524,6 +561,7 @@ module.exports = {
   toWei,
   fromWei,
   expectThrow,
+  sleep,
   getLatestBlockNumber,
   getValidatorSet,
   calculateValCheckpoint,
@@ -537,11 +575,13 @@ module.exports = {
   getValsetCheckpointParams,
   getValset,
   getValsetSigs,
-  getValsetSigs2,
   getCurrentAggregateReport,
   getDataBefore,
   getOracleAttestations,
-  getOracleAttestationsCheat,
-  domainSeparateOracleAttestationData
+  domainSeparateOracleAttestationData,
+  getSnapshotsByReport,
+  getAttestationDataBySnapshot,
+  getAttestationsBySnapshot,
+  requestAttestations
 };
 

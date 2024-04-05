@@ -11,11 +11,11 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdGetAttestationDataBySnapshot() *cobra.Command {
+func CmdGetSnapshotsByReport() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-attestation-data-by-snapshot [snapshot]",
-		Short: "Query get-attestation-data-by-snapshot",
-		Args:  cobra.ExactArgs(1),
+		Use:   "get-snapshots-by-report [queryId] [timestamp]",
+		Short: "Query get-snapshots-by-report",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -23,13 +23,14 @@ func CmdGetAttestationDataBySnapshot() *cobra.Command {
 				return err
 			}
 
-			snapshot := args[0]
+			queryId := args[0]
+			timestamp := args[1]
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetAttestationDataBySnapshotRequest{Snapshot: snapshot}
+			params := &types.QueryGetSnapshotsByReportRequest{QueryId: queryId, Timestamp: timestamp}
 
-			res, err := queryClient.GetAttestationDataBySnapshot(cmd.Context(), params)
+			res, err := queryClient.GetSnapshotsByReport(cmd.Context(), params)
 			if err != nil {
 				return err
 			}
