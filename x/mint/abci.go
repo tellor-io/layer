@@ -18,6 +18,10 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentTime := sdkCtx.BlockTime()
+	if currentTime.IsZero() {
+		// return on invalid block time
+		return nil
+	}
 	if err := mintBlockProvision(sdkCtx, k, currentTime); err != nil {
 		return err
 	}
@@ -27,10 +31,6 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 
 // mintBlockProvision mints the block provision for the current block.
 func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time) error {
-	if currentTime.IsZero() {
-		// return on invalid block time
-		return nil
-	}
 	minter := k.GetMinter(ctx)
 	if minter.PreviousBlockTime == nil {
 		return nil

@@ -180,6 +180,9 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 	suite.mintkeeper = mintkeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
 	)
+	// suite.stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(
+	// 	suite.distrKeeper.Hooks(),
+	// ))
 	// suite.reporterkeeper = reporterkeeper.NewKeeper(
 	// 	appCodec, suite.fetchStoreKey(reportertypes.StoreKey),
 }

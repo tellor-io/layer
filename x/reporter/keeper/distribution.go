@@ -740,10 +740,6 @@ func (k Keeper) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddr
 	if err != nil {
 		return err
 	}
-	fmt.Println("AfterDelegationModified has been called!!")
-	fmt.Println("delAddr: ", delAddr.String())
-	fmt.Println("reporterVal: ", reporterVal.String())
-	fmt.Println("stake: ", stake)
 
 	return k.initializeDelegation(ctx, reporterVal, delAddr, stake)
 }
