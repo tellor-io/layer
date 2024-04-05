@@ -60,9 +60,17 @@ service Query {
     option (google.api.http).get = "/layer/bridge/get_data_before/{queryId}/{timestamp}";
   }
 
-  // rpc GetCurrentAggregateReportTest (QueryGetCurrentAggregateReportTestRequest) returns (QueryGetCurrentAggregateReportTestResponse) {
-  //   option (google.api.http).get = "/layer/bridge/get_current_aggregate_report_test/{queryId}";
-  // }
+  rpc GetSnapshotsByReport (QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
+    option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{queryId}/{timestamp}";
+  }
+
+  rpc GetAttestationDataBySnapshot (QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
+    option (google.api.http).get = "/layer/bridge/get_attestation_data_by_snapshot/{snapshot}";
+  }
+
+  rpc GetAttestationsBySnapshot (QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
+    option (google.api.http).get = "/layer/bridge/get_attestations_by_snapshot/{snapshot}";
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -203,11 +211,34 @@ message QueryGetDataBeforeResponse {
   uint64 timestamp = 2;
 }
 
-// message QueryGetCurrentAggregateReportTestRequest {
-//   string queryId = 1;
-// }
+message QueryGetSnapshotsByReportRequest {
+  string queryId = 1;
+  string timestamp = 2;
+}
 
-// message QueryGetCurrentAggregateReportTestResponse {
-//   layer.oracle.Aggregate aggregate = 1;
-//   uint64 timestamp = 2;
-// }
+message QueryGetSnapshotsByReportResponse {
+  repeated string snapshots = 1;
+}
+
+message QueryGetAttestationDataBySnapshotRequest {
+  string snapshot = 1;
+}
+
+message QueryGetAttestationDataBySnapshotResponse {
+  string queryId = 1;
+  string timestamp = 2;
+  string aggregateValue = 3;
+  string aggregatePower = 4;
+  string checkpoint = 5;
+  string attestationTimestamp = 6;
+  string previousReportTimestamp = 7;
+  string nextReportTimestamp = 8;
+}
+
+message QueryGetAttestationsBySnapshotRequest {
+  string snapshot = 1;
+}
+
+message QueryGetAttestationsBySnapshotResponse {
+  repeated string attestations = 1;
+}
