@@ -12,7 +12,7 @@
 
 ## Context
 
-In order to parse validator signatures on EVM chains, tellor validators need to sign oracle data with ecsda keys (not the normal edd keys used in tendermint).  There are two places where we can place these signatures, either as transactions on the chain, or as vote extensions.  Vote extensions in the cosmos sdk, are simply data that is appended to validator signatures on a given block.  Since it is required that validators commit this data, adding them as vote extensions makes sense as it will force validators to mantain the bridge.  The limit to vote extensions is that the data must be very limited in size of about 4MB.  Too many signatures could result in the chain slowing down or bridge information being ommited.  Additionally, vote extensions are a relatively newer feature of the sdk.  
+In order to parse validator signatures on EVM chains, tellor validators need to sign oracle data with ecsda keys (not the normal edd keys used in tendermint).  There are two places where we can place these signatures, either as transactions on the chain, or as vote extensions.  Vote extensions in the cosmos sdk, are simply data that is appended to validator signatures on a given block.  Since it is required that validators commit this data, adding them as vote extensions makes sense as it will force validators to mantain the bridge.  The limit to vote extensions is that the data must be very limited in size of about 4MB.  Too many signatures could result in the chain slowing down or bridge information being ommitted.  Additionally, vote extensions are a relatively newer feature of the sdk.  
 
 
 ## Alternative Approaches

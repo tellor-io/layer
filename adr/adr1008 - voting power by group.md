@@ -32,9 +32,9 @@ For voting - reporter weights go to B and the token weight portion also goes to 
 
 ### add in validators
 
-Adding in validators (or having validators rather than reporters) could introduce a new stake holder set that could help to decentralize the voting set futher.  Additionally, it might be said that reporters are biased due to their obvious conflict of interest and that disputes should be resolved by neutral third parties.  
+Adding in validators (or having validators rather than reporters) could introduce a new stake holder set that could help to decentralize the voting set further.  Additionally, it might be said that reporters are biased due to their obvious conflict of interest and that disputes should be resolved by neutral third parties.  
 
-This is valid, however the attack method of tripling tokens by dual self degation could undermine chain security.  We feel that the current split (reporters over validators) gives them a say in the accuracy of the vote and gives weight to their long term interest in the validity of the data.  It is also an unknown how different validator and reporter sets will be.  There is a substantial chance that they will overlap significantly and the two sets will not require double counting. 
+This is valid, however the attack method of tripling tokens by dual self delegation could undermine chain security.  We feel that the current split (reporters over validators) gives them a say in the accuracy of the vote and gives weight to their long term interest in the validity of the data.  It is also an unknown how different validator and reporter sets will be.  There is a substantial chance that they will overlap significantly and the two sets will not require double counting. 
 
 ### remove team
 
@@ -46,7 +46,7 @@ Instead of just using reporter weight as the percentage of total reporter stake,
 
 The downside here is that votes are still sellable, you just need to sell your private key.  This actually becomes dangerous as reporters who want to exit are incentivized to sell their voting power to attackers once they are unstaked.  You could fix this by also requiring them to be staked, but it only changes the attack cost, not the fact it exists as an exit strategy.  
 
-This is the case for users as well. Users do not have to stake and they earn voting weight by the amount of tips the provide. However, users are dissinsitivized from selling their private keys because doing so could trigger an attack to their own protocol (there is no guarantee an attacker that is willign to buy their keys will not attack them too). 
+This is the case for users as well. Users do not have to stake and they earn voting weight by the amount of tips the provide. However, users are disincentivized from selling their private keys because doing so could trigger an attack to their own protocol (there is no guarantee an attacker that is willing to buy their keys will not attack them too). 
 
 
 ### decrease user voting power over time
@@ -57,9 +57,9 @@ The downside here is that the risk is still alive (you just have to sell it soon
 
 Another way to fix the attack (buying vote power via tips) is to just have others also tip on subsequent vote rounds, so the system would always be safe if >50% of the power is honest; not to even mention a risk of a social fork. 
 
-### move to different goverance structure
+### move to different governance structure
 
-In the long run, it is definitely on the table to move to a different governance system.  Whether it's liquid staking, delegations, or other market forces that could drive centralization and alter crypto economic incentives, tellor remains commited to having an active community with a robust censorship resistant core that comes to consensus on any data.  Whether this looks like a traditional one citizen one vote system, a reputation system, or just further refinement in the split of voting powers, tellor is open to exploring these options as the crypto ecosystem does.  As of now, DAO governance is nascent and fragile.  We're currently governance minimalists that want to push the boundaries in areas other than decentralized governance.  That said, tellor has a social layer that is the ultimate fallback and this alone was a huge reason for becoming a standalone chain.  
+In the long run, it is definitely on the table to move to a different governance system.  Whether it's liquid staking, delegations, or other market forces that could drive centralization and alter crypto economic incentives, tellor remains committed to having an active community with a robust censorship resistant core that comes to consensus on any data.  Whether this looks like a traditional one citizen one vote system, a reputation system, or just further refinement in the split of voting powers, tellor is open to exploring these options as the crypto ecosystem does.  As of now, DAO governance is nascent and fragile.  We're currently governance minimalists that want to push the boundaries in areas other than decentralized governance.  That said, tellor has a social layer that is the ultimate fallback and this alone was a huge reason for becoming a standalone chain.  
 
 
 ## Issues / Notes on Implementation

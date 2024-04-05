@@ -13,7 +13,7 @@
 
 ## Context
 
-A fee on tips is necessary to discourage vote farming and spaming the network by tippig data that has no support. 
+A fee on tips is necessary to discourage vote farming and spamming the network by tipping data that has no support. 
 
 The 2% fee on tips was chosen relatively arbitrarily, but is consistent with the 2% fee that has been present on previous versions of [Tellor's autopay contract](https://github.com/tellor-io/autoPay). 
 
@@ -22,7 +22,7 @@ The 2% fee on tips was chosen relatively arbitrarily, but is consistent with the
 
 ### No Fee
 
-Rather than a fee for profit, the fee in the tellor system acts more as a spam prevention tool. Removing the fee is unfortunately not an option as it can encourage vote farming. In Layer, users who tip recieve vote power based upon how much they tip.  An attack vector is present where someone could just tip a query only they support, report for it, and gain voting power without losing funds.  The fee prevents this (or makes it costly).  In old tellor, reporters could earn voting weight per report count (and double the effectiveness of this attack), however that has been removed in Layer in favor of reporter weight. 
+Rather than a fee for profit, the fee in the tellor system acts more as a spam prevention tool. Removing the fee is unfortunately not an option as it can encourage vote farming. In Layer, users who tip receive vote power based upon how much they tip.  An attack vector is present where someone could just tip a query only they support, report for it, and gain voting power without losing funds.  The fee prevents this (or makes it costly).  In old tellor, reporters could earn voting weight per report count (and double the effectiveness of this attack), however that has been removed in Layer in favor of reporter weight. 
 
 ### Higher fee
 
