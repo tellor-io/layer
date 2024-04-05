@@ -25,9 +25,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "DecodeQuerydata",
-					Use:            "decode-querydata [querydata]",
+					Use:            "decode-querydata [query_data]",
 					Short:          "Decode the query data into human readable format",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querydata"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}},
 				},
 
 				{
