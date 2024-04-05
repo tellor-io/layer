@@ -23,7 +23,6 @@ service Msg {
   rpc UpdateCyclelist(MsgUpdateCyclelist) returns (MsgUpdateCyclelistResponse);
 }
 
-
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
