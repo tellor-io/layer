@@ -6,6 +6,7 @@
 ## Changelog
 
 - 2024-03-06: initial version
+- 2024-04-23: clarity
 
 ## Context
 
@@ -20,7 +21,7 @@ The commit reveal cycle is still intact and reveals can be anytime before reveal
 
 ### time frame starts when first commit happens
 
-One approach would be to have shorter report time frames, but the window doesn't start right after the tip, but rather on the first report.  This would allow for queries that are not seeking consensus, to just have a tip with a short time frame, and then once one party reports, it is basically over and handled by disputes.  The issue we had with this is that it unties the time frame from the tip.  Usually if you tip, you want some certainty around when you get the data.  It also gives the false impression to the tipper that they should expect the data in some time frame.  If you tip for a manual query and it has a time frame of one hour, you would expect it to be reported in one hour.  The time frame in our mind is tied to how long it should be expected to take reporters to get the data.  
+One approach would be to have shorter report time frames where the window doesn't start right after the tip, but rather on the first report. This would allow for queries that are not seeking consensus to just have a tip with a short time frame, and then once one party reports, it is basically over and handled by disputes.  The issue we had with this is that it unties the time frame from the tip.  Usually if you tip, you want some certainty around when you get the data.  It also gives the false impression to the tipper that they should expect the data in some time frame.  If you tip for a manual query and it has a time frame of one hour, you would expect it to be reported in one hour.  The time frame concept in our mind is tied to how long it should be expected to take reporters to get the data.  If longer is needed, then the data spec itself is just likely not well defined or supported and work should be done on that front. 
 
 ### time frame restarts if no one reports
 
@@ -28,15 +29,15 @@ One option would be to just restart the time frame if no one reports.  This woul
 
 ### refund tip if no report
 
-I think the argument against is that the reason no one reported is that the tip was too low.  It would also be easy to spam the chain with small tips or for unsupported queryId's, if you know that you'll get your tokens back.  Additionally, voting power is given on tips, and more tracking would need to be put in place in regards to refunds.  
+I think the argument against this is that the reason no one reported is that the tip was too low.  It would also be easy to spam the chain with small tips or for unsupported queryId's if you know that you'll get your tokens back.  Additionally, voting power is given on tips, and more tracking would need to be put in place in regards to refunds.  
 
 ### all reveals done in reveal window
 
-The problem here is that for longer time frames, reporters will need to wait until the right block and then have a limited time (right now 2 blocks) to reveal.  If they go down or need to maintain a long list of reveals to submit in the future, this could be computationally expensive.  In order to just allow the reporter to decide their comfort level in being mirrored (they have to split rewards with parties mirroring them), we allow reveals at any stage.  Not to mention, that large parties will not mirror smaller ones.  If a large party mirrors a smaller one, the smaller party can submit a bad value and dispute the larger party right away to make back their funds.  
+Unde this option, you wait until a period right after the time frame for all reveals to happen.  The problem here is that for longer time frames, reporters will need to wait until the right block and then have a limited time (right now 2 blocks) to reveal.  If the reporter software goes down or they need to maintain a long list of reveals to submit in the future, this could be computationally expensive.  In order to just allow the reporter to decide their comfort level in being mirrored (they have to split rewards with parties mirroring them), we allow reveals at any stage.  Not to mention, that large parties will not mirror smaller ones.  If a large party mirrors a smaller one, the smaller party can submit a bad value and dispute the larger party right away to make back their funds.  
 
 ### new tips start a new window
 
-New tips could start a new window, in order to have faster reports (e.g. if the time frame is an hour, you could stack the tips 30 minutes apart to get reports every 30 minutes), however the technical difficulty comes into play when figuring out which time frame a report is for.  When setting a report time frame, parties should be aware that the time frame is the fastest that the data will be available, so if they need faster data, they should set a shorter time frame.  Longer time frame queries are expected to be slower moving data, such as prediction market answers or data queries that have a time frame attached (e.g. what is the ETH block header at 10:35:00 UTC).  
+New tips could start a new window (versus being added to currently open tip), in order to have faster reports (e.g. if the time frame is an hour, you could stack the tips 30 minutes apart to get reports every 30 minutes), however the technical difficulty comes into play when figuring out which time frame a report is for.  When setting a report time frame, parties should be aware that the time frame is the fastest that the data will be available, so if they need faster data, they should set a shorter time frame.  Longer time frame queries are expected to be slower moving data, such as prediction market answers or data queries that have a time frame attached (e.g. what is the ETH block header at 10:35:00 UTC).  
 
 ### no commits, only revealed data
 

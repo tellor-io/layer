@@ -11,25 +11,27 @@
 - 2024-02-21: initial version
 - 2024-03-07: changed to escrow account vs stake
 - 2024-04-01: made the distiction clearer for tips not going into the reporter stake (we should discuss since your last update, did not match what I thought we decided on-BL.)
+- 2024-04-02: clarity / wording changes
 
 ## Context
 
 In layer, when a user sends free floating tokens as a tip, the party(ies) that report for that queryId in the reporting window are given the tip.  Once reported for, these tips are locked in an escrow account that can be withdrawn but observing the same waiting period as unstaking. The tokens are then free floating and the reporter can decide to stake them or not.  
 
-Tellor governance is structured, namely to prevent people from farming voting power.  If tips were not locked, a party could tip a random query that only they know how to report for.  They could report, then tip those exact same tokens, thus looping them in order to look like there is ton of tip demand for this query and increase their 'user' and 'reporter' voting power.  The two methods to prevent this are a) a 2% fee on tips and b) locking the tip in escrow.  Now if the party wishes to withdraw that tip, they will have to wait the 21 day unbonding period, similar to the unstaking.  
+One of the goals of the Tellor governance structure is to prevent people from farming voting power.  If tips were not locked, a party could tip a random query that only they know how to report for.  They could report, then tip those exact same tokens, thus looping them in order to look like there is ton of tip demand for this query and increase their 'user' and 'reporter' voting power.  The two methods to prevent this are a) a 2% fee on tips and b) locking the tip in escrow.  Now if the party wishes to withdraw that tip, they will have to wait the 21 day unbonding period, similar to the unstaking.  
 
-Another potential attack is that they could use tipping to bypass the deposit stake caps.  Notably, they could tip a large portion of the entire staked supply (e.g. 66%) and halt the chain or force a fork.  
+Another potential attack is that they could use tipping to bypass the deposit stake caps.  Notably, they could tip a large portion of the entire staked supply (e.g. 66%) and then halt the chain or force a fork.  
 
 
 ## Alternative Approaches
 
 ### Higher fee burn on tips
 
-The other method we could do is just increase that 2% fee to something like 5 or 10%, thus completely draining the attacker if they did this method.  Although this could be a solution, limiting that fee is important because it supports having on-chain tips (can be tracked for governance/ usage purposes) vs off-chain.  
+The other method we could do is just increase that 2% fee to something like 5 or 10%, thus completely draining the attacker if they did this method.  Although this could be a solution, limiting that fee is important because it supports having on-chain tips (can be tracked for governance/ usage purposes) vs off-chain.  It also only mildly fixes the depositStake bypass.  
 
 
 ### Tips locked as stake and limit the amount
 We could just lock the tips as stake, but then tipping a query only you report is essentially a "deposit stake" function.  This could be handled by just limiting the amount you could unlock, but this dual structure could cause issues for tracking voting power and stake.  Keeping it in a separate escrow was deemed cleaner in the code. 
+
 
 ### just cap tip size or total amount
 
