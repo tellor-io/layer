@@ -79,6 +79,18 @@ echo $PASSWORD | ./layerd keys export bill --keyring-backend $KEYRING_BACKEND --
 echo "Importing bill key to test backend..."
 echo $PASSWORD | ./layerd keys import bill ~/Desktop/bill_keyfile --keyring-backend test --home ~/.layer/bill
 
+# Export charlie key from os backend and import to test backend
+echo "Exporting charlie key..."
+echo $PASSWORD | ./layerd keys export charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice > ~/Desktop/charlie_keyfile
+echo "Importing charlie key to test backend..."
+echo $PASSWORD | ./layerd keys import charlie ~/Desktop/charlie_keyfile --keyring-backend test --home ~/.layer/alice
+
+# Delete the keyfiles
+echo "Deleting keyfiles..."
+rm ~/Desktop/alice_keyfile
+rm ~/Desktop/bill_keyfile
+rm ~/Desktop/charlie_keyfile
+
 # Modify timeout_commit in config.toml for alice
 echo "Modifying timeout_commit in config.toml for alice..."
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "500ms"/' ~/.layer/alice/config/config.toml
