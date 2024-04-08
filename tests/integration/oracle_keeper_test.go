@@ -608,13 +608,13 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	twoPercent := sdk.NewCoin(s.denom, tipAmount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	require.Equal(tipAmount.Sub(twoPercent.Amount), escrowBalance.Amount)
 
-	// withdraw tip
 	// create reporterMsgServer
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	// withdraw tip
 	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: repAcc.String(), ValidatorAddress: valAddr.String()})
 	require.NoError(err)
 
-	// delegation shares should increase after reporting and escrow balance should go nback to 0
+	// delegation shares should increase after reporting and escrow balance should go back to 0
 	delAfter, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
 	s.Nil(err)
 	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares plus the tip added") // 1000 - 2% tip

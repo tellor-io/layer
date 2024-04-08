@@ -19,7 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	// mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	"github.com/tellor-io/layer/x/mint/keeper"
 	"github.com/tellor-io/layer/x/mint/types"
 )
@@ -148,13 +148,23 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 	return BeginBlocker(sdkCtx, am.keeper)
 }
 
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func init() {
+	appmodule.Register(&mintmodulev1.Module{},
+		appmodule.Provide(ProvideModule))
+
+}
+
 type MintInputs struct {
 	depinject.In
 
 	KvStoreKey  *storetypes.KVStoreKey
 	MemStoreKey *storetypes.MemoryStoreKey
 	Cdc         codec.Codec
-	// Config      *mintmodulev1.Module
+	Config      *mintmodulev1.Module
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper

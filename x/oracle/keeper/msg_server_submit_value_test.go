@@ -13,8 +13,9 @@ import (
 )
 
 func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byte) {
+	require := s.Require()
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	// Commit value transaction first
+	// Commit
 	stakedReporter, salt, queryData := s.TestCommitValue()
 	// forward block by 1 and reveal value
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
@@ -29,8 +30,8 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byt
 		Salt:      salt,
 	}
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.Nil(err)
-	s.Equal(&types.MsgSubmitValueResponse{}, res)
+	require.NoError(err)
+	require.Equal(&types.MsgSubmitValueResponse{}, res)
 
 	queryId := utils.QueryIDFromData(queryData)
 	report, err := s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryId})
@@ -52,7 +53,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byt
 			MicroReports: []*types.MicroReport{&microReport},
 		},
 	}
-	s.Equal(&expectedReport, report)
+	require.Equal(&expectedReport, report)
 
 	return stakedReporter, queryId
 }

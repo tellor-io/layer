@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	cosmosmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/mint/keeper"
@@ -18,6 +18,10 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentTime := sdkCtx.BlockTime()
+	if currentTime.IsZero() {
+		// return on invalid block time
+		return nil
+	}
 	if err := mintBlockProvision(sdkCtx, k, currentTime); err != nil {
 		return err
 	}
@@ -31,14 +35,13 @@ func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time)
 	if minter.PreviousBlockTime == nil {
 		return nil
 	}
-
 	toMintCoin, err := minter.CalculateBlockProvision(currentTime, *minter.PreviousBlockTime)
 	if err != nil {
 		return err
 	}
 	toMintCoins := sdk.NewCoins(toMintCoin)
 	// mint coins double half going to team and half to oracle
-	err = k.MintCoins(ctx, toMintCoins.MulInt(cosmosmath.NewInt(2)))
+	err = k.MintCoins(ctx, toMintCoins.MulInt(math.NewInt(2)))
 	if err != nil {
 		return err
 	}

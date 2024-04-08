@@ -12,8 +12,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
-	mintmodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
 )
@@ -83,6 +83,9 @@ func RegistryModule() configurator.ModuleOption {
 
 func MintModule() configurator.ModuleOption {
 	return func(config *configurator.Config) {
+		// config.BeginBlockersOrder = append(config.BeginBlockersOrder, "mint")
+		// config.EndBlockersOrder = append(config.EndBlockersOrder, "mint")
+		// config.InitGenesisOrder = append(config.InitGenesisOrder, "mint")
 		config.ModuleConfigs["mint"] = &appv1alpha1.ModuleConfig{
 			Name:   "mint",
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
