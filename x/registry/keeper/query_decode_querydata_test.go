@@ -9,7 +9,7 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
-func TestDecodeQuerydata(t *testing.T) {
+func TestDecodeQueryData(t *testing.T) {
 	// 	// register data spec
 	querytype := "testQueryType"
 	ms, ctx, k := setupMsgServer(t)
@@ -29,7 +29,7 @@ func TestDecodeQuerydata(t *testing.T) {
 	// generate query data
 	querier := keeper.NewQuerier(k)
 	qData, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000d74657374517565727954797065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000047465737400000000000000000000000000000000000000000000000000000000")
-	res, err := querier.DecodeQuerydata(ctx, &types.QueryDecodeQuerydataRequest{QueryData: qData})
+	res, err := querier.DecodeQueryData(ctx, &types.QueryDecodeQueryDataRequest{QueryData: qData})
 	require.NoError(t, err)
-	require.Equal(t, res, &types.QueryDecodeQuerydataResponse{Spec: `testQueryType: ["test"]`})
+	require.Equal(t, res, &types.QueryDecodeQueryDataResponse{Spec: `testQueryType: ["test"]`})
 }

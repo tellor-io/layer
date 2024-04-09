@@ -102,13 +102,12 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 
 	for i, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
-		evmAddressHex := hex.EncodeToString(evmAddress.EVMAddress)
 		if err != nil {
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			return nil, err
 		}
 		bridgeValset[i] = &types.BridgeValidator{
-			EthereumAddress: evmAddressHex,
+			EthereumAddress: evmAddress.EVMAddress,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
 		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator DDDD", "test", bridgeValset[i].EthereumAddress)
@@ -118,7 +117,7 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 	sort.Slice(bridgeValset, func(i, j int) bool {
 		if bridgeValset[i].Power == bridgeValset[j].Power {
 			// If power is equal, sort alphabetically
-			return bridgeValset[i].EthereumAddress < bridgeValset[j].EthereumAddress
+			return bytes.Compare(bridgeValset[i].EthereumAddress, bridgeValset[j].EthereumAddress) < 1
 		}
 		// Otherwise, sort by power in descending order
 		return bridgeValset[i].Power > bridgeValset[j].Power
@@ -413,7 +412,7 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 	// Convert validatorSet to a slice of the Validator struct defined above
 	var validators []Validator
 	for _, v := range validatorSet.BridgeValidatorSet {
-		addr := common.HexToAddress(v.EthereumAddress)
+		addr := common.BytesToAddress(v.EthereumAddress)
 		power := big.NewInt(0).SetUint64(v.Power)
 		validators = append(validators, Validator{Addr: addr, Power: power})
 	}
@@ -466,14 +465,14 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
 	powers := map[string]int64{}
 	for _, bv := range b.BridgeValidatorSet {
-		powers[bv.EthereumAddress] = int64(bv.GetPower())
+		powers[string(bv.EthereumAddress)] = int64(bv.GetPower())
 	}
 
 	for _, bv := range c.BridgeValidatorSet {
-		if val, ok := powers[bv.EthereumAddress]; ok {
-			powers[bv.EthereumAddress] = val - int64(bv.GetPower())
+		if val, ok := powers[string(bv.EthereumAddress)]; ok {
+			powers[string(bv.EthereumAddress)] = val - int64(bv.GetPower())
 		} else {
-			powers[bv.EthereumAddress] = -int64(bv.GetPower())
+			powers[string(bv.EthereumAddress)] = -int64(bv.GetPower())
 		}
 	}
 
@@ -574,9 +573,8 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 		return err
 	}
 	// set the signature in the valset signatures array by finding the index of the operator address
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
 	for i, val := range previousValset.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
+		if bytes.Equal(val.EthereumAddress, ethAddress.EVMAddress) {
 			valsetSigs.SetSignature(i, signatureBytes)
 		}
 	}
@@ -641,9 +639,8 @@ func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string
 		return err
 	}
 	// set the signature in the oracle attestation map by finding the index of the operator address
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
 	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
+		if bytes.Equal(val.EthereumAddress, ethAddress.EVMAddress) {
 			oracleAttestations.SetAttestation(i, signatureBytes)
 		}
 	}
@@ -730,9 +727,8 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		return false, -1, err
 	}
 	// get the index of the evm address in the previous valset
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
 	for i, val := range previousValset.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
+		if bytes.Equal(val.EthereumAddress, ethAddress.EVMAddress) {
 			// check if the signature exists
 			if len(valsetSigs.Signatures[i]) != 0 {
 				k.Logger(ctx).Info("Validator did sign checkpoint", "operatorAddr", operatorAddr, "checkpointTimestamp", checkpointTimestamp, "signature", hex.EncodeToString(valsetSigs.Signatures[i]))

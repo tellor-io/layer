@@ -22,8 +22,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of GetDataSpec items.
 	GetDataSpec(ctx context.Context, in *QueryGetDataSpecRequest, opts ...grpc.CallOption) (*QueryGetDataSpecResponse, error)
-	// Queries a list of DecodeQuerydata items.
-	DecodeQuerydata(ctx context.Context, in *QueryDecodeQuerydataRequest, opts ...grpc.CallOption) (*QueryDecodeQuerydataResponse, error)
+	// Queries a list of DecodeQueryData items.
+	DecodeQueryData(ctx context.Context, in *QueryDecodeQueryDataRequest, opts ...grpc.CallOption) (*QueryDecodeQueryDataResponse, error)
 	// Queries a list of GenerateQuerydata items.
 	GenerateQuerydata(ctx context.Context, in *QueryGenerateQuerydataRequest, opts ...grpc.CallOption) (*QueryGenerateQuerydataResponse, error)
 	// Queries a list of DecodeValue items.
@@ -56,9 +56,9 @@ func (c *queryClient) GetDataSpec(ctx context.Context, in *QueryGetDataSpecReque
 	return out, nil
 }
 
-func (c *queryClient) DecodeQuerydata(ctx context.Context, in *QueryDecodeQuerydataRequest, opts ...grpc.CallOption) (*QueryDecodeQuerydataResponse, error) {
-	out := new(QueryDecodeQuerydataResponse)
-	err := c.cc.Invoke(ctx, "/layer.registry.Query/DecodeQuerydata", in, out, opts...)
+func (c *queryClient) DecodeQueryData(ctx context.Context, in *QueryDecodeQueryDataRequest, opts ...grpc.CallOption) (*QueryDecodeQueryDataResponse, error) {
+	out := new(QueryDecodeQueryDataResponse)
+	err := c.cc.Invoke(ctx, "/layer.registry.Query/DecodeQueryData", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of GetDataSpec items.
 	GetDataSpec(context.Context, *QueryGetDataSpecRequest) (*QueryGetDataSpecResponse, error)
-	// Queries a list of DecodeQuerydata items.
-	DecodeQuerydata(context.Context, *QueryDecodeQuerydataRequest) (*QueryDecodeQuerydataResponse, error)
+	// Queries a list of DecodeQueryData items.
+	DecodeQueryData(context.Context, *QueryDecodeQueryDataRequest) (*QueryDecodeQueryDataResponse, error)
 	// Queries a list of GenerateQuerydata items.
 	GenerateQuerydata(context.Context, *QueryGenerateQuerydataRequest) (*QueryGenerateQuerydataResponse, error)
 	// Queries a list of DecodeValue items.
@@ -110,8 +110,8 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 func (UnimplementedQueryServer) GetDataSpec(context.Context, *QueryGetDataSpecRequest) (*QueryGetDataSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataSpec not implemented")
 }
-func (UnimplementedQueryServer) DecodeQuerydata(context.Context, *QueryDecodeQuerydataRequest) (*QueryDecodeQuerydataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DecodeQuerydata not implemented")
+func (UnimplementedQueryServer) DecodeQueryData(context.Context, *QueryDecodeQueryDataRequest) (*QueryDecodeQueryDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecodeQueryData not implemented")
 }
 func (UnimplementedQueryServer) GenerateQuerydata(context.Context, *QueryGenerateQuerydataRequest) (*QueryGenerateQuerydataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateQuerydata not implemented")
@@ -168,20 +168,20 @@ func _Query_GetDataSpec_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_DecodeQuerydata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryDecodeQuerydataRequest)
+func _Query_DecodeQueryData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDecodeQueryDataRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).DecodeQuerydata(ctx, in)
+		return srv.(QueryServer).DecodeQueryData(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.registry.Query/DecodeQuerydata",
+		FullMethod: "/layer.registry.Query/DecodeQueryData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).DecodeQuerydata(ctx, req.(*QueryDecodeQuerydataRequest))
+		return srv.(QueryServer).DecodeQueryData(ctx, req.(*QueryDecodeQueryDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -238,8 +238,8 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GetDataSpec_Handler,
 		},
 		{
-			MethodName: "DecodeQuerydata",
-			Handler:    _Query_DecodeQuerydata_Handler,
+			MethodName: "DecodeQueryData",
+			Handler:    _Query_DecodeQueryData_Handler,
 		},
 		{
 			MethodName: "GenerateQuerydata",

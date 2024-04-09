@@ -105,8 +105,8 @@ func local_request_Query_GetDataSpec_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
-func request_Query_DecodeQuerydata_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryDecodeQuerydataRequest
+func request_Query_DecodeQueryData_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryDecodeQueryDataRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -127,13 +127,13 @@ func request_Query_DecodeQuerydata_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
-	msg, err := client.DecodeQuerydata(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.DecodeQueryData(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func local_request_Query_DecodeQuerydata_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq QueryDecodeQuerydataRequest
+func local_request_Query_DecodeQueryData_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryDecodeQueryDataRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -154,7 +154,7 @@ func local_request_Query_DecodeQuerydata_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
-	msg, err := server.DecodeQuerydata(ctx, &protoReq)
+	msg, err := server.DecodeQueryData(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -170,15 +170,15 @@ func request_Query_GenerateQuerydata_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
-	val, ok = pathParams["querytype"]
+	val, ok = pathParams["query_type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "querytype")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_type")
 	}
 
-	protoReq.Querytype, err = runtime.String(val)
+	protoReq.QueryType, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "querytype", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_type", err)
 	}
 
 	val, ok = pathParams["parameters"]
@@ -208,15 +208,15 @@ func local_request_Query_GenerateQuerydata_0(ctx context.Context, marshaler runt
 		_   = err
 	)
 
-	val, ok = pathParams["querytype"]
+	val, ok = pathParams["query_type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "querytype")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_type")
 	}
 
-	protoReq.Querytype, err = runtime.String(val)
+	protoReq.QueryType, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "querytype", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_type", err)
 	}
 
 	val, ok = pathParams["parameters"]
@@ -246,15 +246,15 @@ func request_Query_DecodeValue_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
-	val, ok = pathParams["queryType"]
+	val, ok = pathParams["query_type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryType")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_type")
 	}
 
 	protoReq.QueryType, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryType", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_type", err)
 	}
 
 	val, ok = pathParams["value"]
@@ -284,15 +284,15 @@ func local_request_Query_DecodeValue_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
-	val, ok = pathParams["queryType"]
+	val, ok = pathParams["query_type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryType")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_type")
 	}
 
 	protoReq.QueryType, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryType", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_type", err)
 	}
 
 	val, ok = pathParams["value"]
@@ -363,7 +363,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
-	mux.Handle("GET", pattern_Query_DecodeQuerydata_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_DecodeQueryData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -374,7 +374,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_Query_DecodeQuerydata_0(rctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_Query_DecodeQueryData_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -382,7 +382,7 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
-		forward_Query_DecodeQuerydata_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_DecodeQueryData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -513,7 +513,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
-	mux.Handle("GET", pattern_Query_DecodeQuerydata_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("GET", pattern_Query_DecodeQueryData_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -522,14 +522,14 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_Query_DecodeQuerydata_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_Query_DecodeQueryData_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_Query_DecodeQuerydata_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Query_DecodeQueryData_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -581,11 +581,11 @@ var (
 
 	pattern_Query_GetDataSpec_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "get_data_spec", "query_type"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DecodeQuerydata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "decode_querydata", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DecodeQueryData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "registry", "decode_query_data", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GenerateQuerydata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "registry", "generate_querydata", "querytype", "parameters"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GenerateQuerydata_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "registry", "generate_querydata", "query_type", "parameters"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DecodeValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "registry", "decode_value", "queryType", "value"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_DecodeValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "registry", "decode_value", "query_type", "value"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
@@ -593,7 +593,7 @@ var (
 
 	forward_Query_GetDataSpec_0 = runtime.ForwardResponseMessage
 
-	forward_Query_DecodeQuerydata_0 = runtime.ForwardResponseMessage
+	forward_Query_DecodeQueryData_0 = runtime.ForwardResponseMessage
 
 	forward_Query_GenerateQuerydata_0 = runtime.ForwardResponseMessage
 

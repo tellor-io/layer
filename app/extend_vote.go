@@ -58,7 +58,6 @@ type VoteExtHandler struct {
 	oracleKeeper OracleKeeper
 	bridgeKeeper BridgeKeeper
 	codec        codec.Codec
-	// cosmosCtx    sdk.Context
 }
 
 type OracleAttestation struct {
@@ -479,9 +478,9 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (s
 	}
 }
 
-func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {
+func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddress []byte, valset *bridgetypes.BridgeValidatorSet) (int, error) {
 	for i, val := range valset.BridgeValidatorSet {
-		if val.EthereumAddress == evmAddress {
+		if bytes.Equal(val.EthereumAddress, evmAddress) {
 			return i, nil
 		}
 	}

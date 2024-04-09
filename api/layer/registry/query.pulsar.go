@@ -1661,25 +1661,25 @@ func (x *fastReflection_QueryGetDataSpecResponse) ProtoMethods() *protoiface.Met
 }
 
 var (
-	md_QueryDecodeQuerydataRequest            protoreflect.MessageDescriptor
-	fd_QueryDecodeQuerydataRequest_query_data protoreflect.FieldDescriptor
+	md_QueryDecodeQueryDataRequest            protoreflect.MessageDescriptor
+	fd_QueryDecodeQueryDataRequest_query_data protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_registry_query_proto_init()
-	md_QueryDecodeQuerydataRequest = File_layer_registry_query_proto.Messages().ByName("QueryDecodeQuerydataRequest")
-	fd_QueryDecodeQuerydataRequest_query_data = md_QueryDecodeQuerydataRequest.Fields().ByName("query_data")
+	md_QueryDecodeQueryDataRequest = File_layer_registry_query_proto.Messages().ByName("QueryDecodeQueryDataRequest")
+	fd_QueryDecodeQueryDataRequest_query_data = md_QueryDecodeQueryDataRequest.Fields().ByName("query_data")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryDecodeQuerydataRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryDecodeQueryDataRequest)(nil)
 
-type fastReflection_QueryDecodeQuerydataRequest QueryDecodeQuerydataRequest
+type fastReflection_QueryDecodeQueryDataRequest QueryDecodeQueryDataRequest
 
-func (x *QueryDecodeQuerydataRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryDecodeQuerydataRequest)(x)
+func (x *QueryDecodeQueryDataRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDecodeQueryDataRequest)(x)
 }
 
-func (x *QueryDecodeQuerydataRequest) slowProtoReflect() protoreflect.Message {
+func (x *QueryDecodeQueryDataRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_registry_query_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1691,43 +1691,43 @@ func (x *QueryDecodeQuerydataRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryDecodeQuerydataRequest_messageType fastReflection_QueryDecodeQuerydataRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryDecodeQuerydataRequest_messageType{}
+var _fastReflection_QueryDecodeQueryDataRequest_messageType fastReflection_QueryDecodeQueryDataRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDecodeQueryDataRequest_messageType{}
 
-type fastReflection_QueryDecodeQuerydataRequest_messageType struct{}
+type fastReflection_QueryDecodeQueryDataRequest_messageType struct{}
 
-func (x fastReflection_QueryDecodeQuerydataRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryDecodeQuerydataRequest)(nil)
+func (x fastReflection_QueryDecodeQueryDataRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDecodeQueryDataRequest)(nil)
 }
-func (x fastReflection_QueryDecodeQuerydataRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryDecodeQuerydataRequest)
+func (x fastReflection_QueryDecodeQueryDataRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDecodeQueryDataRequest)
 }
-func (x fastReflection_QueryDecodeQuerydataRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryDecodeQuerydataRequest
+func (x fastReflection_QueryDecodeQueryDataRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDecodeQueryDataRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryDecodeQuerydataRequest
+func (x *fastReflection_QueryDecodeQueryDataRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDecodeQueryDataRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryDecodeQuerydataRequest_messageType
+func (x *fastReflection_QueryDecodeQueryDataRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDecodeQueryDataRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryDecodeQuerydataRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryDecodeQuerydataRequest)
+func (x *fastReflection_QueryDecodeQueryDataRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryDecodeQueryDataRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryDecodeQuerydataRequest)(x)
+func (x *fastReflection_QueryDecodeQueryDataRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryDecodeQueryDataRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1735,10 +1735,10 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryDecodeQueryDataRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.QueryData) != 0 {
 		value := protoreflect.ValueOfBytes(x.QueryData)
-		if !f(fd_QueryDecodeQuerydataRequest_query_data, value) {
+		if !f(fd_QueryDecodeQueryDataRequest_query_data, value) {
 			return
 		}
 	}
@@ -1755,15 +1755,15 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryDecodeQueryDataRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataRequest.query_data":
+	case "layer.registry.QueryDecodeQueryDataRequest.query_data":
 		return len(x.QueryData) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataRequest"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1773,15 +1773,15 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryDecodeQueryDataRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataRequest.query_data":
+	case "layer.registry.QueryDecodeQueryDataRequest.query_data":
 		x.QueryData = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataRequest"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1791,16 +1791,16 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryDecodeQueryDataRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.registry.QueryDecodeQuerydataRequest.query_data":
+	case "layer.registry.QueryDecodeQueryDataRequest.query_data":
 		value := x.QueryData
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataRequest"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1814,15 +1814,15 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryDecodeQueryDataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataRequest.query_data":
+	case "layer.registry.QueryDecodeQueryDataRequest.query_data":
 		x.QueryData = value.Bytes()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataRequest"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1836,40 +1836,40 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryDecodeQueryDataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataRequest.query_data":
-		panic(fmt.Errorf("field query_data of message layer.registry.QueryDecodeQuerydataRequest is not mutable"))
+	case "layer.registry.QueryDecodeQueryDataRequest.query_data":
+		panic(fmt.Errorf("field query_data of message layer.registry.QueryDecodeQueryDataRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataRequest"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryDecodeQuerydataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryDecodeQueryDataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataRequest.query_data":
+	case "layer.registry.QueryDecodeQueryDataRequest.query_data":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataRequest"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryDecodeQuerydataRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryDecodeQueryDataRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.registry.QueryDecodeQuerydataRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.registry.QueryDecodeQueryDataRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1877,7 +1877,7 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryDecodeQuerydataRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryDecodeQueryDataRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1888,7 +1888,7 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryDecodeQueryDataRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1900,7 +1900,7 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryDecodeQuerydataRequest) IsValid() bool {
+func (x *fastReflection_QueryDecodeQueryDataRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -1910,9 +1910,9 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryDecodeQuerydataRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryDecodeQueryDataRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryDecodeQuerydataRequest)
+		x := input.Message.Interface().(*QueryDecodeQueryDataRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1938,7 +1938,7 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryDecodeQuerydataRequest)
+		x := input.Message.Interface().(*QueryDecodeQueryDataRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1975,7 +1975,7 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryDecodeQuerydataRequest)
+		x := input.Message.Interface().(*QueryDecodeQueryDataRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2007,10 +2007,10 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQuerydataRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQueryDataRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQuerydataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQueryDataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2083,25 +2083,25 @@ func (x *fastReflection_QueryDecodeQuerydataRequest) ProtoMethods() *protoiface.
 }
 
 var (
-	md_QueryDecodeQuerydataResponse      protoreflect.MessageDescriptor
-	fd_QueryDecodeQuerydataResponse_spec protoreflect.FieldDescriptor
+	md_QueryDecodeQueryDataResponse      protoreflect.MessageDescriptor
+	fd_QueryDecodeQueryDataResponse_spec protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_registry_query_proto_init()
-	md_QueryDecodeQuerydataResponse = File_layer_registry_query_proto.Messages().ByName("QueryDecodeQuerydataResponse")
-	fd_QueryDecodeQuerydataResponse_spec = md_QueryDecodeQuerydataResponse.Fields().ByName("spec")
+	md_QueryDecodeQueryDataResponse = File_layer_registry_query_proto.Messages().ByName("QueryDecodeQueryDataResponse")
+	fd_QueryDecodeQueryDataResponse_spec = md_QueryDecodeQueryDataResponse.Fields().ByName("spec")
 }
 
-var _ protoreflect.Message = (*fastReflection_QueryDecodeQuerydataResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_QueryDecodeQueryDataResponse)(nil)
 
-type fastReflection_QueryDecodeQuerydataResponse QueryDecodeQuerydataResponse
+type fastReflection_QueryDecodeQueryDataResponse QueryDecodeQueryDataResponse
 
-func (x *QueryDecodeQuerydataResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryDecodeQuerydataResponse)(x)
+func (x *QueryDecodeQueryDataResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDecodeQueryDataResponse)(x)
 }
 
-func (x *QueryDecodeQuerydataResponse) slowProtoReflect() protoreflect.Message {
+func (x *QueryDecodeQueryDataResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_registry_query_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2113,43 +2113,43 @@ func (x *QueryDecodeQuerydataResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_QueryDecodeQuerydataResponse_messageType fastReflection_QueryDecodeQuerydataResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryDecodeQuerydataResponse_messageType{}
+var _fastReflection_QueryDecodeQueryDataResponse_messageType fastReflection_QueryDecodeQueryDataResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDecodeQueryDataResponse_messageType{}
 
-type fastReflection_QueryDecodeQuerydataResponse_messageType struct{}
+type fastReflection_QueryDecodeQueryDataResponse_messageType struct{}
 
-func (x fastReflection_QueryDecodeQuerydataResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryDecodeQuerydataResponse)(nil)
+func (x fastReflection_QueryDecodeQueryDataResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDecodeQueryDataResponse)(nil)
 }
-func (x fastReflection_QueryDecodeQuerydataResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryDecodeQuerydataResponse)
+func (x fastReflection_QueryDecodeQueryDataResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDecodeQueryDataResponse)
 }
-func (x fastReflection_QueryDecodeQuerydataResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryDecodeQuerydataResponse
+func (x fastReflection_QueryDecodeQueryDataResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDecodeQueryDataResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryDecodeQuerydataResponse
+func (x *fastReflection_QueryDecodeQueryDataResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDecodeQueryDataResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryDecodeQuerydataResponse_messageType
+func (x *fastReflection_QueryDecodeQueryDataResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDecodeQueryDataResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryDecodeQuerydataResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryDecodeQuerydataResponse)
+func (x *fastReflection_QueryDecodeQueryDataResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryDecodeQueryDataResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryDecodeQuerydataResponse)(x)
+func (x *fastReflection_QueryDecodeQueryDataResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryDecodeQueryDataResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -2157,10 +2157,10 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) Interface() protoreflect.P
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_QueryDecodeQueryDataResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Spec != "" {
 		value := protoreflect.ValueOfString(x.Spec)
-		if !f(fd_QueryDecodeQuerydataResponse_spec, value) {
+		if !f(fd_QueryDecodeQueryDataResponse_spec, value) {
 			return
 		}
 	}
@@ -2177,15 +2177,15 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) Range(f func(protoreflect.
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_QueryDecodeQueryDataResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataResponse.spec":
+	case "layer.registry.QueryDecodeQueryDataResponse.spec":
 		return x.Spec != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataResponse"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2195,15 +2195,15 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) Has(fd protoreflect.FieldD
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_QueryDecodeQueryDataResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataResponse.spec":
+	case "layer.registry.QueryDecodeQueryDataResponse.spec":
 		x.Spec = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataResponse"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2213,16 +2213,16 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) Clear(fd protoreflect.Fiel
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryDecodeQueryDataResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.registry.QueryDecodeQuerydataResponse.spec":
+	case "layer.registry.QueryDecodeQueryDataResponse.spec":
 		value := x.Spec
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataResponse"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2236,15 +2236,15 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) Get(descriptor protoreflec
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_QueryDecodeQueryDataResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataResponse.spec":
+	case "layer.registry.QueryDecodeQueryDataResponse.spec":
 		x.Spec = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataResponse"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2258,40 +2258,40 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) Set(fd protoreflect.FieldD
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryDecodeQueryDataResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataResponse.spec":
-		panic(fmt.Errorf("field spec of message layer.registry.QueryDecodeQuerydataResponse is not mutable"))
+	case "layer.registry.QueryDecodeQueryDataResponse.spec":
+		panic(fmt.Errorf("field spec of message layer.registry.QueryDecodeQueryDataResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataResponse"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryDecodeQuerydataResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_QueryDecodeQueryDataResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeQuerydataResponse.spec":
+	case "layer.registry.QueryDecodeQueryDataResponse.spec":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQuerydataResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeQueryDataResponse"))
 		}
-		panic(fmt.Errorf("message layer.registry.QueryDecodeQuerydataResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.registry.QueryDecodeQueryDataResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryDecodeQuerydataResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_QueryDecodeQueryDataResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.registry.QueryDecodeQuerydataResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.registry.QueryDecodeQueryDataResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2299,7 +2299,7 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) WhichOneof(d protoreflect.
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryDecodeQuerydataResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_QueryDecodeQueryDataResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2310,7 +2310,7 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) GetUnknown() protoreflect.
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryDecodeQuerydataResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_QueryDecodeQueryDataResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2322,7 +2322,7 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) SetUnknown(fields protoref
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_QueryDecodeQuerydataResponse) IsValid() bool {
+func (x *fastReflection_QueryDecodeQueryDataResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -2332,9 +2332,9 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryDecodeQuerydataResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_QueryDecodeQueryDataResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryDecodeQuerydataResponse)
+		x := input.Message.Interface().(*QueryDecodeQueryDataResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2360,7 +2360,7 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) ProtoMethods() *protoiface
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryDecodeQuerydataResponse)
+		x := input.Message.Interface().(*QueryDecodeQueryDataResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2397,7 +2397,7 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) ProtoMethods() *protoiface
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryDecodeQuerydataResponse)
+		x := input.Message.Interface().(*QueryDecodeQueryDataResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2429,10 +2429,10 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) ProtoMethods() *protoiface
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQuerydataResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQueryDataResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQuerydataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDecodeQueryDataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2504,14 +2504,14 @@ func (x *fastReflection_QueryDecodeQuerydataResponse) ProtoMethods() *protoiface
 
 var (
 	md_QueryGenerateQuerydataRequest            protoreflect.MessageDescriptor
-	fd_QueryGenerateQuerydataRequest_querytype  protoreflect.FieldDescriptor
+	fd_QueryGenerateQuerydataRequest_query_type protoreflect.FieldDescriptor
 	fd_QueryGenerateQuerydataRequest_parameters protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_registry_query_proto_init()
 	md_QueryGenerateQuerydataRequest = File_layer_registry_query_proto.Messages().ByName("QueryGenerateQuerydataRequest")
-	fd_QueryGenerateQuerydataRequest_querytype = md_QueryGenerateQuerydataRequest.Fields().ByName("querytype")
+	fd_QueryGenerateQuerydataRequest_query_type = md_QueryGenerateQuerydataRequest.Fields().ByName("query_type")
 	fd_QueryGenerateQuerydataRequest_parameters = md_QueryGenerateQuerydataRequest.Fields().ByName("parameters")
 }
 
@@ -2580,9 +2580,9 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Interface() protoreflect.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Querytype != "" {
-		value := protoreflect.ValueOfString(x.Querytype)
-		if !f(fd_QueryGenerateQuerydataRequest_querytype, value) {
+	if x.QueryType != "" {
+		value := protoreflect.ValueOfString(x.QueryType)
+		if !f(fd_QueryGenerateQuerydataRequest_query_type, value) {
 			return
 		}
 	}
@@ -2607,8 +2607,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Range(f func(protoreflect
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
-		return x.Querytype != ""
+	case "layer.registry.QueryGenerateQuerydataRequest.query_type":
+		return x.QueryType != ""
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
 		return x.Parameters != ""
 	default:
@@ -2627,8 +2627,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Has(fd protoreflect.Field
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
-		x.Querytype = ""
+	case "layer.registry.QueryGenerateQuerydataRequest.query_type":
+		x.QueryType = ""
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
 		x.Parameters = ""
 	default:
@@ -2647,8 +2647,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Clear(fd protoreflect.Fie
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
-		value := x.Querytype
+	case "layer.registry.QueryGenerateQuerydataRequest.query_type":
+		value := x.QueryType
 		return protoreflect.ValueOfString(value)
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
 		value := x.Parameters
@@ -2673,8 +2673,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Get(descriptor protorefle
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
-		x.Querytype = value.Interface().(string)
+	case "layer.registry.QueryGenerateQuerydataRequest.query_type":
+		x.QueryType = value.Interface().(string)
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
 		x.Parameters = value.Interface().(string)
 	default:
@@ -2697,8 +2697,8 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Set(fd protoreflect.Field
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGenerateQuerydataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
-		panic(fmt.Errorf("field querytype of message layer.registry.QueryGenerateQuerydataRequest is not mutable"))
+	case "layer.registry.QueryGenerateQuerydataRequest.query_type":
+		panic(fmt.Errorf("field query_type of message layer.registry.QueryGenerateQuerydataRequest is not mutable"))
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
 		panic(fmt.Errorf("field parameters of message layer.registry.QueryGenerateQuerydataRequest is not mutable"))
 	default:
@@ -2714,7 +2714,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) Mutable(fd protoreflect.F
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGenerateQuerydataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryGenerateQuerydataRequest.querytype":
+	case "layer.registry.QueryGenerateQuerydataRequest.query_type":
 		return protoreflect.ValueOfString("")
 	case "layer.registry.QueryGenerateQuerydataRequest.parameters":
 		return protoreflect.ValueOfString("")
@@ -2787,7 +2787,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 		var n int
 		var l int
 		_ = l
-		l = len(x.Querytype)
+		l = len(x.QueryType)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -2831,10 +2831,10 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.Querytype) > 0 {
-			i -= len(x.Querytype)
-			copy(dAtA[i:], x.Querytype)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Querytype)))
+		if len(x.QueryType) > 0 {
+			i -= len(x.QueryType)
+			copy(dAtA[i:], x.QueryType)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryType)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -2889,7 +2889,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Querytype", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryType", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -2917,7 +2917,7 @@ func (x *fastReflection_QueryGenerateQuerydataRequest) ProtoMethods() *protoifac
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Querytype = string(dAtA[iNdEx:postIndex])
+				x.QueryType = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -3409,15 +3409,15 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) ProtoMethods() *protoifa
 }
 
 var (
-	md_QueryDecodeValueRequest           protoreflect.MessageDescriptor
-	fd_QueryDecodeValueRequest_queryType protoreflect.FieldDescriptor
-	fd_QueryDecodeValueRequest_value     protoreflect.FieldDescriptor
+	md_QueryDecodeValueRequest            protoreflect.MessageDescriptor
+	fd_QueryDecodeValueRequest_query_type protoreflect.FieldDescriptor
+	fd_QueryDecodeValueRequest_value      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_registry_query_proto_init()
 	md_QueryDecodeValueRequest = File_layer_registry_query_proto.Messages().ByName("QueryDecodeValueRequest")
-	fd_QueryDecodeValueRequest_queryType = md_QueryDecodeValueRequest.Fields().ByName("queryType")
+	fd_QueryDecodeValueRequest_query_type = md_QueryDecodeValueRequest.Fields().ByName("query_type")
 	fd_QueryDecodeValueRequest_value = md_QueryDecodeValueRequest.Fields().ByName("value")
 }
 
@@ -3488,7 +3488,7 @@ func (x *fastReflection_QueryDecodeValueRequest) Interface() protoreflect.ProtoM
 func (x *fastReflection_QueryDecodeValueRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.QueryType != "" {
 		value := protoreflect.ValueOfString(x.QueryType)
-		if !f(fd_QueryDecodeValueRequest_queryType, value) {
+		if !f(fd_QueryDecodeValueRequest_query_type, value) {
 			return
 		}
 	}
@@ -3513,7 +3513,7 @@ func (x *fastReflection_QueryDecodeValueRequest) Range(f func(protoreflect.Field
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryDecodeValueRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueRequest.queryType":
+	case "layer.registry.QueryDecodeValueRequest.query_type":
 		return x.QueryType != ""
 	case "layer.registry.QueryDecodeValueRequest.value":
 		return x.Value != ""
@@ -3533,7 +3533,7 @@ func (x *fastReflection_QueryDecodeValueRequest) Has(fd protoreflect.FieldDescri
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryDecodeValueRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueRequest.queryType":
+	case "layer.registry.QueryDecodeValueRequest.query_type":
 		x.QueryType = ""
 	case "layer.registry.QueryDecodeValueRequest.value":
 		x.Value = ""
@@ -3553,7 +3553,7 @@ func (x *fastReflection_QueryDecodeValueRequest) Clear(fd protoreflect.FieldDesc
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryDecodeValueRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.registry.QueryDecodeValueRequest.queryType":
+	case "layer.registry.QueryDecodeValueRequest.query_type":
 		value := x.QueryType
 		return protoreflect.ValueOfString(value)
 	case "layer.registry.QueryDecodeValueRequest.value":
@@ -3579,7 +3579,7 @@ func (x *fastReflection_QueryDecodeValueRequest) Get(descriptor protoreflect.Fie
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryDecodeValueRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueRequest.queryType":
+	case "layer.registry.QueryDecodeValueRequest.query_type":
 		x.QueryType = value.Interface().(string)
 	case "layer.registry.QueryDecodeValueRequest.value":
 		x.Value = value.Interface().(string)
@@ -3603,8 +3603,8 @@ func (x *fastReflection_QueryDecodeValueRequest) Set(fd protoreflect.FieldDescri
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryDecodeValueRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueRequest.queryType":
-		panic(fmt.Errorf("field queryType of message layer.registry.QueryDecodeValueRequest is not mutable"))
+	case "layer.registry.QueryDecodeValueRequest.query_type":
+		panic(fmt.Errorf("field query_type of message layer.registry.QueryDecodeValueRequest is not mutable"))
 	case "layer.registry.QueryDecodeValueRequest.value":
 		panic(fmt.Errorf("field value of message layer.registry.QueryDecodeValueRequest is not mutable"))
 	default:
@@ -3620,7 +3620,7 @@ func (x *fastReflection_QueryDecodeValueRequest) Mutable(fd protoreflect.FieldDe
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryDecodeValueRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueRequest.queryType":
+	case "layer.registry.QueryDecodeValueRequest.query_type":
 		return protoreflect.ValueOfString("")
 	case "layer.registry.QueryDecodeValueRequest.value":
 		return protoreflect.ValueOfString("")
@@ -3893,14 +3893,14 @@ func (x *fastReflection_QueryDecodeValueRequest) ProtoMethods() *protoiface.Meth
 }
 
 var (
-	md_QueryDecodeValueResponse              protoreflect.MessageDescriptor
-	fd_QueryDecodeValueResponse_decodedValue protoreflect.FieldDescriptor
+	md_QueryDecodeValueResponse               protoreflect.MessageDescriptor
+	fd_QueryDecodeValueResponse_decoded_value protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_registry_query_proto_init()
 	md_QueryDecodeValueResponse = File_layer_registry_query_proto.Messages().ByName("QueryDecodeValueResponse")
-	fd_QueryDecodeValueResponse_decodedValue = md_QueryDecodeValueResponse.Fields().ByName("decodedValue")
+	fd_QueryDecodeValueResponse_decoded_value = md_QueryDecodeValueResponse.Fields().ByName("decoded_value")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryDecodeValueResponse)(nil)
@@ -3970,7 +3970,7 @@ func (x *fastReflection_QueryDecodeValueResponse) Interface() protoreflect.Proto
 func (x *fastReflection_QueryDecodeValueResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.DecodedValue != "" {
 		value := protoreflect.ValueOfString(x.DecodedValue)
-		if !f(fd_QueryDecodeValueResponse_decodedValue, value) {
+		if !f(fd_QueryDecodeValueResponse_decoded_value, value) {
 			return
 		}
 	}
@@ -3989,7 +3989,7 @@ func (x *fastReflection_QueryDecodeValueResponse) Range(f func(protoreflect.Fiel
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryDecodeValueResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueResponse.decodedValue":
+	case "layer.registry.QueryDecodeValueResponse.decoded_value":
 		return x.DecodedValue != ""
 	default:
 		if fd.IsExtension() {
@@ -4007,7 +4007,7 @@ func (x *fastReflection_QueryDecodeValueResponse) Has(fd protoreflect.FieldDescr
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryDecodeValueResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueResponse.decodedValue":
+	case "layer.registry.QueryDecodeValueResponse.decoded_value":
 		x.DecodedValue = ""
 	default:
 		if fd.IsExtension() {
@@ -4025,7 +4025,7 @@ func (x *fastReflection_QueryDecodeValueResponse) Clear(fd protoreflect.FieldDes
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryDecodeValueResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.registry.QueryDecodeValueResponse.decodedValue":
+	case "layer.registry.QueryDecodeValueResponse.decoded_value":
 		value := x.DecodedValue
 		return protoreflect.ValueOfString(value)
 	default:
@@ -4048,7 +4048,7 @@ func (x *fastReflection_QueryDecodeValueResponse) Get(descriptor protoreflect.Fi
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryDecodeValueResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueResponse.decodedValue":
+	case "layer.registry.QueryDecodeValueResponse.decoded_value":
 		x.DecodedValue = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
@@ -4070,8 +4070,8 @@ func (x *fastReflection_QueryDecodeValueResponse) Set(fd protoreflect.FieldDescr
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryDecodeValueResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueResponse.decodedValue":
-		panic(fmt.Errorf("field decodedValue of message layer.registry.QueryDecodeValueResponse is not mutable"))
+	case "layer.registry.QueryDecodeValueResponse.decoded_value":
+		panic(fmt.Errorf("field decoded_value of message layer.registry.QueryDecodeValueResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryDecodeValueResponse"))
@@ -4085,7 +4085,7 @@ func (x *fastReflection_QueryDecodeValueResponse) Mutable(fd protoreflect.FieldD
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryDecodeValueResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.registry.QueryDecodeValueResponse.decodedValue":
+	case "layer.registry.QueryDecodeValueResponse.decoded_value":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -4395,7 +4395,7 @@ type QueryGetDataSpecRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// queryType is the key to fetch a the corresponding data spec.
+	// query_type is the key to fetch a the corresponding data spec.
 	QueryType string `protobuf:"bytes,1,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
 
@@ -4463,8 +4463,8 @@ func (x *QueryGetDataSpecResponse) GetSpec() *DataSpec {
 	return nil
 }
 
-// QueryDecodeQuerydataRequest is request type for the Query/DecodeQuerydata RPC method.
-type QueryDecodeQuerydataRequest struct {
+// QueryDecodeQueryDataRequest is request type for the Query/DecodeQuerydata RPC method.
+type QueryDecodeQueryDataRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -4473,8 +4473,8 @@ type QueryDecodeQuerydataRequest struct {
 	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
-func (x *QueryDecodeQuerydataRequest) Reset() {
-	*x = QueryDecodeQuerydataRequest{}
+func (x *QueryDecodeQueryDataRequest) Reset() {
+	*x = QueryDecodeQueryDataRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_registry_query_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4482,26 +4482,26 @@ func (x *QueryDecodeQuerydataRequest) Reset() {
 	}
 }
 
-func (x *QueryDecodeQuerydataRequest) String() string {
+func (x *QueryDecodeQueryDataRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryDecodeQuerydataRequest) ProtoMessage() {}
+func (*QueryDecodeQueryDataRequest) ProtoMessage() {}
 
-// Deprecated: Use QueryDecodeQuerydataRequest.ProtoReflect.Descriptor instead.
-func (*QueryDecodeQuerydataRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryDecodeQueryDataRequest.ProtoReflect.Descriptor instead.
+func (*QueryDecodeQueryDataRequest) Descriptor() ([]byte, []int) {
 	return file_layer_registry_query_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *QueryDecodeQuerydataRequest) GetQueryData() []byte {
+func (x *QueryDecodeQueryDataRequest) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
 	return nil
 }
 
-// QueryDecodeQuerydataResponse is response type for the Query/DecodeQuerydata RPC method.
-type QueryDecodeQuerydataResponse struct {
+// QueryDecodeQueryDataResponse is response type for the Query/DecodeQuerydata RPC method.
+type QueryDecodeQueryDataResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -4510,8 +4510,8 @@ type QueryDecodeQuerydataResponse struct {
 	Spec string `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
 }
 
-func (x *QueryDecodeQuerydataResponse) Reset() {
-	*x = QueryDecodeQuerydataResponse{}
+func (x *QueryDecodeQueryDataResponse) Reset() {
+	*x = QueryDecodeQueryDataResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_registry_query_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4519,18 +4519,18 @@ func (x *QueryDecodeQuerydataResponse) Reset() {
 	}
 }
 
-func (x *QueryDecodeQuerydataResponse) String() string {
+func (x *QueryDecodeQueryDataResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*QueryDecodeQuerydataResponse) ProtoMessage() {}
+func (*QueryDecodeQueryDataResponse) ProtoMessage() {}
 
-// Deprecated: Use QueryDecodeQuerydataResponse.ProtoReflect.Descriptor instead.
-func (*QueryDecodeQuerydataResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use QueryDecodeQueryDataResponse.ProtoReflect.Descriptor instead.
+func (*QueryDecodeQueryDataResponse) Descriptor() ([]byte, []int) {
 	return file_layer_registry_query_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *QueryDecodeQuerydataResponse) GetSpec() string {
+func (x *QueryDecodeQueryDataResponse) GetSpec() string {
 	if x != nil {
 		return x.Spec
 	}
@@ -4543,8 +4543,8 @@ type QueryGenerateQuerydataRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// querytype for which query_data is to be generated.
-	Querytype string `protobuf:"bytes,1,opt,name=querytype,proto3" json:"querytype,omitempty"`
+	// query_type for which query_data is to be generated.
+	QueryType string `protobuf:"bytes,1,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 	// parameters for which query_data is to be generated.
 	Parameters string `protobuf:"bytes,2,opt,name=parameters,proto3" json:"parameters,omitempty"`
 }
@@ -4569,9 +4569,9 @@ func (*QueryGenerateQuerydataRequest) Descriptor() ([]byte, []int) {
 	return file_layer_registry_query_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *QueryGenerateQuerydataRequest) GetQuerytype() string {
+func (x *QueryGenerateQuerydataRequest) GetQueryType() string {
 	if x != nil {
-		return x.Querytype
+		return x.QueryType
 	}
 	return ""
 }
@@ -4626,8 +4626,8 @@ type QueryDecodeValueRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// queryType is the key to fetch a the corresponding data spec.
-	QueryType string `protobuf:"bytes,1,opt,name=queryType,proto3" json:"queryType,omitempty"`
+	// query_type is the key to fetch a the corresponding data spec.
+	QueryType string `protobuf:"bytes,1,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 	// value is the value hex string to be decoded.
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 }
@@ -4672,8 +4672,8 @@ type QueryDecodeValueResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// decodedValue is the decoded value of the hex string.
-	DecodedValue string `protobuf:"bytes,1,opt,name=decodedValue,proto3" json:"decodedValue,omitempty"`
+	// decoded_value is the decoded value of the hex string.
+	DecodedValue string `protobuf:"bytes,1,opt,name=decoded_value,json=decodedValue,proto3" json:"decoded_value,omitempty"`
 }
 
 func (x *QueryDecodeValueResponse) Reset() {
@@ -4731,92 +4731,92 @@ var file_layer_registry_query_proto_rawDesc = []byte{
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67,
 	0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63, 0x52, 0x04,
 	0x73, 0x70, 0x65, 0x63, 0x22, 0x3c, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63,
-	0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75,
+	0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74,
 	0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61,
 	0x74, 0x61, 0x22, 0x32, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63, 0x6f, 0x64,
-	0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x73, 0x70, 0x65, 0x63, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x73, 0x70, 0x65, 0x63, 0x22, 0x5d, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
+	0x52, 0x04, 0x73, 0x70, 0x65, 0x63, 0x22, 0x5e, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
 	0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72,
-	0x79, 0x74, 0x79, 0x70, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74,
-	0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d,
-	0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x3f, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
-	0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0x4d, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44,
-	0x65, 0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x1c, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12,
-	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x3e, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65,
-	0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x22, 0x0a, 0x0c, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x64, 0x56, 0x61, 0x6c, 0x75,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x64,
-	0x56, 0x61, 0x6c, 0x75, 0x65, 0x32, 0x8e, 0x06, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12,
-	0x71, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x1e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x18, 0x12, 0x16, 0x2f, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2f, 0x70, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x12, 0x94, 0x01, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70,
-	0x65, 0x63, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73,
-	0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61,
-	0x53, 0x70, 0x65, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x32, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2c, 0x12, 0x2a, 0x2f,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2f, 0x67,
-	0x65, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x73, 0x70, 0x65, 0x63, 0x2f, 0x7b, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x7d, 0x12, 0xa3, 0x01, 0x0a, 0x0f, 0x44, 0x65,
-	0x63, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2b, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64,
-	0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x35, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2f,
-	0x12, 0x2d, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
-	0x79, 0x2f, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61,
-	0x74, 0x61, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x7d, 0x12,
-	0xb7, 0x01, 0x0a, 0x11, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
-	0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x6e, 0x65,
-	0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67,
-	0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x6e, 0x65, 0x72,
-	0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x43, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3d, 0x12, 0x3b, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2f, 0x67, 0x65,
-	0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61,
-	0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x74, 0x79, 0x70, 0x65, 0x7d, 0x2f, 0x7b, 0x70, 0x61,
-	0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x7d, 0x12, 0x9a, 0x01, 0x0a, 0x0b, 0x44, 0x65,
-	0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65,
+	0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x61, 0x72, 0x61,
+	0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x3f, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
+	0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0x4e, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79,
 	0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73,
-	0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x56,
-	0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x38, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x32, 0x12, 0x30, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67,
-	0x69, 0x73, 0x74, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x5f, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x7d, 0x2f, 0x7b,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x7d, 0x42, 0xa8, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x42, 0x0a, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69,
-	0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58,
-	0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
-	0x79, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74,
-	0x72, 0x79, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x67, 0x69, 0x73,
-	0x74, 0x72, 0x79, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
-	0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x3f, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x64, 0x5f, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x64, 0x65, 0x63, 0x6f,
+	0x64, 0x65, 0x64, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x32, 0x91, 0x06, 0x0a, 0x05, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x12, 0x71, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x22, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x18, 0x12, 0x16, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2f, 0x70,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x94, 0x01, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74,
+	0x61, 0x53, 0x70, 0x65, 0x63, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44,
+	0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x53, 0x70, 0x65, 0x63,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x32, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2c,
+	0x12, 0x2a, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x73, 0x70, 0x65, 0x63, 0x2f,
+	0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x7d, 0x12, 0xa4, 0x01, 0x0a,
+	0x0f, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61,
+	0x12, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44,
+	0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x36, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x30, 0x12, 0x2e, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69,
+	0x73, 0x74, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x5f, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61,
+	0x74, 0x61, 0x7d, 0x12, 0xb8, 0x01, 0x0a, 0x11, 0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x47, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74,
+	0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
+	0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x44, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3e,
+	0x12, 0x3c, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x79, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x5f, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x64, 0x61, 0x74, 0x61, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65,
+	0x7d, 0x2f, 0x7b, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x65, 0x74, 0x65, 0x72, 0x73, 0x7d, 0x12, 0x9b,
+	0x01, 0x0a, 0x0b, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x27,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65,
+	0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2f, 0x64, 0x65, 0x63, 0x6f, 0x64,
+	0x65, 0x5f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x74,
+	0x79, 0x70, 0x65, 0x7d, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x7d, 0x42, 0xa8, 0x01, 0x0a,
+	0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x72, 0x79, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65,
+	0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79,
+	0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52,
+	0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52,
+	0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4837,8 +4837,8 @@ var file_layer_registry_query_proto_goTypes = []interface{}{
 	(*QueryParamsResponse)(nil),            // 1: layer.registry.QueryParamsResponse
 	(*QueryGetDataSpecRequest)(nil),        // 2: layer.registry.QueryGetDataSpecRequest
 	(*QueryGetDataSpecResponse)(nil),       // 3: layer.registry.QueryGetDataSpecResponse
-	(*QueryDecodeQuerydataRequest)(nil),    // 4: layer.registry.QueryDecodeQuerydataRequest
-	(*QueryDecodeQuerydataResponse)(nil),   // 5: layer.registry.QueryDecodeQuerydataResponse
+	(*QueryDecodeQueryDataRequest)(nil),    // 4: layer.registry.QueryDecodeQueryDataRequest
+	(*QueryDecodeQueryDataResponse)(nil),   // 5: layer.registry.QueryDecodeQueryDataResponse
 	(*QueryGenerateQuerydataRequest)(nil),  // 6: layer.registry.QueryGenerateQuerydataRequest
 	(*QueryGenerateQuerydataResponse)(nil), // 7: layer.registry.QueryGenerateQuerydataResponse
 	(*QueryDecodeValueRequest)(nil),        // 8: layer.registry.QueryDecodeValueRequest
@@ -4851,12 +4851,12 @@ var file_layer_registry_query_proto_depIdxs = []int32{
 	11, // 1: layer.registry.QueryGetDataSpecResponse.spec:type_name -> layer.registry.DataSpec
 	0,  // 2: layer.registry.Query.Params:input_type -> layer.registry.QueryParamsRequest
 	2,  // 3: layer.registry.Query.GetDataSpec:input_type -> layer.registry.QueryGetDataSpecRequest
-	4,  // 4: layer.registry.Query.DecodeQuerydata:input_type -> layer.registry.QueryDecodeQuerydataRequest
+	4,  // 4: layer.registry.Query.DecodeQueryData:input_type -> layer.registry.QueryDecodeQueryDataRequest
 	6,  // 5: layer.registry.Query.GenerateQuerydata:input_type -> layer.registry.QueryGenerateQuerydataRequest
 	8,  // 6: layer.registry.Query.DecodeValue:input_type -> layer.registry.QueryDecodeValueRequest
 	1,  // 7: layer.registry.Query.Params:output_type -> layer.registry.QueryParamsResponse
 	3,  // 8: layer.registry.Query.GetDataSpec:output_type -> layer.registry.QueryGetDataSpecResponse
-	5,  // 9: layer.registry.Query.DecodeQuerydata:output_type -> layer.registry.QueryDecodeQuerydataResponse
+	5,  // 9: layer.registry.Query.DecodeQueryData:output_type -> layer.registry.QueryDecodeQueryDataResponse
 	7,  // 10: layer.registry.Query.GenerateQuerydata:output_type -> layer.registry.QueryGenerateQuerydataResponse
 	9,  // 11: layer.registry.Query.DecodeValue:output_type -> layer.registry.QueryDecodeValueResponse
 	7,  // [7:12] is the sub-list for method output_type
@@ -4923,7 +4923,7 @@ func file_layer_registry_query_proto_init() {
 			}
 		}
 		file_layer_registry_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDecodeQuerydataRequest); i {
+			switch v := v.(*QueryDecodeQueryDataRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4935,7 +4935,7 @@ func file_layer_registry_query_proto_init() {
 			}
 		}
 		file_layer_registry_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDecodeQuerydataResponse); i {
+			switch v := v.(*QueryDecodeQueryDataResponse); i {
 			case 0:
 				return &v.state
 			case 1:

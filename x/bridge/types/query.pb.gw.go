@@ -336,15 +336,15 @@ func request_Query_GetEvmAddressByValidatorAddress_0(ctx context.Context, marsha
 		_   = err
 	)
 
-	val, ok = pathParams["validatorAddress"]
+	val, ok = pathParams["validator_address"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validatorAddress")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_address")
 	}
 
 	protoReq.ValidatorAddress, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validatorAddress", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_address", err)
 	}
 
 	msg, err := client.GetEvmAddressByValidatorAddress(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -363,15 +363,15 @@ func local_request_Query_GetEvmAddressByValidatorAddress_0(ctx context.Context, 
 		_   = err
 	)
 
-	val, ok = pathParams["validatorAddress"]
+	val, ok = pathParams["validator_address"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validatorAddress")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "validator_address")
 	}
 
 	protoReq.ValidatorAddress, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validatorAddress", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "validator_address", err)
 	}
 
 	msg, err := server.GetEvmAddressByValidatorAddress(ctx, &protoReq)
@@ -1101,7 +1101,7 @@ var (
 
 	pattern_Query_GetOracleAttestations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "bridge", "get_oracle_attestations", "query_id", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetEvmAddressByValidatorAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_evm_address_by_validator_address", "validatorAddress"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetEvmAddressByValidatorAddress_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_evm_address_by_validator_address", "validator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetValsetByTimestamp_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "bridge", "get_valset_by_timestamp", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 

@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQuerydataRequest) (*types.QueryDecodeQuerydataResponse, error) {
+func (k Querier) DecodeQueryData(goCtx context.Context, req *types.QueryDecodeQueryDataRequest) (*types.QueryDecodeQueryDataResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -35,5 +35,5 @@ func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQu
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data fields: %v", err))
 	}
 
-	return &types.QueryDecodeQuerydataResponse{Spec: fmt.Sprintf("%s: %s", queryType, fields)}, nil
+	return &types.QueryDecodeQueryDataResponse{Spec: fmt.Sprintf("%s: %s", queryType, fields)}, nil
 }

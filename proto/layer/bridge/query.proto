@@ -45,7 +45,7 @@ service Query {
   }
 
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
-    option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
+    option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validator_address}";
   }
 
   rpc GetValsetByTimestamp (QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
@@ -77,40 +77,40 @@ message QueryParamsResponse {
 message QueryGetEvmValidatorsRequest {}
 
 message QueryGetEvmValidatorsResponse {
-  repeated BridgeValidator bridgeValidatorSet = 1;
+  repeated BridgeValidator bridge_validator_set = 1;
 }
 
 message QueryGetValidatorCheckpointRequest {}
 
 message QueryGetValidatorCheckpointResponse {
-  string validatorCheckpoint = 1;
+  string validator_checkpoint = 1;
 }
 
 message BridgeValidator {
-  string ethereumAddress = 1;
+  bytes ethereum_address = 1;
   uint64 power = 2;
 }
 
 message BridgeValidatorSet {
-  repeated BridgeValidator bridgeValidatorSet = 1;
+  repeated BridgeValidator bridge_validator_set = 1;
 }
 
 message BridgeValidatorSetParams {
-  BridgeValidatorSet bridgeValidatorSet = 1;
-  int64 validatorTimestamp = 2;
-  int64 validatorPowerThreshold = 3;
-  bytes validatorSetHash = 4;
-  bytes validatorCheckpoint = 5;
+  BridgeValidatorSet bridge_validator_set = 1;
+  int64 validator_timestamp = 2;
+  int64 validator_power_threshold = 3;
+  bytes validator_set_hash = 4;
+  bytes validator_checkpoint = 5;
 }
 
 message BridgeValidatorSetCheckpointParams {
-  int64 validatorTimestamp = 1;
-  int64 validatorPowerThreshold = 2;
-  bytes validatorSetHash = 3;
+  int64 validator_timestamp = 1;
+  int64 validator_power_threshold = 2;
+  bytes validator_set_hash = 3;
 }
 
 message BridgeValidatorSetCheckpoint {
-  bytes validatorCheckpoint = 1;
+  bytes validator_checkpoint = 1;
 }
 
 message QueryGetValidatorCheckpointParamsRequest {
@@ -119,9 +119,9 @@ message QueryGetValidatorCheckpointParamsRequest {
 
 message QueryGetValidatorCheckpointParamsResponse {
   string checkpoint = 1;
-  string valsetHash = 2;
+  string valset_hash = 2;
   int64 timestamp = 3;
-  int64 powerThreshold = 4;
+  int64 power_threshold = 4;
 }
 
 message QueryGetValidatorTimestampByIndexRequest {
@@ -150,11 +150,11 @@ message QueryGetOracleAttestationsResponse {
 }
 
 message QueryGetEvmAddressByValidatorAddressRequest {
-  string validatorAddress = 1;
+  string validator_address = 1;
 }
 
 message QueryGetEvmAddressByValidatorAddressResponse {
-  string evmAddress = 1;
+  string evm_address = 1;
 }
 
 message QueryGetValsetByTimestampRequest {
@@ -162,7 +162,7 @@ message QueryGetValsetByTimestampRequest {
 }
 
 message QueryGetValsetByTimestampResponse {
-  repeated BridgeValidator bridgeValidatorSet = 1;
+  repeated BridgeValidator bridge_validator_set = 1;
 }
 
 message QueryGetCurrentAggregateReportRequest {
@@ -177,14 +177,14 @@ message QueryGetCurrentAggregateReportResponse {
 message Aggregate {
   
   bytes query_id = 1; 
-  string aggregateValue = 2; 
-  string aggregateReporter = 3; 
-  int64 reporterPower = 4; 
-  double standardDeviation = 5;
+  string aggregate_value = 2; 
+  string aggregate_reporter = 3; 
+  int64 reporter_power = 4; 
+  double standard_deviation = 5;
   repeated AggregateReporter reporters = 6; 
   bool flagged = 7;
   int64 nonce = 8;
-  int64 aggregateReportIndex = 9;
+  int64 aggregate_report_index = 9;
   int64 height = 10;
 }
 

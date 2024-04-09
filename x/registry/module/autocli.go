@@ -24,24 +24,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}},
 				},
 				{
-					RpcMethod:      "DecodeQuerydata",
-					Use:            "decode-querydata [query_data]",
+					RpcMethod:      "DecodeQueryData",
+					Use:            "decode-query-data [query_data]",
 					Short:          "Decode the query data into human readable format",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}},
 				},
 
 				{
 					RpcMethod:      "GenerateQuerydata",
-					Use:            "generate-querydata [querytype] [parameters]",
+					Use:            "generate-query-data [query-type] [parameters]",
 					Short:          "Encode query data hex given query type and parameters",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querytype"}, {ProtoField: "parameters"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}, {ProtoField: "parameters"}},
 				},
 
 				{
 					RpcMethod:      "DecodeValue",
 					Use:            "decode-value [query-type] [value]",
 					Short:          "Decode the value given query type",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "queryType"}, {ProtoField: "value"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}, {ProtoField: "value"}},
 				},
 
 				// this line is used by ignite scaffolding # autocli/query
