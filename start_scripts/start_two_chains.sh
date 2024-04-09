@@ -37,7 +37,11 @@ echo "alice..."
 echo "bill..."
 ./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 echo "charlie..."
-./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+yes | ./layerd keys add charlie --keyring-backend os --home ~/.layer/alice > ~/Desktop/charlie_key_info.txt 2>&1
+
+# Extract the mnemonic from the key_info file
+echo "Extracting charlie's mnemonic from key_info file..."
+grep -A 24 'It is the only way to recover your account if you ever forget your password.' ~/Desktop/charlie_key_info.txt | tail -n 1 > ~/Desktop/charlie_mnemonic.txt
 
 
 # Update vote_extensions_enable_height in genesis.json

@@ -538,7 +538,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         
     })
     
-    it.only("query layer api, deploy and verify with real params", async function () {
+    it("query layer api, deploy and verify with real params", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         console.log("valsetTimestamp0: ", vts0)
@@ -590,6 +590,72 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         console.log("currentTime: ", currentTime)
         pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
         console.log("pastReport: ", pastReport)
+        // await h.requestAttestations(ETH_USD_QUERY_ID, pastReport.timestamp)
+    })
+
+    it("query layer api, deploy and verify with real params", async function () {
+        vts0 = await h.getValsetTimestampByIndex(0)
+        vp0 = await h.getValsetCheckpointParams(vts0)
+        console.log("vp0: ", vp0)
+
+        console.log("deploying bridge...")
+        const Bridge = await ethers.getContractFactory("BlobstreamO");
+        bridge = await Bridge.deploy(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address);
+        await bridge.deployed();
+
+        vts1 = await h.getValsetTimestampByIndex(1)
+        vp1 = await h.getValsetCheckpointParams(vts1)
+        console.log("vp1: ", vp1)
+        valSet0 = await h.getValset(vp0.timestamp)
+        valSet1 = await h.getValset(vp1.timestamp)
+
+        vsigs1 = await h.getValsetSigs(vp1.timestamp, valSet0, vp1.checkpoint)
+        
+        console.log("updating validator set...")
+        await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
+
+
+        // request new attestations
+        currentBlock = await h.getBlock()
+        currentTime = currentBlock.timestamp
+        currentTime = currentTime - 100
+        console.log("currentTime: ", currentTime)
+        pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
+        console.log("pastReport: ", pastReport)
+
+        snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, 1712610958)
+        console.log("snapshots: ", snapshots)
+        lastSnapshot = snapshots[snapshots.length - 1]
+        attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
+        console.log("attestationData: ", attestationData)
+
+        oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+        if (oattests.length == 0) {
+            sleeptime = 2
+            console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
+            await h.sleep(2)
+            oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+        }
+        console.log("oattests: ", oattests)
+
+        console.log("verifying oracle data...")
+        await bridge.verifyOracleData(
+            attestationData,
+            valSet1,
+            oattests,
+        )
+
+    })
+
+    it.only("try wallet", async function () {
+        wallet = await h.createCosmosWallet()
+        console.log("wallet: ", wallet)
+
+        currentBlock = await h.getBlock()
+        currentTime = currentBlock.timestamp - 100
+        pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
+        console.log("pastReport: ", pastReport)
+
         await h.requestAttestations(ETH_USD_QUERY_ID, pastReport.timestamp)
     })
 })

@@ -967,12 +967,18 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	if err != nil {
 		tsBefore = time.Unix(0, 0)
 	}
+	k.Logger(ctx).Info("tsBefore", "tsBefore", tsBefore.Unix())
 
 	k.Logger(ctx).Info("getting next timestamp...")
 	tsAfter, err := k.oracleKeeper.GetTimestampAfter(ctx, queryId, timestamp)
 	if err != nil {
 		tsAfter = time.Unix(0, 0)
 	}
+	k.Logger(ctx).Info("tsAfter", "tsAfter", tsAfter.Unix())
+
+	// use current block time for attestationTimestamp
+	attestationTimestamp := ctx.BlockTime()
+	k.Logger(ctx).Info("attestation timestamp", "attestationTimestamp", attestationTimestamp.Unix())
 
 	k.Logger(ctx).Info("encoding oracle attestation data...")
 	snapshotBytes, err := k.EncodeOracleAttestationData(
@@ -983,7 +989,7 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		tsBefore.Unix(),
 		tsAfter.Unix(),
 		hex.EncodeToString(validatorCheckpoint.Checkpoint),
-		timestamp.Unix(),
+		attestationTimestamp.Unix(),
 	)
 	if err != nil {
 		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
@@ -1026,13 +1032,15 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	// set snapshot to snapshot data map
 	snapshotData := types.AttestationSnapshotData{
 		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
-		AttestationTimestamp: int64(timestamp.Unix()),
+		AttestationTimestamp: int64(attestationTimestamp.Unix()),
 		PrevReportTimestamp:  int64(tsBefore.Unix()),
 		NextReportTimestamp:  int64(tsAfter.Unix()),
 		QueryId:              queryId,
 		Timestamp:            int64(timestamp.Unix()),
 	}
 	k.Logger(ctx).Info("setting snapshot data...")
+	k.Logger(ctx).Info("snapshot", "snapshot", hex.EncodeToString(snapshotBytes))
+	k.Logger(ctx).Info("snapshot data", "snapshotData", snapshotData)
 	err = k.AttestSnapshotDataMap.Set(ctx, hex.EncodeToString(snapshotBytes), snapshotData)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting attestation snapshot data", "error", err)

@@ -3,7 +3,16 @@ const { ethers, network } = require("hardhat");
 const BigNumber = ethers.BigNumber
 const BN = web3.utils.BN;
 const axios = require('axios')
-const { exec } = require("child_process");
+const { DirectSecp256k1HdWallet, Registry } = require('@cosmjs/proto-signing');
+const { GasPrice, StargateClient, SigningStargateClient } = require('@cosmjs/stargate');
+const os = require('os');
+const path = require('path');
+const fs = require('fs').promises;
+const { MsgRequestAttestations } = require('../../generated/layer/bridge/tx_pb.js');
+
+const homeDirectory = os.homedir();
+const CHARLIE_MNEMONIC_FILE = path.join(homeDirectory, 'Desktop', 'charlie_mnemonic.txt');
+
 
 const hash = web3.utils.keccak256;
 var assert = require('assert');
@@ -300,25 +309,67 @@ getAttestationsBySnapshot = async (snapshot, valset) => {
   }
 }
 
-requestAttestations = async (queryId, timestamp) => {
+createCosmosWallet = async () => {
   try {
-    const shellCommand = '../layerd tx bridge request-attestations ' + queryId + ' ' + timestamp + ' --from charlie --chain-id layer --keyring-backend test --home ~/.layer/alice --yes'
-    const transactionResult = await execShellCommand(shellCommand)
-    console.log("transactionResult: ", transactionResult)
+    // Read the mnemonic from the file
+    const mnemonic = await fs.readFile(CHARLIE_MNEMONIC_FILE, { encoding: 'utf8' });
+    // Trim any whitespace from the mnemonic to ensure it's clean
+    const trimmedMnemonic = mnemonic.trim();
+
+    // Create a wallet using the mnemonic
+    const wallet = await DirectSecp256k1HdWallet.fromMnemonic(trimmedMnemonic, {
+      // Specify the prefix for your blockchain, "cosmos" is used for the Cosmos Hub
+      // You might need to change this depending on your chain
+      prefix: 'tellor',
+    });
+
+    // Example: Fetching the first account from the wallet
+    const [firstAccount] = await wallet.getAccounts();
+
+    console.log(`Wallet address: ${firstAccount.address}`);
+    // Return the wallet or the account depending on your needs
+    return wallet;
   } catch (error) {
-    console.log("error: ", error)
+    console.error('Failed to create wallet from mnemonic:', error);
   }
 }
 
-execShellCommand = async (cmd) => {
-  return new Promise((resolve, reject) => {
-    exec(cmd, (error, stdout, stderr) => {
-      if (error) {
-        console.warn(error);
-      }
-      resolve(stdout ? stdout : stderr);
-    });
-  });
+requestAttestations = async (queryId, timestamp) => {
+  const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
+  const rpcEndpoint = 'http://localhost:26657'; 
+  const chainId = 'layer'; 
+
+  const registry = new Registry();
+  const typeUrl = "/layer.bridge.MsgRequestAttestations"
+  registry.register(typeUrl, MsgRequestAttestations);
+  const options = { registry: registry };
+
+  // create a wallet with charlie's mnemonic
+  const wallet = await createCosmosWallet();
+  const [firstAccount] = await wallet.getAccounts();
+
+  // create a stargate client
+  const client = await SigningStargateClient.connectWithSigner(rpcEndpoint, wallet, options);
+
+  // Construct the message
+  // NOTE: You'll need to adjust this to match the structure expected by your blockchain
+  let msg = new MsgRequestAttestations()
+  msg.setQueryid(formattedQueryId)
+  msg.setTimestamp(timestamp)
+  msg.setCreator(firstAccount.address)
+
+  // Define the fee
+  const fee = {
+    amount: [{ denom: 'stake', amount: '2000' }],
+    gas: '200000',
+  };
+
+  // sign and broadcast the transaction
+  console.log("signing and broadcasting")
+  const result = await client.signAndBroadcast(firstAccount.address, [msg], fee, 'Request attestations');
+  assertIsBroadcastTxSuccess(result);
+
+  console.log('Transaction result:', result);
 }
 
 getValidatorSet = async (height) => {
@@ -582,6 +633,7 @@ module.exports = {
   getSnapshotsByReport,
   getAttestationDataBySnapshot,
   getAttestationsBySnapshot,
-  requestAttestations
+  requestAttestations,
+  createCosmosWallet
 };
 

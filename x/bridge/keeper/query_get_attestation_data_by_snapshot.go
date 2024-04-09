@@ -38,7 +38,7 @@ func (k Keeper) GetAttestationDataBySnapshot(goCtx context.Context, req *types.Q
 	aggValueStr := aggReport.AggregateValue
 	aggPowerStr := strconv.FormatInt(aggReport.ReporterPower, 10)
 	checkpointStr := hex.EncodeToString(snapshotData.ValidatorCheckpoint)
-	attestationTimestampStr := strconv.FormatInt(snapshotData.Timestamp, 10)
+	attestationTimestampStr := strconv.FormatInt(snapshotData.AttestationTimestamp, 10)
 	previousReportTimestampStr := strconv.FormatInt(snapshotData.PrevReportTimestamp, 10)
 	nextReportTimestampStr := strconv.FormatInt(snapshotData.NextReportTimestamp, 10)
 
