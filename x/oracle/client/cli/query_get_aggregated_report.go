@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -28,9 +29,13 @@ func CmdGetAggregatedReport() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetCurrentAggregatedReportRequest{
+			queryId, err := utils.QueryBytesFromString(reqQueryId)
+			if err != nil {
+				return err
+			}
 
-				QueryId: reqQueryId,
+			params := &types.QueryGetCurrentAggregatedReportRequest{
+				QueryId: queryId,
 			}
 
 			res, err := queryClient.GetAggregatedReport(cmd.Context(), params)

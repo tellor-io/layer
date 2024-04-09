@@ -27,7 +27,7 @@ service Query {
   
   // Queries a list of GetReportsbyQid items.
   rpc GetReportsbyQid         (QueryGetReportsbyQidRequest        ) returns (QueryGetReportsbyQidResponse     ) {
-    option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{queryId}";
+    option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{query_id}";
   
   }
   rpc GetReportsbyReporter    (QueryGetReportsbyReporterRequest   ) returns (QueryGetReportsbyReporterResponse) {
@@ -35,31 +35,31 @@ service Query {
   
   }
   rpc GetReportsbyReporterQid (QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse     ) {
-    option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{queryId}";
+    option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{query_id}";
   
   }
   
   // Queries a list of GetCurrentTip items.
   rpc GetCurrentTip (QueryGetCurrentTipRequest) returns (QueryGetCurrentTipResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_current_tip/{queryData}";
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_current_tip/{query_data}";
   
   }
   
   // Queries a list of GetUserTipTotal items.
   rpc GetUserTipTotal (QueryGetUserTipTotalRequest) returns (QueryGetUserTipTotalResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}/{queryData}";
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}/{query_data}";
   
   }
   
   // Queries a list of GetAggregatedReport items.
   rpc GetAggregatedReport (QueryGetCurrentAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{queryId}";
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{query_id}";
   
   }
   
   // Queries a list of GetAggregatedReport items.
   rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{queryId}/{timestamp}";
+    option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{query_id}/{timestamp}";
   
   }
   
@@ -86,7 +86,7 @@ message QueryParamsResponse {
 }
 
 message QueryGetReportsbyQidRequest {
-  string queryId = 1;
+  bytes query_id = 1;
 }
 
 message QueryGetReportsbyQidResponse {
@@ -103,11 +103,11 @@ message QueryGetReportsbyReporterResponse {
 
 message QueryGetReportsbyReporterQidRequest {
   string reporter = 1;
-  string queryId  = 2;
+  bytes query_id  = 2;
 }
 
 message QueryGetCurrentTipRequest {
-  string queryData = 1;
+  bytes query_data = 1;
 }
 
 message QueryGetCurrentTipResponse {
@@ -116,7 +116,7 @@ message QueryGetCurrentTipResponse {
 
 message QueryGetUserTipTotalRequest {
   string tipper    = 1;
-  string queryData = 2;
+  bytes query_data = 2;
 }
 
 message QueryGetUserTipTotalResponse {
@@ -124,7 +124,7 @@ message QueryGetUserTipTotalResponse {
 }
 
 message QueryGetCurrentAggregatedReportRequest {
-  string queryId = 1;
+  bytes query_id = 1;
 }
 
 message QueryGetAggregatedReportResponse {
@@ -132,7 +132,7 @@ message QueryGetAggregatedReportResponse {
 }
 
 message QueryGetDataBeforeRequest {
-  string queryId   = 1;
+  bytes query_id   = 1;
   int64  timestamp = 2;
 }
 
@@ -145,6 +145,6 @@ message QueryGetTimeBasedRewardsResponse {
 message QueryCurrentCyclelistQueryRequest {}
 
 message QueryCurrentCyclelistQueryResponse {
-  string querydata = 1;
+  bytes query_data = 1;
 }
 

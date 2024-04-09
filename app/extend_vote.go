@@ -26,28 +26,28 @@ import (
 )
 
 type OracleKeeper interface {
-	// GetQueryIdAndTimestampPairsByBlockHeight(ctx sdk.Context, height uint64) oracletypes.QueryIdTimestampPairsArray
-	// GetAggregateReport(ctx sdk.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
-	GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
-	GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error)
-	GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []oracletypes.Aggregate
-	GetDataBeforePublic(ctx sdk.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
+	// GetQueryIdAndTimestampPairsByBlockHeight(ctx context.Context, height uint64) oracletypes.QueryIdTimestampPairsArray
+	// GetAggregateReport(ctx context.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
+	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
+	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
+	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate
+	GetDataBeforePublic(ctx context.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
 }
 
 type BridgeKeeper interface {
-	GetValidatorCheckpointFromStorage(ctx sdk.Context) (*bridgetypes.ValidatorCheckpoint, error)
+	GetValidatorCheckpointFromStorage(ctx context.Context) (*bridgetypes.ValidatorCheckpoint, error)
 	Logger(ctx context.Context) log.Logger
 	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
 	EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error)
 	EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error)
 	SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error
-	GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
-	SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string, timestamp uint64, signature string) error
-	GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error)
-	GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*bridgetypes.BridgeValidatorSet, error)
-	GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
-	GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
-	GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
+	GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
+	SetBridgeValsetSignature(ctx context.Context, operatorAddress string, timestamp uint64, signature string) error
+	GetLatestCheckpointIndex(ctx context.Context) (uint64, error)
+	GetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValidatorSet, error)
+	GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
+	GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
+	GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
 	GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*bridgetypes.AttestationRequests, error)
 	SetOracleAttestation2(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error
 }
@@ -176,7 +176,7 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 }
 
 func (h *VoteExtHandler) EncodeOracleAttestationData(
-	queryId string,
+	queryId []byte,
 	value string,
 	timestamp int64,
 	aggregatePower int64,
@@ -195,13 +195,8 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 	var domainSepBytes32 [32]byte
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
 
-	// Convert queryId to bytes32
-	queryIdBytes, err := hex.DecodeString(queryId)
-	if err != nil {
-		return nil, err
-	}
 	var queryIdBytes32 [32]byte
-	copy(queryIdBytes32[:], queryIdBytes)
+	copy(queryIdBytes32[:], queryId)
 
 	// Convert value to bytes
 	valueBytes, err := hex.DecodeString(value)
@@ -407,7 +402,7 @@ func (h *VoteExtHandler) GetKeyName() string {
 	return ""
 }
 
-func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signature []byte, timestamp uint64, err error) {
+func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (signature []byte, timestamp uint64, err error) {
 	// get latest checkpoint index
 	latestCheckpointIdx, err := h.bridgeKeeper.GetLatestCheckpointIndex(ctx)
 	if err != nil {
@@ -453,7 +448,7 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx sdk.Context) (signa
 	}
 }
 
-func (h *VoteExtHandler) GetValidatorIndexInValset(ctx sdk.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {
+func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {
 	for i, val := range valset.BridgeValidatorSet {
 		if val.EthereumAddress == evmAddress {
 			return i, nil

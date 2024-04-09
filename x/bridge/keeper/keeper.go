@@ -42,7 +42,7 @@ type (
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
-		OracleAttestationsMap        collections.Map[string, types.OracleAttestations]
+		OracleAttestationsMap        collections.Map[[]byte, types.OracleAttestations]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
 		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
 		AttestSnapshotsByReportMap   collections.Map[string, types.AttestationSnapshots]
@@ -75,7 +75,7 @@ func NewKeeper(
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
-		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
+		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
 		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.StringKey, codec.CollValue[types.AttestationSnapshots](cdc)),
@@ -101,7 +101,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx sdk.Context) ([]*types.BridgeValidator, error) {
+func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types.BridgeValidator, error) {
 	validators, err := k.stakingKeeper.GetAllValidators(ctx)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx sdk.Context) ([]*types.Bri
 	return bridgeValset, nil
 }
 
-func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx sdk.Context) (*types.BridgeValidatorSet, error) {
+func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx context.Context) (*types.BridgeValidatorSet, error) {
 	// use GetBridgeValidators to get the current bridge validator set
 	bridgeValset, err := k.GetCurrentValidatorsEVMCompatible(ctx)
 	if err != nil {
@@ -147,7 +147,7 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx sdk.Context) (*types.Bri
 }
 
 // function for loading last saved bridge validator set and comparing it to current set
-func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
+func (k Keeper) CompareBridgeValidators(ctx context.Context) (bool, error) {
 	// load current validator set in EVM compatible format
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
 	if err != nil {
@@ -189,14 +189,15 @@ func (k Keeper) CompareBridgeValidators(ctx sdk.Context) (bool, error) {
 	}
 }
 
-func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *types.BridgeValidatorSet) error {
+func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet *types.BridgeValidatorSet) error {
 	var totalPower uint64
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
 	}
 	powerThreshold := totalPower * 2 / 3
 
-	validatorTimestamp := uint64(ctx.BlockTime().Unix())
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	validatorTimestamp := uint64(sdkCtx.BlockTime().Unix())
 
 	// calculate validator set hash
 	_, validatorSetHash, err := k.EncodeAndHashValidatorSet(ctx, bridgeValidatorSet)
@@ -268,7 +269,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx sdk.Context, bridgeValidatorSet *ty
 }
 
 func (k Keeper) CalculateValidatorSetCheckpoint(
-	ctx sdk.Context,
+	ctx context.Context,
 	powerThreshold uint64,
 	validatorTimestamp uint64,
 	validatorSetHash []byte,
@@ -363,7 +364,7 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	return checkpoint, nil
 }
 
-func (k Keeper) GetValidatorCheckpointFromStorage(ctx sdk.Context) (*types.ValidatorCheckpoint, error) {
+func (k Keeper) GetValidatorCheckpointFromStorage(ctx context.Context) (*types.ValidatorCheckpoint, error) {
 	checkpoint, err := k.ValidatorCheckpoint.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Error("Failed to get validator checkpoint", "error", err)
@@ -372,7 +373,7 @@ func (k Keeper) GetValidatorCheckpointFromStorage(ctx sdk.Context) (*types.Valid
 	return &checkpoint, nil
 }
 
-func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timestamp uint64) (*types.ValidatorCheckpointParams, error) {
+func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (*types.ValidatorCheckpointParams, error) {
 	checkpointParams, err := k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
 	if err != nil {
 		k.Logger(ctx).Error("Failed to get validator checkpoint params", "error", err)
@@ -381,7 +382,7 @@ func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx sdk.Context, timesta
 	return &checkpointParams, nil
 }
 
-func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpointIdx uint64) (*types.CheckpointTimestamp, error) {
+func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (*types.CheckpointTimestamp, error) {
 	checkpointTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, checkpointIdx)
 	if err != nil {
 		k.Logger(ctx).Error("Failed to get validator checkpoint index", "error", err)
@@ -390,7 +391,7 @@ func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx sdk.Context, checkpoin
 	return &checkpointTimestamp, nil
 }
 
-func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp uint64) (*types.BridgeValsetSignatures, error) {
+func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*types.BridgeValsetSignatures, error) {
 	valsetSigs, err := k.BridgeValsetSignaturesMap.Get(ctx, timestamp)
 	if err != nil {
 		k.Logger(ctx).Error("Failed to get bridge valset signatures", "error", err)
@@ -399,8 +400,10 @@ func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx sdk.Context, timestamp 
 	return &valsetSigs, nil
 }
 
-func (k Keeper) GetOracleAttestationsFromStorage(ctx sdk.Context, queryId string, timestamp uint64) (*types.OracleAttestations, error) {
-	key := hex.EncodeToString(crypto.Keccak256([]byte(queryId + fmt.Sprint(timestamp))))
+func (k Keeper) GetOracleAttestationsFromStorage(ctx context.Context, queryId []byte, timestamp uint64) (*types.OracleAttestations, error) {
+	var timestampBz []byte
+	binary.LittleEndian.PutUint64(timestampBz, timestamp)
+	key := crypto.Keccak256(append(queryId, timestampBz...))
 	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
 	if err != nil {
 		k.Logger(ctx).Error("Failed to get oracle attestations", "error", err)
@@ -409,7 +412,7 @@ func (k Keeper) GetOracleAttestationsFromStorage(ctx sdk.Context, queryId string
 	return &oracleAttestations, nil
 }
 
-func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
+func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
 	// Define Go equivalent of the Solidity Validator struct
 	type Validator struct {
 		Addr  common.Address
@@ -469,7 +472,7 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx sdk.Context, validatorSet *types.B
 	return finalEncoded, valSetHash, nil
 }
 
-func (k Keeper) PowerDiff(ctx sdk.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
+func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
 	powers := map[string]int64{}
 	for _, bv := range b.BridgeValidatorSet {
 		powers[bv.EthereumAddress] = int64(bv.GetPower())
@@ -673,7 +676,7 @@ func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, ev
 	return nil
 }
 
-func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string, timestamp uint64, signature string) error {
+func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress string, timestamp uint64, signature string) error {
 	// get the bridge valset signatures array by timestamp
 	valsetSigs, err := k.BridgeValsetSignaturesMap.Get(ctx, timestamp)
 	if err != nil {
@@ -729,9 +732,12 @@ func (k Keeper) SetBridgeValsetSignature(ctx sdk.Context, operatorAddress string
 	return nil
 }
 
-func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, queryId string, timestamp uint64, signature string) error {
+func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string, queryId []byte, timestamp uint64, signature string) error {
 	// get the key by taking keccak256 hash of queryid and timestamp
-	key := hex.EncodeToString(crypto.Keccak256([]byte(queryId + fmt.Sprint(timestamp))))
+	var timestampBz []byte
+	binary.LittleEndian.PutUint64(timestampBz, timestamp)
+	key := crypto.Keccak256(append(queryId, timestampBz...))
+
 	// check if map for this key exists, otherwise create a new map
 	exists, err := k.OracleAttestationsMap.Has(ctx, key)
 	if err != nil {
@@ -838,7 +844,7 @@ func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string)
 	return hex.EncodeToString(ethAddress.EVMAddress), nil
 }
 
-func (k Keeper) SetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
+func (k Keeper) SetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
 	err := k.BridgeValsetByTimestampMap.Set(ctx, timestamp, bridgeValset)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
@@ -847,7 +853,7 @@ func (k Keeper) SetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64, br
 	return nil
 }
 
-func (k Keeper) GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*types.BridgeValidatorSet, error) {
+func (k Keeper) GetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64) (*types.BridgeValidatorSet, error) {
 	bridgeValset, err := k.BridgeValsetByTimestampMap.Get(ctx, timestamp)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting bridge valset by timestamp", "error", err)
@@ -856,7 +862,7 @@ func (k Keeper) GetBridgeValsetByTimestamp(ctx sdk.Context, timestamp uint64) (*
 	return &bridgeValset, nil
 }
 
-func (k Keeper) GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error) {
+func (k Keeper) GetLatestCheckpointIndex(ctx context.Context) (uint64, error) {
 	checkpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting latest checkpoint index", "error", err)
@@ -865,7 +871,7 @@ func (k Keeper) GetLatestCheckpointIndex(ctx sdk.Context) (uint64, error) {
 	return checkpointIdx.Index, nil
 }
 
-func (k Keeper) GetValidatorDidSignCheckpoint(ctx sdk.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error) {
+func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error) {
 	// get the valset index by timestamp
 	valsetIdx, err := k.ValsetTimestampToIdxMap.Get(ctx, checkpointTimestamp)
 	if err != nil {
@@ -924,10 +930,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
 	k.Logger(ctx).Info("num reports", "reports", len(reports))
 	for _, report := range reports {
-		queryId, err := hex.DecodeString(report.QueryId)
-		if err != nil {
-			return err
-		}
+		queryId := report.QueryId
 		timeNow := time.Now().Add(time.Second)
 		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
 		if err != nil {

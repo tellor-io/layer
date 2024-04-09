@@ -15,7 +15,7 @@ message MicroReport {
   // string identifier of the data spec
   string query_type = 3;
   // hash of the query data
-  string query_id = 4;
+  bytes query_id = 4;
   // aggregate method to use for aggregating all the reports for the query id
   string aggregate_method = 5;
   // hex string of the response value

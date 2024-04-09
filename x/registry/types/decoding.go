@@ -9,11 +9,11 @@ import (
 )
 
 func IsValueDecodable(value, datatype string) error {
-	result, err := DecodeValue(value, datatype)
+	_, err := DecodeValue(value, datatype)
 	if err != nil {
 		return fmt.Errorf("failed to unpack value: %v", err)
 	}
-	fmt.Println("Decoded value: ", result[0])
+	// fmt.Println("Decoded value: ", result[0]) todo: do we still need this ?
 	return nil
 }
 

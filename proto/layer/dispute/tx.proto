@@ -52,3 +52,4 @@ enum VoteEnum {
   VOTE_SUPPORT = 1;
   VOTE_AGAINST = 2;
 }
+

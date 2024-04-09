@@ -11,7 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {
+func (k Keeper) transfer(ctx context.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {
 	twoPercent := tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	burnCoin := sdk.NewCoin(tip.Denom, twoPercent)
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, tipper, types.ModuleName, sdk.NewCoins(tip)); err != nil {
@@ -24,7 +24,7 @@ func (k Keeper) transfer(ctx sdk.Context, tipper sdk.AccAddress, tip sdk.Coin) (
 	return tip.Sub(burnCoin), nil
 }
 
-func (k Keeper) GetQueryTip(ctx sdk.Context, queryId []byte) (math.Int, error) {
+func (k Keeper) GetQueryTip(ctx context.Context, queryId []byte) (math.Int, error) {
 	tip, err := k.Query.Get(ctx, queryId)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {

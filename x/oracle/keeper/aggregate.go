@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -34,7 +33,7 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 		return err
 	}
 
-	var aggrFunc func(ctx sdk.Context, reports []types.MicroReport) (*types.Aggregate, error)
+	var aggrFunc func(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
 	for _, query := range queries {
 		if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
@@ -89,31 +88,28 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 	return k.AllocateRewards(ctx, reportersToPay, tbr, false)
 }
 
-func (k Keeper) SetAggregate(ctx sdk.Context, report *types.Aggregate) error {
-	queryId, err := utils.QueryBytesFromString(report.QueryId)
-	if err != nil {
-		return err
-	}
-	nonce, err := k.Nonces.Get(ctx, queryId)
+func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error {
+	nonce, err := k.Nonces.Get(ctx, report.QueryId)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 	nonce++
-	err = k.Nonces.Set(ctx, queryId, nonce)
+	err = k.Nonces.Set(ctx, report.QueryId, nonce)
 	if err != nil {
 		return err
 	}
 	report.Nonce = nonce
 
-	currentTimestamp := ctx.BlockTime().Unix()
-	report.Height = ctx.BlockHeight()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentTimestamp := sdkCtx.BlockTime().Unix()
+	report.Height = sdkCtx.BlockHeight()
 
-	return k.Aggregates.Set(ctx, collections.Join(queryId, currentTimestamp), *report)
+	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 
 // getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
 // TODO: add a test for this function.
-func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
 	var mostRecent *types.Aggregate
 	// This should get us the most recent aggregate, as they are walked in descending order
@@ -137,7 +133,7 @@ func (k Keeper) getDataBefore(ctx sdk.Context, queryId []byte, timestamp time.Ti
 	return mostRecent, nil
 }
 
-func (k Keeper) GetDataBeforePublic(ctx sdk.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+func (k Keeper) GetDataBeforePublic(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
 	return k.getDataBefore(ctx, queryId, timestamp)
 }
 
@@ -157,7 +153,7 @@ func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (
 	return mostRecent, nil
 }
 
-func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
+func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestamp.Unix()).Descending()
 	var mostRecent int64
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
@@ -176,7 +172,7 @@ func (k Keeper) GetTimestampBefore(ctx sdk.Context, queryId []byte, timestamp ti
 	return time.Unix(mostRecent, 0), nil
 }
 
-func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
+func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartExclusive(timestamp.Unix())
 	var mostRecent int64
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
@@ -195,7 +191,7 @@ func (k Keeper) GetTimestampAfter(ctx sdk.Context, queryId []byte, timestamp tim
 	return time.Unix(mostRecent, 0), nil
 }
 
-func (k Keeper) GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []types.Aggregate {
+func (k Keeper) GetAggregatedReportsByHeight(ctx context.Context, height int64) []types.Aggregate {
 	iter, err := k.Aggregates.Indexes.BlockHeight.MatchExact(ctx, height)
 	if err != nil {
 		panic(err)
@@ -214,7 +210,7 @@ func (k Keeper) GetAggregatedReportsByHeight(ctx sdk.Context, height int64) []ty
 	return reports
 }
 
-func (k Keeper) GetCurrentAggregateReport(ctx sdk.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time) {
+func (k Keeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		aggregate = &value
@@ -227,7 +223,7 @@ func (k Keeper) GetCurrentAggregateReport(ctx sdk.Context, queryId []byte) (aggr
 	return aggregate, timestamp
 }
 
-func (k Keeper) GetAggregateBefore(ctx sdk.Context, queryId []byte, timestampBefore time.Time) (aggregate *types.Aggregate, timestamp time.Time, err error) {
+func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestampBefore time.Time) (aggregate *types.Aggregate, timestamp time.Time, err error) {
 	// Convert the timestampBefore to Unix time and create a range that ends just before this timestamp
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestampBefore.Unix()).Descending()
 

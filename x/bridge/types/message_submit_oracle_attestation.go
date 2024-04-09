@@ -4,6 +4,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tellor-io/layer/utils"
 )
 
 const TypeMsgSubmitOracleAttestation = "submit_oracle_attestation"
@@ -11,9 +12,14 @@ const TypeMsgSubmitOracleAttestation = "submit_oracle_attestation"
 var _ sdk.Msg = &MsgSubmitOracleAttestation{}
 
 func NewMsgSubmitOracleAttestation(creator string, queryId string, timestamp string, signature string) *MsgSubmitOracleAttestation {
+	queryIdBz, err := utils.QueryBytesFromString(queryId)
+	if err != nil {
+		panic(err)
+	}
+
 	return &MsgSubmitOracleAttestation{
 		Creator:   creator,
-		QueryId:   queryId,
+		QueryId:   queryIdBz,
 		Timestamp: timestamp,
 		Signature: signature,
 	}

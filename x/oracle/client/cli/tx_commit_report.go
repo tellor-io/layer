@@ -9,18 +9,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/spf13/cobra"
 	"github.com/tellor-io/layer/x/oracle/types"
-	"github.com/tellor-io/layer/x/oracle/utils"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
 var _ = strconv.Itoa(0)
 
 func CmdCommitReport() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "commit-report [query-id] [salted-value]",
+		Use:   "commit-report [query-data] [salted-value]",
 		Short: "Broadcast message commitReport",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			argQueryId := args[0]
+			argQueryData := args[0]
 			argValue := args[1]
 
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -38,16 +38,16 @@ func CmdCommitReport() *cobra.Command {
 			// 	return err
 			// }
 
-			salt, err := utils.Salt(32)
+			salt, err := oracleutils.Salt(32)
 			if err != nil {
 				return err
 			}
 
-			commit := utils.CalculateCommitment(string(valueDecoded), salt)
+			commit := oracleutils.CalculateCommitment(string(valueDecoded), salt)
 
 			msg := types.NewMsgCommitReport(
 				clientCtx.GetFromAddress().String(),
-				argQueryId,
+				argQueryData,
 				commit,
 			)
 			if err := msg.ValidateBasic(); err != nil {

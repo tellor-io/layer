@@ -740,6 +740,7 @@ func (k Keeper) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddr
 	if err != nil {
 		return err
 	}
+
 	return k.initializeDelegation(ctx, reporterVal, delAddr, stake)
 }
 

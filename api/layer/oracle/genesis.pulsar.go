@@ -16,7 +16,7 @@ import (
 var _ protoreflect.List = (*_GenesisState_2_list)(nil)
 
 type _GenesisState_2_list struct {
-	list *[]string
+	list *[][]byte
 }
 
 func (x *_GenesisState_2_list) Len() int {
@@ -27,17 +27,17 @@ func (x *_GenesisState_2_list) Len() int {
 }
 
 func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
+	return protoreflect.ValueOfBytes((*x.list)[i])
 }
 
 func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
+	valueUnwrapped := value.Bytes()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
+	valueUnwrapped := value.Bytes()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
@@ -51,8 +51,8 @@ func (x *_GenesisState_2_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
 }
 
 func (x *_GenesisState_2_list) IsValid() bool {
@@ -266,7 +266,7 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
 	case "layer.oracle.GenesisState.cyclelist":
 		if x.Cyclelist == nil {
-			x.Cyclelist = []string{}
+			x.Cyclelist = [][]byte{}
 		}
 		value := &_GenesisState_2_list{list: &x.Cyclelist}
 		return protoreflect.ValueOfList(value)
@@ -287,7 +287,7 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.oracle.GenesisState.cyclelist":
-		list := []string{}
+		list := [][]byte{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -363,8 +363,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if len(x.Cyclelist) > 0 {
-			for _, s := range x.Cyclelist {
-				l = len(s)
+			for _, b := range x.Cyclelist {
+				l = len(b)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
@@ -509,7 +509,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Cyclelist", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -519,23 +519,23 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Cyclelist = append(x.Cyclelist, string(dAtA[iNdEx:postIndex]))
+				x.Cyclelist = append(x.Cyclelist, make([]byte, postIndex-iNdEx))
+				copy(x.Cyclelist[len(x.Cyclelist)-1], dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -592,7 +592,7 @@ type GenesisState struct {
 	unknownFields protoimpl.UnknownFields
 
 	Params    *Params  `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
-	Cyclelist []string `protobuf:"bytes,2,rep,name=cyclelist,proto3" json:"cyclelist,omitempty"`
+	Cyclelist [][]byte `protobuf:"bytes,2,rep,name=cyclelist,proto3" json:"cyclelist,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -622,7 +622,7 @@ func (x *GenesisState) GetParams() *Params {
 	return nil
 }
 
-func (x *GenesisState) GetCyclelist() []string {
+func (x *GenesisState) GetCyclelist() [][]byte {
 	if x != nil {
 		return x.Cyclelist
 	}
@@ -643,7 +643,7 @@ var file_layer_oracle_genesis_proto_rawDesc = []byte{
 	0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d,
 	0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12,
 	0x22, 0x0a, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03,
-	0x28, 0x09, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c,
+	0x28, 0x0c, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c,
 	0x69, 0x73, 0x74, 0x42, 0x9e, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
 	0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
 	0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,

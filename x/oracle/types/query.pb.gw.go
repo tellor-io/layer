@@ -62,15 +62,15 @@ func request_Query_GetReportsbyQid_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := client.GetReportsbyQid(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -89,15 +89,15 @@ func local_request_Query_GetReportsbyQid_0(ctx context.Context, marshaler runtim
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := server.GetReportsbyQid(ctx, &protoReq)
@@ -181,15 +181,15 @@ func request_Query_GetReportsbyReporterQid_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter", err)
 	}
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := client.GetReportsbyReporterQid(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -219,15 +219,15 @@ func local_request_Query_GetReportsbyReporterQid_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter", err)
 	}
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := server.GetReportsbyReporterQid(ctx, &protoReq)
@@ -246,15 +246,15 @@ func request_Query_GetCurrentTip_0(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["queryData"]
+	val, ok = pathParams["query_data"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryData")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryData", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := client.GetCurrentTip(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -273,15 +273,15 @@ func local_request_Query_GetCurrentTip_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["queryData"]
+	val, ok = pathParams["query_data"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryData")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryData", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := server.GetCurrentTip(ctx, &protoReq)
@@ -311,15 +311,15 @@ func request_Query_GetUserTipTotal_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tipper", err)
 	}
 
-	val, ok = pathParams["queryData"]
+	val, ok = pathParams["query_data"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryData")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryData", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := client.GetUserTipTotal(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -349,15 +349,15 @@ func local_request_Query_GetUserTipTotal_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tipper", err)
 	}
 
-	val, ok = pathParams["queryData"]
+	val, ok = pathParams["query_data"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryData")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.String(val)
+	protoReq.QueryData, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryData", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := server.GetUserTipTotal(ctx, &protoReq)
@@ -376,15 +376,15 @@ func request_Query_GetAggregatedReport_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := client.GetAggregatedReport(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -403,15 +403,15 @@ func local_request_Query_GetAggregatedReport_0(ctx context.Context, marshaler ru
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	msg, err := server.GetAggregatedReport(ctx, &protoReq)
@@ -430,15 +430,15 @@ func request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.Marsha
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	val, ok = pathParams["timestamp"]
@@ -468,15 +468,15 @@ func local_request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.
 		_   = err
 	)
 
-	val, ok = pathParams["queryId"]
+	val, ok = pathParams["query_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "queryId")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.String(val)
+	protoReq.QueryId, err = runtime.Bytes(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "queryId", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
 	}
 
 	val, ok = pathParams["timestamp"]
@@ -1014,19 +1014,19 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"layer", "oracle", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetReportsbyQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_qid", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetReportsbyQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_qid", "query_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetReportsbyReporter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"layer", "oracle", "get_reportsby_reporter", "reporter"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetReportsbyReporterQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "oracle", "get_reportsby_reporter_qid", "reporter", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetReportsbyReporterQid_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4}, []string{"layer", "oracle", "get_reportsby_reporter_qid", "reporter", "query_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetCurrentTip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_current_tip", "queryData"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetCurrentTip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_current_tip", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetUserTipTotal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_user_tip_total", "tipper", "queryData"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetUserTipTotal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_user_tip_total", "tipper", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetAggregatedReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_aggregated_report", "queryId"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetAggregatedReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_aggregated_report", "query_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "GetDataBefore", "queryId", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "GetDataBefore", "query_id", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetTimeBasedRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "get_time_based_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 

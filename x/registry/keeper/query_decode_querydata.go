@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,14 +15,7 @@ func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQu
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	// remove 0x from hex string if present
-	req.Querydata = types.Remove0xPrefix(req.Querydata)
-	// decode query data hex to bytes
-	queryDataBytes, err := hex.DecodeString(req.Querydata)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data string: %v", err))
-	}
-	queryType, fieldBytes, err := types.DecodeQueryType(queryDataBytes)
+	queryType, fieldBytes, err := types.DecodeQueryType(req.QueryData)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query data: %v", err))
 	}

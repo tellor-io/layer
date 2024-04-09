@@ -2,13 +2,12 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) GetCyclelist(ctx context.Context) ([]string, error) {
+func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
 
 	iter, err := k.Cyclelist.Iterate(ctx, nil)
 	if err != nil {
@@ -45,22 +44,22 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 }
 
-func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) (string, error) {
+func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) {
 	idx, err := k.CyclelistSequencer.Peek(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	q, err := k.GetCyclelist(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return q[idx], nil
 }
 
 // should be called only once when updating the cycle list
-func (k Keeper) InitCycleListQuery(ctx context.Context, queries []string) error {
+func (k Keeper) InitCycleListQuery(ctx context.Context, queries [][]byte) error {
 
 	for _, querydata := range queries {
 
@@ -68,15 +67,12 @@ func (k Keeper) InitCycleListQuery(ctx context.Context, queries []string) error 
 		if err != nil {
 			return err
 		}
-		queryId, err := utils.QueryIDFromDataString(querydata)
-		if err != nil {
-			return err
-		}
+		queryId := utils.QueryIDFromData(querydata)
 		err = k.Query.Set(ctx, queryId, query)
 		if err != nil {
 			return err
 		}
-		err = k.Cyclelist.Set(ctx, queryId, utils.Remove0xPrefix(querydata))
+		err = k.Cyclelist.Set(ctx, queryId, querydata)
 		if err != nil {
 			return err
 		}
@@ -84,15 +80,10 @@ func (k Keeper) InitCycleListQuery(ctx context.Context, queries []string) error 
 	return nil
 }
 
-func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist []string) error {
+func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist [][]byte) error {
 
-	for _, query := range cyclelist {
-		query := utils.Remove0xPrefix(query)
-		queryDataBytes, err := hex.DecodeString(query)
-		if err != nil {
-			return err
-		}
-		queryId := HashQueryData(queryDataBytes)
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
 
 		nextId, err := k.QuerySequnecer.Next(ctx)
 		if err != nil {
@@ -107,7 +98,7 @@ func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist []string) error 
 		if err != nil {
 			return err
 		}
-		err = k.Cyclelist.Set(ctx, queryId, query)
+		err = k.Cyclelist.Set(ctx, queryId, queryData)
 		if err != nil {
 			return err
 		}

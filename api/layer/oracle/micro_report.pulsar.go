@@ -124,8 +124,8 @@ func (x *fastReflection_MicroReport) Range(f func(protoreflect.FieldDescriptor, 
 			return
 		}
 	}
-	if x.QueryId != "" {
-		value := protoreflect.ValueOfString(x.QueryId)
+	if len(x.QueryId) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryId)
 		if !f(fd_MicroReport_query_id, value) {
 			return
 		}
@@ -182,7 +182,7 @@ func (x *fastReflection_MicroReport) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.oracle.MicroReport.query_type":
 		return x.QueryType != ""
 	case "layer.oracle.MicroReport.query_id":
-		return x.QueryId != ""
+		return len(x.QueryId) != 0
 	case "layer.oracle.MicroReport.aggregate_method":
 		return x.AggregateMethod != ""
 	case "layer.oracle.MicroReport.value":
@@ -216,7 +216,7 @@ func (x *fastReflection_MicroReport) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.MicroReport.query_type":
 		x.QueryType = ""
 	case "layer.oracle.MicroReport.query_id":
-		x.QueryId = ""
+		x.QueryId = nil
 	case "layer.oracle.MicroReport.aggregate_method":
 		x.AggregateMethod = ""
 	case "layer.oracle.MicroReport.value":
@@ -254,7 +254,7 @@ func (x *fastReflection_MicroReport) Get(descriptor protoreflect.FieldDescriptor
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.MicroReport.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.MicroReport.aggregate_method":
 		value := x.AggregateMethod
 		return protoreflect.ValueOfString(value)
@@ -297,7 +297,7 @@ func (x *fastReflection_MicroReport) Set(fd protoreflect.FieldDescriptor, value 
 	case "layer.oracle.MicroReport.query_type":
 		x.QueryType = value.Interface().(string)
 	case "layer.oracle.MicroReport.query_id":
-		x.QueryId = value.Interface().(string)
+		x.QueryId = value.Bytes()
 	case "layer.oracle.MicroReport.aggregate_method":
 		x.AggregateMethod = value.Interface().(string)
 	case "layer.oracle.MicroReport.value":
@@ -369,7 +369,7 @@ func (x *fastReflection_MicroReport) NewField(fd protoreflect.FieldDescriptor) p
 	case "layer.oracle.MicroReport.query_type":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MicroReport.query_id":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.MicroReport.aggregate_method":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.MicroReport.value":
@@ -717,7 +717,7 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -727,23 +727,25 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = string(dAtA[iNdEx:postIndex])
+				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryId == nil {
+					x.QueryId = []byte{}
+				}
 				iNdEx = postIndex
 			case 5:
 				if wireType != 2 {
@@ -945,7 +947,7 @@ type MicroReport struct {
 	// string identifier of the data spec
 	QueryType string `protobuf:"bytes,3,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 	// hash of the query data
-	QueryId string `protobuf:"bytes,4,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId []byte `protobuf:"bytes,4,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	// aggregate method to use for aggregating all the reports for the query id
 	AggregateMethod string `protobuf:"bytes,5,opt,name=aggregate_method,json=aggregateMethod,proto3" json:"aggregate_method,omitempty"`
 	// hex string of the response value
@@ -999,11 +1001,11 @@ func (x *MicroReport) GetQueryType() string {
 	return ""
 }
 
-func (x *MicroReport) GetQueryId() string {
+func (x *MicroReport) GetQueryId() []byte {
 	if x != nil {
 		return x.QueryId
 	}
-	return ""
+	return nil
 }
 
 func (x *MicroReport) GetAggregateMethod() string {
@@ -1057,7 +1059,7 @@ var file_layer_oracle_micro_report_proto_rawDesc = []byte{
 	0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72,
 	0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75,
 	0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79,
 	0x49, 0x64, 0x12, 0x29, 0x0a, 0x10, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f,
 	0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x61, 0x67,
 	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x12, 0x14, 0x0a,

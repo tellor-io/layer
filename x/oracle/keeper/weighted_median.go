@@ -1,26 +1,25 @@
 package keeper
 
 import (
+	"context"
 	"errors"
 	"math"
 	"math/big"
 	"sort"
 
 	cosmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) (*types.Aggregate, error) {
-	k.Logger(ctx).Info("@WeightedMedian", "reports", reports)
+func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error) {
 	var medianReport types.Aggregate
 	values := make(map[string]*big.Int)
 
 	for _, r := range reports {
 		val, ok := new(big.Int).SetString(r.Value, 16)
 		if !ok {
-			ctx.Logger().Error("WeightedMedian", "error", "failed to parse value")
+			k.Logger(ctx).Error("WeightedMedian", "error", "failed to parse value")
 			return nil, errors.New("failed to parse value")
 		}
 		values[r.Reporter] = val
@@ -33,7 +32,6 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) (*t
 
 	var totalReporterPower, weightedSum big.Int
 	for _, r := range reports {
-		k.Logger(ctx).Info("Reporter", "reporter", r.Reporter, "power", r.Power, "queryId", r.QueryId, "value", r.Value)
 		weightedSum.Add(&weightedSum, new(big.Int).Mul(values[r.Reporter], big.NewInt(r.Power)))
 		totalReporterPower.Add(&totalReporterPower, big.NewInt(r.Power))
 		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
@@ -41,8 +39,6 @@ func (k Keeper) WeightedMedian(ctx sdk.Context, reports []types.MicroReport) (*t
 
 	halfTotalPower := new(big.Int).Div(&totalReporterPower, big.NewInt(2))
 	cumulativePower := new(big.Int)
-
-	k.Logger(ctx).Info("TotalReporterPower", "totalReporterPower", totalReporterPower.Int64())
 
 	// Find the weighted median
 	totalReporterPowerMathInt := cosmath.NewInt(totalReporterPower.Int64())

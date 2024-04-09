@@ -35,7 +35,7 @@ message MsgSubmitOracleAttestation {
     option (cosmos.msg.v1.signer) = "creator";
 
     string creator = 1;
-    string queryId = 2;
+    bytes query_id = 2;
     string timestamp = 3;
     string signature = 4;
 }
