@@ -18,9 +18,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
-	RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterOperatorPubkey, opts ...grpc.CallOption) (*MsgRegisterOperatorPubkeyResponse, error)
-	SubmitBridgeValsetSignature(ctx context.Context, in *MsgSubmitBridgeValsetSignature, opts ...grpc.CallOption) (*MsgSubmitBridgeValsetSignatureResponse, error)
-	SubmitOracleAttestation(ctx context.Context, in *MsgSubmitOracleAttestation, opts ...grpc.CallOption) (*MsgSubmitOracleAttestationResponse, error)
 	RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error)
 }
 
@@ -30,33 +27,6 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc.ClientConnInterface) MsgClient {
 	return &msgClient{cc}
-}
-
-func (c *msgClient) RegisterOperatorPubkey(ctx context.Context, in *MsgRegisterOperatorPubkey, opts ...grpc.CallOption) (*MsgRegisterOperatorPubkeyResponse, error) {
-	out := new(MsgRegisterOperatorPubkeyResponse)
-	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/RegisterOperatorPubkey", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) SubmitBridgeValsetSignature(ctx context.Context, in *MsgSubmitBridgeValsetSignature, opts ...grpc.CallOption) (*MsgSubmitBridgeValsetSignatureResponse, error) {
-	out := new(MsgSubmitBridgeValsetSignatureResponse)
-	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/SubmitBridgeValsetSignature", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) SubmitOracleAttestation(ctx context.Context, in *MsgSubmitOracleAttestation, opts ...grpc.CallOption) (*MsgSubmitOracleAttestationResponse, error) {
-	out := new(MsgSubmitOracleAttestationResponse)
-	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/SubmitOracleAttestation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *msgClient) RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error) {
@@ -72,9 +42,6 @@ func (c *msgClient) RequestAttestations(ctx context.Context, in *MsgRequestAttes
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
-	RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error)
-	SubmitBridgeValsetSignature(context.Context, *MsgSubmitBridgeValsetSignature) (*MsgSubmitBridgeValsetSignatureResponse, error)
-	SubmitOracleAttestation(context.Context, *MsgSubmitOracleAttestation) (*MsgSubmitOracleAttestationResponse, error)
 	RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
@@ -83,15 +50,6 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (UnimplementedMsgServer) RegisterOperatorPubkey(context.Context, *MsgRegisterOperatorPubkey) (*MsgRegisterOperatorPubkeyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RegisterOperatorPubkey not implemented")
-}
-func (UnimplementedMsgServer) SubmitBridgeValsetSignature(context.Context, *MsgSubmitBridgeValsetSignature) (*MsgSubmitBridgeValsetSignatureResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SubmitBridgeValsetSignature not implemented")
-}
-func (UnimplementedMsgServer) SubmitOracleAttestation(context.Context, *MsgSubmitOracleAttestation) (*MsgSubmitOracleAttestationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SubmitOracleAttestation not implemented")
-}
 func (UnimplementedMsgServer) RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestAttestations not implemented")
 }
@@ -106,60 +64,6 @@ type UnsafeMsgServer interface {
 
 func RegisterMsgServer(s grpc.ServiceRegistrar, srv MsgServer) {
 	s.RegisterService(&Msg_ServiceDesc, srv)
-}
-
-func _Msg_RegisterOperatorPubkey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRegisterOperatorPubkey)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).RegisterOperatorPubkey(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.bridge.Msg/RegisterOperatorPubkey",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RegisterOperatorPubkey(ctx, req.(*MsgRegisterOperatorPubkey))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_SubmitBridgeValsetSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSubmitBridgeValsetSignature)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).SubmitBridgeValsetSignature(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.bridge.Msg/SubmitBridgeValsetSignature",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SubmitBridgeValsetSignature(ctx, req.(*MsgSubmitBridgeValsetSignature))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_SubmitOracleAttestation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSubmitOracleAttestation)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).SubmitOracleAttestation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.bridge.Msg/SubmitOracleAttestation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SubmitOracleAttestation(ctx, req.(*MsgSubmitOracleAttestation))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_RequestAttestations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -187,18 +91,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.bridge.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "RegisterOperatorPubkey",
-			Handler:    _Msg_RegisterOperatorPubkey_Handler,
-		},
-		{
-			MethodName: "SubmitBridgeValsetSignature",
-			Handler:    _Msg_SubmitBridgeValsetSignature_Handler,
-		},
-		{
-			MethodName: "SubmitOracleAttestation",
-			Handler:    _Msg_SubmitOracleAttestation_Handler,
-		},
 		{
 			MethodName: "RequestAttestations",
 			Handler:    _Msg_RequestAttestations_Handler,

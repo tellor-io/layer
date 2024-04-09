@@ -27,7 +27,6 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdGetValidatorCheckpointParams())
 	cmd.AddCommand(CmdGetValidatorTimestampByIndex())
 	cmd.AddCommand(CmdGetValsetSigs())
-	cmd.AddCommand(CmdGetOracleAttestations())
 	cmd.AddCommand(CmdGetEvmAddressByValidatorAddress())
 	cmd.AddCommand(CmdGetValsetByTimestamp())
 	cmd.AddCommand(CmdGetCurrentAggregateReport())

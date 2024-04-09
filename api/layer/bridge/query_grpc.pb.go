@@ -26,7 +26,6 @@ type QueryClient interface {
 	GetValidatorCheckpointParams(ctx context.Context, in *QueryGetValidatorCheckpointParamsRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointParamsResponse, error)
 	GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error)
-	GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error)
 	GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(ctx context.Context, in *QueryGetValsetByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValsetByTimestampResponse, error)
 	GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error)
@@ -92,15 +91,6 @@ func (c *queryClient) GetValidatorTimestampByIndex(ctx context.Context, in *Quer
 func (c *queryClient) GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error) {
 	out := new(QueryGetValsetSigsResponse)
 	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetValsetSigs", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error) {
-	out := new(QueryGetOracleAttestationsResponse)
-	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetOracleAttestations", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +172,6 @@ type QueryServer interface {
 	GetValidatorCheckpointParams(context.Context, *QueryGetValidatorCheckpointParamsRequest) (*QueryGetValidatorCheckpointParamsResponse, error)
 	GetValidatorTimestampByIndex(context.Context, *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error)
-	GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error)
 	GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error)
 	GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error)
@@ -214,9 +203,6 @@ func (UnimplementedQueryServer) GetValidatorTimestampByIndex(context.Context, *Q
 }
 func (UnimplementedQueryServer) GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValsetSigs not implemented")
-}
-func (UnimplementedQueryServer) GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOracleAttestations not implemented")
 }
 func (UnimplementedQueryServer) GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEvmAddressByValidatorAddress not implemented")
@@ -356,24 +342,6 @@ func _Query_GetValsetSigs_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GetValsetSigs(ctx, req.(*QueryGetValsetSigsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_GetOracleAttestations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetOracleAttestationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetOracleAttestations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.bridge.Query/GetOracleAttestations",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetOracleAttestations(ctx, req.(*QueryGetOracleAttestationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -534,10 +502,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetValsetSigs",
 			Handler:    _Query_GetValsetSigs_Handler,
-		},
-		{
-			MethodName: "GetOracleAttestations",
-			Handler:    _Query_GetOracleAttestations_Handler,
 		},
 		{
 			MethodName: "GetEvmAddressByValidatorAddress",

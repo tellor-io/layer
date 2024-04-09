@@ -174,7 +174,7 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 			for i, operatorAddress := range injectedVoteExtTx.OracleAttestations.OperatorAddresses {
 				snapshot := injectedVoteExtTx.OracleAttestations.Snapshots[i]
 				attestation := injectedVoteExtTx.OracleAttestations.Attestations[i]
-				err := h.bridgeKeeper.SetOracleAttestation2(ctx, operatorAddress, snapshot, attestation)
+				err := h.bridgeKeeper.SetOracleAttestation(ctx, operatorAddress, snapshot, attestation)
 				if err != nil {
 					return nil, err
 				}
@@ -201,8 +201,6 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		// check for initial sig
 		if len(voteExt.InitialSignature.SignatureA) > 0 {
 			// verify initial sig
-			// sigHexString := hex.EncodeToString(voteExt.InitialSignature.SignatureA)
-			// evmAddress, err := h.bridgeKeeper.EVMAddressFromSignature(ctx, sigHexString)
 			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB)
 			if err != nil {
 				h.logger.Error("failed to get evm address from initial sig", "error", err)

@@ -38,7 +38,6 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointFromStorage(ctx context.Context) (*bridgetypes.ValidatorCheckpoint, error)
 	Logger(ctx context.Context) log.Logger
 	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
-	EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error)
 	EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error)
 	SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error
 	GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
@@ -49,7 +48,7 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
 	GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
 	GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*bridgetypes.AttestationRequests, error)
-	SetOracleAttestation2(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error
+	SetOracleAttestation(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error
 }
 
 type StakingKeeper interface {

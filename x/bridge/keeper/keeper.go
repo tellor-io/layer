@@ -42,7 +42,6 @@ type (
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
-		OracleAttestationsMap        collections.Map[[]byte, types.OracleAttestations]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
 		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
 		AttestSnapshotsByReportMap   collections.Map[string, types.AttestationSnapshots]
@@ -75,7 +74,6 @@ func NewKeeper(
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
-		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
 		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.StringKey, codec.CollValue[types.AttestationSnapshots](cdc)),
@@ -400,18 +398,6 @@ func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx context.Context, timest
 	return &valsetSigs, nil
 }
 
-func (k Keeper) GetOracleAttestationsFromStorage(ctx context.Context, queryId []byte, timestamp uint64) (*types.OracleAttestations, error) {
-	var timestampBz []byte
-	binary.LittleEndian.PutUint64(timestampBz, timestamp)
-	key := crypto.Keccak256(append(queryId, timestampBz...))
-	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
-	if err != nil {
-		k.Logger(ctx).Error("Failed to get oracle attestations", "error", err)
-		return nil, err
-	}
-	return &oracleAttestations, nil
-}
-
 func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
 	// Define Go equivalent of the Solidity Validator struct
 	type Validator struct {
@@ -494,44 +480,7 @@ func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c typ
 	return gomath.Abs(delta / float64(gomath.MaxUint32))
 }
 
-func (k Keeper) EVMAddressFromSignature(ctx sdk.Context, sigHexString string) (string, error) {
-	message := "TellorLayer: Initial bridge signature A"
-	// convert message to bytes
-	msgBytes := []byte(message)
-	// hash message
-	msgHashBytes32 := sha256.Sum256(msgBytes)
-	// convert [32]byte to []byte
-	msgHashBytes := msgHashBytes32[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
-	msgDoubleHashBytes32 := sha256.Sum256(msgHashBytes)
-	msgDoubleHashBytes := msgDoubleHashBytes32[:]
-
-	// Convert the hex signature to bytes
-	signatureBytes, err := hex.DecodeString(sigHexString)
-	if err != nil {
-		k.Logger(ctx).Warn("Error decoding signature hex", "error", err)
-		return "", err
-	}
-	// append 01
-
-	// Recover the public key
-	sigPublicKey, err := crypto.SigToPub(msgDoubleHashBytes, signatureBytes)
-	if err != nil {
-		k.Logger(ctx).Warn("Error recovering public key from signature", "error", err)
-		return "", err
-	}
-
-	// Get the address
-	recoveredAddr := crypto.PubkeyToAddress(*sigPublicKey)
-
-	return recoveredAddr.Hex(), nil
-}
-
 func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error) {
-	k.Logger(ctx).Info("@EVMAddressFromSignatures")
-	k.Logger(ctx).Info("sigA", "sigA", hex.EncodeToString(sigA))
-	k.Logger(ctx).Info("sigB", "sigB", hex.EncodeToString(sigB))
 	msgA := "TellorLayer: Initial bridge signature A"
 	msgB := "TellorLayer: Initial bridge signature B"
 
@@ -553,75 +502,21 @@ func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []by
 	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
 	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
 
-	// append recovery id's to signatures
-	sigA00 := append(sigA, 0x00)
-	k.Logger(ctx).Info("sigA00", "sigA00", hex.EncodeToString(sigA00))
-	sigA01 := append(sigA, 0x01)
-	k.Logger(ctx).Info("sigA01", "sigA01", hex.EncodeToString(sigA01))
-	sigB00 := append(sigB, 0x00)
-	k.Logger(ctx).Info("sigB00", "sigB00", hex.EncodeToString(sigB00))
-	sigB01 := append(sigB, 0x01)
-	k.Logger(ctx).Info("sigB01", "sigB01", hex.EncodeToString(sigB01))
-
-	// recover evm addresses from signatures
-	recoveredAddrA00, err := k.recoverEvmAddressFromSig(ctx, sigA00, msgDoubleHashBytesA)
-	if err != nil {
-		k.Logger(ctx).Warn("Error recovering EVM address from signature A00", "error", err)
-		return common.Address{}, err
-	}
-	recoveredAddrA01, err := k.recoverEvmAddressFromSig(ctx, sigA01, msgDoubleHashBytesA)
-	if err != nil {
-		k.Logger(ctx).Warn("Error recovering EVM address from signature A01", "error", err)
-		return common.Address{}, err
-	}
-	recoveredAddrB00, err := k.recoverEvmAddressFromSig(ctx, sigB00, msgDoubleHashBytesB)
-	if err != nil {
-		k.Logger(ctx).Warn("Error recovering EVM address from signature B00", "error", err)
-		return common.Address{}, err
-	}
-	recoveredAddrB01, err := k.recoverEvmAddressFromSig(ctx, sigB01, msgDoubleHashBytesB)
-	if err != nil {
-		k.Logger(ctx).Warn("Error recovering EVM address from signature B01", "error", err)
-		return common.Address{}, err
-	}
-
-	// log everything. delete later
-	k.Logger(ctx).Info("Recovered EVM addresses", "A00", recoveredAddrA00.Hex(), "A01", recoveredAddrA01.Hex(), "B00", recoveredAddrB00.Hex(), "B01", recoveredAddrB01.Hex())
-	k.Logger(ctx).Info("signatures", "A00", hex.EncodeToString(sigA00), "A01", hex.EncodeToString(sigA01), "B00", hex.EncodeToString(sigB00), "B01", hex.EncodeToString(sigB01))
-	k.Logger(ctx).Info("original sigs", "A", hex.EncodeToString(sigA), "B", hex.EncodeToString(sigB))
-
-	addressesA, err := k.tryRecoverAddressWithBothIDs(ctx, sigA, msgDoubleHashBytesA)
+	addressesA, err := k.tryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA)
 	if err != nil {
 		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
 		return common.Address{}, err
 	}
-	addressesB, err := k.tryRecoverAddressWithBothIDs(ctx, sigB, msgDoubleHashBytesB)
+	addressesB, err := k.tryRecoverAddressWithBothIDs(sigB, msgDoubleHashBytesB)
 	if err != nil {
 		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
 		return common.Address{}, err
 	}
-
-	// // log addresses. delete later
-	// k.Logger(ctx).Info("Addresses from both IDs", "A00", addressesA[0].Hex(), "A01", addressesA[1].Hex(), "B00", addressesB[0].Hex(), "B01", addressesB[1].Hex())
-
-	// // check if addresses match
-	// if bytes.Equal(recoveredAddrA00.Bytes(), recoveredAddrB00.Bytes()) || bytes.Equal(recoveredAddrA00.Bytes(), recoveredAddrB01.Bytes()) {
-	// 	k.Logger(ctx).Info("EVM addresses match", "address", recoveredAddrA00.Hex())
-	// 	return recoveredAddrA00, nil
-	// } else if bytes.Equal(recoveredAddrA01.Bytes(), recoveredAddrB00.Bytes()) || bytes.Equal(recoveredAddrA01.Bytes(), recoveredAddrB01.Bytes()) {
-	// 	k.Logger(ctx).Info("EVM addresses match", "address", recoveredAddrA01.Hex())
-	// 	return recoveredAddrA01, nil
-	// } else {
-	// 	k.Logger(ctx).Warn("EVM addresses do not match")
-	// 	return common.Address{}, fmt.Errorf("EVM addresses do not match")
-	// }
 
 	// check if addresses match
 	if bytes.Equal(addressesA[0].Bytes(), addressesB[0].Bytes()) || bytes.Equal(addressesA[0].Bytes(), addressesB[1].Bytes()) {
-		k.Logger(ctx).Info("EVM addresses match", "address", addressesA[0].Hex())
 		return addressesA[0], nil
 	} else if bytes.Equal(addressesA[1].Bytes(), addressesB[0].Bytes()) || bytes.Equal(addressesA[1].Bytes(), addressesB[1].Bytes()) {
-		k.Logger(ctx).Info("EVM addresses match", "address", addressesA[1].Hex())
 		return addressesA[1], nil
 	} else {
 		k.Logger(ctx).Warn("EVM addresses do not match")
@@ -629,29 +524,10 @@ func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []by
 	}
 }
 
-func (k Keeper) recoverEvmAddressFromSig(ctx context.Context, sig []byte, msg []byte) (common.Address, error) {
-	k.Logger(ctx).Info("@recoverEvmAddressFromSig")
-	// recover pubkey
-	pubKey, err := crypto.SigToPub(msg, sig)
-	if err != nil {
-		return common.Address{}, err
-	}
-
-	// get address from pubkey
-	recoveredAddr := crypto.PubkeyToAddress(*pubKey)
-	k.Logger(ctx).Info("sig", "sig", hex.EncodeToString(sig))
-	k.Logger(ctx).Info("msg", "msg", hex.EncodeToString(msg))
-	k.Logger(ctx).Info("Recovered EVM address", "address", recoveredAddr.Hex())
-
-	return recoveredAddr, nil
-}
-
-func (k Keeper) tryRecoverAddressWithBothIDs(ctx sdk.Context, sig []byte, msgHash []byte) ([]common.Address, error) {
-	k.Logger(ctx).Info("@tryRecoverAddressWithBothIDs")
+func (k Keeper) tryRecoverAddressWithBothIDs(sig []byte, msgHash []byte) ([]common.Address, error) {
 	var addrs []common.Address
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)
-		k.Logger(ctx).Info("sigWithID", "sigWithID", hex.EncodeToString(sigWithID))
 		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
 		if err != nil {
 			return []common.Address{}, err
@@ -732,74 +608,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 	return nil
 }
 
-func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string, queryId []byte, timestamp uint64, signature string) error {
-	// get the key by taking keccak256 hash of queryid and timestamp
-	var timestampBz []byte
-	binary.LittleEndian.PutUint64(timestampBz, timestamp)
-	key := crypto.Keccak256(append(queryId, timestampBz...))
-
-	// check if map for this key exists, otherwise create a new map
-	exists, err := k.OracleAttestationsMap.Has(ctx, key)
-	if err != nil {
-		k.Logger(ctx).Info("Error checking if oracle attestation map exists", "error", err)
-		return err
-	}
-	if !exists {
-		lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-		if err != nil {
-			k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
-			return err
-		}
-		// create a new map
-		oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
-		// set the map
-		err = k.OracleAttestationsMap.Set(ctx, key, *oracleAttestations)
-		if err != nil {
-			k.Logger(ctx).Info("Error setting oracle attestation map", "error", err)
-			return err
-		}
-	}
-	// get the map
-	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting oracle attestation map", "error", err)
-		return err
-	}
-	// get the evm address associated with the operator address
-	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
-		return err
-	}
-	// decode the signature hex
-	signatureBytes, err := hex.DecodeString(signature)
-	if err != nil {
-		k.Logger(ctx).Info("Error decoding signature hex", "error", err)
-		return err
-	}
-	// get the last saved bridge validator set
-	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
-		return err
-	}
-	// set the signature in the oracle attestation map by finding the index of the operator address
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
-	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
-			oracleAttestations.SetAttestation(i, signatureBytes)
-		}
-	}
-	// set the valset signatures array by timestamp
-	err = k.OracleAttestationsMap.Set(ctx, key, oracleAttestations)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting oracle attestation", "error", err)
-		return err
-	}
-	return nil
-}
-
-func (k Keeper) SetOracleAttestation2(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error {
+func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error {
 	// get the evm address associated with the operator address
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
@@ -838,8 +647,6 @@ func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 		return "", err
-	} else {
-		k.Logger(ctx).Info("EVM address from operator address", "evmAddress", hex.EncodeToString(ethAddress.EVMAddress))
 	}
 	return hex.EncodeToString(ethAddress.EVMAddress), nil
 }

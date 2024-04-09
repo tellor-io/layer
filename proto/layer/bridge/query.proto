@@ -40,10 +40,6 @@ service Query {
     option (google.api.http).get = "/layer/bridge/get_valset_sigs/{timestamp}";
   }
 
-  rpc GetOracleAttestations (QueryGetOracleAttestationsRequest) returns (QueryGetOracleAttestationsResponse) {
-    option (google.api.http).get = "/layer/bridge/get_oracle_attestations/{query_id}/{timestamp}";
-  }
-
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
   }
@@ -146,15 +142,6 @@ message QueryGetValsetSigsRequest {
 
 message QueryGetValsetSigsResponse {
   repeated string signatures = 1;
-}
-
-message QueryGetOracleAttestationsRequest {
-  bytes query_id = 1;
-  int64 timestamp = 2;
-}
-
-message QueryGetOracleAttestationsResponse {
-  repeated string attestations = 1;
 }
 
 message QueryGetEvmAddressByValidatorAddressRequest {

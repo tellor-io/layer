@@ -6,41 +6,8 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
 // Msg defines the Msg service.
 service Msg {
-    rpc RegisterOperatorPubkey (MsgRegisterOperatorPubkey) returns (MsgRegisterOperatorPubkeyResponse);
-    rpc SubmitBridgeValsetSignature (MsgSubmitBridgeValsetSignature) returns (MsgSubmitBridgeValsetSignatureResponse);
-    rpc SubmitOracleAttestation (MsgSubmitOracleAttestation) returns (MsgSubmitOracleAttestationResponse);
     rpc RequestAttestations (MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
 }
-
-message MsgRegisterOperatorPubkey {
-    option (cosmos.msg.v1.signer) = "creator";
-
-    string creator = 1;
-    string operatorPubkey = 2;
-}
-
-message MsgRegisterOperatorPubkeyResponse {}
-
-message MsgSubmitBridgeValsetSignature {
-    option (cosmos.msg.v1.signer) = "creator";
-
-    string creator = 1;
-    string timestamp = 2;
-    string signature = 3;
-}
-
-message MsgSubmitBridgeValsetSignatureResponse {}
-
-message MsgSubmitOracleAttestation {
-    option (cosmos.msg.v1.signer) = "creator";
-
-    string creator = 1;
-    bytes query_id = 2;
-    string timestamp = 3;
-    string signature = 4;
-}
-
-message MsgSubmitOracleAttestationResponse {}
 
 message MsgRequestAttestations {
     option (cosmos.msg.v1.signer) = "creator";
