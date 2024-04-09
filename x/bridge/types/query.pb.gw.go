@@ -373,7 +373,7 @@ func request_Query_GetCurrentAggregateReport_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -400,7 +400,7 @@ func local_request_Query_GetCurrentAggregateReport_0(ctx context.Context, marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)

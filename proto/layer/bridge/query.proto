@@ -161,7 +161,7 @@ message QueryGetValsetByTimestampResponse {
 }
 
 message QueryGetCurrentAggregateReportRequest {
-  bytes query_id = 1;
+  string query_id = 1;
 }
 
 message QueryGetCurrentAggregateReportResponse {

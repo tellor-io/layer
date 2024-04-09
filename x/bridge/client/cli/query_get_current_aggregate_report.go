@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -28,12 +27,7 @@ func CmdGetCurrentAggregateReport() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			qIdBz, err := utils.QueryBytesFromString(queryId)
-			if err != nil {
-				return err
-			}
-
-			params := &types.QueryGetCurrentAggregateReportRequest{QueryId: qIdBz}
+			params := &types.QueryGetCurrentAggregateReportRequest{QueryId: queryId}
 
 			res, err := queryClient.GetCurrentAggregateReport(cmd.Context(), params)
 			if err != nil {

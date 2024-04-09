@@ -563,35 +563,27 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
         ethUsdRep0 = await h.getCurrentAggregateReport(ETH_USD_QUERY_ID)
         console.log("ethUsdRep0: ", ethUsdRep0)
-        // snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, ethUsdRep0.report.timestamp)
-        // console.log("snapshots: ", snapshots)
-        // lastSnapshot = snapshots[snapshots.length - 1]
-        // attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
-        // console.log("attestationData: ", attestationData)
+        snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, ethUsdRep0.report.timestamp)
+        console.log("snapshots: ", snapshots)
+        lastSnapshot = snapshots[snapshots.length - 1]
+        attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
+        console.log("attestationData: ", attestationData)
 
-        // oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
-        // if (oattests.length == 0) {
-        //     sleeptime = 2
-        //     console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
-        //     await h.sleep(2)
-        //     oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
-        // }
-        // console.log("oattests: ", oattests)
+        oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+        if (oattests.length == 0) {
+            sleeptime = 2
+            console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
+            await h.sleep(2)
+            oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+        }
+        console.log("oattests: ", oattests)
 
-        // console.log("verifying oracle data...")
-        // await bridge.verifyOracleData(
-        //     attestationData,
-        //     valSet1,
-        //     oattests,
-        // )
-
-        // // request new attestations
-        // currentBlock = await h.getBlock()
-        // currentTime = currentBlock.timestamp
-        // console.log("currentTime: ", currentTime)
-        // pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
-        // console.log("pastReport: ", pastReport)
-        // // await h.requestAttestations(ETH_USD_QUERY_ID, pastReport.timestamp)
+        console.log("verifying oracle data...")
+        await bridge.verifyOracleData(
+            attestationData,
+            valSet1,
+            oattests,
+        )
     })
 
     it("query layer api, deploy and verify with real params", async function () {
@@ -646,17 +638,5 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             oattests,
         )
 
-    })
-
-    it("try wallet", async function () {
-        wallet = await h.createCosmosWallet()
-        console.log("wallet: ", wallet)
-
-        currentBlock = await h.getBlock()
-        currentTime = currentBlock.timestamp - 100
-        pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
-        console.log("pastReport: ", pastReport)
-
-        await h.requestAttestations(ETH_USD_QUERY_ID, pastReport.timestamp)
     })
 })

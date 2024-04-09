@@ -9490,8 +9490,8 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Interface() proto
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.QueryId) != 0 {
-		value := protoreflect.ValueOfBytes(x.QueryId)
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
 		if !f(fd_QueryGetCurrentAggregateReportRequest_query_id, value) {
 			return
 		}
@@ -9512,7 +9512,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Range(f func(prot
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		return len(x.QueryId) != 0
+		return x.QueryId != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -9530,7 +9530,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Has(fd protorefle
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		x.QueryId = nil
+		x.QueryId = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -9549,7 +9549,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Get(descriptor pr
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -9571,7 +9571,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Get(descriptor pr
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		x.QueryId = value.Bytes()
+		x.QueryId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -9608,7 +9608,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Mutable(fd protor
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -9771,7 +9771,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) ProtoMethods() *p
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -9781,25 +9781,23 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) ProtoMethods() *p
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
-				if x.QueryId == nil {
-					x.QueryId = []byte{}
-				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -16676,7 +16674,7 @@ type QueryGetCurrentAggregateReportRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 }
 
 func (x *QueryGetCurrentAggregateReportRequest) Reset() {
@@ -16699,11 +16697,11 @@ func (*QueryGetCurrentAggregateReportRequest) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *QueryGetCurrentAggregateReportRequest) GetQueryId() []byte {
+func (x *QueryGetCurrentAggregateReportRequest) GetQueryId() string {
 	if x != nil {
 		return x.QueryId
 	}
-	return nil
+	return ""
 }
 
 type QueryGetCurrentAggregateReportResponse struct {
@@ -17402,7 +17400,7 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x72, 0x53, 0x65, 0x74, 0x22, 0x42, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
 	0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
 	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a,
-	0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x22, 0x7d, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65,
 	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
