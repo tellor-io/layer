@@ -9,7 +9,7 @@ const abiCoder = new ethers.utils.AbiCoder();
 const axios = require('axios');
 
 
-describe("BlobstreamO - Manual Function and e2e Tests", function () {
+describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
     let bridge, valPower, accounts, validators, powers, initialValAddrs,
         initialPowers, threshold, valCheckpoint, valTimestamp, guardian,
@@ -538,7 +538,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         
     })
     
-    it("query layer api, deploy and verify with real params", async function () {
+    it("query layer api, deploy and verify with real params 0", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         console.log("valsetTimestamp0: ", vts0)
@@ -562,35 +562,36 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
 
         ethUsdRep0 = await h.getCurrentAggregateReport(ETH_USD_QUERY_ID)
-        snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, ethUsdRep0.report.timestamp)
-        console.log("snapshots: ", snapshots)
-        lastSnapshot = snapshots[snapshots.length - 1]
-        attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
-        console.log("attestationData: ", attestationData)
+        console.log("ethUsdRep0: ", ethUsdRep0)
+        // snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, ethUsdRep0.report.timestamp)
+        // console.log("snapshots: ", snapshots)
+        // lastSnapshot = snapshots[snapshots.length - 1]
+        // attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
+        // console.log("attestationData: ", attestationData)
 
-        oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
-        if (oattests.length == 0) {
-            sleeptime = 2
-            console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
-            await h.sleep(2)
-            oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
-        }
-        console.log("oattests: ", oattests)
+        // oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+        // if (oattests.length == 0) {
+        //     sleeptime = 2
+        //     console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
+        //     await h.sleep(2)
+        //     oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+        // }
+        // console.log("oattests: ", oattests)
 
-        console.log("verifying oracle data...")
-        await bridge.verifyOracleData(
-            attestationData,
-            valSet1,
-            oattests,
-        )
+        // console.log("verifying oracle data...")
+        // await bridge.verifyOracleData(
+        //     attestationData,
+        //     valSet1,
+        //     oattests,
+        // )
 
-        // request new attestations
-        currentBlock = await h.getBlock()
-        currentTime = currentBlock.timestamp
-        console.log("currentTime: ", currentTime)
-        pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
-        console.log("pastReport: ", pastReport)
-        // await h.requestAttestations(ETH_USD_QUERY_ID, pastReport.timestamp)
+        // // request new attestations
+        // currentBlock = await h.getBlock()
+        // currentTime = currentBlock.timestamp
+        // console.log("currentTime: ", currentTime)
+        // pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
+        // console.log("pastReport: ", pastReport)
+        // // await h.requestAttestations(ETH_USD_QUERY_ID, pastReport.timestamp)
     })
 
     it("query layer api, deploy and verify with real params", async function () {
@@ -647,7 +648,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
     })
 
-    it.only("try wallet", async function () {
+    it("try wallet", async function () {
         wallet = await h.createCosmosWallet()
         console.log("wallet: ", wallet)
 

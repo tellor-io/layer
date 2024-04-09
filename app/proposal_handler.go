@@ -56,7 +56,6 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 }
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-	h.logger.Info("@PrepareProposalHandler")
 	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
 		h.logger.Info("failed to validate vote extensions", "error", err)
@@ -135,12 +134,10 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 }
 
 func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
-	h.logger.Info("@ProcessProposalHandler")
 	return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 }
 
 func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	h.logger.Info("@PreBlocker")
 	res := &sdk.ResponsePreBlock{}
 	if len(req.Txs) == 0 {
 		return res, nil
@@ -262,7 +259,6 @@ func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, c
 
 func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses []string, evmAddresses []string) error {
 	for i, operatorAddress := range operatorAddresses {
-		h.logger.Info("SetEVMAddressByOperator", "operatorAddress", operatorAddress, "evmAddress", evmAddresses[i])
 		err := h.bridgeKeeper.SetEVMAddressByOperator(ctx, operatorAddress, evmAddresses[i])
 		if err != nil {
 			h.logger.Error("failed to set evm address by operator", "error", err)
@@ -308,7 +304,6 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 					h.logger.Error("failed to get operator address from vote", "error", err)
 					return nil, nil, nil, err
 				}
-				h.logger.Info("Operator address from oracle attestation", "operatorAddress", operatorAddress)
 
 				operatorAddresses = append(operatorAddresses, operatorAddress)
 

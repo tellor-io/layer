@@ -94,7 +94,6 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	h.logger.Info("@ExtendVoteHandler")
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
@@ -104,7 +103,6 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("EVM address not found for operator address", "operatorAddress", operatorAddress)
-		h.logger.Info("Error message", "error", err)
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)
@@ -159,7 +157,6 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		Timestamp: timestamp,
 	}
 	voteExt.ValsetSignature = valsetSignature
-	h.logger.Info("Vote extension data", "voteExt", voteExt)
 
 	bz, err := json.Marshal(voteExt)
 	if err != nil {
@@ -169,7 +166,6 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	h.logger.Info("@VerifyVoteExtensionHandler")
 	// TODO: implement the logic to verify the vote extension
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
@@ -291,19 +287,7 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 		fmt.Printf("Failed to create keyring: %v\n", err)
 		return nil, err
 	}
-
-	krlist, err := kr.List()
-	if err != nil {
-		fmt.Printf("Failed to list keys: %v\n", err)
-		return nil, err
-	}
-
-	for _, k := range krlist {
-		fmt.Println("name: ", k.Name)
-	}
-
 	// sign message
-	// tempmsg := []byte("hello")
 	sig, _, err := kr.Sign(keyName, msg, 1)
 	if err != nil {
 		fmt.Printf("Failed to sign message: %v\n", err)

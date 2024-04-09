@@ -118,7 +118,6 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 			EthereumAddress: evmAddressHex,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
-		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator DDDD", "test", bridgeValset[i].EthereumAddress)
 	}
 
 	// Sort the validators
@@ -460,8 +459,11 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 
 func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
 	powers := map[string]int64{}
+	var totalPower int64
 	for _, bv := range b.BridgeValidatorSet {
-		powers[bv.EthereumAddress] = int64(bv.GetPower())
+		power := int64(bv.GetPower())
+		powers[bv.EthereumAddress] = power
+		totalPower += power
 	}
 
 	for _, bv := range c.BridgeValidatorSet {
@@ -477,7 +479,12 @@ func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c typ
 		delta += gomath.Abs(float64(v))
 	}
 
-	return gomath.Abs(delta / float64(gomath.MaxUint32))
+	if totalPower == 0 {
+		return 0
+	}
+
+	relativeDiff := delta / float64(totalPower)
+	return relativeDiff
 }
 
 func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error) {
@@ -719,7 +726,6 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		if val.EthereumAddress == ethAddressHex {
 			// check if the signature exists
 			if len(valsetSigs.Signatures[i]) != 0 {
-				k.Logger(ctx).Info("Validator did sign checkpoint", "operatorAddr", operatorAddr, "checkpointTimestamp", checkpointTimestamp, "signature", hex.EncodeToString(valsetSigs.Signatures[i]))
 				return true, int64(i), nil
 			} else {
 				return false, int64(i), nil
@@ -730,12 +736,9 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 }
 
 func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
-	k.Logger(ctx).Info("@CreateNewReportSnapshots")
 	blockHeight := ctx.BlockHeight()
-	k.Logger(ctx).Info("block height", "blockHeight", blockHeight)
 
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
-	k.Logger(ctx).Info("num reports", "reports", len(reports))
 	for _, report := range reports {
 		queryId := report.QueryId
 		timeNow := time.Now().Add(time.Second)
@@ -748,23 +751,16 @@ func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
 			return err
 		}
 	}
-
 	return nil
 }
 
 // Called with each new agg report and with new request for optimistic attestations
 func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.Time) error {
-	k.Logger(ctx).Info("@CreateSnapshot")
-	k.Logger(ctx).Info("queryId", "queryId", hex.EncodeToString(queryId))
-	k.Logger(ctx).Info("timestamp", "timestamp", fmt.Sprint(timestamp.Unix()))
-	k.Logger(ctx).Info("getting agg report...")
-	// GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error)
 	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
 		return err
 	}
-	k.Logger(ctx).Info(("getting validator checkpoint..."))
 	// get the current validator checkpoint
 	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
 	if err != nil {
@@ -772,25 +768,19 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		return err
 	}
 
-	k.Logger(ctx).Info("getting previous timestamp...")
 	tsBefore, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timestamp)
 	if err != nil {
 		tsBefore = time.Unix(0, 0)
 	}
-	k.Logger(ctx).Info("tsBefore", "tsBefore", tsBefore.Unix())
 
-	k.Logger(ctx).Info("getting next timestamp...")
 	tsAfter, err := k.oracleKeeper.GetTimestampAfter(ctx, queryId, timestamp)
 	if err != nil {
 		tsAfter = time.Unix(0, 0)
 	}
-	k.Logger(ctx).Info("tsAfter", "tsAfter", tsAfter.Unix())
 
 	// use current block time for attestationTimestamp
 	attestationTimestamp := ctx.BlockTime()
-	k.Logger(ctx).Info("attestation timestamp", "attestationTimestamp", attestationTimestamp.Unix())
 
-	k.Logger(ctx).Info("encoding oracle attestation data...")
 	snapshotBytes, err := k.EncodeOracleAttestationData(
 		hex.EncodeToString(queryId),
 		aggReport.AggregateValue,
@@ -806,7 +796,6 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		return err
 	}
 
-	k.Logger(ctx).Info("encoding attest snapshots  by report map key...")
 	// set snapshot by report
 	key := hex.EncodeToString(crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix()))))
 	// check if map for this key exists, otherwise create a new map
@@ -816,7 +805,6 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		return err
 	}
 	if !exists {
-		k.Logger(ctx).Info("attestation snapshots by report map does not exist, creating new map...")
 		attestationSnapshots := types.NewAttestationSnapshots()
 		err = k.AttestSnapshotsByReportMap.Set(ctx, key, *attestationSnapshots)
 		if err != nil {
@@ -829,7 +817,6 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		k.Logger(ctx).Info("Error getting attestation snapshots by report", "error", err)
 		return err
 	}
-	k.Logger(ctx).Info("setting snapshot by report...")
 	// set the snapshot by report
 	attestationSnapshots.SetSnapshot(snapshotBytes)
 	err = k.AttestSnapshotsByReportMap.Set(ctx, key, attestationSnapshots)
@@ -838,7 +825,6 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		return err
 	}
 
-	k.Logger(ctx).Info("encoding snapshot to attestations map data...")
 	// set snapshot to snapshot data map
 	snapshotData := types.AttestationSnapshotData{
 		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
@@ -848,16 +834,12 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		QueryId:              queryId,
 		Timestamp:            int64(timestamp.Unix()),
 	}
-	k.Logger(ctx).Info("setting snapshot data...")
-	k.Logger(ctx).Info("snapshot", "snapshot", hex.EncodeToString(snapshotBytes))
-	k.Logger(ctx).Info("snapshot data", "snapshotData", snapshotData)
 	err = k.AttestSnapshotDataMap.Set(ctx, hex.EncodeToString(snapshotBytes), snapshotData)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting attestation snapshot data", "error", err)
 		return err
 	}
 
-	k.Logger(ctx).Info("getting last saved valset...")
 	// initialize snapshot to attestations map
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {
@@ -866,24 +848,20 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	}
 	oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
 	// set the map
-	k.Logger(ctx).Info("setting snapshot to attestations map...")
 	err = k.SnapshotToAttestationsMap.Set(ctx, hex.EncodeToString(snapshotBytes), *oracleAttestations)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
 		return err
 	}
 
-	k.Logger(ctx).Info("getting attestation requests by height...")
 	// add to attestation requests
 	blockHeight := uint64(ctx.BlockHeight())
-	k.Logger(ctx).Info("block height", "blockHeight", blockHeight)
 	exists, err = k.AttestRequestsByHeightMap.Has(ctx, blockHeight)
 	if err != nil {
 		k.Logger(ctx).Info("Error checking if attestation requests by height map exists", "error", err)
 		return err
 	}
 	if !exists {
-		k.Logger(ctx).Info("attestation requests by height map does not exist, creating new map...")
 		attestRequests := types.AttestationRequests{}
 		err = k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
 		if err != nil {
