@@ -29,7 +29,7 @@ func TestGenerateQueryData(t *testing.T) {
 	// generate query data
 	querier := keeper.NewQuerier(k)
 	queryres, err := querier.GenerateQuerydata(ctx, &types.QueryGenerateQuerydataRequest{
-		Querytype:  querytype,
+		QueryType:  querytype,
 		Parameters: `["test"]`,
 	})
 	require.NoError(t, err)
