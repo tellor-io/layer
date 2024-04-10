@@ -27,7 +27,7 @@ struct ReportData {
 struct OracleAttestationData {
     bytes32 queryId;
     ReportData report;
-    uint256 attestTimestamp;
+    uint256 attestationTimestamp;
 }
 
 /// @title BlobstreamO: Tellor Layer -> EVM, Oracle relay.
@@ -236,7 +236,7 @@ contract BlobstreamO is ECDSA {
                     _attest.report.previousTimestamp,
                     _attest.report.nextTimestamp,
                     lastValidatorSetCheckpoint,
-                    _attest.attestTimestamp
+                    _attest.attestationTimestamp
                 )
             );
     }
