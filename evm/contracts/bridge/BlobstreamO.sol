@@ -196,7 +196,7 @@ contract BlobstreamO is ECDSA {
                 continue;
             }
             // Check that the current validator has signed off on the hash.
-            if (!_verifySig2(_currentValidators[i].addr, _digest, _sigs[i])) {
+            if (!_verifySig(_currentValidators[i].addr, _digest, _sigs[i])) {
                 revert InvalidSignature();
             }
             _cumulativePower += _currentValidators[i].power;
@@ -263,8 +263,11 @@ contract BlobstreamO is ECDSA {
     }
 
     /// @notice Used for verifying oracle data attestations
+    /// @param _attestData The oracle attestation data
+    /// @param _currentValidatorSet The current validator set
+    /// @param _sigs The attestations 
     function _verifyOracleData(
-        OracleAttestationData calldata _attest,
+        OracleAttestationData calldata _attestData,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
     ) internal view returns (bool) {
@@ -284,7 +287,7 @@ contract BlobstreamO is ECDSA {
         ) {
             revert SuppliedValidatorSetInvalid();
         }
-        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attest);
+        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attestData);
         _checkValidatorSignatures(
             _currentValidatorSet,
             _sigs,
@@ -294,7 +297,7 @@ contract BlobstreamO is ECDSA {
         return true;
     }
 
-    /// @notice Utility function to verify EIP-191 signatures.
+    /// @notice Utility function to verify Tellor Layer signatures
     /// @param _signer The address that signed the message.
     /// @param _digest The digest that was signed.
     /// @param _sig The signature.
@@ -304,31 +307,7 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         Signature calldata _sig
     ) internal pure returns (bool) {
-        bytes32 digest_eip191 = ECDSA.toEthSignedMessageHash(_digest);
-        return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
-    }
-
-    function _verifySig2(
-        address _signer,
-        bytes32 _digest,
-        Signature calldata _sig
-    ) internal pure returns (bool) {
-        bytes32 digest_eip191 = sha256(abi.encodePacked(_digest));
-        address recovered = ECDSA.recover(
-            digest_eip191,
-            _sig.v,
-            _sig.r,
-            _sig.s
-        );
-        console.log("Recovered: %s", recovered);
-        return _signer == ECDSA.recover(digest_eip191, _sig.v, _sig.r, _sig.s);
-    }
-
-    function verifySig2(
-        bytes32 _digest,
-        Signature calldata _sig
-    ) external pure returns (address recovered) {
-        bytes32 digest_eip191 = sha256(abi.encodePacked(_digest));
-        recovered = ecrecover(digest_eip191, _sig.v, _sig.r, _sig.s);
+        bytes32 _digestSha256 = sha256(abi.encodePacked(_digest));
+        return _signer == ECDSA.recover(_digestSha256, _sig.v, _sig.r, _sig.s);
     }
 }

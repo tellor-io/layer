@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"sort"
 
+	cosmath "cosmossdk.io/math"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -39,10 +41,11 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 	cumulativePower := new(big.Int)
 
 	// Find the weighted median
+	totalReporterPowerMathInt := cosmath.NewInt(totalReporterPower.Int64())
 	for i, s := range reports {
 		cumulativePower.Add(cumulativePower, big.NewInt(s.Power))
 		if cumulativePower.Cmp(halfTotalPower) >= 0 {
-			medianReport.ReporterPower = s.Power
+			medianReport.ReporterPower = totalReporterPowerMathInt.Mul(layertypes.PowerReduction).Int64()
 			medianReport.AggregateReporter = s.Reporter
 			medianReport.AggregateValue = s.Value
 			medianReport.QueryId = s.QueryId

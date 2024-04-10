@@ -11,10 +11,10 @@ import (
 
 var _ = strconv.Itoa(0)
 
-func CmdGetCurrentAggregateReport() *cobra.Command {
+func CmdGetAttestationsBySnapshot() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-current-aggregate-report [queryId]",
-		Short: "Query get-oracle-attestations",
+		Use:   "get-attestations-by-snapshot [snapshot]",
+		Short: "Query get-attestations-by-snapshot",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
@@ -23,13 +23,13 @@ func CmdGetCurrentAggregateReport() *cobra.Command {
 				return err
 			}
 
-			queryId := args[0]
+			snapshot := args[0]
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetCurrentAggregateReportRequest{QueryId: queryId}
+			params := &types.QueryGetAttestationsBySnapshotRequest{Snapshot: snapshot}
 
-			res, err := queryClient.GetCurrentAggregateReport(cmd.Context(), params)
+			res, err := queryClient.GetAttestationsBySnapshot(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

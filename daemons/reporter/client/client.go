@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"cosmossdk.io/log"
@@ -20,6 +22,7 @@ import (
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
@@ -36,6 +39,8 @@ type Client struct {
 	cosmosCtx        client.Context
 	MarketParams     []pricefeedtypes.MarketParam
 	MarketToExchange *pricefeedservertypes.MarketToExchangePrices
+
+	StakingKeeper stakingkeeper.Keeper
 
 	accAddr sdk.AccAddress
 	// logger is the logger for the daemon.
@@ -57,14 +62,18 @@ func (c *Client) Start(
 	grpcClient daemontypes.GrpcClient,
 	marketParams []pricefeedtypes.MarketParam,
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
+	ctxGetter func(int64, bool) (sdk.Context, error),
+	stakingKeeper stakingkeeper.Keeper,
 ) error {
 	// Log the daemon flags.
 	c.logger.Info(
 		"Starting reporter daemon with flags",
 		"ReportersFlags", flags.Reporter,
 	)
+
 	c.MarketParams = marketParams
 	c.MarketToExchange = marketToExchange
+	c.StakingKeeper = stakingKeeper
 
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
@@ -89,9 +98,16 @@ func (c *Client) Start(
 	// get account
 	accountName := c.AccountName
 	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
+	homeDir := c.GetNodeHomeDir()
+	if homeDir != "" {
+		c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)
+	} else {
+		panic("homeDir is empty")
+	}
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
 		panic(fmt.Errorf("error getting address from keyring: %v", err))
+	} else {
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
@@ -104,6 +120,7 @@ func (c *Client) Start(
 		flags,
 		ticker,
 		stop,
+		ctxGetter,
 	)
 
 	return nil
@@ -117,9 +134,10 @@ func StartReporterDaemonTaskLoop(
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
 	stop <-chan bool,
+	ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
-	if err := client.CreateReporter(ctx); err != nil {
-		client.logger.Error("Error creating reporter: %w", err)
+	if err := client.CreateReporter(ctx, ctxGetter); err != nil {
+		client.logger.Error("Error creating reporter: %w", "err", err)
 		panic(err)
 	}
 
@@ -142,7 +160,7 @@ func StartReporterDaemonTaskLoop(
 }
 
 // MsgCreateReporter creates a staked reporter
-func (c *Client) CreateReporter(ctx context.Context) error {
+func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool) (sdk.Context, error)) error {
 	for {
 		latestHeight, err := c.LatestBlockHeight(ctx)
 		if err != nil {
@@ -150,7 +168,28 @@ func (c *Client) CreateReporter(ctx context.Context) error {
 			panic(err)
 		}
 
-		if latestHeight < 1 {
+		if latestHeight < 2 {
+			time.Sleep(time.Second)
+			continue
+		}
+
+		appCtx, err := ctxGetter(0, false)
+		if err != nil {
+			c.logger.Error("Error getting context: %v", err)
+			time.Sleep(time.Second * 5)
+			appCtx, err = ctxGetter(0, false)
+			if err != nil {
+				c.logger.Error("Error getting context: %v", err)
+				panic(err)
+			}
+		}
+
+		validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
+		if err != nil {
+			return err
+		}
+		if len(validators.Validators) == 0 {
+			c.logger.Info("No validators found, waiting for validators to be available")
 			time.Sleep(time.Second)
 		} else {
 			break
@@ -158,29 +197,20 @@ func (c *Client) CreateReporter(ctx context.Context) error {
 	}
 
 	// get reporter
-	req := &reportertypes.QueryReporterRequest{ReporterAddress: c.accAddr.String()}
-	reporter, err := c.ReporterClient.Reporter(ctx, req)
-	if err == nil {
-		return nil
-	}
-
-	c.logger.Info("ReporterDaemon", "reporter address", reporter.GetReporter())
-
-	// just getting the first validator, should probably require user to specify validator/s when creating reporter
-	valreq := &stakingtypes.QueryDelegatorValidatorsRequest{
-		DelegatorAddr: c.accAddr.String(),
-		Pagination:    nil,
-	}
-	resp, err := c.StakingClient.DelegatorValidators(ctx, valreq)
+	appCtx, err := ctxGetter(0, false)
 	if err != nil {
 		return err
 	}
-	val := resp.Validators[0]
 
-	c.logger.Info("ReporterDaemon", "staked tokens source validator", val.GetOperator())
-	// stake reporter transaction, reporter is alice
+	validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
+	if err != nil {
+		return err
+	}
 
-	// should make this configurable by user :todo
+	val := validators.Validators[0]
+
+	// stake reporter transaction, reporter is determined by LAYERD_NODE_HOME environment variable
+	// should make this configurable by user :time.Sleep(time.Second)todo
 	// staking 1 TRB
 	amtToStake := math.NewInt(1_000_000) // one TRB
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
@@ -238,4 +268,14 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	// no need to call GetAccountNumberSequence here, just increment sequence by 1 for next transaction
 	seq++
 	return c.sendTx(ctx, msgSubmit, &seq)
+}
+
+func (c *Client) GetNodeHomeDir() string {
+	globalHome := os.ExpandEnv("$HOME/.layer")
+	nodeHome := os.Getenv("LAYERD_NODE_HOME")
+
+	if strings.HasPrefix(nodeHome, globalHome+"/") {
+		return nodeHome
+	}
+	return ""
 }

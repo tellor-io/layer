@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
@@ -13,7 +14,11 @@ func (k Keeper) GetCurrentAggregateReport(ctx context.Context, req *types.QueryG
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	aggregate, timestamp := k.oracleKeeper.GetCurrentAggregateReport(ctx, req.QueryId)
+	queryId, err := hex.DecodeString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query id")
+	}
+	aggregate, timestamp := k.oracleKeeper.GetCurrentAggregateReport(ctx, queryId)
 	if aggregate == nil {
 		return nil, status.Error(codes.NotFound, "aggregate not found")
 	}
@@ -30,7 +35,7 @@ func (k Keeper) GetCurrentAggregateReport(ctx context.Context, req *types.QueryG
 
 	// convert oracletypes.Aggregate to bridgetypes.Aggregate
 	bridgeAggregate := types.Aggregate{
-		QueryId:              req.QueryId,
+		QueryId:              aggregate.QueryId,
 		AggregateValue:       aggregate.AggregateValue,
 		AggregateReporter:    aggregate.AggregateReporter,
 		ReporterPower:        aggregate.ReporterPower,

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"time"
 
 	gomath "math"
 
@@ -41,9 +42,12 @@ type (
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
-		OracleAttestationsMap        collections.Map[[]byte, types.OracleAttestations]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
 		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
+		AttestSnapshotsByReportMap   collections.Map[string, types.AttestationSnapshots]
+		AttestSnapshotDataMap        collections.Map[string, types.AttestationSnapshotData]
+		SnapshotToAttestationsMap    collections.Map[string, types.OracleAttestations]
+		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -70,9 +74,12 @@ func NewKeeper(
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
-		OracleAttestationsMap:        collections.NewMap(sb, types.OracleAttestationsMapKey, "oracle_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
+		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.StringKey, codec.CollValue[types.AttestationSnapshots](cdc)),
+		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.StringKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
+		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
+		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
@@ -111,7 +118,6 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 			EthereumAddress: evmAddressHex,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
-		k.Logger(ctx).Info("@GetBridgeValidators - bridge validator DDDD", "test", bridgeValset[i].EthereumAddress)
 	}
 
 	// Sort the validators
@@ -391,18 +397,6 @@ func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx context.Context, timest
 	return &valsetSigs, nil
 }
 
-func (k Keeper) GetOracleAttestationsFromStorage(ctx context.Context, queryId []byte, timestamp uint64) (*types.OracleAttestations, error) {
-	var timestampBz []byte
-	binary.LittleEndian.PutUint64(timestampBz, timestamp)
-	key := crypto.Keccak256(append(queryId, timestampBz...))
-	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
-	if err != nil {
-		k.Logger(ctx).Error("Failed to get oracle attestations", "error", err)
-		return nil, err
-	}
-	return &oracleAttestations, nil
-}
-
 func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
 	// Define Go equivalent of the Solidity Validator struct
 	type Validator struct {
@@ -465,8 +459,11 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 
 func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
 	powers := map[string]int64{}
+	var totalPower int64
 	for _, bv := range b.BridgeValidatorSet {
-		powers[bv.EthereumAddress] = int64(bv.GetPower())
+		power := int64(bv.GetPower())
+		powers[bv.EthereumAddress] = power
+		totalPower += power
 	}
 
 	for _, bv := range c.BridgeValidatorSet {
@@ -482,44 +479,73 @@ func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c typ
 		delta += gomath.Abs(float64(v))
 	}
 
-	return gomath.Abs(delta / float64(gomath.MaxUint32))
+	if totalPower == 0 {
+		return 0
+	}
+
+	relativeDiff := delta / float64(totalPower)
+	return relativeDiff
 }
 
-func (k Keeper) EVMAddressFromSignature(ctx context.Context, sigHexString string) (string, error) {
-	message := "TellorLayer: Initial bridge daemon signature"
-	// convert message to bytes
-	msgBytes := []byte(message)
-	// hash message
-	msgHashBytes32 := sha256.Sum256(msgBytes)
-	// convert [32]byte to []byte
-	msgHashBytes := msgHashBytes32[:]
+func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error) {
+	msgA := "TellorLayer: Initial bridge signature A"
+	msgB := "TellorLayer: Initial bridge signature B"
+
+	// convert messages to bytes
+	msgBytesA := []byte(msgA)
+	msgBytesB := []byte(msgB)
+
+	// hash messages
+	msgHashBytes32A := sha256.Sum256(msgBytesA)
+	msgHashBytesA := msgHashBytes32A[:]
+
+	msgHashBytes32B := sha256.Sum256(msgBytesB)
+	msgHashBytesB := msgHashBytes32B[:]
 
 	// hash the hash, since the keyring signer automatically hashes the message
-	msgDoubleHashBytes32 := sha256.Sum256(msgHashBytes)
-	msgDoubleHashBytes := msgDoubleHashBytes32[:]
+	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
+	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
 
-	// Convert the hex signature to bytes
-	signatureBytes, err := hex.DecodeString(sigHexString)
+	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
+	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
+
+	addressesA, err := k.tryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA)
 	if err != nil {
-		k.Logger(ctx).Warn("Error decoding signature hex", "error", err)
-		return "", err
+		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
+		return common.Address{}, err
 	}
-	// append 01
-
-	// Recover the public key
-	sigPublicKey, err := crypto.SigToPub(msgDoubleHashBytes, signatureBytes)
+	addressesB, err := k.tryRecoverAddressWithBothIDs(sigB, msgDoubleHashBytesB)
 	if err != nil {
-		k.Logger(ctx).Warn("Error recovering public key from signature", "error", err)
-		return "", err
+		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
+		return common.Address{}, err
 	}
 
-	// Get the address
-	recoveredAddr := crypto.PubkeyToAddress(*sigPublicKey)
-
-	return recoveredAddr.Hex(), nil
+	// check if addresses match
+	if bytes.Equal(addressesA[0].Bytes(), addressesB[0].Bytes()) || bytes.Equal(addressesA[0].Bytes(), addressesB[1].Bytes()) {
+		return addressesA[0], nil
+	} else if bytes.Equal(addressesA[1].Bytes(), addressesB[0].Bytes()) || bytes.Equal(addressesA[1].Bytes(), addressesB[1].Bytes()) {
+		return addressesA[1], nil
+	} else {
+		k.Logger(ctx).Warn("EVM addresses do not match")
+		return common.Address{}, fmt.Errorf("EVM addresses do not match")
+	}
 }
 
-func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr string) error {
+func (k Keeper) tryRecoverAddressWithBothIDs(sig []byte, msgHash []byte) ([]common.Address, error) {
+	var addrs []common.Address
+	for _, id := range []byte{0, 1} {
+		sigWithID := append(sig[:64], id)
+		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
+		if err != nil {
+			return []common.Address{}, err
+		}
+		recoveredAddr := crypto.PubkeyToAddress(*pubKey)
+		addrs = append(addrs, recoveredAddr)
+	}
+	return addrs, nil
+}
+
+func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error {
 	evmAddrBytes := common.HexToAddress(evmAddr).Bytes()
 	evmAddrType := types.EVMAddress{
 		EVMAddress: evmAddrBytes,
@@ -589,49 +615,11 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 	return nil
 }
 
-func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string, queryId []byte, timestamp uint64, signature string) error {
-	// get the key by taking keccak256 hash of queryid and timestamp
-	var timestampBz []byte
-	binary.LittleEndian.PutUint64(timestampBz, timestamp)
-	key := crypto.Keccak256(append(queryId, timestampBz...))
-
-	// check if map for this key exists, otherwise create a new map
-	exists, err := k.OracleAttestationsMap.Has(ctx, key)
-	if err != nil {
-		k.Logger(ctx).Info("Error checking if oracle attestation map exists", "error", err)
-		return err
-	}
-	if !exists {
-		lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-		if err != nil {
-			k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
-			return err
-		}
-		// create a new map
-		oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
-		// set the map
-		err = k.OracleAttestationsMap.Set(ctx, key, *oracleAttestations)
-		if err != nil {
-			k.Logger(ctx).Info("Error setting oracle attestation map", "error", err)
-			return err
-		}
-	}
-	// get the map
-	oracleAttestations, err := k.OracleAttestationsMap.Get(ctx, key)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting oracle attestation map", "error", err)
-		return err
-	}
+func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error {
 	// get the evm address associated with the operator address
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
-		return err
-	}
-	// decode the signature hex
-	signatureBytes, err := hex.DecodeString(signature)
-	if err != nil {
-		k.Logger(ctx).Info("Error decoding signature hex", "error", err)
 		return err
 	}
 	// get the last saved bridge validator set
@@ -642,27 +630,30 @@ func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string
 	}
 	// set the signature in the oracle attestation map by finding the index of the operator address
 	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
+	snapshotHex := hex.EncodeToString(snapshot)
 	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
 		if val.EthereumAddress == ethAddressHex {
-			oracleAttestations.SetAttestation(i, signatureBytes)
+			snapshotToSigsMap, err := k.SnapshotToAttestationsMap.Get(ctx, snapshotHex)
+			if err != nil {
+				k.Logger(ctx).Info("Error getting snapshot to attestations map", "error", err)
+				return err
+			}
+			snapshotToSigsMap.SetAttestation(i, sig)
+			err = k.SnapshotToAttestationsMap.Set(ctx, snapshotHex, snapshotToSigsMap)
+			if err != nil {
+				k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
+				return err
+			}
 		}
-	}
-	// set the valset signatures array by timestamp
-	err = k.OracleAttestationsMap.Set(ctx, key, oracleAttestations)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting oracle attestation", "error", err)
-		return err
 	}
 	return nil
 }
 
-func (k Keeper) GetEVMAddressByOperator(ctx context.Context, operatorAddress string) (string, error) {
+func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error) {
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 		return "", err
-	} else {
-		k.Logger(ctx).Info("EVM address from operator address", "evmAddress", hex.EncodeToString(ethAddress.EVMAddress))
 	}
 	return hex.EncodeToString(ethAddress.EVMAddress), nil
 }
@@ -735,7 +726,6 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		if val.EthereumAddress == ethAddressHex {
 			// check if the signature exists
 			if len(valsetSigs.Signatures[i]) != 0 {
-				k.Logger(ctx).Info("Validator did sign checkpoint", "operatorAddr", operatorAddr, "checkpointTimestamp", checkpointTimestamp, "signature", hex.EncodeToString(valsetSigs.Signatures[i]))
 				return true, int64(i), nil
 			} else {
 				return false, int64(i), nil
@@ -743,4 +733,267 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		}
 	}
 	return false, -1, nil
+}
+
+func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
+	blockHeight := ctx.BlockHeight()
+
+	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
+	for _, report := range reports {
+		queryId := report.QueryId
+		timeNow := time.Now().Add(time.Second)
+		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
+		if err != nil {
+			return nil
+		}
+		err = k.CreateSnapshot(ctx, queryId, reportTime)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Called with each new agg report and with new request for optimistic attestations
+func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.Time) error {
+	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
+		return err
+	}
+	// get the current validator checkpoint
+	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting validator checkpoint from storage", "error", err)
+		return err
+	}
+
+	tsBefore, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timestamp)
+	if err != nil {
+		tsBefore = time.Unix(0, 0)
+	}
+
+	tsAfter, err := k.oracleKeeper.GetTimestampAfter(ctx, queryId, timestamp)
+	if err != nil {
+		tsAfter = time.Unix(0, 0)
+	}
+
+	// use current block time for attestationTimestamp
+	attestationTimestamp := ctx.BlockTime()
+
+	snapshotBytes, err := k.EncodeOracleAttestationData(
+		hex.EncodeToString(queryId),
+		aggReport.AggregateValue,
+		timestamp.Unix(),
+		aggReport.ReporterPower,
+		tsBefore.Unix(),
+		tsAfter.Unix(),
+		hex.EncodeToString(validatorCheckpoint.Checkpoint),
+		attestationTimestamp.Unix(),
+	)
+	if err != nil {
+		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
+		return err
+	}
+
+	// set snapshot by report
+	key := hex.EncodeToString(crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix()))))
+	// check if map for this key exists, otherwise create a new map
+	exists, err := k.AttestSnapshotsByReportMap.Has(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if attestation snapshots by report map exists", "error", err)
+		return err
+	}
+	if !exists {
+		attestationSnapshots := types.NewAttestationSnapshots()
+		err = k.AttestSnapshotsByReportMap.Set(ctx, key, *attestationSnapshots)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting attestation snapshots by report", "error", err)
+			return err
+		}
+	}
+	attestationSnapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting attestation snapshots by report", "error", err)
+		return err
+	}
+	// set the snapshot by report
+	attestationSnapshots.SetSnapshot(snapshotBytes)
+	err = k.AttestSnapshotsByReportMap.Set(ctx, key, attestationSnapshots)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting attestation snapshots by report", "error", err)
+		return err
+	}
+
+	// set snapshot to snapshot data map
+	snapshotData := types.AttestationSnapshotData{
+		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
+		AttestationTimestamp: int64(attestationTimestamp.Unix()),
+		PrevReportTimestamp:  int64(tsBefore.Unix()),
+		NextReportTimestamp:  int64(tsAfter.Unix()),
+		QueryId:              queryId,
+		Timestamp:            int64(timestamp.Unix()),
+	}
+	err = k.AttestSnapshotDataMap.Set(ctx, hex.EncodeToString(snapshotBytes), snapshotData)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting attestation snapshot data", "error", err)
+		return err
+	}
+
+	// initialize snapshot to attestations map
+	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+		return err
+	}
+	oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
+	// set the map
+	err = k.SnapshotToAttestationsMap.Set(ctx, hex.EncodeToString(snapshotBytes), *oracleAttestations)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
+		return err
+	}
+
+	// add to attestation requests
+	blockHeight := uint64(ctx.BlockHeight())
+	exists, err = k.AttestRequestsByHeightMap.Has(ctx, blockHeight)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if attestation requests by height map exists", "error", err)
+		return err
+	}
+	if !exists {
+		attestRequests := types.AttestationRequests{}
+		err = k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting attestation requests by height", "error", err)
+			return err
+		}
+	}
+	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, blockHeight)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
+		return err
+	}
+	request := types.AttestationRequest{
+		Snapshot: snapshotBytes,
+	}
+	attestRequests.AddRequest(&request)
+	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
+}
+
+func (k Keeper) EncodeOracleAttestationData(
+	queryId string,
+	value string,
+	timestamp int64,
+	aggregatePower int64,
+	previousTimestamp int64,
+	nextTimestamp int64,
+	valsetCheckpoint string,
+	attestationTimestamp int64,
+) ([]byte, error) {
+	// domainSeparator is bytes "tellorNewReport"
+	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR, err := hex.DecodeString(domainSep)
+	if err != nil {
+		return nil, err
+	}
+	// Convert domain separator to bytes32
+	var domainSepBytes32 [32]byte
+	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
+
+	// Convert queryId to bytes32
+	queryIdBytes, err := hex.DecodeString(queryId)
+	if err != nil {
+		return nil, err
+	}
+	var queryIdBytes32 [32]byte
+	copy(queryIdBytes32[:], queryIdBytes)
+
+	// Convert value to bytes
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert timestamp to uint64
+	timestampUint64 := new(big.Int)
+	timestampUint64.SetInt64(timestamp)
+
+	// Convert aggregatePower to uint64
+	aggregatePowerUint64 := new(big.Int)
+	aggregatePowerUint64.SetInt64(aggregatePower)
+
+	// Convert previousTimestamp to uint64
+	previousTimestampUint64 := new(big.Int)
+	previousTimestampUint64.SetInt64(previousTimestamp)
+
+	// Convert nextTimestamp to uint64
+	nextTimestampUint64 := new(big.Int)
+	nextTimestampUint64.SetInt64(nextTimestamp)
+
+	// Convert valsetCheckpoint to bytes32
+	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
+	if err != nil {
+		return nil, err
+	}
+	var valsetCheckpointBytes32 [32]byte
+	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
+
+	// Convert attestationTimestamp to uint64
+	attestationTimestampUint64 := new(big.Int)
+	attestationTimestampUint64.SetInt64(attestationTimestamp)
+
+	// Prepare Encoding
+	Bytes32Type, err := abi.NewType("bytes32", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	arguments := abi.Arguments{
+		{Type: Bytes32Type},
+		{Type: Bytes32Type},
+		{Type: BytesType},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+		{Type: Bytes32Type},
+		{Type: Uint256Type},
+	}
+
+	// Encode the data
+	encodedData, err := arguments.Pack(
+		domainSepBytes32,
+		queryIdBytes32,
+		valueBytes,
+		timestampUint64,
+		aggregatePowerUint64,
+		previousTimestampUint64,
+		nextTimestampUint64,
+		valsetCheckpointBytes32,
+		attestationTimestampUint64,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	oracleAttestationHash := crypto.Keccak256(encodedData)
+	return oracleAttestationHash, nil
+}
+
+func (k Keeper) GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*types.AttestationRequests, error) {
+	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, height)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
+		return nil, err
+	}
+	return &attestRequests, nil
 }

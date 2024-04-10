@@ -40,10 +40,6 @@ service Query {
     option (google.api.http).get = "/layer/bridge/get_valset_sigs/{timestamp}";
   }
 
-  rpc GetOracleAttestations (QueryGetOracleAttestationsRequest) returns (QueryGetOracleAttestationsResponse) {
-    option (google.api.http).get = "/layer/bridge/get_oracle_attestations/{query_id}/{timestamp}";
-  }
-
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
   }
@@ -60,9 +56,17 @@ service Query {
     option (google.api.http).get = "/layer/bridge/get_data_before/{query_id}/{timestamp}";
   }
 
-  // rpc GetCurrentAggregateReportTest (QueryGetCurrentAggregateReportTestRequest) returns (QueryGetCurrentAggregateReportTestResponse) {
-  //   option (google.api.http).get = "/layer/bridge/get_current_aggregate_report_test/{query_id}";
-  // }
+  rpc GetSnapshotsByReport (QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
+    option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{queryId}/{timestamp}";
+  }
+
+  rpc GetAttestationDataBySnapshot (QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
+    option (google.api.http).get = "/layer/bridge/get_attestation_data_by_snapshot/{snapshot}";
+  }
+
+  rpc GetAttestationsBySnapshot (QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
+    option (google.api.http).get = "/layer/bridge/get_attestations_by_snapshot/{snapshot}";
+  }
 }
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
@@ -140,15 +144,6 @@ message QueryGetValsetSigsResponse {
   repeated string signatures = 1;
 }
 
-message QueryGetOracleAttestationsRequest {
-  bytes query_id = 1;
-  int64 timestamp = 2;
-}
-
-message QueryGetOracleAttestationsResponse {
-  repeated string attestations = 1;
-}
-
 message QueryGetEvmAddressByValidatorAddressRequest {
   string validatorAddress = 1;
 }
@@ -166,7 +161,7 @@ message QueryGetValsetByTimestampResponse {
 }
 
 message QueryGetCurrentAggregateReportRequest {
-  bytes query_id = 1;
+  string query_id = 1;
 }
 
 message QueryGetCurrentAggregateReportResponse {
@@ -203,11 +198,34 @@ message QueryGetDataBeforeResponse {
   uint64 timestamp = 2;
 }
 
-// message QueryGetCurrentAggregateReportTestRequest {
-//   bytes query_id = 1;
-// }
+message QueryGetSnapshotsByReportRequest {
+  string queryId = 1;
+  string timestamp = 2;
+}
 
-// message QueryGetCurrentAggregateReportTestResponse {
-//   layer.oracle.Aggregate aggregate = 1;
-//   uint64 timestamp = 2;
-// }
+message QueryGetSnapshotsByReportResponse {
+  repeated string snapshots = 1;
+}
+
+message QueryGetAttestationDataBySnapshotRequest {
+  string snapshot = 1;
+}
+
+message QueryGetAttestationDataBySnapshotResponse {
+  string queryId = 1;
+  string timestamp = 2;
+  string aggregateValue = 3;
+  string aggregatePower = 4;
+  string checkpoint = 5;
+  string attestationTimestamp = 6;
+  string previousReportTimestamp = 7;
+  string nextReportTimestamp = 8;
+}
+
+message QueryGetAttestationsBySnapshotRequest {
+  string snapshot = 1;
+}
+
+message QueryGetAttestationsBySnapshotResponse {
+  repeated string attestations = 1;
+}
