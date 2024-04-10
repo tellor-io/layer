@@ -23,7 +23,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedIndex := 3
 	expectedValue := values[expectedIndex]
 	expectedReporter := reporters[expectedIndex].String()
-	expectedPower := powers[expectedIndex]
+	var sumPowers int64
+	for _, power := range powers {
+		sumPowers += power
+	}
+	expectedPower := sumPowers * 1e6
 	currentReporters := reporters[:5]
 	reports := testutil.GenerateReports(currentReporters, values, powers, qId)
 
@@ -53,7 +57,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedIndex = 1
 	expectedReporter = currentReporters[expectedIndex].String()
 	expectedValue = values[expectedIndex]
-	expectedPower = 1
+	sumPowers = int64(0)
+	for _, power := range powers {
+		sumPowers += power
+	}
+	expectedPower = sumPowers * 1e6
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
@@ -81,7 +89,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedIndex = 1
 	expectedReporter = currentReporters[expectedIndex].String()
 	expectedValue = values[expectedIndex]
-	expectedPower = powers[expectedIndex]
+	sumPowers = int64(0)
+	for _, power := range powers {
+		sumPowers += power
+	}
+	expectedPower = sumPowers * 1e6
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
@@ -108,7 +120,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedIndex = 2
 	expectedReporter = currentReporters[expectedIndex].String()
 	expectedValue = values[expectedIndex]
-	expectedPower = powers[expectedIndex]
+	sumPowers = int64(0)
+	for _, power := range powers {
+		sumPowers += power
+	}
+	expectedPower = sumPowers * 1e6
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
