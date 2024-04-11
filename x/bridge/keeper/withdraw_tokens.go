@@ -13,6 +13,7 @@ import (
 )
 
 func (k Keeper) withdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte) error {
+	k.Logger(ctx).Info("@withdrawTokens keeper", "amount", amount, "sender", sender, "recipient", recipient)
 	// send coins from the sender to the bridge module
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(amount)); err != nil {
 		return err
@@ -34,36 +35,37 @@ func (k Keeper) withdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 
 	k.oracleKeeper.SetAggregate(ctx, aggregate)
 
+	// TODO: request snapshot
+
 	return nil
 }
 
 func (k Keeper) incrementWithdrawalId(goCtx context.Context) (uint64, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	var id uint64
 	id, err := k.WithdrawalId.Get(ctx)
 	if err != nil {
-		id = 1
+		id.Id = 1
 		err = k.WithdrawalId.Set(ctx, id)
 		if err != nil {
 			return 0, err
 		}
-		return id, nil
+		return id.Id, nil
 	}
-	id++
+	id.Id++
 	err = k.WithdrawalId.Set(ctx, id)
 	if err != nil {
 		return 0, err
 	}
-	return id, nil
+	return id.Id, nil
 }
 
 func (k Keeper) createWithdrawalAggregate(goCtx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	queryId, err := k.getWithdrawalQueryId(goCtx, withdrawalId)
+	queryId, err := k.getWithdrawalQueryId(withdrawalId)
 	if err != nil {
 		return nil, err
 	}
-	reportValue, err := k.getWithdrawalReportValue(goCtx, amount, sender, recipient)
+	reportValue, err := k.getWithdrawalReportValue(amount, sender, recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +85,7 @@ func (k Keeper) createWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 	return aggregate, nil
 }
 
-func (k Keeper) getWithdrawalQueryId(ctx context.Context, withdrawalId uint64) ([]byte, error) {
+func (k Keeper) getWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(uint256 withdrawalId, bool false)))
 
 	queryTypeString := "TRBBridge"
@@ -134,7 +136,7 @@ func (k Keeper) getWithdrawalQueryId(ctx context.Context, withdrawalId uint64) (
 	return queryId, nil
 }
 
-func (k Keeper) getWithdrawalReportValue(ctx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte) ([]byte, error) {
+func (k Keeper) getWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress, recipient []byte) ([]byte, error) {
 	// replicate solidity encoding, abi.encode(address recipient, string sender, uint256 amount)
 
 	ethAddressString := hex.EncodeToString(recipient)
@@ -167,19 +169,9 @@ func (k Keeper) getWithdrawalReportValue(ctx context.Context, amount sdk.Coin, s
 
 	// encode report value arguments
 	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddressString, layerAddressString, amountUint64)
+	if err != nil {
+		return nil, err
+	}
 
 	return reportValueArgsEncoded, nil
 }
-
-// type Aggregate struct {
-// 	QueryId              []byte               `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-// 	AggregateValue       string               `protobuf:"bytes,2,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
-// 	AggregateReporter    string               `protobuf:"bytes,3,opt,name=aggregateReporter,proto3" json:"aggregateReporter,omitempty"`
-// 	ReporterPower        int64                `protobuf:"varint,4,opt,name=reporterPower,proto3" json:"reporterPower,omitempty"`
-// 	StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
-// 	Reporters            []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
-// 	Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
-// 	Nonce                uint64               `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
-// 	AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
-// 	Height               int64                `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
-// }
