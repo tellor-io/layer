@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/hex"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -23,7 +24,10 @@ func CmdGetAttestationDataBySnapshot() *cobra.Command {
 				return err
 			}
 
-			snapshot := args[0]
+			snapshot, err := hex.DecodeString(args[0])
+			if err != nil {
+				return err
+			}
 
 			queryClient := types.NewQueryClient(clientCtx)
 

@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"encoding/hex"
+	"fmt"
 	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -23,12 +25,20 @@ func CmdGetSnapshotsByReport() *cobra.Command {
 				return err
 			}
 
-			queryId := args[0]
-			timestamp := args[1]
+			queryId, err := hex.DecodeString(args[0])
+			if err != nil {
+				return err
+			}
+
+			timestampStr := args[1]
+			timestampInt, err := strconv.ParseInt(timestampStr, 10, 64)
+			if err != nil {
+				return fmt.Errorf("invalid timestamp %s", timestampStr)
+			}
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryGetSnapshotsByReportRequest{QueryId: queryId, Timestamp: timestamp}
+			params := &types.QueryGetSnapshotsByReportRequest{QueryId: queryId, Timestamp: uint64(timestampInt)}
 
 			res, err := queryClient.GetSnapshotsByReport(cmd.Context(), params)
 			if err != nil {

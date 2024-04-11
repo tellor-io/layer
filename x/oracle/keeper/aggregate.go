@@ -250,7 +250,7 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 	return mostRecent, timestamp, nil
 }
 
-func (k Keeper) GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error) {
+func (k Keeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error) {
 	timestampUnix := timestamp.Unix()
 
 	// Create a range that specifically targets the exact timestamp

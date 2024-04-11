@@ -7,19 +7,16 @@ import (
 	"strconv"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetAttestationDataBySnapshot(goCtx context.Context, req *types.QueryGetAttestationDataBySnapshotRequest) (*types.QueryGetAttestationDataBySnapshotResponse, error) {
+func (k Keeper) GetAttestationDataBySnapshot(ctx context.Context, req *types.QueryGetAttestationDataBySnapshotRequest) (*types.QueryGetAttestationDataBySnapshotResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	snapshot := req.Snapshot
-
-	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	snapshotData, err := k.AttestSnapshotDataMap.Get(ctx, snapshot)
 	if err != nil {
@@ -33,7 +30,6 @@ func (k Keeper) GetAttestationDataBySnapshot(goCtx context.Context, req *types.Q
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate not found for queryId %s and timestamp %s", queryId, timestampTime))
 	}
 
-	queryIdStr := hex.EncodeToString(queryId)
 	timestampStr := strconv.FormatInt(snapshotData.Timestamp, 10)
 	aggValueStr := aggReport.AggregateValue
 	aggPowerStr := strconv.FormatInt(aggReport.ReporterPower, 10)
@@ -42,5 +38,5 @@ func (k Keeper) GetAttestationDataBySnapshot(goCtx context.Context, req *types.Q
 	previousReportTimestampStr := strconv.FormatInt(snapshotData.PrevReportTimestamp, 10)
 	nextReportTimestampStr := strconv.FormatInt(snapshotData.NextReportTimestamp, 10)
 
-	return &types.QueryGetAttestationDataBySnapshotResponse{QueryId: queryIdStr, Timestamp: timestampStr, AggregateValue: aggValueStr, AggregatePower: aggPowerStr, Checkpoint: checkpointStr, AttestationTimestamp: attestationTimestampStr, PreviousReportTimestamp: previousReportTimestampStr, NextReportTimestamp: nextReportTimestampStr}, nil
+	return &types.QueryGetAttestationDataBySnapshotResponse{QueryId: queryId, Timestamp: timestampStr, AggregateValue: aggValueStr, AggregatePower: aggPowerStr, Checkpoint: checkpointStr, AttestationTimestamp: attestationTimestampStr, PreviousReportTimestamp: previousReportTimestampStr, NextReportTimestamp: nextReportTimestampStr}, nil
 }

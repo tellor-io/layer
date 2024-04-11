@@ -57,7 +57,7 @@ service Query {
   }
 
   rpc GetSnapshotsByReport (QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
-    option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{queryId}/{timestamp}";
+    option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}";
   }
 
   rpc GetAttestationDataBySnapshot (QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
@@ -170,7 +170,6 @@ message QueryGetCurrentAggregateReportResponse {
 }
 
 message Aggregate {
-  
   bytes query_id = 1; 
   string aggregate_value = 2; 
   string aggregate_reporter = 3; 
@@ -199,31 +198,31 @@ message QueryGetDataBeforeResponse {
 }
 
 message QueryGetSnapshotsByReportRequest {
-  string queryId = 1;
-  string timestamp = 2;
+  bytes query_id = 1;
+  uint64 timestamp = 2;
 }
 
 message QueryGetSnapshotsByReportResponse {
-  repeated string snapshots = 1;
+  repeated bytes snapshots = 1;
 }
 
 message QueryGetAttestationDataBySnapshotRequest {
-  string snapshot = 1;
+  bytes snapshot = 1;
 }
 
 message QueryGetAttestationDataBySnapshotResponse {
-  string queryId = 1;
+  bytes query_id = 1;
   string timestamp = 2;
   string aggregateValue = 3;
   string aggregatePower = 4;
   string checkpoint = 5;
-  string attestationTimestamp = 6;
-  string previousReportTimestamp = 7;
-  string nextReportTimestamp = 8;
+  string attestation_timestamp = 6;
+  string previous_report_timestamp = 7;
+  string next_report_timestamp = 8;
 }
 
 message QueryGetAttestationsBySnapshotRequest {
-  string snapshot = 1;
+  bytes snapshot = 1;
 }
 
 message QueryGetAttestationsBySnapshotResponse {

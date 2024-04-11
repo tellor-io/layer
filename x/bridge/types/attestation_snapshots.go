@@ -11,9 +11,9 @@ type AttestationSnapshots struct {
 }
 
 // NewAttestationSnapshots initializes a AttestationSnapshots with a given size.
-func NewAttestationSnapshots() *AttestationSnapshots {
+func NewAttestationSnapshots() AttestationSnapshots {
 	snapshots := make([][]byte, 0) // Initialize with empty slice, adjust according to needs
-	return &AttestationSnapshots{Snapshots: snapshots}
+	return AttestationSnapshots{Snapshots: snapshots}
 }
 
 // SetSnapshot appends an attestation snapshot to the list of snapshots for a given aggregate report.
