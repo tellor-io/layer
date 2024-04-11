@@ -6,7 +6,7 @@ import (
 
 // CheckpointIdx wraps a uint64 to be used with the codec
 type CheckpointIdx struct {
-	Index uint64 `protobuf:"varint,1,opt,name=timestamp,proto3"`
+	Index uint64 `protobuf:"varint,1,opt,name=index,proto3"`
 }
 
 // Ensure CheckpointIdx implements proto.Message

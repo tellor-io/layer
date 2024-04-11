@@ -26,11 +26,13 @@ type QueryClient interface {
 	GetValidatorCheckpointParams(ctx context.Context, in *QueryGetValidatorCheckpointParamsRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointParamsResponse, error)
 	GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error)
-	GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error)
 	GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(ctx context.Context, in *QueryGetValsetByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValsetByTimestampResponse, error)
 	GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error)
 	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error)
+	GetSnapshotsByReport(ctx context.Context, in *QueryGetSnapshotsByReportRequest, opts ...grpc.CallOption) (*QueryGetSnapshotsByReportResponse, error)
+	GetAttestationDataBySnapshot(ctx context.Context, in *QueryGetAttestationDataBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationDataBySnapshotResponse, error)
+	GetAttestationsBySnapshot(ctx context.Context, in *QueryGetAttestationsBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationsBySnapshotResponse, error)
 }
 
 type queryClient struct {
@@ -95,15 +97,6 @@ func (c *queryClient) GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsR
 	return out, nil
 }
 
-func (c *queryClient) GetOracleAttestations(ctx context.Context, in *QueryGetOracleAttestationsRequest, opts ...grpc.CallOption) (*QueryGetOracleAttestationsResponse, error) {
-	out := new(QueryGetOracleAttestationsResponse)
-	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetOracleAttestations", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error) {
 	out := new(QueryGetEvmAddressByValidatorAddressResponse)
 	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetEvmAddressByValidatorAddress", in, out, opts...)
@@ -140,6 +133,33 @@ func (c *queryClient) GetDataBefore(ctx context.Context, in *QueryGetDataBeforeR
 	return out, nil
 }
 
+func (c *queryClient) GetSnapshotsByReport(ctx context.Context, in *QueryGetSnapshotsByReportRequest, opts ...grpc.CallOption) (*QueryGetSnapshotsByReportResponse, error) {
+	out := new(QueryGetSnapshotsByReportResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetSnapshotsByReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAttestationDataBySnapshot(ctx context.Context, in *QueryGetAttestationDataBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationDataBySnapshotResponse, error) {
+	out := new(QueryGetAttestationDataBySnapshotResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetAttestationDataBySnapshot", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAttestationsBySnapshot(ctx context.Context, in *QueryGetAttestationsBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationsBySnapshotResponse, error) {
+	out := new(QueryGetAttestationsBySnapshotResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetAttestationsBySnapshot", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -152,11 +172,13 @@ type QueryServer interface {
 	GetValidatorCheckpointParams(context.Context, *QueryGetValidatorCheckpointParamsRequest) (*QueryGetValidatorCheckpointParamsResponse, error)
 	GetValidatorTimestampByIndex(context.Context, *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error)
 	GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error)
-	GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error)
 	GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error)
 	GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error)
 	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error)
+	GetSnapshotsByReport(context.Context, *QueryGetSnapshotsByReportRequest) (*QueryGetSnapshotsByReportResponse, error)
+	GetAttestationDataBySnapshot(context.Context, *QueryGetAttestationDataBySnapshotRequest) (*QueryGetAttestationDataBySnapshotResponse, error)
+	GetAttestationsBySnapshot(context.Context, *QueryGetAttestationsBySnapshotRequest) (*QueryGetAttestationsBySnapshotResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -182,9 +204,6 @@ func (UnimplementedQueryServer) GetValidatorTimestampByIndex(context.Context, *Q
 func (UnimplementedQueryServer) GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValsetSigs not implemented")
 }
-func (UnimplementedQueryServer) GetOracleAttestations(context.Context, *QueryGetOracleAttestationsRequest) (*QueryGetOracleAttestationsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOracleAttestations not implemented")
-}
 func (UnimplementedQueryServer) GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetEvmAddressByValidatorAddress not implemented")
 }
@@ -196,6 +215,15 @@ func (UnimplementedQueryServer) GetCurrentAggregateReport(context.Context, *Quer
 }
 func (UnimplementedQueryServer) GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataBefore not implemented")
+}
+func (UnimplementedQueryServer) GetSnapshotsByReport(context.Context, *QueryGetSnapshotsByReportRequest) (*QueryGetSnapshotsByReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSnapshotsByReport not implemented")
+}
+func (UnimplementedQueryServer) GetAttestationDataBySnapshot(context.Context, *QueryGetAttestationDataBySnapshotRequest) (*QueryGetAttestationDataBySnapshotResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAttestationDataBySnapshot not implemented")
+}
+func (UnimplementedQueryServer) GetAttestationsBySnapshot(context.Context, *QueryGetAttestationsBySnapshotRequest) (*QueryGetAttestationsBySnapshotResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAttestationsBySnapshot not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -318,24 +346,6 @@ func _Query_GetValsetSigs_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetOracleAttestations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetOracleAttestationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetOracleAttestations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.bridge.Query/GetOracleAttestations",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetOracleAttestations(ctx, req.(*QueryGetOracleAttestationsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_GetEvmAddressByValidatorAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetEvmAddressByValidatorAddressRequest)
 	if err := dec(in); err != nil {
@@ -408,6 +418,60 @@ func _Query_GetDataBefore_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetSnapshotsByReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetSnapshotsByReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetSnapshotsByReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetSnapshotsByReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetSnapshotsByReport(ctx, req.(*QueryGetSnapshotsByReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAttestationDataBySnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetAttestationDataBySnapshotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAttestationDataBySnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetAttestationDataBySnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAttestationDataBySnapshot(ctx, req.(*QueryGetAttestationDataBySnapshotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAttestationsBySnapshot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetAttestationsBySnapshotRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAttestationsBySnapshot(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetAttestationsBySnapshot",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAttestationsBySnapshot(ctx, req.(*QueryGetAttestationsBySnapshotRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -440,10 +504,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GetValsetSigs_Handler,
 		},
 		{
-			MethodName: "GetOracleAttestations",
-			Handler:    _Query_GetOracleAttestations_Handler,
-		},
-		{
 			MethodName: "GetEvmAddressByValidatorAddress",
 			Handler:    _Query_GetEvmAddressByValidatorAddress_Handler,
 		},
@@ -458,6 +518,18 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDataBefore",
 			Handler:    _Query_GetDataBefore_Handler,
+		},
+		{
+			MethodName: "GetSnapshotsByReport",
+			Handler:    _Query_GetSnapshotsByReport_Handler,
+		},
+		{
+			MethodName: "GetAttestationDataBySnapshot",
+			Handler:    _Query_GetAttestationDataBySnapshot_Handler,
+		},
+		{
+			MethodName: "GetAttestationsBySnapshot",
+			Handler:    _Query_GetAttestationsBySnapshot_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

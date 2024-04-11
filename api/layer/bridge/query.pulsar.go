@@ -7679,958 +7679,8 @@ func (x *fastReflection_QueryGetValsetSigsResponse) ProtoMethods() *protoiface.M
 }
 
 var (
-	md_QueryGetOracleAttestationsRequest           protoreflect.MessageDescriptor
-	fd_QueryGetOracleAttestationsRequest_query_id  protoreflect.FieldDescriptor
-	fd_QueryGetOracleAttestationsRequest_timestamp protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_bridge_query_proto_init()
-	md_QueryGetOracleAttestationsRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetOracleAttestationsRequest")
-	fd_QueryGetOracleAttestationsRequest_query_id = md_QueryGetOracleAttestationsRequest.Fields().ByName("query_id")
-	fd_QueryGetOracleAttestationsRequest_timestamp = md_QueryGetOracleAttestationsRequest.Fields().ByName("timestamp")
-}
-
-var _ protoreflect.Message = (*fastReflection_QueryGetOracleAttestationsRequest)(nil)
-
-type fastReflection_QueryGetOracleAttestationsRequest QueryGetOracleAttestationsRequest
-
-func (x *QueryGetOracleAttestationsRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryGetOracleAttestationsRequest)(x)
-}
-
-func (x *QueryGetOracleAttestationsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[17]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_QueryGetOracleAttestationsRequest_messageType fastReflection_QueryGetOracleAttestationsRequest_messageType
-var _ protoreflect.MessageType = fastReflection_QueryGetOracleAttestationsRequest_messageType{}
-
-type fastReflection_QueryGetOracleAttestationsRequest_messageType struct{}
-
-func (x fastReflection_QueryGetOracleAttestationsRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryGetOracleAttestationsRequest)(nil)
-}
-func (x fastReflection_QueryGetOracleAttestationsRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryGetOracleAttestationsRequest)
-}
-func (x fastReflection_QueryGetOracleAttestationsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryGetOracleAttestationsRequest
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryGetOracleAttestationsRequest
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Type() protoreflect.MessageType {
-	return _fastReflection_QueryGetOracleAttestationsRequest_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) New() protoreflect.Message {
-	return new(fastReflection_QueryGetOracleAttestationsRequest)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Interface() protoreflect.ProtoMessage {
-	return (*QueryGetOracleAttestationsRequest)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.QueryId) != 0 {
-		value := protoreflect.ValueOfBytes(x.QueryId)
-		if !f(fd_QueryGetOracleAttestationsRequest_query_id, value) {
-			return
-		}
-	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
-		if !f(fd_QueryGetOracleAttestationsRequest_timestamp, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsRequest.query_id":
-		return len(x.QueryId) != 0
-	case "layer.bridge.QueryGetOracleAttestationsRequest.timestamp":
-		return x.Timestamp != int64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsRequest"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsRequest.query_id":
-		x.QueryId = nil
-	case "layer.bridge.QueryGetOracleAttestationsRequest.timestamp":
-		x.Timestamp = int64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsRequest"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsRequest.query_id":
-		value := x.QueryId
-		return protoreflect.ValueOfBytes(value)
-	case "layer.bridge.QueryGetOracleAttestationsRequest.timestamp":
-		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsRequest"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsRequest does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsRequest.query_id":
-		x.QueryId = value.Bytes()
-	case "layer.bridge.QueryGetOracleAttestationsRequest.timestamp":
-		x.Timestamp = value.Int()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsRequest"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsRequest.query_id":
-		panic(fmt.Errorf("field query_id of message layer.bridge.QueryGetOracleAttestationsRequest is not mutable"))
-	case "layer.bridge.QueryGetOracleAttestationsRequest.timestamp":
-		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetOracleAttestationsRequest is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsRequest"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsRequest.query_id":
-		return protoreflect.ValueOfBytes(nil)
-	case "layer.bridge.QueryGetOracleAttestationsRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsRequest"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsRequest does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetOracleAttestationsRequest", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryGetOracleAttestationsRequest) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryGetOracleAttestationsRequest)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.QueryId)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Timestamp != 0 {
-			n += 1 + runtime.Sov(uint64(x.Timestamp))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryGetOracleAttestationsRequest)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.Timestamp != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
-			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.QueryId) > 0 {
-			i -= len(x.QueryId)
-			copy(dAtA[i:], x.QueryId)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryGetOracleAttestationsRequest)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetOracleAttestationsRequest: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetOracleAttestationsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
-				if x.QueryId == nil {
-					x.QueryId = []byte{}
-				}
-				iNdEx = postIndex
-			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
-				}
-				x.Timestamp = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var _ protoreflect.List = (*_QueryGetOracleAttestationsResponse_1_list)(nil)
-
-type _QueryGetOracleAttestationsResponse_1_list struct {
-	list *[]string
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfString((*x.list)[i])
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.String()
-	concreteValue := valueUnwrapped
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) AppendMutable() protoreflect.Value {
-	panic(fmt.Errorf("AppendMutable can not be called on message QueryGetOracleAttestationsResponse at list field Attestations as it is not of Message kind"))
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) Truncate(n int) {
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) NewElement() protoreflect.Value {
-	v := ""
-	return protoreflect.ValueOfString(v)
-}
-
-func (x *_QueryGetOracleAttestationsResponse_1_list) IsValid() bool {
-	return x.list != nil
-}
-
-var (
-	md_QueryGetOracleAttestationsResponse              protoreflect.MessageDescriptor
-	fd_QueryGetOracleAttestationsResponse_attestations protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_bridge_query_proto_init()
-	md_QueryGetOracleAttestationsResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetOracleAttestationsResponse")
-	fd_QueryGetOracleAttestationsResponse_attestations = md_QueryGetOracleAttestationsResponse.Fields().ByName("attestations")
-}
-
-var _ protoreflect.Message = (*fastReflection_QueryGetOracleAttestationsResponse)(nil)
-
-type fastReflection_QueryGetOracleAttestationsResponse QueryGetOracleAttestationsResponse
-
-func (x *QueryGetOracleAttestationsResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_QueryGetOracleAttestationsResponse)(x)
-}
-
-func (x *QueryGetOracleAttestationsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[18]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_QueryGetOracleAttestationsResponse_messageType fastReflection_QueryGetOracleAttestationsResponse_messageType
-var _ protoreflect.MessageType = fastReflection_QueryGetOracleAttestationsResponse_messageType{}
-
-type fastReflection_QueryGetOracleAttestationsResponse_messageType struct{}
-
-func (x fastReflection_QueryGetOracleAttestationsResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_QueryGetOracleAttestationsResponse)(nil)
-}
-func (x fastReflection_QueryGetOracleAttestationsResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_QueryGetOracleAttestationsResponse)
-}
-func (x fastReflection_QueryGetOracleAttestationsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryGetOracleAttestationsResponse
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_QueryGetOracleAttestationsResponse
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Type() protoreflect.MessageType {
-	return _fastReflection_QueryGetOracleAttestationsResponse_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) New() protoreflect.Message {
-	return new(fastReflection_QueryGetOracleAttestationsResponse)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Interface() protoreflect.ProtoMessage {
-	return (*QueryGetOracleAttestationsResponse)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Attestations) != 0 {
-		value := protoreflect.ValueOfList(&_QueryGetOracleAttestationsResponse_1_list{list: &x.Attestations})
-		if !f(fd_QueryGetOracleAttestationsResponse_attestations, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsResponse.attestations":
-		return len(x.Attestations) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsResponse"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsResponse.attestations":
-		x.Attestations = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsResponse"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsResponse.attestations":
-		if len(x.Attestations) == 0 {
-			return protoreflect.ValueOfList(&_QueryGetOracleAttestationsResponse_1_list{})
-		}
-		listValue := &_QueryGetOracleAttestationsResponse_1_list{list: &x.Attestations}
-		return protoreflect.ValueOfList(listValue)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsResponse"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsResponse does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsResponse.attestations":
-		lv := value.List()
-		clv := lv.(*_QueryGetOracleAttestationsResponse_1_list)
-		x.Attestations = *clv.list
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsResponse"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsResponse.attestations":
-		if x.Attestations == nil {
-			x.Attestations = []string{}
-		}
-		value := &_QueryGetOracleAttestationsResponse_1_list{list: &x.Attestations}
-		return protoreflect.ValueOfList(value)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsResponse"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.QueryGetOracleAttestationsResponse.attestations":
-		list := []string{}
-		return protoreflect.ValueOfList(&_QueryGetOracleAttestationsResponse_1_list{list: &list})
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetOracleAttestationsResponse"))
-		}
-		panic(fmt.Errorf("message layer.bridge.QueryGetOracleAttestationsResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetOracleAttestationsResponse", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_QueryGetOracleAttestationsResponse) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*QueryGetOracleAttestationsResponse)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if len(x.Attestations) > 0 {
-			for _, s := range x.Attestations {
-				l = len(s)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*QueryGetOracleAttestationsResponse)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Attestations) > 0 {
-			for iNdEx := len(x.Attestations) - 1; iNdEx >= 0; iNdEx-- {
-				i -= len(x.Attestations[iNdEx])
-				copy(dAtA[i:], x.Attestations[iNdEx])
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Attestations[iNdEx])))
-				i--
-				dAtA[i] = 0xa
-			}
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*QueryGetOracleAttestationsResponse)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetOracleAttestationsResponse: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetOracleAttestationsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Attestations", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Attestations = append(x.Attestations, string(dAtA[iNdEx:postIndex]))
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_QueryGetEvmAddressByValidatorAddressRequest                   protoreflect.MessageDescriptor
-	fd_QueryGetEvmAddressByValidatorAddressRequest_validator_address protoreflect.FieldDescriptor
+	md_QueryGetEvmAddressByValidatorAddressRequest                  protoreflect.MessageDescriptor
+	fd_QueryGetEvmAddressByValidatorAddressRequest_validatorAddress protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -8648,7 +7698,7 @@ func (x *QueryGetEvmAddressByValidatorAddressRequest) ProtoReflect() protoreflec
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[19]
+	mi := &file_layer_bridge_query_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9068,7 +8118,7 @@ func (x *QueryGetEvmAddressByValidatorAddressResponse) ProtoReflect() protorefle
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[20]
+	mi := &file_layer_bridge_query_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9488,7 +8538,7 @@ func (x *QueryGetValsetByTimestampRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetValsetByTimestampRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[21]
+	mi := &file_layer_bridge_query_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9943,7 +8993,7 @@ func (x *QueryGetValsetByTimestampResponse) ProtoReflect() protoreflect.Message 
 }
 
 func (x *QueryGetValsetByTimestampResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[22]
+	mi := &file_layer_bridge_query_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10386,7 +9436,7 @@ func (x *QueryGetCurrentAggregateReportRequest) ProtoReflect() protoreflect.Mess
 }
 
 func (x *QueryGetCurrentAggregateReportRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[23]
+	mi := &file_layer_bridge_query_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10442,8 +9492,8 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Interface() proto
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.QueryId) != 0 {
-		value := protoreflect.ValueOfBytes(x.QueryId)
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
 		if !f(fd_QueryGetCurrentAggregateReportRequest_query_id, value) {
 			return
 		}
@@ -10464,7 +9514,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Range(f func(prot
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		return len(x.QueryId) != 0
+		return x.QueryId != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -10482,7 +9532,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Has(fd protorefle
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		x.QueryId = nil
+		x.QueryId = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -10501,7 +9551,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Get(descriptor pr
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -10523,7 +9573,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Get(descriptor pr
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		x.QueryId = value.Bytes()
+		x.QueryId = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -10560,7 +9610,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) Mutable(fd protor
 func (x *fastReflection_QueryGetCurrentAggregateReportRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentAggregateReportRequest.query_id":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentAggregateReportRequest"))
@@ -10723,7 +9773,7 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) ProtoMethods() *p
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -10733,25 +9783,23 @@ func (x *fastReflection_QueryGetCurrentAggregateReportRequest) ProtoMethods() *p
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
-				if x.QueryId == nil {
-					x.QueryId = []byte{}
-				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -10810,7 +9858,7 @@ func (x *QueryGetCurrentAggregateReportResponse) ProtoReflect() protoreflect.Mes
 }
 
 func (x *QueryGetCurrentAggregateReportResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[24]
+	mi := &file_layer_bridge_query_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11360,7 +10408,7 @@ func (x *Aggregate) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Aggregate) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[25]
+	mi := &file_layer_bridge_query_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12268,7 +11316,7 @@ func (x *AggregateReporter) ProtoReflect() protoreflect.Message {
 }
 
 func (x *AggregateReporter) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[26]
+	mi := &file_layer_bridge_query_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12736,7 +11784,7 @@ func (x *QueryGetDataBeforeRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetDataBeforeRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[27]
+	mi := &file_layer_bridge_query_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13206,7 +12254,7 @@ func (x *QueryGetDataBeforeResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetDataBeforeResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[28]
+	mi := &file_layer_bridge_query_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13632,6 +12680,3158 @@ func (x *fastReflection_QueryGetDataBeforeResponse) ProtoMethods() *protoiface.M
 						break
 					}
 				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetSnapshotsByReportRequest           protoreflect.MessageDescriptor
+	fd_QueryGetSnapshotsByReportRequest_queryId   protoreflect.FieldDescriptor
+	fd_QueryGetSnapshotsByReportRequest_timestamp protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetSnapshotsByReportRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetSnapshotsByReportRequest")
+	fd_QueryGetSnapshotsByReportRequest_queryId = md_QueryGetSnapshotsByReportRequest.Fields().ByName("queryId")
+	fd_QueryGetSnapshotsByReportRequest_timestamp = md_QueryGetSnapshotsByReportRequest.Fields().ByName("timestamp")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetSnapshotsByReportRequest)(nil)
+
+type fastReflection_QueryGetSnapshotsByReportRequest QueryGetSnapshotsByReportRequest
+
+func (x *QueryGetSnapshotsByReportRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetSnapshotsByReportRequest)(x)
+}
+
+func (x *QueryGetSnapshotsByReportRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetSnapshotsByReportRequest_messageType fastReflection_QueryGetSnapshotsByReportRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetSnapshotsByReportRequest_messageType{}
+
+type fastReflection_QueryGetSnapshotsByReportRequest_messageType struct{}
+
+func (x fastReflection_QueryGetSnapshotsByReportRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetSnapshotsByReportRequest)(nil)
+}
+func (x fastReflection_QueryGetSnapshotsByReportRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetSnapshotsByReportRequest)
+}
+func (x fastReflection_QueryGetSnapshotsByReportRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetSnapshotsByReportRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetSnapshotsByReportRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetSnapshotsByReportRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryGetSnapshotsByReportRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetSnapshotsByReportRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
+		if !f(fd_QueryGetSnapshotsByReportRequest_queryId, value) {
+			return
+		}
+	}
+	if x.Timestamp != "" {
+		value := protoreflect.ValueOfString(x.Timestamp)
+		if !f(fd_QueryGetSnapshotsByReportRequest_timestamp, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+		return x.QueryId != ""
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
+		return x.Timestamp != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+		x.QueryId = ""
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
+		x.Timestamp = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+		value := x.QueryId
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+		x.QueryId = value.Interface().(string)
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
+		x.Timestamp = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+		panic(fmt.Errorf("field queryId of message layer.bridge.QueryGetSnapshotsByReportRequest is not mutable"))
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetSnapshotsByReportRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetSnapshotsByReportRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetSnapshotsByReportRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetSnapshotsByReportRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.QueryId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Timestamp)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetSnapshotsByReportRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Timestamp) > 0 {
+			i -= len(x.Timestamp)
+			copy(dAtA[i:], x.Timestamp)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Timestamp)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.QueryId) > 0 {
+			i -= len(x.QueryId)
+			copy(dAtA[i:], x.QueryId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetSnapshotsByReportRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetSnapshotsByReportRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetSnapshotsByReportRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Timestamp = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryGetSnapshotsByReportResponse_1_list)(nil)
+
+type _QueryGetSnapshotsByReportResponse_1_list struct {
+	list *[]string
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message QueryGetSnapshotsByReportResponse at list field Snapshots as it is not of Message kind"))
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_QueryGetSnapshotsByReportResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryGetSnapshotsByReportResponse           protoreflect.MessageDescriptor
+	fd_QueryGetSnapshotsByReportResponse_snapshots protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetSnapshotsByReportResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetSnapshotsByReportResponse")
+	fd_QueryGetSnapshotsByReportResponse_snapshots = md_QueryGetSnapshotsByReportResponse.Fields().ByName("snapshots")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetSnapshotsByReportResponse)(nil)
+
+type fastReflection_QueryGetSnapshotsByReportResponse QueryGetSnapshotsByReportResponse
+
+func (x *QueryGetSnapshotsByReportResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetSnapshotsByReportResponse)(x)
+}
+
+func (x *QueryGetSnapshotsByReportResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetSnapshotsByReportResponse_messageType fastReflection_QueryGetSnapshotsByReportResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetSnapshotsByReportResponse_messageType{}
+
+type fastReflection_QueryGetSnapshotsByReportResponse_messageType struct{}
+
+func (x fastReflection_QueryGetSnapshotsByReportResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetSnapshotsByReportResponse)(nil)
+}
+func (x fastReflection_QueryGetSnapshotsByReportResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetSnapshotsByReportResponse)
+}
+func (x fastReflection_QueryGetSnapshotsByReportResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetSnapshotsByReportResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetSnapshotsByReportResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetSnapshotsByReportResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryGetSnapshotsByReportResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetSnapshotsByReportResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Snapshots) != 0 {
+		value := protoreflect.ValueOfList(&_QueryGetSnapshotsByReportResponse_1_list{list: &x.Snapshots})
+		if !f(fd_QueryGetSnapshotsByReportResponse_snapshots, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportResponse.snapshots":
+		return len(x.Snapshots) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportResponse.snapshots":
+		x.Snapshots = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportResponse.snapshots":
+		if len(x.Snapshots) == 0 {
+			return protoreflect.ValueOfList(&_QueryGetSnapshotsByReportResponse_1_list{})
+		}
+		listValue := &_QueryGetSnapshotsByReportResponse_1_list{list: &x.Snapshots}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportResponse.snapshots":
+		lv := value.List()
+		clv := lv.(*_QueryGetSnapshotsByReportResponse_1_list)
+		x.Snapshots = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportResponse.snapshots":
+		if x.Snapshots == nil {
+			x.Snapshots = []string{}
+		}
+		value := &_QueryGetSnapshotsByReportResponse_1_list{list: &x.Snapshots}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetSnapshotsByReportResponse.snapshots":
+		list := []string{}
+		return protoreflect.ValueOfList(&_QueryGetSnapshotsByReportResponse_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetSnapshotsByReportResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetSnapshotsByReportResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetSnapshotsByReportResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetSnapshotsByReportResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetSnapshotsByReportResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Snapshots) > 0 {
+			for _, s := range x.Snapshots {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetSnapshotsByReportResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Snapshots) > 0 {
+			for iNdEx := len(x.Snapshots) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Snapshots[iNdEx])
+				copy(dAtA[i:], x.Snapshots[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Snapshots[iNdEx])))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetSnapshotsByReportResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetSnapshotsByReportResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetSnapshotsByReportResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Snapshots", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Snapshots = append(x.Snapshots, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetAttestationDataBySnapshotRequest          protoreflect.MessageDescriptor
+	fd_QueryGetAttestationDataBySnapshotRequest_snapshot protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetAttestationDataBySnapshotRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetAttestationDataBySnapshotRequest")
+	fd_QueryGetAttestationDataBySnapshotRequest_snapshot = md_QueryGetAttestationDataBySnapshotRequest.Fields().ByName("snapshot")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetAttestationDataBySnapshotRequest)(nil)
+
+type fastReflection_QueryGetAttestationDataBySnapshotRequest QueryGetAttestationDataBySnapshotRequest
+
+func (x *QueryGetAttestationDataBySnapshotRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationDataBySnapshotRequest)(x)
+}
+
+func (x *QueryGetAttestationDataBySnapshotRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType{}
+
+type fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType struct{}
+
+func (x fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationDataBySnapshotRequest)(nil)
+}
+func (x fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationDataBySnapshotRequest)
+}
+func (x fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationDataBySnapshotRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationDataBySnapshotRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetAttestationDataBySnapshotRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationDataBySnapshotRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetAttestationDataBySnapshotRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Snapshot != "" {
+		value := protoreflect.ValueOfString(x.Snapshot)
+		if !f(fd_QueryGetAttestationDataBySnapshotRequest_snapshot, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotRequest.snapshot":
+		return x.Snapshot != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotRequest.snapshot":
+		x.Snapshot = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotRequest.snapshot":
+		value := x.Snapshot
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotRequest.snapshot":
+		x.Snapshot = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotRequest.snapshot":
+		panic(fmt.Errorf("field snapshot of message layer.bridge.QueryGetAttestationDataBySnapshotRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotRequest.snapshot":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetAttestationDataBySnapshotRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetAttestationDataBySnapshotRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Snapshot)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationDataBySnapshotRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Snapshot) > 0 {
+			i -= len(x.Snapshot)
+			copy(dAtA[i:], x.Snapshot)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Snapshot)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationDataBySnapshotRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationDataBySnapshotRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationDataBySnapshotRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Snapshot", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Snapshot = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetAttestationDataBySnapshotResponse                         protoreflect.MessageDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_queryId                 protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_timestamp               protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregateValue          protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregatePower          protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_checkpoint              protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_attestationTimestamp    protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_previousReportTimestamp protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_nextReportTimestamp     protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetAttestationDataBySnapshotResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetAttestationDataBySnapshotResponse")
+	fd_QueryGetAttestationDataBySnapshotResponse_queryId = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("queryId")
+	fd_QueryGetAttestationDataBySnapshotResponse_timestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("timestamp")
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregateValue = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("aggregateValue")
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregatePower = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("aggregatePower")
+	fd_QueryGetAttestationDataBySnapshotResponse_checkpoint = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("checkpoint")
+	fd_QueryGetAttestationDataBySnapshotResponse_attestationTimestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("attestationTimestamp")
+	fd_QueryGetAttestationDataBySnapshotResponse_previousReportTimestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("previousReportTimestamp")
+	fd_QueryGetAttestationDataBySnapshotResponse_nextReportTimestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("nextReportTimestamp")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetAttestationDataBySnapshotResponse)(nil)
+
+type fastReflection_QueryGetAttestationDataBySnapshotResponse QueryGetAttestationDataBySnapshotResponse
+
+func (x *QueryGetAttestationDataBySnapshotResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationDataBySnapshotResponse)(x)
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[30]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType{}
+
+type fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType struct{}
+
+func (x fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationDataBySnapshotResponse)(nil)
+}
+func (x fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationDataBySnapshotResponse)
+}
+func (x fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationDataBySnapshotResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationDataBySnapshotResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetAttestationDataBySnapshotResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationDataBySnapshotResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetAttestationDataBySnapshotResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_queryId, value) {
+			return
+		}
+	}
+	if x.Timestamp != "" {
+		value := protoreflect.ValueOfString(x.Timestamp)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_timestamp, value) {
+			return
+		}
+	}
+	if x.AggregateValue != "" {
+		value := protoreflect.ValueOfString(x.AggregateValue)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_aggregateValue, value) {
+			return
+		}
+	}
+	if x.AggregatePower != "" {
+		value := protoreflect.ValueOfString(x.AggregatePower)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_aggregatePower, value) {
+			return
+		}
+	}
+	if x.Checkpoint != "" {
+		value := protoreflect.ValueOfString(x.Checkpoint)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_checkpoint, value) {
+			return
+		}
+	}
+	if x.AttestationTimestamp != "" {
+		value := protoreflect.ValueOfString(x.AttestationTimestamp)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_attestationTimestamp, value) {
+			return
+		}
+	}
+	if x.PreviousReportTimestamp != "" {
+		value := protoreflect.ValueOfString(x.PreviousReportTimestamp)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_previousReportTimestamp, value) {
+			return
+		}
+	}
+	if x.NextReportTimestamp != "" {
+		value := protoreflect.ValueOfString(x.NextReportTimestamp)
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_nextReportTimestamp, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+		return x.QueryId != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
+		return x.Timestamp != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+		return x.AggregateValue != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+		return x.AggregatePower != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
+		return x.Checkpoint != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+		return x.AttestationTimestamp != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+		return x.PreviousReportTimestamp != ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+		return x.NextReportTimestamp != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+		x.QueryId = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
+		x.Timestamp = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+		x.AggregateValue = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+		x.AggregatePower = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
+		x.Checkpoint = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+		x.AttestationTimestamp = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+		x.PreviousReportTimestamp = ""
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+		x.NextReportTimestamp = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+		value := x.QueryId
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+		value := x.AggregateValue
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+		value := x.AggregatePower
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
+		value := x.Checkpoint
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+		value := x.AttestationTimestamp
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+		value := x.PreviousReportTimestamp
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+		value := x.NextReportTimestamp
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+		x.QueryId = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
+		x.Timestamp = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+		x.AggregateValue = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+		x.AggregatePower = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
+		x.Checkpoint = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+		x.AttestationTimestamp = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+		x.PreviousReportTimestamp = value.Interface().(string)
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+		x.NextReportTimestamp = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+		panic(fmt.Errorf("field queryId of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+		panic(fmt.Errorf("field aggregateValue of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+		panic(fmt.Errorf("field aggregatePower of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
+		panic(fmt.Errorf("field checkpoint of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+		panic(fmt.Errorf("field attestationTimestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+		panic(fmt.Errorf("field previousReportTimestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+		panic(fmt.Errorf("field nextReportTimestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationDataBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetAttestationDataBySnapshotResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetAttestationDataBySnapshotResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.QueryId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Timestamp)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AggregateValue)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AggregatePower)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Checkpoint)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AttestationTimestamp)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.PreviousReportTimestamp)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.NextReportTimestamp)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationDataBySnapshotResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.NextReportTimestamp) > 0 {
+			i -= len(x.NextReportTimestamp)
+			copy(dAtA[i:], x.NextReportTimestamp)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.NextReportTimestamp)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.PreviousReportTimestamp) > 0 {
+			i -= len(x.PreviousReportTimestamp)
+			copy(dAtA[i:], x.PreviousReportTimestamp)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PreviousReportTimestamp)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if len(x.AttestationTimestamp) > 0 {
+			i -= len(x.AttestationTimestamp)
+			copy(dAtA[i:], x.AttestationTimestamp)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AttestationTimestamp)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.Checkpoint) > 0 {
+			i -= len(x.Checkpoint)
+			copy(dAtA[i:], x.Checkpoint)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Checkpoint)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.AggregatePower) > 0 {
+			i -= len(x.AggregatePower)
+			copy(dAtA[i:], x.AggregatePower)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AggregatePower)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.AggregateValue) > 0 {
+			i -= len(x.AggregateValue)
+			copy(dAtA[i:], x.AggregateValue)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AggregateValue)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Timestamp) > 0 {
+			i -= len(x.Timestamp)
+			copy(dAtA[i:], x.Timestamp)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Timestamp)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.QueryId) > 0 {
+			i -= len(x.QueryId)
+			copy(dAtA[i:], x.QueryId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationDataBySnapshotResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationDataBySnapshotResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationDataBySnapshotResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Timestamp = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AggregateValue", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AggregateValue = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AggregatePower", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AggregatePower = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Checkpoint", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Checkpoint = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AttestationTimestamp", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AttestationTimestamp = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PreviousReportTimestamp", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PreviousReportTimestamp = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NextReportTimestamp", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.NextReportTimestamp = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryGetAttestationsBySnapshotRequest          protoreflect.MessageDescriptor
+	fd_QueryGetAttestationsBySnapshotRequest_snapshot protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetAttestationsBySnapshotRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetAttestationsBySnapshotRequest")
+	fd_QueryGetAttestationsBySnapshotRequest_snapshot = md_QueryGetAttestationsBySnapshotRequest.Fields().ByName("snapshot")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetAttestationsBySnapshotRequest)(nil)
+
+type fastReflection_QueryGetAttestationsBySnapshotRequest QueryGetAttestationsBySnapshotRequest
+
+func (x *QueryGetAttestationsBySnapshotRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationsBySnapshotRequest)(x)
+}
+
+func (x *QueryGetAttestationsBySnapshotRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[31]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetAttestationsBySnapshotRequest_messageType fastReflection_QueryGetAttestationsBySnapshotRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetAttestationsBySnapshotRequest_messageType{}
+
+type fastReflection_QueryGetAttestationsBySnapshotRequest_messageType struct{}
+
+func (x fastReflection_QueryGetAttestationsBySnapshotRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationsBySnapshotRequest)(nil)
+}
+func (x fastReflection_QueryGetAttestationsBySnapshotRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationsBySnapshotRequest)
+}
+func (x fastReflection_QueryGetAttestationsBySnapshotRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationsBySnapshotRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationsBySnapshotRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetAttestationsBySnapshotRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationsBySnapshotRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetAttestationsBySnapshotRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Snapshot != "" {
+		value := protoreflect.ValueOfString(x.Snapshot)
+		if !f(fd_QueryGetAttestationsBySnapshotRequest_snapshot, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotRequest.snapshot":
+		return x.Snapshot != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotRequest.snapshot":
+		x.Snapshot = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotRequest.snapshot":
+		value := x.Snapshot
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotRequest.snapshot":
+		x.Snapshot = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotRequest.snapshot":
+		panic(fmt.Errorf("field snapshot of message layer.bridge.QueryGetAttestationsBySnapshotRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotRequest.snapshot":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotRequest"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetAttestationsBySnapshotRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetAttestationsBySnapshotRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetAttestationsBySnapshotRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Snapshot)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationsBySnapshotRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Snapshot) > 0 {
+			i -= len(x.Snapshot)
+			copy(dAtA[i:], x.Snapshot)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Snapshot)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationsBySnapshotRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationsBySnapshotRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationsBySnapshotRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Snapshot", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Snapshot = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryGetAttestationsBySnapshotResponse_1_list)(nil)
+
+type _QueryGetAttestationsBySnapshotResponse_1_list struct {
+	list *[]string
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message QueryGetAttestationsBySnapshotResponse at list field Attestations as it is not of Message kind"))
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_QueryGetAttestationsBySnapshotResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryGetAttestationsBySnapshotResponse              protoreflect.MessageDescriptor
+	fd_QueryGetAttestationsBySnapshotResponse_attestations protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryGetAttestationsBySnapshotResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetAttestationsBySnapshotResponse")
+	fd_QueryGetAttestationsBySnapshotResponse_attestations = md_QueryGetAttestationsBySnapshotResponse.Fields().ByName("attestations")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryGetAttestationsBySnapshotResponse)(nil)
+
+type fastReflection_QueryGetAttestationsBySnapshotResponse QueryGetAttestationsBySnapshotResponse
+
+func (x *QueryGetAttestationsBySnapshotResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationsBySnapshotResponse)(x)
+}
+
+func (x *QueryGetAttestationsBySnapshotResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[32]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryGetAttestationsBySnapshotResponse_messageType fastReflection_QueryGetAttestationsBySnapshotResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryGetAttestationsBySnapshotResponse_messageType{}
+
+type fastReflection_QueryGetAttestationsBySnapshotResponse_messageType struct{}
+
+func (x fastReflection_QueryGetAttestationsBySnapshotResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryGetAttestationsBySnapshotResponse)(nil)
+}
+func (x fastReflection_QueryGetAttestationsBySnapshotResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationsBySnapshotResponse)
+}
+func (x fastReflection_QueryGetAttestationsBySnapshotResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationsBySnapshotResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryGetAttestationsBySnapshotResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryGetAttestationsBySnapshotResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryGetAttestationsBySnapshotResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryGetAttestationsBySnapshotResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Attestations) != 0 {
+		value := protoreflect.ValueOfList(&_QueryGetAttestationsBySnapshotResponse_1_list{list: &x.Attestations})
+		if !f(fd_QueryGetAttestationsBySnapshotResponse_attestations, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotResponse.attestations":
+		return len(x.Attestations) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotResponse.attestations":
+		x.Attestations = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotResponse.attestations":
+		if len(x.Attestations) == 0 {
+			return protoreflect.ValueOfList(&_QueryGetAttestationsBySnapshotResponse_1_list{})
+		}
+		listValue := &_QueryGetAttestationsBySnapshotResponse_1_list{list: &x.Attestations}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotResponse.attestations":
+		lv := value.List()
+		clv := lv.(*_QueryGetAttestationsBySnapshotResponse_1_list)
+		x.Attestations = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotResponse.attestations":
+		if x.Attestations == nil {
+			x.Attestations = []string{}
+		}
+		value := &_QueryGetAttestationsBySnapshotResponse_1_list{list: &x.Attestations}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryGetAttestationsBySnapshotResponse.attestations":
+		list := []string{}
+		return protoreflect.ValueOfList(&_QueryGetAttestationsBySnapshotResponse_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationsBySnapshotResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryGetAttestationsBySnapshotResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryGetAttestationsBySnapshotResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryGetAttestationsBySnapshotResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryGetAttestationsBySnapshotResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Attestations) > 0 {
+			for _, s := range x.Attestations {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationsBySnapshotResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Attestations) > 0 {
+			for iNdEx := len(x.Attestations) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Attestations[iNdEx])
+				copy(dAtA[i:], x.Attestations[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Attestations[iNdEx])))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryGetAttestationsBySnapshotResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationsBySnapshotResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryGetAttestationsBySnapshotResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Attestations", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Attestations = append(x.Attestations, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -14331,84 +16531,6 @@ func (x *QueryGetValsetSigsResponse) GetSignatures() []string {
 	return nil
 }
 
-type QueryGetOracleAttestationsRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	QueryId   []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-}
-
-func (x *QueryGetOracleAttestationsRequest) Reset() {
-	*x = QueryGetOracleAttestationsRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[17]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryGetOracleAttestationsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryGetOracleAttestationsRequest) ProtoMessage() {}
-
-// Deprecated: Use QueryGetOracleAttestationsRequest.ProtoReflect.Descriptor instead.
-func (*QueryGetOracleAttestationsRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *QueryGetOracleAttestationsRequest) GetQueryId() []byte {
-	if x != nil {
-		return x.QueryId
-	}
-	return nil
-}
-
-func (x *QueryGetOracleAttestationsRequest) GetTimestamp() int64 {
-	if x != nil {
-		return x.Timestamp
-	}
-	return 0
-}
-
-type QueryGetOracleAttestationsResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Attestations []string `protobuf:"bytes,1,rep,name=attestations,proto3" json:"attestations,omitempty"`
-}
-
-func (x *QueryGetOracleAttestationsResponse) Reset() {
-	*x = QueryGetOracleAttestationsResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[18]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryGetOracleAttestationsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryGetOracleAttestationsResponse) ProtoMessage() {}
-
-// Deprecated: Use QueryGetOracleAttestationsResponse.ProtoReflect.Descriptor instead.
-func (*QueryGetOracleAttestationsResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{18}
-}
-
-func (x *QueryGetOracleAttestationsResponse) GetAttestations() []string {
-	if x != nil {
-		return x.Attestations
-	}
-	return nil
-}
-
 type QueryGetEvmAddressByValidatorAddressRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -14420,7 +16542,7 @@ type QueryGetEvmAddressByValidatorAddressRequest struct {
 func (x *QueryGetEvmAddressByValidatorAddressRequest) Reset() {
 	*x = QueryGetEvmAddressByValidatorAddressRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[19]
+		mi := &file_layer_bridge_query_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14434,7 +16556,7 @@ func (*QueryGetEvmAddressByValidatorAddressRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetEvmAddressByValidatorAddressRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetEvmAddressByValidatorAddressRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{19}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressRequest) GetValidatorAddress() string {
@@ -14455,7 +16577,7 @@ type QueryGetEvmAddressByValidatorAddressResponse struct {
 func (x *QueryGetEvmAddressByValidatorAddressResponse) Reset() {
 	*x = QueryGetEvmAddressByValidatorAddressResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[20]
+		mi := &file_layer_bridge_query_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14469,7 +16591,7 @@ func (*QueryGetEvmAddressByValidatorAddressResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetEvmAddressByValidatorAddressResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetEvmAddressByValidatorAddressResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{20}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressResponse) GetEvmAddress() string {
@@ -14490,7 +16612,7 @@ type QueryGetValsetByTimestampRequest struct {
 func (x *QueryGetValsetByTimestampRequest) Reset() {
 	*x = QueryGetValsetByTimestampRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[21]
+		mi := &file_layer_bridge_query_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14504,7 +16626,7 @@ func (*QueryGetValsetByTimestampRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValsetByTimestampRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetValsetByTimestampRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{21}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *QueryGetValsetByTimestampRequest) GetTimestamp() int64 {
@@ -14525,7 +16647,7 @@ type QueryGetValsetByTimestampResponse struct {
 func (x *QueryGetValsetByTimestampResponse) Reset() {
 	*x = QueryGetValsetByTimestampResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[22]
+		mi := &file_layer_bridge_query_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14539,7 +16661,7 @@ func (*QueryGetValsetByTimestampResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValsetByTimestampResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetValsetByTimestampResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{22}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *QueryGetValsetByTimestampResponse) GetBridgeValidatorSet() []*BridgeValidator {
@@ -14554,13 +16676,13 @@ type QueryGetCurrentAggregateReportRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 }
 
 func (x *QueryGetCurrentAggregateReportRequest) Reset() {
 	*x = QueryGetCurrentAggregateReportRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[23]
+		mi := &file_layer_bridge_query_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14574,14 +16696,14 @@ func (*QueryGetCurrentAggregateReportRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetCurrentAggregateReportRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetCurrentAggregateReportRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{23}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *QueryGetCurrentAggregateReportRequest) GetQueryId() []byte {
+func (x *QueryGetCurrentAggregateReportRequest) GetQueryId() string {
 	if x != nil {
 		return x.QueryId
 	}
-	return nil
+	return ""
 }
 
 type QueryGetCurrentAggregateReportResponse struct {
@@ -14596,7 +16718,7 @@ type QueryGetCurrentAggregateReportResponse struct {
 func (x *QueryGetCurrentAggregateReportResponse) Reset() {
 	*x = QueryGetCurrentAggregateReportResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[24]
+		mi := &file_layer_bridge_query_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14610,7 +16732,7 @@ func (*QueryGetCurrentAggregateReportResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetCurrentAggregateReportResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetCurrentAggregateReportResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{24}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *QueryGetCurrentAggregateReportResponse) GetAggregate() *Aggregate {
@@ -14647,7 +16769,7 @@ type Aggregate struct {
 func (x *Aggregate) Reset() {
 	*x = Aggregate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[25]
+		mi := &file_layer_bridge_query_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14661,7 +16783,7 @@ func (*Aggregate) ProtoMessage() {}
 
 // Deprecated: Use Aggregate.ProtoReflect.Descriptor instead.
 func (*Aggregate) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{25}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *Aggregate) GetQueryId() []byte {
@@ -14746,7 +16868,7 @@ type AggregateReporter struct {
 func (x *AggregateReporter) Reset() {
 	*x = AggregateReporter{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[26]
+		mi := &file_layer_bridge_query_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14760,7 +16882,7 @@ func (*AggregateReporter) ProtoMessage() {}
 
 // Deprecated: Use AggregateReporter.ProtoReflect.Descriptor instead.
 func (*AggregateReporter) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{26}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AggregateReporter) GetReporter() string {
@@ -14789,7 +16911,7 @@ type QueryGetDataBeforeRequest struct {
 func (x *QueryGetDataBeforeRequest) Reset() {
 	*x = QueryGetDataBeforeRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[27]
+		mi := &file_layer_bridge_query_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14803,7 +16925,7 @@ func (*QueryGetDataBeforeRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetDataBeforeRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetDataBeforeRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{27}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *QueryGetDataBeforeRequest) GetQueryId() []byte {
@@ -14832,7 +16954,7 @@ type QueryGetDataBeforeResponse struct {
 func (x *QueryGetDataBeforeResponse) Reset() {
 	*x = QueryGetDataBeforeResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[28]
+		mi := &file_layer_bridge_query_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14846,7 +16968,7 @@ func (*QueryGetDataBeforeResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetDataBeforeResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetDataBeforeResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{28}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *QueryGetDataBeforeResponse) GetAggregate() *oracle.Aggregate {
@@ -14861,6 +16983,280 @@ func (x *QueryGetDataBeforeResponse) GetTimestamp() uint64 {
 		return x.Timestamp
 	}
 	return 0
+}
+
+type QueryGetSnapshotsByReportRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	QueryId   string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
+	Timestamp string `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (x *QueryGetSnapshotsByReportRequest) Reset() {
+	*x = QueryGetSnapshotsByReportRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetSnapshotsByReportRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetSnapshotsByReportRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryGetSnapshotsByReportRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetSnapshotsByReportRequest) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *QueryGetSnapshotsByReportRequest) GetQueryId() string {
+	if x != nil {
+		return x.QueryId
+	}
+	return ""
+}
+
+func (x *QueryGetSnapshotsByReportRequest) GetTimestamp() string {
+	if x != nil {
+		return x.Timestamp
+	}
+	return ""
+}
+
+type QueryGetSnapshotsByReportResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Snapshots []string `protobuf:"bytes,1,rep,name=snapshots,proto3" json:"snapshots,omitempty"`
+}
+
+func (x *QueryGetSnapshotsByReportResponse) Reset() {
+	*x = QueryGetSnapshotsByReportResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetSnapshotsByReportResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetSnapshotsByReportResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryGetSnapshotsByReportResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetSnapshotsByReportResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *QueryGetSnapshotsByReportResponse) GetSnapshots() []string {
+	if x != nil {
+		return x.Snapshots
+	}
+	return nil
+}
+
+type QueryGetAttestationDataBySnapshotRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Snapshot string `protobuf:"bytes,1,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
+}
+
+func (x *QueryGetAttestationDataBySnapshotRequest) Reset() {
+	*x = QueryGetAttestationDataBySnapshotRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetAttestationDataBySnapshotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetAttestationDataBySnapshotRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryGetAttestationDataBySnapshotRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetAttestationDataBySnapshotRequest) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *QueryGetAttestationDataBySnapshotRequest) GetSnapshot() string {
+	if x != nil {
+		return x.Snapshot
+	}
+	return ""
+}
+
+type QueryGetAttestationDataBySnapshotResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	QueryId                 string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
+	Timestamp               string `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	AggregateValue          string `protobuf:"bytes,3,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
+	AggregatePower          string `protobuf:"bytes,4,opt,name=aggregatePower,proto3" json:"aggregatePower,omitempty"`
+	Checkpoint              string `protobuf:"bytes,5,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
+	AttestationTimestamp    string `protobuf:"bytes,6,opt,name=attestationTimestamp,proto3" json:"attestationTimestamp,omitempty"`
+	PreviousReportTimestamp string `protobuf:"bytes,7,opt,name=previousReportTimestamp,proto3" json:"previousReportTimestamp,omitempty"`
+	NextReportTimestamp     string `protobuf:"bytes,8,opt,name=nextReportTimestamp,proto3" json:"nextReportTimestamp,omitempty"`
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) Reset() {
+	*x = QueryGetAttestationDataBySnapshotResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[30]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetAttestationDataBySnapshotResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryGetAttestationDataBySnapshotResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetAttestationDataBySnapshotResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetQueryId() string {
+	if x != nil {
+		return x.QueryId
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetTimestamp() string {
+	if x != nil {
+		return x.Timestamp
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetAggregateValue() string {
+	if x != nil {
+		return x.AggregateValue
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetAggregatePower() string {
+	if x != nil {
+		return x.AggregatePower
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetCheckpoint() string {
+	if x != nil {
+		return x.Checkpoint
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetAttestationTimestamp() string {
+	if x != nil {
+		return x.AttestationTimestamp
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetPreviousReportTimestamp() string {
+	if x != nil {
+		return x.PreviousReportTimestamp
+	}
+	return ""
+}
+
+func (x *QueryGetAttestationDataBySnapshotResponse) GetNextReportTimestamp() string {
+	if x != nil {
+		return x.NextReportTimestamp
+	}
+	return ""
+}
+
+type QueryGetAttestationsBySnapshotRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Snapshot string `protobuf:"bytes,1,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
+}
+
+func (x *QueryGetAttestationsBySnapshotRequest) Reset() {
+	*x = QueryGetAttestationsBySnapshotRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[31]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetAttestationsBySnapshotRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetAttestationsBySnapshotRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryGetAttestationsBySnapshotRequest.ProtoReflect.Descriptor instead.
+func (*QueryGetAttestationsBySnapshotRequest) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *QueryGetAttestationsBySnapshotRequest) GetSnapshot() string {
+	if x != nil {
+		return x.Snapshot
+	}
+	return ""
+}
+
+type QueryGetAttestationsBySnapshotResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Attestations []string `protobuf:"bytes,1,rep,name=attestations,proto3" json:"attestations,omitempty"`
+}
+
+func (x *QueryGetAttestationsBySnapshotResponse) Reset() {
+	*x = QueryGetAttestationsBySnapshotResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[32]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryGetAttestationsBySnapshotResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryGetAttestationsBySnapshotResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryGetAttestationsBySnapshotResponse.ProtoReflect.Descriptor instead.
+func (*QueryGetAttestationsBySnapshotResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *QueryGetAttestationsBySnapshotResponse) GetAttestations() []string {
+	if x != nil {
+		return x.Attestations
+	}
+	return nil
 }
 
 var File_layer_bridge_query_proto protoreflect.FileDescriptor
@@ -14897,304 +17293,306 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
 	0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x58, 0x0a, 0x23, 0x51, 0x75,
 	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43,
-	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63,
-	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70,
-	0x6f, 0x69, 0x6e, 0x74, 0x22, 0x52, 0x0a, 0x0f, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x29, 0x0a, 0x10, 0x65, 0x74, 0x68, 0x65, 0x72,
-	0x65, 0x75, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x0f, 0x65, 0x74, 0x68, 0x65, 0x72, 0x65, 0x75, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x65, 0x0a, 0x12, 0x42, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x4f,
-	0x0a, 0x14, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x12, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x22,
-	0xbc, 0x02, 0x0a, 0x18, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x52, 0x0a, 0x14,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x5f, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x52, 0x12, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
-	0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x12, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70,
-	0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50,
-	0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x2c, 0x0a,
-	0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x68,
-	0x61, 0x73, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x31, 0x0a, 0x14, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
-	0x69, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x22, 0xbf,
-	0x01, 0x0a, 0x22, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x53, 0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68,
-	0x6f, 0x6c, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f,
-	0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
-	0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10,
-	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68,
-	0x22, 0x51, 0x0a, 0x1c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68,
-	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13,
-	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
-	0x69, 0x6e, 0x74, 0x22, 0x48, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69,
-	0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xb3, 0x01,
-	0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x63,
-	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x76,
-	0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x27, 0x0a, 0x0f, 0x70, 0x6f,
-	0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68,
-	0x6f, 0x6c, 0x64, 0x22, 0x40, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05,
-	0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x49, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
-	0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x22, 0x39, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73,
-	0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x3c, 0x0a, 0x1a, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67,
-	0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0a, 0x73,
-	0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x22, 0x5c, 0x0a, 0x21, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x47, 0x65, 0x74, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x41, 0x74, 0x74, 0x65, 0x73,
-	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19,
-	0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x48, 0x0a, 0x22, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x47, 0x65, 0x74, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x22, 0x0a,
-	0x0c, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20,
-	0x03, 0x28, 0x09, 0x52, 0x0c, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x73, 0x22, 0x5a, 0x0a, 0x2b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x2b, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x4f, 0x0a,
-	0x2c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1f, 0x0a,
-	0x0b, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x68, 0x65,
+	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65,
+	0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x6c,
+	0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x26, 0x0a, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68,
+	0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x70,
+	0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x22, 0x40, 0x0a,
+	0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64,
+	0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64,
+	0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22,
+	0x49, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49,
+	0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x39, 0x0a, 0x19, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x3c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
+	0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75,
+	0x72, 0x65, 0x73, 0x22, 0x59, 0x0a, 0x2b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45,
+	0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x2a, 0x0a, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x4e,
+	0x0a, 0x2c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e,
+	0x0a, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x40,
 	0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74,
 	0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x22, 0x74, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73,
+	0x22, 0x72, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73,
 	0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4f, 0x0a, 0x14, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f,
-	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x22, 0x42, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
-	0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x22, 0x7d, 0x0a, 0x26, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67,
-	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74,
-	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
-	0x52, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x91, 0x03, 0x0a, 0x09, 0x41, 0x67,
-	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x49, 0x64, 0x12, 0x27, 0x0a, 0x0f, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67,
-	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x2d, 0x0a, 0x12, 0x61,
-	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
-	0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x25, 0x0a, 0x0e, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f, 0x77, 0x65,
-	0x72, 0x12, 0x2d, 0x0a, 0x12, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x5f, 0x64, 0x65,
-	0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x01, 0x52, 0x11, 0x73,
-	0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x12, 0x3d, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x18, 0x06, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12,
-	0x18, 0x0a, 0x07, 0x66, 0x6c, 0x61, 0x67, 0x67, 0x65, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x07, 0x66, 0x6c, 0x61, 0x67, 0x67, 0x65, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x6e, 0x6f, 0x6e,
-	0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12,
-	0x34, 0x0a, 0x16, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x14, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
-	0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18,
-	0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0x45, 0x0a,
-	0x11, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
-	0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14,
-	0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x70,
-	0x6f, 0x77, 0x65, 0x72, 0x22, 0x54, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
-	0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x71, 0x0a, 0x1a, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x52, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12,
-	0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x32, 0xc9, 0x0f,
-	0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x6b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x16, 0x12, 0x14,
-	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x12, 0x95, 0x01, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
-	0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22, 0x12, 0x20, 0x2f, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76,
-	0x6d, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0xad, 0x01, 0x0a,
-	0x16, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x30, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69,
-	0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
-	0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70,
-	0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x28, 0x12, 0x26, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0xd2, 0x01, 0x0a,
-	0x1c, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x2e,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x53, 0x65, 0x74, 0x22, 0x42, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
+	0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a,
+	0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x22, 0x7d, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x09,
+	0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x8b, 0x03, 0x0a, 0x09, 0x41, 0x67, 0x67, 0x72,
+	0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64,
+	0x12, 0x26, 0x0a, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c,
+	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67,
+	0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x2c, 0x0a, 0x11, 0x61, 0x67, 0x67, 0x72,
+	0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x24, 0x0a, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x72,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x2c, 0x0a, 0x11,
+	0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x01, 0x52, 0x11, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72,
+	0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3d, 0x0a, 0x09, 0x72, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x41, 0x67, 0x67,
+	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x09,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x66, 0x6c, 0x61,
+	0x67, 0x67, 0x65, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x66, 0x6c, 0x61, 0x67,
+	0x67, 0x65, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12, 0x32, 0x0a, 0x14, 0x61, 0x67, 0x67,
+	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65,
+	0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52, 0x14, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x16, 0x0a,
+	0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68,
+	0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0x45, 0x0a, 0x11, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x54, 0x0a, 0x19,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f,
+	0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x22, 0x71, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61,
+	0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63,
+	0x6c, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x09, 0x61, 0x67,
+	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x5a, 0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
+	0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x22, 0x41, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x73, 0x6e, 0x61, 0x70, 0x73,
+	0x68, 0x6f, 0x74, 0x73, 0x22, 0x46, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
+	0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42,
+	0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x1a, 0x0a, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x22, 0xf3, 0x02, 0x0a,
+	0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x12, 0x26, 0x0a, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56,
+	0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72,
+	0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x26, 0x0a, 0x0e, 0x61, 0x67,
+	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x77,
+	0x65, 0x72, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69,
+	0x6e, 0x74, 0x12, 0x32, 0x0a, 0x14, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x14, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38, 0x0a, 0x17, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f,
+	0x75, 0x73, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x17, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75,
+	0x73, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x12, 0x30, 0x0a, 0x13, 0x6e, 0x65, 0x78, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x6e,
+	0x65, 0x78, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x22, 0x43, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74,
+	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x22, 0x4c, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42,
+	0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x22, 0x0a, 0x0c, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x32, 0xe1, 0x12, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12,
+	0x6b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1c,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x16, 0x12, 0x14, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x95, 0x01, 0x0a,
+	0x10, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x73, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x22, 0x12, 0x20, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x73, 0x12, 0xad, 0x01, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12,
+	0x30, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12, 0x26, 0x2f, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x12, 0xd2, 0x01, 0x0a, 0x1c, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
 	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
 	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x70,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x7d, 0x12, 0xcf, 0x01, 0x0a, 0x1c, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64,
-	0x65, 0x78, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e,
-	0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65,
+	0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63,
+	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2f, 0x7b, 0x74,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xcf, 0x01, 0x0a, 0x1c, 0x47, 0x65,
+	0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79,
 	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
 	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x3e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x5f, 0x62, 0x79, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x2f, 0x7b, 0x69, 0x6e, 0x64,
-	0x65, 0x78, 0x7d, 0x12, 0x95, 0x01, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65,
-	0x74, 0x53, 0x69, 0x67, 0x73, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
-	0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b,
-	0x12, 0x29, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f,
-	0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x2f,
-	0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xc0, 0x01, 0x0a, 0x15,
-	0x47, 0x65, 0x74, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x4f, 0x72, 0x61,
-	0x63, 0x6c, 0x65, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x4f, 0x72,
-	0x61, 0x63, 0x6c, 0x65, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x44, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3e,
-	0x12, 0x3c, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f,
-	0x67, 0x65, 0x74, 0x5f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5f, 0x61, 0x74, 0x74, 0x65, 0x73,
-	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69,
-	0x64, 0x7d, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xe8,
-	0x01, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x39, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e,
+	0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x62, 0x79, 0x5f, 0x69, 0x6e,
+	0x64, 0x65, 0x78, 0x2f, 0x7b, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x7d, 0x12, 0x95, 0x01, 0x0a, 0x0d,
+	0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x12, 0x27, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b, 0x12, 0x29, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73,
+	0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x7d, 0x12, 0xe7, 0x01, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x39, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45,
+	0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x3a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
 	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3a, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42,
-	0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4e, 0x82, 0xd3, 0xe4, 0x93, 0x02,
-	0x48, 0x12, 0x46, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x5f, 0x62, 0x79, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xb2, 0x01, 0x0a, 0x14, 0x47, 0x65,
-	0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x12, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74,
-	0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74,
-	0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76,
-	0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x62, 0x79, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xc5,
-	0x01, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67,
-	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x33, 0x2e, 0x6c,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4d,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x47, 0x12, 0x45, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xb2, 0x01,
+	0x0a, 0x14, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12,
+	0x31, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67,
+	0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x62, 0x79, 0x5f, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x7d, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e,
+	0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x12, 0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41,
+	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72,
+	0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x37, 0x12, 0x35, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x61,
+	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f,
+	0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa0, 0x01, 0x0a, 0x0d, 0x47,
+	0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x12, 0x27, 0x2e, 0x6c,
 	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x34, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74,
-	0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x37, 0x12,
-	0x35, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67,
-	0x65, 0x74, 0x5f, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x67, 0x67, 0x72, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x7b, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa0, 0x01, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x44, 0x61,
-	0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
-	0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66,
-	0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3c, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x36, 0x12, 0x34, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x62, 0x65, 0x66, 0x6f,
-	0x72, 0x65, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x42, 0x9c, 0x01, 0x0a, 0x10, 0x63, 0x6f,
+	0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74,
+	0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x3c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x12, 0x34, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f,
+	0x62, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64,
+	0x7d, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xbc, 0x01,
+	0x0a, 0x14, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x43, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3d, 0x12,
+	0x3b, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67,
+	0x65, 0x74, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x5f, 0x62, 0x79, 0x5f,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x7d,
+	0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xd2, 0x01, 0x0a,
+	0x1c, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44,
+	0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x36, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74,
+	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x62, 0x79, 0x5f, 0x73, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x2f, 0x7b, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x7d, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12,
+	0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65,
+	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x37, 0x12, 0x35, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x2f, 0x7b,
+	0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x7d, 0x42, 0x9c, 0x01, 0x0a, 0x10, 0x63, 0x6f,
 	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0a,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69,
 	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
@@ -15219,7 +17617,7 @@ func file_layer_bridge_query_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_query_proto_rawDescData
 }
 
-var file_layer_bridge_query_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
+var file_layer_bridge_query_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
 var file_layer_bridge_query_proto_goTypes = []interface{}{
 	(*QueryParamsRequest)(nil),                           // 0: layer.bridge.QueryParamsRequest
 	(*QueryParamsResponse)(nil),                          // 1: layer.bridge.QueryParamsResponse
@@ -15238,54 +17636,62 @@ var file_layer_bridge_query_proto_goTypes = []interface{}{
 	(*QueryGetValidatorTimestampByIndexResponse)(nil),    // 14: layer.bridge.QueryGetValidatorTimestampByIndexResponse
 	(*QueryGetValsetSigsRequest)(nil),                    // 15: layer.bridge.QueryGetValsetSigsRequest
 	(*QueryGetValsetSigsResponse)(nil),                   // 16: layer.bridge.QueryGetValsetSigsResponse
-	(*QueryGetOracleAttestationsRequest)(nil),            // 17: layer.bridge.QueryGetOracleAttestationsRequest
-	(*QueryGetOracleAttestationsResponse)(nil),           // 18: layer.bridge.QueryGetOracleAttestationsResponse
-	(*QueryGetEvmAddressByValidatorAddressRequest)(nil),  // 19: layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
-	(*QueryGetEvmAddressByValidatorAddressResponse)(nil), // 20: layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
-	(*QueryGetValsetByTimestampRequest)(nil),             // 21: layer.bridge.QueryGetValsetByTimestampRequest
-	(*QueryGetValsetByTimestampResponse)(nil),            // 22: layer.bridge.QueryGetValsetByTimestampResponse
-	(*QueryGetCurrentAggregateReportRequest)(nil),        // 23: layer.bridge.QueryGetCurrentAggregateReportRequest
-	(*QueryGetCurrentAggregateReportResponse)(nil),       // 24: layer.bridge.QueryGetCurrentAggregateReportResponse
-	(*Aggregate)(nil),                                    // 25: layer.bridge.Aggregate
-	(*AggregateReporter)(nil),                            // 26: layer.bridge.AggregateReporter
-	(*QueryGetDataBeforeRequest)(nil),                    // 27: layer.bridge.QueryGetDataBeforeRequest
-	(*QueryGetDataBeforeResponse)(nil),                   // 28: layer.bridge.QueryGetDataBeforeResponse
-	(*Params)(nil),                                       // 29: layer.bridge.Params
-	(*oracle.Aggregate)(nil),                             // 30: layer.oracle.Aggregate
+	(*QueryGetEvmAddressByValidatorAddressRequest)(nil),  // 17: layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
+	(*QueryGetEvmAddressByValidatorAddressResponse)(nil), // 18: layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
+	(*QueryGetValsetByTimestampRequest)(nil),             // 19: layer.bridge.QueryGetValsetByTimestampRequest
+	(*QueryGetValsetByTimestampResponse)(nil),            // 20: layer.bridge.QueryGetValsetByTimestampResponse
+	(*QueryGetCurrentAggregateReportRequest)(nil),        // 21: layer.bridge.QueryGetCurrentAggregateReportRequest
+	(*QueryGetCurrentAggregateReportResponse)(nil),       // 22: layer.bridge.QueryGetCurrentAggregateReportResponse
+	(*Aggregate)(nil),                                    // 23: layer.bridge.Aggregate
+	(*AggregateReporter)(nil),                            // 24: layer.bridge.AggregateReporter
+	(*QueryGetDataBeforeRequest)(nil),                    // 25: layer.bridge.QueryGetDataBeforeRequest
+	(*QueryGetDataBeforeResponse)(nil),                   // 26: layer.bridge.QueryGetDataBeforeResponse
+	(*QueryGetSnapshotsByReportRequest)(nil),             // 27: layer.bridge.QueryGetSnapshotsByReportRequest
+	(*QueryGetSnapshotsByReportResponse)(nil),            // 28: layer.bridge.QueryGetSnapshotsByReportResponse
+	(*QueryGetAttestationDataBySnapshotRequest)(nil),     // 29: layer.bridge.QueryGetAttestationDataBySnapshotRequest
+	(*QueryGetAttestationDataBySnapshotResponse)(nil),    // 30: layer.bridge.QueryGetAttestationDataBySnapshotResponse
+	(*QueryGetAttestationsBySnapshotRequest)(nil),        // 31: layer.bridge.QueryGetAttestationsBySnapshotRequest
+	(*QueryGetAttestationsBySnapshotResponse)(nil),       // 32: layer.bridge.QueryGetAttestationsBySnapshotResponse
+	(*Params)(nil),           // 33: layer.bridge.Params
+	(*oracle.Aggregate)(nil), // 34: layer.oracle.Aggregate
 }
 var file_layer_bridge_query_proto_depIdxs = []int32{
-	29, // 0: layer.bridge.QueryParamsResponse.params:type_name -> layer.bridge.Params
-	6,  // 1: layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set:type_name -> layer.bridge.BridgeValidator
-	6,  // 2: layer.bridge.BridgeValidatorSet.bridge_validator_set:type_name -> layer.bridge.BridgeValidator
-	7,  // 3: layer.bridge.BridgeValidatorSetParams.bridge_validator_set:type_name -> layer.bridge.BridgeValidatorSet
-	6,  // 4: layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set:type_name -> layer.bridge.BridgeValidator
-	25, // 5: layer.bridge.QueryGetCurrentAggregateReportResponse.aggregate:type_name -> layer.bridge.Aggregate
-	26, // 6: layer.bridge.Aggregate.reporters:type_name -> layer.bridge.AggregateReporter
-	30, // 7: layer.bridge.QueryGetDataBeforeResponse.aggregate:type_name -> layer.oracle.Aggregate
+	33, // 0: layer.bridge.QueryParamsResponse.params:type_name -> layer.bridge.Params
+	6,  // 1: layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
+	6,  // 2: layer.bridge.BridgeValidatorSet.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
+	7,  // 3: layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidatorSet
+	6,  // 4: layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
+	23, // 5: layer.bridge.QueryGetCurrentAggregateReportResponse.aggregate:type_name -> layer.bridge.Aggregate
+	24, // 6: layer.bridge.Aggregate.reporters:type_name -> layer.bridge.AggregateReporter
+	34, // 7: layer.bridge.QueryGetDataBeforeResponse.aggregate:type_name -> layer.oracle.Aggregate
 	0,  // 8: layer.bridge.Query.Params:input_type -> layer.bridge.QueryParamsRequest
 	2,  // 9: layer.bridge.Query.GetEvmValidators:input_type -> layer.bridge.QueryGetEvmValidatorsRequest
 	4,  // 10: layer.bridge.Query.GetValidatorCheckpoint:input_type -> layer.bridge.QueryGetValidatorCheckpointRequest
 	11, // 11: layer.bridge.Query.GetValidatorCheckpointParams:input_type -> layer.bridge.QueryGetValidatorCheckpointParamsRequest
 	13, // 12: layer.bridge.Query.GetValidatorTimestampByIndex:input_type -> layer.bridge.QueryGetValidatorTimestampByIndexRequest
 	15, // 13: layer.bridge.Query.GetValsetSigs:input_type -> layer.bridge.QueryGetValsetSigsRequest
-	17, // 14: layer.bridge.Query.GetOracleAttestations:input_type -> layer.bridge.QueryGetOracleAttestationsRequest
-	19, // 15: layer.bridge.Query.GetEvmAddressByValidatorAddress:input_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
-	21, // 16: layer.bridge.Query.GetValsetByTimestamp:input_type -> layer.bridge.QueryGetValsetByTimestampRequest
-	23, // 17: layer.bridge.Query.GetCurrentAggregateReport:input_type -> layer.bridge.QueryGetCurrentAggregateReportRequest
-	27, // 18: layer.bridge.Query.GetDataBefore:input_type -> layer.bridge.QueryGetDataBeforeRequest
-	1,  // 19: layer.bridge.Query.Params:output_type -> layer.bridge.QueryParamsResponse
-	3,  // 20: layer.bridge.Query.GetEvmValidators:output_type -> layer.bridge.QueryGetEvmValidatorsResponse
-	5,  // 21: layer.bridge.Query.GetValidatorCheckpoint:output_type -> layer.bridge.QueryGetValidatorCheckpointResponse
-	12, // 22: layer.bridge.Query.GetValidatorCheckpointParams:output_type -> layer.bridge.QueryGetValidatorCheckpointParamsResponse
-	14, // 23: layer.bridge.Query.GetValidatorTimestampByIndex:output_type -> layer.bridge.QueryGetValidatorTimestampByIndexResponse
-	16, // 24: layer.bridge.Query.GetValsetSigs:output_type -> layer.bridge.QueryGetValsetSigsResponse
-	18, // 25: layer.bridge.Query.GetOracleAttestations:output_type -> layer.bridge.QueryGetOracleAttestationsResponse
-	20, // 26: layer.bridge.Query.GetEvmAddressByValidatorAddress:output_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
-	22, // 27: layer.bridge.Query.GetValsetByTimestamp:output_type -> layer.bridge.QueryGetValsetByTimestampResponse
-	24, // 28: layer.bridge.Query.GetCurrentAggregateReport:output_type -> layer.bridge.QueryGetCurrentAggregateReportResponse
-	28, // 29: layer.bridge.Query.GetDataBefore:output_type -> layer.bridge.QueryGetDataBeforeResponse
-	19, // [19:30] is the sub-list for method output_type
-	8,  // [8:19] is the sub-list for method input_type
+	17, // 14: layer.bridge.Query.GetEvmAddressByValidatorAddress:input_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
+	19, // 15: layer.bridge.Query.GetValsetByTimestamp:input_type -> layer.bridge.QueryGetValsetByTimestampRequest
+	21, // 16: layer.bridge.Query.GetCurrentAggregateReport:input_type -> layer.bridge.QueryGetCurrentAggregateReportRequest
+	25, // 17: layer.bridge.Query.GetDataBefore:input_type -> layer.bridge.QueryGetDataBeforeRequest
+	27, // 18: layer.bridge.Query.GetSnapshotsByReport:input_type -> layer.bridge.QueryGetSnapshotsByReportRequest
+	29, // 19: layer.bridge.Query.GetAttestationDataBySnapshot:input_type -> layer.bridge.QueryGetAttestationDataBySnapshotRequest
+	31, // 20: layer.bridge.Query.GetAttestationsBySnapshot:input_type -> layer.bridge.QueryGetAttestationsBySnapshotRequest
+	1,  // 21: layer.bridge.Query.Params:output_type -> layer.bridge.QueryParamsResponse
+	3,  // 22: layer.bridge.Query.GetEvmValidators:output_type -> layer.bridge.QueryGetEvmValidatorsResponse
+	5,  // 23: layer.bridge.Query.GetValidatorCheckpoint:output_type -> layer.bridge.QueryGetValidatorCheckpointResponse
+	12, // 24: layer.bridge.Query.GetValidatorCheckpointParams:output_type -> layer.bridge.QueryGetValidatorCheckpointParamsResponse
+	14, // 25: layer.bridge.Query.GetValidatorTimestampByIndex:output_type -> layer.bridge.QueryGetValidatorTimestampByIndexResponse
+	16, // 26: layer.bridge.Query.GetValsetSigs:output_type -> layer.bridge.QueryGetValsetSigsResponse
+	18, // 27: layer.bridge.Query.GetEvmAddressByValidatorAddress:output_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
+	20, // 28: layer.bridge.Query.GetValsetByTimestamp:output_type -> layer.bridge.QueryGetValsetByTimestampResponse
+	22, // 29: layer.bridge.Query.GetCurrentAggregateReport:output_type -> layer.bridge.QueryGetCurrentAggregateReportResponse
+	26, // 30: layer.bridge.Query.GetDataBefore:output_type -> layer.bridge.QueryGetDataBeforeResponse
+	28, // 31: layer.bridge.Query.GetSnapshotsByReport:output_type -> layer.bridge.QueryGetSnapshotsByReportResponse
+	30, // 32: layer.bridge.Query.GetAttestationDataBySnapshot:output_type -> layer.bridge.QueryGetAttestationDataBySnapshotResponse
+	32, // 33: layer.bridge.Query.GetAttestationsBySnapshot:output_type -> layer.bridge.QueryGetAttestationsBySnapshotResponse
+	21, // [21:34] is the sub-list for method output_type
+	8,  // [8:21] is the sub-list for method input_type
 	8,  // [8:8] is the sub-list for extension type_name
 	8,  // [8:8] is the sub-list for extension extendee
 	0,  // [0:8] is the sub-list for field type_name
@@ -15503,30 +17909,6 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetOracleAttestationsRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_bridge_query_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetOracleAttestationsResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_bridge_query_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetEvmAddressByValidatorAddressRequest); i {
 			case 0:
 				return &v.state
@@ -15538,7 +17920,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetEvmAddressByValidatorAddressResponse); i {
 			case 0:
 				return &v.state
@@ -15550,7 +17932,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetValsetByTimestampRequest); i {
 			case 0:
 				return &v.state
@@ -15562,7 +17944,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetValsetByTimestampResponse); i {
 			case 0:
 				return &v.state
@@ -15574,7 +17956,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetCurrentAggregateReportRequest); i {
 			case 0:
 				return &v.state
@@ -15586,7 +17968,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetCurrentAggregateReportResponse); i {
 			case 0:
 				return &v.state
@@ -15598,7 +17980,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Aggregate); i {
 			case 0:
 				return &v.state
@@ -15610,7 +17992,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AggregateReporter); i {
 			case 0:
 				return &v.state
@@ -15622,7 +18004,7 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetDataBeforeRequest); i {
 			case 0:
 				return &v.state
@@ -15634,8 +18016,80 @@ func file_layer_bridge_query_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_query_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_query_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetDataBeforeResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetSnapshotsByReportRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetSnapshotsByReportResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetAttestationDataBySnapshotRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetAttestationDataBySnapshotResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetAttestationsBySnapshotRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetAttestationsBySnapshotResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15653,7 +18107,7 @@ func file_layer_bridge_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   29,
+			NumMessages:   33,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

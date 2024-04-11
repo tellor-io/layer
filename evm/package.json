@@ -23,5 +23,11 @@
     "hardhat-gas-reporter": "^1.0.4",
     "web3": "^4.2.2"
   },
-  "mocha": {}
+  "mocha": {},
+  "dependencies": {
+    "@cosmjs/proto-signing": "^0.32.3",
+    "@cosmjs/stargate": "^0.32.3",
+    "google-protobuf": "^3.21.2",
+    "protoc-gen-grpc-web": "^1.4.2"
+  }
 }

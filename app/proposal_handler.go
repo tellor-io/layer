@@ -34,9 +34,8 @@ type ValsetSignatures struct {
 
 type OracleAttestations struct {
 	OperatorAddresses []string `json:"operator_addresses"`
-	Attestations      []string `json:"attestations"`
-	QueryIds          [][]byte `json:"query_ids"`
-	Timestamps        []int64  `json:"timestamps"`
+	Attestations      [][]byte `json:"attestations"`
+	Snapshots         [][]byte `json:"snapshots"`
 }
 
 type VoteExtTx struct {
@@ -103,7 +102,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 			Signatures:        valsetSignatures,
 		}
 
-		oracleSigs, oracleQueryIds, oracleOperatorAddresses, oracleTimestamps, err := h.CheckOracleAttestationsFromLastCommit(ctx, req.LocalLastCommit)
+		oracleSigs, oracleSnapshots, oracleOperatorAddresses, err := h.CheckOracleAttestationsFromLastCommit(ctx, req.LocalLastCommit)
 		if err != nil {
 			h.logger.Info("failed to check oracle attestations from last commit", "error", err)
 		}
@@ -111,8 +110,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		oracleAttestations := OracleAttestations{
 			OperatorAddresses: oracleOperatorAddresses,
 			Attestations:      oracleSigs,
-			QueryIds:          oracleQueryIds,
-			Timestamps:        oracleTimestamps,
+			Snapshots:         oracleSnapshots,
 		}
 
 		injectedVoteExtTx := VoteExtTx{
@@ -171,10 +169,9 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 
 		if len(injectedVoteExtTx.OracleAttestations.OperatorAddresses) > 0 {
 			for i, operatorAddress := range injectedVoteExtTx.OracleAttestations.OperatorAddresses {
-				queryId := injectedVoteExtTx.OracleAttestations.QueryIds[i]
+				snapshot := injectedVoteExtTx.OracleAttestations.Snapshots[i]
 				attestation := injectedVoteExtTx.OracleAttestations.Attestations[i]
-				timestamp := injectedVoteExtTx.OracleAttestations.Timestamps[i]
-				err := h.bridgeKeeper.SetOracleAttestation(ctx, operatorAddress, queryId, uint64(timestamp), attestation)
+				err := h.bridgeKeeper.SetOracleAttestation(ctx, operatorAddress, snapshot, attestation)
 				if err != nil {
 					return nil, err
 				}
@@ -199,10 +196,9 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		}
 
 		// check for initial sig
-		if len(voteExt.InitialSignature.Signature) > 0 {
+		if len(voteExt.InitialSignature.SignatureA) > 0 {
 			// verify initial sig
-			sigHexString := hex.EncodeToString(voteExt.InitialSignature.Signature)
-			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignature(ctx, sigHexString)
+			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB)
 			if err != nil {
 				h.logger.Error("failed to get evm address from initial sig", "error", err)
 				return nil, nil, err
@@ -215,7 +211,7 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 			}
 
 			operatorAddresses = append(operatorAddresses, operatorAddress)
-			evmAddresses = append(evmAddresses, evmAddress)
+			evmAddresses = append(evmAddresses, evmAddress.Hex())
 		}
 	}
 
@@ -263,7 +259,6 @@ func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, c
 
 func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses []string, evmAddresses []string) error {
 	for i, operatorAddress := range operatorAddresses {
-		h.logger.Info("SetEVMAddressByOperator", "operatorAddress", operatorAddress, "evmAddress", evmAddresses[i])
 		err := h.bridgeKeeper.SetEVMAddressByOperator(ctx, operatorAddress, evmAddresses[i])
 		if err != nil {
 			h.logger.Error("failed to set evm address by operator", "error", err)
@@ -285,11 +280,10 @@ func (h *ProposalHandler) ValidatorOperatorAddressFromVote(ctx sdk.Context, vote
 	return operatorAddress, nil
 }
 
-func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, [][]byte, []string, []int64, error) {
-	var attestations []string
-	var timestamps []int64
+func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([][]byte, [][]byte, []string, error) {
+	var attestations [][]byte
 	var operatorAddresses []string
-	var queryIds [][]byte
+	var snapshots [][]byte
 
 	for _, vote := range commit.Votes {
 		extension := vote.GetVoteExtension()
@@ -298,7 +292,7 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 		err := json.Unmarshal(extension, &voteExt)
 		if err != nil {
 			h.logger.Error("failed to unmarshal vote extension", "error", err)
-			return nil, nil, nil, nil, errors.New("failed to unmarshal vote extension")
+			return nil, nil, nil, errors.New("failed to unmarshal vote extension")
 		}
 
 		// check for oracle attestation
@@ -308,20 +302,17 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 				operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
 				if err != nil {
 					h.logger.Error("failed to get operator address from vote", "error", err)
-					return nil, nil, nil, nil, err
+					return nil, nil, nil, err
 				}
-				h.logger.Info("Operator address from oracle attestation", "operatorAddress", operatorAddress)
 
 				operatorAddresses = append(operatorAddresses, operatorAddress)
 
-				queryId := attestation.QueryId
-				queryIds = append(queryIds, queryId)
+				snapshot := attestation.Snapshot
+				snapshots = append(snapshots, snapshot)
 
-				attestations = append(attestations, hex.EncodeToString(attestation.Attestation))
-				timestamps = append(timestamps, int64(attestation.Timestamp))
-				h.logger.Info("Oracle attestation added to proposal", "queryId", queryId, "attestation", hex.EncodeToString(attestation.Attestation), "timestamp", attestation.Timestamp)
+				attestations = append(attestations, attestation.Attestation)
 			}
 		}
 	}
-	return attestations, queryIds, operatorAddresses, timestamps, nil
+	return attestations, snapshots, operatorAddresses, nil
 }

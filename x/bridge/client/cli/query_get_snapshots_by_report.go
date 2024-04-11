@@ -6,16 +6,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
 var _ = strconv.Itoa(0)
 
-func CmdGetOracleAttestations() *cobra.Command {
+func CmdGetSnapshotsByReport() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-oracle-attestations [queryId] [timestamp]",
-		Short: "Query get-oracle-attestations",
+		Use:   "get-snapshots-by-report [queryId] [timestamp]",
+		Short: "Query get-snapshots-by-report",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 
@@ -25,22 +24,13 @@ func CmdGetOracleAttestations() *cobra.Command {
 			}
 
 			queryId := args[0]
-
-			timestamp, err := strconv.ParseInt(args[1], 10, 64)
-			if err != nil {
-				return err
-			}
+			timestamp := args[1]
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			qIdBz, err := utils.QueryBytesFromString(queryId)
-			if err != nil {
-				return err
-			}
+			params := &types.QueryGetSnapshotsByReportRequest{QueryId: queryId, Timestamp: timestamp}
 
-			params := &types.QueryGetOracleAttestationsRequest{QueryId: qIdBz, Timestamp: timestamp}
-
-			res, err := queryClient.GetOracleAttestations(cmd.Context(), params)
+			res, err := queryClient.GetSnapshotsByReport(cmd.Context(), params)
 			if err != nil {
 				return err
 			}

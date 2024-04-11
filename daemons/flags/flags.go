@@ -1,6 +1,9 @@
 package flags
 
 import (
+	"os"
+	"strings"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -56,6 +59,11 @@ var defaultDaemonFlags *DaemonFlags
 // GetDefaultDaemonFlags returns the default values for the Daemon Flags using a singleton pattern.
 func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
+		accountName := GetKeyName()
+		if accountName == "" {
+			accountName = "alice"
+		}
+
 		defaultDaemonFlags = &DaemonFlags{
 			Shared: SharedFlags{
 				SocketAddress:               "/tmp/daemons.sock",
@@ -69,7 +77,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Reporter: ReporterFlags{
 				Enabled: true,
 				// Account `alice` was initialized during `ignite chain serve`
-				AccountName: "alice",
+				AccountName: GetKeyName(),
 			},
 		}
 	}
@@ -165,4 +173,16 @@ func GetDaemonFlagValuesFromOptions(
 	}
 
 	return result
+}
+
+func GetKeyName() string {
+	globalHome := os.ExpandEnv("$HOME/.layer")
+	homeDir := os.Getenv("LAYERD_NODE_HOME")
+
+	if strings.HasPrefix(homeDir, globalHome+"/") {
+
+		name := strings.TrimPrefix(homeDir, globalHome+"/")
+		return name
+	}
+	return ""
 }

@@ -249,3 +249,29 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 	timestamp = time.Unix(mostRecentTimestamp, 0)
 	return mostRecent, timestamp, nil
 }
+
+func (k Keeper) GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error) {
+	timestampUnix := timestamp.Unix()
+
+	// Create a range that specifically targets the exact timestamp
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartInclusive(timestampUnix).EndInclusive(timestampUnix)
+
+	// Walk through the aggregates to find the one that exactly matches the timestamp
+	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		if key.K2() == timestampUnix {
+			aggregate = &value
+			return true, nil // Stop when the exact match is found
+		}
+		return false, nil // Continue if this is not the exact match
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if aggregate == nil {
+		return nil, fmt.Errorf("no aggregate report found at timestamp %v for query id %s", timestamp, hex.EncodeToString(queryId))
+	}
+
+	return aggregate, nil
+}

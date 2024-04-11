@@ -15,6 +15,9 @@ NODE2_HOME_DIR="$HOME/.layer/bill"
 NODE1_CONFIG_DIR=$NODE1_HOME_DIR"/config"
 NODE2_CONFIG_DIR=$NODE2_HOME_DIR"/config"
 
+# Define bill's node home dir to be read by reporter daemon
+export LAYERD_NODE_HOME=$NODE2_HOME_DIR
+
 # Copy the configuration files from node 1 to node 2
 echo "Copying configuration files..."
 cp $NODE1_CONFIG_DIR/genesis.json $NODE2_CONFIG_DIR/
@@ -61,13 +64,6 @@ sed -i '' "s/persistent_peers = \"\"/persistent_peers = \"$PEER_ADDR\"/" $NODE2_
 
 echo "Seeds/persistent_peers set."
 
-
-# send tokens from alice to bill:
-# echo "Sending tokens from alice to bill..."
-# ./layerd tx bank send $(./layerd keys show alice -a --keyring-backend test) $(layerd keys show bill -a --keyring-backend test) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer --keyring-backend test
-# ./layerd tx bank send $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 1000000000000loya --chain-id layer --home $HOME/.layer/alice --keyring-dir $HOME/.layer/alice --keyring-backend $KEYRING_BACKEND
-
-
 # get bill's validator pubkey
 echo "Getting bill's validator pubkey..."
 BILL_VAL_PUBKEY=$(./layerd tendermint show-validator --home $NODE2_HOME_DIR)
@@ -104,5 +100,4 @@ echo "Staking bill as a validator..."
 # Start the second node
 echo "Starting the second node..."
 ./layerd start --home $NODE2_HOME_DIR --api.enable
-
 
