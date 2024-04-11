@@ -26,7 +26,7 @@ services:
     #   - kms-alice
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME="/root/.layer/val-alice"
+      - LAYERD_NODE_HOME=/root/.layer/val-alice
     networks:
       #- net-alice-kms
       - net-alice
@@ -38,7 +38,7 @@ services:
     container_name: sentry-alice
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME="/root/.layer/sentry-alice"
+      - LAYERD_NODE_HOME=/root/.layer/sentry-alice
     networks:
       - net-alice
       - net-public
@@ -50,7 +50,7 @@ services:
     container_name: val-bob
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME="/root/.layer/val-bob"
+      - LAYERD_NODE_HOME=/root/.layer/val-bob
     networks:
       - net-bob
     volumes:
@@ -61,7 +61,7 @@ services:
     container_name: sentry-bob
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME="/root/.layer/sentry-bob"
+      - LAYERD_NODE_HOME=/root/.layer/sentry-bob
     networks:
       - net-bob
       - net-public
@@ -73,7 +73,7 @@ services:
     container_name: node-carol
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME="/root/.layer/node-carol"
+      - LAYERD_NODE_HOME=/root/.layer/node-carol
     networks:
       - net-public
     ports:
