@@ -282,8 +282,9 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 
 func (c *Client) GetNodeHomeDir() string {
 	globalHome := os.ExpandEnv("$HOME/.layer")
+	c.logger.Info("GlobalHome", "GlobalHome", globalHome)
 	nodeHome := os.Getenv("LAYERD_NODE_HOME")
-
+	c.logger.Info("NodeHome", "NodeHome", nodeHome)
 	if strings.HasPrefix(nodeHome, globalHome+"/") {
 		return nodeHome
 	}

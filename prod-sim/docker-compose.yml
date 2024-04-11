@@ -1,0 +1,82 @@
+version: "3.7"
+
+networks:
+  #net-alice-kms:
+  net-alice:
+  net-bob:
+  net-public:
+
+services:
+
+  # kms-alice:
+  #   command: start --config /root/tmkms/tmkms.toml -v
+  #   container_name: kms-alice
+  #   image: tmkms_i:v0.12.2
+  #   environment:
+  #     - LAYERD_NODE_HOME="/root/.layer"
+  #   networks:
+  #     - net-alice-kms
+  #   volumes:
+  #     - ./kms-alice:/root/tmkms
+
+  val-alice:
+    command: start --api.enable --api.swagger
+    container_name: val-alice
+    # depends_on:
+    #   - kms-alice
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME="/root/.layer/val-alice"
+    networks:
+      #- net-alice-kms
+      - net-alice
+    volumes:
+      - ./val-alice:/root/.layer
+
+  sentry-alice:
+    command: start --api.enable --api.swagger --price-daemon-enabled=false
+    container_name: sentry-alice
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME="/root/.layer/sentry-alice"
+    networks:
+      - net-alice
+      - net-public
+    volumes:
+      - ./sentry-alice:/root/.layer
+
+  val-bob:
+    command: start --api.enable --api.swagger
+    container_name: val-bob
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME="/root/.layer/val-bob"
+    networks:
+      - net-bob
+    volumes:
+      - ./val-bob:/root/.layer
+
+  sentry-bob:
+    command: start --api.enable --api.swagger --price-daemon-enabled=false
+    container_name: sentry-bob
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME="/root/.layer/sentry-bob"
+    networks:
+      - net-bob
+      - net-public
+    volumes:
+      - ./sentry-bob:/root/.layer
+
+  node-carol:
+    command: start --api.enable --api.swagger --price-daemon-enabled=false
+    container_name: node-carol
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME="/root/.layer/node-carol"
+    networks:
+      - net-public
+    ports:
+      - 0.0.0.0:26657:26657
+    volumes:
+      - ./node-carol:/root/.layer
