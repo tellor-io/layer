@@ -37,6 +37,7 @@ type (
 		Params                       collections.Item[types.Params]
 		BridgeValset                 collections.Item[types.BridgeValidatorSet]
 		ValidatorCheckpoint          collections.Item[types.ValidatorCheckpoint]
+		WithdrawalId                 collections.Item[uint64]
 		OperatorToEVMAddressMap      collections.Map[string, types.EVMAddress]
 		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
@@ -52,6 +53,7 @@ type (
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
 		oracleKeeper   types.OracleKeeper
+		bankKeeper     types.BankKeeper
 	}
 )
 
@@ -61,6 +63,7 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
 	oracleKeeper types.OracleKeeper,
+	bankKeeper types.BankKeeper,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
@@ -69,6 +72,7 @@ func NewKeeper(
 		Params:                       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		BridgeValset:                 collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		WithdrawalId:                 collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[uint64](cdc)),
 		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
 		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
@@ -84,6 +88,7 @@ func NewKeeper(
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		oracleKeeper:   oracleKeeper,
+		bankKeeper:     bankKeeper,
 	}
 
 	schema, err := sb.Build()

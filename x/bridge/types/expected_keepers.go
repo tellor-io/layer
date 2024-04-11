@@ -29,6 +29,8 @@ type AccountKeeper interface {
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amts sdk.Coins) error
+	BurnCoins(ctx context.Context, moduleName string, amts sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
 
@@ -39,4 +41,5 @@ type OracleKeeper interface {
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate
+	SetAggregate(ctx context.Context, report *oracletypes.Aggregate) error
 }

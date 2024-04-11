@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error)
+	WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, opts ...grpc.CallOption) (*MsgWithdrawTokensResponse, error)
 }
 
 type msgClient struct {
@@ -38,11 +39,21 @@ func (c *msgClient) RequestAttestations(ctx context.Context, in *MsgRequestAttes
 	return out, nil
 }
 
+func (c *msgClient) WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, opts ...grpc.CallOption) (*MsgWithdrawTokensResponse, error) {
+	out := new(MsgWithdrawTokensResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/WithdrawTokens", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error)
+	WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -52,6 +63,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestAttestations not implemented")
+}
+func (UnimplementedMsgServer) WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTokens not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -84,6 +98,24 @@ func _Msg_RequestAttestations_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawTokens)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/WithdrawTokens",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawTokens(ctx, req.(*MsgWithdrawTokens))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +126,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RequestAttestations",
 			Handler:    _Msg_RequestAttestations_Handler,
+		},
+		{
+			MethodName: "WithdrawTokens",
+			Handler:    _Msg_WithdrawTokens_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
