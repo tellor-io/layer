@@ -256,7 +256,7 @@ getAttestationDataBySnapshot = async (snapshot) => {
         previousTimestamp: attestationDataReturned.previousReportTimestamp,
         nextTimestamp: attestationDataReturned.nextReportTimestamp
       },
-      attestTimestamp: attestationDataReturned.attestationTimestamp
+      attestationTimestamp: attestationDataReturned.attestationTimestamp
     }
     return attestationData
   } catch (error) {

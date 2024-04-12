@@ -14,7 +14,7 @@ interface IERC20 {
 contract TokenBridge is UsingTellor {
     IERC20 public token;
     uint256 public depositId;
-    uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
+    uint256 public constant MAX_ATTESTATION_AGE = 24 hours;
     uint256 public constant DEPOSIT_LIMIT_PERCENTAGE = 20e18; // 20% of total supply on layer
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
     uint256 public depositLimitUpdateTime;
@@ -44,14 +44,31 @@ contract TokenBridge is UsingTellor {
         Signature[] calldata _sigs,
         uint256 _depositId
     ) external {
-        require(_attest.queryId == keccak256(abi.encode("TRBBridge", abi.encode(_depositId, false))), "TokenBridge: invalid queryId");
+        require(_attest.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
-        require(_attest.attestationTimestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
+        require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
         require(isAnyConsensusValue(_attest, _valset, _sigs, MAX_ATTESTATION_AGE), "TokenBridge: invalid attestation");
         withdrawalClaimed[_depositId] = true;    
-        (address _recipient, string memory _layerSender,uint256 _amount) = abi.decode(_attest.report.value, (address, string, uint256));
-        require(token.transfer(_recipient, _amount), "TokenBridge: transfer failed");
-        emit Withdrawal(_depositId, _layerSender, _recipient, _amount);
+        (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attest.report.value, (address, string, uint256));
+        uint256 _amountConverted = _amountLoya * 1e12; 
+        require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        emit Withdrawal(_depositId, _layerSender, _recipient, _amountConverted);
+    }
+
+    function testAttest(OracleAttestationData calldata _attest) external pure returns (OracleAttestationData memory) {
+        return _attest;
+    }
+
+    function testValset(Validator[] calldata _valset) external pure returns (Validator[] memory) {
+        return _valset;
+    }
+
+    function testSigs(Signature[] calldata _sigs) external pure returns (Signature[] memory) {
+        return _sigs;
+    }
+
+    function testDepositId(uint256 _depositId) external pure returns (uint256) {
+        return _depositId;
     }
 
     function _depositLimit() internal returns (uint256) {
