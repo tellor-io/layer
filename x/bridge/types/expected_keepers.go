@@ -4,6 +4,7 @@ import (
 	context "context"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -14,6 +15,7 @@ type StakingKeeper interface {
 	GetValidators(ctx context.Context, maxRetrieve uint32) ([]stakingtypes.Validator, error)
 	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	GetValidator(ctx context.Context, addr sdk.ValAddress) (stakingtypes.Validator, error)
+	TotalBondedTokens(ctx context.Context) (math.Int, error)
 }
 
 type SlashingKeeper interface {

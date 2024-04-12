@@ -179,6 +179,7 @@ var (
 		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 		oraclemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		disputemoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		bridgemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		reportermoduletypes.ModuleName:     nil,
 		reportermoduletypes.TipsEscrowPool: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms

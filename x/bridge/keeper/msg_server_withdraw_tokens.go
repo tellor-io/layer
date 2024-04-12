@@ -11,9 +11,7 @@ import (
 )
 
 func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawTokens) (*types.MsgWithdrawTokensResponse, error) {
-	k.Logger(goCtx).Info("@WithdrawTokens msgserver", "creator", msg.Creator, "recipient", msg.Recipient, "amount", msg.Amount)
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
-
 	if msg.Amount.Denom != layer.BondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
@@ -26,6 +24,5 @@ func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawT
 	if err := k.withdrawTokens(sdkCtx, msg.Amount, sender, recipient); err != nil {
 		return nil, err
 	}
-
 	return &types.MsgWithdrawTokensResponse{}, nil
 }
