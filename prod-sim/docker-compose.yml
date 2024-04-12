@@ -1,82 +1,93 @@
 version: "3.7"
 
 networks:
-  #net-alice-kms:
+  net-alice-kms:
+  net-bob-kms:
   net-alice:
   net-bob:
   net-public:
 
 services:
 
-  # kms-alice:
-  #   command: start --config /root/tmkms/tmkms.toml -v
-  #   container_name: kms-alice
-  #   image: tmkms_i:v0.12.2
-  #   environment:
-  #     - LAYERD_NODE_HOME="/root/.layer"
-  #   networks:
-  #     - net-alice-kms
-  #   volumes:
-  #     - ./kms-alice:/root/tmkms
+  kmsAlice:
+    command: start --config /root/tmkms_alice/tmkms.toml -v
+    container_name: kmsAlice
+    image: tmkms_alice
+    networks:
+      - net-alice-kms
+    volumes:
+      - ./kmsAlice:/root/tmkms_alice
 
-  val-alice:
-    command: start --api.enable --api.swagger
-    container_name: val-alice
-    # depends_on:
-    #   - kms-alice
+  kmsBob:
+    command: start --config /root/tmkms_bob/tmkms.toml -v
+    container_name: kmsBob
+    image: tmkms_bob
+    networks:
+      - net-bob-kms
+    volumes:
+      - ./kmsBob:/root/tmkms_bob   
+
+  valAlice:
+    command: start --api.enable --api.swagger --home /root/.layer/valAlice
+    container_name: valAlice
+    depends_on:
+      - kmsAlice
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME=/root/.layer/val-alice
+      - LAYERD_NODE_HOME=/root/.layer/valAlice
     networks:
-      #- net-alice-kms
+      - net-alice-kms
       - net-alice
     volumes:
-      - ./val-alice:/root/.layer
+      - ./valAlice:/root/.layer/valAlice
 
-  sentry-alice:
-    command: start --api.enable --api.swagger --price-daemon-enabled=false
-    container_name: sentry-alice
+  sentryAlice:
+    command: start --api.enable --api.swagger --home /root/.layer/sentryAlice --price-daemon-enabled=false
+    container_name: sentryAlice
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME=/root/.layer/sentry-alice
+      - LAYERD_NODE_HOME=/root/.layer/sentryAlice
     networks:
       - net-alice
       - net-public
     volumes:
-      - ./sentry-alice:/root/.layer
+      - ./sentryAlice:/root/.layer/sentryAlice
 
-  val-bob:
-    command: start --api.enable --api.swagger
-    container_name: val-bob
+  valBob:
+    command: start --api.enable --api.swagger --home /root/.layer/valBob
+    container_name: valBob
     image: layerd_i
+    depends_on:
+      - kmsBob
     environment:
-      - LAYERD_NODE_HOME=/root/.layer/val-bob
+      - LAYERD_NODE_HOME=/root/.layer/valBob
     networks:
+      - net-bob-kms
       - net-bob
     volumes:
-      - ./val-bob:/root/.layer
+      - ./valBob:/root/.layer/valBob
 
-  sentry-bob:
-    command: start --api.enable --api.swagger --price-daemon-enabled=false
-    container_name: sentry-bob
+  sentryBob:
+    command: start --api.enable --api.swagger --home /root/.layer/sentryBob --price-daemon-enabled=false
+    container_name: sentryBob
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME=/root/.layer/sentry-bob
+      - LAYERD_NODE_HOME=/root/.layer/sentryBob
     networks:
       - net-bob
       - net-public
     volumes:
-      - ./sentry-bob:/root/.layer
+      - ./sentryBob:/root/.layer/sentryBob
 
-  node-carol:
-    command: start --api.enable --api.swagger --price-daemon-enabled=false
-    container_name: node-carol
+  nodeCarol:
+    command: start --api.enable --api.swagger --home /root/.layer/nodeCarol --price-daemon-enabled=false
+    container_name: nodeCarol
     image: layerd_i
     environment:
-      - LAYERD_NODE_HOME=/root/.layer/node-carol
+      - LAYERD_NODE_HOME=/root/.layer/nodeCarol
     networks:
       - net-public
     ports:
       - 0.0.0.0:26657:26657
     volumes:
-      - ./node-carol:/root/.layer
+      - ./nodeCarol:/root/.layer/nodeCarol

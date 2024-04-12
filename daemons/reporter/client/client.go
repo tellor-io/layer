@@ -108,9 +108,16 @@ func (c *Client) Start(
 	} else {
 		panic("homeDir is empty")
 	}
+	c.logger.Info("GetKeyCallContext", "GetKeyCallContext", c.cosmosCtx)
+	c.logger.Info("GetKeyCallAccountName", "GetKeyCallAccountName", accountName)
+	add, err := sdk.AccAddressFromBech32(accountName)
+	if err != nil {
+		c.logger.Info("ErrorInAddress", "ErrorInAddress", err)
+	}
+	c.logger.Info("ResultFromNameToAddress", "ResultFromNameToAddress", add)
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
-		panic(fmt.Errorf("error getting address from keyring: %v", err))
+		panic(fmt.Errorf("error getting address from keyring: %v : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
 	} else {
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
