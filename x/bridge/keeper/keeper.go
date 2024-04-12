@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -795,12 +796,12 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	// set snapshot by report
 	key := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix())))
 	attestationSnapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, key)
-	if err != nil && err != collections.ErrNotFound {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		k.Logger(ctx).Info("Error getting attestation snapshots by report", "error", err)
 		return err
 	}
 
-	if err == collections.ErrNotFound {
+	if errors.Is(err, collections.ErrNotFound) {
 		attestationSnapshots = types.NewAttestationSnapshots()
 	}
 
@@ -845,12 +846,12 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	blockHeight := uint64(ctx.BlockHeight())
 
 	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, blockHeight)
-	if err != nil && err != collections.ErrNotFound {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
 	}
 
-	if err == collections.ErrNotFound {
+	if errors.Is(err, collections.ErrNotFound) {
 		attestRequests = types.AttestationRequests{}
 	}
 
