@@ -62,5 +62,13 @@ sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/alice/co
 # update for main dir as well. why is this needed?
 sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/client.toml
 
+
+# Modify keyring-backend in client.toml for alice
+echo "Modifying keyring-backend in client.toml for alice..."
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/alice/config/client.toml
+# update for main dir as well. why is this needed?
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/client.toml
+
+
 echo "Starting chain for alice..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger
