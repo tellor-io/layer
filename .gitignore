@@ -10,3 +10,5 @@ evm/artifacts
 evm/cache
 evm/node_modules
 evm/package-lock.json
+prod-sim/
+build/
