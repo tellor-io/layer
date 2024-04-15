@@ -276,8 +276,8 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	// define keyring backend and the path to the keystore dir
-	//krBackend := keyring.BackendTest
-	krBackend := keyring.BackendOS
+	krBackend := keyring.BackendTest
+	//krBackend := keyring.BackendOS
 	keyName := h.GetKeyName()
 	if keyName == "" {
 		return nil, fmt.Errorf("key name not found")
@@ -334,8 +334,7 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	if keyName == "" {
 		return "", fmt.Errorf("key name not found")
 	}
-	//krBackend := keyring.BackendTest
-	krBackend := keyring.BackendOS
+	krBackend := keyring.BackendTest
 	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
 
 	userInput := os.Stdin
