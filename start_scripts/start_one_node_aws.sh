@@ -111,11 +111,11 @@ echo "Setting external address to connect to for aws instance"
 sed -i 's/^external_address = ""/external_address = "54.166.101.67:26656"/g' ~/.layer/alice/config/config.toml
 sed -i 's/^external_address = ""/external_address = "54.166.101.67:26656"/g' ~/.layer/config/config.toml 
 
-# # Modify keyring-backend in client.toml for alice
-# echo "Modifying keyring-backend in client.toml for alice..."
-# sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
-# # update for main dir as well. why is this needed?
-# sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
+# Modify keyring-backend in client.toml for alice
+echo "Modifying keyring-backend in client.toml for alice..."
+sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
+# update for main dir as well. why is this needed?
+sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger
