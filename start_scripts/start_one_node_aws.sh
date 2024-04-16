@@ -49,33 +49,33 @@ echo "Collecting gentxs..."
 
 # Modify timeout_commit in config.toml for alice
 echo "Modifying timeout_commit in config.toml for alice..."
-sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/alice/config/config.toml
+sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/alice/config/config.toml
 
 
 # Modify cors to accept *
 echo "Modify cors to accept *"
-sed -i '' 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' ~/.layer/alice/config/config.toml
-sed -i '' 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' ~/.layer/config/config.toml
+sed -i 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' ~/.layer/alice/config/config.toml
+sed -i 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' ~/.layer/config/config.toml
 
 
 # enable unsafe cors
 echo "Enable unsafe cors"
-sed -i '' 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' ~/.layer/alice/config/app.toml
-sed -i '' 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/alice/config/app.toml
+sed -i 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' ~/.layer/alice/config/app.toml
+sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/alice/config/app.toml
 
-sed -i '' 's/^enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.layer/config/app.toml
-sed -i '' 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/config/app.toml
+sed -i 's/^enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.layer/config/app.toml
+sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/config/app.toml
 
 # set the external address for which to connect to
 echo "Setting external address to connect to for aws instance"
-sed -i '' 's/^external_address = ""/external_address = "52.201.190.14:26656"/g' ~/.layer/alice/config/config.toml
-sed -i '' 's/^external_address = ""/external_address = "52.201.190.14:26656"/g' ~/.layer/config/config.toml 
+sed -i 's/^external_address = ""/external_address = "52.201.190.14:26656"/g' ~/.layer/alice/config/config.toml
+sed -i 's/^external_address = ""/external_address = "52.201.190.14:26656"/g' ~/.layer/config/config.toml 
 
 # Modify keyring-backend in client.toml for alice
 echo "Modifying keyring-backend in client.toml for alice..."
-sed -i '' 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
+sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
 # update for main dir as well. why is this needed?
-sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
+sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger
