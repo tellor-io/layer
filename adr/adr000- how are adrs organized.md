@@ -1,5 +1,4 @@
 # ADR 000: How are ADR's organized
-
 ## Authors
 
 @brendaloya
@@ -14,9 +13,9 @@ ADR's capture the discussion behind several architecture and design decision for
 
 ADRs key:
 
-001-999: ADRs are a catch all for other architecture design discussions (may create further categories as these expand)
-1000s: ADRs relating to tokens (delegation, rewards, tips, usage of staked tokens, voting, fees, etc...)
-2000s: ADRs relaging to bridge functionality (bridge, vote extenstion, validators, etc...) 
+* 001-999: ADRs covering other architecture design discussions that don't include tokenomics or the bridge (may create further categories as these expand)
+* 1000s: ADRs relating to tokenomics (delegation, rewards, tips, usage of staked tokens, voting, fees, etc...)
+* 2000s: ADRs relating to bridging data (bridge, vote extenstion, validators, etc...) 
 
 
 
