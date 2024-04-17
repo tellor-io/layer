@@ -55,22 +55,6 @@ contract TokenBridge is UsingTellor {
         emit Withdrawal(_depositId, _layerSender, _recipient, _amountConverted);
     }
 
-    function testAttest(OracleAttestationData calldata _attest) external pure returns (OracleAttestationData memory) {
-        return _attest;
-    }
-
-    function testValset(Validator[] calldata _valset) external pure returns (Validator[] memory) {
-        return _valset;
-    }
-
-    function testSigs(Signature[] calldata _sigs) external pure returns (Signature[] memory) {
-        return _sigs;
-    }
-
-    function testDepositId(uint256 _depositId) external pure returns (uint256) {
-        return _depositId;
-    }
-
     function _depositLimit() internal returns (uint256) {
         uint256 _layerTokenSupply = token.balanceOf(address(this)); // TODO: update this, add initial supply if needed
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {

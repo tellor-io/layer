@@ -6,7 +6,7 @@ clear
 # Stop execution if any command fails
 set -e
 
-KEYRING_BACKEND="os"
+KEYRING_BACKEND="test"
 PASSWORD="password"
 
 export LAYERD_NODE_HOME="$HOME/.layer/alice"
@@ -47,19 +47,25 @@ echo "Creating gentx for alice..."
 echo "Collecting gentxs..."
 ./layerd genesis collect-gentxs --home ~/.layer/alice
 
-# Export alice key from os backend and import to test backend
-echo "Exporting alice key..."
-echo $PASSWORD | ./layerd keys export alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice > ~/Desktop/alice_keyfile
-echo "Importing alice key to test backend..."
-echo $PASSWORD | ./layerd keys import alice ~/Desktop/alice_keyfile --keyring-backend test --home ~/.layer/alice
+# # Export alice key from os backend and import to test backend
+# echo "Exporting alice key..."
+# echo $PASSWORD | ./layerd keys export alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice > ~/Desktop/alice_keyfile
+# echo "Importing alice key to test backend..."
+# echo $PASSWORD | ./layerd keys import alice ~/Desktop/alice_keyfile --keyring-backend test --home ~/.layer/alice
 
-# Delete the keyfiles
-echo "Deleting keyfiles..."
-rm ~/Desktop/alice_keyfile
+# # Delete the keyfiles
+# echo "Deleting keyfiles..."
+# rm ~/Desktop/alice_keyfile
 
 # Modify timeout_commit in config.toml for alice
 echo "Modifying timeout_commit in config.toml for alice..."
-sed -i '' 's/timeout_commit = "5s"/timeout_commit = "500ms"/' ~/.layer/alice/config/config.toml
+sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/alice/config/config.toml
+
+# Modify keyring-backend in client.toml for alice
+echo "Modifying keyring-backend in client.toml for alice..."
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/alice/config/client.toml
+# update for main dir as well. why is this needed?
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger

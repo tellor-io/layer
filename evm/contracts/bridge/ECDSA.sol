@@ -3,8 +3,6 @@
 
 pragma solidity ^0.8.20;
 
-import "hardhat/console.sol";
-
 /**
  * @dev Elliptic Curve Digital Signature Algorithm (ECDSA) operations.
  *
