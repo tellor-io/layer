@@ -51,6 +51,9 @@ echo "Collecting gentxs..."
 echo "Modifying timeout_commit in config.toml for alice..."
 sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/alice/config/config.toml
 
+sed -Ei 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' ~/.layer/alice/config/config.toml
+sed -Ei 's/^laddr = "tcp:\/\/127.0.0.1:26656"/laddr = "tcp:\/\/0.0.0.0:26656"/g' ~/.layer/alice/config/config.toml
+
 
 # Modify cors to accept *
 echo "Modify cors to accept *"
@@ -67,9 +70,9 @@ sed -i 's/^enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.layer/co
 sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/config/app.toml
 
 # set the external address for which to connect to
-echo "Setting external address to connect to for aws instance"
-sed -i 's/^external_address = ""/external_address = "52.201.190.14:26656"/g' ~/.layer/alice/config/config.toml
-sed -i 's/^external_address = ""/external_address = "52.201.190.14:26656"/g' ~/.layer/config/config.toml 
+# echo "Setting external address to connect to for aws instance"
+# sed -i 's/^external_address = ""/external_address = "18.215.40.125:26656"/g' ~/.layer/alice/config/config.toml
+# sed -i 's/^external_address = ""/external_address = "18.215.40.125:26656"/g' ~/.layer/config/config.toml 
 
 # Modify keyring-backend in client.toml for alice
 echo "Modifying keyring-backend in client.toml for alice..."
