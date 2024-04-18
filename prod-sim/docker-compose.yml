@@ -39,7 +39,7 @@ services:
       #- net-alice-kms
       - net-alice
     volumes:
-      - ./valAlice:/root/.layer/valAlice
+      - ./valAlice:/root/.layer
 
   sentryAlice:
     command: start --api.enable --api.swagger --home /root/.layer/sentryAlice --price-daemon-enabled=false
@@ -51,7 +51,7 @@ services:
       - net-alice
       - net-public
     volumes:
-      - ./sentryAlice:/root/.layer/sentryAlice
+      - ./sentryAlice:/root/.layer
 
   valBob:
     command: start --api.enable --api.swagger --home /root/.layer/valBob
@@ -65,7 +65,7 @@ services:
       #- net-bob-kms
       - net-bob
     volumes:
-      - ./valBob:/root/.layer/valBob
+      - ./valBob:/root/.layer
 
   sentryBob:
     command: start --api.enable --api.swagger --home /root/.layer/sentryBob --price-daemon-enabled=false
@@ -77,7 +77,7 @@ services:
       - net-bob
       - net-public
     volumes:
-      - ./sentryBob:/root/.layer/sentryBob
+      - ./sentryBob:/root/.layer
 
   nodeCarol:
     command: start --api.enable --api.swagger --home /root/.layer/nodeCarol --price-daemon-enabled=false
@@ -90,4 +90,4 @@ services:
     ports:
       - 0.0.0.0:26657:26657
     volumes:
-      - ./nodeCarol:/root/.layer/nodeCarol
+      - ./nodeCarol:/root/.layer

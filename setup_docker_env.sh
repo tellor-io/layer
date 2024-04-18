@@ -9,8 +9,8 @@ PASSWORD=password
 echo "Clean up any existing docker images or containers"
 docker-compose -p layer-test down -v || true
 docker image rm -f layerd_i || true
-docker image rm -f tmkms_alice || true
-docker image rm -f tmkms_bob || true
+# docker image rm -f tmkms_alice || true
+# docker image rm -f tmkms_bob || true
 
 echo "Remove the old prod-sim files"
 for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob kmsBob kmsAlice; do
@@ -20,10 +20,10 @@ done
 
 
 
-rm -r -f build
+# rm -r -f build
 
-echo "Build with checksum using Makefile.."
-make build-with-checksum
+# echo "Build with checksum using Makefile.."
+# make build-with-checksum
 
 #mv ./prod-sim/Dockerfile_tmkms ./prod-sim/Dockerfil_tmkms.txt
 
@@ -44,15 +44,14 @@ docker build -f prod-sim/Dockerfile_layerd_alpine . -t layerd_i
 
 # initialize the chain in all containers
 echo "initialize the chain in all containers"
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     layerd_i \
     init layer --chain-id layer
 done
 
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
-    echo $MONIKER
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     layerd_i \
@@ -62,20 +61,20 @@ done
 # sets the denom to trb with a small unit of loya in the genesis file
 echo "sets the denom to trb with a small unit of loya in the genesis file"
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/"stake"/"loya"/g' /root/.layer/config/genesis.json
 
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
-    -i 's/"stake"/"loya"/g' /root/.layer/deskAlice/config/genesis.json
+    -i 's/"stake"/"loya"/g' /root/.layer/valAlice/config/genesis.json
 
 # setup the config files to have a denom of trb and loya as the smallest unit
 echo "setup the config files to have a denom of trb and loya as the smallest unit"
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
@@ -83,7 +82,7 @@ for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; d
     -Ei 's/([0-9]+)stake/\1loya/g' /root/.layer/$name/config/app.toml
 done
 
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
@@ -93,7 +92,7 @@ done
 
 #init the client.toml to have the chainId of layer
 echo "init the client.toml to have the chainId of layer"
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
@@ -102,7 +101,7 @@ for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; d
     /root/.layer/$name/config/client.toml
 done
 
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
@@ -113,7 +112,7 @@ done
 
 #init the client.toml to have the KeyringBackend of variable
 echo "init the client.toml to have the keyring-backend to env variable"
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
@@ -122,7 +121,7 @@ for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; d
     /root/.layer/$name/config/client.toml
 done
 
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
@@ -134,15 +133,11 @@ done
 # create validator key on alice desktop
 echo "create validator key on alice desktop"
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
     keys \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskAlice \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     add valAlice
-
-# move password used in key creation to file (DO NOT DO THIS IN PROD)
-echo "move password used in key creation to file DO NOT DO THIS IN PROD"
-echo -n password > prod-sim/deskAlice/deskAlice/passphrase.txt
 
 # echo "Initiliaze a kms image for alice"
 # docker run --rm -it \
@@ -266,15 +261,15 @@ echo -n password > prod-sim/deskAlice/deskAlice/passphrase.txt
 # create validator key on bob desktop
 echo "create validator key on bob desktop"
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskBob:/root/.layer/deskBob \
+    -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
     keys \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskBob   \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob   \
     add valBob
 
 # move password used in key creation to file (DO NOT DO THIS IN PROD)
-echo "move password used in key creation to file DO NOT DO THIS IN PROD"
-echo -n password > prod-sim/deskBob/deskBob/passphrase.txt
+# echo "move password used in key creation to file DO NOT DO THIS IN PROD"
+# echo -n password > prod-sim/deskBob/deskBob/passphrase.txt
 
 # echo "Initiliaze a kms image for bob"
 # docker run --rm -it \
@@ -392,14 +387,14 @@ echo -n password > prod-sim/deskBob/deskBob/passphrase.txt
 # set chain id in genesis file on alice desktop
 echo "set chain id in genesis file on Alice desktop"
 docker run --rm -i \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' \
-    /root/.layer/deskAlice/config/genesis.json
+    /root/.layer/valAlice/config/genesis.json
 
 docker run --rm -i \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' \
@@ -409,68 +404,72 @@ docker run --rm -i \
 #Get the address returned from the keyring on alice desktop
 echo "Set the address returned from the keyring on alice desktop"
 ALICE=$(echo $PASSWORD | docker run --rm -i \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
     keys \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskAlice \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     show valAlice --address)
 echo $ALICE
 
 # give loya to alice
 echo "give loya to alice..."
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskAlice \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     genesis add-genesis-account $ALICE 10000000000000loya 
 
 # Update vote_extensions_enable_height in genesis.json
 echo "Updating vote_extensions_enable_height in genesis.json..."
 echo "Alice..."
-jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/deskAlice/config/genesis.json > temp.json && mv temp.json prod-sim/deskAlice/config/genesis.json
-jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/deskAlice/deskAlice/config/genesis.json > temp.json && mv temp.json prod-sim/deskAlice/deskAlice/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/valAlice/config/genesis.json > temp.json && mv temp.json prod-sim/valAlice/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/valAlice/valAlice/config/genesis.json > temp.json && mv temp.json prod-sim/valAlice/valAlice/config/genesis.json
+
+echo "Bob...."
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/valBob/config/genesis.json > temp.json && mv temp.json prod-sim/valBob/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/valBob/valBob/config/genesis.json > temp.json && mv temp.json prod-sim/valBob/valBob/config/genesis.json
 
 #move genesis file from alice to bob desktop
 echo "move genesis file from alice to bob desktop"
-mv prod-sim/deskAlice/config/genesis.json \
-    prod-sim/deskBob/config/
+mv prod-sim/valAlice/config/genesis.json \
+    prod-sim/valBob/config/
 
-mv prod-sim/deskAlice/deskAlice/config/genesis.json \
-    prod-sim/deskBob/deskBob/config/
+mv prod-sim/valAlice/valAlice/config/genesis.json \
+    prod-sim/valBob/valBob/config/
 
 # Gets Bobs address from his desktop to be used to send loya to him
 echo "Gets Bobs address from his desktop to be used to send loya to him"
 BOB=$(echo $PASSWORD | docker run --rm -i \
-    -v $(pwd)/prod-sim/deskBob:/root/.layer/deskBob \
+    -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
     keys \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskBob \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob \
     show valBob --address)
 echo $BOB
 
 #send loya to bobs account
 echo "send loya to bobs account"
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskBob:/root/.layer \
+    -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskBob \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob \
     genesis add-genesis-account $BOB 10000000000000loya 
 
 # Copy validator keys from val nodes to bob and alice desktop
-echo "Copy validator keys from val nodes to bob and alice desktop"
-cp prod-sim/valAlice/config/priv_validator_key.json \
-    prod-sim/deskAlice/config/priv_validator_key.json
+# echo "Copy validator keys from val nodes to bob and alice desktop"
+# cp prod-sim/valAlice/config/priv_validator_key.json \
+#     prod-sim/valAlice/config/priv_validator_key.json
 
-cp prod-sim/valBob/config/priv_validator_key.json \
-    prod-sim/deskBob/config/priv_validator_key.json
+# cp prod-sim/valBob/config/priv_validator_key.json \
+#     prod-sim/deskBob/config/priv_validator_key.json
 
 # Create gentx transaction for Bob to stake loya as validator
 echo "Create gentx transaction for Bob to stake loya as validator..."
 echo $PASSWORD | docker run --rm -i \
-    -v $(pwd)/prod-sim/deskBob:/root/.layer/deskBob \
+    -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
     genesis gentx valBob 1000000000000loya \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskBob \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob \
     --chain-id layer 
     # --account-number 0 --sequence 0 \
     # --gas 1000000 \
@@ -478,16 +477,18 @@ echo $PASSWORD | docker run --rm -i \
 
 # move genesis file from bob to alice so that alice knows about bob
 echo "move genesis file from bob to alice so that alice knows about bob"
-mv prod-sim/deskBob/config/genesis.json \
-    prod-sim/deskAlice/config/genesis.json
+mv prod-sim/valBob/config/genesis.json \
+    prod-sim/valAlice/config/genesis.json
+mv prod-sim/valBob/valBob/config/genesis.json \
+    prod-sim/valAlice/valAlice/config/genesis.json
 
 # create gentx tx for alice to stake loya as validator
 echo "create gentx tx for alice to stake loya as validator..."
 echo $PASSWORD | docker run --rm -i \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer/deskAlice \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
     genesis gentx valAlice 1000000000000loya \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskAlice \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     --chain-id layer 
     # --account-number 0 --sequence 0 \
     # --gas 1000000 \
@@ -495,38 +496,35 @@ echo $PASSWORD | docker run --rm -i \
 
 # copy over gentx transaction so that alice has both the gentx transactions then verify
 echo "copy over gentx transaction so that alice has both the gentx transactions then verify"
-cp prod-sim/deskBob/config/gentx/gentx-* \
-    prod-sim/deskAlice/config/gentx
+cp prod-sim/valBob/config/gentx/gentx-* \
+    prod-sim/valAlice/config/gentx
 
-cp prod-sim/deskBob/deskBob/config/gentx/gentx-* \
-    prod-sim/deskAlice/deskAlice/config/gentx
+cp prod-sim/valBob/valBob/config/gentx/gentx-* \
+    prod-sim/valAlice/valAlice/config/gentx
 
 echo "Collection gentxs in desk alice"
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
-    genesis collect-gentxs --home /root/.layer/deskAlice
+    genesis collect-gentxs --home /root/.layer/valAlice
 
 # validate genesis file
 echo "validate genesis file..."
 docker run --rm -it \
-    -v $(pwd)/prod-sim/deskAlice:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
-    genesis validate-genesis --home /root/.layer/deskAlice
+    genesis validate-genesis --home /root/.layer/valAlice
 
 # ensure all nodes have the same genesis file
 echo "ensure all nodes have the same genesis file...."
-for name in deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
-    cp prod-sim/deskAlice/config/genesis.json prod-sim/$name/config/genesis.json
-done
-
-for name in deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
-    cp prod-sim/deskAlice/deskAlice/config/genesis.json prod-sim/$name/$name/config/genesis.json
+for name in nodeCarol sentryAlice sentryBob valBob; do
+    cp prod-sim/valAlice/config/genesis.json prod-sim/$name/config/genesis.json
+    cp prod-sim/valAlice/valAlice/config/genesis.json prod-sim/$name/$name/config/genesis.json
 done
 
 # Get node info to be used in config values of other nodes
 ALICE_VAL_NODE_ID=$(docker run --rm -i \
-    -v $(pwd)/prod-sim/valAlice:/root/.layer/valAlice \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
     --home /root/.layer/valAlice \
     comet show-node-id)
@@ -535,7 +533,7 @@ ALICE_IDENTIFIER=$ALICE_VAL_NODE_ID@valAlice:26656
 echo $ALICE_IDENTIFIER
 
 ALICE_SENTRY_NODE_ID=$(docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryAlice:/root/.layer/sentryAlice \
+    -v $(pwd)/prod-sim/sentryAlice:/root/.layer \
     layerd_i \
     --home /root/.layer/sentryAlice \
     comet show-node-id)
@@ -544,7 +542,7 @@ ALICE_SENTRY_IDENTIFIER=$ALICE_SENTRY_NODE_ID@sentryAlice:26656
 echo $ALICE_SENTRY_IDENTIFIER
 
 BOB_VAL_NODE_ID=$(docker run --rm -i \
-    -v $(pwd)/prod-sim/valBob:/root/.layer/valBob \
+    -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
     --home /root/.layer/valBob \
     comet show-node-id)
@@ -553,7 +551,7 @@ BOB_IDENTIFIER=$BOB_VAL_NODE_ID@valBob:26656
 echo $BOB_IDENTIFIER
 
 BOB_SENTRY_NODE_ID=$(docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryBob:/root/.layer/sentryBob \
+    -v $(pwd)/prod-sim/sentryBob:/root/.layer \
     layerd_i \
     --home /root/.layer/sentryBob \
     comet show-node-id)
@@ -563,7 +561,7 @@ echo $BOB_SENTRY_IDENTIFIER
 
 
 CAROL_NODE_ID=$(docker run --rm -i \
-    -v $(pwd)/prod-sim/nodeCarol:/root/.layer/nodeCarol \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
     layerd_i \
     --home /root/.layer/nodeCarol \
     comet show-node-id)
@@ -578,19 +576,19 @@ CAROL_NODE_SEEDS=$ALICE_SENTRY_IDENTIFIER,$BOB_SENTRY_IDENTIFIER
 #Update sentryAlice config.toml file
 echo "Update sentryAlice config.toml file..."
 docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryAlice:/root/.layer/sentryAlice \
+    -v $(pwd)/prod-sim/sentryAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^persistent_peers = ""/persistent_peers = "'$ALICE_IDENTIFIER'"/g' /root/.layer/sentryAlice/config/config.toml
 
 docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryAlice:/root/.layer/sentryAlice \
+    -v $(pwd)/prod-sim/sentryAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^seeds = ""/seeds = "'$ALICE_SENTRY_SEEDS'"/g' /root/.layer/sentryAlice/config/config.toml
 
 docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryAlice:/root/.layer/sentryAlice \
+    -v $(pwd)/prod-sim/sentryAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^private_peer_ids = ""/private_peer_ids = "'$ALICE_VAL_NODE_ID'"/g' /root/.layer/sentryAlice/config/config.toml
@@ -599,19 +597,19 @@ docker run --rm -i \
 # Update sentryBob config.toml file
 echo "Update sentryBob config.toml file"
 docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryBob:/root/.layer/sentryBob \
+    -v $(pwd)/prod-sim/sentryBob:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^persistent_peers = ""/persistent_peers = "'$BOB_IDENTIFIER'"/g' /root/.layer/sentryBob/config/config.toml
 
 docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryBob:/root/.layer/sentryBob \
+    -v $(pwd)/prod-sim/sentryBob:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^seeds = ""/seeds = "'$BOB_SENTRY_SEEDS'"/g' /root/.layer/sentryBob/config/config.toml
 
 docker run --rm -i \
-    -v $(pwd)/prod-sim/sentryBob:/root/.layer/sentryBob \
+    -v $(pwd)/prod-sim/sentryBob:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^private_peer_ids = ""/private_peer_ids = "'$BOB_VAL_NODE_ID'"/g' /root/.layer/sentryBob/config/config.toml
@@ -619,7 +617,7 @@ docker run --rm -i \
 # Update valAlice config.toml file
 echo "Update valAlice config.toml file..."
 docker run --rm -i \
-    -v $(pwd)/prod-sim/valAlice:/root/.layer/valAlice \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^persistent_peers = ""/persistent_peers = "'$ALICE_SENTRY_IDENTIFIER'"/g' /root/.layer/valAlice/config/config.toml
@@ -627,7 +625,7 @@ docker run --rm -i \
 #Update valBob config.toml file
 echo "Update valBob config.toml file..."
 docker run --rm -i \
-    -v $(pwd)/prod-sim/valBob:/root/.layer/valBob \
+    -v $(pwd)/prod-sim/valBob:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^persistent_peers = ""/persistent_peers = "'$BOB_SENTRY_IDENTIFIER'"/g' /root/.layer/valBob/config/config.toml
@@ -635,7 +633,7 @@ docker run --rm -i \
 #Update nodeCarol config.toml file
 echo "Update nodeCarol config.toml file.."
 docker run --rm -i \
-    -v $(pwd)/prod-sim/nodeCarol:/root/.layer/nodeCarol \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -i 's/^seeds = ""/seeds = "'$CAROL_NODE_SEEDS'"/g' /root/.layer/nodeCarol/config/config.toml
@@ -643,7 +641,7 @@ docker run --rm -i \
 #Update cors_allowed_origin
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
-    -v $(pwd)/prod-sim/$name:/root/.layer/$name \
+    -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -Ei 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' \
@@ -653,7 +651,7 @@ done
 #Update enabled-unsafe-cors to true
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
-    -v $(pwd)/prod-sim/$name:/root/.layer/$name \
+    -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -Ei 's/^enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' \
@@ -662,7 +660,7 @@ done
 
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
-    -v $(pwd)/prod-sim/$name:/root/.layer/$name \
+    -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
     layerd_i \
     -Ei 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' \
@@ -671,12 +669,21 @@ done
 
 # set timeout_commit or block time to 500ms
 echo "Modifying timeout_commit in config.toml for alice..."
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
-    -v $(pwd)/prod-sim/$name:/root/.layer/$name \
+    -v $(pwd)/prod-sim/$name:/root/.layer \
     --entrypoint sed \
     layerd_i \
-    -Ei 's/timeout_commit = "5s"/timeout_commit = "500ms"/' /root/.layer/$name/config/config.toml
+    -Ei 's/timeout_commit = "5s"/timeout_commit = "1s"/' /root/.layer/$name/config/config.toml
+done
+
+echo "Modifying timeout commit in root for all containers"
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
+    docker run --rm -i \
+    -v $(pwd)/prod-sim/$name:/root/.layer \
+    --entrypoint sed \
+    layerd_i \
+    -Ei 's/timeout_commit = "5s"/timeout_commit = "1s"/' /root/.layer/config/config.toml
 done
 
 # rm ./prod-sim/valAlice/config/priv_validator_key.json
@@ -724,12 +731,12 @@ done
 #     --keyring-backend test --home /root/.layer/deskBob \
 #     import valBob /root/.layer/deskBob/bob_keyfile
 
-cp -r ./prod-sim/deskAlice/keyring-test/ ./prod-sim/valAlice/keyring-test/
-cp -r ./prod-sim/deskBob/keyring-test/ ./prod-sim/valBob/keyring-test/
-cp ./prod-sim/deskAlice/passphrase.txt ./prod-sim/valAlice/
-cp ./prod-sim/deskBob/passphrase.txt ./prod-sim/valBob/
+# cp -r ./prod-sim/valAlice/keyring-test/ ./prod-sim/valAlice/keyring-test/
+# cp -r ./prod-sim/deskBob/keyring-test/ ./prod-sim/valBob/keyring-test/
+# cp ./prod-sim/valAlice/passphrase.txt ./prod-sim/valAlice/
+# cp ./prod-sim/deskBob/passphrase.txt ./prod-sim/valBob/
 
-sleep 10
+sleep 5
 
 echo "Starting the chain in all containers..."
 docker compose \
