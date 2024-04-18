@@ -1,4 +1,4 @@
-# ADR 2006: TellorMaster(TRB token contract) to token bridge structure
+# ADR 3001: TellorMaster(TRB token contract) to token bridge structure
 
 ## Authors
 
@@ -11,7 +11,7 @@
 
 ## Context
 
-TellorMaster (oracle mints) => Token Bridge => OracleLightClient(proxy) => OracleLightClient(implemtation)
+TellorMaster (oracle mints) => Token Bridge => OracleLightClient(proxy) => OracleLightClient(implementation)
 <br>
 TellorMaster (team mints) => VotingContract => Team's Safe
 
@@ -20,7 +20,7 @@ The tellor master contract is the tellor token contract on mainnet Ethereum.  It
 
 Voting Contract - we will deploy a separate contract that will be a pass through for team minting.  The reason we need this is to ensure that we can still vote in governance disputes on Ethereum mainnet. 
 
-Bridge Contract - the bridge contract will be non-upgradeable.  This is a one-time gotta get it right scenario (or we'll have to hard fork).  Tokens will be sent to the bridge and layer will read token balances and mint them on layer for reporting/validation purposes.  Parties can unlock tokens from the bridge, but that will be done through the standard tellor light client bridge, that the bridge will read.  The bridge contract will also pass through reports to the current oracle contract on mainnet (for all current users (Liquity)).  The only difference is that reports to the "oracle contract" address will be disabled, thus locking the minting address from ever changing again.  
+Token Bridge Contract - the token bridge contract will be non-upgradeable.  This is a one-time gotta get it right scenario (or we'll have to hard fork).  Tokens will be sent to the bridge and layer will read token balances and mint them on layer for reporting/validation purposes.  Parties can unlock tokens from the bridge, but that will be done through the standard tellor light client bridge, that the bridge will read.  The bridge contract will also pass through reports to the current oracle contract on mainnet (for all current users (Liquity)).  The only difference is that reports to the "oracle contract" address will be disabled, thus locking the minting address from ever changing again.  
 
 OracleLightClient - all light clients on each chain will be proxies. The reason for this is that they are upgradeable through layer itself (governance votes can update in the case of a breaking hard fork).  Additionally, we have mechanisms in place to fork the implementation contract in the case of a hard fork (e.g. push it to a chain multisig, social layer, or worst case voting contract to determine validity of the chain).  This is so that even if the layer breaks, we can still fork users to the better version (a huge benefit of being an L1). 
 
