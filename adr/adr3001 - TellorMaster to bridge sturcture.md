@@ -2,7 +2,7 @@
 
 ## Authors
 
-@themandalore
+@themandalore @brendaloya
 
 ## Changelog
 
