@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/hex"
+	"fmt"
+
 	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 )
 
@@ -21,7 +24,16 @@ func main() {
 	// 	return
 	// }
 
-	client.QueryDepositEvents()
+	client.QueryBridgeDeposits()
+	pendingReport, err := client.GetPendingBridgeDeposit()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("Pending Report:")
+	fmt.Println("queryData: ", hex.EncodeToString(pendingReport.QueryData))
+	fmt.Println("value: ", pendingReport.Value)
+	// not needed
 
 	// fmt.Println(result)
 }

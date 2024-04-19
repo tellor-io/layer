@@ -139,7 +139,7 @@ func (k Keeper) getWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 }
 
 func (k Keeper) getWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress, recipient []byte) ([]byte, error) {
-	// replicate solidity encoding, abi.encode(address recipient, string sender, uint256 amount)
+	// replicate solidity encoding, abi.encode(address ethRecipient, string layerSender, uint256 amount)
 
 	// convert recipient to common.Address
 	ethAddress := common.BytesToAddress(recipient)

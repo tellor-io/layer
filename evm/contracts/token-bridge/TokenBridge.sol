@@ -20,6 +20,13 @@ contract TokenBridge is UsingTellor {
     uint256 public depositLimitUpdateTime;
     uint256 public currentDepositLimit;
     mapping(uint256 => bool) public withdrawalClaimed;
+    mapping(uint256 => DepositDetails) public deposits;
+
+    struct DepositDetails {
+        address sender;
+        string recipient;
+        uint256 amount;
+    }
 
     event Deposit(uint256 depositId, address sender, string recipient, uint256 amount);
     event Withdrawal(uint256 depositId, string sender, address recipient, uint256 amount);
@@ -35,6 +42,7 @@ contract TokenBridge is UsingTellor {
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
         currentDepositLimit -= _amount;
+        deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount);
         emit Deposit(depositId, msg.sender, _layerRecipient, _amount);
     }
 
