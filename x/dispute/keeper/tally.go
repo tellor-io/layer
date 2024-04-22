@@ -171,11 +171,7 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) error {
 func (k Keeper) SetTally(ctx sdk.Context, voterAcc sdk.AccAddress, ballot types.VoteEnum, vote types.Vote) error {
 	tallies := vote.Tally
 	voter := voterAcc.String()
-	// check if voter is reporter then check if voter is delegated to reporter
-	// voter could be reporter or a delegated address to a reporter
-	// if reporter uses entire balance but if delegated then reduce reporter vote power and add delegated vote power
-	// how to handle if delegated address votes before the reporter? when delegator votes, check if they are delegated to reporter if so
-	// store that info and when reporter votes check if any one delegated to them has voted
+
 	valP, err := k.GetReporterPower(ctx, voter)
 	if err != nil {
 		return err
@@ -192,7 +188,6 @@ func (k Keeper) SetTally(ctx sdk.Context, voterAcc sdk.AccAddress, ballot types.
 
 	voterPower := math.ZeroInt()
 	tp, err := k.GetTotalReporterPower(ctx)
-
 	if err != nil {
 		return err
 	}
