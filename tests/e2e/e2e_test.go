@@ -956,11 +956,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	disputes, err := s.disputekeeper.GetOpenDisputeIds(s.ctx)
+	disputes, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
-	dispute, err := s.disputekeeper.GetDisputeById(s.ctx, 1)
+	dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 1)
 	require.NoError(err)
 	require.Equal(dispute.DisputeId, uint64(1))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
@@ -1107,7 +1107,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, true)
 	// dispute is created correctly
 	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	dispute = s.disputekeeper.GetDisputeByReporter(s.ctx, report, disputetypes.Minor)
+	dispute, err = s.disputekeeper.GetDisputeByReporter(s.ctx, report, disputetypes.Minor)
+	require.NoError(err)
 	require.Equal(dispute.DisputeCategory, disputetypes.Minor)
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
@@ -1125,7 +1126,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(voteResponse)
 
 	// vote is properly stored
-	vote, err := s.disputekeeper.GetVote(s.ctx, dispute.DisputeId)
+	vote, err := s.disputekeeper.Votes.Get(s.ctx, dispute.DisputeId)
 	require.NoError(err)
 	require.NotNil(vote)
 	require.Equal(vote.Executed, false)
@@ -1159,7 +1160,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	// vote is executed
-	vote, err = s.disputekeeper.GetVote(s.ctx, dispute.DisputeId)
+	vote, err = s.disputekeeper.Votes.Get(s.ctx, dispute.DisputeId)
 	require.NoError(err)
 	require.NotNil(vote)
 	require.Equal(vote.Executed, true)
@@ -1170,7 +1171,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, false)
 
 	// get open disputes
-	disputes, err = s.disputekeeper.GetOpenDisputeIds(s.ctx)
+	disputes, err = s.disputekeeper.OpenDisputes.Get(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// fmt.Println("disputes: ", disputes)
@@ -1267,7 +1268,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.GreaterOrEqual(msgProposeDispute.Fee.Amount.Uint64(), fee.Uint64())
 
 	// dispute is created and open for voting
-	dispute = s.disputekeeper.GetDisputeByReporter(s.ctx, report, disputetypes.Major)
+	dispute, err = s.disputekeeper.GetDisputeByReporter(s.ctx, report, disputetypes.Major)
+	require.NoError(err)
 	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeStartTime, disputeStartTime)
@@ -1297,7 +1299,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(voteResponse)
 
 	// vote is properly stored
-	vote, err = s.disputekeeper.GetVote(s.ctx, dispute.DisputeId)
+	vote, err = s.disputekeeper.Votes.Get(s.ctx, dispute.DisputeId)
 	require.NoError(err)
 	require.NotNil(vote)
 	require.Equal(vote.Executed, false)
