@@ -52,6 +52,7 @@ import (
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	// _ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -226,7 +227,7 @@ func (s *E2ETestSuite) SetupTest() {
 	s.app = app
 }
 
-func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.AccAddress, []sdk.ValAddress) {
+func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.AccAddress, []sdk.ValAddress, []stakingtypes.Validator) {
 	require := s.Require()
 	// create account that will become a validator
 	accountsAddrs := simtestutil.CreateIncrementalAccounts(numValidators)
@@ -242,11 +243,13 @@ func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.
 	validatorsAddrs := simtestutil.ConvertAddrsToValAddrs(accountsAddrs)
 	// create pub keys for validators
 	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
+	validators := make([]stakingtypes.Validator, numValidators)
 	// set each account with proper keepers
 	for i, pubKey := range pubKeys {
 		s.accountKeeper.NewAccountWithAddress(s.ctx, accountsAddrs[i])
 		validator, err := stakingtypes.NewValidator(validatorsAddrs[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
 		require.NoError(err)
+		validators[i] = validator
 		s.stakingKeeper.SetValidator(s.ctx, validator)
 		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
 		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
@@ -266,7 +269,68 @@ func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.
 		require.NoError(err)
 	}
 
-	return accountsAddrs, validatorsAddrs
+	return accountsAddrs, validatorsAddrs, validators
+}
+
+func (s *E2ETestSuite) CreateReporters(numReporters int, numTrb int64, valAddrs []sdk.ValAddress) []sdk.AccAddress {
+	require := s.Require()
+
+	if numReporters < len(valAddrs) {
+		panic("numReporters must be equal to the the number of validators (not sure how else to implement yet)")
+	}
+
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	require.NotNil(msgServerReporter)
+
+	// create reporter accounts from random private keys
+	privKeys := CreateRandomPrivateKeys(numReporters)
+	accs := s.convertToAccAddress(privKeys) // sdk.AccountAddresses
+
+	// mint tokens for each account
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(numTrb*1e6))
+	for _, acc := range accs {
+		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, acc, sdk.NewCoins(initCoins)))
+	}
+
+	// prep for CreateReporter tx
+	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime()) // rate = 10%, maxRate = 30%, maxChangeRate = 10%
+
+	// CreateReporter tx
+	for i, acc := range accs {
+		// make CreateReporterMsg
+		var createReporterMsg reportertypes.MsgCreateReporter
+		createReporterMsg.Reporter = acc.String()
+		createReporterMsg.Amount = initCoins.Amount
+		createReporterMsg.Commission = &commission
+		createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{
+			{
+				ValidatorAddress: valAddrs[i].String(),
+				Amount:           initCoins.Amount,
+			},
+		}
+		// send CreateReporter Tx
+		_, err := msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
+		s.NoError(err)
+	}
+
+	// Self delegate every reporter
+	for i, acc := range accs {
+		// define delegation source
+		source := reportertypes.TokenOrigin{ValidatorAddress: valAddrs[i].String(), Amount: math.NewInt((numTrb * 1e6))}
+		delegationMsg := reportertypes.NewMsgDelegateReporter(
+			acc.String(),
+			acc.String(),
+			math.NewInt(numTrb*1e6),
+			[]*reportertypes.TokenOrigin{&source},
+		)
+		// send delegate reporter tx
+		_, err := msgServerReporter.DelegateReporter(s.ctx, delegationMsg)
+		s.NoError(err)
+	}
+
+	return accs
 }
 
 func (s *E2ETestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
