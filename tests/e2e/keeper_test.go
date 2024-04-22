@@ -43,7 +43,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/app/config"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -175,7 +175,7 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.registrykeeper, suite.reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	suite.disputekeeper = disputekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.reporterkeeper,
+		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(disputetypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.reporterkeeper,
 	)
 	suite.mintkeeper = mintkeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
@@ -496,7 +496,7 @@ func (s *E2ETestSuite) oracleKeeper() (queryClient oracletypes.QueryClient, msgS
 }
 
 func (s *E2ETestSuite) disputeKeeper() (queryClient disputetypes.QueryClient, msgServer disputetypes.MsgServer) {
-	disputetypes.RegisterQueryServer(s.queryHelper, s.disputekeeper)
+	disputetypes.RegisterQueryServer(s.queryHelper, disputekeeper.NewQuerier(s.disputekeeper))
 	disputetypes.RegisterInterfaces(s.interfaceRegistry)
 	queryClient = disputetypes.NewQueryClient(s.queryHelper)
 	msgServer = disputekeeper.NewMsgServerImpl(s.disputekeeper)

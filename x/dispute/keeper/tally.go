@@ -3,11 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math/big"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	layer "github.com/tellor-io/layer/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	reptypes "github.com/tellor-io/layer/x/reporter/types"
@@ -15,18 +14,15 @@ import (
 
 // Add invalid vote type and return all fees to the paying parties
 func (k Keeper) TallyVote(ctx sdk.Context, id uint64) error {
-	dispute, err := k.GetDisputeById(ctx, id)
+	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
-	tally, err := k.GetTally(ctx, id)
+	vote, err := k.Votes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
-	vote, err := k.GetVote(ctx, id)
-	if err != nil {
-		return err
-	}
+	tally := vote.Tally
 
 	tokenHolderVoteSum := tally.ForVotes.TokenHolders.Add(tally.AgainstVotes.TokenHolders).Add(tally.Invalid.TokenHolders)
 	validatorVoteSum := tally.ForVotes.Validators.Add(tally.AgainstVotes.Validators).Add(tally.Invalid.Validators)
@@ -145,15 +141,25 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) error {
 				if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
 					return err
 				}
-			case len(vote.Voters) == 0:
-				if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
-					return err
-				}
 			default:
-				return errors.New("no quorum majority") // TODO: log only?
+				iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
+				if err != nil {
+					return err
+				}
+				voters, err := iter.PrimaryKeys()
+				if err != nil {
+					return err
+				}
+				if len(voters) == 0 {
+					if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
+						return err
+					}
+					if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
+						return err
+					}
+					return nil
+				}
+				return errors.New("no quorum majority")
 			}
 			return nil
 		}
@@ -161,29 +167,15 @@ func (k Keeper) TallyVote(ctx sdk.Context, id uint64) error {
 	return nil
 }
 
-func (k Keeper) GetTally(ctx sdk.Context, id uint64) (*types.Tally, error) {
-	store := k.voteStore(ctx)
-	tallyBytes := store.Get(types.TallyKeyPrefix(id))
-	var tallies types.Tally
-	if err := k.cdc.Unmarshal(tallyBytes, &tallies); err != nil {
-		return nil, err
-	}
-	// for some reason the proto files don't initialize the tallies when nullable = false
-	if tallies.ForVotes == nil {
-		tallies.ForVotes = k.initVoterClasses()
-		tallies.AgainstVotes = k.initVoterClasses()
-		tallies.Invalid = k.initVoterClasses()
-	}
-
-	return &tallies, nil
-}
-
 // Set tally numbers
-func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, voter string) error {
-	tallies, err := k.GetTally(ctx, id)
-	if err != nil {
-		return err
-	}
+func (k Keeper) SetTally(ctx sdk.Context, voterAcc sdk.AccAddress, ballot types.VoteEnum, vote types.Vote) error {
+	tallies := vote.Tally
+	voter := voterAcc.String()
+	// check if voter is reporter then check if voter is delegated to reporter
+	// voter could be reporter or a delegated address to a reporter
+	// if reporter uses entire balance but if delegated then reduce reporter vote power and add delegated vote power
+	// how to handle if delegated address votes before the reporter? when delegator votes, check if they are delegated to reporter if so
+	// store that info and when reporter votes check if any one delegated to them has voted
 	valP, err := k.GetReporterPower(ctx, voter)
 	if err != nil {
 		return err
@@ -214,7 +206,7 @@ func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, vot
 	voterPower = voterPower.Add(calculateVotingPower(usrTps, totalTips))
 	voterPower = voterPower.Add(calculateVotingPower(team, math.NewInt(1)))
 
-	switch voteFor {
+	switch ballot {
 	case types.VoteEnum_VOTE_SUPPORT:
 		tallies.ForVotes.Validators = tallies.ForVotes.Validators.Add(valP)
 		tallies.ForVotes.TokenHolders = tallies.ForVotes.TokenHolders.Add(tkHol)
@@ -234,8 +226,16 @@ func (k Keeper) SetTally(ctx sdk.Context, id uint64, voteFor types.VoteEnum, vot
 		return errors.New("invalid vote type")
 	}
 
-	k.SetVoterTally(ctx, id, tallies)
-	k.SetVoterPower(ctx, sdk.MustAccAddressFromBech32(voter), voterPower)
+	if err := k.Votes.Set(ctx, vote.Id, vote); err != nil {
+		return err
+	}
+	voterVote := types.Voter{
+		Vote:       ballot,
+		VoterPower: voterPower,
+	}
+	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc), voterVote); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -259,7 +259,7 @@ func (k Keeper) GetAccountBalance(ctx sdk.Context, voter string) (math.Int, erro
 	if err != nil {
 		return math.Int{}, err
 	}
-	bal := k.bankKeeper.GetBalance(ctx, addr, layer.BondDenom)
+	bal := k.bankKeeper.GetBalance(ctx, addr, layertypes.BondDenom)
 	return bal.Amount, nil
 }
 
@@ -284,7 +284,7 @@ func (k Keeper) IsTeamAddress(ctx sdk.Context, voter string) math.Int {
 
 // Get total trb supply
 func (k Keeper) GetTotalSupply(ctx sdk.Context) math.Int {
-	return k.bankKeeper.GetSupply(ctx, layer.BondDenom).Amount
+	return k.bankKeeper.GetSupply(ctx, layertypes.BondDenom).Amount
 }
 
 // Get total reporter power
@@ -299,25 +299,6 @@ func (k Keeper) GetTotalReporterPower(ctx sdk.Context) (math.Int, error) {
 // Get total number of tips
 func (k Keeper) GetTotalTips(ctx sdk.Context) (math.Int, error) {
 	return k.oracleKeeper.GetTotalTips(ctx)
-}
-
-func (k Keeper) SetVoterTally(ctx sdk.Context, id uint64, tally *types.Tally) {
-	voteStore := k.voteStore(ctx)
-	voteStore.Set(types.TallyKeyPrefix(id), k.cdc.MustMarshal(tally))
-}
-
-func (k Keeper) SetVoterPower(ctx sdk.Context, voter sdk.AccAddress, vp math.Int) {
-	store := k.voterPowerStore(ctx)
-	store.Set(voter, vp.BigInt().Bytes())
-}
-
-func (k Keeper) GetVoterPower(ctx sdk.Context, voter sdk.AccAddress) math.Int {
-	store := k.voterPowerStore(ctx)
-	vpBytes := store.Get(voter)
-	if vpBytes == nil {
-		return math.ZeroInt()
-	}
-	return math.NewIntFromBigInt(new(big.Int).SetBytes(vpBytes))
 }
 
 func ratio(total, part math.Int) math.LegacyDec {
@@ -337,38 +318,23 @@ func calculateVotingPower(n, d math.Int) math.Int {
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
-func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []string, totalTokens math.Int) (map[string]math.Int, math.Int) {
-	// remove duplicates from voters list
-	seen := make(map[string]bool)
-	var uniqueVoters []string
-	for _, voter := range voters {
-		if !seen[voter] {
-			seen[voter] = true
-			uniqueVoters = append(uniqueVoters, voter)
-		}
-	}
+func (k Keeper) CalculateVoterShare(ctx sdk.Context, voters []VoterInfo, totalTokens math.Int) ([]VoterInfo, math.Int) {
 	totalPower := math.ZeroInt()
-	powers := make(map[string]math.Int)
-	for _, voter := range uniqueVoters {
-		voterShare := k.GetVoterPower(ctx, sdk.MustAccAddressFromBech32(voter))
-		totalPower = totalPower.Add(voterShare)
-		powers[voter] = voterShare
+	for _, voter := range voters {
+		totalPower = totalPower.Add(voter.Power)
 	}
 
-	// Calculate and allocate tokens based on each person's share of the total power
-	tokenDistribution := make(map[string]math.Int)
 	scalingFactor := layertypes.PowerReduction
 	totalShare := math.ZeroInt()
-	for voter, power := range powers {
-		share := power.Mul(scalingFactor).Quo(totalPower)
+	for i, v := range voters {
+		share := v.Power.Mul(scalingFactor).Quo(totalPower)
 		tokens := share.Mul(totalTokens).Quo(scalingFactor)
-		tokenDistribution[voter] = tokens
+		voters[i].Share = tokens
 		totalShare = totalShare.Add(tokens)
 	}
 	burnedRemainder := math.ZeroInt()
 	if totalTokens.GT(totalShare) {
 		burnedRemainder = totalTokens.Sub(totalShare)
 	}
-
-	return tokenDistribution, burnedRemainder
+	return voters, burnedRemainder
 }
