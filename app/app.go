@@ -579,10 +579,7 @@ func New(
 
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
-		keys[disputemoduletypes.StoreKey],
-		keys[disputemoduletypes.MemStoreKey],
-		paramstypes.Subspace{}, // TODO: remove this!
-
+		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.OracleKeeper,

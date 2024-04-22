@@ -54,8 +54,8 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.NoError(err)
 
 	// 2 here because dispute count starts from 1 and dispute count gives the next dispute id
-	s.Equal(uint64(2), s.disputekeeper.GetDisputeCount(s.ctx))
-	open, err := s.disputekeeper.GetOpenDisputeIds(s.ctx)
+	s.Equal(uint64(2), s.disputekeeper.NextDisputeId(s.ctx))
+	open, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
 	s.NoError(err)
 	s.Equal(1, len(open.Ids))
 
@@ -78,7 +78,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.Equal(rep.TotalTokens, stakeAmount.Sub(math.NewInt(1_000_000)))
 	s.True(rep.Jailed)
 
-	dispute, err := s.disputekeeper.GetDisputeById(s.ctx, 1)
+	dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 1)
 	s.NoError(err)
 	s.Equal(types.Voting, dispute.DisputeStatus)
 	// vote on dispute
@@ -88,13 +88,17 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	})
 	s.NoError(err)
-	vtr, err := s.disputekeeper.GetVoterVote(s.ctx, disputer.String(), 1)
+	vtr, err := s.disputekeeper.Voter.Get(s.ctx, collections.Join(uint64(1), disputer))
 	s.NoError(err)
 	s.Equal(types.VoteEnum_VOTE_SUPPORT, vtr.Vote)
-	v, err := s.disputekeeper.GetVote(s.ctx, 1)
+	v, err := s.disputekeeper.Votes.Get(s.ctx, 1)
 	s.NoError(err)
 	s.Equal(v.VoteResult, types.VoteResult_NO_TALLY)
-	s.Equal(v.Voters, []string{disputer.String()})
+	iter, err := s.disputekeeper.Voter.Indexes.VotersById.MatchExact(s.ctx, uint64(1))
+	s.NoError(err)
+	voters, err := iter.PrimaryKeys()
+	s.NoError(err)
+	s.Equal(voters[0].K2(), disputer)
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
@@ -235,12 +239,25 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.True(reporter.TotalTokens.GT(repTknBeforeExecuteVote))
 	// // dispute fee returned so balance should be the same as before paying fee
 	disputerBalanceAfterExecuteVote := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
-	v, err := s.disputekeeper.GetVote(s.ctx, 1)
+	iter, err := s.disputekeeper.Voter.Indexes.VotersById.MatchExact(s.ctx, uint64(1))
 	s.NoError(err)
-	rewards, _ := s.disputekeeper.CalculateVoterShare(s.ctx, v.Voters, burnAmount.QuoRaw(2))
-	voterReward := rewards[disputer.String()]
+	keys, err := iter.PrimaryKeys()
+	s.NoError(err)
+	voters := make([]keeper.VoterInfo, len(keys))
+	var disputerInfo keeper.VoterInfo
+	for i := range keys {
+		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
+		s.NoError(err)
+		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
+	}
+	rewards, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, burnAmount.QuoRaw(2))
+	for i := range rewards {
+		if rewards[i].Voter.String() == disputer.String() {
+			disputerInfo = rewards[i]
+		}
+	}
 	// // add dispute fee returned minus burn amount plus the voter reward
-	disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(voterReward)
+	disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(disputerInfo.Share)
 	s.Equal(disputerBalanceBeforeExecuteVote, disputerBalanceAfterExecuteVote)
 }
 
@@ -301,7 +318,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	err = s.disputekeeper.ExecuteVotes(ctx, []uint64{1})
 	s.NoError(err)
 
-	voteInfo, err := s.disputekeeper.GetVote(ctx, 1)
+	voteInfo, err := s.disputekeeper.Votes.Get(s.ctx, 1)
 	s.NoError(err)
 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, voteInfo.VoteResult)
 	rep, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
@@ -363,11 +380,11 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	ids, err := s.disputekeeper.CheckPrevoteDisputesForExpiration(s.ctx)
 	s.NoError(err)
 
-	votersBalanceBefore := []sdk.Coin{
-		s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
+	votersBalanceBefore := map[string]sdk.Coin{
+		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
+		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
+		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
 	}
 	votes := []types.MsgVote{
 		{
@@ -406,25 +423,32 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	s.True(reporterAfter.Jailed)
 	s.True(reporterAfter.TotalTokens.LT(reporter.Amount))
 
-	votersBalanceAfter := []sdk.Coin{
-		s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
+	votersBalanceAfter := map[string]sdk.Coin{
+		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
+		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
+		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
 	}
-	v, err := s.disputekeeper.GetVote(s.ctx, 1)
-	s.NoError(err)
 
-	addrs := []sdk.AccAddress{repAcc, disputer, delegators[1], delegators[2]}
-	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, v.Voters, twoPercentBurn)
-	for i := range votersBalanceBefore {
+	iter, err := s.disputekeeper.Voter.Indexes.VotersById.MatchExact(s.ctx, uint64(1))
+	s.NoError(err)
+	keys, err := iter.PrimaryKeys()
+	s.NoError(err)
+	voters := make([]keeper.VoterInfo, len(keys))
+	for i := range keys {
+		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
+		s.NoError(err)
+		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
+	}
+	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
+	for i, v := range votersReward {
 		// voterBal := votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
-		voterBal := votersBalanceBefore[i].AddAmount(votersReward[addrs[i].String()])
-		if bytes.Equal(disputer, addrs[i]) {
+		voterBal := votersBalanceBefore[v.Voter.String()].AddAmount(votersReward[i].Share)
+		if bytes.Equal(disputer, votersReward[i].Voter) {
 			// disputer gets the dispute fee they paid minus the 5% burn for a one rounder dispute
 			voterBal = voterBal.AddAmount(disputeFee.Sub(fivePercentBurn))
 		}
-		s.Equal(voterBal, votersBalanceAfter[i])
+		s.Equal(voterBal, votersBalanceAfter[v.Voter.String()])
 	}
 	disputerDelgation, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, disputer)
 	s.NoError(err)
@@ -485,14 +509,11 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
-
-	addrs := []sdk.AccAddress{repAcc, disputer, delegators[1], delegators[2]}
-
-	votersBalanceBefore := []sdk.Coin{
-		s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
+	votersBalanceBefore := map[string]sdk.Coin{
+		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
+		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
+		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
 	}
 	votes := []types.MsgVote{
 		{
@@ -530,19 +551,29 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	s.NoError(err)
 
 	s.Equal(reporterBefore.Amount.Add(disputeFeeMinusBurn), reporterAfterDispute.TotalTokens)
-
-	votersBalanceAfter := []sdk.Coin{
-		s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
-		s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
+	votersBalanceAfter := map[string]sdk.Coin{
+		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
+		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
+		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
 	}
-	v, err := s.disputekeeper.GetVote(s.ctx, 1)
+
+	iter, err := s.disputekeeper.Voter.Indexes.VotersById.MatchExact(s.ctx, uint64(1))
 	s.NoError(err)
-	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, v.Voters, twoPercentBurn)
-	for i := range votersBalanceBefore {
-		votersBalanceBefore[i].Amount = votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
-		s.Equal(votersBalanceBefore[i], (votersBalanceAfter[i]))
+	keys, err := iter.PrimaryKeys()
+	s.NoError(err)
+	voters := make([]keeper.VoterInfo, len(keys))
+	for i := range keys {
+		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
+		s.NoError(err)
+		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower, Share: math.ZeroInt()}
+	}
+	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
+
+	for _, v := range votersReward {
+		newBal := votersBalanceBefore[v.Voter.String()].Amount.Add(v.Share)
+		// votersBalanceBefore[votersReward[i].Voter.String()].Amount = votersBalanceBefore[i].Amount.Add(votersReward[i].Share)
+		s.Equal(newBal, votersBalanceAfter[v.Voter.String()].Amount)
 	}
 }
 
