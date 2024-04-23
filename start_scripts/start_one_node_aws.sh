@@ -32,8 +32,8 @@ sed -i 's/"stake"/"loya"/g' ~/.layer/alice/config/genesis.json
 sed -i 's/"stake"/"loya"/g' ~/.layer/config/genesis.json
 
 echo "Change denom to loya in config files..."
-sed -i 's/([0-9]+)stake/\1loya/g' ~/.layer/alice/config/app.toml
-sed -i 's/([0-9]+)stake/\1loya/g' ~/.layer/config/app.toml
+sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/alice/config/app.toml
+sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
 sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/alice/config/app.toml
