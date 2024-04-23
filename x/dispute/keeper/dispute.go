@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 	gomath "math"
 	"math/big"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,59 +17,31 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-// Get dispute by dispute id
-func (k Keeper) GetDisputeById(ctx sdk.Context, id uint64) (*types.Dispute, error) {
-	store := k.disputeStore(ctx)
-	bz := store.Get(types.DisputeIdBytes(id))
-	if bz == nil {
-		return nil, types.ErrDisputeDoesNotExist.Wrapf("no dispute found with id %d", id)
-	}
-	var dispute types.Dispute
-	err := k.cdc.Unmarshal(bz, &dispute)
-	if err != nil {
-		return nil, err
-	}
-	return &dispute, nil
-}
-
 // Get dispute by reporter key
-func (k Keeper) GetDisputeByReporter(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) *types.Dispute {
-	store := k.disputeStore(ctx)
+func (k Keeper) GetDisputeByReporter(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) (types.Dispute, error) {
 	key := []byte(k.ReporterKey(ctx, r, c))
-	bz := store.Get(key)
-	if bz == nil {
-		return nil
-	}
-	var dispute types.Dispute
-	k.cdc.MustUnmarshal(bz, &dispute)
-	return &dispute
-}
 
-// Get the dispute count from the store
-func (k Keeper) GetDisputeCount(ctx sdk.Context) uint64 {
-	store := k.disputeStore(ctx)
-	byteKey := types.KeyPrefix(types.DisputeCountKey)
-	bz := store.Get(byteKey)
-	// Count doesn't exist: no disputes yet
-	if bz == nil {
-		return 1
-	}
-	return binary.BigEndian.Uint64(bz)
-}
-
-// Get open dispute ids from the store
-func (k Keeper) GetOpenDisputeIds(ctx sdk.Context) (types.OpenDisputes, error) {
-	store := k.disputeStore(ctx)
-	bz := store.Get(types.OpenDisputeIdsKeyPrefix())
-	if bz == nil {
-		return types.OpenDisputes{}, nil
-	}
-	var ids types.OpenDisputes
-	err := k.cdc.Unmarshal(bz, &ids)
+	id, err := k.Disputes.Indexes.DisputeByReporter.MatchExact(ctx, key)
 	if err != nil {
-		return types.OpenDisputes{}, err
+		return types.Dispute{}, err
 	}
-	return ids, nil
+
+	return k.Disputes.Get(ctx, id)
+}
+
+// Get next dispute id
+func (k Keeper) NextDisputeId(ctx sdk.Context) uint64 {
+	rng := new(collections.Range[uint64]).EndExclusive(gomath.MaxUint64).Descending()
+	// start dispute count at 1
+	id := uint64(1)
+	err := k.Disputes.Walk(ctx, rng, func(k uint64, _ types.Dispute) (stop bool, err error) {
+		id = k + 1
+		return true, nil
+	})
+	if err != nil {
+		return 0
+	}
+	return id
 }
 
 // Generate hash id
@@ -86,41 +58,9 @@ func (k Keeper) ReporterKey(ctx sdk.Context, r oracletypes.MicroReport, c types.
 	return fmt.Sprintf("%s:%x", r.Reporter, k.HashId(ctx, r, c))
 }
 
-// Update the dispute count in the store
-func (k Keeper) SetDisputeCount(ctx sdk.Context, count uint64) {
-	store := k.disputeStore(ctx)
-	byteKey := types.KeyPrefix(types.DisputeCountKey)
-	bz := make([]byte, 8)
-	binary.BigEndian.PutUint64(bz, count)
-	store.Set(byteKey, bz)
-}
-
-// Set dispute in the store by dispute id
-func (k Keeper) SetDisputeById(ctx sdk.Context, id uint64, dispute types.Dispute) error {
-	store := k.disputeStore(ctx)
-	bz, err := k.cdc.Marshal(&dispute)
-	if err != nil {
-		return err
-	}
-	store.Set(types.DisputeIdBytes(id), bz)
-	return nil
-}
-
-// Set dispute by reporter
-func (k Keeper) SetDisputeByReporter(ctx sdk.Context, dispute types.Dispute) error {
-	store := k.disputeStore(ctx)
-	bz, err := k.cdc.Marshal(&dispute)
-	if err != nil {
-		return err
-	}
-	key := []byte(k.ReporterKey(ctx, dispute.ReportEvidence, dispute.DisputeCategory))
-	store.Set(key, bz)
-	return nil
-}
-
 // Set new dispute
 func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) error {
-	disputeId := k.GetDisputeCount(ctx)
+	disputeId := k.NextDisputeId(ctx)
 	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
 	// slash amount
 	disputeFee, err := k.GetDisputeFee(ctx, msg.Report.Reporter, msg.DisputeCategory)
@@ -202,17 +142,6 @@ func (k Keeper) jailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDu
 	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration)
 }
 
-// Store open dispute ids in the store
-func (k Keeper) SetOpenDisputeIds(ctx sdk.Context, ids types.OpenDisputes) error {
-	store := k.disputeStore(ctx)
-	bz, err := k.cdc.Marshal(&ids)
-	if err != nil {
-		return err
-	}
-	store.Set(types.OpenDisputeIdsKeyPrefix(), bz)
-	return nil
-}
-
 // Get percentage of slash amount based on category
 func (k Keeper) GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, int64, error) {
 	switch category {
@@ -284,7 +213,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 
 	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
-	disputeId := k.GetDisputeCount(ctx)
+	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId
 	dispute.DisputeStatus = types.Voting // starting voting immediately
 	dispute.DisputeStartTime = ctx.BlockTime()
@@ -313,7 +242,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 
 // remove dispute id from opendisputes after adding a new round
 func (k Keeper) removeId(ctx sdk.Context, disputeId uint64) error {
-	openDisputes, err := k.GetOpenDisputeIds(ctx)
+	openDisputes, err := k.OpenDisputes.Get(ctx)
 	if err != nil {
 		return err
 	}
@@ -321,7 +250,7 @@ func (k Keeper) removeId(ctx sdk.Context, disputeId uint64) error {
 		if id == disputeId {
 			openDisputes.Ids[i] = openDisputes.Ids[len(openDisputes.Ids)-1]
 			openDisputes.Ids = openDisputes.Ids[:len(openDisputes.Ids)-1]
-			err = k.SetOpenDisputeIds(ctx, openDisputes)
+			err = k.OpenDisputes.Set(ctx, openDisputes)
 			if err != nil {
 				return err
 			}
@@ -332,26 +261,22 @@ func (k Keeper) removeId(ctx sdk.Context, disputeId uint64) error {
 
 // Add time to dispute end time
 func (k Keeper) AddTimeToDisputeEndTime(ctx sdk.Context, id uint64, timeToAdd time.Duration) error {
-	dispute, err := k.GetDisputeById(ctx, id)
+	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 	dispute.DisputeEndTime = dispute.DisputeEndTime.Add(timeToAdd)
-	err = k.SetDisputeById(ctx, dispute.DisputeId, *dispute)
-	if err != nil {
-		return err
-	}
-	return k.SetDisputeByReporter(ctx, *dispute)
+	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
 }
 
 // Append dispute id to open dispute ids
 func (k Keeper) AppendDisputeIdToOpenDisputeIds(ctx sdk.Context, disputeId uint64) error {
-	openDisputes, err := k.GetOpenDisputeIds(ctx)
+	openDisputes, err := k.OpenDisputes.Get(ctx)
 	if err != nil {
 		return err
 	}
 	openDisputes.Ids = append(openDisputes.Ids, disputeId)
-	err = k.SetOpenDisputeIds(ctx, openDisputes)
+	err = k.OpenDisputes.Set(ctx, openDisputes)
 	if err != nil {
 		return err
 	}
@@ -363,27 +288,16 @@ func (k Keeper) SetDispute(ctx sdk.Context, dispute types.Dispute) error {
 	if err := k.AppendDisputeIdToOpenDisputeIds(ctx, dispute.DisputeId); err != nil {
 		return err
 	}
-	if err := k.SetDisputeByReporter(ctx, dispute); err != nil {
-		return err
-	}
-	if err := k.SetDisputeById(ctx, dispute.DisputeId, dispute); err != nil {
-		return err
-	}
-	k.SetDisputeCount(ctx, dispute.DisputeId+1)
-	return nil
+	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
 }
 
 // Set dispute status by dispute id
 func (k Keeper) SetDisputeStatus(ctx sdk.Context, id uint64, status types.DisputeStatus) error {
-	dispute, err := k.GetDisputeById(ctx, id)
-	if err != nil {
-		return err
-	}
-	dispute.DisputeStatus = status
-	err = k.SetDisputeById(ctx, id, *dispute)
+	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	return k.SetDisputeByReporter(ctx, *dispute)
+	dispute.DisputeStatus = status
+	return k.Disputes.Set(ctx, id, dispute)
 }

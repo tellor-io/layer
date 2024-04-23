@@ -11,8 +11,8 @@ import (
 	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/mocks"
@@ -23,23 +23,14 @@ func DisputeKeeper(t testing.TB) (
 	keeper.Keeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context,
 ) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
-	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
 	require.NoError(t, stateStore.LoadLatestVersion())
 
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-
-	paramsSubspace := typesparams.NewSubspace(cdc,
-		types.Amino,
-		storeKey,
-		memStoreKey,
-		"DisputeParams",
-	)
 
 	accountKeeper := new(mocks.AccountKeeper)
 	bankKeeper := new(mocks.BankKeeper)
@@ -48,9 +39,7 @@ func DisputeKeeper(t testing.TB) (
 
 	k := keeper.NewKeeper(
 		cdc,
-		storeKey,
-		memStoreKey,
-		paramsSubspace,
+		runtime.NewKVStoreService(storeKey),
 		accountKeeper,
 		bankKeeper,
 		oracleKeeper,
@@ -60,7 +49,14 @@ func DisputeKeeper(t testing.TB) (
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	// Initialize params
-	k.SetParams(ctx, types.DefaultParams())
+	err := k.SetParams(ctx, types.DefaultParams())
+	if err != nil {
+		panic(err)
+	}
+	err = k.OpenDisputes.Set(ctx, types.OpenDisputes{Ids: make([]uint64, 0)})
+	if err != nil {
+		panic(err)
+	}
 
 	return k, oracleKeeper, reporterKeeper, accountKeeper, bankKeeper, ctx
 }
