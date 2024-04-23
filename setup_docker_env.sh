@@ -5,6 +5,7 @@
 
 KEYRING_BACKEND="test"
 PASSWORD=password
+BUILD_TYPE_FILE_NAME=layerd-linux-arm64
 
 echo "Clean up any existing docker images or containers"
 docker-compose -p layer-test down -v || true
@@ -13,7 +14,7 @@ docker image rm -f layerd_i || true
 # docker image rm -f tmkms_bob || true
 
 echo "Remove the old prod-sim files"
-for name in deskAlice deskBob nodeCarol sentryAlice sentryBob valAlice valBob kmsBob kmsAlice; do
+for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     rm -r -f ./prod-sim/$name
     mkdir -p ./prod-sim/$name
 done
@@ -139,124 +140,6 @@ docker run --rm -it \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     add valAlice
 
-# echo "Initiliaze a kms image for alice"
-# docker run --rm -it \
-#     -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#     tmkms_alice \
-#     init /root/tmkms_alice
-
-# echo "Set proper version of CometBFT package for tmkms"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsAlice:/root/tmkms \
-#     --entrypoint sed \
-#     tmkms_alice \
-#     -i 's/protocol_version = "v0.34"/protocol_version = "v0.38"/g' /root/tmkms/tmkms.toml
-
-# echo "Set Name of file where alice key will be"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#   --entrypoint sed \
-#   tmkms_alice \
-#   -Ei 's/path = "\/root\/tmkms_alice\/secrets\/cosmoshub-3-consensus.key"/path = "\/root\/tmkms_alice\/secrets\/valAlice_consensus.key"/g' \
-#   /root/tmkms_alice/tmkms.toml
-
-# echo "Update chain id in tmkms.toml to layer"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#   --entrypoint sed \
-#   tmkms_alice \
-#   -i 's/id = "cosmoshub-3"/id = "layer"/g' /root/tmkms_alice/tmkms.toml
-
-# echo "Update the path to the state file to represent the correct chain id"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#   --entrypoint sed \
-#   tmkms_alice \
-#   -i 's/state_file = "\/root\/tmkms_alice\/state\/cosmoshub-3-consensus.json"/state_file = "\/root\/tmkms_alice\/state\/priv_validator_state.json"/g' /root/tmkms_alice/tmkms.toml
-
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#   --entrypoint sed \
-#   tmkms_alice \
-#   -i 's/chain_ids = \["cosmoshub-3"\]/chain_ids = \["layer"\]/g' /root/tmkms_alice/tmkms.toml
-
-# echo "Copy public consensus key to valAlice"
-# docker run --rm -t \
-#     -v $(pwd)/prod-sim/valAlice:/root/.layer/valAlice \
-#     layerd_i \
-#     comet show-validator \
-#     | tr -d '\n' | tr -d '\r' \
-#     > prod-sim/deskAlice/config/pub_validator_key_valAlice.json
-
-
-# echo "Moving priv validator key off of valAlice"
-# cp prod-sim/valAlice/config/priv_validator_key.json \
-#   prod-sim/deskAlice/config/priv_validator_key_valAlice.json
-
-# mv prod-sim/valAlice/config/priv_validator_key.json \
-#   prod-sim/kmsAlice/secrets/priv_validator_key_valAlice.json
-
-# echo "import validator key into tmkms softsign feature"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#     -w /root/tmkms_alice \
-#     tmkms_alice \
-#     softsign import secrets/priv_validator_key_valAlice.json \
-#     secrets/valAlice_consensus.key
-
-# echo "copy over validator key from sentryAlice where it is empty to remove alice's info"
-# cp prod-sim/sentryAlice/config/priv_validator_key.json \
-#     prod-sim/valAlice/config/
-
-
-# echo "Set Port that will be used to communicate with val alice over private connection"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#     --entrypoint sed \
-#     tmkms_alice \
-#     -Ei 's/^addr = "tcp:.*$/addr = "tcp:\/\/valAlice:26699"/g' /root/tmkms_alice/tmkms.toml
-
-# echo "Update the key format in tmkms"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#     --entrypoint sed \
-#     tmkms_alice \
-#     -Ei 's/account_key_prefix = "cosmospub"/account_key_prefix = "tellor"/g' /root/tmkms_alice/tmkms.toml
-
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsAlice:/root/tmkms_alice \
-#     --entrypoint sed \
-#     tmkms_alice \
-#     -Ei 's/consensus_key_prefix = "cosmosvalconspub"/consensus_key_prefix = "tellorvalconspub"/g' /root/tmkms_alice/tmkms.toml
-
-# echo "Inform valAlice of the port to listen for the tmkms"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/valAlice:/root/.layer/valAlice \
-#   --entrypoint sed \
-#   layerd_i \
-#   -Ei 's/priv_validator_laddr = ""/priv_validator_laddr = "tcp:\/\/0.0.0.0:26699"/g' \
-#   /root/.layer/valAlice/config/config.toml
-
-# echo "valAlice config to not look for consensus key"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/valAlice:/root/.layer/valAlice \
-#   --entrypoint sed \
-#   layerd_i \
-#   -Ei 's/^priv_validator_key_file/# priv_validator_key_file/g' \
-#   /root/.layer/valAlice/config/config.toml
-
-# echo "Comment out validator state file so valAlice no longer looks for it"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/valAlice:/root/.layer/valAlice \
-#   --entrypoint sed \
-#   layerd_i \
-#   -Ei 's/^priv_validator_state_file/# priv_validator_state_file/g' \
-#   /root/.layer/valAlice/config/config.toml
-
-# cp prod-sim/sentryAlice/config/priv_validator_key.json \
-#     prod-sim/valAlice/config/
-
-
 
 # create validator key on bob desktop
 echo "create validator key on bob desktop"
@@ -271,118 +154,6 @@ docker run --rm -it \
 # echo "move password used in key creation to file DO NOT DO THIS IN PROD"
 # echo -n password > prod-sim/deskBob/deskBob/passphrase.txt
 
-# echo "Initiliaze a kms image for bob"
-# docker run --rm -it \
-#     -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#     tmkms_bob \
-#     init /root/tmkms_bob
-
-# echo "Set proper version of CometBFT package for tmkms"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsBob:/root/tmkms \
-#     --entrypoint sed \
-#     tmkms_alice \
-#     -i 's/protocol_version = "v0.34"/protocol_version = "v0.38"/g' /root/tmkms/tmkms.toml
-
-# echo "Set Name of file where bob key will be"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#   --entrypoint sed \
-#   tmkms_bob \
-#   -Ei 's/path = "\/root\/tmkms_bob\/secrets\/cosmoshub-3-consensus.key"/path = "\/root\/tmkms_bob\/secrets\/valBob_consensus.key"/g' \
-#   /root/tmkms_bob/tmkms.toml
-
-# echo "Update the path to the state file to represent the correct chain id"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#   --entrypoint sed \
-#   tmkms_bob \
-#   -i 's/state_file = "\/root\/tmkms_bob\/state\/cosmoshub-3-consensus.json"/state_file = "\/root\/tmkms_bob\/state\/priv_validator_key.json"/g' /root/tmkms_bob/tmkms.toml
-
-# echo "Update chain id in tmkms.toml to layer"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#   --entrypoint sed \
-#   tmkms_bob \
-#   -i 's/id = "cosmoshub-3"/id = "layer"/g' /root/tmkms_bob/tmkms.toml
-
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#   --entrypoint sed \
-#   tmkms_bob \
-#   -i 's/chain_ids = \["cosmoshub-3"\]/chain_ids = \["layer"\]/g' /root/tmkms_bob/tmkms.toml
-
-# echo "Copy public consensus key to valBob"
-# docker run --rm -t \
-#     -v $(pwd)/prod-sim/valBob:/root/.layer/valBob \
-#     layerd_i \
-#     comet show-validator \
-#     | tr -d '\n' | tr -d '\r' \
-#     > prod-sim/deskBob/config/pub_validator_key_valBob.json
-
-# echo "Moving priv validator key off of valBob"
-# cp prod-sim/valBob/config/priv_validator_key.json \
-#   prod-sim/deskBob/config/priv_validator_key_valBob.json
-# mv prod-sim/valBob/config/priv_validator_key.json \
-#   prod-sim/kmsBob/secrets/priv_validator_key_valBob.json
-
-# echo "import validator key into tmkms softsign feature"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#     -w /root/tmkms_bob \
-#     tmkms_bob \
-#     softsign import secrets/priv_validator_key_valBob.json \
-#     secrets/valBob_consensus.key
-
-# echo "copy over validator key from sentryBob where it is empty to remove bob's info"
-# cp prod-sim/sentryBob/config/priv_validator_key.json prod-sim/valBob/config/
-
-# echo "Set Port that will be used to communicate with val bob over private connection"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#     --entrypoint sed \
-#     tmkms_bob \
-#     -Ei 's/^addr = "tcp:.*$/addr = "tcp:\/\/valBob:26699"/g' /root/tmkms_bob/tmkms.toml
-
-# echo "Update the key format in tmkms"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#     --entrypoint sed \
-#     tmkms_bob \
-#     -Ei 's/account_key_prefix = "cosmospub"/account_key_prefix = "tellor"/g' /root/tmkms_bob/tmkms.toml
-
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/kmsBob:/root/tmkms_bob \
-#     --entrypoint sed \
-#     tmkms_bob \
-#     -Ei 's/consensus_key_prefix = "cosmosvalconspub"/consensus_key_prefix = "tellorvalconspub"/g' /root/tmkms_bob/tmkms.toml
-
-# echo "Inform valBob of the port to listen for the tmkms"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/valBob:/root/.layer/valBob \
-#   --entrypoint sed \
-#   layerd_i \
-#   -Ei 's/priv_validator_laddr = ""/priv_validator_laddr = "tcp:\/\/0.0.0.0:26699"/g' \
-#   /root/.layer/valBob/config/config.toml
-
-# echo "valBob config to not look for consensus key"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/valBob:/root/.layer/valBob \
-#   --entrypoint sed \
-#   layerd_i \
-#   -Ei 's/^priv_validator_key_file/# priv_validator_key_file/g' \
-#   /root/.layer/valBob/config/config.toml
-
-# echo "Comment out validator state file so valBob no longer looks for it"
-# docker run --rm -i \
-#   -v $(pwd)/prod-sim/valBob:/root/.layer/valBob \
-#   --entrypoint sed \
-#   layerd_i \
-#   -Ei 's/^priv_validator_state_file/# priv_validator_state_file/g' \
-#   /root/.layer/valBob/config/config.toml
-
-# cp prod-sim/sentryBob/config/priv_validator_key.json \
-#     prod-sim/valBob/config/
 
 # set chain id in genesis file on alice desktop
 echo "set chain id in genesis file on Alice desktop"
@@ -496,8 +267,6 @@ echo $PASSWORD | docker run --rm -i \
 
 # copy over gentx transaction so that alice has both the gentx transactions then verify
 echo "copy over gentx transaction so that alice has both the gentx transactions then verify"
-cp prod-sim/valBob/config/gentx/gentx-* \
-    prod-sim/valAlice/config/gentx
 
 cp prod-sim/valBob/valBob/config/gentx/gentx-* \
     prod-sim/valAlice/valAlice/config/gentx
@@ -638,6 +407,33 @@ docker run --rm -i \
     layerd_i \
     -i 's/^seeds = ""/seeds = "'$CAROL_NODE_SEEDS'"/g' /root/.layer/nodeCarol/config/config.toml
 
+# 127.0.0.1
+# echo "Set api 
+
+echo "Open up node carol to listen on all IPs"
+docker run --rm -i \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    --entrypoint sed \
+    layerd_i \
+    -Ei 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' \
+    /root/.layer/nodeCarol/config/config.toml
+
+echo "enable api and swagger at localhost:1317"
+docker run --rm -i \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    --entrypoint sed \
+    layerd_i \
+    -Ei 's/^enable = false/enable = true/g' \
+    /root/.layer/nodeCarol/config/app.toml
+
+docker run --rm -i \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    --entrypoint sed \
+    layerd_i \
+    -Ei 's/^swagger = false/swagger = true/g' \
+    /root/.layer/nodeCarol/config/app.toml
+
+
 #Update cors_allowed_origin
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
@@ -736,12 +532,31 @@ done
 # cp ./prod-sim/valAlice/passphrase.txt ./prod-sim/valAlice/
 # cp ./prod-sim/deskBob/passphrase.txt ./prod-sim/valBob/
 
-sleep 5
-
 echo "Starting the chain in all containers..."
 docker compose \
     --file ./prod-sim/docker-compose.yml \
-    --project-name layer-test up
+    --project-name layer-test up \
+    --detach
+
+#mv ./build/layerd-linux-arm64 ./build/layerd
+
+sleep 45
+
+docker run --rm -it \
+    --network layer-test_net-public \
+    layerd_i status \
+    --node "tcp://nodeCarol:26657"
+
+# chmod +x ./build/layerd-darwin-arm64
+
+# ./build/layerd-darwin-arm64 tx reporter --help \
+#     --node "http://node-carol:26657"
+
+# ./build/layerd tx reporter --help \
+#     --node "tcp://localhost:26657"
+
+
+#mv ./build/layerd ./build/layerd-linux-arm64
 
 
 

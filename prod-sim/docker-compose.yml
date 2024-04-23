@@ -1,42 +1,13 @@
 version: "3.7"
 
-networks:
-  # net-alice-kms:
-  # net-bob-kms:
-  net-alice:
-  net-bob:
-  net-public:
-
-services:
-
-  # kmsAlice:
-  #   command: start --config /root/tmkms_alice/tmkms.toml -v
-  #   container_name: kmsAlice
-  #   image: tmkms_alice
-  #   networks:
-  #     - net-alice-kms
-  #   volumes:
-  #     - ./kmsAlice:/root/tmkms_alice
-
-  # kmsBob:
-  #   command: start --config /root/tmkms_bob/tmkms.toml -v
-  #   container_name: kmsBob
-  #   image: tmkms_bob
-  #   networks:
-  #     - net-bob-kms
-  #   volumes:
-  #     - ./kmsBob:/root/tmkms_bob   
-
+services:  
   valAlice:
     command: start --api.enable --api.swagger --home /root/.layer/valAlice
     container_name: valAlice
-    # depends_on:
-    #   - kmsAlice
     image: layerd_i
     environment:
       - LAYERD_NODE_HOME=/root/.layer/valAlice
     networks:
-      #- net-alice-kms
       - net-alice
     volumes:
       - ./valAlice:/root/.layer
@@ -57,12 +28,9 @@ services:
     command: start --api.enable --api.swagger --home /root/.layer/valBob
     container_name: valBob
     image: layerd_i
-    # depends_on:
-    #   - kmsBob
     environment:
       - LAYERD_NODE_HOME=/root/.layer/valBob
     networks:
-      #- net-bob-kms
       - net-bob
     volumes:
       - ./valBob:/root/.layer
@@ -88,6 +56,12 @@ services:
     networks:
       - net-public
     ports:
-      - 0.0.0.0:26657:26657
+      - 127.0.0.1:26657:26657
+      - 127.0.0.1:1317:1317
     volumes:
       - ./nodeCarol:/root/.layer
+
+networks:
+  net-alice:
+  net-bob:
+  net-public:
