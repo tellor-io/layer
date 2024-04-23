@@ -48,8 +48,8 @@ echo "Adding validator account for alice..."
 ./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "set chain id in genesis file to layer..."
-sed -i e 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
-sed -i e 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/config/genesis.json
+sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
+sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/config/genesis.json
 
 # Update vote_extensions_enable_height in genesis.json for alice
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
