@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"fmt"
 	"math/big"
 	"math/rand"
 	"strconv"
@@ -96,7 +97,9 @@ func (s *E2ETestSuite) TestTransferAfterMint() {
 func (s *E2ETestSuite) TestValidateCycleList() {
 	require := s.Require()
 
-	// height 0
+	//---------------------------------------------------------------------------
+	// Height 0 - get initial cycle list query
+	//---------------------------------------------------------------------------
 	_, err := s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 	firstInCycle, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -108,7 +111,9 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
-	// height 1
+	//---------------------------------------------------------------------------
+	// Height 1 - get second cycle list query
+	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
@@ -121,7 +126,9 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
-	// height 2
+	//---------------------------------------------------------------------------
+	// Height 2 - get third cycle list query
+	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
@@ -134,7 +141,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
-	// loop through more times
+	// loop through 20 more blocks
 	list, err := s.oraclekeeper.GetCyclelist(s.ctx)
 	require.NoError(err)
 	for i := 0; i < 20; i++ {
@@ -824,7 +831,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// mint 5000*1e6 tokens for reporter
 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, reporterAccount, sdk.NewCoins(initCoins)))
-	// delegate to validator so reporter can delegate to themselves
+	// delegate 5k trb to validator so reporter can delegate to themselves
 	reporterDelToVal := Delegator{delegatorAddress: reporterAccount, validator: validator, tokenAmount: math.NewInt(5000 * 1e6)}
 	_, err = s.stakingKeeper.Delegate(s.ctx, reporterDelToVal.delegatorAddress, reporterDelToVal.tokenAmount, stakingtypes.Unbonded, reporterDelToVal.validator, true)
 	require.NoError(err)
@@ -836,7 +843,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, reporterAccount, valAccountValAddrs[0])
 	require.NoError(err)
 
-	// define createReporterMsg params
+	// self delegate in reporter module with 4k trb
 	var createReporterMsg reportertypes.MsgCreateReporter
 	reporterAddress := reporterDelToVal.delegatorAddress.String()
 	amount := math.NewInt(4000 * 1e6)
@@ -1325,5 +1332,98 @@ func (s *E2ETestSuite) TestDisputes() {
 }
 
 func (s *E2ETestSuite) TestUnstaking() {
+	require := s.Require()
+
+	// create 5 validators with 5_000 TRB
+	_, _, _ = s.CreateValidators(5)
+	// all validators are bonded
+	validators, err := s.stakingKeeper.GetAllValidators(s.ctx)
+	require.NoError(err)
+	require.NotNil(validators)
+	for _, val := range validators {
+		require.Equal(val.Status.String(), stakingtypes.BondStatusBonded)
+	}
+	val1 := validators[1]
+
+	// begin unbonding validator 0
+	val1, err = s.stakingKeeper.BeginUnbondingValidator(s.ctx, val1)
+	require.NoError(err)
+	// unbonding time is 21 days after calling BeginUnbondingValidator
+	unbondingStartTime := s.ctx.BlockTime()
+	twentyOneDays := time.Hour * 24 * 21
+	require.Equal(val1.UnbondingTime, unbondingStartTime.Add(twentyOneDays))
+	require.Equal(val1.IsUnbonding(), true)
+	require.Equal(val1.IsBonded(), false)
+	require.Equal(val1.IsUnbonded(), false)
+	fmt.Println(val1)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// new block
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(twentyOneDays))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	// validator 0 is now unbonded
+	val1, err = s.stakingKeeper.GetValidator(s.ctx, sdk.ValAddress(val1.GetOperator()))
+	require.NoError(err)
+	require.Equal(val1.IsUnbonded(), true)
+
+}
+
+func (s *E2ETestSuite) TestX() {
+	require := s.Require()
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
+	require.NotNil(msgServerOracle)
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	require.NotNil(msgServerReporter)
+	msgServerDispute := disputekeeper.NewMsgServerImpl(s.disputekeeper)
+	require.NotNil(msgServerDispute)
+
+	//---------------------------------------------------------------------------
+	// Height 0 - create 3 validators and 3 reporters
+	//---------------------------------------------------------------------------
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+	valsAcctAddrs, valsValAddrs, vals := s.CreateValidators(3)
+	require.NotNil(valsAcctAddrs)
+	repsAccs := s.CreateReporters(3, valsValAddrs, vals)
+	specialReporter := repsAccs[0]
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	// mapping to track reporter delegation balance
+	reporterToAmountMap := make(map[string]math.Int)
+	for _, acc := range repsAccs {
+		rkDelegation, err := s.reporterkeeper.Delegators.Get(s.ctx, acc)
+		require.NoError(err)
+		reporterToAmountMap[acc.String()] = rkDelegation.Amount
+	}
+
+	//---------------------------------------------------------------------------
+	// Height 1 - create new account and delegate 1k trb to validator 0 and special reporter
+	//---------------------------------------------------------------------------
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	pk := secp256k1.GenPrivKey()
+	delAcc := s.convertToAccAddress([]secp256k1.PrivKey{*pk})
+	delAccAddr := sdk.AccAddress(delAcc[0])
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(500*1e6))
+	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, delAccAddr, sdk.NewCoins(initCoins)))
+
+	// delegate to validator 0
+	val, err := s.stakingKeeper.GetValidator(s.ctx, valsValAddrs[0])
+	require.NoError(err)
+	_, err = s.stakingKeeper.Delegate(s.ctx, delAccAddr, math.NewInt(500*1e6), stakingtypes.Unbonded, val, false)
+	require.NoError(err)
+	// delegate to special reporter
+	source := reportertypes.TokenOrigin{ValidatorAddress: val.OperatorAddress, Amount: math.NewInt(500 * 1e6)}
+	msgDelegate := reportertypes.NewMsgDelegateReporter(delAccAddr.String(), specialReporter.String(), math.NewInt(500*1e6), []*reportertypes.TokenOrigin{&source})
+	_, err = msgServerReporter.DelegateReporter(s.ctx, msgDelegate)
+	require.NoError(err)
 
 }
