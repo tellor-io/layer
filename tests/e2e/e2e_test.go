@@ -19,7 +19,6 @@ import (
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
@@ -941,7 +940,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// todo: is there a getter for this ?
 	// get microreport for dispute
-	report := types.MicroReport{
+	report := oracletypes.MicroReport{
 		Reporter:  reporter.Reporter,
 		Power:     reporter.TotalTokens.Int64(),
 		QueryId:   queryId,
@@ -1075,7 +1074,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
 	disputeFee = sdk.NewCoin(s.denom, fivePercent)
 
-	report = types.MicroReport{
+	report = oracletypes.MicroReport{
 		Reporter:  reporter.Reporter,
 		Power:     reporter.TotalTokens.Int64(),
 		QueryId:   queryId,
@@ -1236,7 +1235,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	oneHundredPercent := reporter.TotalTokens
 	disputeFee = sdk.NewCoin(s.denom, oneHundredPercent)
 
-	report = types.MicroReport{
+	report = oracletypes.MicroReport{
 		Reporter:  reporter.Reporter,
 		Power:     reporter.TotalTokens.Int64(),
 		QueryId:   queryId,
@@ -1336,8 +1335,12 @@ func (s *E2ETestSuite) TestDisputes() {
 func (s *E2ETestSuite) TestUnstaking() {
 	require := s.Require()
 
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
 	// create 5 validators with 5_000 TRB
 	_, _, _ = s.CreateValidators(5)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
 	// all validators are bonded
 	validators, err := s.stakingKeeper.GetAllValidators(s.ctx)
 	require.NoError(err)
@@ -1397,16 +1400,17 @@ func (s *E2ETestSuite) TestX() {
 	require.NoError(err)
 
 	// mapping to track reporter delegation balance
-	reporterToAmountMap := make(map[string]math.Int)
+	reporterToBalanceMap := make(map[string]math.Int)
 	for _, acc := range repsAccs {
 		rkDelegation, err := s.reporterkeeper.Delegators.Get(s.ctx, acc)
 		require.NoError(err)
-		reporterToAmountMap[acc.String()] = rkDelegation.Amount
+		reporterToBalanceMap[acc.String()] = rkDelegation.Amount
 	}
 
 	//---------------------------------------------------------------------------
-	// Height 1 - create new account and delegate 1k trb to validator 0 and special reporter
+	// Height 1 - delegate 500 trb to validator 0 and special reporter
 	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(1)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1419,13 +1423,32 @@ func (s *E2ETestSuite) TestX() {
 
 	// delegate to validator 0
 	val, err := s.stakingKeeper.GetValidator(s.ctx, valsValAddrs[0])
+	fmt.Println("val 01: ", val)
 	require.NoError(err)
 	_, err = s.stakingKeeper.Delegate(s.ctx, delAccAddr, math.NewInt(500*1e6), stakingtypes.Unbonded, val, false)
 	require.NoError(err)
+
 	// delegate to special reporter
 	source := reportertypes.TokenOrigin{ValidatorAddress: val.OperatorAddress, Amount: math.NewInt(500 * 1e6)}
 	msgDelegate := reportertypes.NewMsgDelegateReporter(delAccAddr.String(), specialReporter.String(), math.NewInt(500*1e6), []*reportertypes.TokenOrigin{&source})
 	_, err = msgServerReporter.DelegateReporter(s.ctx, msgDelegate)
+	require.NoError(err)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	val, err = s.stakingKeeper.GetValidator(s.ctx, valsValAddrs[0])
+	require.NoError(err)
+	require.Equal(val.Tokens, math.NewInt(1500*1e6))
+	rep, err := s.reporterkeeper.Reporters.Get(s.ctx, specialReporter)
+	require.NoError(err)
+	require.Equal(rep.TotalTokens, math.NewInt(1500*1e6))
+
+	//---------------------------------------------------------------------------
+	// Height 2 - direct reveal for cycle list 
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(2)
+	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
 }
