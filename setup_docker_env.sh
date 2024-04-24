@@ -140,7 +140,6 @@ docker run --rm -it \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     add valAlice
 
-
 # create validator key on bob desktop
 echo "create validator key on bob desktop"
 docker run --rm -it \
@@ -150,10 +149,13 @@ docker run --rm -it \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob   \
     add valBob
 
-# move password used in key creation to file (DO NOT DO THIS IN PROD)
-# echo "move password used in key creation to file DO NOT DO THIS IN PROD"
-# echo -n password > prod-sim/deskBob/deskBob/passphrase.txt
-
+# echo "Create keys for nodeCarol"
+# docker run --rm -it \
+#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+#     layerd_i \
+#     keys \
+#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+#     add nodeCarol
 
 # set chain id in genesis file on alice desktop
 echo "set chain id in genesis file on Alice desktop"
@@ -170,6 +172,30 @@ docker run --rm -i \
     layerd_i \
     -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' \
     /root/.layer/config/genesis.json
+
+# echo "Set address for nodeCarol to give them loya"
+# NODE_CAROL=$(echo $PASSWORD | docker run --rm -i \
+#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+#     layerd_i \
+#     keys \
+#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+#     show nodeCarol --address)
+
+# # give loya to nodeCarol
+# echo "give loya to nodeCarol..."
+# docker run --rm -it \
+#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+#     layerd_i \
+#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+#     genesis add-genesis-account $NODE_CAROL 1000000000loya 
+
+# #move genesis file from carol to alice desktop
+# echo "move genesis file from carol to alice desktop"
+# mv prod-sim/nodeCarol/config/genesis.json \
+#     prod-sim/valAlice/config/
+
+# mv prod-sim/nodeCarol/nodeCarol/config/genesis.json \
+#     prod-sim/valAlice/valAlice/config/
 
 
 #Get the address returned from the keyring on alice desktop
@@ -267,7 +293,8 @@ echo $PASSWORD | docker run --rm -i \
 
 # copy over gentx transaction so that alice has both the gentx transactions then verify
 echo "copy over gentx transaction so that alice has both the gentx transactions then verify"
-
+cp prod-sim/valBob/config/gentx/gentx-* \
+    prod-sim/valAlice/config/gentx
 cp prod-sim/valBob/valBob/config/gentx/gentx-* \
     prod-sim/valAlice/valAlice/config/gentx
 
@@ -482,56 +509,6 @@ for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     -Ei 's/timeout_commit = "5s"/timeout_commit = "1s"/' /root/.layer/config/config.toml
 done
 
-# rm ./prod-sim/valAlice/config/priv_validator_key.json
-# mv ./prod-sim/sentryAlice/config/priv_validator_key.json ./prod-sim/valAlice/config/priv_validator_key.json
-# mkdir ./prod-sim/valAlice/keys
-# cp ./prod-sim/deskAlice/keys ./prod-sim/valAlice/keys
-
-# rm prod-sim/valBob/priv_validator_key.json
-# mv prod-sim/sentryBob/config/priv_validator_key.json prod-sim/valBob/config/priv_validator_key.json
-# mkdir ./prod-sim/valBob/keys
-# cp ./prod-sim/deskBob/keys ./prod-sim/valBob/keys
-
-# Export alice key from os backend and import to test backend
-# echo "Exporting alice key... with password:"
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/deskAlice:/root/.layer/deskAlice \
-#     layerd_i \
-#     keys \
-#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskAlice \
-#     export valAlice > ./prod-sim/deskAlice/alice_keyfile
-
-# echo "Importing alice key to test backend..."
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/deskAlice:/root/.layer/deskAlice \
-#     layerd_i \
-#     keys \
-#     --keyring-backend test --home /root/.layer/deskAlice \
-#     import valAlice /root/.layer/deskAlice/alice_keyfile
-
-
-# # Export bob key from os backend and import to test backend
-# echo "Exporting bob key..."
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/deskBob:/root/.layer/deskBob \
-#     layerd_i \
-#     keys \
-#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/deskBob \
-#     export valBob > ./prod-sim/deskBob/bob_keyfile
-
-# echo "Importing bob key to test backend..."
-# docker run --rm -i \
-#     -v $(pwd)/prod-sim/deskBob:/root/.layer/deskBob \
-#     layerd_i \
-#     keys \
-#     --keyring-backend test --home /root/.layer/deskBob \
-#     import valBob /root/.layer/deskBob/bob_keyfile
-
-# cp -r ./prod-sim/valAlice/keyring-test/ ./prod-sim/valAlice/keyring-test/
-# cp -r ./prod-sim/deskBob/keyring-test/ ./prod-sim/valBob/keyring-test/
-# cp ./prod-sim/valAlice/passphrase.txt ./prod-sim/valAlice/
-# cp ./prod-sim/deskBob/passphrase.txt ./prod-sim/valBob/
-
 echo "Starting the chain in all containers..."
 docker compose \
     --file ./prod-sim/docker-compose.yml \
@@ -546,6 +523,17 @@ docker run --rm -it \
     --network layer-test_net-public \
     layerd_i status \
     --node "tcp://nodeCarol:26657"
+
+docker run --rm -it \
+    --network layer-test_net-public \
+    layerd_i query staking validators \
+    --node "tcp://nodeCarol:26657"
+
+# docker run --rm -it \
+#     --network layer-test_net-public \
+#     layerd_i tx staking delegate $ACCOUNT 1000000000loya \
+#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+#     --chain-id layer --node "tcp://ec2-54-166-101-67.compute-1.amazonaws.com:26657"
 
 # chmod +x ./build/layerd-darwin-arm64
 
