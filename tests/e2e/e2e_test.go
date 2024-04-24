@@ -1350,7 +1350,7 @@ func (s *E2ETestSuite) TestUnstaking() {
 	}
 	val1 := validators[1]
 
-	// begin unbonding validator 0
+	// begin unbonding validator 1
 	val1, err = s.stakingKeeper.BeginUnbondingValidator(s.ctx, val1)
 	require.NoError(err)
 	// unbonding time is 21 days after calling BeginUnbondingValidator
@@ -1395,7 +1395,7 @@ func (s *E2ETestSuite) TestX() {
 	valsAcctAddrs, valsValAddrs, vals := s.CreateValidators(3)
 	require.NotNil(valsAcctAddrs)
 	repsAccs := s.CreateReporters(3, valsValAddrs, vals)
-	specialReporter := repsAccs[0]
+	badReporter := repsAccs[0]
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1408,7 +1408,7 @@ func (s *E2ETestSuite) TestX() {
 	}
 
 	//---------------------------------------------------------------------------
-	// Height 1 - delegate 500 trb to validator 0 and special reporter
+	// Height 1 - delegate 500 trb to validator 0 and bad reporter
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(1)
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -1428,9 +1428,9 @@ func (s *E2ETestSuite) TestX() {
 	_, err = s.stakingKeeper.Delegate(s.ctx, delAccAddr, math.NewInt(500*1e6), stakingtypes.Unbonded, val, false)
 	require.NoError(err)
 
-	// delegate to special reporter
+	// delegate to bad reporter
 	source := reportertypes.TokenOrigin{ValidatorAddress: val.OperatorAddress, Amount: math.NewInt(500 * 1e6)}
-	msgDelegate := reportertypes.NewMsgDelegateReporter(delAccAddr.String(), specialReporter.String(), math.NewInt(500*1e6), []*reportertypes.TokenOrigin{&source})
+	msgDelegate := reportertypes.NewMsgDelegateReporter(delAccAddr.String(), badReporter.String(), math.NewInt(500*1e6), []*reportertypes.TokenOrigin{&source})
 	_, err = msgServerReporter.DelegateReporter(s.ctx, msgDelegate)
 	require.NoError(err)
 
@@ -1440,14 +1440,345 @@ func (s *E2ETestSuite) TestX() {
 	val, err = s.stakingKeeper.GetValidator(s.ctx, valsValAddrs[0])
 	require.NoError(err)
 	require.Equal(val.Tokens, math.NewInt(1500*1e6))
-	rep, err := s.reporterkeeper.Reporters.Get(s.ctx, specialReporter)
+	rep, err := s.reporterkeeper.Reporters.Get(s.ctx, badReporter)
 	require.NoError(err)
 	require.Equal(rep.TotalTokens, math.NewInt(1500*1e6))
 
 	//---------------------------------------------------------------------------
-	// Height 2 - direct reveal for cycle list 
+	// Height 2 - direct reveal for cycle list
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(2)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	disputedRep, err := s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
+	require.NoError(err)
+
+	// get new cycle list query data
+	cycleListQuery, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	queryId := utils.QueryIDFromData(cycleListQuery)
+	// create reveal message
+	value := encodeValue(10_000)
+	require.NoError(err)
+	reveal := oracletypes.MsgSubmitValue{
+		Creator:   disputedRep.Reporter,
+		QueryData: cycleListQuery,
+		Value:     value,
+	}
+	// send reveal message
+	revealResponse, err := msgServerOracle.SubmitValue(s.ctx, &reveal)
+	require.NoError(err)
+	require.NotNil(revealResponse)
+	// advance time and block height to expire the query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 3 - open warning, pay from bond from reporter 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(3)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	disputer, err := s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[1])
+	require.NoError(err)
+
+	// disputerBal := disputer.TotalTokens
+	disputedBal := disputedRep.TotalTokens
+	onePercent := disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
+	disputeFee := sdk.NewCoin(s.denom, onePercent) // warning should be 1% of bonded tokens
+
+	// todo: is there a getter for this ?
+	// get microreport for dispute
+	report := oracletypes.MicroReport{
+		Reporter:  disputedRep.Reporter,
+		Power:     disputedRep.TotalTokens.Int64(),
+		QueryId:   queryId,
+		Value:     value,
+		Timestamp: s.ctx.BlockTime(),
+	}
+
+	// create msg for propose dispute tx
+	msgProposeDispute := disputetypes.MsgProposeDispute{
+		Creator:         disputer.Reporter,
+		Report:          &report,
+		DisputeCategory: disputetypes.Warning,
+		Fee:             disputeFee,
+		PayFromBond:     true,
+	}
+
+	// send propose dispute tx
+	_, err = msgServerDispute.ProposeDispute(s.ctx, &msgProposeDispute)
+	require.NoError(err)
+
+	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
+	disputes, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
+	require.NoError(err)
+	require.NotNil(disputes)
+	// dispute is created correctly
+	dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeId, uint64(1))
+	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
+	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
+	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: disputer.Reporter, Amount: disputeFee.Amount, FromBond: true, BlockNumber: 3}})
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 4 - disputed reporter reports after calling unjail
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(4)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
+	require.NoError(err)
+	require.Equal(disputedRep.Jailed, true)
+
+	// disputed reporter cant report yet
+	cycleListQuery, err = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	value = encodeValue(10_000)
+	require.NoError(err)
+	reveal = oracletypes.MsgSubmitValue{
+		Creator:   disputedRep.Reporter,
+		QueryData: cycleListQuery,
+		Value:     value,
+	}
+	_, err = msgServerOracle.SubmitValue(s.ctx, &reveal)
+	require.Error(err)
+
+	// disputed reporter can report after calling unjail function
+	msgUnjail := reportertypes.MsgUnjailReporter{
+		ReporterAddress: disputedRep.Reporter,
+	}
+	_, err = msgServerReporter.UnjailReporter(s.ctx, &msgUnjail)
+	require.NoError(err)
+	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
+	require.NoError(err)
+	require.Equal(disputedRep.Jailed, false)
+	// send reveal message
+	revealResponse, err = msgServerOracle.SubmitValue(s.ctx, &reveal)
+	require.NoError(err)
+	require.NotNil(revealResponse)
+
+	// give disputer tokens to pay for next disputes not from bond
+	initCoins = sdk.NewCoin(s.denom, math.NewInt(10_000*1e6))
+	require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+	// send from module to account
+	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, sdk.AccAddress(disputer.Reporter), sdk.NewCoins(initCoins)))
+	require.Equal(initCoins, s.bankKeeper.GetBalance(s.ctx, sdk.AccAddress(disputer.Reporter), s.denom))
+
+	// advance time and block height to expire the query and aggregate report
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	disputer, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[1])
+	require.NoError(err)
+	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 5 - open warning, pay from not bond from reporter 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(5)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	// disputerBal := disputer.TotalTokens
+	disputedBal = disputedRep.TotalTokens
+	onePercent = disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
+	disputeFee = sdk.NewCoin(s.denom, onePercent) // warning should be 1% of bonded tokens
+
+	// todo: is there a getter for this ?
+	// get microreport for dispute
+	report = oracletypes.MicroReport{
+		Reporter:  disputedRep.Reporter,
+		Power:     disputedRep.TotalTokens.Int64(),
+		QueryId:   queryId,
+		Value:     value,
+		Timestamp: s.ctx.BlockTime(),
+	}
+
+	// create msg for propose dispute tx
+	msgProposeDispute = disputetypes.MsgProposeDispute{
+		Creator:         disputer.Reporter,
+		Report:          &report,
+		DisputeCategory: disputetypes.Warning,
+		Fee:             disputeFee,
+		PayFromBond:     false,
+	}
+
+	// send propose dispute tx
+	_, err = msgServerDispute.ProposeDispute(s.ctx, &msgProposeDispute)
+	require.NoError(err)
+
+	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
+	disputes, err = s.disputekeeper.OpenDisputes.Get(s.ctx)
+	require.NoError(err)
+	require.NotNil(disputes)
+	// dispute is created correctly
+	dispute, err = s.disputekeeper.Disputes.Get(s.ctx, 1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeId, uint64(1))
+	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
+	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
+	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: disputer.Reporter, Amount: disputeFee.Amount, FromBond: false, BlockNumber: 5}})
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 6 - dispute is resolved, direct reveal again
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(6)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
+	require.NoError(err)
+	require.Equal(disputedRep.Jailed, true)
+
+	// disputed reporter cant report yet
+	cycleListQuery, err = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+	value = encodeValue(10_000)
+	require.NoError(err)
+	reveal = oracletypes.MsgSubmitValue{
+		Creator:   disputedRep.Reporter,
+		QueryData: cycleListQuery,
+		Value:     value,
+	}
+	_, err = msgServerOracle.SubmitValue(s.ctx, &reveal)
+	require.Error(err)
+
+	// disputed reporter can report after calling unjail function
+	msgUnjail = reportertypes.MsgUnjailReporter{
+		ReporterAddress: disputedRep.Reporter,
+	}
+	_, err = msgServerReporter.UnjailReporter(s.ctx, &msgUnjail)
+	require.NoError(err)
+	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
+	require.NoError(err)
+	require.Equal(disputedRep.Jailed, false)
+	// send reveal message
+	revealResponse, err = msgServerOracle.SubmitValue(s.ctx, &reveal)
+	require.NoError(err)
+	require.NotNil(revealResponse)
+
+	//---------------------------------------------------------------------------
+	// Height 7 - open minor dispute, pay from bond from reporter 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(7)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	report = oracletypes.MicroReport{
+		Reporter:  disputedRep.Reporter,
+		Power:     disputedRep.TotalTokens.Int64(),
+		QueryId:   queryId,
+		Value:     value,
+		Timestamp: s.ctx.BlockTime(),
+	}
+
+	// create msg for propose dispute tx
+	msgProposeDispute = disputetypes.MsgProposeDispute{
+		Creator:         disputer.Reporter,
+		Report:          &report,
+		DisputeCategory: disputetypes.Minor,
+		Fee:             disputeFee,
+		PayFromBond:     false,
+	}
+
+	// send propose dispute tx
+	_, err = msgServerDispute.ProposeDispute(s.ctx, &msgProposeDispute)
+	require.NoError(err)
+	// disputeStartTime := s.ctx.BlockTime()
+
+	//---------------------------------------------------------------------------
+	// Height 8 - vote on minor dispute
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(8)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 9 - resolve dispute, direct reveal again
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(9)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 10 - open minor dispute, pay from not bond from reporter 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(10)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 11 - vote on minor dispute
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(11)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 12 - resolve dispute, direct reveal again
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(12)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 13 - open major dispute, pay from bond from reporter 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(13)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 14 - vote on major dispute
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(14)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 15 - resolve dispute, direct reveal again
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(15)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 16 - open major dispute, pay from not bond from reporter 1
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(16)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 17 - vote on major dispute
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(17)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 18 - resolve dispute, direct reveal again
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(18)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
