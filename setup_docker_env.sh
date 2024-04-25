@@ -149,13 +149,13 @@ docker run --rm -it \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob   \
     add valBob
 
-# echo "Create keys for nodeCarol"
-# docker run --rm -it \
-#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
-#     layerd_i \
-#     keys \
-#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-#     add nodeCarol
+echo "Create keys for nodeCarol"
+docker run --rm -it \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    layerd_i \
+    keys \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+    add nodeCarol
 
 # set chain id in genesis file on alice desktop
 echo "set chain id in genesis file on Alice desktop"
@@ -173,29 +173,29 @@ docker run --rm -i \
     -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' \
     /root/.layer/config/genesis.json
 
-# echo "Set address for nodeCarol to give them loya"
-# NODE_CAROL=$(echo $PASSWORD | docker run --rm -i \
-#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
-#     layerd_i \
-#     keys \
-#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-#     show nodeCarol --address)
+echo "Set address for nodeCarol to give them loya"
+NODE_CAROL=$(echo $PASSWORD | docker run --rm -i \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    layerd_i \
+    keys \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+    show nodeCarol --address)
 
-# # give loya to nodeCarol
-# echo "give loya to nodeCarol..."
-# docker run --rm -it \
-#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
-#     layerd_i \
-#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-#     genesis add-genesis-account $NODE_CAROL 1000000000loya 
+# give loya to nodeCarol
+echo "give loya to nodeCarol..."
+docker run --rm -it \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    layerd_i \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+    genesis add-genesis-account $NODE_CAROL 1000000000loya 
 
-# #move genesis file from carol to alice desktop
-# echo "move genesis file from carol to alice desktop"
-# mv prod-sim/nodeCarol/config/genesis.json \
-#     prod-sim/valAlice/config/
+#move genesis file from carol to alice desktop
+echo "move genesis file from carol to alice desktop"
+mv prod-sim/nodeCarol/config/genesis.json \
+    prod-sim/valAlice/config/
 
-# mv prod-sim/nodeCarol/nodeCarol/config/genesis.json \
-#     prod-sim/valAlice/valAlice/config/
+mv prod-sim/nodeCarol/nodeCarol/config/genesis.json \
+    prod-sim/valAlice/valAlice/config/
 
 
 #Get the address returned from the keyring on alice desktop
@@ -517,7 +517,7 @@ docker compose \
 
 #mv ./build/layerd-linux-arm64 ./build/layerd
 
-sleep 45
+sleep 30
 
 docker run --rm -it \
     --network layer-test_net-public \
@@ -526,14 +526,35 @@ docker run --rm -it \
 
 docker run --rm -it \
     --network layer-test_net-public \
-    layerd_i query staking validators \
-    --node "tcp://nodeCarol:26657"
+    layerd_i query staking validators --node "tcp://nodeCarol:26657"  > ./validator_info.yml 
 
-# docker run --rm -it \
-#     --network layer-test_net-public \
-#     layerd_i tx staking delegate $ACCOUNT 1000000000loya \
-#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-#     --chain-id layer --node "tcp://ec2-54-166-101-67.compute-1.amazonaws.com:26657"
+ALICE_VAL_OP_ADD=$(yq '.validators[0].operator_address' ./validator_info.yml)
+echo "ALICE: $ALICE_VAL_OP_ADD"
+echo "Printing out val operator address for alice: $ALICE_VAL_OP_ADD"
+
+echo "Gets Carols address from his desktop to be used to send loya to him"
+CAROL=$(echo $PASSWORD | docker run --rm -i \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    layerd_i \
+    keys \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+    show nodeCarol --address)
+echo $CAROL
+
+echo "Delegate from node carol to validator..."
+docker run --rm -it \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    --network layer-test_net-public \
+    layerd_i tx staking delegate $ALICE_VAL_OP_ADD 1000000loya \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+    --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
+
+echo "Creating reporter for nodeCarol..."
+docker run --rm -it \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer/nodeCarol \
+    layerd_i tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"tellorvaloper1ya2vzpj62h2h75ws6ufa4xzwyg42vxsaf0lkay\", \"amount\": \"1000000loya\" }" \
+    --keyring-backend test --home /root/.layer/nodeCarol \
+    --chain-id layer --node "tcp://nodeCarol:26657" --from tellor17r2dl5g6032fwmrl80knnkvxnx6438dzyyrvam
 
 # chmod +x ./build/layerd-darwin-arm64
 
