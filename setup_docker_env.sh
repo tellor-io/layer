@@ -552,9 +552,9 @@ docker run --rm -it \
 echo "Creating reporter for nodeCarol..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/nodeCarol:/root/.layer/nodeCarol \
-    layerd_i tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"tellorvaloper1ya2vzpj62h2h75ws6ufa4xzwyg42vxsaf0lkay\", \"amount\": \"1000000loya\" }" \
-    --keyring-backend test --home /root/.layer/nodeCarol \
-    --chain-id layer --node "tcp://nodeCarol:26657" --from tellor17r2dl5g6032fwmrl80knnkvxnx6438dzyyrvam
+    layerd_i tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"$ALICE_VAL_OP_ADD\", \"amount\": \"1000000loya\" }" \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+    --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
 
 # chmod +x ./build/layerd-darwin-arm64
 
