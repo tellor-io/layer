@@ -32,6 +32,30 @@ func (_m *ReporterKeeper) AddAmountToStake(ctx context.Context, addr string, amt
 	return r0
 }
 
+// Delegation provides a mock function with given fields: ctx, delegator
+func (_m *ReporterKeeper) Delegation(ctx context.Context, delegator cosmos_sdktypes.AccAddress) (reportertypes.Delegation, error) {
+	ret := _m.Called(ctx, delegator)
+
+	var r0 reportertypes.Delegation
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress) (reportertypes.Delegation, error)); ok {
+		return rf(ctx, delegator)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress) reportertypes.Delegation); ok {
+		r0 = rf(ctx, delegator)
+	} else {
+		r0 = ret.Get(0).(reportertypes.Delegation)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, cosmos_sdktypes.AccAddress) error); ok {
+		r1 = rf(ctx, delegator)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt
 func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr cosmos_sdktypes.AccAddress, power int64, height int64, amt math.Int) error {
 	ret := _m.Called(ctx, reporterAddr, power, height, amt)

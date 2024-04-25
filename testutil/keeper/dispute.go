@@ -13,6 +13,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/mocks"
@@ -49,11 +50,7 @@ func DisputeKeeper(t testing.TB) (
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	// Initialize params
-	err := k.SetParams(ctx, types.DefaultParams())
-	if err != nil {
-		panic(err)
-	}
-	err = k.OpenDisputes.Set(ctx, types.OpenDisputes{Ids: make([]uint64, 0)})
+	err := k.OpenDisputes.Set(ctx, types.OpenDisputes{Ids: make([]uint64, 0)})
 	if err != nil {
 		panic(err)
 	}

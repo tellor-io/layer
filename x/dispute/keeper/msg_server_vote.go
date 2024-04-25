@@ -46,10 +46,11 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		return nil, types.ErrVotingPeriodEnded
 	}
 
-	err = k.Keeper.SetTally(ctx, voterAcc, msg.Vote, vote)
-	if err != nil {
+	voterVote := types.Voter{
+		Vote: msg.Vote,
+	}
+	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc), voterVote); err != nil {
 		return nil, err
 	}
-
 	return &types.MsgVoteResponse{}, nil
 }

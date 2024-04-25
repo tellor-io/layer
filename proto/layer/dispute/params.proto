@@ -8,5 +8,5 @@ option go_package = "github.com/tellor-io/layer/x/dispute/types";
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  
+  string team = 1;
 }

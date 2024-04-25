@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
@@ -13,18 +15,8 @@ type VoterInfo struct {
 	Share math.Int
 }
 
-// tally votes
-func (k Keeper) Tally(ctx sdk.Context, ids []uint64) error {
-	for _, id := range ids {
-		if err := k.TallyVote(ctx, id); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // Execute the transfer of fee after the vote on a dispute is complete
-func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
+func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return err
@@ -55,7 +47,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		return err
 	}
 	if vote.Executed || dispute.DisputeStatus != types.Resolved {
-		ctx.Logger().Info("can't execute vote, reason either vote has already executed: %v, or dispute not resolved: %v", vote.Executed, dispute.DisputeStatus)
+		k.Logger(ctx).Info("can't execute vote, reason either vote has already executed: %v, or dispute not resolved: %v", vote.Executed, dispute.DisputeStatus)
 		return nil
 	}
 	// amount of dispute fee to return to fee payers or give to reporter
@@ -136,19 +128,22 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 	return nil
 }
 
-func (k Keeper) ExecuteVotes(ctx sdk.Context, ids []uint64) error {
+func (k Keeper) ExecuteVotes(ctx context.Context, ids []uint64) error {
 	for _, id := range ids {
-		err := k.ExecuteVote(ctx, id)
-		if err != nil {
+		if err := k.Tallyvote(ctx, id); err != nil {
 			return err
 		}
+		if err := k.ExecuteVote(ctx, id); err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
 
 // set disputes to resolved if adding rounds has been exhausted
 // check if disputes can be removed due to expiration prior to commencing vote
-func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) ([]uint64, error) {
+func (k Keeper) CheckPrevoteDisputesForExpiration(ctx context.Context) ([]uint64, error) {
 	openDisputes, err := k.OpenDisputes.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -163,7 +158,7 @@ func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) ([]uint64, er
 			return nil, err
 		}
 
-		if ctx.BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
+		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
 			// append to expired list
 			expiredDisputes = append(expiredDisputes, disputeId)
 		} else {

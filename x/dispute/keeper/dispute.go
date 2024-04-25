@@ -292,7 +292,7 @@ func (k Keeper) SetDispute(ctx sdk.Context, dispute types.Dispute) error {
 }
 
 // Set dispute status by dispute id
-func (k Keeper) SetDisputeStatus(ctx sdk.Context, id uint64, status types.DisputeStatus) error {
+func (k Keeper) SetDisputeStatus(ctx context.Context, id uint64, status types.DisputeStatus) error {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return err

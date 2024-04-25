@@ -20,7 +20,6 @@ message Vote {
   ];
   VoteResult voteResult = 4;
   bool executed = 5;
-  Tally tally = 6;
 }
 
 enum VoteResult {

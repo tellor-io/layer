@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -45,7 +46,7 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, from
 }
 
 // return slashed tokens when reporter either wins dispute or dispute is invalid
-func (k Keeper) ReturnSlashedTokens(ctx sdk.Context, dispute types.Dispute) error {
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
 
 	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.ReportEvidence.Reporter, dispute.ReportEvidence.BlockNumber, dispute.SlashAmount)
 	if err != nil {
@@ -56,7 +57,7 @@ func (k Keeper) ReturnSlashedTokens(ctx sdk.Context, dispute types.Dispute) erro
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
 }
 
-func (k Keeper) ReturnFeetoStake(ctx sdk.Context, repAddr string, height int64, remainingAmt math.Int) error {
+func (k Keeper) ReturnFeetoStake(ctx context.Context, repAddr string, height int64, remainingAmt math.Int) error {
 
 	err := k.reporterKeeper.ReturnSlashedTokens(ctx, repAddr, height, remainingAmt)
 	if err != nil {

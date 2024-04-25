@@ -17,6 +17,7 @@ service Msg {
   rpc ProposeDispute(MsgProposeDispute) returns (MsgProposeDisputeResponse);
   rpc AddFeeToDispute(MsgAddFeeToDispute) returns (MsgAddFeeToDisputeResponse);
   rpc Vote(MsgVote) returns (MsgVoteResponse);
+  rpc UpdateTeam(MsgUpdateTeam) returns (MsgUpdateTeamResponse);
 }
 message MsgProposeDispute {
   option (cosmos.msg.v1.signer) = "creator";
@@ -47,3 +48,11 @@ message MsgVote {
 }
 
 message MsgVoteResponse {}
+
+message MsgUpdateTeam {
+  option (cosmos.msg.v1.signer) = "current_team_address";
+  string current_team_address = 1;
+  string new_team_address = 2;
+}
+
+message MsgUpdateTeamResponse {}

@@ -151,16 +151,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ids, err := am.keeper.CheckPrevoteDisputesForExpiration(sdkCtx)
-	if err != nil {
-		return err
-	}
-	err = am.keeper.Tally(sdkCtx, ids)
-	if err != nil {
-		return err
-	}
-	return am.keeper.ExecuteVotes(sdkCtx, ids)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 // ----------------------------------------------------------------------------

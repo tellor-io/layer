@@ -7,25 +7,24 @@ import "gogoproto/gogo.proto";
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
 message VoterClasses {
-  
-  string validators = 1 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+  string reporters = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
+    (gogoproto.nullable) = false
+  ];
   string tokenHolders = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
+    (gogoproto.nullable) = false
+  ];
   string users = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
+    (gogoproto.nullable) = false
+  ];
   string team = 4 [
-    (cosmos_proto.scalar)  = "cosmos.Int",
+    (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ]; 
+    (gogoproto.nullable) = false
+  ];
 }

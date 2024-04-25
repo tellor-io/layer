@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"context"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -9,7 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k Keeper) RefundDisputeFee(ctx sdk.Context, feePayers []types.PayerInfo, remainingAmt math.Int) error {
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInfo, remainingAmt math.Int) error {
 	var outputs []banktypes.Output
 
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
@@ -43,7 +45,7 @@ func (k Keeper) RefundDisputeFee(ctx sdk.Context, feePayers []types.PayerInfo, r
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }
 
-func (k Keeper) RewardReporterBondToFeePayers(ctx sdk.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
+func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
 	totalFeesPaid := math.ZeroInt()
 	for _, reporter := range feePayers {
 		totalFeesPaid = totalFeesPaid.Add(reporter.Amount)
@@ -63,7 +65,7 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx sdk.Context, feePayers []types
 
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reporterBond)))
 }
-func (k Keeper) RewardVoters(ctx sdk.Context, voters []VoterInfo, totalAmount math.Int) (math.Int, error) {
+func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
 		return totalAmount, nil
 	}

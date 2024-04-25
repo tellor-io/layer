@@ -3,6 +3,43 @@ info:
   title: HTTP API Console
   name: ''
   description: ''
+paths:
+  /tellor-io/layer/dispute/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerDisputeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
 definitions:
   cosmos.auth.v1beta1.MsgUpdateParamsResponse:
     type: object
@@ -2029,6 +2066,81 @@ definitions:
       the connection handshake.
   layer.bridge.MsgRequestAttestationsResponse:
     type: object
+  layer.dispute.DisputeCategory:
+    type: string
+    enum:
+      - DISPUTE_CATEGORY_UNSPECIFIED
+      - DISPUTE_CATEGORY_WARNING
+      - DISPUTE_CATEGORY_MINOR
+      - DISPUTE_CATEGORY_MAJOR
+    default: DISPUTE_CATEGORY_UNSPECIFIED
+    description: |-
+      DisputeCategory defines the severity of a dispute.
+
+       - DISPUTE_CATEGORY_UNSPECIFIED: UNSPECIFIED defines an invalid dispute category.
+       - DISPUTE_CATEGORY_WARNING: WARNING defines a 1 percent slashing.
+       - DISPUTE_CATEGORY_MINOR: MINOR defines a 5 percent slashing.
+       - DISPUTE_CATEGORY_MAJOR: MAJOR defines a 100 percent slashing.
+  layer.dispute.MsgAddFeeToDisputeResponse:
+    type: object
+  layer.dispute.MsgProposeDisputeResponse:
+    type: object
+  layer.dispute.MsgVoteResponse:
+    type: object
+  layer.dispute.VoteEnum:
+    type: string
+    enum:
+      - VOTE_INVALID
+      - VOTE_SUPPORT
+      - VOTE_AGAINST
+    default: VOTE_INVALID
+  layer.oracle.MicroReport:
+    type: object
+    properties:
+      reporter:
+        type: string
+        title: reporter is the address of the reporter
+      power:
+        type: string
+        format: int64
+        title: the power of the reporter based on total tokens normalized
+      query_type:
+        type: string
+        title: string identifier of the data spec
+      query_id:
+        type: string
+        format: byte
+        title: hash of the query data
+      aggregate_method:
+        type: string
+        title: >-
+          aggregate method to use for aggregating all the reports for the query
+          id
+      value:
+        type: string
+        title: hex string of the response value
+      timestamp:
+        type: string
+        format: date-time
+        title: timestamp of when the report was created
+      cyclelist:
+        type: boolean
+        title: indicates if the report's query id is in the cyclelist
+      block_number:
+        type: string
+        format: int64
+        title: block number of when the report was created
+    title: MicroReport represents data for a single report
+  layer.dispute.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.dispute.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.registry.ABIComponent:
     type: object
     properties:

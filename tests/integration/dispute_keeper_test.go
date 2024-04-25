@@ -224,7 +224,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 	// // tally vote
-	err = s.disputekeeper.TallyVote(s.ctx, ids[0])
+	err = s.disputekeeper.Tallyvote(s.ctx, ids[0])
 	s.NoError(err)
 	reporter, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
 	s.NoError(err)
@@ -310,7 +310,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.NoError(err)
 
 	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
-	err = s.disputekeeper.TallyVote(ctx, 1)
+	err = s.disputekeeper.Tallyvote(ctx, 1)
 	s.NoError(err)
 
 	bond := reporter.Amount
@@ -412,9 +412,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
-	// tally vote
-	err = s.disputekeeper.Tally(s.ctx, ids)
-	s.NoError(err)
 	// execute vote
 	err = s.disputekeeper.ExecuteVotes(s.ctx, ids)
 	s.NoError(err)
@@ -542,7 +539,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		s.NoError(err)
 	}
 	// tally vote
-	err = s.disputekeeper.TallyVote(s.ctx, 1)
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
 	// execute vote
 	err = s.disputekeeper.ExecuteVote(s.ctx, 1)
