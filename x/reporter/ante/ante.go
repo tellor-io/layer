@@ -1,8 +1,11 @@
 package ante
 
 import (
+	"fmt"
+
+	"errors"
+
 	"cosmossdk.io/math"
-	"github.com/cockroachdb/errors"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -35,6 +38,8 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			msgAmount = msg.Amount.Amount
 		case *stakingtypes.MsgCancelUnbondingDelegation:
 			msgAmount = msg.Amount.Amount
+		case *stakingtypes.MsgUndelegate:
+			msgAmount = msg.Amount.Amount.Neg()
 		default:
 			continue
 		}
@@ -46,10 +51,23 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if err != nil {
 			return ctx, err
 		}
-		incr := currentAmount.Add(msgAmount)
-		if incr.GT(state.FivePercent) {
-			return ctx, errors.New("amount is over the twelve hour five percent limit")
+		if msgAmount.IsNegative() {
+			removedFivePercent := state.Amount.Sub(state.Amount.QuoRaw(20))
+			lowerBound := currentAmount.Add(msgAmount)
+			fmt.Println("lowerBound", lowerBound, "removedFivePercent", removedFivePercent)
+			if lowerBound.LT(removedFivePercent) {
+				return ctx, errors.New("amount decreases total stake by more than the allowed 5% in a twelve hour period")
+			}
+		} else {
+			// add 5 percent
+			addedFivePercent := state.Amount.Add(state.Amount.QuoRaw(20))
+			upperBound := currentAmount.Add(msgAmount)
+			fmt.Println("upperBound", upperBound, "addedFivePercent", addedFivePercent)
+			if upperBound.GT(addedFivePercent) {
+				return ctx, errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period")
+			}
 		}
+
 	}
 
 	return next(ctx, tx, simulate)

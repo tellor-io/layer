@@ -17,8 +17,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 	c := ctx.BlockTime()
 	k.Tracker.Set(ctx, types.StakeTracker{
-		Expiration:  &c,
-		FivePercent: math.ZeroInt()})
+		Expiration: &c,
+		Amount:     math.ZeroInt()})
 }
 
 // ExportGenesis returns the module's exported genesis.

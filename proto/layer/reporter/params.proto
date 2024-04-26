@@ -26,8 +26,8 @@ message Params {
 message StakeTracker {
   google.protobuf.Timestamp expiration = 1 [(gogoproto.stdtime) = true];
 
-  string five_percent = 2 [
-    (gogoproto.moretags) = "yaml:\"five_percent\"",
+  string amount = 2 [
+    (gogoproto.moretags) = "yaml:\"amount\"",
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
