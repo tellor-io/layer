@@ -114,10 +114,8 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// add 5 percent
-	newTotal := total.Add(total.QuoRaw(20))
 
 	maxStake.Expiration = &newExpiration
-	maxStake.FivePercent = newTotal
+	maxStake.Amount = total
 	return k.Tracker.Set(ctx, maxStake)
 }

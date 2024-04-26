@@ -3,8 +3,9 @@ package ante
 import (
 	"testing"
 
+	"errors"
+
 	"cosmossdk.io/math"
-	"github.com/cockroachdb/errors"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,8 +22,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
 	err := k.Tracker.Set(ctx, types.StakeTracker{
-		Expiration:  nil,
-		FivePercent: math.NewInt(105),
+		Expiration: nil,
+		Amount:     math.NewInt(105),
 	})
 	require.NoError(t, err)
 	testCases := []struct {
@@ -56,7 +57,16 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				ValidatorAddress: sample.AccAddressBytes().String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
-			err: errors.New("amount is over the twelve hour five percent limit"),
+			err: errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period"),
+		},
+		{
+			name: "Undelegate",
+			msg: &stakingtypes.MsgUndelegate{
+				DelegatorAddress: sample.AccAddressBytes().String(),
+				ValidatorAddress: sample.AccAddressBytes().String(),
+				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(95)},
+			},
+			err: errors.New("amount decreases total stake by more than the allowed 5% in a twelve hour period"),
 		},
 		{
 			name: "Other message type",
