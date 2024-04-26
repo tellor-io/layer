@@ -1,6 +1,7 @@
 package reporter
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tellor-io/layer/x/reporter/keeper"
@@ -14,6 +15,10 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err != nil {
 		panic(err)
 	}
+	c := ctx.BlockTime()
+	k.Tracker.Set(ctx, types.StakeTracker{
+		Expiration:  &c,
+		FivePercent: math.ZeroInt()})
 }
 
 // ExportGenesis returns the module's exported genesis.

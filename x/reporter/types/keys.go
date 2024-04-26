@@ -31,6 +31,7 @@ var (
 	ReporterDelegatorsIndexPrefix       = collections.NewPrefix(20)
 	TokenOriginSnapshotPrefix           = collections.NewPrefix(21)
 	DelegatorTipsPrefix                 = collections.NewPrefix(22)
+	StakeTrackerPrefix                  = collections.NewPrefix(23)
 )
 
 func KeyPrefix(p string) []byte {
