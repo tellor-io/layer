@@ -4,6 +4,7 @@ package layer.reporter;
 import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
@@ -19,5 +20,16 @@ message Params {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar) = "cosmos.Dec"
+  ];
+}
+
+message StakeTracker {
+  google.protobuf.Timestamp expiration = 1 [(gogoproto.stdtime) = true];
+
+  string five_percent = 2 [
+    (gogoproto.moretags) = "yaml:\"five_percent\"",
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
   ];
 }
