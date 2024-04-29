@@ -129,6 +129,8 @@ import (
 
 	_ "github.com/tellor-io/layer/app/config"
 
+	tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
+	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	bridgemodule "github.com/tellor-io/layer/x/bridge"
 	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
 	bridgemoduletypes "github.com/tellor-io/layer/x/bridge/types"
@@ -148,6 +150,7 @@ import (
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
 	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 )
 
 const (
@@ -265,6 +268,7 @@ type App struct {
 	PriceFeedClient     *pricefeedclient.Client
 	ReporterClient      *reporterclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+	TokenBridgeClient   *tokenbridgeclient.Client
 }
 
 // New returns a reference to an initialized blockchain app
@@ -620,6 +624,8 @@ func New(
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
+
+	tokenDepositsCache := tokenbridgetypes.NewDepositReports()
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
 	// accept new connections.
@@ -636,6 +642,7 @@ func New(
 		app.Logger(),
 		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
 	)
+	app.Server.WithTokenDepositsCache(tokenDepositsCache)
 	// Create a closure for starting pricefeed daemon and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
@@ -688,6 +695,9 @@ func New(
 					}
 				}()
 			}
+
+			go tokenbridgeserver.StartTokenBridgeServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, tokenDepositsCache)
+			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger)
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.

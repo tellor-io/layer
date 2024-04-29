@@ -1,4 +1,4 @@
-package server
+package token_bridge
 
 import (
 	"context"
