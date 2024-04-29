@@ -1,0 +1,13 @@
+syntax = "proto3";
+package layer.dispute.module;
+
+import "cosmos/app/v1alpha1/module.proto";
+import "cosmos_proto/cosmos.proto";
+
+// Module is the config object for the module.
+message Module {
+  option (cosmos.app.v1alpha1.module) = {go_import: "github.com/tellor-io/layer/x/dispute"};
+
+  // authority defines the custom module authority. If not set, defaults to the governance module.
+  string team_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

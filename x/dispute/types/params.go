@@ -26,7 +26,7 @@ func NewParams(
 	team string,
 ) Params {
 	return Params{
-		Team: team,
+		TeamAddress: team,
 	}
 }
 
@@ -40,13 +40,13 @@ func DefaultParams() Params {
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyTeamAddress, &p.Team, validateTeamAddress),
+		paramtypes.NewParamSetPair(KeyTeamAddress, &p.TeamAddress, validateTeamAddress),
 	}
 }
 
 // Validate validates the set of params
 func (p Params) Validate() error {
-	if err := validateTeamAddress(p.Team); err != nil {
+	if err := validateTeamAddress(p.TeamAddress); err != nil {
 		return err
 	}
 

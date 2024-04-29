@@ -314,7 +314,7 @@ func (k Keeper) IsTeamAddress(ctx context.Context, voter sdk.AccAddress) math.In
 		panic(err)
 	}
 
-	if !bytes.Equal(voter, sdk.MustAccAddressFromBech32(params.Team)) {
+	if !bytes.Equal(voter, sdk.MustAccAddressFromBech32(params.TeamAddress)) {
 		return math.ZeroInt()
 	}
 	return math.NewInt(1)

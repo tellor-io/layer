@@ -185,6 +185,7 @@ type DisputeOutputs struct {
 }
 
 func ProvideModule(in DisputeInputs) DisputeOutputs {
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -193,6 +194,7 @@ func ProvideModule(in DisputeInputs) DisputeOutputs {
 		in.OracleKeeper,
 		in.ReporterKeeper,
 	)
+
 	m := NewAppModule(
 		in.Cdc,
 		k,

@@ -12,10 +12,10 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 	if err != nil {
 		return nil, err
 	}
-	if param.Team != msg.CurrentTeamAddress {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid team address; expected %s, got %s", param.Team, msg.CurrentTeamAddress)
+	if param.TeamAddress != msg.CurrentTeamAddress {
+		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid team address; expected %s, got %s", param.TeamAddress, msg.CurrentTeamAddress)
 	}
-	param.Team = msg.NewTeamAddress
+	param.TeamAddress = msg.NewTeamAddress
 	if err := k.Params.Set(ctx, param); err != nil {
 		return nil, err
 	}
