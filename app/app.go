@@ -129,7 +129,7 @@ import (
 
 	_ "github.com/tellor-io/layer/app/config"
 
-	tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
+	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	bridgemodule "github.com/tellor-io/layer/x/bridge"
 	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
@@ -688,6 +688,7 @@ func New(
 						&daemontypes.GrpcClientImpl{},
 						marketParamsConfig,
 						indexPriceCache,
+						tokenDepositsCache,
 						app.CreateQueryContext,
 						*app.StakingKeeper,
 					); err != nil {
@@ -696,8 +697,8 @@ func New(
 				}()
 			}
 
-			go tokenbridgeserver.StartTokenBridgeServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, tokenDepositsCache)
-			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger)
+			// go tokenbridgeserver.StartTokenBridgeServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, tokenDepositsCache)
+			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger, tokenDepositsCache)
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.

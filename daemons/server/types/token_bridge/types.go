@@ -2,6 +2,7 @@ package types
 
 import (
 	"bytes"
+	"fmt"
 	"sync"
 )
 
@@ -16,13 +17,19 @@ type DepositReports struct {
 }
 
 func NewDepositReports() *DepositReports {
-	return &DepositReports{}
+	return &DepositReports{
+		Reports: make([]DepositReport, 0),
+	}
 }
 
+// GetReports returns the list of pending deposits.
 func (d *DepositReports) GetReports() []DepositReport {
+	d.Lock()
+	defer d.Unlock()
 	return d.Reports
 }
 
+// AddReport adds a new deposit report to the list of pending deposits.
 func (d *DepositReports) AddReport(report DepositReport) {
 	d.Lock()
 	defer d.Unlock()
@@ -40,6 +47,13 @@ func (d *DepositReports) RemoveReport(report DepositReport) {
 	}
 }
 
-func (d *DepositReports) GetOldestReport() DepositReport {
-	return d.Reports[0]
+func (d *DepositReports) GetOldestReport() (DepositReport, error) {
+	d.Lock()
+	defer d.Unlock()
+	if len(d.Reports) == 0 {
+		return DepositReport{}, fmt.Errorf("no pending deposits")
+	}
+	oldest := d.Reports[0]
+	d.Reports = d.Reports[1:]
+	return oldest, nil
 }

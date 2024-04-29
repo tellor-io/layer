@@ -24,7 +24,10 @@ func NewTokenBridgeServer(pendingDeposits *tokenbridgeservertypes.DepositReports
 
 func (s *tokenBridgeServer) GetPendingDepositReport(ctx context.Context, req *types.GetPendingDepositReportRequest) (*types.GetPendingDepositReportResponse, error) {
 	// Retrieve pending deposits from s.pendingDeposits
-	deposits := s.pendingDeposits.GetOldestReport()
+	deposits, err := s.pendingDeposits.GetOldestReport()
+	if err != nil {
+		return nil, err
+	}
 
 	// Create response with pending deposits
 	response := &types.GetPendingDepositReportResponse{

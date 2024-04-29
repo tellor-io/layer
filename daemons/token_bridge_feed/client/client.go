@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"math/big"
@@ -15,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
 )
 
@@ -23,6 +23,7 @@ type Client struct {
 	lastReportedDepositId *big.Int
 	pendingReports        []DepositReport
 	logger                log.Logger
+	tokenDepositsCache    *tokenbridgetypes.DepositReports
 
 	daemonStartup sync.WaitGroup
 
@@ -32,17 +33,15 @@ type Client struct {
 
 	stops []chan bool
 
-	stopDaemon sync.Once
-
 	ethClient *ethclient.Client
 
 	bridgeContract *tokenbridge.TokenBridge
 }
 
-func StartNewClient(ctx context.Context, logger log.Logger) *Client {
+func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
 	logger.Info("Starting tokenbridge daemon")
 
-	client := newClient(logger)
+	client := newClient(logger, tokenDepositsCache)
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {
 		defer client.runningSubtasksWaitGroup.Done()
@@ -51,12 +50,13 @@ func StartNewClient(ctx context.Context, logger log.Logger) *Client {
 	return client
 }
 
-func newClient(logger log.Logger) *Client {
+func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
 	logger = logger.With(log.ModuleKey, "tokenbridge-daemon")
 	client := &Client{
-		tickers: []*time.Ticker{},
-		stops:   []chan bool{},
-		logger:  logger,
+		tickers:            []*time.Ticker{},
+		stops:              []chan bool{},
+		logger:             logger,
+		tokenDepositsCache: tokenDepositsCache,
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -217,8 +217,10 @@ func (c *Client) QueryTokenBridgeContract() error {
 		if err != nil {
 			c.logger.Error("Failed to encode report value", "error", err)
 		}
-		c.pendingReports = append(c.pendingReports, DepositReport{queryData, reportValue})
+		// c.pendingReports = append(c.pendingReports, DepositReport{queryData, reportValue})
 
+		// Update the token deposits cache
+		c.tokenDepositsCache.AddReport(tokenbridgetypes.DepositReport{QueryData: queryData, Value: reportValue})
 		c.logger.Info("Added deposit to pending reports", "depositId", c.lastReportedDepositId)
 	}
 
@@ -296,21 +298,21 @@ func (c *Client) EncodeQueryData(depositReceipt DepositReceipt) ([]byte, error) 
 	return queryDataEncoded, nil
 }
 
-func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) (string, error) {
+func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error) {
 	// replicate solidity encoding, abi.encode(address ethSender, string layerRecipient, uint256 amount)
 
 	// prepare encoding
 	AddressType, err := abi.NewType("address", "", nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	reportValueArgs := abi.Arguments{
@@ -322,12 +324,10 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) (string, error
 	// encode report value arguments
 	reportValueArgsEncoded, err := reportValueArgs.Pack(depositReceipt.Sender, depositReceipt.Recipient, depositReceipt.Amount)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	reportValString := hex.EncodeToString(reportValueArgsEncoded)
-
-	return reportValString, nil
+	return reportValueArgsEncoded, nil
 }
 
 func (c *Client) GetPendingBridgeDeposit() (DepositReport, error) {

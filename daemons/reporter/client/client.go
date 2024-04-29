@@ -23,6 +23,7 @@ import (
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
@@ -36,11 +37,11 @@ type Client struct {
 	StakingClient     stakingtypes.QueryClient
 	ReporterClient    reportertypes.QueryClient
 
-	cosmosCtx        client.Context
-	MarketParams     []pricefeedtypes.MarketParam
-	MarketToExchange *pricefeedservertypes.MarketToExchangePrices
-
-	StakingKeeper stakingkeeper.Keeper
+	cosmosCtx          client.Context
+	MarketParams       []pricefeedtypes.MarketParam
+	MarketToExchange   *pricefeedservertypes.MarketToExchangePrices
+	TokenDepositsCache *tokenbridgetypes.DepositReports
+	StakingKeeper      stakingkeeper.Keeper
 
 	accAddr sdk.AccAddress
 	// logger is the logger for the daemon.
@@ -62,6 +63,7 @@ func (c *Client) Start(
 	grpcClient daemontypes.GrpcClient,
 	marketParams []pricefeedtypes.MarketParam,
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
+	tokenDepositsCache *tokenbridgetypes.DepositReports,
 	ctxGetter func(int64, bool) (sdk.Context, error),
 	stakingKeeper stakingkeeper.Keeper,
 ) error {
@@ -74,6 +76,8 @@ func (c *Client) Start(
 	c.MarketParams = marketParams
 	c.MarketToExchange = marketToExchange
 	c.StakingKeeper = stakingKeeper
+
+	c.TokenDepositsCache = tokenDepositsCache
 
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
@@ -226,13 +230,19 @@ func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool)
 }
 
 func (c *Client) SubmitReport(ctx context.Context) error {
-	querydata, err := c.CurrentQuery(ctx)
+	querydata, value, err := c.deposits()
 	if err != nil {
-		return fmt.Errorf("error calling 'CurrentQuery': %v", err)
-	}
-	value, err := c.median(querydata)
-	if err != nil {
-		return fmt.Errorf("error getting median from median client': %v", err)
+		querydata, err = c.CurrentQuery(ctx)
+		if err != nil {
+			return fmt.Errorf("error calling 'CurrentQuery': %v", err)
+		}
+		value, err = c.median(querydata)
+		if err != nil {
+			return fmt.Errorf("error getting median from median client': %v", err)
+		}
+	} else {
+		// delete this
+		c.logger.Info("Submitting for token bridge")
 	}
 	c.logger.Info("SubmitReport", "Median value", value)
 	// Salt and hash the value

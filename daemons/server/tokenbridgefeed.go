@@ -41,7 +41,10 @@ func (s *TokenBridgeFeedServer) GetPendingDepositReport(
 		panic(fmt.Errorf("server not initialized correclty, tokenDepositsCache not initialized"))
 	}
 
-	report := s.tokenDepositsCache.GetOldestReport()
+	report, err := s.tokenDepositsCache.GetOldestReport()
+	if err != nil {
+		return nil, err
+	}
 	queryData := report.QueryData
 	value := report.Value
 
