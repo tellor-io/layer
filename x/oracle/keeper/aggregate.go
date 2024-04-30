@@ -275,3 +275,30 @@ func (k Keeper) GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timesta
 
 	return aggregate, nil
 }
+
+func (k Keeper) GetAggregateByIndex(ctx context.Context, queryId []byte, index uint64) (aggregate *types.Aggregate, timestamp time.Time, err error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId)
+
+	// var aggregate *types.Aggregate
+	var currentIndex uint64
+
+	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		if currentIndex == index {
+			aggregate = &value
+			timestamp = time.Unix(key.K2(), 0)
+			return true, nil // Stop when the desired index is reached
+		}
+		currentIndex++
+		return false, nil // Continue to the next aggregate
+	})
+
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	if aggregate == nil {
+		return nil, time.Time{}, fmt.Errorf("no aggregate found at index %d for query id %s", index, hex.EncodeToString(queryId))
+	}
+
+	return aggregate, timestamp, nil
+}

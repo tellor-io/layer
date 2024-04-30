@@ -12,6 +12,7 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 service Msg {
     rpc RequestAttestations (MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
     rpc WithdrawTokens (MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
+    rpc ClaimDeposit (MsgClaimDepositRequest) returns (MsgClaimDepositResponse);
 }
 
 message MsgRequestAttestations {
@@ -33,4 +34,14 @@ message MsgWithdrawTokens {
 }
 
 message MsgWithdrawTokensResponse {}
+
+message MsgClaimDepositRequest {
+    option (cosmos.msg.v1.signer) = "creator";
+
+    string creator = 1;
+    uint64 depositId = 2;
+    uint64 index = 3;
+}
+
+message MsgClaimDepositResponse {}
 

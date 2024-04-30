@@ -89,7 +89,7 @@ func (k Keeper) createWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 }
 
 func (k Keeper) getWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
-	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(uint256 withdrawalId, bool false)))
+	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool false, uint256 withdrawalId)))
 
 	queryTypeString := "TRBBridge"
 	toLayerBool := false

@@ -49,6 +49,7 @@ type (
 		AttestSnapshotDataMap        collections.Map[string, types.AttestationSnapshotData]
 		SnapshotToAttestationsMap    collections.Map[string, types.OracleAttestations]
 		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
+		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
@@ -84,6 +85,7 @@ func NewKeeper(
 		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.StringKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
 		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
 		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
+		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,

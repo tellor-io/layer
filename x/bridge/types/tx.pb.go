@@ -222,42 +222,145 @@ func (m *MsgWithdrawTokensResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawTokensResponse proto.InternalMessageInfo
 
+type MsgClaimDepositRequest struct {
+	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	DepositId uint64 `protobuf:"varint,2,opt,name=depositId,proto3" json:"depositId,omitempty"`
+	Index     uint64 `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
+}
+
+func (m *MsgClaimDepositRequest) Reset()         { *m = MsgClaimDepositRequest{} }
+func (m *MsgClaimDepositRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimDepositRequest) ProtoMessage()    {}
+func (*MsgClaimDepositRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cb4091a52ebadfca, []int{4}
+}
+func (m *MsgClaimDepositRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimDepositRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimDepositRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimDepositRequest.Merge(m, src)
+}
+func (m *MsgClaimDepositRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimDepositRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimDepositRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimDepositRequest proto.InternalMessageInfo
+
+func (m *MsgClaimDepositRequest) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgClaimDepositRequest) GetDepositId() uint64 {
+	if m != nil {
+		return m.DepositId
+	}
+	return 0
+}
+
+func (m *MsgClaimDepositRequest) GetIndex() uint64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+type MsgClaimDepositResponse struct {
+}
+
+func (m *MsgClaimDepositResponse) Reset()         { *m = MsgClaimDepositResponse{} }
+func (m *MsgClaimDepositResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimDepositResponse) ProtoMessage()    {}
+func (*MsgClaimDepositResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cb4091a52ebadfca, []int{5}
+}
+func (m *MsgClaimDepositResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimDepositResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimDepositResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimDepositResponse.Merge(m, src)
+}
+func (m *MsgClaimDepositResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimDepositResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimDepositResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimDepositResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRequestAttestations)(nil), "layer.bridge.MsgRequestAttestations")
 	proto.RegisterType((*MsgRequestAttestationsResponse)(nil), "layer.bridge.MsgRequestAttestationsResponse")
 	proto.RegisterType((*MsgWithdrawTokens)(nil), "layer.bridge.MsgWithdrawTokens")
 	proto.RegisterType((*MsgWithdrawTokensResponse)(nil), "layer.bridge.MsgWithdrawTokensResponse")
+	proto.RegisterType((*MsgClaimDepositRequest)(nil), "layer.bridge.MsgClaimDepositRequest")
+	proto.RegisterType((*MsgClaimDepositResponse)(nil), "layer.bridge.MsgClaimDepositResponse")
 }
 
 func init() { proto.RegisterFile("layer/bridge/tx.proto", fileDescriptor_cb4091a52ebadfca) }
 
 var fileDescriptor_cb4091a52ebadfca = []byte{
-	// 400 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xcd, 0xce, 0xd2, 0x40,
-	0x14, 0x6d, 0xfd, 0xcc, 0x67, 0x18, 0x89, 0x89, 0xf5, 0xaf, 0x54, 0x32, 0x10, 0x62, 0xe2, 0x4f,
-	0x74, 0x26, 0xe0, 0xc2, 0xc4, 0x9d, 0xb0, 0x72, 0xc1, 0xa6, 0x31, 0x31, 0x61, 0xd7, 0x96, 0x9b,
-	0x61, 0x22, 0xed, 0x2d, 0x33, 0x53, 0x84, 0xad, 0x4f, 0x60, 0x7c, 0x12, 0x1f, 0x83, 0x85, 0x0b,
-	0x96, 0xae, 0x8c, 0x81, 0x85, 0xaf, 0x61, 0xfa, 0x27, 0x0a, 0x44, 0x5d, 0xf5, 0xde, 0x73, 0x4e,
-	0xef, 0x3d, 0x3d, 0xbd, 0xe4, 0xce, 0x3c, 0x58, 0x83, 0xe2, 0xa1, 0x92, 0x53, 0x01, 0xdc, 0xac,
-	0x58, 0xaa, 0xd0, 0xa0, 0xd3, 0x2c, 0x60, 0x56, 0xc2, 0xde, 0xbd, 0x08, 0x75, 0x8c, 0x9a, 0xc7,
-	0x5a, 0xf0, 0x65, 0x3f, 0x7f, 0x94, 0x32, 0x8f, 0x56, 0x44, 0x18, 0x68, 0xe0, 0xcb, 0x7e, 0x08,
-	0x26, 0xe8, 0xf3, 0x08, 0x65, 0x52, 0xf1, 0xb7, 0x05, 0x0a, 0x2c, 0x4a, 0x9e, 0x57, 0x25, 0xda,
-	0x5b, 0x91, 0xbb, 0x63, 0x2d, 0x7c, 0x58, 0x64, 0xa0, 0xcd, 0x2b, 0x63, 0x40, 0x9b, 0xc0, 0x48,
-	0x4c, 0xb4, 0xe3, 0x92, 0x6b, 0x91, 0x82, 0xc0, 0xa0, 0x72, 0xed, 0xae, 0xfd, 0xa8, 0xe1, 0xd7,
-	0x6d, 0xce, 0x2c, 0x32, 0x50, 0xeb, 0xd7, 0x53, 0xf7, 0x4a, 0xc9, 0x54, 0xad, 0xd3, 0x26, 0x0d,
-	0x23, 0xe3, 0x7c, 0x46, 0x9c, 0xba, 0x17, 0x05, 0x77, 0x00, 0x5e, 0x36, 0x3f, 0xfc, 0xf8, 0xfc,
-	0xa4, 0x9e, 0xd2, 0xeb, 0x12, 0x7a, 0x7e, 0xb3, 0x0f, 0x3a, 0xc5, 0x44, 0x43, 0xef, 0x93, 0x4d,
-	0x6e, 0x8e, 0xb5, 0x78, 0x2b, 0xcd, 0x6c, 0xaa, 0x82, 0xf7, 0x6f, 0xf0, 0x1d, 0xfc, 0xd5, 0x57,
-	0x9b, 0x34, 0x14, 0x44, 0x32, 0x95, 0x90, 0x98, 0xca, 0xd9, 0x01, 0x70, 0x5e, 0x90, 0xcb, 0x20,
-	0xc6, 0x2c, 0x31, 0x85, 0xb1, 0xeb, 0x83, 0x16, 0x2b, 0x03, 0x63, 0x79, 0x60, 0xac, 0x0a, 0x8c,
-	0x8d, 0x50, 0x26, 0xc3, 0xab, 0x9b, 0x6f, 0x1d, 0xcb, 0xaf, 0xe4, 0x47, 0xb6, 0xef, 0x93, 0xd6,
-	0x89, 0xa7, 0xda, 0xf1, 0xe0, 0x8b, 0x4d, 0x2e, 0xc6, 0x5a, 0x38, 0x92, 0xdc, 0x3a, 0x17, 0xe9,
-	0x03, 0xf6, 0xfb, 0xaf, 0x64, 0xe7, 0x3f, 0xdf, 0x7b, 0xfa, 0x3f, 0xaa, 0x7a, 0xa5, 0x33, 0x21,
-	0x37, 0x8e, 0x02, 0xea, 0x9c, 0xbc, 0xff, 0xa7, 0xc0, 0x7b, 0xf8, 0x0f, 0x41, 0x3d, 0x7b, 0x38,
-	0xda, 0xec, 0xa8, 0xbd, 0xdd, 0x51, 0xfb, 0xfb, 0x8e, 0xda, 0x1f, 0xf7, 0xd4, 0xda, 0xee, 0xa9,
-	0xf5, 0x75, 0x4f, 0xad, 0xc9, 0x63, 0x21, 0xcd, 0x2c, 0x0b, 0x59, 0x84, 0x31, 0x37, 0x30, 0x9f,
-	0xa3, 0x7a, 0x26, 0x91, 0x97, 0xf7, 0xbb, 0xfa, 0x75, 0xc1, 0xeb, 0x14, 0x74, 0x78, 0x59, 0x1c,
-	0xda, 0xf3, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc7, 0xf5, 0xb4, 0x56, 0xde, 0x02, 0x00, 0x00,
+	// 466 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0xcd, 0x6e, 0xd3, 0x40,
+	0x10, 0x8e, 0xdb, 0x50, 0x94, 0x25, 0x42, 0xc2, 0x14, 0x9a, 0x98, 0xca, 0xad, 0x22, 0x10, 0x3f,
+	0x82, 0x5d, 0xa5, 0x1c, 0x90, 0xb8, 0xd1, 0x70, 0xe1, 0x90, 0x8b, 0x85, 0x84, 0x54, 0x4e, 0xfe,
+	0x19, 0xb9, 0x2b, 0x62, 0x8f, 0xbb, 0x3b, 0x29, 0xce, 0x95, 0x27, 0x40, 0xbc, 0x05, 0x37, 0x1e,
+	0xa3, 0xc7, 0x1e, 0x39, 0x21, 0x94, 0x1c, 0x78, 0x0d, 0x64, 0xaf, 0x93, 0x94, 0xc4, 0x6a, 0x38,
+	0x79, 0xe7, 0x9b, 0xcf, 0x33, 0xdf, 0x7e, 0xb3, 0xc3, 0xee, 0x8d, 0xfc, 0x09, 0x28, 0x11, 0x28,
+	0x19, 0xc5, 0x20, 0x28, 0xe7, 0x99, 0x42, 0x42, 0xbb, 0x5d, 0xc2, 0xdc, 0xc0, 0xce, 0x5e, 0x88,
+	0x3a, 0x41, 0x2d, 0x12, 0x1d, 0x8b, 0xf3, 0x7e, 0xf1, 0x31, 0x34, 0xc7, 0xad, 0x12, 0x81, 0xaf,
+	0x41, 0x9c, 0xf7, 0x03, 0x20, 0xbf, 0x2f, 0x42, 0x94, 0x69, 0x95, 0xdf, 0x8d, 0x31, 0xc6, 0xf2,
+	0x28, 0x8a, 0x93, 0x41, 0x7b, 0x39, 0xbb, 0x3f, 0xd4, 0xb1, 0x07, 0x67, 0x63, 0xd0, 0xf4, 0x86,
+	0x08, 0x34, 0xf9, 0x24, 0x31, 0xd5, 0x76, 0x87, 0xdd, 0x0c, 0x15, 0xf8, 0x84, 0xaa, 0x63, 0x1d,
+	0x5a, 0x4f, 0x5a, 0xde, 0x3c, 0x2c, 0x32, 0x67, 0x63, 0x50, 0x93, 0x77, 0x51, 0x67, 0xcb, 0x64,
+	0xaa, 0xd0, 0xde, 0x67, 0x2d, 0x92, 0x49, 0x51, 0x23, 0xc9, 0x3a, 0xdb, 0x65, 0x6e, 0x09, 0xbc,
+	0x6e, 0x7f, 0xf9, 0xf3, 0xe3, 0xd9, 0xbc, 0x4a, 0xef, 0x90, 0xb9, 0xf5, 0x9d, 0x3d, 0xd0, 0x19,
+	0xa6, 0x1a, 0x7a, 0xdf, 0x2c, 0x76, 0x67, 0xa8, 0xe3, 0x0f, 0x92, 0x4e, 0x23, 0xe5, 0x7f, 0x7e,
+	0x8f, 0x9f, 0xe0, 0x5a, 0x5d, 0xfb, 0xac, 0xa5, 0x20, 0x94, 0x99, 0x84, 0x94, 0x2a, 0x65, 0x4b,
+	0xc0, 0x7e, 0xc5, 0x76, 0xfc, 0x04, 0xc7, 0x29, 0x95, 0xc2, 0x6e, 0x1d, 0x75, 0xb9, 0x31, 0x8c,
+	0x17, 0x86, 0xf1, 0xca, 0x30, 0x3e, 0x40, 0x99, 0x1e, 0x37, 0x2f, 0x7e, 0x1d, 0x34, 0xbc, 0x8a,
+	0xbe, 0x22, 0xfb, 0x01, 0xeb, 0xae, 0x69, 0x5a, 0x28, 0xa6, 0xd2, 0xcd, 0xc1, 0xc8, 0x97, 0xc9,
+	0x5b, 0xc8, 0x50, 0x4b, 0xaa, 0xee, 0x77, 0xbd, 0xea, 0xc8, 0x70, 0x2b, 0x3f, 0x9b, 0xde, 0x12,
+	0xb0, 0x77, 0xd9, 0x0d, 0x99, 0x46, 0x90, 0x97, 0xa2, 0x9b, 0x9e, 0x09, 0x56, 0x24, 0x75, 0xd9,
+	0xde, 0x5a, 0x57, 0x23, 0xe8, 0xe8, 0xfb, 0x16, 0xdb, 0x1e, 0xea, 0xd8, 0x96, 0xec, 0x6e, 0xdd,
+	0x8c, 0x1f, 0xf2, 0xab, 0x6f, 0x8b, 0xd7, 0xcf, 0xc3, 0x79, 0xfe, 0x3f, 0xac, 0x79, 0x4b, 0xfb,
+	0x84, 0xdd, 0x5e, 0x99, 0xd8, 0xc1, 0xda, 0xff, 0xff, 0x12, 0x9c, 0xc7, 0x1b, 0x08, 0x8b, 0xda,
+	0x1f, 0x59, 0xfb, 0xea, 0x35, 0x6b, 0xf4, 0xd7, 0x78, 0xef, 0x3c, 0xda, 0xc0, 0x32, 0xc5, 0x8f,
+	0x07, 0x17, 0x53, 0xd7, 0xba, 0x9c, 0xba, 0xd6, 0xef, 0xa9, 0x6b, 0x7d, 0x9d, 0xb9, 0x8d, 0xcb,
+	0x99, 0xdb, 0xf8, 0x39, 0x73, 0x1b, 0x27, 0x4f, 0x63, 0x49, 0xa7, 0xe3, 0x80, 0x87, 0x98, 0x08,
+	0x82, 0xd1, 0x08, 0xd5, 0x0b, 0x89, 0xc2, 0x6c, 0x6b, 0xbe, 0xd8, 0xd7, 0x49, 0x06, 0x3a, 0xd8,
+	0x29, 0xd7, 0xea, 0xe5, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x71, 0x90, 0x49, 0x78, 0xcc, 0x03,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -274,6 +377,7 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error)
 	WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, opts ...grpc.CallOption) (*MsgWithdrawTokensResponse, error)
+	ClaimDeposit(ctx context.Context, in *MsgClaimDepositRequest, opts ...grpc.CallOption) (*MsgClaimDepositResponse, error)
 }
 
 type msgClient struct {
@@ -302,10 +406,20 @@ func (c *msgClient) WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, o
 	return out, nil
 }
 
+func (c *msgClient) ClaimDeposit(ctx context.Context, in *MsgClaimDepositRequest, opts ...grpc.CallOption) (*MsgClaimDepositResponse, error) {
+	out := new(MsgClaimDepositResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/ClaimDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error)
 	WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error)
+	ClaimDeposit(context.Context, *MsgClaimDepositRequest) (*MsgClaimDepositResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -317,6 +431,9 @@ func (*UnimplementedMsgServer) RequestAttestations(ctx context.Context, req *Msg
 }
 func (*UnimplementedMsgServer) WithdrawTokens(ctx context.Context, req *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTokens not implemented")
+}
+func (*UnimplementedMsgServer) ClaimDeposit(ctx context.Context, req *MsgClaimDepositRequest) (*MsgClaimDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimDeposit not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -359,6 +476,24 @@ func _Msg_WithdrawTokens_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ClaimDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/ClaimDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimDeposit(ctx, req.(*MsgClaimDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.bridge.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -370,6 +505,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawTokens",
 			Handler:    _Msg_WithdrawTokens_Handler,
+		},
+		{
+			MethodName: "ClaimDeposit",
+			Handler:    _Msg_ClaimDeposit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -513,6 +652,69 @@ func (m *MsgWithdrawTokensResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgClaimDepositRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimDepositRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimDepositRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Index != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.Index))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.DepositId != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.DepositId))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimDepositResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimDepositResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -574,6 +776,34 @@ func (m *MsgWithdrawTokens) Size() (n int) {
 }
 
 func (m *MsgWithdrawTokensResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgClaimDepositRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.DepositId != 0 {
+		n += 1 + sovTx(uint64(m.DepositId))
+	}
+	if m.Index != 0 {
+		n += 1 + sovTx(uint64(m.Index))
+	}
+	return n
+}
+
+func (m *MsgClaimDepositResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -958,6 +1188,176 @@ func (m *MsgWithdrawTokensResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgWithdrawTokensResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimDepositRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimDepositRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimDepositRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DepositId", wireType)
+			}
+			m.DepositId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DepositId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Index |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimDepositResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimDepositResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

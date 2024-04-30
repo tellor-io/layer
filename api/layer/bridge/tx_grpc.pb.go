@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type MsgClient interface {
 	RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error)
 	WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, opts ...grpc.CallOption) (*MsgWithdrawTokensResponse, error)
+	ClaimDeposit(ctx context.Context, in *MsgClaimDepositRequest, opts ...grpc.CallOption) (*MsgClaimDepositResponse, error)
 }
 
 type msgClient struct {
@@ -48,12 +49,22 @@ func (c *msgClient) WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, o
 	return out, nil
 }
 
+func (c *msgClient) ClaimDeposit(ctx context.Context, in *MsgClaimDepositRequest, opts ...grpc.CallOption) (*MsgClaimDepositResponse, error) {
+	out := new(MsgClaimDepositResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/ClaimDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error)
 	WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error)
+	ClaimDeposit(context.Context, *MsgClaimDepositRequest) (*MsgClaimDepositResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -66,6 +77,9 @@ func (UnimplementedMsgServer) RequestAttestations(context.Context, *MsgRequestAt
 }
 func (UnimplementedMsgServer) WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTokens not implemented")
+}
+func (UnimplementedMsgServer) ClaimDeposit(context.Context, *MsgClaimDepositRequest) (*MsgClaimDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimDeposit not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -116,6 +130,24 @@ func _Msg_WithdrawTokens_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ClaimDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/ClaimDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimDeposit(ctx, req.(*MsgClaimDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -130,6 +162,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawTokens",
 			Handler:    _Msg_WithdrawTokens_Handler,
+		},
+		{
+			MethodName: "ClaimDeposit",
+			Handler:    _Msg_ClaimDeposit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

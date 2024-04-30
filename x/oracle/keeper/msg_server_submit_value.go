@@ -112,7 +112,7 @@ func (k Keeper) directReveal(ctx sdk.Context,
 	}
 
 	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(ctx.BlockTime()) && incycle {
-		nextId, err := k.QuerySequnecer.Next(ctx)
+		nextId, err := k.QuerySequencer.Next(ctx)
 		if err != nil {
 			return err
 		}
