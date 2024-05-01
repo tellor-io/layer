@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"fmt"
-
 	"errors"
 
 	"cosmossdk.io/math"
@@ -54,7 +52,6 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if msgAmount.IsNegative() {
 			removedFivePercent := state.Amount.Sub(state.Amount.QuoRaw(20))
 			lowerBound := currentAmount.Add(msgAmount)
-			fmt.Println("lowerBound", lowerBound, "removedFivePercent", removedFivePercent)
 			if lowerBound.LT(removedFivePercent) {
 				return ctx, errors.New("amount decreases total stake by more than the allowed 5% in a twelve hour period")
 			}
@@ -62,7 +59,6 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			// add 5 percent
 			addedFivePercent := state.Amount.Add(state.Amount.QuoRaw(20))
 			upperBound := currentAmount.Add(msgAmount)
-			fmt.Println("upperBound", upperBound, "addedFivePercent", addedFivePercent)
 			if upperBound.GT(addedFivePercent) {
 				return ctx, errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period")
 			}
