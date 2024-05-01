@@ -13,6 +13,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/utils"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -21,6 +25,7 @@ import (
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
@@ -918,9 +923,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(int64(4000000000), result.Report.ReporterPower)
 	require.Equal(int64(1), result.Report.Height)
 
-	// votingPower := reporter.TotalTokens.Quo(layertypes.PowerReduction).Int64()
-	// fmt.Println("voting power: ", votingPower)
-
 	//---------------------------------------------------------------------------
 	// Height 2 - create a dispute
 	//---------------------------------------------------------------------------
@@ -992,10 +994,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	// reporter lost 1% of their free floating tokens
 	freeFloatingBalanceAfter := s.bankKeeper.GetBalance(s.ctx, reporterAccount, s.denom)
 	require.Equal(freeFloatingBalanceAfter, freeFloatingBalanceBefore.Sub(disputeFee))
-	// disputeModAcct := s.accountKeeper.GetModuleAddress(disputetypes.ModuleName)
-	// disputeModAcctBal := s.bankKeeper.GetBalance(s.ctx, disputeModAcct, s.denom)
-	// fmt.Println("dispute Module Acct Bal: ", disputeModAcctBal)
-	// require.Equal(disputeModAcctBal.Amount, disputeFee.Amount)
 
 	// create msgUnJailReporter
 	msgUnjailReporter := reportertypes.MsgUnjailReporter{
@@ -1180,7 +1178,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	disputes, err = s.disputekeeper.OpenDisputes.Get(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
-	// fmt.Println("disputes: ", disputes)
 
 	// get new cycle list query data
 	cycleListQuery, err = s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -1285,13 +1282,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	// todo: handle reporter removal
 	reporter, err = s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	// fmt.Println(reporter)
-	// reporter, err = s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
-	// require.NoError(err)
-	// fmt.Println("reporter.TotalTokens during dispute: ", reporter.TotalTokens)
-	// require.NoError(err)
-	// freeFloatingBalanceBefore = s.bankKeeper.GetBalance(s.ctx, reporterAccount, s.denom)
-	// fmt.Println("freeFloatingBalance during dispute: ", freeFloatingBalanceBefore)
 
 	// create vote tx msg
 	msgVote = disputetypes.MsgVote{
@@ -1335,12 +1325,9 @@ func (s *E2ETestSuite) TestDisputes() {
 func (s *E2ETestSuite) TestUnstaking() {
 	require := s.Require()
 
-	_, err := s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
 	// create 5 validators with 5_000 TRB
-	_, _, _ = s.CreateValidators(5)
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
+	accaddr, valaddr, _ := s.CreateValidators(5)
+	s.stakingKeeper.EndBlocker(s.ctx)
 	// all validators are bonded
 	validators, err := s.stakingKeeper.GetAllValidators(s.ctx)
 	require.NoError(err)
@@ -1348,37 +1335,43 @@ func (s *E2ETestSuite) TestUnstaking() {
 	for _, val := range validators {
 		require.Equal(val.Status.String(), stakingtypes.BondStatusBonded)
 	}
-	val1 := validators[1]
 
-	// begin unbonding validator 1
-	val1, err = s.stakingKeeper.BeginUnbondingValidator(s.ctx, val1)
+	// begin unbonding validator 0
+	del, err := s.stakingKeeper.GetDelegation(s.ctx, accaddr[1], valaddr[1])
 	require.NoError(err)
+	// undelegate all shares except for 1 to avoid getting the validator deleted
+	timeToUnbond, _, err := s.stakingKeeper.Undelegate(s.ctx, accaddr[1], valaddr[1], del.Shares.Sub(math.LegacyNewDec(1)))
+	require.NoError(err)
+
 	// unbonding time is 21 days after calling BeginUnbondingValidator
 	unbondingStartTime := s.ctx.BlockTime()
 	twentyOneDays := time.Hour * 24 * 21
-	require.Equal(val1.UnbondingTime, unbondingStartTime.Add(twentyOneDays))
-	require.Equal(val1.IsUnbonding(), true)
-	require.Equal(val1.IsBonded(), false)
-	require.Equal(val1.IsUnbonded(), false)
-	fmt.Println(val1)
+	require.Equal(unbondingStartTime.Add(twentyOneDays), timeToUnbond)
 
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
+	val1, err := s.stakingKeeper.GetValidator(s.ctx, valaddr[1])
+	require.Equal(val1.UnbondingTime, unbondingStartTime.Add(twentyOneDays))
+	require.NoError(err)
+	require.Equal(val1.IsUnbonding(), true)
+	require.Equal(val1.IsBonded(), false)
+	require.Equal(val1.IsUnbonded(), false)
 	// new block
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockHeight(val1.UnbondingHeight + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(twentyOneDays))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
 
 	// validator 0 is now unbonded
-	val1, err = s.stakingKeeper.GetValidator(s.ctx, sdk.ValAddress(val1.GetOperator()))
+	val1, err = s.stakingKeeper.GetValidator(s.ctx, valaddr[1])
 	require.NoError(err)
 	require.Equal(val1.IsUnbonded(), true)
-
 }
 
-func (s *E2ETestSuite) TestX() {
+func (s *E2ETestSuite) TestDisputes2() {
 	require := s.Require()
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
 	require.NotNil(msgServerOracle)
@@ -1392,6 +1385,7 @@ func (s *E2ETestSuite) TestX() {
 	//---------------------------------------------------------------------------
 	_, err := s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 	valsAcctAddrs, valsValAddrs, vals := s.CreateValidators(3)
 	require.NotNil(valsAcctAddrs)
 	repsAccs := s.CreateReporters(3, valsValAddrs, vals)
@@ -1413,6 +1407,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(1)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	pk := secp256k1.GenPrivKey()
 	delAcc := s.convertToAccAddress([]secp256k1.PrivKey{*pk})
@@ -1423,7 +1418,6 @@ func (s *E2ETestSuite) TestX() {
 
 	// delegate to validator 0
 	val, err := s.stakingKeeper.GetValidator(s.ctx, valsValAddrs[0])
-	fmt.Println("val 01: ", val)
 	require.NoError(err)
 	_, err = s.stakingKeeper.Delegate(s.ctx, delAccAddr, math.NewInt(500*1e6), stakingtypes.Unbonded, val, false)
 	require.NoError(err)
@@ -1470,6 +1464,7 @@ func (s *E2ETestSuite) TestX() {
 	revealResponse, err := msgServerOracle.SubmitValue(s.ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
+	revealTime := s.ctx.BlockTime()
 	// advance time and block height to expire the query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
 	_, err = s.app.EndBlocker(s.ctx)
@@ -1484,6 +1479,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(3)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	disputer, err := s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[1])
 	require.NoError(err)
@@ -1497,10 +1493,10 @@ func (s *E2ETestSuite) TestX() {
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:  disputedRep.Reporter,
-		Power:     disputedRep.TotalTokens.Int64(),
+		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
-		Timestamp: s.ctx.BlockTime(),
+		Timestamp: revealTime,
 	}
 
 	// create msg for propose dispute tx
@@ -1569,13 +1565,14 @@ func (s *E2ETestSuite) TestX() {
 	revealResponse, err = msgServerOracle.SubmitValue(s.ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
+	revealTime = s.ctx.BlockTime()
 
 	// give disputer tokens to pay for next disputes not from bond
 	initCoins = sdk.NewCoin(s.denom, math.NewInt(10_000*1e6))
 	require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	// send from module to account
-	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, sdk.AccAddress(disputer.Reporter), sdk.NewCoins(initCoins)))
-	require.Equal(initCoins, s.bankKeeper.GetBalance(s.ctx, sdk.AccAddress(disputer.Reporter), s.denom))
+	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, sdk.MustAccAddressFromBech32(disputer.Reporter), sdk.NewCoins(initCoins)))
+	require.Equal(initCoins, s.bankKeeper.GetBalance(s.ctx, sdk.MustAccAddressFromBech32(disputer.Reporter), s.denom))
 
 	// advance time and block height to expire the query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
@@ -1593,20 +1590,20 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(5)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	// disputerBal := disputer.TotalTokens
 	disputedBal = disputedRep.TotalTokens
 	onePercent = disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	disputeFee = sdk.NewCoin(s.denom, onePercent) // warning should be 1% of bonded tokens
 
-	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report = oracletypes.MicroReport{
 		Reporter:  disputedRep.Reporter,
-		Power:     disputedRep.TotalTokens.Int64(),
+		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
-		Timestamp: s.ctx.BlockTime(),
+		Timestamp: revealTime,
 	}
 
 	// create msg for propose dispute tx
@@ -1627,9 +1624,9 @@ func (s *E2ETestSuite) TestX() {
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
-	dispute, err = s.disputekeeper.Disputes.Get(s.ctx, 1)
+	dispute, err = s.disputekeeper.Disputes.Get(s.ctx, 2)
 	require.NoError(err)
-	require.Equal(dispute.DisputeId, uint64(1))
+	require.Equal(dispute.DisputeId, uint64(2))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
@@ -1644,6 +1641,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(6)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
 	require.NoError(err)
@@ -1654,6 +1652,7 @@ func (s *E2ETestSuite) TestX() {
 	require.NoError(err)
 	value = encodeValue(10_000)
 	require.NoError(err)
+	queryId = utils.QueryIDFromData(cycleListQuery)
 	reveal = oracletypes.MsgSubmitValue{
 		Creator:   disputedRep.Reporter,
 		QueryData: cycleListQuery,
@@ -1675,6 +1674,10 @@ func (s *E2ETestSuite) TestX() {
 	revealResponse, err = msgServerOracle.SubmitValue(s.ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
+	revealTime = s.ctx.BlockTime()
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
 
 	//---------------------------------------------------------------------------
 	// Height 7 - open minor dispute, pay from bond from reporter 1
@@ -1682,13 +1685,18 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(7)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+
+	balBeforeDispute := disputedRep.TotalTokens
+	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
+	disputeFee = sdk.NewCoin(s.denom, fivePercent)
 
 	report = oracletypes.MicroReport{
 		Reporter:  disputedRep.Reporter,
-		Power:     disputedRep.TotalTokens.Int64(),
+		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
-		Timestamp: s.ctx.BlockTime(),
+		Timestamp: revealTime,
 	}
 
 	// create msg for propose dispute tx
@@ -1697,20 +1705,132 @@ func (s *E2ETestSuite) TestX() {
 		Report:          &report,
 		DisputeCategory: disputetypes.Minor,
 		Fee:             disputeFee,
-		PayFromBond:     false,
+		PayFromBond:     true,
 	}
 
 	// send propose dispute tx
 	_, err = msgServerDispute.ProposeDispute(s.ctx, &msgProposeDispute)
 	require.NoError(err)
-	// disputeStartTime := s.ctx.BlockTime()
+	_ = s.ctx.BlockTime()
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 8 - vote on minor dispute
+	// Height 8 - vote on minor dispute -- reaches quorum
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(8)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+
+	// vote from disputer
+	msgVote := disputetypes.MsgVote{
+		Voter: disputer.Reporter,
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
+	}
+	voteResponse, err := msgServerDispute.Vote(s.ctx, &msgVote)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	// vote from disputed reporter
+	msgVote = disputetypes.MsgVote{
+		Voter: disputedRep.Reporter,
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
+	}
+	voteResponse, err = msgServerDispute.Vote(s.ctx, &msgVote)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	// vote from third reporter
+	thirdReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[2])
+	require.NoError(err)
+	msgVote = disputetypes.MsgVote{
+		Voter: thirdReporter.Reporter,
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
+	}
+	voteResponse, err = msgServerDispute.Vote(s.ctx, &msgVote)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	// vote from team
+	// fmt.Println(disputetypes.TeamAddress)
+	// msgVote = disputetypes.MsgVote{
+	// 	Voter: sdk.MustAccAddressFromBech32(disputetypes.TeamAddress).String(),
+	// 	Id:    dispute.DisputeId,
+	// 	Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
+	// }
+	// voteResponse, err = msgServerDispute.Vote(s.ctx, &msgVote)
+	// require.NoError(err)
+	// require.NotNil(voteResponse)
+
+	totalTips, err := s.disputekeeper.GetTotalTips(s.ctx)
+	require.NoError(err)
+	fmt.Println("totalTips: ", totalTips)
+
+	totalReporterPower, err := s.reporterkeeper.TotalReporterPower(s.ctx)
+	require.NoError(err)
+	fmt.Println("total reporter power: ", totalReporterPower.Quo(sdk.DefaultPowerReduction))
+	reporter1Power, err := s.disputekeeper.GetReporterPower(s.ctx, disputedRep.Reporter)
+	require.NoError(err)
+	fmt.Println("reporter1 Power: ", reporter1Power)
+	reporter2Power, err := s.disputekeeper.GetReporterPower(s.ctx, disputer.Reporter)
+	require.NoError(err)
+	fmt.Println("reporter2 Power: ", reporter2Power)
+	reporter3Power, err := s.disputekeeper.GetReporterPower(s.ctx, thirdReporter.Reporter)
+	require.NoError(err)
+	fmt.Println("reporter3 Power: ", reporter3Power)
+
+	totalFreeFloatingTokens := s.disputekeeper.GetTotalSupply(s.ctx)
+	fmt.Println("total Free Floating Tokens: ", totalFreeFloatingTokens)
+	owners, err := s.bankKeeper.DenomOwners(s.ctx, &banktypes.QueryDenomOwnersRequest{Denom: s.denom})
+	require.NoError(err)
+	sumFromDenomOwners := math.ZeroInt()
+	for _, owner := range owners.DenomOwners {
+		fmt.Println("owner: ", owner)
+		sumFromDenomOwners = sumFromDenomOwners.Add(owner.Balance.Amount)
+	}
+	fmt.Println("sumFromDenomOwners: ", sumFromDenomOwners)
+
+	// print all reporter sdk.AccAddr
+	for _, rep := range repsAccs {
+		fmt.Println("rep: ", rep.String())
+	}
+	for _, val := range valsAcctAddrs {
+		fmt.Println("val: ", val.String())
+	}
+	fmt.Println("delegator acc addr: ", delAccAddr.String())
+
+	// print tbr module account address
+	tbrModuleAccount := s.accountKeeper.GetModuleAddress(minttypes.TimeBasedRewards) // yes
+	fmt.Println("tbr module account: ", tbrModuleAccount.String())
+
+	teamAccount := s.accountKeeper.GetModuleAddress(minttypes.MintToTeam) // yes
+	fmt.Println("team account: ", teamAccount.String())
+
+	disputeModuleAccount := s.accountKeeper.GetModuleAddress(disputetypes.ModuleName) // yes
+	fmt.Println("dispute module account: ", disputeModuleAccount.String())
+
+	authModuleAccount := s.accountKeeper.GetModuleAddress(authtypes.ModuleName) //
+	fmt.Println("auth module account: ", authModuleAccount.String())
+
+	reporterModuleAccount := s.accountKeeper.GetModuleAddress(reportertypes.ModuleName) // yes
+	fmt.Println("reporter module account: ", reporterModuleAccount.String())
+
+	registryModuleAccount := s.accountKeeper.GetModuleAddress(registrytypes.ModuleName) // no
+	fmt.Println("registry module account: ", registryModuleAccount.String())
+
+	reporterTipsEscrowAccount := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool) // no
+	fmt.Println("reporter tips escrow account: ", reporterTipsEscrowAccount.String())
+
+	oracleModuleAccount := s.accountKeeper.GetModuleAddress(oracletypes.ModuleName) // no
+	fmt.Println("oracle module account: ", oracleModuleAccount.String())
+
+	stakingModuleAccount := s.accountKeeper.GetModuleAddress(stakingtypes.ModuleName) //
+	fmt.Println("staking module account: ", stakingModuleAccount.String())
 
 	//---------------------------------------------------------------------------
 	// Height 9 - resolve dispute, direct reveal again
@@ -1718,6 +1838,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(9)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 10 - open minor dispute, pay from not bond from reporter 1
@@ -1725,6 +1846,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(10)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 11 - vote on minor dispute
@@ -1732,6 +1854,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(11)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 12 - resolve dispute, direct reveal again
@@ -1739,6 +1862,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(12)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 13 - open major dispute, pay from bond from reporter 1
@@ -1746,6 +1870,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(13)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 14 - vote on major dispute
@@ -1753,6 +1878,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(14)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 15 - resolve dispute, direct reveal again
@@ -1760,6 +1886,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(15)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 16 - open major dispute, pay from not bond from reporter 1
@@ -1767,6 +1894,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(16)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 17 - vote on major dispute
@@ -1774,6 +1902,7 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(17)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
 	//---------------------------------------------------------------------------
 	// Height 18 - resolve dispute, direct reveal again
@@ -1781,5 +1910,143 @@ func (s *E2ETestSuite) TestX() {
 	s.ctx = s.ctx.WithBlockHeight(18)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
+}
+
+func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
+	require := s.Require()
+
+	//---------------------------------------------------------------------------
+	// Height 0 - create bonded validators and reporters
+	//---------------------------------------------------------------------------
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	valAccAddrs, valValAddrs, vals := s.CreateValidators(5)
+	repAccAddrs := s.CreateReporters(5, valValAddrs, vals)
+	proposer := repAccAddrs[0]
+	fmt.Println("proposer: ", proposer.String())
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(100*1e6))
+	for _, rep := range repAccAddrs {
+		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, rep, sdk.NewCoins(initCoins)))
+	}
+
+	govMsgServer := govkeeper.NewMsgServerImpl(s.govKeeper)
+	require.NotNil(govMsgServer)
+	govParams, err := s.govKeeper.Params.Get(s.ctx)
+	require.NoError(err)
+	fmt.Println("govParams min deposit: ", govParams.MinDeposit)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 1 - submit proposal
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	msgUpdateCycleList := oracletypes.MsgUpdateCyclelist{
+		Authority: s.accountKeeper.GetAuthority(),
+		Cyclelist: [][]byte{
+			[]byte("test"),
+		},
+	}
+
+	anyMsg, err := codectypes.NewAnyWithValue(&msgUpdateCycleList)
+	propMsg := []*codectypes.Any{anyMsg}
+	require.NoError(err)
+	msgSubmitProposal := v1.MsgSubmitProposal{
+		Messages:       propMsg,
+		InitialDeposit: govParams.MinDeposit,
+		Proposer:       proposer.String(),
+		Metadata:       "test metadata",
+		Title:          "test title",
+		Summary:        "test summary",
+		Expedited:      false,
+	}
+
+	proposal, err := govMsgServer.SubmitProposal(s.ctx, &msgSubmitProposal)
+	fmt.Println("propRepsonse: ", proposal)
+	require.NoError(err)
+
+	_, err = s.app.EndBlocker(s.ctx) // end blocker should emit active proposal event
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2 - vote on proposal
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	for _, rep := range repAccAddrs {
+		voteResponse, err := govMsgServer.VoteWeighted(s.ctx, &v1.MsgVoteWeighted{
+			ProposalId: proposal.ProposalId,
+			Voter:      rep.String(),
+			Options:    v1.NewNonSplitVoteOption(v1.OptionYes),
+			Metadata:   "test vote metadata from reporter",
+		})
+		require.NoError(err)
+		require.NotNil(voteResponse)
+	}
+
+	for _, val := range valAccAddrs {
+		voteResponse, err := govMsgServer.VoteWeighted(s.ctx, &v1.MsgVoteWeighted{
+			ProposalId: proposal.ProposalId,
+			Voter:      val.String(),
+			Options:    v1.NewNonSplitVoteOption(v1.OptionYes),
+			Metadata:   "test vote metadata from validator",
+		})
+		require.NoError(err)
+		require.NotNil(voteResponse)
+	}
+
+	// check proposal status
+	proposal1, err := s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
+	require.NoError(err)
+	fmt.Println("proposal1: ", proposal1)
+	fmt.Println("proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
+	fmt.Println("proposal1.Status: ", proposal1.Status)
+	fmt.Println("proposal1.Messages: ", proposal1.Messages)
+	fmt.Println("proposal1.Metadata: ", proposal1.Metadata)
+	fmt.Println("proposal1.Proposer: ", proposal1.Proposer)
+	fmt.Println("proposal1.SubmitTime: ", proposal1.SubmitTime)
+	fmt.Println("proposal1.TotalDeposit: ", proposal1.TotalDeposit)
+	fmt.Println("proposal1.VotingStartTime: ", proposal1.VotingStartTime)
+	fmt.Println("proposal1.VotingEndTime: ", proposal1.VotingEndTime)
+
+	timeOfVotes := s.ctx.BlockTime()
+	fmt.Println("timeOfVotes: ", timeOfVotes)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 3 - advance time to expire vote
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(48 * time.Hour)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
+	require.NoError(err)
+	fmt.Println("-----")
+	fmt.Println("proposal1: ", proposal1)
+	fmt.Println("proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
+	fmt.Println("proposal1.Status: ", proposal1.Status)
+	fmt.Println("proposal1.Messages: ", proposal1.Messages)
+	fmt.Println("proposal1.Metadata: ", proposal1.Metadata)
+	fmt.Println("proposal1.Proposer: ", proposal1.Proposer)
+	fmt.Println("proposal1.SubmitTime: ", proposal1.SubmitTime)
+	fmt.Println("proposal1.TotalDeposit: ", proposal1.TotalDeposit)
+	fmt.Println("proposal1.VotingStartTime: ", proposal1.VotingStartTime)
+	fmt.Println("proposal1.VotingEndTime: ", proposal1.VotingEndTime)
+
+	fmt.Println("current time: ", s.ctx.BlockTime())
 }
