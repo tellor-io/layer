@@ -28,6 +28,7 @@ import (
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+	collections "cosmossdk.io/collections"
 )
 
 func (s *E2ETestSuite) TestInitialMint() {
@@ -1927,7 +1928,7 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	repAccAddrs := s.CreateReporters(5, valValAddrs, vals)
 	proposer := repAccAddrs[0]
 	fmt.Println("proposer: ", proposer.String())
-	initCoins := sdk.NewCoin(s.denom, math.NewInt(100*1e6))
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(500*1e6))
 	for _, rep := range repAccAddrs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, rep, sdk.NewCoins(initCoins)))
@@ -1958,10 +1959,10 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	}
 
 	anyMsg, err := codectypes.NewAnyWithValue(&msgUpdateCycleList)
-	propMsg := []*codectypes.Any{anyMsg}
+	proposalMsg := []*codectypes.Any{anyMsg}
 	require.NoError(err)
 	msgSubmitProposal := v1.MsgSubmitProposal{
-		Messages:       propMsg,
+		Messages:       proposalMsg,
 		InitialDeposit: govParams.MinDeposit,
 		Proposer:       proposer.String(),
 		Metadata:       "test metadata",
@@ -1990,10 +1991,11 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 			ProposalId: proposal.ProposalId,
 			Voter:      rep.String(),
 			Options:    v1.NewNonSplitVoteOption(v1.OptionYes),
-			Metadata:   "test vote metadata from reporter",
+			Metadata:   "weighted vote metadata from reporter",
 		})
 		require.NoError(err)
 		require.NotNil(voteResponse)
+		fmt.Println("reporter: ", rep.String())
 	}
 
 	for _, val := range valAccAddrs {
@@ -2001,7 +2003,35 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 			ProposalId: proposal.ProposalId,
 			Voter:      val.String(),
 			Options:    v1.NewNonSplitVoteOption(v1.OptionYes),
-			Metadata:   "test vote metadata from validator",
+			Metadata:   "weighted vote metadata from validator",
+		})
+		require.NoError(err)
+		require.NotNil(voteResponse)
+		fmt.Println("validator: ", val.String())
+	}
+
+	for _, rep := range repAccAddrs {
+		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
+			ProposalId: proposal.ProposalId,
+			Voter:      rep.String(),
+			Option:     v1.VoteOption(1),
+			Metadata:   "vote metadata from reporter",
+		})
+		require.NoError(err)
+		require.NotNil(voteResponse)
+	}
+
+	
+	vote, err := s.govKeeper.Votes.Get(s.ctx, collections.Join(proposal.ProposalId, valAccAddrs[0]))
+	require.NoError(err)
+	fmt.Println("vote: ", vote)
+
+	for _, val := range valAccAddrs {
+		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
+			ProposalId: proposal.ProposalId,
+			Voter:      val.String(),
+			Option:     v1.VoteOption(1),
+			Metadata:   "vote metadata from validator",
 		})
 		require.NoError(err)
 		require.NotNil(voteResponse)
@@ -2010,16 +2040,16 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	// check proposal status
 	proposal1, err := s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
 	require.NoError(err)
-	fmt.Println("proposal1: ", proposal1)
-	fmt.Println("proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
-	fmt.Println("proposal1.Status: ", proposal1.Status)
-	fmt.Println("proposal1.Messages: ", proposal1.Messages)
-	fmt.Println("proposal1.Metadata: ", proposal1.Metadata)
-	fmt.Println("proposal1.Proposer: ", proposal1.Proposer)
-	fmt.Println("proposal1.SubmitTime: ", proposal1.SubmitTime)
-	fmt.Println("proposal1.TotalDeposit: ", proposal1.TotalDeposit)
-	fmt.Println("proposal1.VotingStartTime: ", proposal1.VotingStartTime)
-	fmt.Println("proposal1.VotingEndTime: ", proposal1.VotingEndTime)
+
+	fmt.Println("before proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
+	fmt.Println("before proposal1.Status: ", proposal1.Status)
+	fmt.Println("before proposal1.Messages: ", proposal1.Messages)
+	fmt.Println("before proposal1.Metadata: ", proposal1.Metadata)
+	fmt.Println("before proposal1.Proposer: ", proposal1.Proposer)
+	fmt.Println("before proposal1.SubmitTime: ", proposal1.SubmitTime)
+	fmt.Println("before proposal1.TotalDeposit: ", proposal1.TotalDeposit)
+	fmt.Println("before proposal1.VotingStartTime: ", proposal1.VotingStartTime)
+	fmt.Println("before proposal1.VotingEndTime: ", proposal1.VotingEndTime)
 
 	timeOfVotes := s.ctx.BlockTime()
 	fmt.Println("timeOfVotes: ", timeOfVotes)
@@ -2037,16 +2067,15 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
 	require.NoError(err)
 	fmt.Println("-----")
-	fmt.Println("proposal1: ", proposal1)
-	fmt.Println("proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
-	fmt.Println("proposal1.Status: ", proposal1.Status)
-	fmt.Println("proposal1.Messages: ", proposal1.Messages)
-	fmt.Println("proposal1.Metadata: ", proposal1.Metadata)
-	fmt.Println("proposal1.Proposer: ", proposal1.Proposer)
-	fmt.Println("proposal1.SubmitTime: ", proposal1.SubmitTime)
-	fmt.Println("proposal1.TotalDeposit: ", proposal1.TotalDeposit)
-	fmt.Println("proposal1.VotingStartTime: ", proposal1.VotingStartTime)
-	fmt.Println("proposal1.VotingEndTime: ", proposal1.VotingEndTime)
-
 	fmt.Println("current time: ", s.ctx.BlockTime())
+	fmt.Println("after proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
+	fmt.Println("after proposal1.Status: ", proposal1.Status)
+	fmt.Println("after proposal1.Messages: ", proposal1.Messages)
+	fmt.Println("after proposal1.Metadata: ", proposal1.Metadata)
+	fmt.Println("after proposal1.Proposer: ", proposal1.Proposer)
+	fmt.Println("after proposal1.SubmitTime: ", proposal1.SubmitTime)
+	fmt.Println("after proposal1.TotalDeposit: ", proposal1.TotalDeposit)
+	fmt.Println("after proposal1.VotingStartTime: ", proposal1.VotingStartTime)
+	fmt.Println("after proposal1.VotingEndTime: ", proposal1.VotingEndTime)
+
 }
