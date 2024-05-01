@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -38,6 +39,14 @@ type Client struct {
 	bridgeContract *tokenbridge.TokenBridge
 }
 
+// Struct to unmarshal the JSON data
+type APIResponse struct {
+	Status string `json:"status"`
+	Data   []struct {
+		ExecBlockNumber int `json:"exec_block_number"`
+	} `json:"data"`
+}
+
 func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
 	logger.Info("Starting tokenbridge daemon")
 
@@ -67,7 +76,7 @@ func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositRe
 func (c *Client) start(ctx context.Context) {
 
 	c.InitializeDeposits()
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -84,10 +93,11 @@ func (c *Client) start(ctx context.Context) {
 }
 
 type DepositReceipt struct {
-	DepositId *big.Int
-	Sender    common.Address
-	Recipient string
-	Amount    *big.Int
+	DepositId   *big.Int
+	Sender      common.Address
+	Recipient   string
+	Amount      *big.Int
+	BlockHeight *big.Int
 }
 
 type DepositReport struct {
@@ -114,61 +124,16 @@ func (c *Client) QueryAPI(url string) ([]byte, error) {
 	return body, nil
 }
 
-// func (c *Client) QueryBridgeDeposits() error {
-// 	client, err := ethclient.Dial("ws://127.0.0.1:7545")
-// 	if err != nil {
-// 		return fmt.Errorf("failed to connect to the Ethereum client: %v", err)
-// 	}
-
-// 	contractAddress := common.HexToAddress("0x47F2853f1f85E2c3E3194cC3152769E3c9900a4e")
-
-// 	tbContract, err := tokenbridge.NewTokenBridge(contractAddress, client)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to instantiate a TokenBridge contract: %v", err)
-// 	}
-
-// 	latestDepositId, err := c.QueryCurrentDepositId(tbContract)
-// 	if err != nil {
-// 		return fmt.Errorf("failed to query the latest deposit ID: %v", err)
-// 	}
-
-// 	if c.lastReportedDepositId == nil {
-// 		c.lastReportedDepositId = big.NewInt(0)
-// 	}
-
-// 	if latestDepositId.Uint64() > c.lastReportedDepositId.Uint64() {
-// 		c.lastReportedDepositId = big.NewInt(int64(c.lastReportedDepositId.Uint64() + 1))
-
-// 		depositTicket, err := c.QueryDepositDetails(tbContract, c.lastReportedDepositId)
-// 		if err != nil {
-// 			return fmt.Errorf("failed to query deposit details: %v", err)
-// 		}
-
-// 		// assemble and add to pending reports
-// 		queryData, err := c.EncodeQueryData(depositTicket)
-// 		if err != nil {
-// 			c.logger.Error("Failed to encode query data", "error", err)
-// 		}
-// 		reportValue, err := c.EncodeReportValue(depositTicket)
-// 		if err != nil {
-// 			c.logger.Error("Failed to encode report value", "error", err)
-// 		}
-// 		c.pendingReports = append(c.pendingReports, DepositReport{queryData, reportValue})
-// 	}
-
-// 	return nil
-// }
-
 func (c *Client) InitializeDeposits() error {
 	c.logger.Info("Initializing token bridge client")
-	eclient, err := ethclient.Dial("ws://127.0.0.1:7545")
+	eclient, err := ethclient.Dial("wss://eth-sepolia.g.alchemy.com/v2/{API_KEY}")
 	if err != nil {
 		return fmt.Errorf("failed to connect to the Ethereum client: %v", err)
 	}
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x47F2853f1f85E2c3E3194cC3152769E3c9900a4e")
+	contractAddress := common.HexToAddress("0x81c9cd1b90673e2b4a11f5E61c5FE22D30CDcE49")
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
@@ -191,6 +156,7 @@ func (c *Client) InitializeDeposits() error {
 }
 
 func (c *Client) QueryTokenBridgeContract() error {
+	c.logger.Info("@QueryTokenBridgeContract")
 	latestDepositId, err := c.QueryCurrentDepositId()
 	if err != nil {
 		return fmt.Errorf("failed to query the latest deposit ID: %v", err)
@@ -201,11 +167,22 @@ func (c *Client) QueryTokenBridgeContract() error {
 	}
 
 	if latestDepositId.Uint64() > c.lastReportedDepositId.Uint64() {
-		c.lastReportedDepositId = big.NewInt(int64(c.lastReportedDepositId.Uint64() + 1))
+		nextDepositId := big.NewInt(int64(c.lastReportedDepositId.Uint64() + 1))
 
-		depositTicket, err := c.QueryDepositDetails(c.lastReportedDepositId)
+		depositTicket, err := c.QueryDepositDetails(nextDepositId)
 		if err != nil {
 			return fmt.Errorf("failed to query deposit details: %v", err)
+		}
+
+		// Check if the block height is final
+		isFinal, err := c.CheckForFinality(depositTicket.BlockHeight)
+		if err != nil {
+			return fmt.Errorf("failed to check if block height is final: %v", err)
+		}
+
+		if !isFinal {
+			c.logger.Info("Block height is not final", "blockHeight", depositTicket.BlockHeight)
+			return nil
 		}
 
 		// assemble and add to pending reports
@@ -221,6 +198,9 @@ func (c *Client) QueryTokenBridgeContract() error {
 
 		// Update the token deposits cache
 		c.tokenDepositsCache.AddReport(tokenbridgetypes.DepositReport{QueryData: queryData, Value: reportValue})
+
+		// Update the last reported deposit ID
+		c.lastReportedDepositId = nextDepositId
 		c.logger.Info("Added deposit to pending reports", "depositId", c.lastReportedDepositId)
 	}
 
@@ -245,13 +225,44 @@ func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error)
 	}
 
 	depositReceipt := DepositReceipt{
-		DepositId: depositId,
-		Sender:    depositDetails.Sender,
-		Recipient: depositDetails.Recipient,
-		Amount:    depositDetails.Amount,
+		DepositId:   depositId,
+		Sender:      depositDetails.Sender,
+		Recipient:   depositDetails.Recipient,
+		Amount:      depositDetails.Amount,
+		BlockHeight: depositDetails.BlockHeight,
 	}
 
 	return depositReceipt, nil
+}
+
+func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
+	c.logger.Info("@CheckForFinality", "blockHeight", blockHeight)
+	// Check if the block height is final
+	url := "https://sepolia.beaconcha.in/api/v1/epoch/finalized/slots"
+	body, err := c.QueryAPI(url)
+	if err != nil {
+		c.logger.Error("Failed to query API", "error", err)
+		return false, err
+	}
+
+	var apiResponse APIResponse
+	err = json.Unmarshal(body, &apiResponse)
+	if err != nil {
+		return false, fmt.Errorf("error unmarshaling JSON: %v", err)
+	}
+
+	// Find the highest exec_block_number
+	var highestBlockNumber int
+	for _, data := range apiResponse.Data {
+		if data.ExecBlockNumber > highestBlockNumber {
+			highestBlockNumber = data.ExecBlockNumber
+		}
+	}
+
+	c.logger.Info("Highest block number", "highestBlockNumber", highestBlockNumber)
+
+	// Check if the input blockHeight is greater than or equal to the highest exec_block_number
+	return uint64(highestBlockNumber) >= blockHeight.Uint64(), nil
 }
 
 func (c *Client) EncodeQueryData(depositReceipt DepositReceipt) ([]byte, error) {

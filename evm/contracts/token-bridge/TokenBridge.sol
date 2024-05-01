@@ -26,6 +26,7 @@ contract TokenBridge is UsingTellor {
         address sender;
         string recipient;
         uint256 amount;
+        uint256 blockHeight;
     }
 
     event Deposit(uint256 depositId, address sender, string recipient, uint256 amount);
@@ -42,7 +43,7 @@ contract TokenBridge is UsingTellor {
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
         currentDepositLimit -= _amount;
-        deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount);
+        deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, block.number);
         emit Deposit(depositId, msg.sender, _layerRecipient, _amount);
     }
 
