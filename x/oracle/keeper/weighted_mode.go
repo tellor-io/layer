@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	cosmath "cosmossdk.io/math"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -18,6 +20,7 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 	var mode string
 	frequencyMap := make(map[string]int)
 
+	var totalReporterPower int64
 	// populate frequency map
 	for _, r := range reports {
 		modeReporters = append(modeReporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
@@ -25,6 +28,7 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 		for i := int64(0); i < entries; i++ {
 			frequencyMap[r.Value]++
 		}
+		totalReporterPower += r.Power
 	}
 
 	// find the max frequency
@@ -48,11 +52,12 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 
 	}
 
+	totalReporterPowerMathInt := cosmath.NewInt(totalReporterPower)
 	aggregateReport := types.Aggregate{
 		QueryId:              modeReport.QueryId,
 		AggregateValue:       modeReport.Value,
 		AggregateReporter:    modeReport.Reporter,
-		ReporterPower:        modeReport.Power,
+		ReporterPower:        totalReporterPowerMathInt.Mul(layertypes.PowerReduction).Int64(),
 		Reporters:            modeReporters,
 		AggregateReportIndex: modeReportIndex,
 	}

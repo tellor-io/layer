@@ -2,10 +2,13 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -14,58 +17,79 @@ import (
 )
 
 func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex uint64) error {
+	k.Logger(ctx).Info("@claimDeposit", "depositId", depositId, "reportIndex", reportIndex)
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
 	queryId, err := k.getDepositQueryId(depositId)
 	if err != nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get query id, err: %w", err))
 		return err
 	}
 	aggregate, aggregateTimestamp, err := k.oracleKeeper.GetAggregateByIndex(ctx, queryId, reportIndex)
 	if err != nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", err))
 		return err
 	}
 	if aggregate == nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", types.ErrNoAggregate))
 		return types.ErrNoAggregate
 	}
 	if aggregate.Flagged {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", types.ErrAggregateFlagged))
 		return types.ErrAggregateFlagged
 	}
 	depositClaimedStatus, err := k.DepositIdClaimedMap.Get(ctx, depositId)
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get deposit claimed status unexpected error, err: %w", err))
 		return err
-	}
-	if depositClaimedStatus.Claimed {
-		return types.ErrDepositAlreadyClaimed
+	} else {
+		if depositClaimedStatus.Claimed {
+			k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("deposit already claimed, err: %w", types.ErrDepositAlreadyClaimed))
+			return types.ErrDepositAlreadyClaimed
+		}
 	}
 	// get total bonded tokens
 	totalBondedTokens, err := k.stakingKeeper.TotalBondedTokens(ctx)
 	if err != nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get total bonded tokens, err: %w", err))
 		return err
 	}
-	powerThreshold := totalBondedTokens.Int64() * 2 / 3
+	// NOTE: be careful with this, make sure to use same conversion as staking and reporter power
+	powerThreshold := totalBondedTokens.Int64() * 2 / 3e6
 	if aggregate.ReporterPower < powerThreshold {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, threshold: %d, reporter power: %d, err: %w", powerThreshold, aggregate.ReporterPower, types.ErrInsufficientReporterPower))
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
-	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 1*time.Minute {
+	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 1*time.Second {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", types.ErrReportTooYoung))
 		return types.ErrReportTooYoung
 	}
 
-	recipient, amount, err := k.decodeDepositReportValue(aggregate.AggregateValue)
+	recipient, amount, err := k.decodeDepositReportValue(ctx, aggregate.AggregateValue)
 	if err != nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%w: %v", types.ErrInvalidDepositReportValue, err)
 	}
 
-	if err := k.DepositIdClaimedMap.Set(ctx, depositId, types.DepositClaimed{Claimed: true}); err != nil {
+	newClaimedStatus := types.DepositClaimed{Claimed: true}
+	err = k.DepositIdClaimedMap.Set(ctx, depositId, newClaimedStatus)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to set deposit claimed status", "depositId", depositId, "err", err)
 		return err
 	}
 
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, amount); err != nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to mint coins, err: %w", err))
 		return err
 	}
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, amount); err != nil {
+		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
 		return err
 	}
+
+	// log params
+	k.Logger(ctx).Info("@claimDeposit", "depositId", depositId, "reportIndex", reportIndex, "recipient", recipient.String(), "amount", amount.String())
 
 	return nil
 }
@@ -133,7 +157,7 @@ func (k Keeper) getDepositQueryId(depositId uint64) ([]byte, error) {
 	return queryId, nil
 }
 
-func (k Keeper) decodeDepositReportValue(reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
+func (k Keeper) decodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
 	// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount))
 
 	// prepare decoding
@@ -157,8 +181,14 @@ func (k Keeper) decodeDepositReportValue(reportValue string) (recipient sdk.AccA
 	}
 
 	// decode report value
-	reportValueDecoded, err := reportValueArgs.Unpack([]byte(reportValue))
+	reportValueBytes, err := hex.DecodeString(reportValue)
 	if err != nil {
+		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to decode report value, err: %w", err))
+		return nil, sdk.Coins{}, err
+	}
+	reportValueDecoded, err := reportValueArgs.Unpack(reportValueBytes)
+	if err != nil {
+		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to decode report value, err: %w", err))
 		return nil, sdk.Coins{}, err
 	}
 
@@ -168,6 +198,7 @@ func (k Keeper) decodeDepositReportValue(reportValue string) (recipient sdk.AccA
 	// convert layer recipient to cosmos address
 	layerRecipientAddress, err := sdk.AccAddressFromBech32(recipientString)
 	if err != nil {
+		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to convert layer recipient to cosmos address, err: %w", err))
 		return nil, sdk.Coins{}, err
 	}
 

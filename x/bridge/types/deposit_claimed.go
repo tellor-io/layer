@@ -6,7 +6,7 @@ import (
 
 // DepositClaimed holds the claimed status of a deposit ID.
 type DepositClaimed struct {
-	Claimed bool `protobuf:"bool,1,opt,name=claimed,proto3"`
+	Claimed bool `protobuf:"varint,1,opt,name=claimed,proto3"`
 }
 
 // Ensure DepositIdClaimed implements proto.Message
