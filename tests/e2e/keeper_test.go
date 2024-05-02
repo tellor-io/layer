@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/math"
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	// govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -107,6 +108,7 @@ type E2ETestSuite struct {
 	ctx            sdk.Context
 	appCodec       codec.Codec
 	authConfig     *authmodulev1.Module
+	// govConfig      *govmodulev1.Module
 
 	queryHelper       *baseapp.QueryServiceTestHelper
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -145,6 +147,20 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		log.NewNopLogger(),
 	)
+
+	// govConfig := suite.govConfig
+
+	// suite.govKeeper = govkeeper.NewKeeper(
+	// 	appCodec,
+	// 	runtime.NewKVStoreService(suite.fetchStoreKey(govtypes.StoreKey).(*storetypes.KVStoreKey)),
+	// 	suite.accountKeeper,
+	// 	suite.bankKeeper,
+	// 	suite.stakingKeeper,
+	// 	suite.distrKeeper,
+	// 	baseapp.NewMsgServiceRouter(),
+	// 	govConfig,
+	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	// )
 
 	suite.stakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
@@ -227,18 +243,21 @@ func (s *E2ETestSuite) SetupTest() {
 	s.app = app
 }
 
-func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.AccAddress, []sdk.ValAddress, []stakingtypes.Validator) {
+func (s *E2ETestSuite) CreateValidators(numValidators int) ([]sdk.AccAddress, []sdk.ValAddress, []stakingtypes.Validator) {
 	require := s.Require()
+
 	// create account that will become a validator
 	accountsAddrs := simtestutil.CreateIncrementalAccounts(numValidators)
 	// mint numTrb for each validator
-	initCoins := sdk.NewCoin(s.denom, math.NewInt(numTrb*1e6))
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(5000*1e6))
 	for _, acc := range accountsAddrs {
 		// mint to module
 		require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 		// send from module to account
 		require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, acc, sdk.NewCoins(initCoins)))
+		require.Equal(initCoins, s.bankKeeper.GetBalance(s.ctx, acc, s.denom))
 	}
+
 	// get val address for each account
 	validatorsAddrs := simtestutil.ConvertAddrsToValAddrs(accountsAddrs)
 	// create pub keys for validators
@@ -254,7 +273,7 @@ func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.
 		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
 		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
 
-		_, err = s.stakingKeeper.Delegate(s.ctx, accountsAddrs[i], math.NewInt(numTrb*1e6), stakingtypes.Unbonded, validator, true)
+		_, err = s.stakingKeeper.Delegate(s.ctx, accountsAddrs[i], math.NewInt(5000*1e6), stakingtypes.Unbonded, validator, true)
 		require.NoError(err)
 		// call hooks for distribution init
 		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
@@ -272,11 +291,16 @@ func (s *E2ETestSuite) CreateValidators(numValidators int, numTrb int64) ([]sdk.
 	return accountsAddrs, validatorsAddrs, validators
 }
 
-func (s *E2ETestSuite) CreateReporters(numReporters int, numTrb int64, valAddrs []sdk.ValAddress) []sdk.AccAddress {
+func (s *E2ETestSuite) CreateReporters(numReporters int, valAddrs []sdk.ValAddress, vals []stakingtypes.Validator) []sdk.AccAddress {
 	require := s.Require()
+	type Delegator struct {
+		delegatorAddress sdk.AccAddress
+		validator        stakingtypes.Validator
+		tokenAmount      math.Int
+	}
 
-	if numReporters < len(valAddrs) {
-		panic("numReporters must be equal to the the number of validators (not sure how else to implement yet)")
+	if numReporters != len(valAddrs) {
+		panic("numReporters must be equal to the the number of validators (make other reporters manually)")
 	}
 
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
@@ -286,48 +310,59 @@ func (s *E2ETestSuite) CreateReporters(numReporters int, numTrb int64, valAddrs 
 	privKeys := CreateRandomPrivateKeys(numReporters)
 	accs := s.convertToAccAddress(privKeys) // sdk.AccountAddresses
 
-	// mint tokens for each account
-	initCoins := sdk.NewCoin(s.denom, math.NewInt(numTrb*1e6))
+	// mint 1k trb to each account
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(1000*1e6))
 	for _, acc := range accs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, acc, sdk.NewCoins(initCoins)))
 	}
-
-	// prep for CreateReporter tx
-	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
-		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime()) // rate = 10%, maxRate = 30%, maxChangeRate = 10%
-
+	// delegate 1k trb to validators
+	for i, acc := range accs {
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(vals[i].GetOperator())
+		require.NoError(err)
+		reporterDelToVal := Delegator{delegatorAddress: acc, validator: vals[i], tokenAmount: math.NewInt(1000 * 1e6)}
+		_, err = s.stakingKeeper.Delegate(s.ctx, reporterDelToVal.delegatorAddress, reporterDelToVal.tokenAmount, stakingtypes.Unbonded, reporterDelToVal.validator, true)
+		require.NoError(err)
+		// call dist module hooks
+		err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, acc, valBz)
+		require.NoError(err)
+		err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, acc, valBz)
+		require.NoError(err)
+	}
+	// self delegate in reporter module with 1k trb
 	// CreateReporter tx
 	for i, acc := range accs {
-		// make CreateReporterMsg
+		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(vals[i].GetOperator())
+		require.NoError(err)
+		commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+			math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime()) // rate = 10%, maxRate = 30%, maxChangeRate = 10%
+
 		var createReporterMsg reportertypes.MsgCreateReporter
 		createReporterMsg.Reporter = acc.String()
-		createReporterMsg.Amount = initCoins.Amount
+		createReporterMsg.Amount = math.NewInt(1000 * 1e6)
 		createReporterMsg.Commission = &commission
 		createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{
 			{
-				ValidatorAddress: valAddrs[i].String(),
-				Amount:           initCoins.Amount,
+				ValidatorAddress: vals[i].GetOperator(),
+				Amount:           math.NewInt(1000 * 1e6),
 			},
 		}
 		// send CreateReporter Tx
-		_, err := msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
+		_, err = msgServerReporter.CreateReporter(s.ctx, &createReporterMsg)
 		s.NoError(err)
-	}
 
-	// Self delegate every reporter
-	for i, acc := range accs {
-		// define delegation source
-		source := reportertypes.TokenOrigin{ValidatorAddress: valAddrs[i].String(), Amount: math.NewInt((numTrb * 1e6))}
-		delegationMsg := reportertypes.NewMsgDelegateReporter(
-			acc.String(),
-			acc.String(),
-			math.NewInt(numTrb*1e6),
-			[]*reportertypes.TokenOrigin{&source},
-		)
-		// send delegate reporter tx
-		_, err := msgServerReporter.DelegateReporter(s.ctx, delegationMsg)
-		s.NoError(err)
+		// verify in collections
+		rkDelegation, err := s.reporterkeeper.Delegators.Get(s.ctx, acc)
+		require.NoError(err)
+		require.Equal(rkDelegation.Reporter, acc.String())
+		require.Equal(rkDelegation.Amount, math.NewInt(1000*1e6))
+		// check on reporter/validator delegation
+		skDelegation, err := s.stakingKeeper.Delegation(s.ctx, acc, valBz)
+		require.NoError(err)
+		require.Equal(skDelegation.GetDelegatorAddr(), acc.String())
+		require.Equal(skDelegation.GetValidatorAddr(), vals[i].GetOperator())
 	}
 
 	return accs

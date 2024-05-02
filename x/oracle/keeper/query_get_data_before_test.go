@@ -1,6 +1,6 @@
 package keeper_test
 
-func (s *KeeperTestSuite) TestGetDataBefore() {
+func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	// require := s.Require()
 
 	// s.TestSubmitValue()
