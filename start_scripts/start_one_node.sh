@@ -46,7 +46,7 @@ echo "charlie..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 1000000000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
+./layerd genesis gentx alice 1000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."

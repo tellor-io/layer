@@ -48,3 +48,7 @@ type OracleKeeper interface {
 	SetAggregate(ctx context.Context, report *oracletypes.Aggregate) error
 	GetAggregateByIndex(ctx context.Context, queryId []byte, index uint64) (*oracletypes.Aggregate, time.Time, error)
 }
+
+type ReporterKeeper interface {
+	TotalReporterPower(ctx context.Context) (math.Int, error)
+}

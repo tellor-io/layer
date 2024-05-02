@@ -15,6 +15,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/spf13/viper"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
 )
@@ -22,7 +23,6 @@ import (
 type Client struct {
 	// Add necessary fields
 	lastReportedDepositId *big.Int
-	pendingReports        []DepositReport
 	logger                log.Logger
 	tokenDepositsCache    *tokenbridgetypes.DepositReports
 
@@ -125,8 +125,11 @@ func (c *Client) QueryAPI(url string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	c.logger.Info("Initializing token bridge client")
-	eclient, err := ethclient.Dial("wss://eth-sepolia.g.alchemy.com/v2/{API_KEY}")
+	ethApiKey, err := c.getEthApiKey()
+	if err != nil {
+		return fmt.Errorf("failed to get ETH API key: %v", err)
+	}
+	eclient, err := ethclient.Dial("wss://eth-sepolia.g.alchemy.com/v2/" + ethApiKey)
 	if err != nil {
 		return fmt.Errorf("failed to connect to the Ethereum client: %v", err)
 	}
@@ -149,14 +152,10 @@ func (c *Client) InitializeDeposits() error {
 
 	c.lastReportedDepositId = latestDepositId
 
-	c.logger.Info("Last reported deposit ID", "depositId", c.lastReportedDepositId)
-	c.logger.Info("Initialized token bridge client")
-
 	return nil
 }
 
 func (c *Client) QueryTokenBridgeContract() error {
-	c.logger.Info("@QueryTokenBridgeContract")
 	latestDepositId, err := c.QueryCurrentDepositId()
 	if err != nil {
 		return fmt.Errorf("failed to query the latest deposit ID: %v", err)
@@ -236,7 +235,6 @@ func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error)
 }
 
 func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
-	c.logger.Info("@CheckForFinality", "blockHeight", blockHeight)
 	// Check if the block height is final
 	url := "https://sepolia.beaconcha.in/api/v1/epoch/finalized/slots"
 	body, err := c.QueryAPI(url)
@@ -258,8 +256,6 @@ func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
 			highestBlockNumber = data.ExecBlockNumber
 		}
 	}
-
-	c.logger.Info("Highest block number", "highestBlockNumber", highestBlockNumber)
 
 	// Check if the input blockHeight is greater than or equal to the highest exec_block_number
 	return uint64(highestBlockNumber) >= blockHeight.Uint64(), nil
@@ -341,12 +337,17 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error
 	return reportValueArgsEncoded, nil
 }
 
-func (c *Client) GetPendingBridgeDeposit() (DepositReport, error) {
-	if len(c.pendingReports) == 0 {
-		return DepositReport{}, fmt.Errorf("no pending bridge deposits")
+func (c *Client) getEthApiKey() (string, error) {
+	viper.SetConfigName("secrets")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-
-	report := c.pendingReports[0]
-	c.pendingReports = c.pendingReports[1:]
-	return report, nil
+	ethApiKey := viper.GetString("eth_api_key")
+	if ethApiKey == "" {
+		return "", fmt.Errorf("eth_api_key not set")
+	}
+	return ethApiKey, nil
 }

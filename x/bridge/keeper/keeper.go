@@ -55,6 +55,7 @@ type (
 		slashingKeeper types.SlashingKeeper
 		oracleKeeper   types.OracleKeeper
 		bankKeeper     types.BankKeeper
+		reporterKeeper types.ReporterKeeper
 	}
 )
 
@@ -65,6 +66,7 @@ func NewKeeper(
 	slashingKeeper types.SlashingKeeper,
 	oracleKeeper types.OracleKeeper,
 	bankKeeper types.BankKeeper,
+	reporterKeeper types.ReporterKeeper,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
@@ -91,6 +93,7 @@ func NewKeeper(
 		slashingKeeper: slashingKeeper,
 		oracleKeeper:   oracleKeeper,
 		bankKeeper:     bankKeeper,
+		reporterKeeper: reporterKeeper,
 	}
 
 	schema, err := sb.Build()

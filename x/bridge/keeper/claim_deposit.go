@@ -17,51 +17,40 @@ import (
 )
 
 func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex uint64) error {
-	k.Logger(ctx).Info("@claimDeposit", "depositId", depositId, "reportIndex", reportIndex)
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
 	queryId, err := k.getDepositQueryId(depositId)
 	if err != nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get query id, err: %w", err))
 		return err
 	}
 	aggregate, aggregateTimestamp, err := k.oracleKeeper.GetAggregateByIndex(ctx, queryId, reportIndex)
 	if err != nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", err))
 		return err
 	}
 	if aggregate == nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", types.ErrNoAggregate))
 		return types.ErrNoAggregate
 	}
 	if aggregate.Flagged {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", types.ErrAggregateFlagged))
 		return types.ErrAggregateFlagged
 	}
 	depositClaimedStatus, err := k.DepositIdClaimedMap.Get(ctx, depositId)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get deposit claimed status unexpected error, err: %w", err))
 		return err
 	} else {
 		if depositClaimedStatus.Claimed {
-			k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("deposit already claimed, err: %w", types.ErrDepositAlreadyClaimed))
 			return types.ErrDepositAlreadyClaimed
 		}
 	}
 	// get total bonded tokens
-	totalBondedTokens, err := k.stakingKeeper.TotalBondedTokens(ctx)
+	totalBondedTokens, err := k.reporterKeeper.TotalReporterPower(ctx)
 	if err != nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get total bonded tokens, err: %w", err))
 		return err
 	}
-	// NOTE: be careful with this, make sure to use same conversion as staking and reporter power
-	powerThreshold := totalBondedTokens.Int64() * 2 / 3e6
+	powerThreshold := totalBondedTokens.Int64() * 2 / 3
 	if aggregate.ReporterPower < powerThreshold {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, threshold: %d, reporter power: %d, err: %w", powerThreshold, aggregate.ReporterPower, types.ErrInsufficientReporterPower))
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
 	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 1*time.Second {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to get aggregate, err: %w", types.ErrReportTooYoung))
 		return types.ErrReportTooYoung
 	}
 
@@ -88,24 +77,8 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 		return err
 	}
 
-	// log params
-	k.Logger(ctx).Info("@claimDeposit", "depositId", depositId, "reportIndex", reportIndex, "recipient", recipient.String(), "amount", amount.String())
-
 	return nil
 }
-
-// type Aggregate struct {
-//     QueryId              []byte               `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-//     AggregateValue       string               `protobuf:"bytes,2,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
-//     AggregateReporter    string               `protobuf:"bytes,3,opt,name=aggregateReporter,proto3" json:"aggregateReporter,omitempty"`
-//     ReporterPower        int64                `protobuf:"varint,4,opt,name=reporterPower,proto3" json:"reporterPower,omitempty"`
-//     StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
-//     Reporters            []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
-//     Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
-//     Nonce                uint64               `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
-//     AggregateReportIndex int64                `protobuf:"varint,9,opt,name=aggregateReportIndex,proto3" json:"aggregateReportIndex,omitempty"`
-//     Height               int64                `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
-// }
 
 func (k Keeper) getDepositQueryId(depositId uint64) ([]byte, error) {
 	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))

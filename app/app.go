@@ -602,6 +602,7 @@ func New(
 		app.SlashingKeeper,
 		app.OracleKeeper,
 		app.BankKeeper,
+		app.ReporterKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
 	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
@@ -697,7 +698,6 @@ func New(
 				}()
 			}
 
-			// go tokenbridgeserver.StartTokenBridgeServer(cltx, app.GRPCQueryRouter(), apiSvr.GRPCGatewayRouter, tokenDepositsCache)
 			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger, tokenDepositsCache)
 		}
 		// Start the Metrics Daemon.
