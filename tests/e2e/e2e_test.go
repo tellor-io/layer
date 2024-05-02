@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -15,8 +16,10 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	collections "cosmossdk.io/collections"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/utils"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -25,10 +28,10 @@ import (
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-	collections "cosmossdk.io/collections"
 )
 
 func (s *E2ETestSuite) TestInitialMint() {
@@ -1372,6 +1375,164 @@ func (s *E2ETestSuite) TestUnstaking() {
 	require.Equal(val1.IsUnbonded(), true)
 }
 
+func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
+	require := s.Require()
+
+	govMsgServer := govkeeper.NewMsgServerImpl(s.govKeeper)
+	require.NotNil(govMsgServer)
+
+	//---------------------------------------------------------------------------
+	// Height 0 - create bonded validators and reporters
+	//---------------------------------------------------------------------------
+	_, err := s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	valAccAddrs, valValAddrs, vals := s.CreateValidators(5)
+	repAccAddrs := s.CreateReporters(5, valValAddrs, vals)
+	proposer := repAccAddrs[0]
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(500*1e6))
+	for _, rep := range repAccAddrs {
+		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, rep, sdk.NewCoins(initCoins)))
+	}
+
+	govParams, err := s.govKeeper.Params.Get(s.ctx)
+	require.NoError(err)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 1 - submit proposal
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	matic, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	msgUpdateCycleList := oracletypes.MsgUpdateCyclelist{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Cyclelist: [][]byte{matic},
+	}
+	anyMsg, err := codectypes.NewAnyWithValue(&msgUpdateCycleList)
+	proposalMsg := []*codectypes.Any{anyMsg}
+	require.NoError(err)
+	msgSubmitProposal := v1.MsgSubmitProposal{
+		Messages:       proposalMsg,
+		InitialDeposit: govParams.MinDeposit,
+		Proposer:       proposer.String(),
+		Metadata:       "test metadata",
+		Title:          "test title",
+		Summary:        "test summary",
+		Expedited:      false,
+	}
+
+	proposal, err := govMsgServer.SubmitProposal(s.ctx, &msgSubmitProposal)
+	fmt.Println("propRepsonse: ", proposal)
+	require.NoError(err)
+	require.Equal(proposal.ProposalId, uint64(1))
+
+	proposal1, err := s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
+	require.NoError(err)
+	require.Equal(proposal1.Status, v1.StatusVotingPeriod)
+	require.Equal(proposal1.Proposer, proposer.String())
+	require.Equal(proposal1.TotalDeposit, govParams.MinDeposit)
+	require.Equal(proposal1.Messages, proposalMsg)
+	require.Equal(proposal1.Metadata, "test metadata")
+	require.Equal(proposal1.Title, "test title")
+	require.Equal(proposal1.Summary, "test summary")
+	require.Equal(proposal1.Expedited, false)
+
+	_, err = s.app.EndBlocker(s.ctx) // end blocker should emit active proposal event
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2 - vote on proposal
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	// vote from each validator
+	for _, val := range valAccAddrs {
+		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
+			ProposalId: proposal.ProposalId,
+			Voter:      val.String(),
+			Option:     v1.VoteOption(1),
+			Metadata:   "vote metadata from validator",
+		})
+		require.NoError(err)
+		require.NotNil(voteResponse)
+	}
+
+	// check on vote in collections
+	vote, err := s.govKeeper.Votes.Get(s.ctx, collections.Join(proposal.ProposalId, valAccAddrs[0]))
+	require.NoError(err)
+	require.Equal(vote.ProposalId, proposal.ProposalId)
+	require.Equal(vote.Voter, valAccAddrs[0].String())
+	require.Equal(vote.Metadata, "vote metadata from validator")
+
+	for _, val := range valAccAddrs {
+		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
+			ProposalId: proposal.ProposalId,
+			Voter:      val.String(),
+			Option:     v1.VoteOption(1),
+			Metadata:   "vote metadata from validator",
+		})
+		require.NoError(err)
+		require.NotNil(voteResponse)
+	}
+
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(48 * time.Hour)))
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 3 - advance time to expire vote
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	// proposal passed
+	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
+	require.NoError(err)
+	require.Equal(proposal1.Status, v1.StatusPassed)
+	require.Equal(proposal1.Proposer, proposer.String())
+	require.Equal(proposal1.TotalDeposit, govParams.MinDeposit)
+	require.Equal(proposal1.Messages, proposalMsg)
+	require.Equal(proposal1.Metadata, "test metadata")
+	require.Equal(proposal1.Title, "test title")
+	require.Equal(proposal1.Summary, "test summary")
+	require.Equal(proposal1.Expedited, false)
+
+	_, err = s.app.EndBlocker(s.ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 4 - check cycle list
+	//---------------------------------------------------------------------------
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
+
+	cycleList, err := s.oraclekeeper.GetCyclelist(s.ctx)
+	require.NoError(err)
+	require.Equal(cycleList, [][]byte{matic})
+
+}
+
+func (s *E2ETestSuite) TestEditingSpec() {
+	require := s.Require()
+
+	registryMsgServer := registrykeeper.NewMsgServerImpl(s.registrykeeper)
+	require.NotNil(registryMsgServer)
+
+}
+
 func (s *E2ETestSuite) TestDisputes2() {
 	require := s.Require()
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
@@ -1912,170 +2073,5 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
-
-}
-
-func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
-	require := s.Require()
-
-	//---------------------------------------------------------------------------
-	// Height 0 - create bonded validators and reporters
-	//---------------------------------------------------------------------------
-	_, err := s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-
-	valAccAddrs, valValAddrs, vals := s.CreateValidators(5)
-	repAccAddrs := s.CreateReporters(5, valValAddrs, vals)
-	proposer := repAccAddrs[0]
-	fmt.Println("proposer: ", proposer.String())
-	initCoins := sdk.NewCoin(s.denom, math.NewInt(500*1e6))
-	for _, rep := range repAccAddrs {
-		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
-		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, rep, sdk.NewCoins(initCoins)))
-	}
-
-	govMsgServer := govkeeper.NewMsgServerImpl(s.govKeeper)
-	require.NotNil(govMsgServer)
-	govParams, err := s.govKeeper.Params.Get(s.ctx)
-	require.NoError(err)
-	fmt.Println("govParams min deposit: ", govParams.MinDeposit)
-
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
-
-	//---------------------------------------------------------------------------
-	// Height 1 - submit proposal
-	//---------------------------------------------------------------------------
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-
-	msgUpdateCycleList := oracletypes.MsgUpdateCyclelist{
-		Authority: s.accountKeeper.GetAuthority(),
-		Cyclelist: [][]byte{
-			[]byte("test"),
-		},
-	}
-
-	anyMsg, err := codectypes.NewAnyWithValue(&msgUpdateCycleList)
-	proposalMsg := []*codectypes.Any{anyMsg}
-	require.NoError(err)
-	msgSubmitProposal := v1.MsgSubmitProposal{
-		Messages:       proposalMsg,
-		InitialDeposit: govParams.MinDeposit,
-		Proposer:       proposer.String(),
-		Metadata:       "test metadata",
-		Title:          "test title",
-		Summary:        "test summary",
-		Expedited:      false,
-	}
-
-	proposal, err := govMsgServer.SubmitProposal(s.ctx, &msgSubmitProposal)
-	fmt.Println("propRepsonse: ", proposal)
-	require.NoError(err)
-
-	_, err = s.app.EndBlocker(s.ctx) // end blocker should emit active proposal event
-	require.NoError(err)
-
-	//---------------------------------------------------------------------------
-	// Height 2 - vote on proposal
-	//---------------------------------------------------------------------------
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-
-	for _, rep := range repAccAddrs {
-		voteResponse, err := govMsgServer.VoteWeighted(s.ctx, &v1.MsgVoteWeighted{
-			ProposalId: proposal.ProposalId,
-			Voter:      rep.String(),
-			Options:    v1.NewNonSplitVoteOption(v1.OptionYes),
-			Metadata:   "weighted vote metadata from reporter",
-		})
-		require.NoError(err)
-		require.NotNil(voteResponse)
-		fmt.Println("reporter: ", rep.String())
-	}
-
-	for _, val := range valAccAddrs {
-		voteResponse, err := govMsgServer.VoteWeighted(s.ctx, &v1.MsgVoteWeighted{
-			ProposalId: proposal.ProposalId,
-			Voter:      val.String(),
-			Options:    v1.NewNonSplitVoteOption(v1.OptionYes),
-			Metadata:   "weighted vote metadata from validator",
-		})
-		require.NoError(err)
-		require.NotNil(voteResponse)
-		fmt.Println("validator: ", val.String())
-	}
-
-	for _, rep := range repAccAddrs {
-		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
-			ProposalId: proposal.ProposalId,
-			Voter:      rep.String(),
-			Option:     v1.VoteOption(1),
-			Metadata:   "vote metadata from reporter",
-		})
-		require.NoError(err)
-		require.NotNil(voteResponse)
-	}
-
-	
-	vote, err := s.govKeeper.Votes.Get(s.ctx, collections.Join(proposal.ProposalId, valAccAddrs[0]))
-	require.NoError(err)
-	fmt.Println("vote: ", vote)
-
-	for _, val := range valAccAddrs {
-		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
-			ProposalId: proposal.ProposalId,
-			Voter:      val.String(),
-			Option:     v1.VoteOption(1),
-			Metadata:   "vote metadata from validator",
-		})
-		require.NoError(err)
-		require.NotNil(voteResponse)
-	}
-
-	// check proposal status
-	proposal1, err := s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
-	require.NoError(err)
-
-	fmt.Println("before proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
-	fmt.Println("before proposal1.Status: ", proposal1.Status)
-	fmt.Println("before proposal1.Messages: ", proposal1.Messages)
-	fmt.Println("before proposal1.Metadata: ", proposal1.Metadata)
-	fmt.Println("before proposal1.Proposer: ", proposal1.Proposer)
-	fmt.Println("before proposal1.SubmitTime: ", proposal1.SubmitTime)
-	fmt.Println("before proposal1.TotalDeposit: ", proposal1.TotalDeposit)
-	fmt.Println("before proposal1.VotingStartTime: ", proposal1.VotingStartTime)
-	fmt.Println("before proposal1.VotingEndTime: ", proposal1.VotingEndTime)
-
-	timeOfVotes := s.ctx.BlockTime()
-	fmt.Println("timeOfVotes: ", timeOfVotes)
-
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
-
-	//---------------------------------------------------------------------------
-	// Height 3 - advance time to expire vote
-	//---------------------------------------------------------------------------
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(48 * time.Hour)))
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-
-	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
-	require.NoError(err)
-	fmt.Println("-----")
-	fmt.Println("current time: ", s.ctx.BlockTime())
-	fmt.Println("after proposal1.FinalTallyResult: ", proposal1.FinalTallyResult)
-	fmt.Println("after proposal1.Status: ", proposal1.Status)
-	fmt.Println("after proposal1.Messages: ", proposal1.Messages)
-	fmt.Println("after proposal1.Metadata: ", proposal1.Metadata)
-	fmt.Println("after proposal1.Proposer: ", proposal1.Proposer)
-	fmt.Println("after proposal1.SubmitTime: ", proposal1.SubmitTime)
-	fmt.Println("after proposal1.TotalDeposit: ", proposal1.TotalDeposit)
-	fmt.Println("after proposal1.VotingStartTime: ", proposal1.VotingStartTime)
-	fmt.Println("after proposal1.VotingEndTime: ", proposal1.VotingEndTime)
 
 }
