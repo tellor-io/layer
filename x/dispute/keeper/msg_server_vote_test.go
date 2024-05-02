@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
@@ -31,18 +32,20 @@ func (s *KeeperTestSuite) TestVote() {
 	_, err = s.msgServer.Vote(s.ctx, &voteMsg)
 	s.Error(err)
 
-	voterVote, err := s.disputeKeeper.GetVoterVote(s.ctx, addr.String(), 1)
+	voterVote, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), addr))
 	s.NoError(err)
 
-	s.Equal(voterVote.Voter, addr.String())
-	s.Equal(voterVote.Id, uint64(1))
 	s.Equal(voterVote.Vote, types.VoteEnum_VOTE_SUPPORT)
 
 	// start voting, this method is check on beginblock
-	vote, err := s.disputeKeeper.GetVote(s.ctx, 1)
+	vote, err := s.disputeKeeper.Votes.Get(s.ctx, 1)
 	s.NoError(err)
 	s.NotNil(vote)
-	s.Equal(vote.Voters, []string{addr.String()})
+	iter, err := s.disputeKeeper.Voter.Indexes.VotersById.MatchExact(s.ctx, uint64(1))
+	s.NoError(err)
+	keys, err := iter.PrimaryKeys()
+	s.NoError(err)
+	s.Equal(keys[0].K2(), addr)
 	s.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
 	s.Equal(vote.Id, uint64(1))
 }

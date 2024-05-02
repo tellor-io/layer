@@ -63,19 +63,19 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx sdk.Context, feePayers []types
 
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reporterBond)))
 }
-func (k Keeper) RewardVoters(ctx sdk.Context, voters []string, totalAmount math.Int) (math.Int, error) {
+func (k Keeper) RewardVoters(ctx sdk.Context, voters []VoterInfo, totalAmount math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
 		return totalAmount, nil
 	}
 	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount)
 	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
-	for voter, share := range tokenDistribution {
-		if share.IsZero() {
+	for _, v := range tokenDistribution {
+		if v.Share.IsZero() {
 			continue
 		}
-		reward := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, share))
-		outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(voter), reward))
+		reward := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, v.Share))
+		outputs = append(outputs, banktypes.NewOutput(v.Voter, reward))
 	}
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, totalAmount)))

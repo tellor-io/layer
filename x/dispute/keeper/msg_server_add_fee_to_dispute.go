@@ -12,8 +12,8 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 ) (*types.MsgAddFeeToDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	dispute, err := k.GetDisputeById(ctx, msg.DisputeId)
-	if dispute == nil {
+	dispute, err := k.Disputes.Get(ctx, msg.DisputeId)
+	if err != nil {
 		return nil, err
 	}
 	// check if time to add fee has expired
@@ -51,10 +51,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 			return nil, err
 		}
 	}
-	if err := k.Keeper.SetDisputeById(ctx, dispute.DisputeId, *dispute); err != nil {
-		return nil, err
-	}
-	if err := k.Keeper.SetDisputeByReporter(ctx, *dispute); err != nil {
+	if err := k.Keeper.Disputes.Set(ctx, dispute.DisputeId, dispute); err != nil {
 		return nil, err
 	}
 

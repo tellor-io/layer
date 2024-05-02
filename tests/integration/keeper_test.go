@@ -42,7 +42,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/app/config"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -171,9 +170,8 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	suite.oraclekeeper = oraclekeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.registrykeeper, suite.reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
 	suite.disputekeeper = disputekeeper.NewKeeper(
-		appCodec, suite.fetchStoreKey(disputetypes.StoreKey), suite.fetchStoreKey(disputetypes.StoreKey), paramtypes.Subspace{}, suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.reporterkeeper,
+		appCodec, runtime.NewKVStoreService(suite.fetchStoreKey(disputetypes.StoreKey).(*storetypes.KVStoreKey)), suite.accountKeeper, suite.bankKeeper, suite.oraclekeeper, suite.reporterkeeper,
 	)
 	suite.stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
