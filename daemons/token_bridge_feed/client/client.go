@@ -76,7 +76,7 @@ func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositRe
 func (c *Client) start(ctx context.Context) {
 
 	c.InitializeDeposits()
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(180 * time.Second)
 	defer ticker.Stop()
 
 	for {
