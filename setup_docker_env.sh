@@ -5,46 +5,34 @@
 
 KEYRING_BACKEND="test"
 PASSWORD=password
-BUILD_TYPE_FILE_NAME=layerd-linux-arm64
 
-echo "Clean up any existing docker images or containers"
+echo "Clean up any existing docker images or containers..."
 docker-compose -p layer-test down -v || true
 docker image rm -f layerd_i || true
 # docker image rm -f tmkms_alice || true
 # docker image rm -f tmkms_bob || true
 
-echo "Remove the old prod-sim files"
+echo "Remove the old prod-sim files..."
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     rm -r -f ./prod-sim/$name
     mkdir -p ./prod-sim/$name
 done
 
 
+##  UNCOMMENT COMMANDS BELOW IF YOU NEED TO BUILD/REBUILD THE PROJECT
 
 # rm -r -f build
 
 # echo "Build with checksum using Makefile.."
 # make build-with-checksum
 
-#mv ./prod-sim/Dockerfile_tmkms ./prod-sim/Dockerfil_tmkms.txt
 
 # Build base image of layerd_i to be the image used across all containers
-echo "Build base image of layerd_i to be the image used across all containers"
+echo "Build base image of layerd_i to be the image used across all containers..."
 docker build -f prod-sim/Dockerfile_layerd_alpine . -t layerd_i
 
-# mv ./prod-sim/Dockerfil_tmkms.txt ./prod-sim/Dockerfile_tmkms 
-# mv ./prod-sim/Dockerfile_layerd_alpine ./prod-sim/Dockerfil_layerd_alpine.txt
-
-# echo "Build the KMS used for validator key management and signing ONLY NEED TO RUN THIS ONCE"
-# docker build -f prod-sim/Dockerfile_tmkms . -t tmkms_alice
-
-# echo "Build the KMS used for validator key management and signing"
-# docker build -f prod-sim/Dockerfile_tmkms . -t tmkms_bob
-
-# mv ./prod-sim/Dockerfil_layerd_alpine.txt ./prod-sim/Dockerfile_layerd_alpine
-
 # initialize the chain in all containers
-echo "initialize the chain in all containers"
+echo "initialize the chain in all containers..."
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
@@ -52,6 +40,8 @@ for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     init layer --chain-id layer
 done
 
+#   Create moniker for each node being ran in each container
+echo "Create moniker for each node being ran in each container..."
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
@@ -60,7 +50,7 @@ for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
 done
 
 # sets the denom to trb with a small unit of loya in the genesis file
-echo "sets the denom to trb with a small unit of loya in the genesis file"
+echo "sets the denom to trb with a small unit of loya in the genesis file..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
@@ -74,7 +64,7 @@ docker run --rm -it \
     -i 's/"stake"/"loya"/g' /root/.layer/valAlice/config/genesis.json
 
 # setup the config files to have a denom of trb and loya as the smallest unit
-echo "setup the config files to have a denom of trb and loya as the smallest unit"
+echo "setup the config files to have a denom of trb and loya as the smallest unit..."
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
@@ -92,7 +82,7 @@ for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
 done
 
 #init the client.toml to have the chainId of layer
-echo "init the client.toml to have the chainId of layer"
+echo "init the client.toml to have the chainId of layer..."
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
@@ -112,7 +102,7 @@ for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
 done
 
 #init the client.toml to have the KeyringBackend of variable
-echo "init the client.toml to have the keyring-backend to env variable"
+echo "init the client.toml to have the keyring-backend to env variable..."
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     docker run --rm -i \
     -v $(pwd)/prod-sim/$name:/root/.layer \
@@ -131,8 +121,8 @@ for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
     /root/.layer/config/client.toml
 done
 
-# create validator key on alice desktop
-echo "create validator key on alice desktop"
+# create keys for alice
+echo "create validator key on alice desktop..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
@@ -140,8 +130,8 @@ docker run --rm -it \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
     add valAlice
 
-# create validator key on bob desktop
-echo "create validator key on bob desktop"
+# create keys for bob
+echo "create validator key on bob desktop..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
@@ -149,7 +139,8 @@ docker run --rm -it \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob   \
     add valBob
 
-echo "Create keys for nodeCarol"
+#Create keys for node carol 
+echo "Create keys for nodeCarol..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
     layerd_i \
@@ -158,7 +149,7 @@ docker run --rm -it \
     add nodeCarol
 
 # set chain id in genesis file on alice desktop
-echo "set chain id in genesis file on Alice desktop"
+echo "set chain id in genesis file on Alice desktop..."
 docker run --rm -i \
     -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --entrypoint sed \
@@ -173,7 +164,8 @@ docker run --rm -i \
     -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' \
     /root/.layer/config/genesis.json
 
-echo "Set address for nodeCarol to give them loya"
+# Get address for nodeCarol
+echo "Set address for nodeCarol to give them loya..."
 NODE_CAROL=$(echo $PASSWORD | docker run --rm -i \
     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
     layerd_i \
@@ -190,7 +182,7 @@ docker run --rm -it \
     genesis add-genesis-account $NODE_CAROL 1000000000loya 
 
 #move genesis file from carol to alice desktop
-echo "move genesis file from carol to alice desktop"
+echo "move genesis file from carol to alice..."
 mv prod-sim/nodeCarol/config/genesis.json \
     prod-sim/valAlice/config/
 
@@ -199,7 +191,7 @@ mv prod-sim/nodeCarol/nodeCarol/config/genesis.json \
 
 
 #Get the address returned from the keyring on alice desktop
-echo "Set the address returned from the keyring on alice desktop"
+echo "Set address for alice to give them loya..."
 ALICE=$(echo $PASSWORD | docker run --rm -i \
     -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
@@ -227,7 +219,7 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/valBob/
 jq '.consensus.params.abci.vote_extensions_enable_height = "1"' prod-sim/valBob/valBob/config/genesis.json > temp.json && mv temp.json prod-sim/valBob/valBob/config/genesis.json
 
 #move genesis file from alice to bob desktop
-echo "move genesis file from alice to bob desktop"
+echo "move genesis file from alice to bob..."
 mv prod-sim/valAlice/config/genesis.json \
     prod-sim/valBob/config/
 
@@ -235,7 +227,7 @@ mv prod-sim/valAlice/valAlice/config/genesis.json \
     prod-sim/valBob/valBob/config/
 
 # Gets Bobs address from his desktop to be used to send loya to him
-echo "Gets Bobs address from his desktop to be used to send loya to him"
+echo "Gets Bobs address from his desktop to be used to send loya to him..."
 BOB=$(echo $PASSWORD | docker run --rm -i \
     -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
@@ -245,20 +237,12 @@ BOB=$(echo $PASSWORD | docker run --rm -i \
 echo $BOB
 
 #send loya to bobs account
-echo "send loya to bobs account"
+echo "send loya to bobs account..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/valBob:/root/.layer \
     layerd_i \
     --keyring-backend $KEYRING_BACKEND --home /root/.layer/valBob \
     genesis add-genesis-account $BOB 10000000000000loya 
-
-# Copy validator keys from val nodes to bob and alice desktop
-# echo "Copy validator keys from val nodes to bob and alice desktop"
-# cp prod-sim/valAlice/config/priv_validator_key.json \
-#     prod-sim/valAlice/config/priv_validator_key.json
-
-# cp prod-sim/valBob/config/priv_validator_key.json \
-#     prod-sim/deskBob/config/priv_validator_key.json
 
 # Create gentx transaction for Bob to stake loya as validator
 echo "Create gentx transaction for Bob to stake loya as validator..."
@@ -460,6 +444,12 @@ docker run --rm -i \
     -Ei 's/^swagger = false/swagger = true/g' \
     /root/.layer/nodeCarol/config/app.toml
 
+docker run --rm -i \
+    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    --entrypoint sed \
+    layerd_i \
+    -Ei 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' \
+    /root/.layer/nodeCarol/config/app.toml
 
 #Update cors_allowed_origin
 for name in nodeCarol sentryAlice sentryBob valAlice valBob; do
@@ -517,7 +507,7 @@ docker compose \
 
 #mv ./build/layerd-linux-arm64 ./build/layerd
 
-sleep 30
+sleep 20
 
 docker run --rm -it \
     --network layer-test_net-public \
@@ -545,27 +535,18 @@ echo "Delegate from node carol to validator..."
 docker run --rm -it \
     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
     --network layer-test_net-public \
-    layerd_i tx staking delegate $ALICE_VAL_OP_ADD 1000000loya \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-    --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
+    layerd_i tx staking delegate tellorvaloper1f8tupdprzqu38074xd4vasy0dqw98yeuykqayg 1000000loya \
+    --keyring-backend test --home /root/.layer/nodeCarol \
+    --chain-id layer --node "tcp://nodeCarol:26657" --from tellor10juyqjsv08vpsszm3uelp7ckfj3yfe34a4d2zw
 
-echo "Creating reporter for nodeCarol..."
-docker run --rm -it \
-    -v $(pwd)/prod-sim/nodeCarol:/root/.layer/nodeCarol \
-    layerd_i tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"$ALICE_VAL_OP_ADD\", \"amount\": \"1000000loya\" }" \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-    --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
-
-# chmod +x ./build/layerd-darwin-arm64
-
-# ./build/layerd-darwin-arm64 tx reporter --help \
-#     --node "http://node-carol:26657"
-
-# ./build/layerd tx reporter --help \
-#     --node "tcp://localhost:26657"
-
-
-#mv ./build/layerd ./build/layerd-linux-arm64
+echo "Now that you are delegated nodeCarol should start reporting now or soon..."
 
 
 
+# ./layerd tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"$ALICE_VAL_OP_ADD\", \"amount\": \"1000000loya\" }" \
+#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+#     --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
+
+# docker run --rm -it \
+#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+#     layerd_i keys list --home /root/.layer/nodeCarol --keyring-backend test

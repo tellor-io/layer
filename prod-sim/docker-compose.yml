@@ -48,7 +48,7 @@ services:
       - ./sentryBob:/root/.layer
 
   nodeCarol:
-    command: start --api.enable --api.swagger --home /root/.layer/nodeCarol --price-daemon-enabled=false
+    command: start --api.enable --api.swagger --home /root/.layer/nodeCarol --panic-on-daemon-failure-enabled=false
     container_name: nodeCarol
     image: layerd_i
     environment:
