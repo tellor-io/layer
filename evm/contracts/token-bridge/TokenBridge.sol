@@ -65,7 +65,7 @@ contract TokenBridge is UsingTellor {
     }
 
     function _depositLimit() internal returns (uint256) {
-        uint256 _layerTokenSupply = token.balanceOf(address(this)); // TODO: update this, add initial supply if needed
+        uint256 _layerTokenSupply = token.balanceOf(address(this)) + 100 ether; // TODO: update this, add initial supply if needed
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
             currentDepositLimit = _layerTokenSupply * DEPOSIT_LIMIT_PERCENTAGE / 1e16;
             depositLimitUpdateTime = block.timestamp;
