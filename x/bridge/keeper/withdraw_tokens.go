@@ -33,24 +33,21 @@ func (k Keeper) withdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 		return err
 	}
 
-	k.oracleKeeper.SetAggregate(ctx, aggregate)
-
-	return nil
+	return k.oracleKeeper.SetAggregate(ctx, aggregate)
 }
 
 func (k Keeper) incrementWithdrawalId(goCtx context.Context) (uint64, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	id, err := k.WithdrawalId.Get(ctx)
+	id, err := k.WithdrawalId.Get(goCtx)
 	if err != nil {
 		id.Id = 1
-		err = k.WithdrawalId.Set(ctx, id)
+		err = k.WithdrawalId.Set(goCtx, id)
 		if err != nil {
 			return 0, err
 		}
 		return id.Id, nil
 	}
 	id.Id++
-	err = k.WithdrawalId.Set(ctx, id)
+	err = k.WithdrawalId.Set(goCtx, id)
 	if err != nil {
 		return 0, err
 	}
