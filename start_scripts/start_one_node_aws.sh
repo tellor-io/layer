@@ -83,19 +83,12 @@ echo "Validate genesis file"
 echo "Modifying timeout_commit in config.toml for alice..."
 sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/alice/config/config.toml
 
-<<<<<<< HEAD
 # Open up alice to outside traffic
 echo "Open up alice to outside traffice" 
 sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' ~/.layer/alice/config/config.toml
 sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26656"/laddr = "tcp:\/\/0.0.0.0:26656"/g' ~/.layer/alice/config/config.toml
 
 sed -i 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' ~/.layer/alice/config/app.toml
-=======
-sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' ~/.layer/alice/config/config.toml
-sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26656"/laddr = "tcp:\/\/0.0.0.0:26656"/g' ~/.layer/alice/config/config.toml
-
-sed -i 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/18.215.40.125:1317"/g' ~/.layer/alice/config/config.toml
->>>>>>> 76f2d292 (sets the api address to use the public address of aws instance)
 
 
 
