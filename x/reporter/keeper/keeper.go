@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -18,6 +20,7 @@ type (
 		cdc                            codec.BinaryCodec
 		storeService                   store.KVStoreService
 		Params                         collections.Item[types.Params]
+		Tracker                        collections.Item[types.StakeTracker]
 		Reporters                      collections.Map[sdk.AccAddress, types.OracleReporter]
 		DelegatorTips                  collections.Map[sdk.AccAddress, math.Int]
 		Delegators                     *collections.IndexedMap[sdk.AccAddress, types.Delegation, ReporterDelegatorsIndex]
@@ -60,6 +63,7 @@ func NewKeeper(
 		storeService: storeService,
 
 		Params:                         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Tracker:                        collections.NewItem(sb, types.StakeTrackerPrefix, "tracker", codec.CollValue[types.StakeTracker](cdc)),
 		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
 		Delegators:                     collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
 		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_delegator_validator", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), sdk.IntValue),
@@ -92,4 +96,26 @@ func (k Keeper) GetAuthority() string {
 // Logger returns a module-specific logger.
 func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) TrackStakeChange(ctx context.Context) error {
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	maxStake, err := k.Tracker.Get(ctx)
+	if err != nil {
+		return err
+	}
+	if sdkctx.BlockTime().Before(*maxStake.Expiration) {
+		return nil
+	}
+	// reset expiration
+	newExpiration := sdkctx.BlockTime().Add(12 * time.Hour)
+	// get current total stake
+	total, err := k.stakingKeeper.TotalBondedTokens(ctx)
+	if err != nil {
+		return err
+	}
+
+	maxStake.Expiration = &newExpiration
+	maxStake.Amount = total
+	return k.Tracker.Set(ctx, maxStake)
 }

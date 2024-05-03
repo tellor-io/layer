@@ -222,6 +222,30 @@ func (_m *StakingKeeper) SetUnbondingDelegation(ctx context.Context, ubd staking
 	return r0
 }
 
+// TotalBondedTokens provides a mock function with given fields: _a0
+func (_m *StakingKeeper) TotalBondedTokens(_a0 context.Context) (math.Int, error) {
+	ret := _m.Called(_a0)
+
+	var r0 math.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (math.Int, error)); ok {
+		return rf(_a0)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) math.Int); ok {
+		r0 = rf(_a0)
+	} else {
+		r0 = ret.Get(0).(math.Int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Unbond provides a mock function with given fields: ctx, delAddr, valAddr, shares
 func (_m *StakingKeeper) Unbond(ctx context.Context, delAddr types.AccAddress, valAddr types.ValAddress, shares math.LegacyDec) (math.Int, error) {
 	ret := _m.Called(ctx, delAddr, valAddr, shares)
