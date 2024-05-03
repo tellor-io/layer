@@ -3,8 +3,6 @@ package keeper
 import (
 	"context"
 
-	cosmath "cosmossdk.io/math"
-	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -52,12 +50,11 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 
 	}
 
-	totalReporterPowerMathInt := cosmath.NewInt(totalReporterPower)
 	aggregateReport := types.Aggregate{
 		QueryId:              modeReport.QueryId,
 		AggregateValue:       modeReport.Value,
 		AggregateReporter:    modeReport.Reporter,
-		ReporterPower:        totalReporterPowerMathInt.Mul(layertypes.PowerReduction).Int64(),
+		ReporterPower:        totalReporterPower,
 		Reporters:            modeReporters,
 		AggregateReportIndex: modeReportIndex,
 	}

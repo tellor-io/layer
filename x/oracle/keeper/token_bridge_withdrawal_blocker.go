@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 )
@@ -25,7 +26,7 @@ func (k Keeper) preventBridgeWithdrawalReport(queryData []byte) error {
 	}
 	queryDataDecodedPartial, err := initialArgs.Unpack(queryData)
 	if err != nil {
-		return err
+		return types.ErrInvalidQueryData.Wrapf("failed to unpack query data: %v", err)
 	}
 	if len(queryDataDecodedPartial) != 2 {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data length")
@@ -54,7 +55,7 @@ func (k Keeper) preventBridgeWithdrawalReport(queryData []byte) error {
 
 	queryDataArgsDecoded, err := queryDataArgs.Unpack(queryDataDecodedPartial[1].([]byte))
 	if err != nil {
-		return err
+		return types.ErrInvalidQueryData.Wrapf("failed to unpack query data arguments: %v", err)
 	}
 
 	if len(queryDataArgsDecoded) != 2 {

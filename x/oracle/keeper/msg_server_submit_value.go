@@ -20,15 +20,16 @@ import (
 func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := k.preventBridgeWithdrawalReport(msg.QueryData)
-	if err != nil {
-		return nil, err
-	}
-
 	reporterAddr, err := msg.GetSignerAndValidateMsg()
 	if err != nil {
 		return nil, err
 	}
+
+	err = k.preventBridgeWithdrawalReport(msg.QueryData)
+	if err != nil {
+		return nil, err
+	}
+
 	// get reporter
 	reporter, err := k.reporterKeeper.Reporter(ctx, reporterAddr)
 	if err != nil {

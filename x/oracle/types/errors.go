@@ -21,4 +21,5 @@ var (
 	ErrQueryNotFound               = sdkerrors.Register(ModuleName, 1109, "query not found")
 	ErrNoTipsNotInCycle            = sdkerrors.Register(ModuleName, 1110, "no tips not in cycle")
 	ErrNotTokenDeposit             = sdkerrors.Register(ModuleName, 1111, "not a token deposit")
+	ErrInvalidQueryData            = sdkerrors.Register(ModuleName, 1112, "invalid query data")
 )
