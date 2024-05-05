@@ -45,9 +45,9 @@ type (
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
 		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
-		AttestSnapshotsByReportMap   collections.Map[string, types.AttestationSnapshots]
-		AttestSnapshotDataMap        collections.Map[string, types.AttestationSnapshotData]
-		SnapshotToAttestationsMap    collections.Map[string, types.OracleAttestations]
+		AttestSnapshotsByReportMap   collections.Map[[]byte, types.AttestationSnapshots]
+		AttestSnapshotDataMap        collections.Map[[]byte, types.AttestationSnapshotData]
+		SnapshotToAttestationsMap    collections.Map[[]byte, types.OracleAttestations]
 		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
 		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
 
@@ -83,9 +83,9 @@ func NewKeeper(
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
-		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.StringKey, codec.CollValue[types.AttestationSnapshots](cdc)),
-		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.StringKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
-		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
+		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.BytesKey, codec.CollValue[types.AttestationSnapshots](cdc)),
+		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.BytesKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
+		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
 		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
 		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
 
@@ -119,13 +119,12 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 
 	for i, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
-		evmAddressHex := hex.EncodeToString(evmAddress.EVMAddress)
 		if err != nil {
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			return nil, err
 		}
 		bridgeValset[i] = &types.BridgeValidator{
-			EthereumAddress: evmAddressHex,
+			EthereumAddress: evmAddress.EVMAddress,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
 		}
 	}
@@ -134,7 +133,7 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 	sort.Slice(bridgeValset, func(i, j int) bool {
 		if bridgeValset[i].Power == bridgeValset[j].Power {
 			// If power is equal, sort alphabetically
-			return bridgeValset[i].EthereumAddress < bridgeValset[j].EthereumAddress
+			return bytes.Compare(bridgeValset[i].EthereumAddress, bridgeValset[j].EthereumAddress) < 0
 		}
 		// Otherwise, sort by power in descending order
 		return bridgeValset[i].Power > bridgeValset[j].Power
@@ -380,22 +379,8 @@ func (k Keeper) GetValidatorCheckpointFromStorage(ctx context.Context) (*types.V
 	return &checkpoint, nil
 }
 
-func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (*types.ValidatorCheckpointParams, error) {
-	checkpointParams, err := k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
-	if err != nil {
-		k.Logger(ctx).Error("Failed to get validator checkpoint params", "error", err)
-		return nil, err
-	}
-	return &checkpointParams, nil
-}
-
-func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (*types.CheckpointTimestamp, error) {
-	checkpointTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, checkpointIdx)
-	if err != nil {
-		k.Logger(ctx).Error("Failed to get validator checkpoint index", "error", err)
-		return nil, err
-	}
-	return &checkpointTimestamp, nil
+func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (types.CheckpointTimestamp, error) {
+	return k.ValidatorCheckpointIdxMap.Get(ctx, checkpointIdx)
 }
 
 func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*types.BridgeValsetSignatures, error) {
@@ -417,7 +402,7 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 	// Convert validatorSet to a slice of the Validator struct defined above
 	var validators []Validator
 	for _, v := range validatorSet.BridgeValidatorSet {
-		addr := common.HexToAddress(v.EthereumAddress)
+		addr := common.BytesToAddress(v.EthereumAddress)
 		power := big.NewInt(0).SetUint64(v.Power)
 		validators = append(validators, Validator{Addr: addr, Power: power})
 	}
@@ -472,15 +457,15 @@ func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c typ
 	var totalPower int64
 	for _, bv := range b.BridgeValidatorSet {
 		power := int64(bv.GetPower())
-		powers[bv.EthereumAddress] = power
+		powers[string(bv.EthereumAddress)] = power
 		totalPower += power
 	}
 
 	for _, bv := range c.BridgeValidatorSet {
-		if val, ok := powers[bv.EthereumAddress]; ok {
-			powers[bv.EthereumAddress] = val - int64(bv.GetPower())
+		if val, ok := powers[string(bv.EthereumAddress)]; ok {
+			powers[string(bv.EthereumAddress)] = val - int64(bv.GetPower())
 		} else {
-			powers[bv.EthereumAddress] = -int64(bv.GetPower())
+			powers[string(bv.EthereumAddress)] = -int64(bv.GetPower())
 		}
 	}
 
@@ -497,7 +482,7 @@ func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c typ
 	return relativeDiff
 }
 
-func (k Keeper) EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error) {
+func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB []byte) (common.Address, error) {
 	msgA := "TellorLayer: Initial bridge signature A"
 	msgB := "TellorLayer: Initial bridge signature B"
 
@@ -555,13 +540,12 @@ func (k Keeper) tryRecoverAddressWithBothIDs(sig []byte, msgHash []byte) ([]comm
 	return addrs, nil
 }
 
-func (k Keeper) SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error {
-	evmAddrBytes := common.HexToAddress(evmAddr).Bytes()
+func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr []byte) error {
 	evmAddrType := types.EVMAddress{
-		EVMAddress: evmAddrBytes,
+		EVMAddress: evmAddr,
 	}
 
-	err := k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, types.EVMAddress(evmAddrType))
+	err := k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, evmAddrType)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting EVM address by operator", "error", err)
 		return err
@@ -610,9 +594,8 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 		return err
 	}
 	// set the signature in the valset signatures array by finding the index of the operator address
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
 	for i, val := range previousValset.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
+		if bytes.Equal(val.EthereumAddress, ethAddress.EVMAddress) {
 			valsetSigs.SetSignature(i, signatureBytes)
 		}
 	}
@@ -625,7 +608,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 	return nil
 }
 
-func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error {
+func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string, snapshot []byte, sig []byte) error {
 	// get the evm address associated with the operator address
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
@@ -639,17 +622,15 @@ func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, sn
 		return err
 	}
 	// set the signature in the oracle attestation map by finding the index of the operator address
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
-	snapshotHex := hex.EncodeToString(snapshot)
 	for i, val := range lastSavedBridgeValidators.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
-			snapshotToSigsMap, err := k.SnapshotToAttestationsMap.Get(ctx, snapshotHex)
+		if bytes.Equal(val.EthereumAddress, ethAddress.EVMAddress) {
+			snapshotToSigsMap, err := k.SnapshotToAttestationsMap.Get(ctx, snapshot)
 			if err != nil {
 				k.Logger(ctx).Info("Error getting snapshot to attestations map", "error", err)
 				return err
 			}
 			snapshotToSigsMap.SetAttestation(i, sig)
-			err = k.SnapshotToAttestationsMap.Set(ctx, snapshotHex, snapshotToSigsMap)
+			err = k.SnapshotToAttestationsMap.Set(ctx, snapshot, snapshotToSigsMap)
 			if err != nil {
 				k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
 				return err
@@ -659,13 +640,13 @@ func (k Keeper) SetOracleAttestation(ctx sdk.Context, operatorAddress string, sn
 	return nil
 }
 
-func (k Keeper) GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error) {
+func (k Keeper) GetEVMAddressByOperator(ctx context.Context, operatorAddress string) ([]byte, error) {
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
-		return "", err
+		return nil, err
 	}
-	return hex.EncodeToString(ethAddress.EVMAddress), nil
+	return ethAddress.EVMAddress, nil
 }
 
 func (k Keeper) SetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
@@ -731,9 +712,8 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		return false, -1, err
 	}
 	// get the index of the evm address in the previous valset
-	ethAddressHex := hex.EncodeToString(ethAddress.EVMAddress)
 	for i, val := range previousValset.BridgeValidatorSet {
-		if val.EthereumAddress == ethAddressHex {
+		if bytes.Equal(val.EthereumAddress, ethAddress.EVMAddress) {
 			// check if the signature exists
 			if len(valsetSigs.Signatures[i]) != 0 {
 				return true, int64(i), nil
@@ -745,8 +725,9 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 	return false, -1, nil
 }
 
-func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
-	blockHeight := ctx.BlockHeight()
+func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockHeight := sdkCtx.BlockHeight()
 
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
 	for _, report := range reports {
@@ -765,7 +746,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx sdk.Context) error {
 }
 
 // Called with each new agg report and with new request for optimistic attestations
-func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.Time) error {
+func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp time.Time) error {
 	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
@@ -789,16 +770,17 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	}
 
 	// use current block time for attestationTimestamp
-	attestationTimestamp := ctx.BlockTime()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	attestationTimestamp := sdkCtx.BlockTime()
 
 	snapshotBytes, err := k.EncodeOracleAttestationData(
-		hex.EncodeToString(queryId),
+		queryId,
 		aggReport.AggregateValue,
 		timestamp.Unix(),
 		aggReport.ReporterPower,
 		tsBefore.Unix(),
 		tsAfter.Unix(),
-		hex.EncodeToString(validatorCheckpoint.Checkpoint),
+		validatorCheckpoint.Checkpoint,
 		attestationTimestamp.Unix(),
 	)
 	if err != nil {
@@ -807,7 +789,7 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	}
 
 	// set snapshot by report
-	key := hex.EncodeToString(crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix()))))
+	key := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix())))
 	// check if map for this key exists, otherwise create a new map
 	exists, err := k.AttestSnapshotsByReportMap.Has(ctx, key)
 	if err != nil {
@@ -844,7 +826,7 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 		QueryId:              queryId,
 		Timestamp:            int64(timestamp.Unix()),
 	}
-	err = k.AttestSnapshotDataMap.Set(ctx, hex.EncodeToString(snapshotBytes), snapshotData)
+	err = k.AttestSnapshotDataMap.Set(ctx, snapshotBytes, snapshotData)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting attestation snapshot data", "error", err)
 		return err
@@ -858,14 +840,14 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 	}
 	oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
 	// set the map
-	err = k.SnapshotToAttestationsMap.Set(ctx, hex.EncodeToString(snapshotBytes), *oracleAttestations)
+	err = k.SnapshotToAttestationsMap.Set(ctx, snapshotBytes, *oracleAttestations)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
 		return err
 	}
 
 	// add to attestation requests
-	blockHeight := uint64(ctx.BlockHeight())
+	blockHeight := uint64(sdkCtx.BlockHeight())
 	exists, err = k.AttestRequestsByHeightMap.Has(ctx, blockHeight)
 	if err != nil {
 		k.Logger(ctx).Info("Error checking if attestation requests by height map exists", "error", err)
@@ -892,13 +874,13 @@ func (k Keeper) CreateSnapshot(ctx sdk.Context, queryId []byte, timestamp time.T
 }
 
 func (k Keeper) EncodeOracleAttestationData(
-	queryId string,
+	queryId []byte,
 	value string,
 	timestamp int64,
 	aggregatePower int64,
 	previousTimestamp int64,
 	nextTimestamp int64,
-	valsetCheckpoint string,
+	valsetCheckpoint []byte,
 	attestationTimestamp int64,
 ) ([]byte, error) {
 	// domainSeparator is bytes "tellorNewReport"
@@ -912,12 +894,8 @@ func (k Keeper) EncodeOracleAttestationData(
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
 
 	// Convert queryId to bytes32
-	queryIdBytes, err := hex.DecodeString(queryId)
-	if err != nil {
-		return nil, err
-	}
 	var queryIdBytes32 [32]byte
-	copy(queryIdBytes32[:], queryIdBytes)
+	copy(queryIdBytes32[:], queryId)
 
 	// Convert value to bytes
 	valueBytes, err := hex.DecodeString(value)
@@ -942,12 +920,8 @@ func (k Keeper) EncodeOracleAttestationData(
 	nextTimestampUint64.SetInt64(nextTimestamp)
 
 	// Convert valsetCheckpoint to bytes32
-	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
-	if err != nil {
-		return nil, err
-	}
 	var valsetCheckpointBytes32 [32]byte
-	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
+	copy(valsetCheckpointBytes32[:], valsetCheckpoint)
 
 	// Convert attestationTimestamp to uint64
 	attestationTimestampUint64 := new(big.Int)
@@ -999,11 +973,15 @@ func (k Keeper) EncodeOracleAttestationData(
 	return oracleAttestationHash, nil
 }
 
-func (k Keeper) GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*types.AttestationRequests, error) {
+func (k Keeper) GetAttestationRequestsByHeight(ctx context.Context, height uint64) (*types.AttestationRequests, error) {
 	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, height)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return nil, err
 	}
 	return &attestRequests, nil
+}
+
+func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (types.ValidatorCheckpointParams, error) {
+	return k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
 }

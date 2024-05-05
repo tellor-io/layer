@@ -7,14 +7,13 @@ import (
 	"strconv"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetSnapshotsByReport(goCtx context.Context, req *types.QueryGetSnapshotsByReportRequest) (*types.QueryGetSnapshotsByReportResponse, error) {
+func (q Querier) GetSnapshotsByReport(ctx context.Context, req *types.QueryGetSnapshotsByReportRequest) (*types.QueryGetSnapshotsByReportResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -30,10 +29,8 @@ func (k Keeper) GetSnapshotsByReport(goCtx context.Context, req *types.QueryGetS
 	}
 	timestampTime := time.Unix(timestampInt, 0)
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	key := hex.EncodeToString(crypto.Keccak256([]byte(hex.EncodeToString(queryIdBytes) + fmt.Sprint(timestampTime.Unix()))))
-	// key := hex.EncodeToString(crypto.Keccak256([]byte(queryId + timestamp)))
-	snapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, key)
+	key := crypto.Keccak256([]byte(hex.EncodeToString(queryIdBytes) + fmt.Sprint(timestampTime.Unix())))
+	snapshots, err := q.k.AttestSnapshotsByReportMap.Get(ctx, key)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("snapshots not found for queryId %s and timestamp %s", queryIdStr, timestampStr))
 	}

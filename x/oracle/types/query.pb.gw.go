@@ -67,7 +67,7 @@ func request_Query_GetReportsbyQid_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -94,7 +94,7 @@ func local_request_Query_GetReportsbyQid_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -186,7 +186,7 @@ func request_Query_GetReportsbyReporterQid_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -224,7 +224,7 @@ func local_request_Query_GetReportsbyReporterQid_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -251,7 +251,7 @@ func request_Query_GetCurrentTip_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.Bytes(val)
+	protoReq.QueryData, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
@@ -278,7 +278,7 @@ func local_request_Query_GetCurrentTip_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
 	}
 
-	protoReq.QueryData, err = runtime.Bytes(val)
+	protoReq.QueryData, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
@@ -381,7 +381,7 @@ func request_Query_GetAggregatedReport_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -408,7 +408,7 @@ func local_request_Query_GetAggregatedReport_0(ctx context.Context, marshaler ru
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -435,7 +435,7 @@ func request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
@@ -473,7 +473,7 @@ func local_request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
 	}
 
-	protoReq.QueryId, err = runtime.Bytes(val)
+	protoReq.QueryId, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
