@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	for _, power := range powers {
 		sumPowers += power
 	}
-	expectedPower := sumPowers * 1e6
+	expectedPower := sumPowers
 	currentReporters := reporters[:5]
 	reports := testutil.GenerateReports(currentReporters, values, powers, qId)
 
@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	for _, power := range powers {
 		sumPowers += power
 	}
-	expectedPower = sumPowers * 1e6
+	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	for _, power := range powers {
 		sumPowers += power
 	}
-	expectedPower = sumPowers * 1e6
+	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
@@ -124,7 +124,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	for _, power := range powers {
 		sumPowers += power
 	}
-	expectedPower = sumPowers * 1e6
+	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})

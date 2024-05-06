@@ -5,7 +5,6 @@ import "../bridge/BlobstreamO.sol";
 
 contract UsingTellor {
     BlobstreamO public bridge;
-    uint256 public constant MAX_ATTESTATION_AGE = 5 minutes;
 
     constructor(address _blobstreamO) {
         bridge = BlobstreamO(_blobstreamO);
@@ -14,11 +13,23 @@ contract UsingTellor {
     function isCurrentConsensusValue(
         OracleAttestationData calldata _attest,
         Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
+        Signature[] calldata _sigs,
+        uint256 _maxAttestationAge
     ) public view returns(bool) {
         require(bridge.verifyConsensusOracleData(_attest, _currentValidatorSet, _sigs), "Invalid attestation");
-        require(block.timestamp - _attest.attestTimestamp <= MAX_ATTESTATION_AGE, "Attestation is too old");
+        require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
         require(_attest.report.nextTimestamp == 0, "Report is not latest");
+        return true;
+    }
+
+    function isAnyConsensusValue(
+        OracleAttestationData calldata _attest,
+        Validator[] calldata _currentValidatorSet,
+        Signature[] calldata _sigs,
+        uint256 _maxAttestationAge
+    ) public view returns(bool) {
+        require(bridge.verifyConsensusOracleData(_attest, _currentValidatorSet, _sigs), "Invalid attestation");
+        require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
         return true;
     }
 
@@ -26,15 +37,17 @@ contract UsingTellor {
         OracleAttestationData calldata _attest,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs,
-        uint256 _timestamp,
-        uint256 _maxAge,        
-        uint256 _minimumPower
+        uint256 _timestampBefore,
+        uint256 _maxReportAge,        
+        uint256 _minimumPower,
+        uint256 _maxAttestationAge
     ) public view returns(bool){
-        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid signature");
-        require(block.timestamp - _attest.attestTimestamp <= MAX_ATTESTATION_AGE, "Attestation is too old");
-        require(_attest.report.timestamp < _timestamp, "Report timestamp must be before _timestamp");
-        require(_attest.report.nextTimestamp == 0 || _attest.report.nextTimestamp > _timestamp, "Report is latest before timestamp");
+        require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
+        require(_attest.report.timestamp < _timestampBefore, "Report timestamp must be before _timestampBefore");
+        require(_attest.report.nextTimestamp == 0 || _attest.report.nextTimestamp > _timestampBefore, "Report is latest before timestamp");
         require(_attest.report.aggregatePower >= _minimumPower, "Report aggregate power must be greater than or equal to _minimumPower");
+        require(block.timestamp - _attest.report.timestamp < _maxReportAge, "Report is too old");
+        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid signature");
         return true;
     }
 
@@ -42,15 +55,17 @@ contract UsingTellor {
         OracleAttestationData calldata _attest,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs,
-        uint256 _timestamp,
-        uint256 _maxAge, //?
-        uint256 _minimumPower
+        uint256 _timestampAfter,
+        uint256 _maxAge,
+        uint256 _minimumPower,
+        uint256 _maxAttestationAge
     ) public view returns(bool){
-        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid signature");
-        require(block.timestamp - _attest.attestTimestamp <= MAX_ATTESTATION_AGE, "Attestation is too old");
-        require(_attest.report.timestamp > _timestamp, "Report timestamp must be after _timestamp");
-        require(_attest.report.nextTimestamp == 0 || _attest.report.nextTimestamp > _timestamp, "Report is latest before timestamp");
+        require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
+        require(_attest.report.timestamp > _timestampAfter, "Report timestamp must be after _timestamp");
+        require(_attest.report.nextTimestamp == 0 || _attest.report.nextTimestamp > _timestampAfter, "Report is latest before timestamp");
         require(_attest.report.aggregatePower >= _minimumPower, "Report aggregate power must be greater than or equal to _minimumPower");
+        require(block.timestamp - _attest.report.timestamp < _maxAge, "Report is too old");
+        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid signature");
         return true;
     }
 
@@ -59,10 +74,11 @@ contract UsingTellor {
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs,
         uint256 _fallbackTimestamp,
-        uint256 _fallbackMinimumPower
+        uint256 _fallbackMinimumPower, // or use percentage?
+        uint256 _maxAttestationAge
     ) public view returns(bool){
         require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid signature");
-        require(block.timestamp - _attest.attestTimestamp <= MAX_ATTESTATION_AGE, "Attestation is too old");
+        require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
         if(_attest.report.aggregatePower >= bridge.powerThreshold()) {
             require(_attest.report.timestamp < _fallbackTimestamp, "Report timestamp must be before _fallbackTimestamp");
         }

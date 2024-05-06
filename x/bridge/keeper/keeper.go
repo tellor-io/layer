@@ -37,6 +37,7 @@ type (
 		Params                       collections.Item[types.Params]
 		BridgeValset                 collections.Item[types.BridgeValidatorSet]
 		ValidatorCheckpoint          collections.Item[types.ValidatorCheckpoint]
+		WithdrawalId                 collections.Item[types.WithdrawalId]
 		OperatorToEVMAddressMap      collections.Map[string, types.EVMAddress]
 		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
@@ -48,10 +49,13 @@ type (
 		AttestSnapshotDataMap        collections.Map[string, types.AttestationSnapshotData]
 		SnapshotToAttestationsMap    collections.Map[string, types.OracleAttestations]
 		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
+		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
 
 		stakingKeeper  types.StakingKeeper
 		slashingKeeper types.SlashingKeeper
 		oracleKeeper   types.OracleKeeper
+		bankKeeper     types.BankKeeper
+		reporterKeeper types.ReporterKeeper
 	}
 )
 
@@ -61,6 +65,8 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	slashingKeeper types.SlashingKeeper,
 	oracleKeeper types.OracleKeeper,
+	bankKeeper types.BankKeeper,
+	reporterKeeper types.ReporterKeeper,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
@@ -69,6 +75,7 @@ func NewKeeper(
 		Params:                       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		BridgeValset:                 collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
 		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		WithdrawalId:                 collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
 		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
 		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
@@ -80,10 +87,13 @@ func NewKeeper(
 		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.StringKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
 		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.StringKey, codec.CollValue[types.OracleAttestations](cdc)),
 		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
+		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		slashingKeeper: slashingKeeper,
 		oracleKeeper:   oracleKeeper,
+		bankKeeper:     bankKeeper,
+		reporterKeeper: reporterKeeper,
 	}
 
 	schema, err := sb.Build()

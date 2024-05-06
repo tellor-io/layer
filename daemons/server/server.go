@@ -25,6 +25,7 @@ type Server struct {
 	fileHandler   daemontypes.FileHandler
 	socketAddress string
 	PriceFeedServer
+	TokenBridgeFeedServer
 }
 
 // NewServer creates a single gRPC server that's shared across multiple daemons for communication.
@@ -90,6 +91,7 @@ func (server *Server) Start() {
 
 	// Register Server to ingest gRPC requests from price feed daemon and update market prices.
 	types.RegisterPriceFeedServiceServer(server.gsrv, server)
+	types.RegisterTokenBridgeServiceServer(server.gsrv, server)
 
 	if err := server.gsrv.Serve(ln); err != nil {
 		server.logger.Error("daemon gRPC server stopped with an error", "error", err)

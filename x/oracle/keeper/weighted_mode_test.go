@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Report.QueryId, qId, "query id is not correct")
 	s.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Report.AggregateValue, "aaa", "aggregate value is not correct")
-	s.Equal(res.Report.ReporterPower, int64(20), "aggregate reporter power is not correct")
+	s.Equal(res.Report.ReporterPower, int64(44), "aggregate reporter power is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Report.Reporters[0].Reporter, reporters[0].String(), "reporter is not correct")
 	s.Equal(res.Report.Reporters[1].Reporter, reporters[1].String(), "reporter is not correct")
@@ -108,7 +108,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Report.QueryId, qId2, "query id is not correct")
 	s.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Report.AggregateValue, "ccc", "aggregate value is not correct")
-	s.Equal(res.Report.ReporterPower, int64(2), "aggregate reporter power is not correct")
+	s.Equal(res.Report.ReporterPower, int64(11), "aggregate reporter power is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Report.Reporters[0].Reporter, reporters[5].String(), "reporter is not correct")
 	s.Equal(res.Report.Reporters[1].Reporter, expectedReporter, "reporter is not correct")

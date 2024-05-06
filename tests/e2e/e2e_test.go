@@ -498,7 +498,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.AggregateValue, encodeValue(4500))
 	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
 	require.Equal(result1.Report.QueryId, queryIdEth)
-	require.Equal(int64(4000000000), result1.Report.ReporterPower)
+	require.Equal(int64(4000), result1.Report.ReporterPower)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	require.Equal(int64(0), tbrModuleAccountBalance.Amount.Int64())
@@ -573,7 +573,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(encodeValue(100_000), result2.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result2.Report.AggregateReporter)
 	require.Equal(queryIdTrb, result2.Report.QueryId)
-	require.Equal(int64(4000000000), result2.Report.ReporterPower)
+	require.Equal(int64(4000), result2.Report.ReporterPower)
 	require.Equal(int64(3), result2.Report.Height)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
@@ -681,7 +681,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.AggregateValue, encodeValue(5000))
 	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
 	require.Equal(queryIdEth, result1.Report.QueryId)
-	require.Equal(int64(4000000000), result1.Report.ReporterPower)
+	require.Equal(int64(4000), result1.Report.ReporterPower)
 	require.Equal(int64(5), result1.Report.Height)
 	// check that the tip is in tip escrow
 	tipEscrowAcct := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
@@ -758,7 +758,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(resultTrb.Report.AggregateValue, encodeValue(1_000_000))
 	require.Equal(resultTrb.Report.AggregateReporter, reporter.Reporter)
 	require.Equal(queryIdTrb, resultTrb.Report.QueryId)
-	require.Equal(int64(4000000000), resultTrb.Report.ReporterPower)
+	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
 	require.Equal(int64(6), resultTrb.Report.Height)
 	// check that the tip is in tip escrow
 	tipEscrowBalance = s.bankKeeper.GetBalance(s.ctx, tipEscrowAcct, sdk.DefaultBondDenom) // 98 loya
@@ -924,7 +924,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(4000000000), result.Report.ReporterPower)
+	require.Equal(int64(4000), result.Report.ReporterPower)
 	require.Equal(int64(1), result.Report.Height)
 
 	//---------------------------------------------------------------------------
@@ -1058,7 +1058,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(4000000000), result.Report.ReporterPower)
+	require.Equal(int64(4000), result.Report.ReporterPower)
 	require.Equal(int64(4), result.Report.Height)
 
 	_, err = s.app.EndBlocker(s.ctx)
