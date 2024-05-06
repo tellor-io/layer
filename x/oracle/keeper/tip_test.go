@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"context"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -60,15 +59,19 @@ func ReturnTestQueryMeta(tip math.Int) types.QueryMeta {
 func (s *KeeperTestSuite) TestGetQueryTip() {
 	//returns a query metadata with a tip of 1 TRB
 	queryMeta := ReturnTestQueryMeta(math.NewInt(1 * 1e6))
-	s.oracleKeeper.Query.Set(context.Background(), queryMeta.QueryId, queryMeta)
+	s.oracleKeeper.Query.Set(s.ctx, queryMeta.QueryId, queryMeta)
 
 	// test with a valid queryId
-	res, err := s.oracleKeeper.GetQueryTip(context.Background(), queryMeta.QueryId)
+	res, err := s.oracleKeeper.GetQueryTip(s.ctx, queryMeta.QueryId)
 	s.NoError(err)
 	s.Equal(math.NewInt(1*1e6), res)
 
 	// test with an invalid queryId that should return 0
-	res, err = s.oracleKeeper.GetQueryTip(context.Background(), []byte("test"))
+	res, err = s.oracleKeeper.GetQueryTip(s.ctx, []byte("test"))
 	s.NoError(err)
 	s.Equal(math.NewInt(0), res)
+}
+
+func (s *KeeperTestSuite) TestGetUserTips() {
+
 }
