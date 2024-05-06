@@ -574,7 +574,7 @@ function getBlock() {
 }
 
 function toWei(n) {
-  return web3.utils.toWei(n)
+  return web3.utils.toWei(n, "ether")
 }
 
 function fromWei(n) {

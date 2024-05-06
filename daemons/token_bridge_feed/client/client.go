@@ -136,7 +136,7 @@ func (c *Client) InitializeDeposits() error {
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x81c9cd1b90673e2b4a11f5E61c5FE22D30CDcE49")
+	contractAddress := common.HexToAddress("0x4a58c4fCaa1aDE33EF79E1Dfb619f241E2EA33a6")
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
@@ -193,7 +193,6 @@ func (c *Client) QueryTokenBridgeContract() error {
 		if err != nil {
 			c.logger.Error("Failed to encode report value", "error", err)
 		}
-		// c.pendingReports = append(c.pendingReports, DepositReport{queryData, reportValue})
 
 		// Update the token deposits cache
 		c.tokenDepositsCache.AddReport(tokenbridgetypes.DepositReport{QueryData: queryData, Value: reportValue})

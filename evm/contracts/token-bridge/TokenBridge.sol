@@ -14,9 +14,10 @@ interface IERC20 {
 contract TokenBridge is UsingTellor {
     IERC20 public token;
     uint256 public depositId;
-    uint256 public constant MAX_ATTESTATION_AGE = 24 hours;
-    uint256 public constant DEPOSIT_LIMIT_PERCENTAGE = 20e18; // 20% of total supply on layer
+    uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
+    uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
+    uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
     uint256 public depositLimitUpdateTime;
     uint256 public currentDepositLimit;
     mapping(uint256 => bool) public withdrawalClaimed;
@@ -34,7 +35,7 @@ contract TokenBridge is UsingTellor {
 
     constructor(address _token, address _blobstream) UsingTellor(_blobstream) {
         token = IERC20(_token);
-        depositLimitUpdateTime = block.timestamp;
+        _depositLimit();
     }
 
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
@@ -65,9 +66,9 @@ contract TokenBridge is UsingTellor {
     }
 
     function _depositLimit() internal returns (uint256) {
-        uint256 _layerTokenSupply = token.balanceOf(address(this)) + 100 ether; // TODO: update this, add initial supply if needed
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
-            currentDepositLimit = _layerTokenSupply * DEPOSIT_LIMIT_PERCENTAGE / 1e16;
+            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
+            currentDepositLimit = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
         }
         return currentDepositLimit;
