@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetCurrentAggregateReport(ctx context.Context, req *types.QueryGetCurrentAggregateReportRequest) (*types.QueryGetCurrentAggregateReportResponse, error) {
+func (q Querier) GetCurrentAggregateReport(ctx context.Context, req *types.QueryGetCurrentAggregateReportRequest) (*types.QueryGetCurrentAggregateReportResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -18,7 +18,7 @@ func (k Keeper) GetCurrentAggregateReport(ctx context.Context, req *types.QueryG
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid query id")
 	}
-	aggregate, timestamp := k.oracleKeeper.GetCurrentAggregateReport(ctx, queryId)
+	aggregate, timestamp := q.k.oracleKeeper.GetCurrentAggregateReport(ctx, queryId)
 	if aggregate == nil {
 		return nil, status.Error(codes.NotFound, "aggregate not found")
 	}

@@ -19,7 +19,7 @@ func NewTipsIndex(sb *collections.SchemaBuilder) tipsIndex {
 	return tipsIndex{
 		Tipper: indexes.NewMulti(
 			sb, types.TipsIndexPrefix, "tips_by_tipper",
-			collections.BytesKey, collections.PairKeyCodec[[]byte, []byte](collections.BytesKey, collections.BytesKey),
+			collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
 			func(k collections.Pair[[]byte, []byte], _ math.Int) ([]byte, error) {
 				return k.K2(), nil
 			},

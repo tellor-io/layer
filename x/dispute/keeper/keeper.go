@@ -5,12 +5,11 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -22,62 +21,45 @@ const (
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		memKey     storetypes.StoreKey
-		paramstore paramtypes.Subspace
+		cdc          codec.BinaryCodec
+		storeService store.KVStoreService
+		Params       collections.Item[types.Params]
 
 		accountKeeper  types.AccountKeeper
 		bankKeeper     types.BankKeeper
 		oracleKeeper   types.OracleKeeper
 		reporterKeeper types.ReporterKeeper
+		Disputes       *collections.IndexedMap[uint64, types.Dispute, DisputesIndex] // dispute id -> dispute
+		OpenDisputes   collections.Item[types.OpenDisputes]
+		Votes          collections.Map[uint64, types.Vote]
+		Voter          *collections.IndexedMap[collections.Pair[uint64, sdk.AccAddress], types.Voter, VotersVoteIndex]
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	storeKey,
-	memKey storetypes.StoreKey,
-	ps paramtypes.Subspace,
-
+	storeService store.KVStoreService,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	oracleKeeper types.OracleKeeper,
 	reporterKeeper types.ReporterKeeper,
 ) Keeper {
-	// set KeyTable if it has not already been set
-	if !ps.HasKeyTable() {
-		ps = ps.WithKeyTable(types.ParamKeyTable())
-	}
-
+	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
-		cdc:        cdc,
-		storeKey:   storeKey,
-		memKey:     memKey,
-		paramstore: ps,
-
+		cdc:            cdc,
+		Params:         collections.NewItem(sb, types.ParamsKeyPrefix(), "params", codec.CollValue[types.Params](cdc)),
+		storeService:   storeService,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		oracleKeeper:   oracleKeeper,
 		reporterKeeper: reporterKeeper,
+		Disputes:       collections.NewIndexedMap(sb, types.DisputesPrefix, "disputes", collections.Uint64Key, codec.CollValue[types.Dispute](cdc), NewDisputesIndex(sb)),
+		OpenDisputes:   collections.NewItem(sb, types.OpenDisputeIdsPrefix, "open_disputes", codec.CollValue[types.OpenDisputes](cdc)),
+		Votes:          collections.NewMap(sb, types.VotesPrefix, "votes", collections.Uint64Key, codec.CollValue[types.Vote](cdc)),
+		Voter:          collections.NewIndexedMap(sb, types.VoterVotePrefix, "voter_vote", collections.PairKeyCodec(collections.Uint64Key, sdk.AccAddressKey), codec.CollValue[types.Voter](cdc), NewVotersIndex(sb)),
 	}
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// Get dispute store
-func (k Keeper) disputeStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.DisputesKeyPrefix())
-}
-
-// Get vote store
-func (k Keeper) voteStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.VotesKeyPrefix())
-}
-
-// Get voter power store
-func (k Keeper) voterPowerStore(ctx sdk.Context) prefix.Store {
-	return prefix.NewStore(ctx.KVStore(k.storeKey), types.VoterPowerKeyPrefix())
 }

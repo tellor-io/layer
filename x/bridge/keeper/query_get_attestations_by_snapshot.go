@@ -5,23 +5,26 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/errors"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetAttestationsBySnapshot(goCtx context.Context, req *types.QueryGetAttestationsBySnapshotRequest) (*types.QueryGetAttestationsBySnapshotResponse, error) {
+func (q Querier) GetAttestationsBySnapshot(ctx context.Context, req *types.QueryGetAttestationsBySnapshotRequest) (*types.QueryGetAttestationsBySnapshotResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	snapshot := req.Snapshot
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	attestations, err := k.SnapshotToAttestationsMap.Get(ctx, snapshot)
+	snapshot, err := utils.QueryBytesFromString(req.Snapshot)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("attestations not found for snapshot %s", snapshot))
+		return nil, errors.Wrapf(err, "failed to decode snapshot %s", req.Snapshot)
+	}
+
+	attestations, err := q.k.SnapshotToAttestationsMap.Get(ctx, snapshot)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("attestations not found for snapshot %s", req.Snapshot))
 	}
 
 	var attestationStringArray []string

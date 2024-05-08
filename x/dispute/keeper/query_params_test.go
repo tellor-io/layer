@@ -5,15 +5,17 @@ import (
 
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func TestParamsQuery(t *testing.T) {
-	keeper, _, _, _, _, ctx := testkeeper.DisputeKeeper(t)
+	k, _, _, _, _, ctx := testkeeper.DisputeKeeper(t)
+	q := keeper.NewQuerier(k)
 	params := types.DefaultParams()
-	keeper.SetParams(ctx, params)
+	k.SetParams(ctx, params)
 
-	response, err := keeper.Params(ctx, &types.QueryParamsRequest{})
+	response, err := q.Params(ctx, &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, &types.QueryParamsResponse{Params: params}, response)
 }

@@ -7,6 +7,12 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
+type VoterInfo struct {
+	Voter sdk.AccAddress
+	Power math.Int
+	Share math.Int
+}
+
 // tally votes
 func (k Keeper) Tally(ctx sdk.Context, ids []uint64) error {
 	for _, id := range ids {
@@ -19,19 +25,32 @@ func (k Keeper) Tally(ctx sdk.Context, ids []uint64) error {
 
 // Execute the transfer of fee after the vote on a dispute is complete
 func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
-	dispute, err := k.GetDisputeById(ctx, id)
+	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
-	var voters []string
+	var voters []VoterInfo
 	for _, id := range dispute.PrevDisputeIds {
-		v, err := k.GetVote(ctx, id)
+		iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
 		if err != nil {
 			return err
 		}
-		voters = append(voters, v.Voters...)
+
+		defer iter.Close()
+		for ; iter.Valid(); iter.Next() {
+			key, err := iter.PrimaryKey()
+			if err != nil {
+				return err
+			}
+			v, err := k.Voter.Get(ctx, key)
+			if err != nil {
+				return err
+			}
+			voters = append(voters, VoterInfo{Voter: key.K2(), Power: v.VoterPower, Share: math.ZeroInt()})
+
+		}
 	}
-	vote, err := k.GetVote(ctx, id)
+	vote, err := k.Votes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -70,7 +89,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 			return err
 		}
 		vote.Executed = true
-		if err := k.SetVote(ctx, id, vote); err != nil {
+		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
@@ -92,7 +111,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 		}
 
 		vote.Executed = true
-		if err := k.SetVote(ctx, id, vote); err != nil {
+		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
@@ -110,7 +129,7 @@ func (k Keeper) ExecuteVote(ctx sdk.Context, id uint64) error {
 			return err
 		}
 		vote.Executed = true
-		if err := k.SetVote(ctx, id, vote); err != nil {
+		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
 	}
@@ -130,7 +149,7 @@ func (k Keeper) ExecuteVotes(ctx sdk.Context, ids []uint64) error {
 // set disputes to resolved if adding rounds has been exhausted
 // check if disputes can be removed due to expiration prior to commencing vote
 func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) ([]uint64, error) {
-	openDisputes, err := k.GetOpenDisputeIds(ctx)
+	openDisputes, err := k.OpenDisputes.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +158,7 @@ func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) ([]uint64, er
 
 	for _, disputeId := range openDisputes.Ids {
 		// get dispute by id
-		dispute, err := k.GetDisputeById(ctx, disputeId)
+		dispute, err := k.Disputes.Get(ctx, disputeId)
 		if err != nil {
 			return nil, err
 		}
@@ -154,7 +173,7 @@ func (k Keeper) CheckPrevoteDisputesForExpiration(ctx sdk.Context) ([]uint64, er
 	}
 	// update active disputes list
 	openDisputes.Ids = activeDisputes
-	err = k.SetOpenDisputeIds(ctx, openDisputes)
+	err = k.OpenDisputes.Set(ctx, openDisputes)
 	if err != nil {
 		return nil, err
 	}

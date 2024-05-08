@@ -129,6 +129,8 @@ import (
 
 	_ "github.com/tellor-io/layer/app/config"
 
+	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
+	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	bridgemodule "github.com/tellor-io/layer/x/bridge"
 	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
 	bridgemoduletypes "github.com/tellor-io/layer/x/bridge/types"
@@ -148,6 +150,7 @@ import (
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
 	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 )
 
 const (
@@ -179,6 +182,7 @@ var (
 		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 		oraclemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		disputemoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner, authtypes.Staking},
+		bridgemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		reportermoduletypes.ModuleName:     nil,
 		reportermoduletypes.TipsEscrowPool: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
@@ -264,6 +268,7 @@ type App struct {
 	PriceFeedClient     *pricefeedclient.Client
 	ReporterClient      *reporterclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+	TokenBridgeClient   *tokenbridgeclient.Client
 }
 
 // New returns a reference to an initialized blockchain app
@@ -579,10 +584,7 @@ func New(
 
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
-		keys[disputemoduletypes.StoreKey],
-		keys[disputemoduletypes.MemStoreKey],
-		paramstypes.Subspace{}, // TODO: remove this!
-
+		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.OracleKeeper,
@@ -596,6 +598,8 @@ func New(
 		app.StakingKeeper,
 		app.SlashingKeeper,
 		app.OracleKeeper,
+		app.BankKeeper,
+		app.ReporterKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
 	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
@@ -618,6 +622,8 @@ func New(
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
+
+	tokenDepositsCache := tokenbridgetypes.NewDepositReports()
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
 	// accept new connections.
@@ -634,6 +640,7 @@ func New(
 		app.Logger(),
 		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
 	)
+	app.Server.WithTokenDepositsCache(tokenDepositsCache)
 	// Create a closure for starting pricefeed daemon and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
@@ -679,6 +686,7 @@ func New(
 						&daemontypes.GrpcClientImpl{},
 						marketParamsConfig,
 						indexPriceCache,
+						tokenDepositsCache,
 						app.CreateQueryContext,
 						*app.StakingKeeper,
 					); err != nil {
@@ -686,6 +694,8 @@ func New(
 					}
 				}()
 			}
+
+			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger, tokenDepositsCache)
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
@@ -922,24 +932,10 @@ func New(
 	app.MountKVStores(keys)
 	app.MountMemoryStores(memKeys)
 
-	// initialize BaseApp
-	anteHandler, err := ante.NewAnteHandler(
-		ante.HandlerOptions{
-			AccountKeeper:   app.AccountKeeper,
-			BankKeeper:      app.BankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  app.FeeGrantKeeper,
-			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-		},
-	)
-	if err != nil {
-		panic(fmt.Errorf("failed to create AnteHandler: %w", err))
-	}
-
-	app.SetAnteHandler(anteHandler)
 	app.SetInitChainer(app.InitChainer)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
+	app.setAnteHandler(txConfig)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -952,6 +948,28 @@ func New(
 	// this line is used by starport scaffolding # stargate/app/beforeInitReturn
 
 	return app
+}
+
+func (app *App) setAnteHandler(txConfig client.TxConfig) {
+	anteHandler, err := NewAnteHandler(
+		HandlerOptions{
+			ante.HandlerOptions{
+				AccountKeeper:   app.AccountKeeper,
+				BankKeeper:      app.BankKeeper,
+				SignModeHandler: txConfig.SignModeHandler(),
+				FeegrantKeeper:  app.FeeGrantKeeper,
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			},
+			app.ReporterKeeper,
+			app.StakingKeeper,
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Set the AnteHandler for the app
+	app.SetAnteHandler(anteHandler)
 }
 
 // Name returns the name of the App
