@@ -3,6 +3,7 @@
 pragma solidity 0.8.22;
 
 import "../usingtellor/UsingTellor.sol";
+import "../interfaces/ITellorFlex.sol";
 
 interface IERC20 {
     function transfer(address recipient, uint256 amount) external returns (bool);
@@ -13,6 +14,7 @@ interface IERC20 {
 
 contract TokenBridge is UsingTellor {
     IERC20 public token;
+    ITellorFlex public tellorFlex;
     uint256 public depositId;
     uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
@@ -33,8 +35,9 @@ contract TokenBridge is UsingTellor {
     event Deposit(uint256 depositId, address sender, string recipient, uint256 amount);
     event Withdrawal(uint256 depositId, string sender, address recipient, uint256 amount);
 
-    constructor(address _token, address _blobstream) UsingTellor(_blobstream) {
+    constructor(address _token, address _blobstream, address _tellorFlex) UsingTellor(_blobstream) {
         token = IERC20(_token);
+        tellorFlex = ITellorFlex(_tellorFlex);
         _depositLimit();
     }
 
@@ -72,5 +75,70 @@ contract TokenBridge is UsingTellor {
             depositLimitUpdateTime = block.timestamp;
         }
         return currentDepositLimit;
+    }
+
+    // ********** Transition functions **********
+
+    // needed for "mintToOracle" function
+    function addStakingRewards(uint256 _amount) external {
+        token.transferFrom(msg.sender, address(this), _amount);
+    }
+
+    // forward to tellor360:
+    function getDataBefore(
+        bytes32 _queryId,
+        uint256 _timestamp
+    )
+        external
+        view
+        returns (
+            bool _ifRetrieve,
+            bytes memory _value,
+            uint256 _timestampRetrieved
+        ) {
+            return tellorFlex.getDataBefore(_queryId, _timestamp);
+        }
+
+    function getIndexForDataBefore(
+        bytes32 _queryId,
+        uint256 _timestamp
+    ) external view returns (bool _found, uint256 _index) {
+        return tellorFlex.getIndexForDataBefore(_queryId, _timestamp);
+    }
+
+    function getNewValueCountbyQueryId(
+        bytes32 _queryId
+    ) external view returns (uint256) {
+        return tellorFlex.getNewValueCountbyQueryId(_queryId);
+    }
+
+    function getReporterByTimestamp(
+        bytes32 _queryId,
+        uint256 _timestamp
+    ) external view returns (address) {
+        return tellorFlex.getReporterByTimestamp(_queryId, _timestamp);
+    }
+
+    function getTimestampbyQueryIdandIndex(
+        bytes32 _queryId,
+        uint256 _index
+    ) external view returns (uint256) {
+        return tellorFlex.getTimestampbyQueryIdandIndex(_queryId, _index);
+    }
+
+    function getTimeOfLastNewValue() external view returns (uint256) {
+        // note: should parachute use old flex, or something else?
+        return tellorFlex.getTimeOfLastNewValue();
+    }
+
+    function isInDispute(
+        bytes32 _queryId,
+        uint256 _timestamp
+    ) external view returns (bool) {
+        return tellorFlex.isInDispute(_queryId, _timestamp);
+    }
+
+    function verify() external pure returns (uint256) {
+        return 9999;
     }
 }

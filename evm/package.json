@@ -28,6 +28,9 @@
     "@cosmjs/proto-signing": "^0.32.3",
     "@cosmjs/stargate": "^0.32.3",
     "google-protobuf": "^3.21.2",
-    "protoc-gen-grpc-web": "^1.4.2"
+    "polygongovernance": "github:tellor-io/polygongovernance",
+    "protoc-gen-grpc-web": "^1.4.2",
+    "tellorflex": "github:tellor-io/tellorflex",
+    "usingtellor": "5.0.4"
   }
 }
