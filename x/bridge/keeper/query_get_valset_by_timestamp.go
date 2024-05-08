@@ -3,28 +3,27 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetValsetByTimestamp(goCtx context.Context, req *types.QueryGetValsetByTimestampRequest) (*types.QueryGetValsetByTimestampResponse, error) {
+func (q Querier) GetValsetByTimestamp(ctx context.Context, req *types.QueryGetValsetByTimestampRequest) (*types.QueryGetValsetByTimestampResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	valset, err := k.GetBridgeValsetByTimestamp(ctx, uint64(req.Timestamp))
+	valset, err := q.k.GetBridgeValsetByTimestamp(ctx, uint64(req.Timestamp))
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get eth address")
 	}
 
-	valsetArray := make([]*types.BridgeValidator, len(valset.BridgeValidatorSet))
+	valsetArray := make([]*types.QueryBridgeValidator, len(valset.BridgeValidatorSet))
 	for i, val := range valset.BridgeValidatorSet {
-		valsetArray[i] = &types.BridgeValidator{
-			EthereumAddress: val.EthereumAddress,
+		ethAddr := common.BytesToAddress(val.EthereumAddress)
+		valsetArray[i] = &types.QueryBridgeValidator{
+			EthereumAddress: ethAddr.Hex(),
 			Power:           val.Power,
 		}
 	}

@@ -41,7 +41,7 @@ service Query {
   }
 
   rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
-    option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validatorAddress}";
+    option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validator_address}";
   }
 
   rpc GetValsetByTimestamp (QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
@@ -57,7 +57,7 @@ service Query {
   }
 
   rpc GetSnapshotsByReport (QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
-    option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{queryId}/{timestamp}";
+    option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}";
   }
 
   rpc GetAttestationDataBySnapshot (QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
@@ -81,40 +81,49 @@ message QueryParamsResponse {
 message QueryGetEvmValidatorsRequest {}
 
 message QueryGetEvmValidatorsResponse {
-  repeated BridgeValidator bridgeValidatorSet = 1;
+  repeated QueryBridgeValidator bridge_validator_set = 1;
 }
 
 message QueryGetValidatorCheckpointRequest {}
 
 message QueryGetValidatorCheckpointResponse {
-  string validatorCheckpoint = 1;
+  string validator_checkpoint = 1;
 }
 
-message BridgeValidator {
+message QueryBridgeValidator {
   string ethereumAddress = 1;
   uint64 power = 2;
 }
 
+message QueryBridgeValidatorSet {
+  repeated QueryBridgeValidator bridge_validator_set = 1;
+}
+
+message BridgeValidator {
+  bytes ethereumAddress = 1;
+  uint64 power = 2;
+}
+
 message BridgeValidatorSet {
-  repeated BridgeValidator bridgeValidatorSet = 1;
+  repeated BridgeValidator bridge_validator_set = 1;
 }
 
 message BridgeValidatorSetParams {
-  BridgeValidatorSet bridgeValidatorSet = 1;
-  int64 validatorTimestamp = 2;
-  int64 validatorPowerThreshold = 3;
-  bytes validatorSetHash = 4;
-  bytes validatorCheckpoint = 5;
+  BridgeValidatorSet bridge_validator_set = 1;
+  int64 validator_timestamp = 2;
+  int64 validator_power_threshold = 3;
+  bytes validator_set_hash = 4;
+  bytes validator_checkpoint = 5;
 }
 
 message BridgeValidatorSetCheckpointParams {
-  int64 validatorTimestamp = 1;
-  int64 validatorPowerThreshold = 2;
-  bytes validatorSetHash = 3;
+  int64 validator_timestamp = 1;
+  int64 validator_power_threshold = 2;
+  bytes validator_set_hash = 3;
 }
 
 message BridgeValidatorSetCheckpoint {
-  bytes validatorCheckpoint = 1;
+  bytes validator_checkpoint = 1;
 }
 
 message QueryGetValidatorCheckpointParamsRequest {
@@ -123,9 +132,9 @@ message QueryGetValidatorCheckpointParamsRequest {
 
 message QueryGetValidatorCheckpointParamsResponse {
   string checkpoint = 1;
-  string valsetHash = 2;
+  string valset_hash = 2;
   int64 timestamp = 3;
-  int64 powerThreshold = 4;
+  int64 power_threshold = 4;
 }
 
 message QueryGetValidatorTimestampByIndexRequest {
@@ -145,11 +154,11 @@ message QueryGetValsetSigsResponse {
 }
 
 message QueryGetEvmAddressByValidatorAddressRequest {
-  string validatorAddress = 1;
+  string validator_address = 1;
 }
 
 message QueryGetEvmAddressByValidatorAddressResponse {
-  string evmAddress = 1;
+  string evm_address = 1;
 }
 
 message QueryGetValsetByTimestampRequest {
@@ -157,7 +166,7 @@ message QueryGetValsetByTimestampRequest {
 }
 
 message QueryGetValsetByTimestampResponse {
-  repeated BridgeValidator bridgeValidatorSet = 1;
+  repeated QueryBridgeValidator bridge_validator_set = 1;
 }
 
 message QueryGetCurrentAggregateReportRequest {
@@ -170,12 +179,11 @@ message QueryGetCurrentAggregateReportResponse {
 }
 
 message Aggregate {
-  
   bytes query_id = 1; 
   string aggregateValue = 2; 
   string aggregateReporter = 3; 
   int64 reporterPower = 4; 
-  double standardDeviation = 5;
+  double standard_deviation = 5;
   repeated AggregateReporter reporters = 6; 
   bool flagged = 7;
   int64 nonce = 8;
@@ -189,7 +197,7 @@ message AggregateReporter {
 }
 
 message QueryGetDataBeforeRequest {
-  bytes query_id = 1;
+  string query_id = 1;
   int64 timestamp = 2;
 }
 
@@ -199,7 +207,7 @@ message QueryGetDataBeforeResponse {
 }
 
 message QueryGetSnapshotsByReportRequest {
-  string queryId = 1;
+  string query_id = 1;
   string timestamp = 2;
 }
 
@@ -212,14 +220,14 @@ message QueryGetAttestationDataBySnapshotRequest {
 }
 
 message QueryGetAttestationDataBySnapshotResponse {
-  string queryId = 1;
+  string query_id = 1;
   string timestamp = 2;
-  string aggregateValue = 3;
-  string aggregatePower = 4;
+  string aggregate_value = 3;
+  string aggregate_power = 4;
   string checkpoint = 5;
-  string attestationTimestamp = 6;
-  string previousReportTimestamp = 7;
-  string nextReportTimestamp = 8;
+  string attestation_timestamp = 6;
+  string previous_report_timestamp = 7;
+  string next_report_timestamp = 8;
 }
 
 message QueryGetAttestationsBySnapshotRequest {
