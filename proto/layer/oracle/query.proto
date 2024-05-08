@@ -86,7 +86,7 @@ message QueryParamsResponse {
 }
 
 message QueryGetReportsbyQidRequest {
-  string query_id = 1;
+  bytes query_id = 1;
 }
 
 message QueryGetReportsbyQidResponse {
@@ -103,11 +103,11 @@ message QueryGetReportsbyReporterResponse {
 
 message QueryGetReportsbyReporterQidRequest {
   string reporter = 1;
-  string query_id  = 2;
+  bytes query_id  = 2;
 }
 
 message QueryGetCurrentTipRequest {
-  string query_data = 1;
+  bytes query_data = 1;
 }
 
 message QueryGetCurrentTipResponse {
@@ -124,7 +124,7 @@ message QueryGetUserTipTotalResponse {
 }
 
 message QueryGetCurrentAggregatedReportRequest {
-  string query_id = 1;
+  bytes query_id = 1;
 }
 
 message QueryGetAggregatedReportResponse {
@@ -132,7 +132,7 @@ message QueryGetAggregatedReportResponse {
 }
 
 message QueryGetDataBeforeRequest {
-  string query_id   = 1;
+  bytes query_id   = 1;
   int64  timestamp = 2;
 }
 
@@ -145,6 +145,6 @@ message QueryGetTimeBasedRewardsResponse {
 message QueryCurrentCyclelistQueryRequest {}
 
 message QueryCurrentCyclelistQueryResponse {
-  string query_data = 1;
+  bytes query_data = 1;
 }
 

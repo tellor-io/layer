@@ -884,8 +884,8 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) Interface() protoreflect.Pr
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetReportsbyQidRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.QueryId != "" {
-		value := protoreflect.ValueOfString(x.QueryId)
+	if len(x.QueryId) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryId)
 		if !f(fd_QueryGetReportsbyQidRequest_query_id, value) {
 			return
 		}
@@ -906,7 +906,7 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) Range(f func(protoreflect.F
 func (x *fastReflection_QueryGetReportsbyQidRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetReportsbyQidRequest.query_id":
-		return x.QueryId != ""
+		return len(x.QueryId) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyQidRequest"))
@@ -924,7 +924,7 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) Has(fd protoreflect.FieldDe
 func (x *fastReflection_QueryGetReportsbyQidRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetReportsbyQidRequest.query_id":
-		x.QueryId = ""
+		x.QueryId = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyQidRequest"))
@@ -943,7 +943,7 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) Get(descriptor protoreflect
 	switch descriptor.FullName() {
 	case "layer.oracle.QueryGetReportsbyQidRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyQidRequest"))
@@ -965,7 +965,7 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) Get(descriptor protoreflect
 func (x *fastReflection_QueryGetReportsbyQidRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetReportsbyQidRequest.query_id":
-		x.QueryId = value.Interface().(string)
+		x.QueryId = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyQidRequest"))
@@ -1002,7 +1002,7 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) Mutable(fd protoreflect.Fie
 func (x *fastReflection_QueryGetReportsbyQidRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetReportsbyQidRequest.query_id":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyQidRequest"))
@@ -1165,7 +1165,7 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) ProtoMethods() *protoiface.
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1175,23 +1175,25 @@ func (x *fastReflection_QueryGetReportsbyQidRequest) ProtoMethods() *protoiface.
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = string(dAtA[iNdEx:postIndex])
+				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryId == nil {
+					x.QueryId = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2661,8 +2663,8 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) Range(f func(protor
 			return
 		}
 	}
-	if x.QueryId != "" {
-		value := protoreflect.ValueOfString(x.QueryId)
+	if len(x.QueryId) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryId)
 		if !f(fd_QueryGetReportsbyReporterQidRequest_query_id, value) {
 			return
 		}
@@ -2685,7 +2687,7 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) Has(fd protoreflect
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.reporter":
 		return x.Reporter != ""
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.query_id":
-		return x.QueryId != ""
+		return len(x.QueryId) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyReporterQidRequest"))
@@ -2705,7 +2707,7 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) Clear(fd protorefle
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.reporter":
 		x.Reporter = ""
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.query_id":
-		x.QueryId = ""
+		x.QueryId = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyReporterQidRequest"))
@@ -2727,7 +2729,7 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) Get(descriptor prot
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyReporterQidRequest"))
@@ -2751,7 +2753,7 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) Set(fd protoreflect
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.reporter":
 		x.Reporter = value.Interface().(string)
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.query_id":
-		x.QueryId = value.Interface().(string)
+		x.QueryId = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyReporterQidRequest"))
@@ -2792,7 +2794,7 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) NewField(fd protore
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.reporter":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.QueryGetReportsbyReporterQidRequest.query_id":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetReportsbyReporterQidRequest"))
@@ -2998,7 +3000,7 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) ProtoMethods() *pro
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3008,23 +3010,25 @@ func (x *fastReflection_QueryGetReportsbyReporterQidRequest) ProtoMethods() *pro
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = string(dAtA[iNdEx:postIndex])
+				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryId == nil {
+					x.QueryId = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3137,8 +3141,8 @@ func (x *fastReflection_QueryGetCurrentTipRequest) Interface() protoreflect.Prot
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetCurrentTipRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
+	if len(x.QueryData) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryData)
 		if !f(fd_QueryGetCurrentTipRequest_query_data, value) {
 			return
 		}
@@ -3159,7 +3163,7 @@ func (x *fastReflection_QueryGetCurrentTipRequest) Range(f func(protoreflect.Fie
 func (x *fastReflection_QueryGetCurrentTipRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentTipRequest.query_data":
-		return x.QueryData != ""
+		return len(x.QueryData) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentTipRequest"))
@@ -3177,7 +3181,7 @@ func (x *fastReflection_QueryGetCurrentTipRequest) Has(fd protoreflect.FieldDesc
 func (x *fastReflection_QueryGetCurrentTipRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentTipRequest.query_data":
-		x.QueryData = ""
+		x.QueryData = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentTipRequest"))
@@ -3196,7 +3200,7 @@ func (x *fastReflection_QueryGetCurrentTipRequest) Get(descriptor protoreflect.F
 	switch descriptor.FullName() {
 	case "layer.oracle.QueryGetCurrentTipRequest.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentTipRequest"))
@@ -3218,7 +3222,7 @@ func (x *fastReflection_QueryGetCurrentTipRequest) Get(descriptor protoreflect.F
 func (x *fastReflection_QueryGetCurrentTipRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentTipRequest.query_data":
-		x.QueryData = value.Interface().(string)
+		x.QueryData = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentTipRequest"))
@@ -3255,7 +3259,7 @@ func (x *fastReflection_QueryGetCurrentTipRequest) Mutable(fd protoreflect.Field
 func (x *fastReflection_QueryGetCurrentTipRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentTipRequest.query_data":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentTipRequest"))
@@ -3418,7 +3422,7 @@ func (x *fastReflection_QueryGetCurrentTipRequest) ProtoMethods() *protoiface.Me
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3428,23 +3432,25 @@ func (x *fastReflection_QueryGetCurrentTipRequest) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
+				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryData == nil {
+					x.QueryData = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -4913,8 +4919,8 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Interface() prot
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.QueryId != "" {
-		value := protoreflect.ValueOfString(x.QueryId)
+	if len(x.QueryId) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryId)
 		if !f(fd_QueryGetCurrentAggregatedReportRequest_query_id, value) {
 			return
 		}
@@ -4935,7 +4941,7 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Range(f func(pro
 func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentAggregatedReportRequest.query_id":
-		return x.QueryId != ""
+		return len(x.QueryId) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentAggregatedReportRequest"))
@@ -4953,7 +4959,7 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Has(fd protorefl
 func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentAggregatedReportRequest.query_id":
-		x.QueryId = ""
+		x.QueryId = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentAggregatedReportRequest"))
@@ -4972,7 +4978,7 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Get(descriptor p
 	switch descriptor.FullName() {
 	case "layer.oracle.QueryGetCurrentAggregatedReportRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentAggregatedReportRequest"))
@@ -4994,7 +5000,7 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Get(descriptor p
 func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentAggregatedReportRequest.query_id":
-		x.QueryId = value.Interface().(string)
+		x.QueryId = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentAggregatedReportRequest"))
@@ -5031,7 +5037,7 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) Mutable(fd proto
 func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCurrentAggregatedReportRequest.query_id":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetCurrentAggregatedReportRequest"))
@@ -5194,7 +5200,7 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) ProtoMethods() *
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -5204,23 +5210,25 @@ func (x *fastReflection_QueryGetCurrentAggregatedReportRequest) ProtoMethods() *
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = string(dAtA[iNdEx:postIndex])
+				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryId == nil {
+					x.QueryId = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -5770,8 +5778,8 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Interface() protoreflect.Prot
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetDataBeforeRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.QueryId != "" {
-		value := protoreflect.ValueOfString(x.QueryId)
+	if len(x.QueryId) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryId)
 		if !f(fd_QueryGetDataBeforeRequest_query_id, value) {
 			return
 		}
@@ -5798,7 +5806,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Range(f func(protoreflect.Fie
 func (x *fastReflection_QueryGetDataBeforeRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
-		return x.QueryId != ""
+		return len(x.QueryId) != 0
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
 		return x.Timestamp != int64(0)
 	default:
@@ -5818,7 +5826,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Has(fd protoreflect.FieldDesc
 func (x *fastReflection_QueryGetDataBeforeRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
-		x.QueryId = ""
+		x.QueryId = nil
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
 		x.Timestamp = int64(0)
 	default:
@@ -5839,7 +5847,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Get(descriptor protoreflect.F
 	switch descriptor.FullName() {
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
 		value := x.Timestamp
 		return protoreflect.ValueOfInt64(value)
@@ -5864,7 +5872,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Get(descriptor protoreflect.F
 func (x *fastReflection_QueryGetDataBeforeRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
-		x.QueryId = value.Interface().(string)
+		x.QueryId = value.Bytes()
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
 		x.Timestamp = value.Int()
 	default:
@@ -5905,7 +5913,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Mutable(fd protoreflect.Field
 func (x *fastReflection_QueryGetDataBeforeRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
@@ -6078,7 +6086,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) ProtoMethods() *protoiface.Me
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -6088,23 +6096,25 @@ func (x *fastReflection_QueryGetDataBeforeRequest) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = string(dAtA[iNdEx:postIndex])
+				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryId == nil {
+					x.QueryId = []byte{}
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 0 {
@@ -7383,8 +7393,8 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Interface() protoref
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
+	if len(x.QueryData) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryData)
 		if !f(fd_QueryCurrentCyclelistQueryResponse_query_data, value) {
 			return
 		}
@@ -7405,7 +7415,7 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Range(f func(protore
 func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.oracle.QueryCurrentCyclelistQueryResponse.query_data":
-		return x.QueryData != ""
+		return len(x.QueryData) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryCurrentCyclelistQueryResponse"))
@@ -7423,7 +7433,7 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Has(fd protoreflect.
 func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryCurrentCyclelistQueryResponse.query_data":
-		x.QueryData = ""
+		x.QueryData = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryCurrentCyclelistQueryResponse"))
@@ -7442,7 +7452,7 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Get(descriptor proto
 	switch descriptor.FullName() {
 	case "layer.oracle.QueryCurrentCyclelistQueryResponse.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryCurrentCyclelistQueryResponse"))
@@ -7464,7 +7474,7 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Get(descriptor proto
 func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.oracle.QueryCurrentCyclelistQueryResponse.query_data":
-		x.QueryData = value.Interface().(string)
+		x.QueryData = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryCurrentCyclelistQueryResponse"))
@@ -7501,7 +7511,7 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) Mutable(fd protorefl
 func (x *fastReflection_QueryCurrentCyclelistQueryResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.QueryCurrentCyclelistQueryResponse.query_data":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryCurrentCyclelistQueryResponse"))
@@ -7664,7 +7674,7 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) ProtoMethods() *prot
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -7674,23 +7684,25 @@ func (x *fastReflection_QueryCurrentCyclelistQueryResponse) ProtoMethods() *prot
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
+				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryData == nil {
+					x.QueryData = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -7809,7 +7821,7 @@ type QueryGetReportsbyQidRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 }
 
 func (x *QueryGetReportsbyQidRequest) Reset() {
@@ -7832,11 +7844,11 @@ func (*QueryGetReportsbyQidRequest) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_query_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *QueryGetReportsbyQidRequest) GetQueryId() string {
+func (x *QueryGetReportsbyQidRequest) GetQueryId() []byte {
 	if x != nil {
 		return x.QueryId
 	}
-	return ""
+	return nil
 }
 
 type QueryGetReportsbyQidResponse struct {
@@ -7950,7 +7962,7 @@ type QueryGetReportsbyReporterQidRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	QueryId  string `protobuf:"bytes,2,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId  []byte `protobuf:"bytes,2,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 }
 
 func (x *QueryGetReportsbyReporterQidRequest) Reset() {
@@ -7980,11 +7992,11 @@ func (x *QueryGetReportsbyReporterQidRequest) GetReporter() string {
 	return ""
 }
 
-func (x *QueryGetReportsbyReporterQidRequest) GetQueryId() string {
+func (x *QueryGetReportsbyReporterQidRequest) GetQueryId() []byte {
 	if x != nil {
 		return x.QueryId
 	}
-	return ""
+	return nil
 }
 
 type QueryGetCurrentTipRequest struct {
@@ -7992,7 +8004,7 @@ type QueryGetCurrentTipRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
 func (x *QueryGetCurrentTipRequest) Reset() {
@@ -8015,11 +8027,11 @@ func (*QueryGetCurrentTipRequest) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_query_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *QueryGetCurrentTipRequest) GetQueryData() string {
+func (x *QueryGetCurrentTipRequest) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
-	return ""
+	return nil
 }
 
 type QueryGetCurrentTipResponse struct {
@@ -8140,7 +8152,7 @@ type QueryGetCurrentAggregatedReportRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 }
 
 func (x *QueryGetCurrentAggregatedReportRequest) Reset() {
@@ -8163,11 +8175,11 @@ func (*QueryGetCurrentAggregatedReportRequest) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_query_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *QueryGetCurrentAggregatedReportRequest) GetQueryId() string {
+func (x *QueryGetCurrentAggregatedReportRequest) GetQueryId() []byte {
 	if x != nil {
 		return x.QueryId
 	}
-	return ""
+	return nil
 }
 
 type QueryGetAggregatedReportResponse struct {
@@ -8210,7 +8222,7 @@ type QueryGetDataBeforeRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId   string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId   []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
@@ -8234,11 +8246,11 @@ func (*QueryGetDataBeforeRequest) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_query_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *QueryGetDataBeforeRequest) GetQueryId() string {
+func (x *QueryGetDataBeforeRequest) GetQueryId() []byte {
 	if x != nil {
 		return x.QueryId
 	}
-	return ""
+	return nil
 }
 
 func (x *QueryGetDataBeforeRequest) GetTimestamp() int64 {
@@ -8340,7 +8352,7 @@ type QueryCurrentCyclelistQueryResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
 func (x *QueryCurrentCyclelistQueryResponse) Reset() {
@@ -8363,11 +8375,11 @@ func (*QueryCurrentCyclelistQueryResponse) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_query_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *QueryCurrentCyclelistQueryResponse) GetQueryData() string {
+func (x *QueryCurrentCyclelistQueryResponse) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
-	return ""
+	return nil
 }
 
 var File_layer_oracle_query_proto protoreflect.FileDescriptor
@@ -8404,7 +8416,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22, 0x38, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x47, 0x65, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x73, 0x62, 0x79, 0x51, 0x69, 0x64,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79,
 	0x49, 0x64, 0x22, 0x55, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x52, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x73, 0x62, 0x79, 0x51, 0x69, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x35, 0x0a, 0x07, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x73, 0x18, 0x01, 0x20,
@@ -8426,11 +8438,11 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x51, 0x69, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f,
-	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49,
 	0x64, 0x22, 0x3a, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72,
 	0x72, 0x65, 0x6e, 0x74, 0x54, 0x69, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d,
 	0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0x44, 0x0a,
+	0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0x44, 0x0a,
 	0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74,
 	0x54, 0x69, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x26, 0x0a, 0x04, 0x74,
 	0x69, 0x70, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x6c, 0x61, 0x79, 0x65,
@@ -8449,7 +8461,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x69, 0x70, 0x73, 0x22, 0x43, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43,
 	0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x64,
 	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a,
-	0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
 	0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x22, 0x53, 0x0a, 0x20, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x47, 0x65, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x64, 0x52, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x06,
@@ -8458,7 +8470,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x06, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x22, 0x54, 0x0a,
 	0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66,
 	0x6f, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75,
 	0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
 	0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
 	0x61, 0x6d, 0x70, 0x22, 0x21, 0x0a, 0x1f, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x54,
@@ -8478,7 +8490,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x72, 0x79, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x43, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69,
 	0x73, 0x74, 0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
 	0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x32, 0xb7,
+	0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x32, 0xb7,
 	0x0d, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x6b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61,
 	0x6d, 0x73, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c,
 	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71,
