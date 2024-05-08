@@ -38,12 +38,12 @@ contract TokenBridge is UsingTellor {
     constructor(address _token, address _blobstream, address _tellorFlex) UsingTellor(_blobstream) {
         token = IERC20(_token);
         tellorFlex = ITellorFlex(_tellorFlex);
-        _depositLimit();
+        _refreshDepositLimit();
     }
 
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
         require(_amount > 0, "TokenBridge: amount must be greater than 0");
-        require(_amount <= _depositLimit(), "TokenBridge: amount exceeds deposit limit");
+        require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit");
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
         currentDepositLimit -= _amount;
@@ -68,11 +68,20 @@ contract TokenBridge is UsingTellor {
         emit Withdrawal(_depositId, _layerSender, _recipient, _amountConverted);
     }
 
-    function _depositLimit() internal returns (uint256) {
+    function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
             uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
             currentDepositLimit = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
+        }
+        return currentDepositLimit;
+    }
+
+    function depositLimit() external view returns (uint256) {
+        if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
+            uint256 _updatedDepositLimit = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
+            return _updatedDepositLimit;
         }
         return currentDepositLimit;
     }

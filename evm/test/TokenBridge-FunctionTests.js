@@ -34,13 +34,16 @@ describe("TokenBridge - Function Tests", async function () {
         blobstream = await BlobstreamO.deploy(valParams.powerThreshold, valParams.timestamp, UNBONDING_PERIOD, valParams.checkpoint, guardian.address);
         await blobstream.deployed();
 
-        const Token = await ethers.getContractFactory("TellorPlayground")
-        token = await Token.deploy()
+        const TellorPlayground = await ethers.getContractFactory("TellorPlayground")
+        token = await TellorPlayground.deploy()
         await token.deployed()
+
+        oldOracle = await TellorPlayground.deploy()
+        await oldOracle.deployed() 
         
         const TokenBridge = await ethers.getContractFactory("TokenBridge")
         blocky0 = await h.getBlock()
-        tbridge = await TokenBridge.deploy(token.address, blobstream.address)
+        tbridge = await TokenBridge.deploy(token.address, blobstream.address, oldOracle.address)
 
         // await token.faucet(tbridge.address)
         await token.faucet(accounts[0].address)
