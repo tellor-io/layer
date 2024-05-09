@@ -16,7 +16,7 @@ const CHARLIE_MNEMONIC_FILE = path.join(homeDirectory, 'Desktop', 'charlie_mnemo
 
 const hash = web3.utils.keccak256;
 var assert = require('assert');
-const abiCoder = new ethers.utils.AbiCoder();
+const abiCoder = new ethers.AbiCoder();
 
 getLatestBlockNumber = async () => {
   url = "http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest"

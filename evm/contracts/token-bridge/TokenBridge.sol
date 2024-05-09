@@ -3,25 +3,17 @@
 pragma solidity 0.8.22;
 
 import "../usingtellor/UsingTellor.sol";
-import "../interfaces/ITellorFlex.sol";
+import { ITellorFlex } from "../interfaces/ITellorFlex.sol";
+import { LayerTransition } from "./LayerTransition.sol";
 
-interface IERC20 {
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    function approve(address spender, uint256 amount) external returns (bool);
-}
-
-contract TokenBridge is UsingTellor {
-    IERC20 public token;
-    ITellorFlex public tellorFlex;
+contract TokenBridge is UsingTellor, LayerTransition {
     uint256 public depositId;
     uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
     uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
     uint256 public depositLimitUpdateTime;
-    uint256 public currentDepositLimit;
+    uint256 public depositLimitRecord;
     mapping(uint256 => bool) public withdrawalClaimed;
     mapping(uint256 => DepositDetails) public deposits;
 
@@ -35,10 +27,17 @@ contract TokenBridge is UsingTellor {
     event Deposit(uint256 depositId, address sender, string recipient, uint256 amount);
     event Withdrawal(uint256 depositId, string sender, address recipient, uint256 amount);
 
-    constructor(address _token, address _blobstream, address _tellorFlex) UsingTellor(_blobstream) {
-        token = IERC20(_token);
-        tellorFlex = ITellorFlex(_tellorFlex);
+    constructor(address _token, address _blobstream, address _tellorFlex) UsingTellor(_blobstream) LayerTransition(_tellorFlex, _token) {
         _refreshDepositLimit();
+    }
+
+    function depositLimit() external view returns (uint256) {
+        if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
+            uint256 _updatedDepositLimit = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
+            return _updatedDepositLimit;
+        }
+        return depositLimitRecord;
     }
 
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
@@ -46,7 +45,7 @@ contract TokenBridge is UsingTellor {
         require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit");
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
-        currentDepositLimit -= _amount;
+        depositLimitRecord -= _amount;
         deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, block.number);
         emit Deposit(depositId, msg.sender, _layerRecipient, _amount);
     }
@@ -71,83 +70,9 @@ contract TokenBridge is UsingTellor {
     function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
             uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
-            currentDepositLimit = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
+            depositLimitRecord = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
         }
-        return currentDepositLimit;
-    }
-
-    function depositLimit() external view returns (uint256) {
-        if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
-            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
-            uint256 _updatedDepositLimit = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
-            return _updatedDepositLimit;
-        }
-        return currentDepositLimit;
-    }
-
-    // ********** Transition functions **********
-
-    // needed for "mintToOracle" function
-    function addStakingRewards(uint256 _amount) external {
-        token.transferFrom(msg.sender, address(this), _amount);
-    }
-
-    // forward to tellor360:
-    function getDataBefore(
-        bytes32 _queryId,
-        uint256 _timestamp
-    )
-        external
-        view
-        returns (
-            bool _ifRetrieve,
-            bytes memory _value,
-            uint256 _timestampRetrieved
-        ) {
-            return tellorFlex.getDataBefore(_queryId, _timestamp);
-        }
-
-    function getIndexForDataBefore(
-        bytes32 _queryId,
-        uint256 _timestamp
-    ) external view returns (bool _found, uint256 _index) {
-        return tellorFlex.getIndexForDataBefore(_queryId, _timestamp);
-    }
-
-    function getNewValueCountbyQueryId(
-        bytes32 _queryId
-    ) external view returns (uint256) {
-        return tellorFlex.getNewValueCountbyQueryId(_queryId);
-    }
-
-    function getReporterByTimestamp(
-        bytes32 _queryId,
-        uint256 _timestamp
-    ) external view returns (address) {
-        return tellorFlex.getReporterByTimestamp(_queryId, _timestamp);
-    }
-
-    function getTimestampbyQueryIdandIndex(
-        bytes32 _queryId,
-        uint256 _index
-    ) external view returns (uint256) {
-        return tellorFlex.getTimestampbyQueryIdandIndex(_queryId, _index);
-    }
-
-    function getTimeOfLastNewValue() external view returns (uint256) {
-        // note: should parachute use old flex, or something else?
-        return tellorFlex.getTimeOfLastNewValue();
-    }
-
-    function isInDispute(
-        bytes32 _queryId,
-        uint256 _timestamp
-    ) external view returns (bool) {
-        return tellorFlex.isInDispute(_queryId, _timestamp);
-    }
-
-    function verify() external pure returns (uint256) {
-        return 9999;
+        return depositLimitRecord;
     }
 }

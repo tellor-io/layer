@@ -3,11 +3,7 @@ const { ethers, network } = require("hardhat");
 const h = require("./helpers/helpers");
 var assert = require('assert');
 const web3 = require('web3');
-const { prependOnceListener } = require("process");
-const BN = ethers.BigNumber.from
-const abiCoder = new ethers.utils.AbiCoder();
-const axios = require('axios');
-
+const abiCoder = new ethers.AbiCoder();
 
 describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
@@ -21,20 +17,15 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
     beforeEach(async function () {
         accounts = await ethers.getSigners();
         guardian = accounts[10]
-        initialValAddrs = [accounts[1].address, accounts[2].address]
+        initialValAddrs = [accounts[1].getAddress(), accounts[2].getAddress()]
         initialPowers = [1, 2]
         threshold = 2
         blocky = await h.getBlock()
         valTimestamp = blocky.timestamp - 2
         valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, threshold, valTimestamp)
 
-        const Bridge = await ethers.getContractFactory("BlobstreamO");
-        bridge = await Bridge.deploy(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint, guardian.address);
-        await bridge.deployed();
-
-        const BridgeCaller = await ethers.getContractFactory("BridgeCaller");
-        bridgeCaller = await BridgeCaller.deploy(bridge.address);
-        await bridgeCaller.deployed();
+        bridge = await ethers.deployContract("BlobstreamO", [threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint, guardian.getAddress()]);
+        bridgeCaller = await ethers.deployContract("BridgeCaller", [bridge.getAddress()]);
     });
 
     it("constructor", async function () {
@@ -538,7 +529,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
         
     })
     
-    it.only("query layer api, deploy and verify with real params", async function () {
+    it("query layer api, deploy and verify with real params", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         console.log("valsetTimestamp0: ", vts0)
