@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
@@ -185,6 +186,9 @@ func createMicroReportForQuery(reporterAdd, aggMethod, valueHex string, power in
 }
 
 func (s *KeeperTestSuite) TestSetAggregatedReport() {
+	timestamp := time.Now()
+	ctx := s.ctx.WithBlockTime(timestamp)
+	ctx = ctx.WithBlockHeight(10)
 	// setup
 	rep1 := sample.AccAddressBytes()
 	rep2 := sample.AccAddressBytes()
@@ -203,7 +207,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 		QueryType:             "SpotPrice",
 	}
 
-	err := s.oracleKeeper.Query.Set(s.ctx, queryData.QueryId, queryData)
+	err := s.oracleKeeper.Query.Set(ctx, queryData.QueryId, queryData)
 	s.NoError(err)
 
 	val := "0x0000000000000000000000000000000000000000000000b4ed64f50fa9b7b8f2"
@@ -213,20 +217,48 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	report_three := createMicroReportForQuery(rep3.String(), "weighted-median", val, 1000000000, queryData, time.Now())
 	report_four := createMicroReportForQuery(rep4.String(), "weighted-median", val, 1000000000, queryData, time.Now())
 
-	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep1.Bytes(), queryData.Id), report_one)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep1.Bytes(), queryData.Id), report_one)
 	s.NoError(err)
-	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep2.Bytes(), queryData.Id), report_two)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep2.Bytes(), queryData.Id), report_two)
 	s.NoError(err)
-	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep3.Bytes(), queryData.Id), report_three)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep3.Bytes(), queryData.Id), report_three)
 	s.NoError(err)
-	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep4.Bytes(), queryData.Id), report_four)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep4.Bytes(), queryData.Id), report_four)
 	s.NoError(err)
-	// add := sample.AccAddressBytes()
-	// sdk.C
-	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
-	s.accountKeeper.On("GetModuleAccount", s.ctx, minttypes.TimeBasedRewards).Return(sample.AccAddressBytes())
-	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layer.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 
-	err = s.oracleKeeper.SetAggregatedReport(s.ctx)
+	// use auth types GetModule Account
+	add := sample.AccAddressBytes()
+	baseAccount := authtypes.NewBaseAccountWithAddress(add)
+	permissions := []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}
+	testModuleAccount := authtypes.NewModuleAccount(baseAccount, "time_based_rewards", permissions...)
+
+	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
+	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
+	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layer.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
+	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	err = s.oracleKeeper.SetAggregatedReport(ctx)
 	s.NoError(err)
+
+	reporter_one_balance := s.bankKeeper.GetBalance(ctx, rep1, "loya")
+	div4_totalTip := math.NewInt(1 * 1e6).QuoRaw(4)
+	s.True(reporter_one_balance.Amount.GTE(div4_totalTip))
+
+	reporter_two_balance := s.bankKeeper.GetBalance(ctx, rep2, "loya")
+	s.True(reporter_two_balance.Amount.GTE(div4_totalTip))
+
+	reporter_three_balance := s.bankKeeper.GetBalance(ctx, rep3, "loya")
+	s.True(reporter_three_balance.Amount.GTE(div4_totalTip))
+
+	reporter_four_balance := s.bankKeeper.GetBalance(ctx, rep4, "loya")
+	s.True(reporter_four_balance.Amount.GTE(div4_totalTip))
+
+	res_query, err := s.oracleKeeper.Query.Get(ctx, queryData.QueryId)
+	s.NoError(err)
+	s.Equal(false, res_query.HasRevealedReports)
+	s.Equal(math.ZeroInt(), res_query.Amount)
+
+	aggregate, err := s.oracleKeeper.Aggregates.Get(ctx, collections.Join(queryData.QueryId, timestamp.Unix()))
+	s.NoError(err)
+	s.Equal(4, len(aggregate.Reporters))
 }
