@@ -28,7 +28,7 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
-func (s *E2ETestSuite) TestInitialMint() {
+func (s *E2ETestSuite) TestNoInitialMint() {
 	require := s.Require()
 
 	mintToTeamAcc := s.accountKeeper.GetModuleAddress(minttypes.MintToTeam)
