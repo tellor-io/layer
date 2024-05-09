@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	collections "cosmossdk.io/collections"
@@ -70,7 +69,6 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	}
 
 	proposal, err := govMsgServer.SubmitProposal(s.ctx, &msgSubmitProposal)
-	fmt.Println("propRepsonse: ", proposal)
 	require.NoError(err)
 	require.Equal(proposal.ProposalId, uint64(1))
 
@@ -115,23 +113,12 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
 
-	for _, val := range valAccAddrs {
-		voteResponse, err := govMsgServer.Vote(s.ctx, &v1.MsgVote{
-			ProposalId: proposal.ProposalId,
-			Voter:      val.String(),
-			Option:     v1.VoteOption(1),
-			Metadata:   "vote metadata from validator",
-		})
-		require.NoError(err)
-		require.NotNil(voteResponse)
-	}
-
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(48 * time.Hour)))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 3 - advance time to expire vote
+	// Height 3 - proposal passes
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -163,7 +150,4 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	cycleList, err := s.oraclekeeper.GetCyclelist(s.ctx)
 	require.NoError(err)
 	require.Equal(cycleList, [][]byte{matic})
-
-	// add fails
-
 }
