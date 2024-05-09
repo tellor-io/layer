@@ -51,7 +51,7 @@ func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time)
 		return err
 	}
 
-	err = k.SendCoinsToOracle(ctx, toMintCoins)
+	err = k.SendInflationaryRewards(ctx, toMintCoins)
 	if err != nil {
 		return err
 	}

@@ -1168,7 +1168,7 @@ func (x *fastReflection_QueryGetEvmValidatorsRequest) ProtoMethods() *protoiface
 var _ protoreflect.List = (*_QueryGetEvmValidatorsResponse_1_list)(nil)
 
 type _QueryGetEvmValidatorsResponse_1_list struct {
-	list *[]*BridgeValidator
+	list *[]*QueryBridgeValidator
 }
 
 func (x *_QueryGetEvmValidatorsResponse_1_list) Len() int {
@@ -1184,18 +1184,18 @@ func (x *_QueryGetEvmValidatorsResponse_1_list) Get(i int) protoreflect.Value {
 
 func (x *_QueryGetEvmValidatorsResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValidator)
+	concreteValue := valueUnwrapped.Interface().(*QueryBridgeValidator)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_QueryGetEvmValidatorsResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValidator)
+	concreteValue := valueUnwrapped.Interface().(*QueryBridgeValidator)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_QueryGetEvmValidatorsResponse_1_list) AppendMutable() protoreflect.Value {
-	v := new(BridgeValidator)
+	v := new(QueryBridgeValidator)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -1208,7 +1208,7 @@ func (x *_QueryGetEvmValidatorsResponse_1_list) Truncate(n int) {
 }
 
 func (x *_QueryGetEvmValidatorsResponse_1_list) NewElement() protoreflect.Value {
-	v := new(BridgeValidator)
+	v := new(QueryBridgeValidator)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -1217,14 +1217,14 @@ func (x *_QueryGetEvmValidatorsResponse_1_list) IsValid() bool {
 }
 
 var (
-	md_QueryGetEvmValidatorsResponse                    protoreflect.MessageDescriptor
-	fd_QueryGetEvmValidatorsResponse_bridgeValidatorSet protoreflect.FieldDescriptor
+	md_QueryGetEvmValidatorsResponse                      protoreflect.MessageDescriptor
+	fd_QueryGetEvmValidatorsResponse_bridge_validator_set protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetEvmValidatorsResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetEvmValidatorsResponse")
-	fd_QueryGetEvmValidatorsResponse_bridgeValidatorSet = md_QueryGetEvmValidatorsResponse.Fields().ByName("bridgeValidatorSet")
+	fd_QueryGetEvmValidatorsResponse_bridge_validator_set = md_QueryGetEvmValidatorsResponse.Fields().ByName("bridge_validator_set")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetEvmValidatorsResponse)(nil)
@@ -1294,7 +1294,7 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Interface() protoreflect.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.BridgeValidatorSet) != 0 {
 		value := protoreflect.ValueOfList(&_QueryGetEvmValidatorsResponse_1_list{list: &x.BridgeValidatorSet})
-		if !f(fd_QueryGetEvmValidatorsResponse_bridgeValidatorSet, value) {
+		if !f(fd_QueryGetEvmValidatorsResponse_bridge_validator_set, value) {
 			return
 		}
 	}
@@ -1313,7 +1313,7 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Range(f func(protoreflect
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set":
 		return len(x.BridgeValidatorSet) != 0
 	default:
 		if fd.IsExtension() {
@@ -1331,7 +1331,7 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Has(fd protoreflect.Field
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set":
 		x.BridgeValidatorSet = nil
 	default:
 		if fd.IsExtension() {
@@ -1349,7 +1349,7 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Clear(fd protoreflect.Fie
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set":
 		if len(x.BridgeValidatorSet) == 0 {
 			return protoreflect.ValueOfList(&_QueryGetEvmValidatorsResponse_1_list{})
 		}
@@ -1375,7 +1375,7 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Get(descriptor protorefle
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set":
 		lv := value.List()
 		clv := lv.(*_QueryGetEvmValidatorsResponse_1_list)
 		x.BridgeValidatorSet = *clv.list
@@ -1399,9 +1399,9 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Set(fd protoreflect.Field
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set":
 		if x.BridgeValidatorSet == nil {
-			x.BridgeValidatorSet = []*BridgeValidator{}
+			x.BridgeValidatorSet = []*QueryBridgeValidator{}
 		}
 		value := &_QueryGetEvmValidatorsResponse_1_list{list: &x.BridgeValidatorSet}
 		return protoreflect.ValueOfList(value)
@@ -1418,8 +1418,8 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) Mutable(fd protoreflect.F
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetEvmValidatorsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet":
-		list := []*BridgeValidator{}
+	case "layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set":
+		list := []*QueryBridgeValidator{}
 		return protoreflect.ValueOfList(&_QueryGetEvmValidatorsResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -1619,7 +1619,7 @@ func (x *fastReflection_QueryGetEvmValidatorsResponse) ProtoMethods() *protoifac
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.BridgeValidatorSet = append(x.BridgeValidatorSet, &BridgeValidator{})
+				x.BridgeValidatorSet = append(x.BridgeValidatorSet, &QueryBridgeValidator{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BridgeValidatorSet[len(x.BridgeValidatorSet)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -2016,14 +2016,14 @@ func (x *fastReflection_QueryGetValidatorCheckpointRequest) ProtoMethods() *prot
 }
 
 var (
-	md_QueryGetValidatorCheckpointResponse                     protoreflect.MessageDescriptor
-	fd_QueryGetValidatorCheckpointResponse_validatorCheckpoint protoreflect.FieldDescriptor
+	md_QueryGetValidatorCheckpointResponse                      protoreflect.MessageDescriptor
+	fd_QueryGetValidatorCheckpointResponse_validator_checkpoint protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetValidatorCheckpointResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetValidatorCheckpointResponse")
-	fd_QueryGetValidatorCheckpointResponse_validatorCheckpoint = md_QueryGetValidatorCheckpointResponse.Fields().ByName("validatorCheckpoint")
+	fd_QueryGetValidatorCheckpointResponse_validator_checkpoint = md_QueryGetValidatorCheckpointResponse.Fields().ByName("validator_checkpoint")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetValidatorCheckpointResponse)(nil)
@@ -2093,7 +2093,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Interface() protore
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ValidatorCheckpoint != "" {
 		value := protoreflect.ValueOfString(x.ValidatorCheckpoint)
-		if !f(fd_QueryGetValidatorCheckpointResponse_validatorCheckpoint, value) {
+		if !f(fd_QueryGetValidatorCheckpointResponse_validator_checkpoint, value) {
 			return
 		}
 	}
@@ -2112,7 +2112,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Range(f func(protor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValidatorCheckpointResponse.validatorCheckpoint":
+	case "layer.bridge.QueryGetValidatorCheckpointResponse.validator_checkpoint":
 		return x.ValidatorCheckpoint != ""
 	default:
 		if fd.IsExtension() {
@@ -2130,7 +2130,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Has(fd protoreflect
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValidatorCheckpointResponse.validatorCheckpoint":
+	case "layer.bridge.QueryGetValidatorCheckpointResponse.validator_checkpoint":
 		x.ValidatorCheckpoint = ""
 	default:
 		if fd.IsExtension() {
@@ -2148,7 +2148,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Clear(fd protorefle
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetValidatorCheckpointResponse.validatorCheckpoint":
+	case "layer.bridge.QueryGetValidatorCheckpointResponse.validator_checkpoint":
 		value := x.ValidatorCheckpoint
 		return protoreflect.ValueOfString(value)
 	default:
@@ -2171,7 +2171,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Get(descriptor prot
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValidatorCheckpointResponse.validatorCheckpoint":
+	case "layer.bridge.QueryGetValidatorCheckpointResponse.validator_checkpoint":
 		x.ValidatorCheckpoint = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
@@ -2193,8 +2193,8 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Set(fd protoreflect
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValidatorCheckpointResponse.validatorCheckpoint":
-		panic(fmt.Errorf("field validatorCheckpoint of message layer.bridge.QueryGetValidatorCheckpointResponse is not mutable"))
+	case "layer.bridge.QueryGetValidatorCheckpointResponse.validator_checkpoint":
+		panic(fmt.Errorf("field validator_checkpoint of message layer.bridge.QueryGetValidatorCheckpointResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointResponse"))
@@ -2208,7 +2208,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) Mutable(fd protoref
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetValidatorCheckpointResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValidatorCheckpointResponse.validatorCheckpoint":
+	case "layer.bridge.QueryGetValidatorCheckpointResponse.validator_checkpoint":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -2436,6 +2436,968 @@ func (x *fastReflection_QueryGetValidatorCheckpointResponse) ProtoMethods() *pro
 }
 
 var (
+	md_QueryBridgeValidator                 protoreflect.MessageDescriptor
+	fd_QueryBridgeValidator_ethereumAddress protoreflect.FieldDescriptor
+	fd_QueryBridgeValidator_power           protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryBridgeValidator = File_layer_bridge_query_proto.Messages().ByName("QueryBridgeValidator")
+	fd_QueryBridgeValidator_ethereumAddress = md_QueryBridgeValidator.Fields().ByName("ethereumAddress")
+	fd_QueryBridgeValidator_power = md_QueryBridgeValidator.Fields().ByName("power")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryBridgeValidator)(nil)
+
+type fastReflection_QueryBridgeValidator QueryBridgeValidator
+
+func (x *QueryBridgeValidator) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryBridgeValidator)(x)
+}
+
+func (x *QueryBridgeValidator) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryBridgeValidator_messageType fastReflection_QueryBridgeValidator_messageType
+var _ protoreflect.MessageType = fastReflection_QueryBridgeValidator_messageType{}
+
+type fastReflection_QueryBridgeValidator_messageType struct{}
+
+func (x fastReflection_QueryBridgeValidator_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryBridgeValidator)(nil)
+}
+func (x fastReflection_QueryBridgeValidator_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryBridgeValidator)
+}
+func (x fastReflection_QueryBridgeValidator_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryBridgeValidator
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryBridgeValidator) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryBridgeValidator
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryBridgeValidator) Type() protoreflect.MessageType {
+	return _fastReflection_QueryBridgeValidator_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryBridgeValidator) New() protoreflect.Message {
+	return new(fastReflection_QueryBridgeValidator)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryBridgeValidator) Interface() protoreflect.ProtoMessage {
+	return (*QueryBridgeValidator)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryBridgeValidator) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.EthereumAddress != "" {
+		value := protoreflect.ValueOfString(x.EthereumAddress)
+		if !f(fd_QueryBridgeValidator_ethereumAddress, value) {
+			return
+		}
+	}
+	if x.Power != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Power)
+		if !f(fd_QueryBridgeValidator_power, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryBridgeValidator) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidator.ethereumAddress":
+		return x.EthereumAddress != ""
+	case "layer.bridge.QueryBridgeValidator.power":
+		return x.Power != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidator"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidator does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidator) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidator.ethereumAddress":
+		x.EthereumAddress = ""
+	case "layer.bridge.QueryBridgeValidator.power":
+		x.Power = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidator"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidator does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryBridgeValidator) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryBridgeValidator.ethereumAddress":
+		value := x.EthereumAddress
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.QueryBridgeValidator.power":
+		value := x.Power
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidator"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidator does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidator) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidator.ethereumAddress":
+		x.EthereumAddress = value.Interface().(string)
+	case "layer.bridge.QueryBridgeValidator.power":
+		x.Power = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidator"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidator does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidator) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidator.ethereumAddress":
+		panic(fmt.Errorf("field ethereumAddress of message layer.bridge.QueryBridgeValidator is not mutable"))
+	case "layer.bridge.QueryBridgeValidator.power":
+		panic(fmt.Errorf("field power of message layer.bridge.QueryBridgeValidator is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidator"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidator does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryBridgeValidator) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidator.ethereumAddress":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.QueryBridgeValidator.power":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidator"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidator does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryBridgeValidator) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryBridgeValidator", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryBridgeValidator) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidator) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryBridgeValidator) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryBridgeValidator) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryBridgeValidator)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.EthereumAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Power != 0 {
+			n += 1 + runtime.Sov(uint64(x.Power))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryBridgeValidator)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Power != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Power))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.EthereumAddress) > 0 {
+			i -= len(x.EthereumAddress)
+			copy(dAtA[i:], x.EthereumAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.EthereumAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryBridgeValidator)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryBridgeValidator: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryBridgeValidator: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EthereumAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.EthereumAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Power", wireType)
+				}
+				x.Power = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Power |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryBridgeValidatorSet_1_list)(nil)
+
+type _QueryBridgeValidatorSet_1_list struct {
+	list *[]*QueryBridgeValidator
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*QueryBridgeValidator)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*QueryBridgeValidator)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) AppendMutable() protoreflect.Value {
+	v := new(QueryBridgeValidator)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) NewElement() protoreflect.Value {
+	v := new(QueryBridgeValidator)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryBridgeValidatorSet_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryBridgeValidatorSet                      protoreflect.MessageDescriptor
+	fd_QueryBridgeValidatorSet_bridge_validator_set protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_query_proto_init()
+	md_QueryBridgeValidatorSet = File_layer_bridge_query_proto.Messages().ByName("QueryBridgeValidatorSet")
+	fd_QueryBridgeValidatorSet_bridge_validator_set = md_QueryBridgeValidatorSet.Fields().ByName("bridge_validator_set")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryBridgeValidatorSet)(nil)
+
+type fastReflection_QueryBridgeValidatorSet QueryBridgeValidatorSet
+
+func (x *QueryBridgeValidatorSet) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryBridgeValidatorSet)(x)
+}
+
+func (x *QueryBridgeValidatorSet) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_query_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryBridgeValidatorSet_messageType fastReflection_QueryBridgeValidatorSet_messageType
+var _ protoreflect.MessageType = fastReflection_QueryBridgeValidatorSet_messageType{}
+
+type fastReflection_QueryBridgeValidatorSet_messageType struct{}
+
+func (x fastReflection_QueryBridgeValidatorSet_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryBridgeValidatorSet)(nil)
+}
+func (x fastReflection_QueryBridgeValidatorSet_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryBridgeValidatorSet)
+}
+func (x fastReflection_QueryBridgeValidatorSet_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryBridgeValidatorSet
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryBridgeValidatorSet) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryBridgeValidatorSet
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryBridgeValidatorSet) Type() protoreflect.MessageType {
+	return _fastReflection_QueryBridgeValidatorSet_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryBridgeValidatorSet) New() protoreflect.Message {
+	return new(fastReflection_QueryBridgeValidatorSet)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryBridgeValidatorSet) Interface() protoreflect.ProtoMessage {
+	return (*QueryBridgeValidatorSet)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryBridgeValidatorSet) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.BridgeValidatorSet) != 0 {
+		value := protoreflect.ValueOfList(&_QueryBridgeValidatorSet_1_list{list: &x.BridgeValidatorSet})
+		if !f(fd_QueryBridgeValidatorSet_bridge_validator_set, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryBridgeValidatorSet) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidatorSet.bridge_validator_set":
+		return len(x.BridgeValidatorSet) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidatorSet"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidatorSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidatorSet) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidatorSet.bridge_validator_set":
+		x.BridgeValidatorSet = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidatorSet"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidatorSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryBridgeValidatorSet) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.QueryBridgeValidatorSet.bridge_validator_set":
+		if len(x.BridgeValidatorSet) == 0 {
+			return protoreflect.ValueOfList(&_QueryBridgeValidatorSet_1_list{})
+		}
+		listValue := &_QueryBridgeValidatorSet_1_list{list: &x.BridgeValidatorSet}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidatorSet"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidatorSet does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidatorSet) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidatorSet.bridge_validator_set":
+		lv := value.List()
+		clv := lv.(*_QueryBridgeValidatorSet_1_list)
+		x.BridgeValidatorSet = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidatorSet"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidatorSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidatorSet) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidatorSet.bridge_validator_set":
+		if x.BridgeValidatorSet == nil {
+			x.BridgeValidatorSet = []*QueryBridgeValidator{}
+		}
+		value := &_QueryBridgeValidatorSet_1_list{list: &x.BridgeValidatorSet}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidatorSet"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidatorSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryBridgeValidatorSet) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.QueryBridgeValidatorSet.bridge_validator_set":
+		list := []*QueryBridgeValidator{}
+		return protoreflect.ValueOfList(&_QueryBridgeValidatorSet_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryBridgeValidatorSet"))
+		}
+		panic(fmt.Errorf("message layer.bridge.QueryBridgeValidatorSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryBridgeValidatorSet) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.QueryBridgeValidatorSet", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryBridgeValidatorSet) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryBridgeValidatorSet) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryBridgeValidatorSet) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryBridgeValidatorSet) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryBridgeValidatorSet)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.BridgeValidatorSet) > 0 {
+			for _, e := range x.BridgeValidatorSet {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryBridgeValidatorSet)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.BridgeValidatorSet) > 0 {
+			for iNdEx := len(x.BridgeValidatorSet) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.BridgeValidatorSet[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryBridgeValidatorSet)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryBridgeValidatorSet: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryBridgeValidatorSet: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeValidatorSet", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.BridgeValidatorSet = append(x.BridgeValidatorSet, &QueryBridgeValidator{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BridgeValidatorSet[len(x.BridgeValidatorSet)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_BridgeValidator                 protoreflect.MessageDescriptor
 	fd_BridgeValidator_ethereumAddress protoreflect.FieldDescriptor
 	fd_BridgeValidator_power           protoreflect.FieldDescriptor
@@ -2457,7 +3419,7 @@ func (x *BridgeValidator) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BridgeValidator) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[6]
+	mi := &file_layer_bridge_query_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2513,8 +3475,8 @@ func (x *fastReflection_BridgeValidator) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_BridgeValidator) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.EthereumAddress != "" {
-		value := protoreflect.ValueOfString(x.EthereumAddress)
+	if len(x.EthereumAddress) != 0 {
+		value := protoreflect.ValueOfBytes(x.EthereumAddress)
 		if !f(fd_BridgeValidator_ethereumAddress, value) {
 			return
 		}
@@ -2541,7 +3503,7 @@ func (x *fastReflection_BridgeValidator) Range(f func(protoreflect.FieldDescript
 func (x *fastReflection_BridgeValidator) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidator.ethereumAddress":
-		return x.EthereumAddress != ""
+		return len(x.EthereumAddress) != 0
 	case "layer.bridge.BridgeValidator.power":
 		return x.Power != uint64(0)
 	default:
@@ -2561,7 +3523,7 @@ func (x *fastReflection_BridgeValidator) Has(fd protoreflect.FieldDescriptor) bo
 func (x *fastReflection_BridgeValidator) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidator.ethereumAddress":
-		x.EthereumAddress = ""
+		x.EthereumAddress = nil
 	case "layer.bridge.BridgeValidator.power":
 		x.Power = uint64(0)
 	default:
@@ -2582,7 +3544,7 @@ func (x *fastReflection_BridgeValidator) Get(descriptor protoreflect.FieldDescri
 	switch descriptor.FullName() {
 	case "layer.bridge.BridgeValidator.ethereumAddress":
 		value := x.EthereumAddress
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.bridge.BridgeValidator.power":
 		value := x.Power
 		return protoreflect.ValueOfUint64(value)
@@ -2607,7 +3569,7 @@ func (x *fastReflection_BridgeValidator) Get(descriptor protoreflect.FieldDescri
 func (x *fastReflection_BridgeValidator) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidator.ethereumAddress":
-		x.EthereumAddress = value.Interface().(string)
+		x.EthereumAddress = value.Bytes()
 	case "layer.bridge.BridgeValidator.power":
 		x.Power = value.Uint()
 	default:
@@ -2648,7 +3610,7 @@ func (x *fastReflection_BridgeValidator) Mutable(fd protoreflect.FieldDescriptor
 func (x *fastReflection_BridgeValidator) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidator.ethereumAddress":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.bridge.BridgeValidator.power":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
@@ -2821,7 +3783,7 @@ func (x *fastReflection_BridgeValidator) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EthereumAddress", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2831,23 +3793,25 @@ func (x *fastReflection_BridgeValidator) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.EthereumAddress = string(dAtA[iNdEx:postIndex])
+				x.EthereumAddress = append(x.EthereumAddress[:0], dAtA[iNdEx:postIndex]...)
+				if x.EthereumAddress == nil {
+					x.EthereumAddress = []byte{}
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 0 {
@@ -2955,14 +3919,14 @@ func (x *_BridgeValidatorSet_1_list) IsValid() bool {
 }
 
 var (
-	md_BridgeValidatorSet                    protoreflect.MessageDescriptor
-	fd_BridgeValidatorSet_bridgeValidatorSet protoreflect.FieldDescriptor
+	md_BridgeValidatorSet                      protoreflect.MessageDescriptor
+	fd_BridgeValidatorSet_bridge_validator_set protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_BridgeValidatorSet = File_layer_bridge_query_proto.Messages().ByName("BridgeValidatorSet")
-	fd_BridgeValidatorSet_bridgeValidatorSet = md_BridgeValidatorSet.Fields().ByName("bridgeValidatorSet")
+	fd_BridgeValidatorSet_bridge_validator_set = md_BridgeValidatorSet.Fields().ByName("bridge_validator_set")
 }
 
 var _ protoreflect.Message = (*fastReflection_BridgeValidatorSet)(nil)
@@ -2974,7 +3938,7 @@ func (x *BridgeValidatorSet) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BridgeValidatorSet) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[7]
+	mi := &file_layer_bridge_query_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3032,7 +3996,7 @@ func (x *fastReflection_BridgeValidatorSet) Interface() protoreflect.ProtoMessag
 func (x *fastReflection_BridgeValidatorSet) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.BridgeValidatorSet) != 0 {
 		value := protoreflect.ValueOfList(&_BridgeValidatorSet_1_list{list: &x.BridgeValidatorSet})
-		if !f(fd_BridgeValidatorSet_bridgeValidatorSet, value) {
+		if !f(fd_BridgeValidatorSet_bridge_validator_set, value) {
 			return
 		}
 	}
@@ -3051,7 +4015,7 @@ func (x *fastReflection_BridgeValidatorSet) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BridgeValidatorSet) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSet.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSet.bridge_validator_set":
 		return len(x.BridgeValidatorSet) != 0
 	default:
 		if fd.IsExtension() {
@@ -3069,7 +4033,7 @@ func (x *fastReflection_BridgeValidatorSet) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSet) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSet.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSet.bridge_validator_set":
 		x.BridgeValidatorSet = nil
 	default:
 		if fd.IsExtension() {
@@ -3087,7 +4051,7 @@ func (x *fastReflection_BridgeValidatorSet) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BridgeValidatorSet) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.BridgeValidatorSet.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSet.bridge_validator_set":
 		if len(x.BridgeValidatorSet) == 0 {
 			return protoreflect.ValueOfList(&_BridgeValidatorSet_1_list{})
 		}
@@ -3113,7 +4077,7 @@ func (x *fastReflection_BridgeValidatorSet) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSet) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSet.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSet.bridge_validator_set":
 		lv := value.List()
 		clv := lv.(*_BridgeValidatorSet_1_list)
 		x.BridgeValidatorSet = *clv.list
@@ -3137,7 +4101,7 @@ func (x *fastReflection_BridgeValidatorSet) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSet) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSet.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSet.bridge_validator_set":
 		if x.BridgeValidatorSet == nil {
 			x.BridgeValidatorSet = []*BridgeValidator{}
 		}
@@ -3156,7 +4120,7 @@ func (x *fastReflection_BridgeValidatorSet) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BridgeValidatorSet) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSet.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSet.bridge_validator_set":
 		list := []*BridgeValidator{}
 		return protoreflect.ValueOfList(&_BridgeValidatorSet_1_list{list: &list})
 	default:
@@ -3398,22 +4362,22 @@ func (x *fastReflection_BridgeValidatorSet) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_BridgeValidatorSetParams                         protoreflect.MessageDescriptor
-	fd_BridgeValidatorSetParams_bridgeValidatorSet      protoreflect.FieldDescriptor
-	fd_BridgeValidatorSetParams_validatorTimestamp      protoreflect.FieldDescriptor
-	fd_BridgeValidatorSetParams_validatorPowerThreshold protoreflect.FieldDescriptor
-	fd_BridgeValidatorSetParams_validatorSetHash        protoreflect.FieldDescriptor
-	fd_BridgeValidatorSetParams_validatorCheckpoint     protoreflect.FieldDescriptor
+	md_BridgeValidatorSetParams                           protoreflect.MessageDescriptor
+	fd_BridgeValidatorSetParams_bridge_validator_set      protoreflect.FieldDescriptor
+	fd_BridgeValidatorSetParams_validator_timestamp       protoreflect.FieldDescriptor
+	fd_BridgeValidatorSetParams_validator_power_threshold protoreflect.FieldDescriptor
+	fd_BridgeValidatorSetParams_validator_set_hash        protoreflect.FieldDescriptor
+	fd_BridgeValidatorSetParams_validator_checkpoint      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_BridgeValidatorSetParams = File_layer_bridge_query_proto.Messages().ByName("BridgeValidatorSetParams")
-	fd_BridgeValidatorSetParams_bridgeValidatorSet = md_BridgeValidatorSetParams.Fields().ByName("bridgeValidatorSet")
-	fd_BridgeValidatorSetParams_validatorTimestamp = md_BridgeValidatorSetParams.Fields().ByName("validatorTimestamp")
-	fd_BridgeValidatorSetParams_validatorPowerThreshold = md_BridgeValidatorSetParams.Fields().ByName("validatorPowerThreshold")
-	fd_BridgeValidatorSetParams_validatorSetHash = md_BridgeValidatorSetParams.Fields().ByName("validatorSetHash")
-	fd_BridgeValidatorSetParams_validatorCheckpoint = md_BridgeValidatorSetParams.Fields().ByName("validatorCheckpoint")
+	fd_BridgeValidatorSetParams_bridge_validator_set = md_BridgeValidatorSetParams.Fields().ByName("bridge_validator_set")
+	fd_BridgeValidatorSetParams_validator_timestamp = md_BridgeValidatorSetParams.Fields().ByName("validator_timestamp")
+	fd_BridgeValidatorSetParams_validator_power_threshold = md_BridgeValidatorSetParams.Fields().ByName("validator_power_threshold")
+	fd_BridgeValidatorSetParams_validator_set_hash = md_BridgeValidatorSetParams.Fields().ByName("validator_set_hash")
+	fd_BridgeValidatorSetParams_validator_checkpoint = md_BridgeValidatorSetParams.Fields().ByName("validator_checkpoint")
 }
 
 var _ protoreflect.Message = (*fastReflection_BridgeValidatorSetParams)(nil)
@@ -3425,7 +4389,7 @@ func (x *BridgeValidatorSetParams) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BridgeValidatorSetParams) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[8]
+	mi := &file_layer_bridge_query_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3483,31 +4447,31 @@ func (x *fastReflection_BridgeValidatorSetParams) Interface() protoreflect.Proto
 func (x *fastReflection_BridgeValidatorSetParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.BridgeValidatorSet != nil {
 		value := protoreflect.ValueOfMessage(x.BridgeValidatorSet.ProtoReflect())
-		if !f(fd_BridgeValidatorSetParams_bridgeValidatorSet, value) {
+		if !f(fd_BridgeValidatorSetParams_bridge_validator_set, value) {
 			return
 		}
 	}
 	if x.ValidatorTimestamp != int64(0) {
 		value := protoreflect.ValueOfInt64(x.ValidatorTimestamp)
-		if !f(fd_BridgeValidatorSetParams_validatorTimestamp, value) {
+		if !f(fd_BridgeValidatorSetParams_validator_timestamp, value) {
 			return
 		}
 	}
 	if x.ValidatorPowerThreshold != int64(0) {
 		value := protoreflect.ValueOfInt64(x.ValidatorPowerThreshold)
-		if !f(fd_BridgeValidatorSetParams_validatorPowerThreshold, value) {
+		if !f(fd_BridgeValidatorSetParams_validator_power_threshold, value) {
 			return
 		}
 	}
 	if len(x.ValidatorSetHash) != 0 {
 		value := protoreflect.ValueOfBytes(x.ValidatorSetHash)
-		if !f(fd_BridgeValidatorSetParams_validatorSetHash, value) {
+		if !f(fd_BridgeValidatorSetParams_validator_set_hash, value) {
 			return
 		}
 	}
 	if len(x.ValidatorCheckpoint) != 0 {
 		value := protoreflect.ValueOfBytes(x.ValidatorCheckpoint)
-		if !f(fd_BridgeValidatorSetParams_validatorCheckpoint, value) {
+		if !f(fd_BridgeValidatorSetParams_validator_checkpoint, value) {
 			return
 		}
 	}
@@ -3526,15 +4490,15 @@ func (x *fastReflection_BridgeValidatorSetParams) Range(f func(protoreflect.Fiel
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BridgeValidatorSetParams) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		return x.BridgeValidatorSet != nil
-	case "layer.bridge.BridgeValidatorSetParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
 		return x.ValidatorTimestamp != int64(0)
-	case "layer.bridge.BridgeValidatorSetParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
 		return x.ValidatorPowerThreshold != int64(0)
-	case "layer.bridge.BridgeValidatorSetParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		return len(x.ValidatorSetHash) != 0
-	case "layer.bridge.BridgeValidatorSetParams.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
 		return len(x.ValidatorCheckpoint) != 0
 	default:
 		if fd.IsExtension() {
@@ -3552,15 +4516,15 @@ func (x *fastReflection_BridgeValidatorSetParams) Has(fd protoreflect.FieldDescr
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetParams) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		x.BridgeValidatorSet = nil
-	case "layer.bridge.BridgeValidatorSetParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
 		x.ValidatorTimestamp = int64(0)
-	case "layer.bridge.BridgeValidatorSetParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
 		x.ValidatorPowerThreshold = int64(0)
-	case "layer.bridge.BridgeValidatorSetParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		x.ValidatorSetHash = nil
-	case "layer.bridge.BridgeValidatorSetParams.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
 		x.ValidatorCheckpoint = nil
 	default:
 		if fd.IsExtension() {
@@ -3578,19 +4542,19 @@ func (x *fastReflection_BridgeValidatorSetParams) Clear(fd protoreflect.FieldDes
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BridgeValidatorSetParams) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		value := x.BridgeValidatorSet
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.bridge.BridgeValidatorSetParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
 		value := x.ValidatorTimestamp
 		return protoreflect.ValueOfInt64(value)
-	case "layer.bridge.BridgeValidatorSetParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
 		value := x.ValidatorPowerThreshold
 		return protoreflect.ValueOfInt64(value)
-	case "layer.bridge.BridgeValidatorSetParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		value := x.ValidatorSetHash
 		return protoreflect.ValueOfBytes(value)
-	case "layer.bridge.BridgeValidatorSetParams.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
 		value := x.ValidatorCheckpoint
 		return protoreflect.ValueOfBytes(value)
 	default:
@@ -3613,15 +4577,15 @@ func (x *fastReflection_BridgeValidatorSetParams) Get(descriptor protoreflect.Fi
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		x.BridgeValidatorSet = value.Message().Interface().(*BridgeValidatorSet)
-	case "layer.bridge.BridgeValidatorSetParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
 		x.ValidatorTimestamp = value.Int()
-	case "layer.bridge.BridgeValidatorSetParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
 		x.ValidatorPowerThreshold = value.Int()
-	case "layer.bridge.BridgeValidatorSetParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		x.ValidatorSetHash = value.Bytes()
-	case "layer.bridge.BridgeValidatorSetParams.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
 		x.ValidatorCheckpoint = value.Bytes()
 	default:
 		if fd.IsExtension() {
@@ -3643,19 +4607,19 @@ func (x *fastReflection_BridgeValidatorSetParams) Set(fd protoreflect.FieldDescr
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetParams) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		if x.BridgeValidatorSet == nil {
 			x.BridgeValidatorSet = new(BridgeValidatorSet)
 		}
 		return protoreflect.ValueOfMessage(x.BridgeValidatorSet.ProtoReflect())
-	case "layer.bridge.BridgeValidatorSetParams.validatorTimestamp":
-		panic(fmt.Errorf("field validatorTimestamp of message layer.bridge.BridgeValidatorSetParams is not mutable"))
-	case "layer.bridge.BridgeValidatorSetParams.validatorPowerThreshold":
-		panic(fmt.Errorf("field validatorPowerThreshold of message layer.bridge.BridgeValidatorSetParams is not mutable"))
-	case "layer.bridge.BridgeValidatorSetParams.validatorSetHash":
-		panic(fmt.Errorf("field validatorSetHash of message layer.bridge.BridgeValidatorSetParams is not mutable"))
-	case "layer.bridge.BridgeValidatorSetParams.validatorCheckpoint":
-		panic(fmt.Errorf("field validatorCheckpoint of message layer.bridge.BridgeValidatorSetParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
+		panic(fmt.Errorf("field validator_timestamp of message layer.bridge.BridgeValidatorSetParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
+		panic(fmt.Errorf("field validator_power_threshold of message layer.bridge.BridgeValidatorSetParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
+		panic(fmt.Errorf("field validator_set_hash of message layer.bridge.BridgeValidatorSetParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
+		panic(fmt.Errorf("field validator_checkpoint of message layer.bridge.BridgeValidatorSetParams is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValidatorSetParams"))
@@ -3669,16 +4633,16 @@ func (x *fastReflection_BridgeValidatorSetParams) Mutable(fd protoreflect.FieldD
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BridgeValidatorSetParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet":
+	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		m := new(BridgeValidatorSet)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.bridge.BridgeValidatorSetParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.bridge.BridgeValidatorSetParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.bridge.BridgeValidatorSetParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		return protoreflect.ValueOfBytes(nil)
-	case "layer.bridge.BridgeValidatorSetParams.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
@@ -4061,18 +5025,18 @@ func (x *fastReflection_BridgeValidatorSetParams) ProtoMethods() *protoiface.Met
 }
 
 var (
-	md_BridgeValidatorSetCheckpointParams                         protoreflect.MessageDescriptor
-	fd_BridgeValidatorSetCheckpointParams_validatorTimestamp      protoreflect.FieldDescriptor
-	fd_BridgeValidatorSetCheckpointParams_validatorPowerThreshold protoreflect.FieldDescriptor
-	fd_BridgeValidatorSetCheckpointParams_validatorSetHash        protoreflect.FieldDescriptor
+	md_BridgeValidatorSetCheckpointParams                           protoreflect.MessageDescriptor
+	fd_BridgeValidatorSetCheckpointParams_validator_timestamp       protoreflect.FieldDescriptor
+	fd_BridgeValidatorSetCheckpointParams_validator_power_threshold protoreflect.FieldDescriptor
+	fd_BridgeValidatorSetCheckpointParams_validator_set_hash        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_BridgeValidatorSetCheckpointParams = File_layer_bridge_query_proto.Messages().ByName("BridgeValidatorSetCheckpointParams")
-	fd_BridgeValidatorSetCheckpointParams_validatorTimestamp = md_BridgeValidatorSetCheckpointParams.Fields().ByName("validatorTimestamp")
-	fd_BridgeValidatorSetCheckpointParams_validatorPowerThreshold = md_BridgeValidatorSetCheckpointParams.Fields().ByName("validatorPowerThreshold")
-	fd_BridgeValidatorSetCheckpointParams_validatorSetHash = md_BridgeValidatorSetCheckpointParams.Fields().ByName("validatorSetHash")
+	fd_BridgeValidatorSetCheckpointParams_validator_timestamp = md_BridgeValidatorSetCheckpointParams.Fields().ByName("validator_timestamp")
+	fd_BridgeValidatorSetCheckpointParams_validator_power_threshold = md_BridgeValidatorSetCheckpointParams.Fields().ByName("validator_power_threshold")
+	fd_BridgeValidatorSetCheckpointParams_validator_set_hash = md_BridgeValidatorSetCheckpointParams.Fields().ByName("validator_set_hash")
 }
 
 var _ protoreflect.Message = (*fastReflection_BridgeValidatorSetCheckpointParams)(nil)
@@ -4084,7 +5048,7 @@ func (x *BridgeValidatorSetCheckpointParams) ProtoReflect() protoreflect.Message
 }
 
 func (x *BridgeValidatorSetCheckpointParams) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[9]
+	mi := &file_layer_bridge_query_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4142,19 +5106,19 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Interface() protoref
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ValidatorTimestamp != int64(0) {
 		value := protoreflect.ValueOfInt64(x.ValidatorTimestamp)
-		if !f(fd_BridgeValidatorSetCheckpointParams_validatorTimestamp, value) {
+		if !f(fd_BridgeValidatorSetCheckpointParams_validator_timestamp, value) {
 			return
 		}
 	}
 	if x.ValidatorPowerThreshold != int64(0) {
 		value := protoreflect.ValueOfInt64(x.ValidatorPowerThreshold)
-		if !f(fd_BridgeValidatorSetCheckpointParams_validatorPowerThreshold, value) {
+		if !f(fd_BridgeValidatorSetCheckpointParams_validator_power_threshold, value) {
 			return
 		}
 	}
 	if len(x.ValidatorSetHash) != 0 {
 		value := protoreflect.ValueOfBytes(x.ValidatorSetHash)
-		if !f(fd_BridgeValidatorSetCheckpointParams_validatorSetHash, value) {
+		if !f(fd_BridgeValidatorSetCheckpointParams_validator_set_hash, value) {
 			return
 		}
 	}
@@ -4173,11 +5137,11 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Range(f func(protore
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
 		return x.ValidatorTimestamp != int64(0)
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
 		return x.ValidatorPowerThreshold != int64(0)
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		return len(x.ValidatorSetHash) != 0
 	default:
 		if fd.IsExtension() {
@@ -4195,11 +5159,11 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Has(fd protoreflect.
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
 		x.ValidatorTimestamp = int64(0)
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
 		x.ValidatorPowerThreshold = int64(0)
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		x.ValidatorSetHash = nil
 	default:
 		if fd.IsExtension() {
@@ -4217,13 +5181,13 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Clear(fd protoreflec
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
 		value := x.ValidatorTimestamp
 		return protoreflect.ValueOfInt64(value)
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
 		value := x.ValidatorPowerThreshold
 		return protoreflect.ValueOfInt64(value)
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		value := x.ValidatorSetHash
 		return protoreflect.ValueOfBytes(value)
 	default:
@@ -4246,11 +5210,11 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Get(descriptor proto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
 		x.ValidatorTimestamp = value.Int()
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
 		x.ValidatorPowerThreshold = value.Int()
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		x.ValidatorSetHash = value.Bytes()
 	default:
 		if fd.IsExtension() {
@@ -4272,12 +5236,12 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Set(fd protoreflect.
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorTimestamp":
-		panic(fmt.Errorf("field validatorTimestamp of message layer.bridge.BridgeValidatorSetCheckpointParams is not mutable"))
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorPowerThreshold":
-		panic(fmt.Errorf("field validatorPowerThreshold of message layer.bridge.BridgeValidatorSetCheckpointParams is not mutable"))
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorSetHash":
-		panic(fmt.Errorf("field validatorSetHash of message layer.bridge.BridgeValidatorSetCheckpointParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
+		panic(fmt.Errorf("field validator_timestamp of message layer.bridge.BridgeValidatorSetCheckpointParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
+		panic(fmt.Errorf("field validator_power_threshold of message layer.bridge.BridgeValidatorSetCheckpointParams is not mutable"))
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
+		panic(fmt.Errorf("field validator_set_hash of message layer.bridge.BridgeValidatorSetCheckpointParams is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValidatorSetCheckpointParams"))
@@ -4291,11 +5255,11 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Mutable(fd protorefl
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorTimestamp":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorPowerThreshold":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.bridge.BridgeValidatorSetCheckpointParams.validatorSetHash":
+	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
@@ -4579,14 +5543,14 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) ProtoMethods() *prot
 }
 
 var (
-	md_BridgeValidatorSetCheckpoint                     protoreflect.MessageDescriptor
-	fd_BridgeValidatorSetCheckpoint_validatorCheckpoint protoreflect.FieldDescriptor
+	md_BridgeValidatorSetCheckpoint                      protoreflect.MessageDescriptor
+	fd_BridgeValidatorSetCheckpoint_validator_checkpoint protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_BridgeValidatorSetCheckpoint = File_layer_bridge_query_proto.Messages().ByName("BridgeValidatorSetCheckpoint")
-	fd_BridgeValidatorSetCheckpoint_validatorCheckpoint = md_BridgeValidatorSetCheckpoint.Fields().ByName("validatorCheckpoint")
+	fd_BridgeValidatorSetCheckpoint_validator_checkpoint = md_BridgeValidatorSetCheckpoint.Fields().ByName("validator_checkpoint")
 }
 
 var _ protoreflect.Message = (*fastReflection_BridgeValidatorSetCheckpoint)(nil)
@@ -4598,7 +5562,7 @@ func (x *BridgeValidatorSetCheckpoint) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BridgeValidatorSetCheckpoint) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[10]
+	mi := &file_layer_bridge_query_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4656,7 +5620,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Interface() protoreflect.P
 func (x *fastReflection_BridgeValidatorSetCheckpoint) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.ValidatorCheckpoint) != 0 {
 		value := protoreflect.ValueOfBytes(x.ValidatorCheckpoint)
-		if !f(fd_BridgeValidatorSetCheckpoint_validatorCheckpoint, value) {
+		if !f(fd_BridgeValidatorSetCheckpoint_validator_checkpoint, value) {
 			return
 		}
 	}
@@ -4675,7 +5639,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Range(f func(protoreflect.
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_BridgeValidatorSetCheckpoint) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpoint.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetCheckpoint.validator_checkpoint":
 		return len(x.ValidatorCheckpoint) != 0
 	default:
 		if fd.IsExtension() {
@@ -4693,7 +5657,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Has(fd protoreflect.FieldD
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetCheckpoint) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpoint.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetCheckpoint.validator_checkpoint":
 		x.ValidatorCheckpoint = nil
 	default:
 		if fd.IsExtension() {
@@ -4711,7 +5675,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Clear(fd protoreflect.Fiel
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_BridgeValidatorSetCheckpoint) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpoint.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetCheckpoint.validator_checkpoint":
 		value := x.ValidatorCheckpoint
 		return protoreflect.ValueOfBytes(value)
 	default:
@@ -4734,7 +5698,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Get(descriptor protoreflec
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetCheckpoint) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpoint.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetCheckpoint.validator_checkpoint":
 		x.ValidatorCheckpoint = value.Bytes()
 	default:
 		if fd.IsExtension() {
@@ -4756,8 +5720,8 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Set(fd protoreflect.FieldD
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_BridgeValidatorSetCheckpoint) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpoint.validatorCheckpoint":
-		panic(fmt.Errorf("field validatorCheckpoint of message layer.bridge.BridgeValidatorSetCheckpoint is not mutable"))
+	case "layer.bridge.BridgeValidatorSetCheckpoint.validator_checkpoint":
+		panic(fmt.Errorf("field validator_checkpoint of message layer.bridge.BridgeValidatorSetCheckpoint is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValidatorSetCheckpoint"))
@@ -4771,7 +5735,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpoint) Mutable(fd protoreflect.Fi
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_BridgeValidatorSetCheckpoint) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.BridgeValidatorSetCheckpoint.validatorCheckpoint":
+	case "layer.bridge.BridgeValidatorSetCheckpoint.validator_checkpoint":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
@@ -5020,7 +5984,7 @@ func (x *QueryGetValidatorCheckpointParamsRequest) ProtoReflect() protoreflect.M
 }
 
 func (x *QueryGetValidatorCheckpointParamsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[11]
+	mi := &file_layer_bridge_query_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5405,20 +6369,20 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) ProtoMethods()
 }
 
 var (
-	md_QueryGetValidatorCheckpointParamsResponse                protoreflect.MessageDescriptor
-	fd_QueryGetValidatorCheckpointParamsResponse_checkpoint     protoreflect.FieldDescriptor
-	fd_QueryGetValidatorCheckpointParamsResponse_valsetHash     protoreflect.FieldDescriptor
-	fd_QueryGetValidatorCheckpointParamsResponse_timestamp      protoreflect.FieldDescriptor
-	fd_QueryGetValidatorCheckpointParamsResponse_powerThreshold protoreflect.FieldDescriptor
+	md_QueryGetValidatorCheckpointParamsResponse                 protoreflect.MessageDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_checkpoint      protoreflect.FieldDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_valset_hash     protoreflect.FieldDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_timestamp       protoreflect.FieldDescriptor
+	fd_QueryGetValidatorCheckpointParamsResponse_power_threshold protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetValidatorCheckpointParamsResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetValidatorCheckpointParamsResponse")
 	fd_QueryGetValidatorCheckpointParamsResponse_checkpoint = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("checkpoint")
-	fd_QueryGetValidatorCheckpointParamsResponse_valsetHash = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("valsetHash")
+	fd_QueryGetValidatorCheckpointParamsResponse_valset_hash = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("valset_hash")
 	fd_QueryGetValidatorCheckpointParamsResponse_timestamp = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("timestamp")
-	fd_QueryGetValidatorCheckpointParamsResponse_powerThreshold = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("powerThreshold")
+	fd_QueryGetValidatorCheckpointParamsResponse_power_threshold = md_QueryGetValidatorCheckpointParamsResponse.Fields().ByName("power_threshold")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetValidatorCheckpointParamsResponse)(nil)
@@ -5430,7 +6394,7 @@ func (x *QueryGetValidatorCheckpointParamsResponse) ProtoReflect() protoreflect.
 }
 
 func (x *QueryGetValidatorCheckpointParamsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[12]
+	mi := &file_layer_bridge_query_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5494,7 +6458,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Range(f func(
 	}
 	if x.ValsetHash != "" {
 		value := protoreflect.ValueOfString(x.ValsetHash)
-		if !f(fd_QueryGetValidatorCheckpointParamsResponse_valsetHash, value) {
+		if !f(fd_QueryGetValidatorCheckpointParamsResponse_valset_hash, value) {
 			return
 		}
 	}
@@ -5506,7 +6470,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Range(f func(
 	}
 	if x.PowerThreshold != int64(0) {
 		value := protoreflect.ValueOfInt64(x.PowerThreshold)
-		if !f(fd_QueryGetValidatorCheckpointParamsResponse_powerThreshold, value) {
+		if !f(fd_QueryGetValidatorCheckpointParamsResponse_power_threshold, value) {
 			return
 		}
 	}
@@ -5527,11 +6491,11 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Has(fd protor
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
 		return x.Checkpoint != ""
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		return x.ValsetHash != ""
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		return x.Timestamp != int64(0)
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
 		return x.PowerThreshold != int64(0)
 	default:
 		if fd.IsExtension() {
@@ -5551,11 +6515,11 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Clear(fd prot
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
 		x.Checkpoint = ""
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		x.ValsetHash = ""
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		x.Timestamp = int64(0)
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
 		x.PowerThreshold = int64(0)
 	default:
 		if fd.IsExtension() {
@@ -5576,13 +6540,13 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Get(descripto
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
 		value := x.Checkpoint
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		value := x.ValsetHash
 		return protoreflect.ValueOfString(value)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		value := x.Timestamp
 		return protoreflect.ValueOfInt64(value)
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
 		value := x.PowerThreshold
 		return protoreflect.ValueOfInt64(value)
 	default:
@@ -5607,11 +6571,11 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Set(fd protor
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
 		x.Checkpoint = value.Interface().(string)
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		x.ValsetHash = value.Interface().(string)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		x.Timestamp = value.Int()
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
 		x.PowerThreshold = value.Int()
 	default:
 		if fd.IsExtension() {
@@ -5635,12 +6599,12 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Mutable(fd pr
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
 		panic(fmt.Errorf("field checkpoint of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
-		panic(fmt.Errorf("field valsetHash of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
+		panic(fmt.Errorf("field valset_hash of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
-		panic(fmt.Errorf("field powerThreshold of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
+		panic(fmt.Errorf("field power_threshold of message layer.bridge.QueryGetValidatorCheckpointParamsResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
@@ -5656,11 +6620,11 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) NewField(fd p
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.checkpoint":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valsetHash":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		return protoreflect.ValueOfString("")
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.powerThreshold":
+	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
@@ -6004,7 +6968,7 @@ func (x *QueryGetValidatorTimestampByIndexRequest) ProtoReflect() protoreflect.M
 }
 
 func (x *QueryGetValidatorTimestampByIndexRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[13]
+	mi := &file_layer_bridge_query_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6408,7 +7372,7 @@ func (x *QueryGetValidatorTimestampByIndexResponse) ProtoReflect() protoreflect.
 }
 
 func (x *QueryGetValidatorTimestampByIndexResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[14]
+	mi := &file_layer_bridge_query_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6812,7 +7776,7 @@ func (x *QueryGetValsetSigsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetValsetSigsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[15]
+	mi := &file_layer_bridge_query_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7262,7 +8226,7 @@ func (x *QueryGetValsetSigsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetValsetSigsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[16]
+	mi := &file_layer_bridge_query_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7677,14 +8641,14 @@ func (x *fastReflection_QueryGetValsetSigsResponse) ProtoMethods() *protoiface.M
 }
 
 var (
-	md_QueryGetEvmAddressByValidatorAddressRequest                  protoreflect.MessageDescriptor
-	fd_QueryGetEvmAddressByValidatorAddressRequest_validatorAddress protoreflect.FieldDescriptor
+	md_QueryGetEvmAddressByValidatorAddressRequest                   protoreflect.MessageDescriptor
+	fd_QueryGetEvmAddressByValidatorAddressRequest_validator_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetEvmAddressByValidatorAddressRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetEvmAddressByValidatorAddressRequest")
-	fd_QueryGetEvmAddressByValidatorAddressRequest_validatorAddress = md_QueryGetEvmAddressByValidatorAddressRequest.Fields().ByName("validatorAddress")
+	fd_QueryGetEvmAddressByValidatorAddressRequest_validator_address = md_QueryGetEvmAddressByValidatorAddressRequest.Fields().ByName("validator_address")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetEvmAddressByValidatorAddressRequest)(nil)
@@ -7696,7 +8660,7 @@ func (x *QueryGetEvmAddressByValidatorAddressRequest) ProtoReflect() protoreflec
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[17]
+	mi := &file_layer_bridge_query_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7754,7 +8718,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Interface()
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.ValidatorAddress != "" {
 		value := protoreflect.ValueOfString(x.ValidatorAddress)
-		if !f(fd_QueryGetEvmAddressByValidatorAddressRequest_validatorAddress, value) {
+		if !f(fd_QueryGetEvmAddressByValidatorAddressRequest_validator_address, value) {
 			return
 		}
 	}
@@ -7773,7 +8737,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Range(f fun
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validatorAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validator_address":
 		return x.ValidatorAddress != ""
 	default:
 		if fd.IsExtension() {
@@ -7791,7 +8755,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Has(fd prot
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validatorAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validator_address":
 		x.ValidatorAddress = ""
 	default:
 		if fd.IsExtension() {
@@ -7809,7 +8773,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Clear(fd pr
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validatorAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validator_address":
 		value := x.ValidatorAddress
 		return protoreflect.ValueOfString(value)
 	default:
@@ -7832,7 +8796,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Get(descrip
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validatorAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validator_address":
 		x.ValidatorAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
@@ -7854,8 +8818,8 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Set(fd prot
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validatorAddress":
-		panic(fmt.Errorf("field validatorAddress of message layer.bridge.QueryGetEvmAddressByValidatorAddressRequest is not mutable"))
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validator_address":
+		panic(fmt.Errorf("field validator_address of message layer.bridge.QueryGetEvmAddressByValidatorAddressRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetEvmAddressByValidatorAddressRequest"))
@@ -7869,7 +8833,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) Mutable(fd 
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validatorAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressRequest.validator_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -8097,14 +9061,14 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressRequest) ProtoMethod
 }
 
 var (
-	md_QueryGetEvmAddressByValidatorAddressResponse            protoreflect.MessageDescriptor
-	fd_QueryGetEvmAddressByValidatorAddressResponse_evmAddress protoreflect.FieldDescriptor
+	md_QueryGetEvmAddressByValidatorAddressResponse             protoreflect.MessageDescriptor
+	fd_QueryGetEvmAddressByValidatorAddressResponse_evm_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetEvmAddressByValidatorAddressResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetEvmAddressByValidatorAddressResponse")
-	fd_QueryGetEvmAddressByValidatorAddressResponse_evmAddress = md_QueryGetEvmAddressByValidatorAddressResponse.Fields().ByName("evmAddress")
+	fd_QueryGetEvmAddressByValidatorAddressResponse_evm_address = md_QueryGetEvmAddressByValidatorAddressResponse.Fields().ByName("evm_address")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetEvmAddressByValidatorAddressResponse)(nil)
@@ -8116,7 +9080,7 @@ func (x *QueryGetEvmAddressByValidatorAddressResponse) ProtoReflect() protorefle
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[18]
+	mi := &file_layer_bridge_query_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8174,7 +9138,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Interface(
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.EvmAddress != "" {
 		value := protoreflect.ValueOfString(x.EvmAddress)
-		if !f(fd_QueryGetEvmAddressByValidatorAddressResponse_evmAddress, value) {
+		if !f(fd_QueryGetEvmAddressByValidatorAddressResponse_evm_address, value) {
 			return
 		}
 	}
@@ -8193,7 +9157,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Range(f fu
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evmAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evm_address":
 		return x.EvmAddress != ""
 	default:
 		if fd.IsExtension() {
@@ -8211,7 +9175,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Has(fd pro
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evmAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evm_address":
 		x.EvmAddress = ""
 	default:
 		if fd.IsExtension() {
@@ -8229,7 +9193,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Clear(fd p
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evmAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evm_address":
 		value := x.EvmAddress
 		return protoreflect.ValueOfString(value)
 	default:
@@ -8252,7 +9216,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Get(descri
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evmAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evm_address":
 		x.EvmAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
@@ -8274,8 +9238,8 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Set(fd pro
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evmAddress":
-		panic(fmt.Errorf("field evmAddress of message layer.bridge.QueryGetEvmAddressByValidatorAddressResponse is not mutable"))
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evm_address":
+		panic(fmt.Errorf("field evm_address of message layer.bridge.QueryGetEvmAddressByValidatorAddressResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetEvmAddressByValidatorAddressResponse"))
@@ -8289,7 +9253,7 @@ func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) Mutable(fd
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetEvmAddressByValidatorAddressResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evmAddress":
+	case "layer.bridge.QueryGetEvmAddressByValidatorAddressResponse.evm_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -8536,7 +9500,7 @@ func (x *QueryGetValsetByTimestampRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetValsetByTimestampRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[19]
+	mi := &file_layer_bridge_query_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8923,7 +9887,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) ProtoMethods() *protoi
 var _ protoreflect.List = (*_QueryGetValsetByTimestampResponse_1_list)(nil)
 
 type _QueryGetValsetByTimestampResponse_1_list struct {
-	list *[]*BridgeValidator
+	list *[]*QueryBridgeValidator
 }
 
 func (x *_QueryGetValsetByTimestampResponse_1_list) Len() int {
@@ -8939,18 +9903,18 @@ func (x *_QueryGetValsetByTimestampResponse_1_list) Get(i int) protoreflect.Valu
 
 func (x *_QueryGetValsetByTimestampResponse_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValidator)
+	concreteValue := valueUnwrapped.Interface().(*QueryBridgeValidator)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_QueryGetValsetByTimestampResponse_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValidator)
+	concreteValue := valueUnwrapped.Interface().(*QueryBridgeValidator)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_QueryGetValsetByTimestampResponse_1_list) AppendMutable() protoreflect.Value {
-	v := new(BridgeValidator)
+	v := new(QueryBridgeValidator)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -8963,7 +9927,7 @@ func (x *_QueryGetValsetByTimestampResponse_1_list) Truncate(n int) {
 }
 
 func (x *_QueryGetValsetByTimestampResponse_1_list) NewElement() protoreflect.Value {
-	v := new(BridgeValidator)
+	v := new(QueryBridgeValidator)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -8972,14 +9936,14 @@ func (x *_QueryGetValsetByTimestampResponse_1_list) IsValid() bool {
 }
 
 var (
-	md_QueryGetValsetByTimestampResponse                    protoreflect.MessageDescriptor
-	fd_QueryGetValsetByTimestampResponse_bridgeValidatorSet protoreflect.FieldDescriptor
+	md_QueryGetValsetByTimestampResponse                      protoreflect.MessageDescriptor
+	fd_QueryGetValsetByTimestampResponse_bridge_validator_set protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetValsetByTimestampResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetValsetByTimestampResponse")
-	fd_QueryGetValsetByTimestampResponse_bridgeValidatorSet = md_QueryGetValsetByTimestampResponse.Fields().ByName("bridgeValidatorSet")
+	fd_QueryGetValsetByTimestampResponse_bridge_validator_set = md_QueryGetValsetByTimestampResponse.Fields().ByName("bridge_validator_set")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetValsetByTimestampResponse)(nil)
@@ -8991,7 +9955,7 @@ func (x *QueryGetValsetByTimestampResponse) ProtoReflect() protoreflect.Message 
 }
 
 func (x *QueryGetValsetByTimestampResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[20]
+	mi := &file_layer_bridge_query_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9049,7 +10013,7 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Interface() protorefl
 func (x *fastReflection_QueryGetValsetByTimestampResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.BridgeValidatorSet) != 0 {
 		value := protoreflect.ValueOfList(&_QueryGetValsetByTimestampResponse_1_list{list: &x.BridgeValidatorSet})
-		if !f(fd_QueryGetValsetByTimestampResponse_bridgeValidatorSet, value) {
+		if !f(fd_QueryGetValsetByTimestampResponse_bridge_validator_set, value) {
 			return
 		}
 	}
@@ -9068,7 +10032,7 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Range(f func(protoref
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetValsetByTimestampResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set":
 		return len(x.BridgeValidatorSet) != 0
 	default:
 		if fd.IsExtension() {
@@ -9086,7 +10050,7 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Has(fd protoreflect.F
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetValsetByTimestampResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set":
 		x.BridgeValidatorSet = nil
 	default:
 		if fd.IsExtension() {
@@ -9104,7 +10068,7 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Clear(fd protoreflect
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetValsetByTimestampResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set":
 		if len(x.BridgeValidatorSet) == 0 {
 			return protoreflect.ValueOfList(&_QueryGetValsetByTimestampResponse_1_list{})
 		}
@@ -9130,7 +10094,7 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Get(descriptor protor
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetValsetByTimestampResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set":
 		lv := value.List()
 		clv := lv.(*_QueryGetValsetByTimestampResponse_1_list)
 		x.BridgeValidatorSet = *clv.list
@@ -9154,9 +10118,9 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Set(fd protoreflect.F
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetValsetByTimestampResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet":
+	case "layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set":
 		if x.BridgeValidatorSet == nil {
-			x.BridgeValidatorSet = []*BridgeValidator{}
+			x.BridgeValidatorSet = []*QueryBridgeValidator{}
 		}
 		value := &_QueryGetValsetByTimestampResponse_1_list{list: &x.BridgeValidatorSet}
 		return protoreflect.ValueOfList(value)
@@ -9173,8 +10137,8 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) Mutable(fd protorefle
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetValsetByTimestampResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet":
-		list := []*BridgeValidator{}
+	case "layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set":
+		list := []*QueryBridgeValidator{}
 		return protoreflect.ValueOfList(&_QueryGetValsetByTimestampResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -9374,7 +10338,7 @@ func (x *fastReflection_QueryGetValsetByTimestampResponse) ProtoMethods() *proto
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.BridgeValidatorSet = append(x.BridgeValidatorSet, &BridgeValidator{})
+				x.BridgeValidatorSet = append(x.BridgeValidatorSet, &QueryBridgeValidator{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BridgeValidatorSet[len(x.BridgeValidatorSet)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -9434,7 +10398,7 @@ func (x *QueryGetCurrentAggregateReportRequest) ProtoReflect() protoreflect.Mess
 }
 
 func (x *QueryGetCurrentAggregateReportRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[21]
+	mi := &file_layer_bridge_query_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9856,7 +10820,7 @@ func (x *QueryGetCurrentAggregateReportResponse) ProtoReflect() protoreflect.Mes
 }
 
 func (x *QueryGetCurrentAggregateReportResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[22]
+	mi := &file_layer_bridge_query_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10374,7 +11338,7 @@ var (
 	fd_Aggregate_aggregateValue       protoreflect.FieldDescriptor
 	fd_Aggregate_aggregateReporter    protoreflect.FieldDescriptor
 	fd_Aggregate_reporterPower        protoreflect.FieldDescriptor
-	fd_Aggregate_standardDeviation    protoreflect.FieldDescriptor
+	fd_Aggregate_standard_deviation   protoreflect.FieldDescriptor
 	fd_Aggregate_reporters            protoreflect.FieldDescriptor
 	fd_Aggregate_flagged              protoreflect.FieldDescriptor
 	fd_Aggregate_nonce                protoreflect.FieldDescriptor
@@ -10389,7 +11353,7 @@ func init() {
 	fd_Aggregate_aggregateValue = md_Aggregate.Fields().ByName("aggregateValue")
 	fd_Aggregate_aggregateReporter = md_Aggregate.Fields().ByName("aggregateReporter")
 	fd_Aggregate_reporterPower = md_Aggregate.Fields().ByName("reporterPower")
-	fd_Aggregate_standardDeviation = md_Aggregate.Fields().ByName("standardDeviation")
+	fd_Aggregate_standard_deviation = md_Aggregate.Fields().ByName("standard_deviation")
 	fd_Aggregate_reporters = md_Aggregate.Fields().ByName("reporters")
 	fd_Aggregate_flagged = md_Aggregate.Fields().ByName("flagged")
 	fd_Aggregate_nonce = md_Aggregate.Fields().ByName("nonce")
@@ -10406,7 +11370,7 @@ func (x *Aggregate) ProtoReflect() protoreflect.Message {
 }
 
 func (x *Aggregate) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[23]
+	mi := &file_layer_bridge_query_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10488,7 +11452,7 @@ func (x *fastReflection_Aggregate) Range(f func(protoreflect.FieldDescriptor, pr
 	}
 	if x.StandardDeviation != float64(0) || math.Signbit(x.StandardDeviation) {
 		value := protoreflect.ValueOfFloat64(x.StandardDeviation)
-		if !f(fd_Aggregate_standardDeviation, value) {
+		if !f(fd_Aggregate_standard_deviation, value) {
 			return
 		}
 	}
@@ -10545,7 +11509,7 @@ func (x *fastReflection_Aggregate) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.AggregateReporter != ""
 	case "layer.bridge.Aggregate.reporterPower":
 		return x.ReporterPower != int64(0)
-	case "layer.bridge.Aggregate.standardDeviation":
+	case "layer.bridge.Aggregate.standard_deviation":
 		return x.StandardDeviation != float64(0) || math.Signbit(x.StandardDeviation)
 	case "layer.bridge.Aggregate.reporters":
 		return len(x.Reporters) != 0
@@ -10581,7 +11545,7 @@ func (x *fastReflection_Aggregate) Clear(fd protoreflect.FieldDescriptor) {
 		x.AggregateReporter = ""
 	case "layer.bridge.Aggregate.reporterPower":
 		x.ReporterPower = int64(0)
-	case "layer.bridge.Aggregate.standardDeviation":
+	case "layer.bridge.Aggregate.standard_deviation":
 		x.StandardDeviation = float64(0)
 	case "layer.bridge.Aggregate.reporters":
 		x.Reporters = nil
@@ -10621,7 +11585,7 @@ func (x *fastReflection_Aggregate) Get(descriptor protoreflect.FieldDescriptor) 
 	case "layer.bridge.Aggregate.reporterPower":
 		value := x.ReporterPower
 		return protoreflect.ValueOfInt64(value)
-	case "layer.bridge.Aggregate.standardDeviation":
+	case "layer.bridge.Aggregate.standard_deviation":
 		value := x.StandardDeviation
 		return protoreflect.ValueOfFloat64(value)
 	case "layer.bridge.Aggregate.reporters":
@@ -10670,7 +11634,7 @@ func (x *fastReflection_Aggregate) Set(fd protoreflect.FieldDescriptor, value pr
 		x.AggregateReporter = value.Interface().(string)
 	case "layer.bridge.Aggregate.reporterPower":
 		x.ReporterPower = value.Int()
-	case "layer.bridge.Aggregate.standardDeviation":
+	case "layer.bridge.Aggregate.standard_deviation":
 		x.StandardDeviation = value.Float()
 	case "layer.bridge.Aggregate.reporters":
 		lv := value.List()
@@ -10718,8 +11682,8 @@ func (x *fastReflection_Aggregate) Mutable(fd protoreflect.FieldDescriptor) prot
 		panic(fmt.Errorf("field aggregateReporter of message layer.bridge.Aggregate is not mutable"))
 	case "layer.bridge.Aggregate.reporterPower":
 		panic(fmt.Errorf("field reporterPower of message layer.bridge.Aggregate is not mutable"))
-	case "layer.bridge.Aggregate.standardDeviation":
-		panic(fmt.Errorf("field standardDeviation of message layer.bridge.Aggregate is not mutable"))
+	case "layer.bridge.Aggregate.standard_deviation":
+		panic(fmt.Errorf("field standard_deviation of message layer.bridge.Aggregate is not mutable"))
 	case "layer.bridge.Aggregate.flagged":
 		panic(fmt.Errorf("field flagged of message layer.bridge.Aggregate is not mutable"))
 	case "layer.bridge.Aggregate.nonce":
@@ -10749,7 +11713,7 @@ func (x *fastReflection_Aggregate) NewField(fd protoreflect.FieldDescriptor) pro
 		return protoreflect.ValueOfString("")
 	case "layer.bridge.Aggregate.reporterPower":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "layer.bridge.Aggregate.standardDeviation":
+	case "layer.bridge.Aggregate.standard_deviation":
 		return protoreflect.ValueOfFloat64(float64(0))
 	case "layer.bridge.Aggregate.reporters":
 		list := []*AggregateReporter{}
@@ -11314,7 +12278,7 @@ func (x *AggregateReporter) ProtoReflect() protoreflect.Message {
 }
 
 func (x *AggregateReporter) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[24]
+	mi := &file_layer_bridge_query_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11782,7 +12746,7 @@ func (x *QueryGetDataBeforeRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetDataBeforeRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[25]
+	mi := &file_layer_bridge_query_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11838,8 +12802,8 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Interface() protoreflect.Prot
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetDataBeforeRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.QueryId) != 0 {
-		value := protoreflect.ValueOfBytes(x.QueryId)
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
 		if !f(fd_QueryGetDataBeforeRequest_query_id, value) {
 			return
 		}
@@ -11866,7 +12830,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Range(f func(protoreflect.Fie
 func (x *fastReflection_QueryGetDataBeforeRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetDataBeforeRequest.query_id":
-		return len(x.QueryId) != 0
+		return x.QueryId != ""
 	case "layer.bridge.QueryGetDataBeforeRequest.timestamp":
 		return x.Timestamp != int64(0)
 	default:
@@ -11886,7 +12850,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Has(fd protoreflect.FieldDesc
 func (x *fastReflection_QueryGetDataBeforeRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetDataBeforeRequest.query_id":
-		x.QueryId = nil
+		x.QueryId = ""
 	case "layer.bridge.QueryGetDataBeforeRequest.timestamp":
 		x.Timestamp = int64(0)
 	default:
@@ -11907,7 +12871,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Get(descriptor protoreflect.F
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetDataBeforeRequest.query_id":
 		value := x.QueryId
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	case "layer.bridge.QueryGetDataBeforeRequest.timestamp":
 		value := x.Timestamp
 		return protoreflect.ValueOfInt64(value)
@@ -11932,7 +12896,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Get(descriptor protoreflect.F
 func (x *fastReflection_QueryGetDataBeforeRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetDataBeforeRequest.query_id":
-		x.QueryId = value.Bytes()
+		x.QueryId = value.Interface().(string)
 	case "layer.bridge.QueryGetDataBeforeRequest.timestamp":
 		x.Timestamp = value.Int()
 	default:
@@ -11973,7 +12937,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Mutable(fd protoreflect.Field
 func (x *fastReflection_QueryGetDataBeforeRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetDataBeforeRequest.query_id":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	case "layer.bridge.QueryGetDataBeforeRequest.timestamp":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
@@ -12146,7 +13110,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) ProtoMethods() *protoiface.Me
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -12156,25 +13120,23 @@ func (x *fastReflection_QueryGetDataBeforeRequest) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
-				if x.QueryId == nil {
-					x.QueryId = []byte{}
-				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 0 {
@@ -12252,7 +13214,7 @@ func (x *QueryGetDataBeforeResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetDataBeforeResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[26]
+	mi := &file_layer_bridge_query_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12715,14 +13677,14 @@ func (x *fastReflection_QueryGetDataBeforeResponse) ProtoMethods() *protoiface.M
 
 var (
 	md_QueryGetSnapshotsByReportRequest           protoreflect.MessageDescriptor
-	fd_QueryGetSnapshotsByReportRequest_queryId   protoreflect.FieldDescriptor
+	fd_QueryGetSnapshotsByReportRequest_query_id  protoreflect.FieldDescriptor
 	fd_QueryGetSnapshotsByReportRequest_timestamp protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetSnapshotsByReportRequest = File_layer_bridge_query_proto.Messages().ByName("QueryGetSnapshotsByReportRequest")
-	fd_QueryGetSnapshotsByReportRequest_queryId = md_QueryGetSnapshotsByReportRequest.Fields().ByName("queryId")
+	fd_QueryGetSnapshotsByReportRequest_query_id = md_QueryGetSnapshotsByReportRequest.Fields().ByName("query_id")
 	fd_QueryGetSnapshotsByReportRequest_timestamp = md_QueryGetSnapshotsByReportRequest.Fields().ByName("timestamp")
 }
 
@@ -12735,7 +13697,7 @@ func (x *QueryGetSnapshotsByReportRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryGetSnapshotsByReportRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[27]
+	mi := &file_layer_bridge_query_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12793,7 +13755,7 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Interface() protorefle
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.QueryId != "" {
 		value := protoreflect.ValueOfString(x.QueryId)
-		if !f(fd_QueryGetSnapshotsByReportRequest_queryId, value) {
+		if !f(fd_QueryGetSnapshotsByReportRequest_query_id, value) {
 			return
 		}
 	}
@@ -12818,7 +13780,7 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Range(f func(protorefl
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.query_id":
 		return x.QueryId != ""
 	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
 		return x.Timestamp != ""
@@ -12838,7 +13800,7 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Has(fd protoreflect.Fi
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.query_id":
 		x.QueryId = ""
 	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
 		x.Timestamp = ""
@@ -12858,7 +13820,7 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Clear(fd protoreflect.
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.query_id":
 		value := x.QueryId
 		return protoreflect.ValueOfString(value)
 	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
@@ -12884,7 +13846,7 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Get(descriptor protore
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.query_id":
 		x.QueryId = value.Interface().(string)
 	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
 		x.Timestamp = value.Interface().(string)
@@ -12908,8 +13870,8 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Set(fd protoreflect.Fi
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
-		panic(fmt.Errorf("field queryId of message layer.bridge.QueryGetSnapshotsByReportRequest is not mutable"))
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.query_id":
+		panic(fmt.Errorf("field query_id of message layer.bridge.QueryGetSnapshotsByReportRequest is not mutable"))
 	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
 		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetSnapshotsByReportRequest is not mutable"))
 	default:
@@ -12925,7 +13887,7 @@ func (x *fastReflection_QueryGetSnapshotsByReportRequest) Mutable(fd protoreflec
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetSnapshotsByReportRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetSnapshotsByReportRequest.queryId":
+	case "layer.bridge.QueryGetSnapshotsByReportRequest.query_id":
 		return protoreflect.ValueOfString("")
 	case "layer.bridge.QueryGetSnapshotsByReportRequest.timestamp":
 		return protoreflect.ValueOfString("")
@@ -13263,7 +14225,7 @@ func (x *QueryGetSnapshotsByReportResponse) ProtoReflect() protoreflect.Message 
 }
 
 func (x *QueryGetSnapshotsByReportResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[28]
+	mi := &file_layer_bridge_query_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13697,7 +14659,7 @@ func (x *QueryGetAttestationDataBySnapshotRequest) ProtoReflect() protoreflect.M
 }
 
 func (x *QueryGetAttestationDataBySnapshotRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[29]
+	mi := &file_layer_bridge_query_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14098,28 +15060,28 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotRequest) ProtoMethods()
 }
 
 var (
-	md_QueryGetAttestationDataBySnapshotResponse                         protoreflect.MessageDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_queryId                 protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_timestamp               protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_aggregateValue          protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_aggregatePower          protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_checkpoint              protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_attestationTimestamp    protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_previousReportTimestamp protoreflect.FieldDescriptor
-	fd_QueryGetAttestationDataBySnapshotResponse_nextReportTimestamp     protoreflect.FieldDescriptor
+	md_QueryGetAttestationDataBySnapshotResponse                           protoreflect.MessageDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_query_id                  protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_timestamp                 protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregate_value           protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregate_power           protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_checkpoint                protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_attestation_timestamp     protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_previous_report_timestamp protoreflect.FieldDescriptor
+	fd_QueryGetAttestationDataBySnapshotResponse_next_report_timestamp     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_query_proto_init()
 	md_QueryGetAttestationDataBySnapshotResponse = File_layer_bridge_query_proto.Messages().ByName("QueryGetAttestationDataBySnapshotResponse")
-	fd_QueryGetAttestationDataBySnapshotResponse_queryId = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("queryId")
+	fd_QueryGetAttestationDataBySnapshotResponse_query_id = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("query_id")
 	fd_QueryGetAttestationDataBySnapshotResponse_timestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("timestamp")
-	fd_QueryGetAttestationDataBySnapshotResponse_aggregateValue = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("aggregateValue")
-	fd_QueryGetAttestationDataBySnapshotResponse_aggregatePower = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("aggregatePower")
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregate_value = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("aggregate_value")
+	fd_QueryGetAttestationDataBySnapshotResponse_aggregate_power = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("aggregate_power")
 	fd_QueryGetAttestationDataBySnapshotResponse_checkpoint = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("checkpoint")
-	fd_QueryGetAttestationDataBySnapshotResponse_attestationTimestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("attestationTimestamp")
-	fd_QueryGetAttestationDataBySnapshotResponse_previousReportTimestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("previousReportTimestamp")
-	fd_QueryGetAttestationDataBySnapshotResponse_nextReportTimestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("nextReportTimestamp")
+	fd_QueryGetAttestationDataBySnapshotResponse_attestation_timestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("attestation_timestamp")
+	fd_QueryGetAttestationDataBySnapshotResponse_previous_report_timestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("previous_report_timestamp")
+	fd_QueryGetAttestationDataBySnapshotResponse_next_report_timestamp = md_QueryGetAttestationDataBySnapshotResponse.Fields().ByName("next_report_timestamp")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryGetAttestationDataBySnapshotResponse)(nil)
@@ -14131,7 +15093,7 @@ func (x *QueryGetAttestationDataBySnapshotResponse) ProtoReflect() protoreflect.
 }
 
 func (x *QueryGetAttestationDataBySnapshotResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[30]
+	mi := &file_layer_bridge_query_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14189,7 +15151,7 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Interface() p
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.QueryId != "" {
 		value := protoreflect.ValueOfString(x.QueryId)
-		if !f(fd_QueryGetAttestationDataBySnapshotResponse_queryId, value) {
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_query_id, value) {
 			return
 		}
 	}
@@ -14201,13 +15163,13 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Range(f func(
 	}
 	if x.AggregateValue != "" {
 		value := protoreflect.ValueOfString(x.AggregateValue)
-		if !f(fd_QueryGetAttestationDataBySnapshotResponse_aggregateValue, value) {
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_aggregate_value, value) {
 			return
 		}
 	}
 	if x.AggregatePower != "" {
 		value := protoreflect.ValueOfString(x.AggregatePower)
-		if !f(fd_QueryGetAttestationDataBySnapshotResponse_aggregatePower, value) {
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_aggregate_power, value) {
 			return
 		}
 	}
@@ -14219,19 +15181,19 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Range(f func(
 	}
 	if x.AttestationTimestamp != "" {
 		value := protoreflect.ValueOfString(x.AttestationTimestamp)
-		if !f(fd_QueryGetAttestationDataBySnapshotResponse_attestationTimestamp, value) {
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_attestation_timestamp, value) {
 			return
 		}
 	}
 	if x.PreviousReportTimestamp != "" {
 		value := protoreflect.ValueOfString(x.PreviousReportTimestamp)
-		if !f(fd_QueryGetAttestationDataBySnapshotResponse_previousReportTimestamp, value) {
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_previous_report_timestamp, value) {
 			return
 		}
 	}
 	if x.NextReportTimestamp != "" {
 		value := protoreflect.ValueOfString(x.NextReportTimestamp)
-		if !f(fd_QueryGetAttestationDataBySnapshotResponse_nextReportTimestamp, value) {
+		if !f(fd_QueryGetAttestationDataBySnapshotResponse_next_report_timestamp, value) {
 			return
 		}
 	}
@@ -14250,21 +15212,21 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Range(f func(
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.query_id":
 		return x.QueryId != ""
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
 		return x.Timestamp != ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_value":
 		return x.AggregateValue != ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_power":
 		return x.AggregatePower != ""
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
 		return x.Checkpoint != ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestation_timestamp":
 		return x.AttestationTimestamp != ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previous_report_timestamp":
 		return x.PreviousReportTimestamp != ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.next_report_timestamp":
 		return x.NextReportTimestamp != ""
 	default:
 		if fd.IsExtension() {
@@ -14282,21 +15244,21 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Has(fd protor
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.query_id":
 		x.QueryId = ""
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
 		x.Timestamp = ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_value":
 		x.AggregateValue = ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_power":
 		x.AggregatePower = ""
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
 		x.Checkpoint = ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestation_timestamp":
 		x.AttestationTimestamp = ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previous_report_timestamp":
 		x.PreviousReportTimestamp = ""
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.next_report_timestamp":
 		x.NextReportTimestamp = ""
 	default:
 		if fd.IsExtension() {
@@ -14314,28 +15276,28 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Clear(fd prot
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.query_id":
 		value := x.QueryId
 		return protoreflect.ValueOfString(value)
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
 		value := x.Timestamp
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_value":
 		value := x.AggregateValue
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_power":
 		value := x.AggregatePower
 		return protoreflect.ValueOfString(value)
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
 		value := x.Checkpoint
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestation_timestamp":
 		value := x.AttestationTimestamp
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previous_report_timestamp":
 		value := x.PreviousReportTimestamp
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.next_report_timestamp":
 		value := x.NextReportTimestamp
 		return protoreflect.ValueOfString(value)
 	default:
@@ -14358,21 +15320,21 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Get(descripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.query_id":
 		x.QueryId = value.Interface().(string)
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
 		x.Timestamp = value.Interface().(string)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_value":
 		x.AggregateValue = value.Interface().(string)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_power":
 		x.AggregatePower = value.Interface().(string)
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
 		x.Checkpoint = value.Interface().(string)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestation_timestamp":
 		x.AttestationTimestamp = value.Interface().(string)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previous_report_timestamp":
 		x.PreviousReportTimestamp = value.Interface().(string)
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.next_report_timestamp":
 		x.NextReportTimestamp = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
@@ -14394,22 +15356,22 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Set(fd protor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
-		panic(fmt.Errorf("field queryId of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.query_id":
+		panic(fmt.Errorf("field query_id of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
 		panic(fmt.Errorf("field timestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
-		panic(fmt.Errorf("field aggregateValue of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
-		panic(fmt.Errorf("field aggregatePower of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_value":
+		panic(fmt.Errorf("field aggregate_value of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_power":
+		panic(fmt.Errorf("field aggregate_power of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
 		panic(fmt.Errorf("field checkpoint of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
-		panic(fmt.Errorf("field attestationTimestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
-		panic(fmt.Errorf("field previousReportTimestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
-		panic(fmt.Errorf("field nextReportTimestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestation_timestamp":
+		panic(fmt.Errorf("field attestation_timestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previous_report_timestamp":
+		panic(fmt.Errorf("field previous_report_timestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.next_report_timestamp":
+		panic(fmt.Errorf("field next_report_timestamp of message layer.bridge.QueryGetAttestationDataBySnapshotResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetAttestationDataBySnapshotResponse"))
@@ -14423,21 +15385,21 @@ func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) Mutable(fd pr
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryGetAttestationDataBySnapshotResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.queryId":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.query_id":
 		return protoreflect.ValueOfString("")
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.timestamp":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregateValue":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_value":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregatePower":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.aggregate_power":
 		return protoreflect.ValueOfString("")
 	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.checkpoint":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestationTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.attestation_timestamp":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previousReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.previous_report_timestamp":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.nextReportTimestamp":
+	case "layer.bridge.QueryGetAttestationDataBySnapshotResponse.next_report_timestamp":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -14985,7 +15947,7 @@ func (x *QueryGetAttestationsBySnapshotRequest) ProtoReflect() protoreflect.Mess
 }
 
 func (x *QueryGetAttestationsBySnapshotRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[31]
+	mi := &file_layer_bridge_query_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15451,7 +16413,7 @@ func (x *QueryGetAttestationsBySnapshotResponse) ProtoReflect() protoreflect.Mes
 }
 
 func (x *QueryGetAttestationsBySnapshotResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_query_proto_msgTypes[32]
+	mi := &file_layer_bridge_query_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15973,7 +16935,7 @@ type QueryGetEvmValidatorsResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BridgeValidatorSet []*BridgeValidator `protobuf:"bytes,1,rep,name=bridgeValidatorSet,proto3" json:"bridgeValidatorSet,omitempty"`
+	BridgeValidatorSet []*QueryBridgeValidator `protobuf:"bytes,1,rep,name=bridge_validator_set,json=bridgeValidatorSet,proto3" json:"bridge_validator_set,omitempty"`
 }
 
 func (x *QueryGetEvmValidatorsResponse) Reset() {
@@ -15996,7 +16958,7 @@ func (*QueryGetEvmValidatorsResponse) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *QueryGetEvmValidatorsResponse) GetBridgeValidatorSet() []*BridgeValidator {
+func (x *QueryGetEvmValidatorsResponse) GetBridgeValidatorSet() []*QueryBridgeValidator {
 	if x != nil {
 		return x.BridgeValidatorSet
 	}
@@ -16034,7 +16996,7 @@ type QueryGetValidatorCheckpointResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorCheckpoint string `protobuf:"bytes,1,opt,name=validatorCheckpoint,proto3" json:"validatorCheckpoint,omitempty"`
+	ValidatorCheckpoint string `protobuf:"bytes,1,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
 }
 
 func (x *QueryGetValidatorCheckpointResponse) Reset() {
@@ -16064,7 +17026,7 @@ func (x *QueryGetValidatorCheckpointResponse) GetValidatorCheckpoint() string {
 	return ""
 }
 
-type BridgeValidator struct {
+type QueryBridgeValidator struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -16073,10 +17035,88 @@ type BridgeValidator struct {
 	Power           uint64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
 }
 
+func (x *QueryBridgeValidator) Reset() {
+	*x = QueryBridgeValidator{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryBridgeValidator) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryBridgeValidator) ProtoMessage() {}
+
+// Deprecated: Use QueryBridgeValidator.ProtoReflect.Descriptor instead.
+func (*QueryBridgeValidator) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *QueryBridgeValidator) GetEthereumAddress() string {
+	if x != nil {
+		return x.EthereumAddress
+	}
+	return ""
+}
+
+func (x *QueryBridgeValidator) GetPower() uint64 {
+	if x != nil {
+		return x.Power
+	}
+	return 0
+}
+
+type QueryBridgeValidatorSet struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	BridgeValidatorSet []*QueryBridgeValidator `protobuf:"bytes,1,rep,name=bridge_validator_set,json=bridgeValidatorSet,proto3" json:"bridge_validator_set,omitempty"`
+}
+
+func (x *QueryBridgeValidatorSet) Reset() {
+	*x = QueryBridgeValidatorSet{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_query_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryBridgeValidatorSet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryBridgeValidatorSet) ProtoMessage() {}
+
+// Deprecated: Use QueryBridgeValidatorSet.ProtoReflect.Descriptor instead.
+func (*QueryBridgeValidatorSet) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *QueryBridgeValidatorSet) GetBridgeValidatorSet() []*QueryBridgeValidator {
+	if x != nil {
+		return x.BridgeValidatorSet
+	}
+	return nil
+}
+
+type BridgeValidator struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	EthereumAddress []byte `protobuf:"bytes,1,opt,name=ethereumAddress,proto3" json:"ethereumAddress,omitempty"`
+	Power           uint64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+}
+
 func (x *BridgeValidator) Reset() {
 	*x = BridgeValidator{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[6]
+		mi := &file_layer_bridge_query_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16090,14 +17130,14 @@ func (*BridgeValidator) ProtoMessage() {}
 
 // Deprecated: Use BridgeValidator.ProtoReflect.Descriptor instead.
 func (*BridgeValidator) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{6}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *BridgeValidator) GetEthereumAddress() string {
+func (x *BridgeValidator) GetEthereumAddress() []byte {
 	if x != nil {
 		return x.EthereumAddress
 	}
-	return ""
+	return nil
 }
 
 func (x *BridgeValidator) GetPower() uint64 {
@@ -16112,13 +17152,13 @@ type BridgeValidatorSet struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BridgeValidatorSet []*BridgeValidator `protobuf:"bytes,1,rep,name=bridgeValidatorSet,proto3" json:"bridgeValidatorSet,omitempty"`
+	BridgeValidatorSet []*BridgeValidator `protobuf:"bytes,1,rep,name=bridge_validator_set,json=bridgeValidatorSet,proto3" json:"bridge_validator_set,omitempty"`
 }
 
 func (x *BridgeValidatorSet) Reset() {
 	*x = BridgeValidatorSet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[7]
+		mi := &file_layer_bridge_query_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16132,7 +17172,7 @@ func (*BridgeValidatorSet) ProtoMessage() {}
 
 // Deprecated: Use BridgeValidatorSet.ProtoReflect.Descriptor instead.
 func (*BridgeValidatorSet) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{7}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *BridgeValidatorSet) GetBridgeValidatorSet() []*BridgeValidator {
@@ -16147,17 +17187,17 @@ type BridgeValidatorSetParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BridgeValidatorSet      *BridgeValidatorSet `protobuf:"bytes,1,opt,name=bridgeValidatorSet,proto3" json:"bridgeValidatorSet,omitempty"`
-	ValidatorTimestamp      int64               `protobuf:"varint,2,opt,name=validatorTimestamp,proto3" json:"validatorTimestamp,omitempty"`
-	ValidatorPowerThreshold int64               `protobuf:"varint,3,opt,name=validatorPowerThreshold,proto3" json:"validatorPowerThreshold,omitempty"`
-	ValidatorSetHash        []byte              `protobuf:"bytes,4,opt,name=validatorSetHash,proto3" json:"validatorSetHash,omitempty"`
-	ValidatorCheckpoint     []byte              `protobuf:"bytes,5,opt,name=validatorCheckpoint,proto3" json:"validatorCheckpoint,omitempty"`
+	BridgeValidatorSet      *BridgeValidatorSet `protobuf:"bytes,1,opt,name=bridge_validator_set,json=bridgeValidatorSet,proto3" json:"bridge_validator_set,omitempty"`
+	ValidatorTimestamp      int64               `protobuf:"varint,2,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
+	ValidatorPowerThreshold int64               `protobuf:"varint,3,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
+	ValidatorSetHash        []byte              `protobuf:"bytes,4,opt,name=validator_set_hash,json=validatorSetHash,proto3" json:"validator_set_hash,omitempty"`
+	ValidatorCheckpoint     []byte              `protobuf:"bytes,5,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
 }
 
 func (x *BridgeValidatorSetParams) Reset() {
 	*x = BridgeValidatorSetParams{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[8]
+		mi := &file_layer_bridge_query_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16171,7 +17211,7 @@ func (*BridgeValidatorSetParams) ProtoMessage() {}
 
 // Deprecated: Use BridgeValidatorSetParams.ProtoReflect.Descriptor instead.
 func (*BridgeValidatorSetParams) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{8}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *BridgeValidatorSetParams) GetBridgeValidatorSet() *BridgeValidatorSet {
@@ -16214,15 +17254,15 @@ type BridgeValidatorSetCheckpointParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorTimestamp      int64  `protobuf:"varint,1,opt,name=validatorTimestamp,proto3" json:"validatorTimestamp,omitempty"`
-	ValidatorPowerThreshold int64  `protobuf:"varint,2,opt,name=validatorPowerThreshold,proto3" json:"validatorPowerThreshold,omitempty"`
-	ValidatorSetHash        []byte `protobuf:"bytes,3,opt,name=validatorSetHash,proto3" json:"validatorSetHash,omitempty"`
+	ValidatorTimestamp      int64  `protobuf:"varint,1,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
+	ValidatorPowerThreshold int64  `protobuf:"varint,2,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
+	ValidatorSetHash        []byte `protobuf:"bytes,3,opt,name=validator_set_hash,json=validatorSetHash,proto3" json:"validator_set_hash,omitempty"`
 }
 
 func (x *BridgeValidatorSetCheckpointParams) Reset() {
 	*x = BridgeValidatorSetCheckpointParams{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[9]
+		mi := &file_layer_bridge_query_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16236,7 +17276,7 @@ func (*BridgeValidatorSetCheckpointParams) ProtoMessage() {}
 
 // Deprecated: Use BridgeValidatorSetCheckpointParams.ProtoReflect.Descriptor instead.
 func (*BridgeValidatorSetCheckpointParams) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{9}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *BridgeValidatorSetCheckpointParams) GetValidatorTimestamp() int64 {
@@ -16265,13 +17305,13 @@ type BridgeValidatorSetCheckpoint struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorCheckpoint []byte `protobuf:"bytes,1,opt,name=validatorCheckpoint,proto3" json:"validatorCheckpoint,omitempty"`
+	ValidatorCheckpoint []byte `protobuf:"bytes,1,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
 }
 
 func (x *BridgeValidatorSetCheckpoint) Reset() {
 	*x = BridgeValidatorSetCheckpoint{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[10]
+		mi := &file_layer_bridge_query_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16285,7 +17325,7 @@ func (*BridgeValidatorSetCheckpoint) ProtoMessage() {}
 
 // Deprecated: Use BridgeValidatorSetCheckpoint.ProtoReflect.Descriptor instead.
 func (*BridgeValidatorSetCheckpoint) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{10}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *BridgeValidatorSetCheckpoint) GetValidatorCheckpoint() []byte {
@@ -16306,7 +17346,7 @@ type QueryGetValidatorCheckpointParamsRequest struct {
 func (x *QueryGetValidatorCheckpointParamsRequest) Reset() {
 	*x = QueryGetValidatorCheckpointParamsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[11]
+		mi := &file_layer_bridge_query_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16320,7 +17360,7 @@ func (*QueryGetValidatorCheckpointParamsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValidatorCheckpointParamsRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetValidatorCheckpointParamsRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{11}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *QueryGetValidatorCheckpointParamsRequest) GetTimestamp() int64 {
@@ -16336,15 +17376,15 @@ type QueryGetValidatorCheckpointParamsResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	Checkpoint     string `protobuf:"bytes,1,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
-	ValsetHash     string `protobuf:"bytes,2,opt,name=valsetHash,proto3" json:"valsetHash,omitempty"`
+	ValsetHash     string `protobuf:"bytes,2,opt,name=valset_hash,json=valsetHash,proto3" json:"valset_hash,omitempty"`
 	Timestamp      int64  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	PowerThreshold int64  `protobuf:"varint,4,opt,name=powerThreshold,proto3" json:"powerThreshold,omitempty"`
+	PowerThreshold int64  `protobuf:"varint,4,opt,name=power_threshold,json=powerThreshold,proto3" json:"power_threshold,omitempty"`
 }
 
 func (x *QueryGetValidatorCheckpointParamsResponse) Reset() {
 	*x = QueryGetValidatorCheckpointParamsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[12]
+		mi := &file_layer_bridge_query_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16358,7 +17398,7 @@ func (*QueryGetValidatorCheckpointParamsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValidatorCheckpointParamsResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetValidatorCheckpointParamsResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{12}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *QueryGetValidatorCheckpointParamsResponse) GetCheckpoint() string {
@@ -16400,7 +17440,7 @@ type QueryGetValidatorTimestampByIndexRequest struct {
 func (x *QueryGetValidatorTimestampByIndexRequest) Reset() {
 	*x = QueryGetValidatorTimestampByIndexRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[13]
+		mi := &file_layer_bridge_query_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16414,7 +17454,7 @@ func (*QueryGetValidatorTimestampByIndexRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValidatorTimestampByIndexRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetValidatorTimestampByIndexRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{13}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *QueryGetValidatorTimestampByIndexRequest) GetIndex() int64 {
@@ -16435,7 +17475,7 @@ type QueryGetValidatorTimestampByIndexResponse struct {
 func (x *QueryGetValidatorTimestampByIndexResponse) Reset() {
 	*x = QueryGetValidatorTimestampByIndexResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[14]
+		mi := &file_layer_bridge_query_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16449,7 +17489,7 @@ func (*QueryGetValidatorTimestampByIndexResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValidatorTimestampByIndexResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetValidatorTimestampByIndexResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{14}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *QueryGetValidatorTimestampByIndexResponse) GetTimestamp() int64 {
@@ -16470,7 +17510,7 @@ type QueryGetValsetSigsRequest struct {
 func (x *QueryGetValsetSigsRequest) Reset() {
 	*x = QueryGetValsetSigsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[15]
+		mi := &file_layer_bridge_query_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16484,7 +17524,7 @@ func (*QueryGetValsetSigsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValsetSigsRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetValsetSigsRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{15}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *QueryGetValsetSigsRequest) GetTimestamp() int64 {
@@ -16505,7 +17545,7 @@ type QueryGetValsetSigsResponse struct {
 func (x *QueryGetValsetSigsResponse) Reset() {
 	*x = QueryGetValsetSigsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[16]
+		mi := &file_layer_bridge_query_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16519,7 +17559,7 @@ func (*QueryGetValsetSigsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValsetSigsResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetValsetSigsResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{16}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *QueryGetValsetSigsResponse) GetSignatures() []string {
@@ -16534,13 +17574,13 @@ type QueryGetEvmAddressByValidatorAddressRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorAddress string `protobuf:"bytes,1,opt,name=validatorAddress,proto3" json:"validatorAddress,omitempty"`
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressRequest) Reset() {
 	*x = QueryGetEvmAddressByValidatorAddressRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[17]
+		mi := &file_layer_bridge_query_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16554,7 +17594,7 @@ func (*QueryGetEvmAddressByValidatorAddressRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetEvmAddressByValidatorAddressRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetEvmAddressByValidatorAddressRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{17}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressRequest) GetValidatorAddress() string {
@@ -16569,13 +17609,13 @@ type QueryGetEvmAddressByValidatorAddressResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	EvmAddress string `protobuf:"bytes,1,opt,name=evmAddress,proto3" json:"evmAddress,omitempty"`
+	EvmAddress string `protobuf:"bytes,1,opt,name=evm_address,json=evmAddress,proto3" json:"evm_address,omitempty"`
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressResponse) Reset() {
 	*x = QueryGetEvmAddressByValidatorAddressResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[18]
+		mi := &file_layer_bridge_query_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16589,7 +17629,7 @@ func (*QueryGetEvmAddressByValidatorAddressResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetEvmAddressByValidatorAddressResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetEvmAddressByValidatorAddressResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{18}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *QueryGetEvmAddressByValidatorAddressResponse) GetEvmAddress() string {
@@ -16610,7 +17650,7 @@ type QueryGetValsetByTimestampRequest struct {
 func (x *QueryGetValsetByTimestampRequest) Reset() {
 	*x = QueryGetValsetByTimestampRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[19]
+		mi := &file_layer_bridge_query_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16624,7 +17664,7 @@ func (*QueryGetValsetByTimestampRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValsetByTimestampRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetValsetByTimestampRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{19}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *QueryGetValsetByTimestampRequest) GetTimestamp() int64 {
@@ -16639,13 +17679,13 @@ type QueryGetValsetByTimestampResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BridgeValidatorSet []*BridgeValidator `protobuf:"bytes,1,rep,name=bridgeValidatorSet,proto3" json:"bridgeValidatorSet,omitempty"`
+	BridgeValidatorSet []*QueryBridgeValidator `protobuf:"bytes,1,rep,name=bridge_validator_set,json=bridgeValidatorSet,proto3" json:"bridge_validator_set,omitempty"`
 }
 
 func (x *QueryGetValsetByTimestampResponse) Reset() {
 	*x = QueryGetValsetByTimestampResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[20]
+		mi := &file_layer_bridge_query_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16659,10 +17699,10 @@ func (*QueryGetValsetByTimestampResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetValsetByTimestampResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetValsetByTimestampResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{20}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{22}
 }
 
-func (x *QueryGetValsetByTimestampResponse) GetBridgeValidatorSet() []*BridgeValidator {
+func (x *QueryGetValsetByTimestampResponse) GetBridgeValidatorSet() []*QueryBridgeValidator {
 	if x != nil {
 		return x.BridgeValidatorSet
 	}
@@ -16680,7 +17720,7 @@ type QueryGetCurrentAggregateReportRequest struct {
 func (x *QueryGetCurrentAggregateReportRequest) Reset() {
 	*x = QueryGetCurrentAggregateReportRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[21]
+		mi := &file_layer_bridge_query_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16694,7 +17734,7 @@ func (*QueryGetCurrentAggregateReportRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetCurrentAggregateReportRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetCurrentAggregateReportRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{21}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *QueryGetCurrentAggregateReportRequest) GetQueryId() string {
@@ -16716,7 +17756,7 @@ type QueryGetCurrentAggregateReportResponse struct {
 func (x *QueryGetCurrentAggregateReportResponse) Reset() {
 	*x = QueryGetCurrentAggregateReportResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[22]
+		mi := &file_layer_bridge_query_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16730,7 +17770,7 @@ func (*QueryGetCurrentAggregateReportResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetCurrentAggregateReportResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetCurrentAggregateReportResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{22}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *QueryGetCurrentAggregateReportResponse) GetAggregate() *Aggregate {
@@ -16756,7 +17796,7 @@ type Aggregate struct {
 	AggregateValue       string               `protobuf:"bytes,2,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
 	AggregateReporter    string               `protobuf:"bytes,3,opt,name=aggregateReporter,proto3" json:"aggregateReporter,omitempty"`
 	ReporterPower        int64                `protobuf:"varint,4,opt,name=reporterPower,proto3" json:"reporterPower,omitempty"`
-	StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standardDeviation,proto3" json:"standardDeviation,omitempty"`
+	StandardDeviation    float64              `protobuf:"fixed64,5,opt,name=standard_deviation,json=standardDeviation,proto3" json:"standard_deviation,omitempty"`
 	Reporters            []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
 	Flagged              bool                 `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
 	Nonce                int64                `protobuf:"varint,8,opt,name=nonce,proto3" json:"nonce,omitempty"`
@@ -16767,7 +17807,7 @@ type Aggregate struct {
 func (x *Aggregate) Reset() {
 	*x = Aggregate{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[23]
+		mi := &file_layer_bridge_query_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16781,7 +17821,7 @@ func (*Aggregate) ProtoMessage() {}
 
 // Deprecated: Use Aggregate.ProtoReflect.Descriptor instead.
 func (*Aggregate) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{23}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *Aggregate) GetQueryId() []byte {
@@ -16866,7 +17906,7 @@ type AggregateReporter struct {
 func (x *AggregateReporter) Reset() {
 	*x = AggregateReporter{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[24]
+		mi := &file_layer_bridge_query_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16880,7 +17920,7 @@ func (*AggregateReporter) ProtoMessage() {}
 
 // Deprecated: Use AggregateReporter.ProtoReflect.Descriptor instead.
 func (*AggregateReporter) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{24}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *AggregateReporter) GetReporter() string {
@@ -16902,14 +17942,14 @@ type QueryGetDataBeforeRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId   []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId   string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetDataBeforeRequest) Reset() {
 	*x = QueryGetDataBeforeRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[25]
+		mi := &file_layer_bridge_query_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16923,14 +17963,14 @@ func (*QueryGetDataBeforeRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetDataBeforeRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetDataBeforeRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{25}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{27}
 }
 
-func (x *QueryGetDataBeforeRequest) GetQueryId() []byte {
+func (x *QueryGetDataBeforeRequest) GetQueryId() string {
 	if x != nil {
 		return x.QueryId
 	}
-	return nil
+	return ""
 }
 
 func (x *QueryGetDataBeforeRequest) GetTimestamp() int64 {
@@ -16952,7 +17992,7 @@ type QueryGetDataBeforeResponse struct {
 func (x *QueryGetDataBeforeResponse) Reset() {
 	*x = QueryGetDataBeforeResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[26]
+		mi := &file_layer_bridge_query_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16966,7 +18006,7 @@ func (*QueryGetDataBeforeResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetDataBeforeResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetDataBeforeResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{26}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *QueryGetDataBeforeResponse) GetAggregate() *oracle.Aggregate {
@@ -16988,14 +18028,14 @@ type QueryGetSnapshotsByReportRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId   string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
+	QueryId   string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	Timestamp string `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetSnapshotsByReportRequest) Reset() {
 	*x = QueryGetSnapshotsByReportRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[27]
+		mi := &file_layer_bridge_query_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -17009,7 +18049,7 @@ func (*QueryGetSnapshotsByReportRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetSnapshotsByReportRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetSnapshotsByReportRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{27}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *QueryGetSnapshotsByReportRequest) GetQueryId() string {
@@ -17037,7 +18077,7 @@ type QueryGetSnapshotsByReportResponse struct {
 func (x *QueryGetSnapshotsByReportResponse) Reset() {
 	*x = QueryGetSnapshotsByReportResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[28]
+		mi := &file_layer_bridge_query_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -17051,7 +18091,7 @@ func (*QueryGetSnapshotsByReportResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetSnapshotsByReportResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetSnapshotsByReportResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{28}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *QueryGetSnapshotsByReportResponse) GetSnapshots() []string {
@@ -17072,7 +18112,7 @@ type QueryGetAttestationDataBySnapshotRequest struct {
 func (x *QueryGetAttestationDataBySnapshotRequest) Reset() {
 	*x = QueryGetAttestationDataBySnapshotRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[29]
+		mi := &file_layer_bridge_query_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -17086,7 +18126,7 @@ func (*QueryGetAttestationDataBySnapshotRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetAttestationDataBySnapshotRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetAttestationDataBySnapshotRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{29}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *QueryGetAttestationDataBySnapshotRequest) GetSnapshot() string {
@@ -17101,20 +18141,20 @@ type QueryGetAttestationDataBySnapshotResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	QueryId                 string `protobuf:"bytes,1,opt,name=queryId,proto3" json:"queryId,omitempty"`
+	QueryId                 string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	Timestamp               string `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	AggregateValue          string `protobuf:"bytes,3,opt,name=aggregateValue,proto3" json:"aggregateValue,omitempty"`
-	AggregatePower          string `protobuf:"bytes,4,opt,name=aggregatePower,proto3" json:"aggregatePower,omitempty"`
+	AggregateValue          string `protobuf:"bytes,3,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
+	AggregatePower          string `protobuf:"bytes,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
 	Checkpoint              string `protobuf:"bytes,5,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
-	AttestationTimestamp    string `protobuf:"bytes,6,opt,name=attestationTimestamp,proto3" json:"attestationTimestamp,omitempty"`
-	PreviousReportTimestamp string `protobuf:"bytes,7,opt,name=previousReportTimestamp,proto3" json:"previousReportTimestamp,omitempty"`
-	NextReportTimestamp     string `protobuf:"bytes,8,opt,name=nextReportTimestamp,proto3" json:"nextReportTimestamp,omitempty"`
+	AttestationTimestamp    string `protobuf:"bytes,6,opt,name=attestation_timestamp,json=attestationTimestamp,proto3" json:"attestation_timestamp,omitempty"`
+	PreviousReportTimestamp string `protobuf:"bytes,7,opt,name=previous_report_timestamp,json=previousReportTimestamp,proto3" json:"previous_report_timestamp,omitempty"`
+	NextReportTimestamp     string `protobuf:"bytes,8,opt,name=next_report_timestamp,json=nextReportTimestamp,proto3" json:"next_report_timestamp,omitempty"`
 }
 
 func (x *QueryGetAttestationDataBySnapshotResponse) Reset() {
 	*x = QueryGetAttestationDataBySnapshotResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[30]
+		mi := &file_layer_bridge_query_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -17128,7 +18168,7 @@ func (*QueryGetAttestationDataBySnapshotResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetAttestationDataBySnapshotResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetAttestationDataBySnapshotResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{30}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *QueryGetAttestationDataBySnapshotResponse) GetQueryId() string {
@@ -17198,7 +18238,7 @@ type QueryGetAttestationsBySnapshotRequest struct {
 func (x *QueryGetAttestationsBySnapshotRequest) Reset() {
 	*x = QueryGetAttestationsBySnapshotRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[31]
+		mi := &file_layer_bridge_query_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -17212,7 +18252,7 @@ func (*QueryGetAttestationsBySnapshotRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryGetAttestationsBySnapshotRequest.ProtoReflect.Descriptor instead.
 func (*QueryGetAttestationsBySnapshotRequest) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{31}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *QueryGetAttestationsBySnapshotRequest) GetSnapshot() string {
@@ -17233,7 +18273,7 @@ type QueryGetAttestationsBySnapshotResponse struct {
 func (x *QueryGetAttestationsBySnapshotResponse) Reset() {
 	*x = QueryGetAttestationsBySnapshotResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_query_proto_msgTypes[32]
+		mi := &file_layer_bridge_query_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -17247,7 +18287,7 @@ func (*QueryGetAttestationsBySnapshotResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryGetAttestationsBySnapshotResponse.ProtoReflect.Descriptor instead.
 func (*QueryGetAttestationsBySnapshotResponse) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_query_proto_rawDescGZIP(), []int{32}
+	return file_layer_bridge_query_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *QueryGetAttestationsBySnapshotResponse) GetAttestations() []string {
@@ -17280,385 +18320,401 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61,
 	0x6d, 0x73, 0x22, 0x1e, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76,
 	0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x22, 0x6e, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76,
+	0x73, 0x74, 0x22, 0x75, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76,
 	0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
-	0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42,
+	0x6e, 0x73, 0x65, 0x12, 0x54, 0x0a, 0x14, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x22, 0x24, 0x0a, 0x22, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
+	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
+	0x58, 0x0a, 0x23, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43,
+	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x22, 0x56, 0x0a, 0x14, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x12, 0x28, 0x0a, 0x0f, 0x65, 0x74, 0x68, 0x65, 0x72, 0x65, 0x75, 0x6d, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x65, 0x74, 0x68, 0x65,
+	0x72, 0x65, 0x75, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x70,
+	0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65,
+	0x72, 0x22, 0x6f, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x54, 0x0a, 0x14,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x5f, 0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42,
 	0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x12,
 	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53,
-	0x65, 0x74, 0x22, 0x24, 0x0a, 0x22, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
-	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x57, 0x0a, 0x23, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x30, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63,
-	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x76, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
-	0x74, 0x22, 0x51, 0x0a, 0x0f, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x12, 0x28, 0x0a, 0x0f, 0x65, 0x74, 0x68, 0x65, 0x72, 0x65, 0x75, 0x6d,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x65,
-	0x74, 0x68, 0x65, 0x72, 0x65, 0x75, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14,
-	0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x70,
-	0x6f, 0x77, 0x65, 0x72, 0x22, 0x63, 0x0a, 0x12, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x4d, 0x0a, 0x12, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
-	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x22, 0xb4, 0x02, 0x0a, 0x18, 0x42, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x50, 0x0a, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x53, 0x65, 0x74, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x2e, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38, 0x0a, 0x17, 0x76, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68,
-	0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f,
-	0x6c, 0x64, 0x12, 0x2a, 0x0a, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53,
-	0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x30,
-	0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b,
-	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x22, 0xba, 0x01, 0x0a, 0x22, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
-	0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2e, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38, 0x0a, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f,
-	0x6c, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c,
-	0x64, 0x12, 0x2a, 0x0a, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65,
-	0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x22, 0x50, 0x0a,
-	0x1c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x53, 0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x30, 0x0a,
-	0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70,
-	0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x22,
-	0x48, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xb1, 0x01, 0x0a, 0x29, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43,
-	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b,
-	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x68, 0x65,
-	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65,
-	0x74, 0x48, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x6c,
-	0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x26, 0x0a, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68,
-	0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0e, 0x70,
-	0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x22, 0x40, 0x0a,
-	0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64,
-	0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64,
-	0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22,
-	0x49, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49,
-	0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09,
+	0x65, 0x74, 0x22, 0x51, 0x0a, 0x0f, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x28, 0x0a, 0x0f, 0x65, 0x74, 0x68, 0x65, 0x72, 0x65, 0x75,
+	0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0f,
+	0x65, 0x74, 0x68, 0x65, 0x72, 0x65, 0x75, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05,
+	0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x65, 0x0a, 0x12, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x4f, 0x0a, 0x14, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
+	0x73, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x22, 0xbc, 0x02, 0x0a,
+	0x18, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x53, 0x65, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x52, 0x0a, 0x14, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65,
+	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x2f, 0x0a,
+	0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a,
+	0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65,
+	0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65,
+	0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x22, 0xbf, 0x01, 0x0a, 0x22,
+	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53,
+	0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
 	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x39, 0x0a, 0x19, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73,
+	0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12,
+	0x2c, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74,
+	0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x22, 0x51, 0x0a,
+	0x1c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x53, 0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x31, 0x0a,
+	0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x22, 0x48, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xb3, 0x01, 0x0a, 0x29, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65, 0x63,
+	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x68,
+	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x6c, 0x73,
+	0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76,
+	0x61, 0x6c, 0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x27, 0x0a, 0x0f, 0x70, 0x6f, 0x77, 0x65, 0x72,
+	0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03,
+	0x52, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64,
+	0x22, 0x40, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79,
+	0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
+	0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64,
+	0x65, 0x78, 0x22, 0x49, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x39, 0x0a,
+	0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53,
+	0x69, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x3c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74,
+	0x75, 0x72, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x69, 0x67, 0x6e,
+	0x61, 0x74, 0x75, 0x72, 0x65, 0x73, 0x22, 0x5a, 0x0a, 0x2b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
+	0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2b, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x22, 0x4f, 0x0a, 0x2c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76,
+	0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x22, 0x40, 0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56,
+	0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
 	0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x3c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
-	0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75,
-	0x72, 0x65, 0x73, 0x22, 0x59, 0x0a, 0x2b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45,
-	0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x2a, 0x0a, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x76, 0x61,
-	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x4e,
-	0x0a, 0x2c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e,
-	0x0a, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x40,
-	0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74,
-	0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x22, 0x72, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73,
-	0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x53, 0x65, 0x74, 0x22, 0x42, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x79, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
+	0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x54, 0x0a, 0x14, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73,
+	0x65, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x42, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x52, 0x12, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
+	0x22, 0x42, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72,
+	0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x49, 0x64, 0x22, 0x7d, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
 	0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a,
-	0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x22, 0x7d, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65,
-	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x09,
-	0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x8b, 0x03, 0x0a, 0x09, 0x41, 0x67, 0x67, 0x72,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69,
-	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64,
-	0x12, 0x26, 0x0a, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67,
-	0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x2c, 0x0a, 0x11, 0x61, 0x67, 0x67, 0x72,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x24, 0x0a, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74,
-	0x65, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x72,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x2c, 0x0a, 0x11,
-	0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x01, 0x52, 0x11, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72,
-	0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3d, 0x0a, 0x09, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x41, 0x67, 0x67,
-	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x09,
-	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x66, 0x6c, 0x61,
-	0x67, 0x67, 0x65, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x66, 0x6c, 0x61, 0x67,
-	0x67, 0x65, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12, 0x32, 0x0a, 0x14, 0x61, 0x67, 0x67,
-	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65,
-	0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52, 0x14, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x16, 0x0a,
-	0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68,
-	0x65, 0x69, 0x67, 0x68, 0x74, 0x22, 0x45, 0x0a, 0x11, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x54, 0x0a, 0x19,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f,
-	0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x22, 0x71, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61,
-	0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63,
-	0x6c, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x09, 0x61, 0x67,
-	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x5a, 0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
-	0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35,
+	0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x09, 0x61, 0x67, 0x67, 0x72,
+	0x65, 0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x22, 0x8c, 0x03, 0x0a, 0x09, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74,
+	0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x26, 0x0a, 0x0e,
+	0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56,
+	0x61, 0x6c, 0x75, 0x65, 0x12, 0x2c, 0x0a, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74,
+	0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x12, 0x24, 0x0a, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f,
+	0x77, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x2d, 0x0a, 0x12, 0x73, 0x74, 0x61, 0x6e,
+	0x64, 0x61, 0x72, 0x64, 0x5f, 0x64, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x01, 0x52, 0x11, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x44, 0x65,
+	0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x3d, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67,
+	0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x09, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x66, 0x6c, 0x61, 0x67, 0x67, 0x65,
+	0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x66, 0x6c, 0x61, 0x67, 0x67, 0x65, 0x64,
+	0x12, 0x14, 0x0a, 0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x05, 0x6e, 0x6f, 0x6e, 0x63, 0x65, 0x12, 0x32, 0x0a, 0x14, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67,
+	0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x09,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x14, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65,
+	0x69, 0x67, 0x68, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67,
+	0x68, 0x74, 0x22, 0x45, 0x0a, 0x11, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x54, 0x0a, 0x19, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49,
+	0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22,
+	0x71, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42,
+	0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a,
+	0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e,
+	0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x22, 0x5b, 0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49,
+	0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22,
+	0x41, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73,
+	0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f,
+	0x74, 0x73, 0x22, 0x46, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74,
+	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a,
+	0x0a, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x22, 0xfb, 0x02, 0x0a, 0x29, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72,
 	0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x22, 0x41, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61,
-	0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68,
-	0x6f, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x73, 0x6e, 0x61, 0x70, 0x73,
-	0x68, 0x6f, 0x74, 0x73, 0x22, 0x46, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
-	0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42,
-	0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x1a, 0x0a, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x22, 0xf3, 0x02, 0x0a,
-	0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
-	0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x12, 0x26, 0x0a, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x56,
+	0x70, 0x12, 0x27, 0x0a, 0x0f, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x76,
 	0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72,
-	0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x26, 0x0a, 0x0e, 0x61, 0x67,
-	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x77,
-	0x65, 0x72, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69,
-	0x6e, 0x74, 0x12, 0x32, 0x0a, 0x14, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x14, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38, 0x0a, 0x17, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f,
-	0x75, 0x73, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x17, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75,
-	0x73, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x12, 0x30, 0x0a, 0x13, 0x6e, 0x65, 0x78, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x6e,
-	0x65, 0x78, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x22, 0x43, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74,
-	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70,
-	0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73,
-	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x73,
-	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x22, 0x4c, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42,
-	0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x22, 0x0a, 0x0c, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x32, 0xe1, 0x12, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12,
-	0x6b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1c,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x16, 0x12, 0x14, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x95, 0x01, 0x0a,
-	0x10, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x73, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x22, 0x12, 0x20, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x73, 0x12, 0xad, 0x01, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12,
-	0x30, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12, 0x26, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f,
-	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70,
-	0x6f, 0x69, 0x6e, 0x74, 0x12, 0xd2, 0x01, 0x0a, 0x1c, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x65, 0x67, 0x61, 0x74, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x61, 0x67,
+	0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x50, 0x6f,
+	0x77, 0x65, 0x72, 0x12, 0x1e, 0x0a, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
+	0x69, 0x6e, 0x74, 0x12, 0x33, 0x0a, 0x15, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x06, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x14, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x70, 0x72, 0x65, 0x76,
+	0x69, 0x6f, 0x75, 0x73, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x17, 0x70, 0x72, 0x65,
+	0x76, 0x69, 0x6f, 0x75, 0x73, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x12, 0x32, 0x0a, 0x15, 0x6e, 0x65, 0x78, 0x74, 0x5f, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x08, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x13, 0x6e, 0x65, 0x78, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x43, 0x0a, 0x25, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x1a, 0x0a, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x08, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x22, 0x4c, 0x0a,
+	0x26, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x22, 0x0a, 0x0c, 0x61, 0x74, 0x74, 0x65, 0x73,
+	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x0c, 0x61,
+	0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x32, 0xe3, 0x12, 0x0a, 0x05,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x6b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12,
+	0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x16, 0x12, 0x14, 0x2f, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x12, 0x95, 0x01, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45,
+	0x76, 0x6d, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x56, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22, 0x12, 0x20, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x12, 0xad, 0x01, 0x0a, 0x16, 0x47,
+	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x30, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
 	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c,
 	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
-	0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
-	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69,
+	0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93,
+	0x02, 0x28, 0x12, 0x26, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
+	0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0xd2, 0x01, 0x0a, 0x1c, 0x47,
+	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b,
+	0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x36, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63,
+	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12,
+	0xcf, 0x01, 0x0a, 0x1c, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78,
+	0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65,
+	0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x3e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x5f, 0x62, 0x79, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x2f, 0x7b, 0x69, 0x6e, 0x64, 0x65, 0x78,
+	0x7d, 0x12, 0x95, 0x01, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53,
+	0x69, 0x67, 0x73, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65,
+	0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b, 0x12, 0x29,
 	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65,
-	0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63,
-	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2f, 0x7b, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xcf, 0x01, 0x0a, 0x1c, 0x47, 0x65,
-	0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
-	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79, 0x49, 0x6e,
-	0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3e, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x38, 0x12, 0x36, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x62, 0x79, 0x5f, 0x69, 0x6e,
-	0x64, 0x65, 0x78, 0x2f, 0x7b, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x7d, 0x12, 0x95, 0x01, 0x0a, 0x0d,
-	0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x12, 0x27, 0x2e,
+	0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x2f, 0x7b, 0x74,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xe8, 0x01, 0x0a, 0x1f, 0x47, 0x65,
+	0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x39, 0x2e,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
-	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x22, 0x31, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2b, 0x12, 0x29, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73,
-	0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x7d, 0x12, 0xe7, 0x01, 0x0a, 0x1f, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x39, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45,
-	0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x3a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4d,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x47, 0x12, 0x45, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0xb2, 0x01,
-	0x0a, 0x14, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
-	0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
-	0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12,
-	0x31, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67,
-	0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x62, 0x79, 0x5f, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x7d, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e,
-	0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
-	0x12, 0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41,
-	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72,
-	0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x37, 0x12, 0x35, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x61,
-	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f,
-	0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa0, 0x01, 0x0a, 0x0d, 0x47,
-	0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x12, 0x27, 0x2e, 0x6c,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42,
+	0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,
+	0x45, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x42, 0x79, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x4e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x48, 0x12, 0x46, 0x2f, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f,
+	0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x76,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x7d, 0x12, 0xb2, 0x01, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73,
+	0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2e, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74,
+	0x5f, 0x62, 0x79, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2f, 0x7b, 0x74,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x47, 0x65,
+	0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74,
+	0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43,
+	0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x41, 0x67, 0x67, 0x72, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x37, 0x12, 0x35, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x63, 0x75,
+	0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64,
+	0x7d, 0x12, 0xa0, 0x01, 0x0a, 0x0d, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66,
+	0x6f, 0x72, 0x65, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42,
+	0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c,
 	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x44, 0x61, 0x74,
-	0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x3c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x12, 0x34, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f,
-	0x62, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64,
-	0x7d, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xbc, 0x01,
-	0x0a, 0x14, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e,
-	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e,
-	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x43, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3d, 0x12,
-	0x3b, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67,
-	0x65, 0x74, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x5f, 0x62, 0x79, 0x5f,
-	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x7b, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x7d,
-	0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x7d, 0x12, 0xd2, 0x01, 0x0a,
-	0x1c, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44,
-	0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x36, 0x2e,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3c, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x36, 0x12, 0x34,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65,
+	0x74, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x62, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x2f, 0x7b, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x7d, 0x12, 0xbd, 0x01, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x2e, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x47, 0x65, 0x74, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x73, 0x42, 0x79,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x44,
+	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3e, 0x12, 0x3c, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68,
+	0x6f, 0x74, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2f, 0x7b, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x7d, 0x2f, 0x7b, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x7d, 0x12, 0xd2, 0x01, 0x0a, 0x1c, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65,
+	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x36, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74,
+	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,
 	0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
 	0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74,
-	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x61, 0x74, 0x61, 0x42, 0x79, 0x53, 0x6e,
-	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41,
-	0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x62, 0x79, 0x5f, 0x73, 0x6e,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x41, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x3b, 0x12, 0x39,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65,
+	0x74, 0x5f, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x64, 0x61,
+	0x74, 0x61, 0x5f, 0x62, 0x79, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x2f, 0x7b,
+	0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x7d, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x47, 0x65,
+	0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41,
+	0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x37, 0x12, 0x35, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x61, 0x74,
+	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x73, 0x6e,
 	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x2f, 0x7b, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
-	0x7d, 0x12, 0xc5, 0x01, 0x0a, 0x19, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12,
-	0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x34, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x41, 0x74, 0x74, 0x65,
-	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x42, 0x79, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68,
-	0x6f, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3d, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x37, 0x12, 0x35, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x2f, 0x67, 0x65, 0x74, 0x5f, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x73, 0x5f, 0x62, 0x79, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x2f, 0x7b,
-	0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x7d, 0x42, 0x9c, 0x01, 0x0a, 0x10, 0x63, 0x6f,
-	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0a,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
-	0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa,
-	0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02,
-	0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18,
-	0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x7d, 0x42, 0x9c, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -17673,7 +18729,7 @@ func file_layer_bridge_query_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_query_proto_rawDescData
 }
 
-var file_layer_bridge_query_proto_msgTypes = make([]protoimpl.MessageInfo, 33)
+var file_layer_bridge_query_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_layer_bridge_query_proto_goTypes = []interface{}{
 	(*QueryParamsRequest)(nil),                           // 0: layer.bridge.QueryParamsRequest
 	(*QueryParamsResponse)(nil),                          // 1: layer.bridge.QueryParamsResponse
@@ -17681,76 +18737,79 @@ var file_layer_bridge_query_proto_goTypes = []interface{}{
 	(*QueryGetEvmValidatorsResponse)(nil),                // 3: layer.bridge.QueryGetEvmValidatorsResponse
 	(*QueryGetValidatorCheckpointRequest)(nil),           // 4: layer.bridge.QueryGetValidatorCheckpointRequest
 	(*QueryGetValidatorCheckpointResponse)(nil),          // 5: layer.bridge.QueryGetValidatorCheckpointResponse
-	(*BridgeValidator)(nil),                              // 6: layer.bridge.BridgeValidator
-	(*BridgeValidatorSet)(nil),                           // 7: layer.bridge.BridgeValidatorSet
-	(*BridgeValidatorSetParams)(nil),                     // 8: layer.bridge.BridgeValidatorSetParams
-	(*BridgeValidatorSetCheckpointParams)(nil),           // 9: layer.bridge.BridgeValidatorSetCheckpointParams
-	(*BridgeValidatorSetCheckpoint)(nil),                 // 10: layer.bridge.BridgeValidatorSetCheckpoint
-	(*QueryGetValidatorCheckpointParamsRequest)(nil),     // 11: layer.bridge.QueryGetValidatorCheckpointParamsRequest
-	(*QueryGetValidatorCheckpointParamsResponse)(nil),    // 12: layer.bridge.QueryGetValidatorCheckpointParamsResponse
-	(*QueryGetValidatorTimestampByIndexRequest)(nil),     // 13: layer.bridge.QueryGetValidatorTimestampByIndexRequest
-	(*QueryGetValidatorTimestampByIndexResponse)(nil),    // 14: layer.bridge.QueryGetValidatorTimestampByIndexResponse
-	(*QueryGetValsetSigsRequest)(nil),                    // 15: layer.bridge.QueryGetValsetSigsRequest
-	(*QueryGetValsetSigsResponse)(nil),                   // 16: layer.bridge.QueryGetValsetSigsResponse
-	(*QueryGetEvmAddressByValidatorAddressRequest)(nil),  // 17: layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
-	(*QueryGetEvmAddressByValidatorAddressResponse)(nil), // 18: layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
-	(*QueryGetValsetByTimestampRequest)(nil),             // 19: layer.bridge.QueryGetValsetByTimestampRequest
-	(*QueryGetValsetByTimestampResponse)(nil),            // 20: layer.bridge.QueryGetValsetByTimestampResponse
-	(*QueryGetCurrentAggregateReportRequest)(nil),        // 21: layer.bridge.QueryGetCurrentAggregateReportRequest
-	(*QueryGetCurrentAggregateReportResponse)(nil),       // 22: layer.bridge.QueryGetCurrentAggregateReportResponse
-	(*Aggregate)(nil),                                    // 23: layer.bridge.Aggregate
-	(*AggregateReporter)(nil),                            // 24: layer.bridge.AggregateReporter
-	(*QueryGetDataBeforeRequest)(nil),                    // 25: layer.bridge.QueryGetDataBeforeRequest
-	(*QueryGetDataBeforeResponse)(nil),                   // 26: layer.bridge.QueryGetDataBeforeResponse
-	(*QueryGetSnapshotsByReportRequest)(nil),             // 27: layer.bridge.QueryGetSnapshotsByReportRequest
-	(*QueryGetSnapshotsByReportResponse)(nil),            // 28: layer.bridge.QueryGetSnapshotsByReportResponse
-	(*QueryGetAttestationDataBySnapshotRequest)(nil),     // 29: layer.bridge.QueryGetAttestationDataBySnapshotRequest
-	(*QueryGetAttestationDataBySnapshotResponse)(nil),    // 30: layer.bridge.QueryGetAttestationDataBySnapshotResponse
-	(*QueryGetAttestationsBySnapshotRequest)(nil),        // 31: layer.bridge.QueryGetAttestationsBySnapshotRequest
-	(*QueryGetAttestationsBySnapshotResponse)(nil),       // 32: layer.bridge.QueryGetAttestationsBySnapshotResponse
-	(*Params)(nil),           // 33: layer.bridge.Params
-	(*oracle.Aggregate)(nil), // 34: layer.oracle.Aggregate
+	(*QueryBridgeValidator)(nil),                         // 6: layer.bridge.QueryBridgeValidator
+	(*QueryBridgeValidatorSet)(nil),                      // 7: layer.bridge.QueryBridgeValidatorSet
+	(*BridgeValidator)(nil),                              // 8: layer.bridge.BridgeValidator
+	(*BridgeValidatorSet)(nil),                           // 9: layer.bridge.BridgeValidatorSet
+	(*BridgeValidatorSetParams)(nil),                     // 10: layer.bridge.BridgeValidatorSetParams
+	(*BridgeValidatorSetCheckpointParams)(nil),           // 11: layer.bridge.BridgeValidatorSetCheckpointParams
+	(*BridgeValidatorSetCheckpoint)(nil),                 // 12: layer.bridge.BridgeValidatorSetCheckpoint
+	(*QueryGetValidatorCheckpointParamsRequest)(nil),     // 13: layer.bridge.QueryGetValidatorCheckpointParamsRequest
+	(*QueryGetValidatorCheckpointParamsResponse)(nil),    // 14: layer.bridge.QueryGetValidatorCheckpointParamsResponse
+	(*QueryGetValidatorTimestampByIndexRequest)(nil),     // 15: layer.bridge.QueryGetValidatorTimestampByIndexRequest
+	(*QueryGetValidatorTimestampByIndexResponse)(nil),    // 16: layer.bridge.QueryGetValidatorTimestampByIndexResponse
+	(*QueryGetValsetSigsRequest)(nil),                    // 17: layer.bridge.QueryGetValsetSigsRequest
+	(*QueryGetValsetSigsResponse)(nil),                   // 18: layer.bridge.QueryGetValsetSigsResponse
+	(*QueryGetEvmAddressByValidatorAddressRequest)(nil),  // 19: layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
+	(*QueryGetEvmAddressByValidatorAddressResponse)(nil), // 20: layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
+	(*QueryGetValsetByTimestampRequest)(nil),             // 21: layer.bridge.QueryGetValsetByTimestampRequest
+	(*QueryGetValsetByTimestampResponse)(nil),            // 22: layer.bridge.QueryGetValsetByTimestampResponse
+	(*QueryGetCurrentAggregateReportRequest)(nil),        // 23: layer.bridge.QueryGetCurrentAggregateReportRequest
+	(*QueryGetCurrentAggregateReportResponse)(nil),       // 24: layer.bridge.QueryGetCurrentAggregateReportResponse
+	(*Aggregate)(nil),                                    // 25: layer.bridge.Aggregate
+	(*AggregateReporter)(nil),                            // 26: layer.bridge.AggregateReporter
+	(*QueryGetDataBeforeRequest)(nil),                    // 27: layer.bridge.QueryGetDataBeforeRequest
+	(*QueryGetDataBeforeResponse)(nil),                   // 28: layer.bridge.QueryGetDataBeforeResponse
+	(*QueryGetSnapshotsByReportRequest)(nil),             // 29: layer.bridge.QueryGetSnapshotsByReportRequest
+	(*QueryGetSnapshotsByReportResponse)(nil),            // 30: layer.bridge.QueryGetSnapshotsByReportResponse
+	(*QueryGetAttestationDataBySnapshotRequest)(nil),     // 31: layer.bridge.QueryGetAttestationDataBySnapshotRequest
+	(*QueryGetAttestationDataBySnapshotResponse)(nil),    // 32: layer.bridge.QueryGetAttestationDataBySnapshotResponse
+	(*QueryGetAttestationsBySnapshotRequest)(nil),        // 33: layer.bridge.QueryGetAttestationsBySnapshotRequest
+	(*QueryGetAttestationsBySnapshotResponse)(nil),       // 34: layer.bridge.QueryGetAttestationsBySnapshotResponse
+	(*Params)(nil),           // 35: layer.bridge.Params
+	(*oracle.Aggregate)(nil), // 36: layer.oracle.Aggregate
 }
 var file_layer_bridge_query_proto_depIdxs = []int32{
-	33, // 0: layer.bridge.QueryParamsResponse.params:type_name -> layer.bridge.Params
-	6,  // 1: layer.bridge.QueryGetEvmValidatorsResponse.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
-	6,  // 2: layer.bridge.BridgeValidatorSet.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
-	7,  // 3: layer.bridge.BridgeValidatorSetParams.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidatorSet
-	6,  // 4: layer.bridge.QueryGetValsetByTimestampResponse.bridgeValidatorSet:type_name -> layer.bridge.BridgeValidator
-	23, // 5: layer.bridge.QueryGetCurrentAggregateReportResponse.aggregate:type_name -> layer.bridge.Aggregate
-	24, // 6: layer.bridge.Aggregate.reporters:type_name -> layer.bridge.AggregateReporter
-	34, // 7: layer.bridge.QueryGetDataBeforeResponse.aggregate:type_name -> layer.oracle.Aggregate
-	0,  // 8: layer.bridge.Query.Params:input_type -> layer.bridge.QueryParamsRequest
-	2,  // 9: layer.bridge.Query.GetEvmValidators:input_type -> layer.bridge.QueryGetEvmValidatorsRequest
-	4,  // 10: layer.bridge.Query.GetValidatorCheckpoint:input_type -> layer.bridge.QueryGetValidatorCheckpointRequest
-	11, // 11: layer.bridge.Query.GetValidatorCheckpointParams:input_type -> layer.bridge.QueryGetValidatorCheckpointParamsRequest
-	13, // 12: layer.bridge.Query.GetValidatorTimestampByIndex:input_type -> layer.bridge.QueryGetValidatorTimestampByIndexRequest
-	15, // 13: layer.bridge.Query.GetValsetSigs:input_type -> layer.bridge.QueryGetValsetSigsRequest
-	17, // 14: layer.bridge.Query.GetEvmAddressByValidatorAddress:input_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
-	19, // 15: layer.bridge.Query.GetValsetByTimestamp:input_type -> layer.bridge.QueryGetValsetByTimestampRequest
-	21, // 16: layer.bridge.Query.GetCurrentAggregateReport:input_type -> layer.bridge.QueryGetCurrentAggregateReportRequest
-	25, // 17: layer.bridge.Query.GetDataBefore:input_type -> layer.bridge.QueryGetDataBeforeRequest
-	27, // 18: layer.bridge.Query.GetSnapshotsByReport:input_type -> layer.bridge.QueryGetSnapshotsByReportRequest
-	29, // 19: layer.bridge.Query.GetAttestationDataBySnapshot:input_type -> layer.bridge.QueryGetAttestationDataBySnapshotRequest
-	31, // 20: layer.bridge.Query.GetAttestationsBySnapshot:input_type -> layer.bridge.QueryGetAttestationsBySnapshotRequest
-	1,  // 21: layer.bridge.Query.Params:output_type -> layer.bridge.QueryParamsResponse
-	3,  // 22: layer.bridge.Query.GetEvmValidators:output_type -> layer.bridge.QueryGetEvmValidatorsResponse
-	5,  // 23: layer.bridge.Query.GetValidatorCheckpoint:output_type -> layer.bridge.QueryGetValidatorCheckpointResponse
-	12, // 24: layer.bridge.Query.GetValidatorCheckpointParams:output_type -> layer.bridge.QueryGetValidatorCheckpointParamsResponse
-	14, // 25: layer.bridge.Query.GetValidatorTimestampByIndex:output_type -> layer.bridge.QueryGetValidatorTimestampByIndexResponse
-	16, // 26: layer.bridge.Query.GetValsetSigs:output_type -> layer.bridge.QueryGetValsetSigsResponse
-	18, // 27: layer.bridge.Query.GetEvmAddressByValidatorAddress:output_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
-	20, // 28: layer.bridge.Query.GetValsetByTimestamp:output_type -> layer.bridge.QueryGetValsetByTimestampResponse
-	22, // 29: layer.bridge.Query.GetCurrentAggregateReport:output_type -> layer.bridge.QueryGetCurrentAggregateReportResponse
-	26, // 30: layer.bridge.Query.GetDataBefore:output_type -> layer.bridge.QueryGetDataBeforeResponse
-	28, // 31: layer.bridge.Query.GetSnapshotsByReport:output_type -> layer.bridge.QueryGetSnapshotsByReportResponse
-	30, // 32: layer.bridge.Query.GetAttestationDataBySnapshot:output_type -> layer.bridge.QueryGetAttestationDataBySnapshotResponse
-	32, // 33: layer.bridge.Query.GetAttestationsBySnapshot:output_type -> layer.bridge.QueryGetAttestationsBySnapshotResponse
-	21, // [21:34] is the sub-list for method output_type
-	8,  // [8:21] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	35, // 0: layer.bridge.QueryParamsResponse.params:type_name -> layer.bridge.Params
+	6,  // 1: layer.bridge.QueryGetEvmValidatorsResponse.bridge_validator_set:type_name -> layer.bridge.QueryBridgeValidator
+	6,  // 2: layer.bridge.QueryBridgeValidatorSet.bridge_validator_set:type_name -> layer.bridge.QueryBridgeValidator
+	8,  // 3: layer.bridge.BridgeValidatorSet.bridge_validator_set:type_name -> layer.bridge.BridgeValidator
+	9,  // 4: layer.bridge.BridgeValidatorSetParams.bridge_validator_set:type_name -> layer.bridge.BridgeValidatorSet
+	6,  // 5: layer.bridge.QueryGetValsetByTimestampResponse.bridge_validator_set:type_name -> layer.bridge.QueryBridgeValidator
+	25, // 6: layer.bridge.QueryGetCurrentAggregateReportResponse.aggregate:type_name -> layer.bridge.Aggregate
+	26, // 7: layer.bridge.Aggregate.reporters:type_name -> layer.bridge.AggregateReporter
+	36, // 8: layer.bridge.QueryGetDataBeforeResponse.aggregate:type_name -> layer.oracle.Aggregate
+	0,  // 9: layer.bridge.Query.Params:input_type -> layer.bridge.QueryParamsRequest
+	2,  // 10: layer.bridge.Query.GetEvmValidators:input_type -> layer.bridge.QueryGetEvmValidatorsRequest
+	4,  // 11: layer.bridge.Query.GetValidatorCheckpoint:input_type -> layer.bridge.QueryGetValidatorCheckpointRequest
+	13, // 12: layer.bridge.Query.GetValidatorCheckpointParams:input_type -> layer.bridge.QueryGetValidatorCheckpointParamsRequest
+	15, // 13: layer.bridge.Query.GetValidatorTimestampByIndex:input_type -> layer.bridge.QueryGetValidatorTimestampByIndexRequest
+	17, // 14: layer.bridge.Query.GetValsetSigs:input_type -> layer.bridge.QueryGetValsetSigsRequest
+	19, // 15: layer.bridge.Query.GetEvmAddressByValidatorAddress:input_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressRequest
+	21, // 16: layer.bridge.Query.GetValsetByTimestamp:input_type -> layer.bridge.QueryGetValsetByTimestampRequest
+	23, // 17: layer.bridge.Query.GetCurrentAggregateReport:input_type -> layer.bridge.QueryGetCurrentAggregateReportRequest
+	27, // 18: layer.bridge.Query.GetDataBefore:input_type -> layer.bridge.QueryGetDataBeforeRequest
+	29, // 19: layer.bridge.Query.GetSnapshotsByReport:input_type -> layer.bridge.QueryGetSnapshotsByReportRequest
+	31, // 20: layer.bridge.Query.GetAttestationDataBySnapshot:input_type -> layer.bridge.QueryGetAttestationDataBySnapshotRequest
+	33, // 21: layer.bridge.Query.GetAttestationsBySnapshot:input_type -> layer.bridge.QueryGetAttestationsBySnapshotRequest
+	1,  // 22: layer.bridge.Query.Params:output_type -> layer.bridge.QueryParamsResponse
+	3,  // 23: layer.bridge.Query.GetEvmValidators:output_type -> layer.bridge.QueryGetEvmValidatorsResponse
+	5,  // 24: layer.bridge.Query.GetValidatorCheckpoint:output_type -> layer.bridge.QueryGetValidatorCheckpointResponse
+	14, // 25: layer.bridge.Query.GetValidatorCheckpointParams:output_type -> layer.bridge.QueryGetValidatorCheckpointParamsResponse
+	16, // 26: layer.bridge.Query.GetValidatorTimestampByIndex:output_type -> layer.bridge.QueryGetValidatorTimestampByIndexResponse
+	18, // 27: layer.bridge.Query.GetValsetSigs:output_type -> layer.bridge.QueryGetValsetSigsResponse
+	20, // 28: layer.bridge.Query.GetEvmAddressByValidatorAddress:output_type -> layer.bridge.QueryGetEvmAddressByValidatorAddressResponse
+	22, // 29: layer.bridge.Query.GetValsetByTimestamp:output_type -> layer.bridge.QueryGetValsetByTimestampResponse
+	24, // 30: layer.bridge.Query.GetCurrentAggregateReport:output_type -> layer.bridge.QueryGetCurrentAggregateReportResponse
+	28, // 31: layer.bridge.Query.GetDataBefore:output_type -> layer.bridge.QueryGetDataBeforeResponse
+	30, // 32: layer.bridge.Query.GetSnapshotsByReport:output_type -> layer.bridge.QueryGetSnapshotsByReportResponse
+	32, // 33: layer.bridge.Query.GetAttestationDataBySnapshot:output_type -> layer.bridge.QueryGetAttestationDataBySnapshotResponse
+	34, // 34: layer.bridge.Query.GetAttestationsBySnapshot:output_type -> layer.bridge.QueryGetAttestationsBySnapshotResponse
+	22, // [22:35] is the sub-list for method output_type
+	9,  // [9:22] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_layer_bridge_query_proto_init() }
@@ -17833,7 +18892,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BridgeValidator); i {
+			switch v := v.(*QueryBridgeValidator); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17845,7 +18904,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BridgeValidatorSet); i {
+			switch v := v.(*QueryBridgeValidatorSet); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17857,7 +18916,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BridgeValidatorSetParams); i {
+			switch v := v.(*BridgeValidator); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17869,7 +18928,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BridgeValidatorSetCheckpointParams); i {
+			switch v := v.(*BridgeValidatorSet); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17881,7 +18940,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*BridgeValidatorSetCheckpoint); i {
+			switch v := v.(*BridgeValidatorSetParams); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17893,7 +18952,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValidatorCheckpointParamsRequest); i {
+			switch v := v.(*BridgeValidatorSetCheckpointParams); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17905,7 +18964,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValidatorCheckpointParamsResponse); i {
+			switch v := v.(*BridgeValidatorSetCheckpoint); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17917,7 +18976,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValidatorTimestampByIndexRequest); i {
+			switch v := v.(*QueryGetValidatorCheckpointParamsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17929,7 +18988,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValidatorTimestampByIndexResponse); i {
+			switch v := v.(*QueryGetValidatorCheckpointParamsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17941,7 +19000,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValsetSigsRequest); i {
+			switch v := v.(*QueryGetValidatorTimestampByIndexRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17953,7 +19012,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValsetSigsResponse); i {
+			switch v := v.(*QueryGetValidatorTimestampByIndexResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17965,7 +19024,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetEvmAddressByValidatorAddressRequest); i {
+			switch v := v.(*QueryGetValsetSigsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17977,7 +19036,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetEvmAddressByValidatorAddressResponse); i {
+			switch v := v.(*QueryGetValsetSigsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -17989,7 +19048,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValsetByTimestampRequest); i {
+			switch v := v.(*QueryGetEvmAddressByValidatorAddressRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18001,7 +19060,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetValsetByTimestampResponse); i {
+			switch v := v.(*QueryGetEvmAddressByValidatorAddressResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18013,7 +19072,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetCurrentAggregateReportRequest); i {
+			switch v := v.(*QueryGetValsetByTimestampRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18025,7 +19084,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetCurrentAggregateReportResponse); i {
+			switch v := v.(*QueryGetValsetByTimestampResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18037,7 +19096,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Aggregate); i {
+			switch v := v.(*QueryGetCurrentAggregateReportRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18049,7 +19108,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AggregateReporter); i {
+			switch v := v.(*QueryGetCurrentAggregateReportResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18061,7 +19120,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetDataBeforeRequest); i {
+			switch v := v.(*Aggregate); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18073,7 +19132,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetDataBeforeResponse); i {
+			switch v := v.(*AggregateReporter); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18085,7 +19144,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetSnapshotsByReportRequest); i {
+			switch v := v.(*QueryGetDataBeforeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18097,7 +19156,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetSnapshotsByReportResponse); i {
+			switch v := v.(*QueryGetDataBeforeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18109,7 +19168,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetAttestationDataBySnapshotRequest); i {
+			switch v := v.(*QueryGetSnapshotsByReportRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18121,7 +19180,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetAttestationDataBySnapshotResponse); i {
+			switch v := v.(*QueryGetSnapshotsByReportResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18133,7 +19192,7 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryGetAttestationsBySnapshotRequest); i {
+			switch v := v.(*QueryGetAttestationDataBySnapshotRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -18145,6 +19204,30 @@ func file_layer_bridge_query_proto_init() {
 			}
 		}
 		file_layer_bridge_query_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetAttestationDataBySnapshotResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryGetAttestationsBySnapshotRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_query_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryGetAttestationsBySnapshotResponse); i {
 			case 0:
 				return &v.state
@@ -18163,7 +19246,7 @@ func file_layer_bridge_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   33,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

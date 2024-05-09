@@ -24,6 +24,12 @@ func (k msgServer) SubmitValue(goCtx context.Context, msg *types.MsgSubmitValue)
 	if err != nil {
 		return nil, err
 	}
+
+	err = k.preventBridgeWithdrawalReport(msg.QueryData)
+	if err != nil {
+		return nil, err
+	}
+
 	// get reporter
 	reporter, err := k.reporterKeeper.Reporter(ctx, reporterAddr)
 	if err != nil {
@@ -107,7 +113,7 @@ func (k Keeper) directReveal(ctx sdk.Context,
 	}
 
 	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(ctx.BlockTime()) && incycle {
-		nextId, err := k.QuerySequnecer.Next(ctx)
+		nextId, err := k.QuerySequencer.Next(ctx)
 		if err != nil {
 			return err
 		}

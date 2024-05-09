@@ -34,7 +34,7 @@ type (
 		TotalTips      collections.Item[math.Int]                                                                           // keep track of the total tips                                  // key: queryId, timestamp
 		Nonces         collections.Map[[]byte, uint64]                                                                      // key: queryId
 		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
-		QuerySequnecer collections.Sequence
+		QuerySequencer collections.Sequence
 		Query          *collections.IndexedMap[[]byte, types.QueryMeta, queryMetaIndex]
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.                           // key: reporter, queryid                                                                       // keep track of the total tips
@@ -90,7 +90,7 @@ func NewKeeper(
 			codec.CollValue[types.MicroReport](cdc),
 			NewReportsIndex(sb),
 		),
-		QuerySequnecer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
+		QuerySequencer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
 		Query: collections.NewIndexedMap(sb,
 			types.QueryTipPrefix,
 			"query",
@@ -133,7 +133,7 @@ func (k Keeper) initializeQuery(ctx context.Context, querydata []byte) (types.Qu
 	if err != nil {
 		return types.QueryMeta{}, err
 	}
-	id, err := k.QuerySequnecer.Next(ctx)
+	id, err := k.QuerySequencer.Next(ctx)
 	if err != nil {
 		return types.QueryMeta{}, err
 	}
