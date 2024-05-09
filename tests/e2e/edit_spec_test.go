@@ -134,7 +134,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
-	// claim tip from block 3 submitValue
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
 		DelegatorAddress: repAccAddrs[0].String(),
 		ValidatorAddress: valValAddrs[0].String(),
@@ -324,18 +323,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
-
-	_, err = s.app.EndBlocker(s.ctx)
-	require.NoError(err)
-
-	//---------------------------------------------------------------------------
-	// Height 9 - proposal passed
-	//---------------------------------------------------------------------------
-	s.ctx = s.ctx.WithBlockHeight(9)
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
-
 	// proposal passed
 	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal.ProposalId)
 	require.NoError(err)
@@ -357,8 +344,4 @@ func (s *E2ETestSuite) TestEditSpec() {
 
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
-
-	//---------------------------------------------------------------------------
-	// Height 10 -
-	//---------------------------------------------------------------------------
 }
