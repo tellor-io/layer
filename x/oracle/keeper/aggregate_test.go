@@ -5,10 +5,16 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/testutil/sample"
+	layer "github.com/tellor-io/layer/types"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (s *KeeperTestSuite) TestFindTimestampBefore() {
+func (s *KeeperTestSuite) TestGetTimestampBefore() {
 	testCases := []struct {
 		name       string
 		timestamps []time.Time
@@ -86,7 +92,7 @@ func (s *KeeperTestSuite) TestFindTimestampBefore() {
 	}
 }
 
-func (s *KeeperTestSuite) TestFindTimestampAfter() {
+func (s *KeeperTestSuite) TestGetTimestampAfter() {
 	testCases := []struct {
 		name       string
 		timestamps []time.Time
@@ -162,4 +168,65 @@ func (s *KeeperTestSuite) TestFindTimestampAfter() {
 			}
 		})
 	}
+}
+
+func createMicroReportForQuery(reporterAdd, aggMethod, valueHex string, power int64, query types.QueryMeta, timestamp time.Time) types.MicroReport {
+	return types.MicroReport{
+		Reporter:        reporterAdd,
+		Power:           power,
+		QueryId:         []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryType:       "SpotPrice",
+		AggregateMethod: aggMethod,
+		Value:           valueHex,
+		Timestamp:       timestamp,
+		Cyclelist:       true,
+		BlockNumber:     10,
+	}
+}
+
+func (s *KeeperTestSuite) TestSetAggregatedReport() {
+	// setup
+	rep1 := sample.AccAddressBytes()
+	rep2 := sample.AccAddressBytes()
+	rep3 := sample.AccAddressBytes()
+	rep4 := sample.AccAddressBytes()
+
+	expiration := time.Now().Unix() - 20
+
+	queryData := types.QueryMeta{
+		Id:                    1,
+		Amount:                math.NewInt(1 * 1e6),
+		Expiration:            time.Unix(expiration, expiration*time.Second.Nanoseconds()),
+		RegistrySpecTimeframe: 0,
+		HasRevealedReports:    true,
+		QueryId:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryType:             "SpotPrice",
+	}
+
+	err := s.oracleKeeper.Query.Set(s.ctx, queryData.QueryId, queryData)
+	s.NoError(err)
+
+	val := "0x0000000000000000000000000000000000000000000000b4ed64f50fa9b7b8f2"
+
+	report_one := createMicroReportForQuery(rep1.String(), "weighted-median", val, 1000000000, queryData, time.Now())
+	report_two := createMicroReportForQuery(rep2.String(), "weighted-median", val, 1000000000, queryData, time.Now())
+	report_three := createMicroReportForQuery(rep3.String(), "weighted-median", val, 1000000000, queryData, time.Now())
+	report_four := createMicroReportForQuery(rep4.String(), "weighted-median", val, 1000000000, queryData, time.Now())
+
+	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep1.Bytes(), queryData.Id), report_one)
+	s.NoError(err)
+	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep2.Bytes(), queryData.Id), report_two)
+	s.NoError(err)
+	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep3.Bytes(), queryData.Id), report_three)
+	s.NoError(err)
+	err = s.oracleKeeper.Reports.Set(s.ctx, collections.Join3(queryData.QueryId, rep4.Bytes(), queryData.Id), report_four)
+	s.NoError(err)
+	// add := sample.AccAddressBytes()
+	// sdk.C
+	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
+	s.accountKeeper.On("GetModuleAccount", s.ctx, minttypes.TimeBasedRewards).Return(sample.AccAddressBytes())
+	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layer.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
+
+	err = s.oracleKeeper.SetAggregatedReport(s.ctx)
+	s.NoError(err)
 }
