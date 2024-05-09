@@ -8,6 +8,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
+	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
@@ -54,8 +55,10 @@ func TestLogger(t *testing.T) {
 	require.Equal(t, logger, loggerExpected, "logger does not match")
 }
 
-func TestSetHooks(t *testing.T) {
-}
-
-func TestHooks(t *testing.T) {
+func TestSetHooksAndHooks(t *testing.T) {
+	_k2, _, _, _, _, _ := keepertest.OracleKeeper(t)
+	_, _, k := setupMsgServer(t)
+	k.SetHooks(_k2.Hooks())
+	_h := k.Hooks()
+	require.NotNil(t, _h)
 }
