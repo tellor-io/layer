@@ -3,15 +3,12 @@ package types
 import (
 	"errors"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(bondDenom string) *GenesisState {
 	return &GenesisState{
 		BondDenom:   bondDenom,
-		InitialMint: sdk.NewCoins(sdk.NewCoin(bondDenom, math.NewInt(InitialMint))),
 	}
 }
 
@@ -25,9 +22,6 @@ func DefaultGenesis() *GenesisState {
 func ValidateGenesis(data GenesisState) error {
 	if data.BondDenom == "" {
 		return errors.New("bond denom cannot be empty")
-	}
-	if !data.InitialMint.IsValid() {
-		return errors.New("initial mint coins are invalid")
 	}
 	return nil
 }

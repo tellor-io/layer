@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/math"
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	// govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -108,7 +107,6 @@ type E2ETestSuite struct {
 	ctx            sdk.Context
 	appCodec       codec.Codec
 	authConfig     *authmodulev1.Module
-	// govConfig      *govmodulev1.Module
 
 	queryHelper       *baseapp.QueryServiceTestHelper
 	interfaceRegistry codectypes.InterfaceRegistry
@@ -148,20 +146,6 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 		log.NewNopLogger(),
 	)
 
-	// govConfig := suite.govConfig
-
-	// suite.govKeeper = govkeeper.NewKeeper(
-	// 	appCodec,
-	// 	runtime.NewKVStoreService(suite.fetchStoreKey(govtypes.StoreKey).(*storetypes.KVStoreKey)),
-	// 	suite.accountKeeper,
-	// 	suite.bankKeeper,
-	// 	suite.stakingKeeper,
-	// 	suite.distrKeeper,
-	// 	baseapp.NewMsgServiceRouter(),
-	// 	govConfig,
-	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	// )
-
 	suite.stakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(suite.fetchStoreKey(stakingtypes.StoreKey).(*storetypes.KVStoreKey)),
@@ -197,11 +181,6 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 	suite.mintkeeper = mintkeeper.NewKeeper(
 		appCodec, suite.fetchStoreKey(minttypes.StoreKey), suite.accountKeeper, suite.bankKeeper,
 	)
-	// suite.stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(
-	// 	suite.distrKeeper.Hooks(),
-	// ))
-	// suite.reporterkeeper = reporterkeeper.NewKeeper(
-	// 	appCodec, suite.fetchStoreKey(reportertypes.StoreKey),
 }
 
 func (s *E2ETestSuite) SetupTest() {
