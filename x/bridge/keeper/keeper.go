@@ -115,19 +115,19 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 		return nil, err
 	}
 
-	bridgeValset := make([]*types.BridgeValidator, len(validators))
+	var bridgeValset []*types.BridgeValidator
 
-	for i, validator := range validators {
+	for _, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
-		evmAddressHex := hex.EncodeToString(evmAddress.EVMAddress)
 		if err != nil {
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
-			return nil, err
+			continue // Skip this validator if the EVM address is not found
 		}
-		bridgeValset[i] = &types.BridgeValidator{
+		evmAddressHex := hex.EncodeToString(evmAddress.EVMAddress)
+		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddressHex,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
-		}
+		})
 	}
 
 	// Sort the validators
@@ -1002,7 +1002,6 @@ func (k Keeper) EncodeOracleAttestationData(
 func (k Keeper) GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*types.AttestationRequests, error) {
 	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, height)
 	if err != nil {
-		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return nil, err
 	}
 	return &attestRequests, nil

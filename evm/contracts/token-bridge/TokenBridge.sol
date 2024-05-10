@@ -42,8 +42,8 @@ contract TokenBridge is UsingTellor, LayerTransition {
 
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
         require(_amount > 0, "TokenBridge: amount must be greater than 0");
-        require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit");
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
+        require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit");
         depositId++;
         depositLimitRecord -= _amount;
         deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, block.number);
