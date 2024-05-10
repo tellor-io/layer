@@ -41,7 +41,7 @@ type BankKeeper interface {
 type OracleKeeper interface {
 	GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *oracletypes.Aggregate, timestamp time.Time)
 	GetAggregateBefore(ctx context.Context, queryId []byte, timestampBefore time.Time) (aggregate *oracletypes.Aggregate, timestamp time.Time, err error)
-	GetAggregateByTimestamp(ctx sdk.Context, queryId []byte, timestamp time.Time) (aggregate *oracletypes.Aggregate, err error)
+	GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate *oracletypes.Aggregate, err error)
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate

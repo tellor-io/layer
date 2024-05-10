@@ -19,7 +19,7 @@ message MsgRequestAttestations {
     option (cosmos.msg.v1.signer) = "creator";
 
     string creator = 1;
-    string queryId = 2;
+    string query_id = 2;
     string timestamp = 3;
 }
 
@@ -39,7 +39,7 @@ message MsgClaimDepositRequest {
     option (cosmos.msg.v1.signer) = "creator";
 
     string creator = 1;
-    uint64 depositId = 2;
+    uint64 deposit_id = 2;
     uint64 index = 3;
 }
 

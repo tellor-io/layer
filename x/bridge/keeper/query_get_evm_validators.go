@@ -3,27 +3,31 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetEvmValidators(goCtx context.Context, req *types.QueryGetEvmValidatorsRequest) (*types.QueryGetEvmValidatorsResponse, error) {
+func (q Querier) GetEvmValidators(ctx context.Context, req *types.QueryGetEvmValidatorsRequest) (*types.QueryGetEvmValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	ethAddresses, err := k.GetCurrentValidatorsEVMCompatible(ctx)
+	valset, err := q.k.GetCurrentValidatorsEVMCompatible(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get current validators")
 	}
-	ethAddressesStr := make([]string, len(ethAddresses))
-	for i, ethAddresses := range ethAddresses {
-		ethAddressesStr[i] = ethAddresses.EthereumAddress
+
+	qValidatorSet := []*types.QueryBridgeValidator{}
+
+	for _, val := range valset {
+		qValidatorSet = append(qValidatorSet, &types.QueryBridgeValidator{
+			EthereumAddress: common.Bytes2Hex(val.EthereumAddress),
+			Power:           val.Power,
+		})
+
 	}
 
-	return &types.QueryGetEvmValidatorsResponse{BridgeValidatorSet: ethAddresses}, nil
+	return &types.QueryGetEvmValidatorsResponse{BridgeValidatorSet: qValidatorSet}, nil
 }

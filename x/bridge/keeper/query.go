@@ -5,11 +5,11 @@ import (
 )
 
 type Querier struct {
-	Keeper
+	k Keeper
 }
 
 func NewQuerier(keeper Keeper) Querier {
-	return Querier{Keeper: keeper}
+	return Querier{k: keeper}
 }
 
 var _ types.QueryServer = Querier{}

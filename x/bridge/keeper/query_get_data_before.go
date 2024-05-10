@@ -4,17 +4,23 @@ import (
 	"context"
 	"time"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetDataBefore(ctx context.Context, req *types.QueryGetDataBeforeRequest) (*types.QueryGetDataBeforeResponse, error) {
+func (q Querier) GetDataBefore(ctx context.Context, req *types.QueryGetDataBeforeRequest) (*types.QueryGetDataBeforeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	aggregate, timestamp, err := k.oracleKeeper.GetAggregateBefore(ctx, req.QueryId, time.Unix(req.Timestamp, 0))
+	qIdBz, err := utils.QueryBytesFromString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid queryId")
+	}
+
+	aggregate, timestamp, err := q.k.oracleKeeper.GetAggregateBefore(ctx, qIdBz, time.Unix(req.Timestamp, 0))
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get aggregate before")
 	}
