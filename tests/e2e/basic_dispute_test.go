@@ -164,7 +164,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(4000000000), result.Report.ReporterPower)
+	require.Equal(int64(4000), result.Report.ReporterPower)
 	require.Equal(int64(1), result.Report.Height)
 
 	//---------------------------------------------------------------------------
@@ -298,7 +298,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(4000000000), result.Report.ReporterPower)
+	require.Equal(int64(4000), result.Report.ReporterPower)
 	require.Equal(int64(4), result.Report.Height)
 
 	_, err = s.app.EndBlocker(s.ctx)

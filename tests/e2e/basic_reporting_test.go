@@ -12,10 +12,10 @@ import (
 	utils "github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *E2ETestSuite) TestBasicReporting() {
@@ -171,7 +171,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that 1 second worth of tbr has been minted
 	// expected tbr = (daily mint rate * time elapsed) / (# of ms in a day)
 	expectedBlockProvision := int64(146940000 * (1 * time.Second) / (24 * 60 * 60 * 1000))
-	expectedTbr := sdk.NewCoin(s.denom, math.NewInt((expectedBlockProvision)).Quo(sdk.DefaultPowerReduction))
+	expectedTbr := sdk.NewCoin(s.denom, math.NewInt((expectedBlockProvision)).MulRaw(75).QuoRaw(100).Quo(sdk.DefaultPowerReduction))
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	require.Equal(expectedTbr, tbrModuleAccountBalance)
 	// check that the cycle list has rotated
@@ -209,7 +209,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.AggregateValue, encodeValue(4500))
 	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
 	require.Equal(result1.Report.QueryId, queryIdEth)
-	require.Equal(int64(4000000000), result1.Report.ReporterPower)
+	require.Equal(int64(4000), result1.Report.ReporterPower)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	require.Equal(int64(0), tbrModuleAccountBalance.Amount.Int64())
@@ -246,7 +246,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that 8 sec of tbr has been minted
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
 	expectedBlockProvision = int64(146940000 * (8 * time.Second) / (24 * 60 * 60 * 1000))
-	expectedTbr = sdk.NewCoin(s.denom, math.NewInt((expectedBlockProvision)).Quo(sdk.DefaultPowerReduction))
+	expectedTbr = sdk.NewCoin(s.denom, math.NewInt((expectedBlockProvision)).MulRaw(75).QuoRaw(100).Quo(sdk.DefaultPowerReduction))
 	require.Equal(expectedTbr, tbrModuleAccountBalance)
 
 	// get new cycle list query data
@@ -284,7 +284,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(encodeValue(100_000), result2.Report.AggregateValue)
 	require.Equal(reporter.Reporter, result2.Report.AggregateReporter)
 	require.Equal(queryIdTrb, result2.Report.QueryId)
-	require.Equal(int64(4000000000), result2.Report.ReporterPower)
+	require.Equal(int64(4000), result2.Report.ReporterPower)
 	require.Equal(int64(3), result2.Report.Height)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.bankKeeper.GetBalance(s.ctx, tbrModuleAccount, sdk.DefaultBondDenom)
@@ -392,7 +392,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.AggregateValue, encodeValue(5000))
 	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
 	require.Equal(queryIdEth, result1.Report.QueryId)
-	require.Equal(int64(4000000000), result1.Report.ReporterPower)
+	require.Equal(int64(4000), result1.Report.ReporterPower)
 	require.Equal(int64(5), result1.Report.Height)
 	// check that the tip is in tip escrow
 	tipEscrowAcct := s.accountKeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
@@ -469,7 +469,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(resultTrb.Report.AggregateValue, encodeValue(1_000_000))
 	require.Equal(resultTrb.Report.AggregateReporter, reporter.Reporter)
 	require.Equal(queryIdTrb, resultTrb.Report.QueryId)
-	require.Equal(int64(4000000000), resultTrb.Report.ReporterPower)
+	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
 	require.Equal(int64(6), resultTrb.Report.Height)
 	// check that the tip is in tip escrow
 	tipEscrowBalance = s.bankKeeper.GetBalance(s.ctx, tipEscrowAcct, sdk.DefaultBondDenom) // 98 loya

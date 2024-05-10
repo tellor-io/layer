@@ -342,6 +342,13 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.Equal(spec.ResponseValueType, "uint256")
 	require.Equal(spec.AggregationMethod, "weighted-median")
 
+	_, err = oracleMsgServer.Tip(s.ctx, &msgTip)
+	require.NoError(err)
+
+	_, err = oracleMsgServer.SubmitValue(s.ctx, &msgSubmit)
+	require.NoError(err)
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(7 * time.Second)))
+
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 }
