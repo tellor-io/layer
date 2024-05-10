@@ -379,7 +379,7 @@ func (s *KeeperTestSuite) TestGetAggregatedReportsByHeight() {
 	s.ctx = s.ctx.WithBlockHeight(15)
 	aggregates := s.oracleKeeper.GetAggregatedReportsByHeight(s.ctx, int64(10))
 	s.NotEqual(0, len(aggregates))
-	s.Equal(aggregate, aggregates[0])
+	s.Equal(*aggregate, aggregates[0])
 }
 
 func (s *KeeperTestSuite) TestGetCurrentAggregateReport() {
