@@ -63,7 +63,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		return nil, err
 	}
 	proposalTxs := req.Txs
-	injectedVoteExtTx := OperatorAndEVM{}
+	injectedVoteExtTx := VoteExtTx{}
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)

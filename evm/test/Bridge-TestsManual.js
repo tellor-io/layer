@@ -29,7 +29,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         await bridge.deployed();
 
         const BridgeCaller = await ethers.getContractFactory("BridgeCaller");
-        bridgeCaller = await BridgeCaller.deploy(bridge.address);
+        bridgeCaller = await BridgeCaller.deploy(await bridge.getAddress());
         await bridgeCaller.deployed();
     });
 
@@ -41,7 +41,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
     })
 
     it("updateValidatorSet", async function () {
-        newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
+        newValAddrs = [await accounts[1].getAddress(), await accounts[2].getAddress(), await accounts[3].getAddress()]
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)

@@ -103,7 +103,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
-		h.logger.Info("EVM address not found for operator address", "operatorAddress", operatorAddress)
+		h.logger.Info("EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)

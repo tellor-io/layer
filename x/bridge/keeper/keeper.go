@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -129,6 +130,10 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 		})
 	}
 
+	if len(bridgeValset) == 0 {
+		return nil, errors.New("no validators found")
+	}
+
 	// Sort the validators
 	sort.Slice(bridgeValset, func(i, j int) bool {
 		if bridgeValset[i].Power == bridgeValset[j].Power {
@@ -243,7 +248,6 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 		// TODO: handle error?
 	}
 	if valsetIdx.Index == 0 {
-		// TODO: no need to set signatures for the first valset
 		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
 		err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
 		if err != nil {
