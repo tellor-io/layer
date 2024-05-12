@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -37,18 +38,18 @@ type OracleKeeper interface {
 type BridgeKeeper interface {
 	GetValidatorCheckpointFromStorage(ctx context.Context) (*bridgetypes.ValidatorCheckpoint, error)
 	Logger(ctx context.Context) log.Logger
-	GetEVMAddressByOperator(ctx sdk.Context, operatorAddress string) (string, error)
-	EVMAddressFromSignatures(ctx sdk.Context, sigA []byte, sigB []byte) (common.Address, error)
-	SetEVMAddressByOperator(ctx sdk.Context, operatorAddr string, evmAddr string) error
+	GetEVMAddressByOperator(ctx context.Context, operatorAddress string) ([]byte, error)
+	EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB []byte) (common.Address, error)
+	SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr []byte) error
 	GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
 	SetBridgeValsetSignature(ctx context.Context, operatorAddress string, timestamp uint64, signature string) error
 	GetLatestCheckpointIndex(ctx context.Context) (uint64, error)
 	GetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValidatorSet, error)
-	GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (*bridgetypes.CheckpointTimestamp, error)
-	GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.ValidatorCheckpointParams, error)
+	GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (bridgetypes.CheckpointTimestamp, error)
+	GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (bridgetypes.ValidatorCheckpointParams, error)
 	GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
-	GetAttestationRequestsByHeight(ctx sdk.Context, height uint64) (*bridgetypes.AttestationRequests, error)
-	SetOracleAttestation(ctx sdk.Context, operatorAddress string, snapshot []byte, sig []byte) error
+	GetAttestationRequestsByHeight(ctx context.Context, height uint64) (*bridgetypes.AttestationRequests, error)
+	SetOracleAttestation(ctx context.Context, operatorAddress string, snapshot []byte, sig []byte) error
 }
 
 type StakingKeeper interface {
@@ -431,9 +432,9 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (s
 	}
 }
 
-func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddress string, valset *bridgetypes.BridgeValidatorSet) (int, error) {
+func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddress []byte, valset *bridgetypes.BridgeValidatorSet) (int, error) {
 	for i, val := range valset.BridgeValidatorSet {
-		if val.EthereumAddress == evmAddress {
+		if bytes.Equal(val.EthereumAddress, evmAddress) {
 			return i, nil
 		}
 	}

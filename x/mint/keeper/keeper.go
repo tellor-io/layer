@@ -6,6 +6,9 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/mint/types"
 )
 
@@ -80,7 +83,23 @@ func (k Keeper) SendCoinsToTeam(ctx sdk.Context, coins sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.MintToTeam, coins)
 }
 
-func (k Keeper) SendCoinsToOracle(ctx sdk.Context, coins sdk.Coins) error {
-	k.Logger(ctx).Info("SendCoinsToOracle", "amount", coins.AmountOf("loya"))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.TimeBasedRewards, coins)
+func (k Keeper) SendInflationaryRewards(ctx sdk.Context, coins sdk.Coins) error {
+	if coins.Empty() {
+		return nil
+	}
+	quarter := coins.AmountOf(layer.BondDenom).QuoRaw(4)
+	threequarters := coins.AmountOf(layer.BondDenom).Sub(quarter)
+	outputs := []banktypes.Output{
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)),
+		},
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)),
+		},
+	}
+	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ModuleName)
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
+	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }

@@ -27,6 +27,7 @@ type StakingKeeper interface {
 		ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec,
 	) (amount math.Int, err error)
 	ValidatorsPowerStoreIterator(ctx context.Context) (store.Iterator, error)
+	TotalBondedTokens(context.Context) (math.Int, error)
 	// Methods imported from account should be defined here
 }
 

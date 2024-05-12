@@ -12,7 +12,6 @@ const (
 	DailyMintRate     = 146940000 // loya per day
 	DefaultBondDenom  = "loya"
 	MillisecondsInDay = 24 * 60 * 60 * 1000
-	InitialMint       = 300 * 1e6 // 300k loya
 )
 
 // NewMinter returns a new Minter object.

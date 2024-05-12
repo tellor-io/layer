@@ -256,7 +256,7 @@ getAttestationDataBySnapshot = async (snapshot) => {
         previousTimestamp: attestationDataReturned.previousReportTimestamp,
         nextTimestamp: attestationDataReturned.nextReportTimestamp
       },
-      attestTimestamp: attestationDataReturned.attestationTimestamp
+      attestationTimestamp: attestationDataReturned.attestationTimestamp
     }
     return attestationData
   } catch (error) {
@@ -574,7 +574,7 @@ function getBlock() {
 }
 
 function toWei(n) {
-  return web3.utils.toWei(n)
+  return web3.utils.toWei(n, "ether")
 }
 
 function fromWei(n) {

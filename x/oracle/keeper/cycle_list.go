@@ -85,7 +85,7 @@ func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist [][]byte) error 
 	for _, queryData := range cyclelist {
 		queryId := utils.QueryIDFromData(queryData)
 
-		nextId, err := k.QuerySequnecer.Next(ctx)
+		nextId, err := k.QuerySequencer.Next(ctx)
 		if err != nil {
 			return err
 		}

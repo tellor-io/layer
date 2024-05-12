@@ -37,4 +37,5 @@ var (
 	DisputedDelegationAmountsPrefix     = collections.NewPrefix(26)
 	FeePaidFromStakePrefix              = collections.NewPrefix(27)
 	TotalPowerPrefix                    = collections.NewPrefix(28)
+	StakeTrackerPrefix                  = collections.NewPrefix(29)
 )

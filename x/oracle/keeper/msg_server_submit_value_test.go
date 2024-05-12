@@ -105,7 +105,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.ErrorContains(err, "collections: not found: key")
+	s.ErrorContains(err, "invalid query data")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithBadValue() {

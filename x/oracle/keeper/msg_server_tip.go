@@ -60,7 +60,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		// in aggregate you set revealed reports to false after pay out
 		// so if query either has reports or is paid out then new id should be generated
 		if query.HasRevealedReports || prevAmt.IsZero() {
-			id, err := k.QuerySequnecer.Next(ctx)
+			id, err := k.QuerySequencer.Next(ctx)
 			if err != nil {
 				return nil, err
 			}

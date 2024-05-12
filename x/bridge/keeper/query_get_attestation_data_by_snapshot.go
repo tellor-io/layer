@@ -7,28 +7,34 @@ import (
 	"strconv"
 	"time"
 
+	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetAttestationDataBySnapshot(goCtx context.Context, req *types.QueryGetAttestationDataBySnapshotRequest) (*types.QueryGetAttestationDataBySnapshotResponse, error) {
+func (q Querier) GetAttestationDataBySnapshot(goCtx context.Context, req *types.QueryGetAttestationDataBySnapshotRequest) (*types.QueryGetAttestationDataBySnapshotResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	snapshot := req.Snapshot
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	snapshotData, err := k.AttestSnapshotDataMap.Get(ctx, snapshot)
+	snapshot, err := utils.QueryBytesFromString(req.Snapshot)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to decode snapshot %s", req.Snapshot)
+	}
+
+	snapshotData, err := q.k.AttestSnapshotDataMap.Get(ctx, snapshot)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("snapshot not found for snapshot %s", snapshot))
 	}
 	queryId := snapshotData.QueryId
 	timestampTime := time.Unix(snapshotData.Timestamp, 0)
 
-	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestampTime)
+	aggReport, err := q.k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestampTime)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate not found for queryId %s and timestamp %s", queryId, timestampTime))
 	}

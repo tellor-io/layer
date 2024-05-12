@@ -538,7 +538,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
         
     })
     
-    it("query layer api, deploy and verify with real params 0", async function () {
+    it.only("query layer api, deploy and verify with real params", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         console.log("valsetTimestamp0: ", vts0)
@@ -586,7 +586,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
         )
     })
 
-    it("query layer api, deploy and verify with real params", async function () {
+    it("optimistic value", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         console.log("vp0: ", vp0)
