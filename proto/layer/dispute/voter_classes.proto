@@ -28,3 +28,9 @@ message VoterClasses {
     (gogoproto.nullable) = false
   ];
 }
+
+message VoteGroup {
+  bytes users = 1;
+  bytes reporters = 2;
+  bytes tokenHolders = 3;
+}

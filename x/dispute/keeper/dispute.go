@@ -98,12 +98,12 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		PrevDisputeIds: []uint64{disputeId},
 	}
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
+	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
 		return err
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory); err != nil {
+		if err := k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return err
 		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
@@ -113,12 +113,15 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 			return err
 		}
 	}
-
+	err = k.SetBlockInfo(ctx, dispute.HashId)
+	if err != nil {
+		return err
+	}
 	return k.SetDispute(ctx, dispute)
 }
 
 // Slash and jail reporter
-func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory) error {
+func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory, hashId []byte) error {
 	reporterAddr := sdk.MustAccAddressFromBech32(report.Reporter)
 
 	slashFactor, jailDuration, err := k.GetSlashPercentageAndJailDuration(category)
@@ -127,7 +130,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	}
 	amount := math.NewInt(report.Power).Mul(layertypes.PowerReduction)
 	slashAmount := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
-	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmount.TruncateInt())
+	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmount.TruncateInt(), hashId)
 	if err != nil {
 		return err
 	}
@@ -207,7 +210,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 	}
 
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond); err != nil {
+	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
 		return err
 	}
 
@@ -300,4 +303,21 @@ func (k Keeper) SetDisputeStatus(ctx context.Context, id uint64, status types.Di
 
 	dispute.DisputeStatus = status
 	return k.Disputes.Set(ctx, id, dispute)
+}
+
+func (k Keeper) SetBlockInfo(ctx context.Context, hashId []byte) error {
+	tp, err := k.reporterKeeper.TotalReporterPower(ctx)
+	if err != nil {
+		return err
+	}
+	tips, err := k.oracleKeeper.GetTotalTips(ctx)
+	if err != nil {
+		return err
+	}
+
+	blockInfo := types.BlockInfo{
+		TotalReporterPower: tp,
+		TotalUserTips:      tips,
+	}
+	return k.BlockInfo.Set(ctx, hashId, blockInfo)
 }

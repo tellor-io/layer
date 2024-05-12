@@ -65,14 +65,75 @@ func (m *VoterClasses) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VoterClasses proto.InternalMessageInfo
 
+type VoteGroup struct {
+	Users        []byte `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
+	Reporters    []byte `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
+	TokenHolders []byte `protobuf:"bytes,3,opt,name=tokenHolders,proto3" json:"tokenHolders,omitempty"`
+}
+
+func (m *VoteGroup) Reset()         { *m = VoteGroup{} }
+func (m *VoteGroup) String() string { return proto.CompactTextString(m) }
+func (*VoteGroup) ProtoMessage()    {}
+func (*VoteGroup) Descriptor() ([]byte, []int) {
+	return fileDescriptor_de6bb69a4f2a19e8, []int{1}
+}
+func (m *VoteGroup) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VoteGroup) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VoteGroup.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VoteGroup) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VoteGroup.Merge(m, src)
+}
+func (m *VoteGroup) XXX_Size() int {
+	return m.Size()
+}
+func (m *VoteGroup) XXX_DiscardUnknown() {
+	xxx_messageInfo_VoteGroup.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VoteGroup proto.InternalMessageInfo
+
+func (m *VoteGroup) GetUsers() []byte {
+	if m != nil {
+		return m.Users
+	}
+	return nil
+}
+
+func (m *VoteGroup) GetReporters() []byte {
+	if m != nil {
+		return m.Reporters
+	}
+	return nil
+}
+
+func (m *VoteGroup) GetTokenHolders() []byte {
+	if m != nil {
+		return m.TokenHolders
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*VoterClasses)(nil), "layer.dispute.VoterClasses")
+	proto.RegisterType((*VoteGroup)(nil), "layer.dispute.VoteGroup")
 }
 
 func init() { proto.RegisterFile("layer/dispute/voter_classes.proto", fileDescriptor_de6bb69a4f2a19e8) }
 
 var fileDescriptor_de6bb69a4f2a19e8 = []byte{
-	// 279 bytes of a gzipped FileDescriptorProto
+	// 318 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0xcc, 0x49, 0xac, 0x4c,
 	0x2d, 0xd2, 0x4f, 0xc9, 0x2c, 0x2e, 0x28, 0x2d, 0x49, 0xd5, 0x2f, 0xcb, 0x2f, 0x49, 0x2d, 0x8a,
 	0x4f, 0xce, 0x49, 0x2c, 0x2e, 0x4e, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x05,
@@ -85,12 +146,14 @@ var fileDescriptor_de6bb69a4f2a19e8 = []byte{
 	0xcf, 0xbc, 0x92, 0x20, 0x84, 0x6e, 0x21, 0x7f, 0x2e, 0x9e, 0x92, 0xfc, 0xec, 0xd4, 0x3c, 0x8f,
 	0xfc, 0x9c, 0x14, 0x90, 0x69, 0x4c, 0xa4, 0x9b, 0x86, 0x62, 0x80, 0x90, 0x23, 0x17, 0x6b, 0x69,
 	0x31, 0xc8, 0x24, 0x66, 0xd2, 0x4d, 0x82, 0xe8, 0x14, 0xb2, 0xe7, 0x62, 0x29, 0x49, 0x4d, 0xcc,
-	0x95, 0x60, 0x21, 0xdd, 0x04, 0xb0, 0x46, 0x27, 0x97, 0x13, 0x8f, 0xe4, 0x18, 0x2f, 0x3c, 0x92,
-	0x63, 0x7c, 0xf0, 0x48, 0x8e, 0x71, 0xc2, 0x63, 0x39, 0x86, 0x0b, 0x8f, 0xe5, 0x18, 0x6e, 0x3c,
-	0x96, 0x63, 0x88, 0xd2, 0x4a, 0xcf, 0x2c, 0xc9, 0x28, 0x4d, 0xd2, 0x4b, 0xce, 0xcf, 0xd5, 0x2f,
-	0x49, 0xcd, 0xc9, 0xc9, 0x2f, 0xd2, 0xcd, 0xcc, 0xd7, 0x87, 0x44, 0x61, 0x05, 0x3c, 0x12, 0x4b,
-	0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0xa1, 0x6f, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x68,
-	0x25, 0xed, 0xfc, 0xe2, 0x01, 0x00, 0x00,
+	0x95, 0x60, 0x21, 0xdd, 0x04, 0xb0, 0x46, 0xa5, 0x64, 0x2e, 0x4e, 0x50, 0x78, 0xb9, 0x17, 0xe5,
+	0x97, 0x16, 0x08, 0x89, 0xc0, 0x1c, 0x04, 0x0a, 0x28, 0x1e, 0x98, 0x1d, 0x32, 0xc8, 0x41, 0xc8,
+	0x04, 0x96, 0x41, 0x0a, 0x15, 0x25, 0xb4, 0x50, 0x61, 0x06, 0x2b, 0x40, 0x11, 0x73, 0x72, 0x39,
+	0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63,
+	0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xad, 0xf4, 0xcc, 0x92, 0x8c, 0xd2,
+	0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0xfd, 0x92, 0xd4, 0x9c, 0x9c, 0xfc, 0x22, 0xdd, 0xcc, 0x7c, 0x7d,
+	0x48, 0x3a, 0xa9, 0x80, 0xa7, 0x94, 0x92, 0xca, 0x82, 0xd4, 0xe2, 0x24, 0x36, 0x70, 0x14, 0x1b,
+	0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xe1, 0xa5, 0xb2, 0x27, 0x47, 0x02, 0x00, 0x00,
 }
 
 func (m *VoterClasses) Marshal() (dAtA []byte, err error) {
@@ -156,6 +219,50 @@ func (m *VoterClasses) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *VoteGroup) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VoteGroup) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VoteGroup) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TokenHolders) > 0 {
+		i -= len(m.TokenHolders)
+		copy(dAtA[i:], m.TokenHolders)
+		i = encodeVarintVoterClasses(dAtA, i, uint64(len(m.TokenHolders)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Reporters) > 0 {
+		i -= len(m.Reporters)
+		copy(dAtA[i:], m.Reporters)
+		i = encodeVarintVoterClasses(dAtA, i, uint64(len(m.Reporters)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Users) > 0 {
+		i -= len(m.Users)
+		copy(dAtA[i:], m.Users)
+		i = encodeVarintVoterClasses(dAtA, i, uint64(len(m.Users)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintVoterClasses(dAtA []byte, offset int, v uint64) int {
 	offset -= sovVoterClasses(v)
 	base := offset
@@ -181,6 +288,27 @@ func (m *VoterClasses) Size() (n int) {
 	n += 1 + l + sovVoterClasses(uint64(l))
 	l = m.Team.Size()
 	n += 1 + l + sovVoterClasses(uint64(l))
+	return n
+}
+
+func (m *VoteGroup) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Users)
+	if l > 0 {
+		n += 1 + l + sovVoterClasses(uint64(l))
+	}
+	l = len(m.Reporters)
+	if l > 0 {
+		n += 1 + l + sovVoterClasses(uint64(l))
+	}
+	l = len(m.TokenHolders)
+	if l > 0 {
+		n += 1 + l + sovVoterClasses(uint64(l))
+	}
 	return n
 }
 
@@ -353,6 +481,158 @@ func (m *VoterClasses) Unmarshal(dAtA []byte) error {
 			}
 			if err := m.Team.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVoterClasses(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VoteGroup) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVoterClasses
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VoteGroup: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VoteGroup: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVoterClasses
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Users = append(m.Users[:0], dAtA[iNdEx:postIndex]...)
+			if m.Users == nil {
+				m.Users = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reporters", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVoterClasses
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reporters = append(m.Reporters[:0], dAtA[iNdEx:postIndex]...)
+			if m.Reporters == nil {
+				m.Reporters = []byte{}
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenHolders", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVoterClasses
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVoterClasses
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TokenHolders = append(m.TokenHolders[:0], dAtA[iNdEx:postIndex]...)
+			if m.TokenHolders == nil {
+				m.TokenHolders = []byte{}
 			}
 			iNdEx = postIndex
 		default:

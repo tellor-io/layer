@@ -54,6 +54,9 @@ func DisputeKeeper(t testing.TB) (
 	if err != nil {
 		panic(err)
 	}
-
+	err = k.Params.Set(ctx, types.DefaultParams())
+	if err != nil {
+		panic(err)
+	}
 	return k, oracleKeeper, reporterKeeper, accountKeeper, bankKeeper, ctx
 }

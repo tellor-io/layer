@@ -15,7 +15,7 @@ import (
 )
 
 // FeefromReporterStake deducts the fee from the reporter's stake used mainly for paying dispute from bond
-func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error {
+func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
@@ -47,6 +47,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 		if err != nil {
 			return err
 		}
+		feeTracker := make([]*types.TokenOriginInfo, 0, len(delegatorSources))
 		for _, source := range delegatorSources {
 			srcAmt := math.LegacyNewDecFromInt(source.Value)
 			share := srcAmt.Quo(totaltokens).Mul(math.LegacyNewDecFromInt(amt))
@@ -54,6 +55,27 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 			if err != nil {
 				return err
 			}
+			feeTracker = append(feeTracker, &types.TokenOriginInfo{
+				DelegatorAddress: source.Key.K1().String(),
+				ValidatorAddress: source.Key.K2().String(),
+				Amount:           share.TruncateInt(),
+			})
+		}
+
+		has, err := k.FeePaidFromStake.Has(ctx, hashId)
+		if err != nil {
+			return err
+		}
+		if has {
+			preFeeTracker, err := k.FeePaidFromStake.Get(ctx, hashId)
+			if err != nil {
+				return err
+			}
+
+			feeTracker = append(feeTracker, preFeeTracker.TokenOrigins...)
+		}
+		if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsPreUpdate{TokenOrigins: feeTracker}); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -193,9 +215,9 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 
 }
 
-func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int) error {
+func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error {
 	// get origins at height
-	rng := collections.NewPrefixedPairRange[sdk.AccAddress, int64](reporterAddr).StartInclusive(height)
+	rng := collections.NewPrefixedPairRange[sdk.AccAddress, int64](reporterAddr).EndInclusive(height).Descending()
 	var firstValue *types.DelegationsPreUpdate
 
 	err := k.TokenOriginSnapshot.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, int64], value types.DelegationsPreUpdate) (stop bool, err error) {
@@ -207,6 +229,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	}
 
 	totalTokens := layertypes.PowerReduction.MulRaw(power)
+	disputeTokens := make([]*types.TokenOriginInfo, 0)
 	for _, del := range firstValue.TokenOrigins {
 		delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
 		delAddr, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
@@ -221,6 +244,11 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		if err != nil {
 			return err
 		}
+		disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
+			DelegatorAddress: del.DelegatorAddress,
+			ValidatorAddress: del.ValidatorAddress,
+			Amount:           delegatorShare.TruncateInt().Sub(remaining),
+		})
 		if !remaining.IsZero() {
 			dstVAl, err := k.getDstValidator(ctx, delAddr, valAddr)
 			if err != nil {
@@ -230,9 +258,17 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			if err != nil {
 				return err
 			}
+			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
+				DelegatorAddress: del.DelegatorAddress,
+				ValidatorAddress: dstVAl.String(),
+				Amount:           remaining,
+			})
 		}
 	}
-	return nil
+
+	// after escrow you should keep a new snapshot of the amounts from each that were taken instead of relying on the original snapshot
+	// then you can delete it after the slashed tokens are returned
+	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsPreUpdate{TokenOrigins: disputeTokens})
 }
 
 func (k Keeper) tokensToDispute(ctx context.Context, fromPool string, amount math.Int) error {

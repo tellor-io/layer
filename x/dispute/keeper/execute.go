@@ -11,7 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInfo, remainingAmt math.Int) error {
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInfo, remainingAmt math.Int, hashId []byte) error {
 	var outputs []banktypes.Output
 
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
@@ -32,7 +32,7 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInf
 			accInputTotal = accInputTotal.Add(amt.TruncateInt())
 			outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), coins))
 		} else {
-			if err := k.ReturnFeetoStake(ctx, recipient.PayerAddress, recipient.BlockNumber, amt.TruncateInt()); err != nil {
+			if err := k.ReturnFeetoStake(ctx, sdk.MustAccAddressFromBech32(recipient.PayerAddress), hashId, amt.TruncateInt()); err != nil {
 				return err
 			}
 		}
@@ -47,19 +47,15 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInf
 
 func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
 	totalFeesPaid := math.ZeroInt()
-	for _, reporter := range feePayers {
-		totalFeesPaid = totalFeesPaid.Add(reporter.Amount)
+	for _, feeInfo := range feePayers {
+		totalFeesPaid = totalFeesPaid.Add(feeInfo.Amount)
 	}
-	for _, reporter := range feePayers {
-		amt := reporter.Amount.Quo(totalFeesPaid).Mul(reporterBond)
-		if reporter.FromBond {
-			if err := k.reporterKeeper.ReturnSlashedTokens(ctx, reporter.PayerAddress, reporter.BlockNumber, amt); err != nil {
-				return err
-			}
-		} else {
-			if err := k.reporterKeeper.AddAmountToStake(ctx, reporter.PayerAddress, amt); err != nil {
-				return err
-			}
+	// divvy up the reporter bond among the fee payers based how much they paid
+	// paid it in as a stake in staking module
+	for _, feeInfo := range feePayers {
+		amt := feeInfo.Amount.Quo(totalFeesPaid).Mul(reporterBond)
+		if err := k.reporterKeeper.AddAmountToStake(ctx, feeInfo.PayerAddress, amt); err != nil {
+			return err
 		}
 	}
 

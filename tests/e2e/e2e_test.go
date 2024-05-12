@@ -976,6 +976,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
+	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1014,6 +1016,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
+	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1098,6 +1102,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
+	require.Error(err, "vote period not ended and quorum not reached")
+	err = s.disputekeeper.Tallyvote(s.ctx, 2)
+	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1156,6 +1164,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
+	require.NoError(err)
+	err = s.disputekeeper.Tallyvote(s.ctx, 2)
+	require.NoError(err)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1230,14 +1243,15 @@ func (s *E2ETestSuite) TestDisputes() {
 	disputeFee = sdk.NewCoin(s.denom, oneHundredPercent)
 
 	report = types.MicroReport{
-		Reporter:  reporter.Reporter,
-		Power:     reporter.TotalTokens.Int64(),
-		QueryId:   queryId,
-		Value:     value,
-		Timestamp: s.ctx.BlockTime(),
+		Reporter:    reporter.Reporter,
+		Power:       reporter.TotalTokens.Int64(),
+		QueryId:     queryId,
+		Value:       value,
+		Timestamp:   s.ctx.BlockTime(),
+		BlockNumber: s.ctx.BlockHeight(),
 	}
-
 	// create msg for propose dispute tx
+
 	msgProposeDispute = disputetypes.MsgProposeDispute{
 		Creator:         reporter.Reporter,
 		Report:          &report,
@@ -1260,6 +1274,9 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+
+	err = s.disputekeeper.Tallyvote(s.ctx, 3)
+	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -1321,6 +1338,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	// _, err = s.app.BeginBlocker(s.ctx)
 	// require.NoError(err)
 
+	err = s.disputekeeper.Tallyvote(s.ctx, 3)
+	require.NoError(err)
+	_, err = s.app.BeginBlocker(s.ctx)
+	require.NoError(err)
 	// reporter, err = s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
 	// require.NoError(err)
 

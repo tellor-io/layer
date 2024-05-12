@@ -171,11 +171,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:  repAcc.String(),
-		Power:     100,
-		QueryId:   qId,
-		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Reporter:    repAcc.String(),
+		Power:       100,
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.ctx.BlockHeight(),
 	}
 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
 	s.NoError(err)
@@ -412,6 +413,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
+	s.NoError(err)
 	// execute vote
 	err = s.disputekeeper.ExecuteVotes(s.ctx, ids)
 	s.NoError(err)

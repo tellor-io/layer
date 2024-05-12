@@ -20,8 +20,5 @@ func (k Keeper) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTip
 		return nil, err
 	}
 
-	return &types.QueryGetCurrentTipResponse{Tips: &types.Tips{
-		QueryData: req.QueryData, // TODO: avoid returning the same data as the request
-		Amount:    tips,
-	}}, nil
+	return &types.QueryGetCurrentTipResponse{Tips: tips}, nil
 }

@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestPayFromAccount() {
 func (s *KeeperTestSuite) TestPayFromBond() {
 	addr := sample.AccAddressBytes()
 
-	s.reporterKeeper.On("FeefromReporterStake", s.ctx, addr, math.OneInt()).Return(nil)
-	err := s.disputeKeeper.PayFromBond(s.ctx, addr, sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
+	s.reporterKeeper.On("FeefromReporterStake", s.ctx, addr, math.OneInt(), []byte("hash")).Return(nil)
+	err := s.disputeKeeper.PayFromBond(s.ctx, addr, sdk.NewCoin(layer.BondDenom, math.NewInt(1)), []byte("hash"))
 	s.Nil(err)
 }

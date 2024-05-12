@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -13,51 +12,6 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
-
-type AddressInfo struct {
-	Address  string
-	Reporter string
-	Stake    math.Int
-}
-
-func (k Keeper) fetchData(ctx context.Context, voters []collections.KeyValue[collections.Pair[uint64, sdk.AccAddress], types.Voter]) ([]AddressInfo, error) {
-	info := make([]AddressInfo, 0)
-	for _, v := range voters {
-		voterAddr := v.Key.K2().String()
-		delegation, err := k.reporterKeeper.Delegation(ctx, v.Key.K2())
-		if err != nil {
-			if !errors.Is(err, collections.ErrNotFound) {
-				return nil, err
-			}
-			info = append(info, AddressInfo{Address: voterAddr, Reporter: "", Stake: math.ZeroInt()})
-			continue
-		}
-		reporterAcc := sdk.MustAccAddressFromBech32(delegation.Reporter)
-		reporter, err := k.reporterKeeper.Reporter(ctx, reporterAcc)
-		if err != nil {
-			return nil, err
-		}
-		if bytes.Equal(reporterAcc, v.Key.K2()) {
-			info = append(info, AddressInfo{Address: voterAddr, Reporter: voterAddr, Stake: reporter.TotalTokens})
-		} else {
-			info = append(info, AddressInfo{Address: voterAddr, Reporter: delegation.Reporter, Stake: delegation.Amount})
-		}
-	}
-	return info, nil
-}
-func (k Keeper) calculateReportingEffectivePowers(voters []AddressInfo) map[string]math.Int {
-	effectivePowers := make(map[string]math.Int)
-	for _, v := range voters {
-		effectivePowers[v.Address] = v.Stake
-	}
-	for _, v := range voters {
-		if v.Address != v.Reporter && v.Reporter != "" {
-			effectivePowers[v.Reporter] = effectivePowers[v.Reporter].Sub(v.Stake)
-		}
-	}
-	return effectivePowers
-
-}
 
 func (k Keeper) GetVoters(ctx context.Context, id uint64) (
 	[]collections.KeyValue[collections.Pair[uint64, sdk.AccAddress], types.Voter], error) {
@@ -72,252 +26,9 @@ func (k Keeper) GetVoters(ctx context.Context, id uint64) (
 	return voters, nil
 }
 
-func (k Keeper) getReportingPower(ctx context.Context, voters []collections.KeyValue[collections.Pair[uint64, sdk.AccAddress], types.Voter]) (map[string]math.Int, error) {
-	info, err := k.fetchData(ctx, voters)
-	if err != nil {
-		return nil, err
-	}
-	effectivePowers := k.calculateReportingEffectivePowers(info)
-	return effectivePowers, nil
-}
-func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
-	voters, err := k.GetVoters(ctx, id)
-	if err != nil {
-		return err
-	}
-	totalReporterPower, err := k.GetTotalReporterPower(ctx)
-	if err != nil {
-		return err
-	}
-	totalTips, err := k.GetTotalTips(ctx)
-	if err != nil {
-		return err
-	}
-	tokenSupply := k.GetTotalSupply(ctx)
-
-	tallies := types.Tally{
-		ForVotes:     k.initVoterClasses(),
-		AgainstVotes: k.initVoterClasses(),
-		Invalid:      k.initVoterClasses(),
-	}
-	repP, err := k.getReportingPower(ctx, voters)
-	if err != nil {
-		return err
-	}
-	for _, v := range voters {
-		voterAddr := v.Key.K2()
-		tkHol, err := k.GetAccountBalance(ctx, voterAddr)
-		if err != nil {
-			return err
-		}
-		usrTps, err := k.GetUserTips(ctx, voterAddr)
-		if err != nil {
-			return err
-		}
-		team := k.IsTeamAddress(ctx, voterAddr)
-
-		voterPower := math.ZeroInt()
-		voterPower = voterPower.Add(calculateVotingPower(repP[voterAddr.String()], totalReporterPower))
-		voterPower = voterPower.Add(calculateVotingPower(tkHol, tokenSupply))
-		voterPower = voterPower.Add(calculateVotingPower(usrTps, totalTips))
-		voterPower = voterPower.Add(calculateVotingPower(team, math.OneInt()))
-
-		voter, err := k.Voter.Get(ctx, v.Key)
-		if err != nil {
-			return err
-		}
-		voter.VoterPower = voterPower
-		err = k.Voter.Set(ctx, v.Key, voter)
-		if err != nil {
-			return err
-		}
-
-		switch v.Value.Vote {
-		case types.VoteEnum_VOTE_SUPPORT:
-			tallies.ForVotes.Reporters = tallies.ForVotes.Reporters.Add(repP[voterAddr.String()])
-			tallies.ForVotes.TokenHolders = tallies.ForVotes.TokenHolders.Add(tkHol)
-			tallies.ForVotes.Users = tallies.ForVotes.Users.Add(usrTps)
-			tallies.ForVotes.Team = tallies.ForVotes.Team.Add(team)
-		case types.VoteEnum_VOTE_AGAINST:
-			tallies.AgainstVotes.Reporters = tallies.AgainstVotes.Reporters.Add(repP[voterAddr.String()])
-			tallies.AgainstVotes.TokenHolders = tallies.AgainstVotes.TokenHolders.Add(tkHol)
-			tallies.AgainstVotes.Users = tallies.AgainstVotes.Users.Add(usrTps)
-			tallies.AgainstVotes.Team = tallies.AgainstVotes.Team.Add(team)
-		case types.VoteEnum_VOTE_INVALID:
-			tallies.Invalid.Reporters = tallies.Invalid.Reporters.Add(repP[voterAddr.String()])
-			tallies.Invalid.TokenHolders = tallies.Invalid.TokenHolders.Add(tkHol)
-			tallies.Invalid.Users = tallies.Invalid.Users.Add(usrTps)
-			tallies.Invalid.Team = tallies.Invalid.Team.Add(team)
-		}
-	}
-	tokenHolderVoteSum := tallies.ForVotes.TokenHolders.Add(tallies.AgainstVotes.TokenHolders).Add(tallies.Invalid.TokenHolders)
-	reporterVoteSum := tallies.ForVotes.Reporters.Add(tallies.AgainstVotes.Reporters).Add(tallies.Invalid.Reporters)
-	userVoteSum := tallies.ForVotes.Users.Add(tallies.AgainstVotes.Users).Add(tallies.Invalid.Users)
-	teamVoteSum := tallies.ForVotes.Team.Add(tallies.AgainstVotes.Team).Add(tallies.Invalid.Team)
-	// Prevent zero-division
-	if tokenHolderVoteSum.IsZero() {
-		tokenHolderVoteSum = math.OneInt()
-	}
-	if reporterVoteSum.IsZero() {
-		reporterVoteSum = math.OneInt()
-	}
-	if userVoteSum.IsZero() {
-		userVoteSum = math.OneInt()
-	}
-	if teamVoteSum.IsZero() {
-		teamVoteSum = math.OneInt()
-	}
-
-	// Convert to Dec for precision
-	tokenHolderVoteSumDec := math.LegacyNewDecFromInt(tokenHolderVoteSum)
-	reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
-	userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
-	teamVoteSumDec := math.LegacyNewDecFromInt(teamVoteSum)
-
-	// Normalize the votes for each group
-	forTokenHolders := math.LegacyNewDecFromInt(tallies.ForVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
-	forReporters := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters).Quo(reporterVoteSumDec)
-	forUsers := math.LegacyNewDecFromInt(tallies.ForVotes.Users).Quo(userVoteSumDec)
-	forTeam := math.LegacyNewDecFromInt(tallies.ForVotes.Team).Quo(teamVoteSumDec)
-
-	againstTokenHolders := math.LegacyNewDecFromInt(tallies.AgainstVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
-	againstValidators := math.LegacyNewDecFromInt(tallies.AgainstVotes.Reporters).Quo(reporterVoteSumDec)
-	againstUsers := math.LegacyNewDecFromInt(tallies.AgainstVotes.Users).Quo(userVoteSumDec)
-	againstTeam := math.LegacyNewDecFromInt(tallies.AgainstVotes.Team).Quo(teamVoteSumDec)
-
-	invalidTokenHolders := math.LegacyNewDecFromInt(tallies.Invalid.TokenHolders).Quo(tokenHolderVoteSumDec)
-	invalidValidators := math.LegacyNewDecFromInt(tallies.Invalid.Reporters).Quo(reporterVoteSumDec)
-	invalidUsers := math.LegacyNewDecFromInt(tallies.Invalid.Users).Quo(userVoteSumDec)
-	invalidTeam := math.LegacyNewDecFromInt(tallies.Invalid.Team).Quo(teamVoteSumDec)
-
-	// Sum the normalized votes and divide by number of groups to scale between 0 and 1
-	numGroups := math.LegacyNewDec(4)
-	scaledSupport := (forTokenHolders.Add(forReporters).Add(forUsers).Add(forTeam)).Quo(numGroups)
-	scaledAgainst := (againstTokenHolders.Add(againstValidators).Add(againstUsers).Add(againstTeam)).Quo(numGroups)
-	scaledInvalid := (invalidTokenHolders.Add(invalidValidators).Add(invalidUsers).Add(invalidTeam)).Quo(numGroups)
-	tokenHolderRatio := ratio(tokenSupply, tokenHolderVoteSum)
-	reporterRatio := ratio(totalReporterPower, reporterVoteSum)
-	userRatio := ratio(totalTips, userVoteSum)
-	teamRatio := ratio(math.OneInt(), teamVoteSum)
-	totalRatio := tokenHolderRatio.Add(reporterRatio).Add(userRatio).Add(teamRatio)
-
-	vote, err := k.Votes.Get(ctx, id)
-	if err != nil {
-		return err
-	}
-	if vote.VoteResult == types.VoteResult_NO_TALLY {
-		// quorum reached case
-		if totalRatio.GTE(math.LegacyNewDec(51)) {
-			fmt.Println("quorum reached")
-			switch {
-			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
-				if err := k.SetDisputeStatus(ctx, id, types.Resolved); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_SUPPORT); err != nil {
-					return err
-				}
-			case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
-				if err := k.SetDisputeStatus(ctx, id, types.Resolved); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_AGAINST); err != nil {
-					return err
-				}
-			case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
-				if err := k.SetDisputeStatus(ctx, id, types.Resolved); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_INVALID); err != nil {
-					return err
-				}
-			default:
-			}
-			return nil
-		}
-		sdkctx := sdk.UnwrapSDKContext(ctx)
-		// quorum not reached case
-		if vote.VoteEnd.Before(sdkctx.BlockTime()) {
-			dispute, err := k.Disputes.Get(ctx, id)
-			if err != nil {
-				return err
-			}
-			disputeStatus := types.Unresolved
-			// check if rounds have been exhausted or dispute has expired in order to disperse funds
-			if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
-				disputeStatus = types.Resolved
-			}
-			switch {
-			case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
-				if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT); err != nil {
-					return err
-				}
-			case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
-				if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST); err != nil {
-					return err
-				}
-			case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
-				if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
-					return err
-				}
-				if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
-					return err
-				}
-			default:
-				iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
-				if err != nil {
-					return err
-				}
-				voters, err := iter.PrimaryKeys()
-				if err != nil {
-					return err
-				}
-				if len(voters) == 0 {
-					if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
-						return err
-					}
-					if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
-						return err
-					}
-					return nil
-				}
-				return errors.New("no quorum majority")
-			}
-			return nil
-		}
-	}
-	return nil
-}
-
 func (k Keeper) GetAccountBalance(ctx context.Context, addr sdk.AccAddress) (math.Int, error) {
 	bal := k.bankKeeper.GetBalance(ctx, addr, layertypes.BondDenom)
 	return bal.Amount, nil
-}
-
-func (k Keeper) GetUserTips(ctx context.Context, voterAddr sdk.AccAddress) (math.Int, error) {
-	userTips, err := k.oracleKeeper.GetUserTips(ctx, voterAddr)
-	if err != nil {
-		return math.Int{}, err
-	}
-	return userTips.Total, nil
-}
-
-func (k Keeper) IsTeamAddress(ctx context.Context, voter sdk.AccAddress) math.Int {
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	if !bytes.Equal(voter, sdk.MustAccAddressFromBech32(params.TeamAddress)) {
-		return math.ZeroInt()
-	}
-	return math.NewInt(1)
 }
 
 // Get total trb supply
@@ -334,11 +45,6 @@ func (k Keeper) GetTotalReporterPower(ctx context.Context) (math.Int, error) {
 	return tp, nil
 }
 
-// Get total number of tips
-func (k Keeper) GetTotalTips(ctx context.Context) (math.Int, error) {
-	return k.oracleKeeper.GetTotalTips(ctx)
-}
-
 func ratio(total, part math.Int) math.LegacyDec {
 	if total.IsZero() {
 		return math.LegacyZeroDec()
@@ -353,6 +59,7 @@ func calculateVotingPower(n, d math.Int) math.Int {
 		return math.ZeroInt()
 	}
 	scalingFactor := math.NewInt(1_000_000)
+	fmt.Println(n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor), n, d)
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
@@ -375,4 +82,248 @@ func (k Keeper) CalculateVoterShare(ctx context.Context, voters []VoterInfo, tot
 		burnedRemainder = totalTokens.Sub(totalShare)
 	}
 	return voters, burnedRemainder
+}
+
+func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
+	numGroups := math.LegacyNewDec(4)
+	scaledSupport := math.LegacyZeroDec()
+	scaledAgainst := math.LegacyZeroDec()
+	scaledInvalid := math.LegacyZeroDec()
+	vote, err := k.Votes.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if vote.VoteResult != types.VoteResult_NO_TALLY {
+		return errors.New("vote already tallied")
+	}
+	dispute, err := k.Disputes.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	totalRatio := math.LegacyZeroDec()
+	// init tallies
+	tallies := types.Tally{
+		ForVotes:     k.initVoterClasses(),
+		AgainstVotes: k.initVoterClasses(),
+		Invalid:      k.initVoterClasses(),
+	}
+
+	teamVote, err := k.TeamVote(ctx, id)
+	if err != nil {
+		return err
+	}
+	if teamVote.GT(math.ZeroInt()) {
+		teamAddr, err := k.GetTeamAddress(ctx)
+		if err != nil {
+			return err
+		}
+		vote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr))
+		if err != nil {
+			return err
+		}
+		switch vote.Vote {
+		case types.VoteEnum_VOTE_SUPPORT:
+			tallies.ForVotes.Team = math.OneInt()
+			scaledSupport = scaledSupport.Add(math.LegacyOneDec())
+		case types.VoteEnum_VOTE_AGAINST:
+			tallies.AgainstVotes.Team = math.OneInt()
+			scaledAgainst = scaledAgainst.Add(math.LegacyOneDec())
+		case types.VoteEnum_VOTE_INVALID:
+			tallies.Invalid.Team = math.OneInt()
+			scaledInvalid = scaledInvalid.Add(math.LegacyOneDec())
+		}
+
+		totalRatio = totalRatio.Add(math.LegacyNewDec(25))
+	}
+
+	// get user group
+	userVoteSum := math.ZeroInt()
+	userRng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](id)
+	err = k.UsersGroup.Walk(ctx, userRng, func(key collections.Pair[uint64, sdk.AccAddress], value math.Int) (stop bool, err error) {
+		vote, err := k.Voter.Get(ctx, key)
+		if err != nil {
+			return true, err
+		}
+		switch vote.Vote {
+		case types.VoteEnum_VOTE_SUPPORT:
+			tallies.ForVotes.Users = tallies.ForVotes.Users.Add(value)
+		case types.VoteEnum_VOTE_AGAINST:
+			tallies.AgainstVotes.Users = tallies.AgainstVotes.Users.Add(value)
+		case types.VoteEnum_VOTE_INVALID:
+			tallies.Invalid.Users = tallies.Invalid.Users.Add(value)
+		}
+		userVoteSum = userVoteSum.Add(value)
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+
+	totaltips, err := k.oracleKeeper.GetTotalTipsAtBlock(ctx, dispute.BlockNumber)
+	if err != nil {
+		return err
+	}
+
+	if userVoteSum.GT(math.ZeroInt()) {
+		totalRatio = totalRatio.Add(ratio(totaltips, userVoteSum))
+
+		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
+
+		scaledSupport = scaledSupport.Add(math.LegacyNewDecFromInt(tallies.ForVotes.Users).Quo(userVoteSumDec))
+		scaledAgainst = scaledAgainst.Add(math.LegacyNewDecFromInt(tallies.AgainstVotes.Users).Quo(userVoteSumDec))
+		scaledInvalid = scaledInvalid.Add(math.LegacyNewDecFromInt(tallies.Invalid.Users).Quo(userVoteSumDec))
+	}
+	// fmt.Println("total ratio", totalRatio)
+	// reporterRatio := ratio(totalReporterPower, reporterVoteSum)
+	totalReporterPower, err := k.GetTotalReporterPower(ctx)
+	if err != nil {
+		return err
+	}
+	reporterRatio := math.LegacyZeroDec()
+	reporterVoteSum := math.ZeroInt()
+	reportersRng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](id)
+	err = k.ReportersGroup.Walk(ctx, reportersRng, func(key collections.Pair[uint64, sdk.AccAddress], value math.Int) (stop bool, err error) {
+		vote, err := k.Voter.Get(ctx, key)
+		// fmt.Println("reporter vote", vote.Vote, value)
+		if err != nil {
+			return true, err
+		}
+		switch vote.Vote {
+		case types.VoteEnum_VOTE_SUPPORT:
+			tallies.ForVotes.Reporters = tallies.ForVotes.Reporters.Add(value)
+		case types.VoteEnum_VOTE_AGAINST:
+			tallies.AgainstVotes.Reporters = tallies.AgainstVotes.Reporters.Add(value)
+		case types.VoteEnum_VOTE_INVALID:
+			tallies.Invalid.Reporters = tallies.Invalid.Reporters.Add(value)
+		}
+		reporterVoteSum = reporterVoteSum.Add(value)
+		reporterRatio = reporterRatio.Add(ratio(totalReporterPower, reporterVoteSum))
+		totalRatio = totalRatio.Add(reporterRatio)
+		if totalRatio.GTE(math.LegacyNewDec(51)) {
+			return true, nil
+		}
+
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	if reporterVoteSum.GT(math.ZeroInt()) {
+		reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
+		forReporters := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters).Quo(reporterVoteSumDec)
+		againstReporters := math.LegacyNewDecFromInt(tallies.AgainstVotes.Reporters).Quo(reporterVoteSumDec)
+		invalidReporters := math.LegacyNewDecFromInt(tallies.Invalid.Reporters).Quo(reporterVoteSumDec)
+		scaledSupport = scaledSupport.Add(forReporters)
+		scaledAgainst = scaledAgainst.Add(againstReporters)
+		scaledInvalid = scaledInvalid.Add(invalidReporters)
+	}
+
+	if totalRatio.GTE(math.LegacyNewDec(51)) {
+		scaledSupport = scaledSupport.Quo(numGroups)
+		scaledAgainst = scaledAgainst.Quo(numGroups)
+		scaledInvalid = scaledInvalid.Quo(numGroups)
+		fmt.Println("quorum reached")
+		return k.UpdateDispute(ctx, id, types.Resolved, scaledSupport, scaledAgainst, scaledInvalid)
+	}
+
+	allvoters, err := k.GetVoters(ctx, id)
+	if err != nil {
+		return err
+	}
+	tokenHolderVoteSum := math.ZeroInt()
+	tokenSupply := k.GetTotalSupply(ctx)
+	for _, v := range allvoters {
+		voterAddr := v.Key.K2()
+		tkHol, err := k.GetAccountBalance(ctx, voterAddr)
+		if err != nil {
+			return err
+		}
+		switch v.Value.Vote {
+		case types.VoteEnum_VOTE_SUPPORT:
+			tallies.ForVotes.TokenHolders = tallies.ForVotes.TokenHolders.Add(tkHol)
+		case types.VoteEnum_VOTE_AGAINST:
+			tallies.AgainstVotes.TokenHolders = tallies.AgainstVotes.TokenHolders.Add(tkHol)
+		case types.VoteEnum_VOTE_INVALID:
+			tallies.Invalid.TokenHolders = tallies.Invalid.TokenHolders.Add(tkHol)
+		}
+
+		tokenHolderVoteSum = tokenHolderVoteSum.Add(tkHol)
+		totalRatio = totalRatio.Add(ratio(tokenSupply, tokenHolderVoteSum))
+
+		if totalRatio.GTE(math.LegacyNewDec(51)) {
+			break
+		}
+	}
+	tokenHolderVoteSumDec := math.LegacyNewDecFromInt(tokenHolderVoteSum)
+	if !tokenHolderVoteSum.IsZero() {
+		forTokenHolders := math.LegacyNewDecFromInt(tallies.ForVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
+		againstTokenHolders := math.LegacyNewDecFromInt(tallies.AgainstVotes.TokenHolders).Quo(tokenHolderVoteSumDec)
+		invalidTokenHolders := math.LegacyNewDecFromInt(tallies.Invalid.TokenHolders).Quo(tokenHolderVoteSumDec)
+		scaledSupport = scaledSupport.Add(forTokenHolders).Quo(numGroups)
+		scaledAgainst = scaledAgainst.Add(againstTokenHolders).Quo(numGroups)
+		scaledInvalid = scaledInvalid.Add(invalidTokenHolders).Quo(numGroups)
+	}
+	if totalRatio.GTE(math.LegacyNewDec(51)) {
+
+		return k.UpdateDispute(ctx, id, types.Resolved, scaledSupport, scaledAgainst, scaledInvalid)
+	}
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	// quorum not reached case
+	// fmt.Println("vote ended: ", vote.VoteEnd.Before(sdkctx.BlockTime()))
+	if vote.VoteEnd.Before(sdkctx.BlockTime()) {
+		fmt.Println("quorum not reached")
+		disputeStatus := types.Unresolved
+		// check if rounds have been exhausted or dispute has expired in order to disperse funds
+		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
+			disputeStatus = types.Resolved
+		}
+		if len(allvoters) == 0 {
+			if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
+				return err
+			}
+			if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
+				return err
+			}
+			return nil
+		}
+		// fmt.Println("no quorum majority updating dispute", disputeStatus, totalRatio)
+		// fmt.Println("scales", scaledSupport, scaledAgainst, scaledInvalid)
+		return k.UpdateDispute(ctx, id, disputeStatus, scaledSupport, scaledAgainst, scaledInvalid)
+	} else {
+		return errors.New("vote period not ended and quorum not reached")
+	}
+
+}
+
+func (k Keeper) UpdateDispute(
+	ctx context.Context,
+	id uint64,
+	status types.DisputeStatus,
+	scaledSupport, scaledAgainst, scaledInvalid math.LegacyDec) error {
+	switch {
+	case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
+		if err := k.SetDisputeStatus(ctx, id, status); err != nil {
+			return err
+		}
+		if err := k.SetVoteResult(ctx, id, types.VoteResult_SUPPORT); err != nil {
+			return err
+		}
+	case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
+		if err := k.SetDisputeStatus(ctx, id, status); err != nil {
+			return err
+		}
+		if err := k.SetVoteResult(ctx, id, types.VoteResult_AGAINST); err != nil {
+			return err
+		}
+	case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
+		if err := k.SetDisputeStatus(ctx, id, status); err != nil {
+			return err
+		}
+		if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
+			return err
+		}
+	default:
+	}
+	return nil
 }

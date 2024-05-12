@@ -23,16 +23,16 @@ func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coi
 }
 
 // Pay fee from validator's bond can only be called by the validator itself
-func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin) error {
-	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount)
+func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin, hashId []byte) error {
+	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount, hashId)
 }
 
 // Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool) error {
+func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool, hashId []byte) error {
 	proposer := sdk.MustAccAddressFromBech32(sender)
 	if fromBond {
 		// pay fee from given validator
-		err := k.PayFromBond(ctx, proposer, fee)
+		err := k.PayFromBond(ctx, proposer, fee, hashId)
 		if err != nil {
 			return err
 		}
@@ -48,7 +48,7 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, from
 // return slashed tokens when reporter either wins dispute or dispute is invalid
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
 
-	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.ReportEvidence.Reporter, dispute.ReportEvidence.BlockNumber, dispute.SlashAmount)
+	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.ReportEvidence.Reporter, dispute.SlashAmount, dispute.HashId)
 	if err != nil {
 		return err
 	}
@@ -57,9 +57,9 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) 
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
 }
 
-func (k Keeper) ReturnFeetoStake(ctx context.Context, repAddr string, height int64, remainingAmt math.Int) error {
+func (k Keeper) ReturnFeetoStake(ctx context.Context, repAcc sdk.AccAddress, hashId []byte, remainingAmt math.Int) error {
 
-	err := k.reporterKeeper.ReturnSlashedTokens(ctx, repAddr, height, remainingAmt)
+	err := k.reporterKeeper.FeeRefund(ctx, repAcc, hashId, remainingAmt)
 	if err != nil {
 		return err
 	}

@@ -29,8 +29,9 @@ type (
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
 		Schema         collections.Schema
-		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                                      // key: reporter, queryid
-		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]                       // key: queryId, tipper
+		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                // key: reporter, queryid
+		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex] // key: queryId, tipper
+		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, int64], math.Int, tipperTotalIndex]
 		TotalTips      collections.Item[math.Int]                                                                           // keep track of the total tips                                  // key: queryId, timestamp
 		Nonces         collections.Map[[]byte, uint64]                                                                      // key: queryId
 		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
@@ -100,6 +101,14 @@ func NewKeeper(
 		),
 		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
 		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
+
+		TipperTotal: collections.NewIndexedMap(sb,
+			types.TipperTotalPrefix,
+			"tipper_total",
+			collections.PairKeyCodec(collections.BytesKey, collections.Int64Key),
+			sdk.IntValue,
+			NewTippersIndex(sb),
+		),
 	}
 
 	schema, err := sb.Build()

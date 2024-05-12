@@ -34,15 +34,20 @@ type BankKeeper interface {
 type OracleKeeper interface {
 	GetTotalTips(ctx context.Context) (math.Int, error)
 	GetUserTips(ctx context.Context, tipper sdk.AccAddress) (oracletypes.UserTipTotal, error)
+	GetTotalTipsAtBlock(ctx context.Context, blockNumber int64) (math.Int, error)
+	GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, tipper sdk.AccAddress) (math.Int, error)
 }
 
 type ReporterKeeper interface {
-	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int) error
+	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error
 	Reporter(ctx context.Context, repAddr sdk.AccAddress) (*reportertypes.OracleReporter, error)
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration int64) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
-	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error
-	ReturnSlashedTokens(ctx context.Context, repAddr string, blockHeight int64, amt math.Int) error
+	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error
+	ReturnSlashedTokens(ctx context.Context, repAddr string, amt math.Int, hashId []byte) error
 	AddAmountToStake(ctx context.Context, addr string, amt math.Int) error
 	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Delegation, error)
+	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error)
+	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error)
+	FeeRefund(ctx context.Context, repAcc sdk.AccAddress, hashId []byte, amt math.Int) error
 }

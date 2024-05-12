@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -37,49 +36,65 @@ func (k Keeper) GetQueryTip(ctx context.Context, queryId []byte) (math.Int, erro
 }
 
 func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) (types.UserTipTotal, error) {
-	it, err := k.Tips.Indexes.Tipper.MatchExact(ctx, tipper.Bytes())
+	// it, err := k.Tips.Indexes.Tipper.MatchExact(ctx, tipper.Bytes())
+	// if err != nil {
+	// 	return types.UserTipTotal{}, err
+	// }
+
+	// vals, err := indexes.CollectValues(ctx, k.Tips, it)
+	// if err != nil {
+	// 	return types.UserTipTotal{}, err
+	// }
+
+	// totalTips := math.ZeroInt()
+	// for _, tip := range vals {
+	// 	totalTips = totalTips.Add(tip)
+	// }
+	tip, err := k.GetTipsAtBlockForTipper(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight(), tipper)
 	if err != nil {
 		return types.UserTipTotal{}, err
 	}
-
-	vals, err := indexes.CollectValues(ctx, k.Tips, it)
-	if err != nil {
-		return types.UserTipTotal{}, err
-	}
-
-	totalTips := math.ZeroInt()
-	for _, tip := range vals {
-		totalTips = totalTips.Add(tip)
-	}
-
 	return types.UserTipTotal{
 		Address: tipper.String(),
-		Total:   totalTips,
+		Total:   tip,
 	}, nil
 }
 
 func (k Keeper) GetTotalTips(ctx context.Context) (math.Int, error) {
-	totalTips, err := k.TotalTips.Get(ctx)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return math.ZeroInt(), nil
-		}
-		return math.Int{}, err
-	}
+	return k.GetTotalTipsAtBlock(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight())
+}
+
+// get tips at block
+func (k Keeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, tipper sdk.AccAddress) (math.Int, error) {
+	totalTips := math.ZeroInt()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](tipper).EndInclusive(blockNumber)
+	k.TipperTotal.Walk(ctx, rng, func(k collections.Pair[[]byte, int64], v math.Int) (stop bool, err error) {
+		totalTips = v
+		return true, nil
+	})
 
 	return totalTips, nil
 }
 
-// Add to overall total tips, used for dispute voting calculation
-func (k Keeper) AddtoTotalTips(ctx context.Context, tip math.Int) error {
-	totalTips, err := k.TotalTips.Get(ctx)
+func (k Keeper) GetTotalTipsAtBlock(ctx context.Context, blockNumber int64) (math.Int, error) {
+	totalTips := math.ZeroInt()
+	rng := new(collections.Range[int64]).EndInclusive(blockNumber)
+	iter, err := k.TipperTotal.Indexes.BlockNumber.Iterate(ctx, rng)
 	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return k.TotalTips.Set(ctx, tip)
-		}
-	} else {
-		return err
+		return math.Int{}, err
 	}
-	totalTips = totalTips.Add(totalTips)
-	return k.TotalTips.Set(ctx, totalTips)
+
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return math.Int{}, err
+		}
+		amt, err := k.TipperTotal.Get(ctx, pk)
+		if err != nil {
+			return math.Int{}, err
+		}
+		totalTips = totalTips.Add(amt)
+	}
+	return totalTips, nil
 }

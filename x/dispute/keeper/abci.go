@@ -73,7 +73,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 		// refund the remaining dispute fee to the fee payers according to their payment method
-		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn); err != nil {
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn, dispute.HashId); err != nil {
 			return err
 		}
 		// stake the slashed tokens back into the bonded pool for the reporter
@@ -94,7 +94,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 		// refund the remaining dispute fee to the fee payers according to their payment method
-		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn); err != nil {
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn, dispute.HashId); err != nil {
 			return err
 		}
 		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
@@ -125,14 +125,11 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	}
-	return nil
+	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
 
 func (k Keeper) ExecuteVotes(ctx context.Context, ids []uint64) error {
 	for _, id := range ids {
-		if err := k.Tallyvote(ctx, id); err != nil {
-			return err
-		}
 		if err := k.ExecuteVote(ctx, id); err != nil {
 			return err
 		}

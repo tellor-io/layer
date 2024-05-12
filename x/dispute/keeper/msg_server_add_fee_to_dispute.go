@@ -25,7 +25,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		return nil, types.ErrDisputeFeeAlreadyMet
 	}
 	// Pay fee
-	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.Amount, msg.PayFromBond); err != nil {
+	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.Amount, msg.PayFromBond, dispute.HashId); err != nil {
 		return nil, err
 	}
 	// Don't take payment more than slash amount
@@ -41,7 +41,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	})
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory); err != nil {
+		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return nil, err
 		}
 		// begin voting immediately
