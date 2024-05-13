@@ -22,6 +22,7 @@ type MsgClient interface {
 	AddFeeToDispute(ctx context.Context, in *MsgAddFeeToDispute, opts ...grpc.CallOption) (*MsgAddFeeToDisputeResponse, error)
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	UpdateTeam(ctx context.Context, in *MsgUpdateTeam, opts ...grpc.CallOption) (*MsgUpdateTeamResponse, error)
+	TallyVote(ctx context.Context, in *MsgTallyVote, opts ...grpc.CallOption) (*MsgTallyVoteResponse, error)
 }
 
 type msgClient struct {
@@ -68,6 +69,15 @@ func (c *msgClient) UpdateTeam(ctx context.Context, in *MsgUpdateTeam, opts ...g
 	return out, nil
 }
 
+func (c *msgClient) TallyVote(ctx context.Context, in *MsgTallyVote, opts ...grpc.CallOption) (*MsgTallyVoteResponse, error) {
+	out := new(MsgTallyVoteResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Msg/TallyVote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -76,6 +86,7 @@ type MsgServer interface {
 	AddFeeToDispute(context.Context, *MsgAddFeeToDispute) (*MsgAddFeeToDisputeResponse, error)
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	UpdateTeam(context.Context, *MsgUpdateTeam) (*MsgUpdateTeamResponse, error)
+	TallyVote(context.Context, *MsgTallyVote) (*MsgTallyVoteResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -94,6 +105,9 @@ func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse,
 }
 func (UnimplementedMsgServer) UpdateTeam(context.Context, *MsgUpdateTeam) (*MsgUpdateTeamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTeam not implemented")
+}
+func (UnimplementedMsgServer) TallyVote(context.Context, *MsgTallyVote) (*MsgTallyVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TallyVote not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -180,6 +194,24 @@ func _Msg_UpdateTeam_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_TallyVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgTallyVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).TallyVote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Msg/TallyVote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).TallyVote(ctx, req.(*MsgTallyVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -202,6 +234,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateTeam",
 			Handler:    _Msg_UpdateTeam_Handler,
+		},
+		{
+			MethodName: "TallyVote",
+			Handler:    _Msg_TallyVote_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

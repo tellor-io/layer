@@ -18,7 +18,17 @@ service Msg {
   rpc AddFeeToDispute(MsgAddFeeToDispute) returns (MsgAddFeeToDisputeResponse);
   rpc Vote(MsgVote) returns (MsgVoteResponse);
   rpc UpdateTeam(MsgUpdateTeam) returns (MsgUpdateTeamResponse);
+  rpc TallyVote(MsgTallyVote) returns (MsgTallyVoteResponse);
 }
+
+message MsgTallyVote {
+  option (cosmos.msg.v1.signer) = "caller_address";
+  string caller_address = 1;
+  uint64 dispute_id = 2;
+}
+
+message MsgTallyVoteResponse {}
+
 message MsgProposeDispute {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;

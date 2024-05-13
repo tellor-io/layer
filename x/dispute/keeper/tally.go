@@ -59,7 +59,6 @@ func calculateVotingPower(n, d math.Int) math.Int {
 		return math.ZeroInt()
 	}
 	scalingFactor := math.NewInt(1_000_000)
-	fmt.Println(n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor), n, d)
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
@@ -174,8 +173,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		scaledAgainst = scaledAgainst.Add(math.LegacyNewDecFromInt(tallies.AgainstVotes.Users).Quo(userVoteSumDec))
 		scaledInvalid = scaledInvalid.Add(math.LegacyNewDecFromInt(tallies.Invalid.Users).Quo(userVoteSumDec))
 	}
-	// fmt.Println("total ratio", totalRatio)
-	// reporterRatio := ratio(totalReporterPower, reporterVoteSum)
+
 	totalReporterPower, err := k.GetTotalReporterPower(ctx)
 	if err != nil {
 		return err
@@ -185,7 +183,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	reportersRng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](id)
 	err = k.ReportersGroup.Walk(ctx, reportersRng, func(key collections.Pair[uint64, sdk.AccAddress], value math.Int) (stop bool, err error) {
 		vote, err := k.Voter.Get(ctx, key)
-		// fmt.Println("reporter vote", vote.Vote, value)
+
 		if err != nil {
 			return true, err
 		}
@@ -270,7 +268,6 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
-	// fmt.Println("vote ended: ", vote.VoteEnd.Before(sdkctx.BlockTime()))
 	if vote.VoteEnd.Before(sdkctx.BlockTime()) {
 		fmt.Println("quorum not reached")
 		disputeStatus := types.Unresolved
@@ -287,8 +284,6 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 			}
 			return nil
 		}
-		// fmt.Println("no quorum majority updating dispute", disputeStatus, totalRatio)
-		// fmt.Println("scales", scaledSupport, scaledAgainst, scaledInvalid)
 		return k.UpdateDispute(ctx, id, disputeStatus, scaledSupport, scaledAgainst, scaledInvalid)
 	} else {
 		return errors.New("vote period not ended and quorum not reached")
