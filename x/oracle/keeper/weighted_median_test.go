@@ -33,19 +33,19 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 
 	_, err := s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	s.NoError(err)
-	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	res, err := s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, qId)
 	s.Nil(err)
-	s.Equal(res.Report.QueryId, qId, "query id is not correct")
-	s.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
-	s.Equal(res.Report.AggregateValue, expectedValue, "aggregate value is not correct")
-	s.Equal(res.Report.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Report.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.QueryId, qId, "query id is not correct")
+	s.Equal(res.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
+	s.Equal(res.AggregateValue, expectedValue, "aggregate value is not correct")
+	s.Equal(res.ReporterPower, expectedPower, "reporter power is not correct")
+	s.Equal(res.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
 	//  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
-		s.Equal(res.Report.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+		s.Equal(res.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
 	weightedMean := testutil.CalculateWeightedMean(valuesInt, powers)
-	s.Equal(res.Report.StandardDeviation, testutil.CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
+	s.Equal(res.StandardDeviation, testutil.CalculateStandardDeviation(valuesInt, powers, weightedMean), "std deviation is not correct")
 
 	// // special case A -- lower weighted median and upper weighted median are equal, powers are equal
 	// // calculates lower median

@@ -1,7 +1,8 @@
 package keeper_test
 
 import (
-	// "github.com/stretchr/testify/require"
+	"encoding/hex"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -12,7 +13,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
-	req := &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr}
+	req := &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)}
 
 	report, err := s.queryClient.GetReportsbyQid(s.ctx, req)
 	s.Nil(err)
@@ -38,11 +39,11 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	s.NoError(err)
 	s.Equal(*expectedReports.MicroReports[0], report2.MicroReports[0])
 
-	report3, err := s.queryClient.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: stakedReporter.GetReporter(), QueryId: queryIdStr})
+	report3, err := s.queryClient.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: stakedReporter.GetReporter(), QueryId: hex.EncodeToString(queryIdStr)})
 	s.NoError(err)
 	s.EqualValues(expectedReports.MicroReports, report3.Reports.MicroReports)
 
-	report, err = s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryIdStr})
+	report, err = s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)})
 	s.NoError(err)
 	s.Equal(expectedReports, report.Reports)
 }

@@ -21,7 +21,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	}
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
 
-	tip, err := k.Keeper.transfer(ctx, tipper, msg.Amount)
+	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -30,20 +30,20 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
 	// get query info for the query id
-	query, err := k.Keeper.Query.Get(ctx, queryId)
+	query, err := k.keeper.Query.Get(ctx, queryId)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
 		}
 		// initialize query tip first time
-		query, err := k.Keeper.initializeQuery(ctx, msg.QueryData)
+		query, err := k.keeper.initializeQuery(ctx, msg.QueryData)
 		if err != nil {
 			return nil, err
 		}
 
 		query.Amount = tip.Amount
 		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
-		err = k.Keeper.Query.Set(ctx, queryId, query)
+		err = k.keeper.Query.Set(ctx, queryId, query)
 		if err != nil {
 			return nil, err
 		}
@@ -59,7 +59,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		// in aggregate you set revealed reports to false after pay out
 		// so if query either has reports or is paid out then new id should be generated
 		if query.HasRevealedReports || prevAmt.IsZero() {
-			id, err := k.QuerySequencer.Next(ctx)
+			id, err := k.keeper.QuerySequencer.Next(ctx)
 			if err != nil {
 				return nil, err
 			}
@@ -68,12 +68,12 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			query.HasRevealedReports = false
 		}
 	}
-	err = k.Keeper.Query.Set(ctx, queryId, query)
+	err = k.keeper.Query.Set(ctx, queryId, query)
 	if err != nil {
 		return nil, err
 	}
 
-	prevTip, err := k.Keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
+	prevTip, err := k.keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get previous tip: %w", err)
 	}
@@ -81,11 +81,11 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if !prevTip.IsNil() {
 		tip = tip.AddAmount(prevTip)
 	}
-	err = k.Keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
+	err = k.keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
 	if err != nil {
 		return nil, err
 	}
-	err = k.Keeper.AddtoTotalTips(ctx, tip.Amount)
+	err = k.keeper.AddtoTotalTips(ctx, tip.Amount)
 	if err != nil {
 		return nil, err
 	}
