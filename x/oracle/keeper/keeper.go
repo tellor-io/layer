@@ -29,10 +29,11 @@ type (
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
 		Schema         collections.Schema
-		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                // key: reporter, queryid
-		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex] // key: queryId, tipper
-		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, int64], math.Int, tipperTotalIndex]
-		TotalTips      collections.Item[math.Int]                                                                           // keep track of the total tips                                  // key: queryId, timestamp
+		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                      // key: reporter, queryid
+		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]       // key: queryId, tipper
+		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, int64], math.Int, tipperTotalIndex] // key: tipperAcc, blockNumber
+		// total tips given over time
+		TotalTips      collections.Map[int64, math.Int]                                                                     // key: blockNumber, value: total tips                                  // key: queryId, timestamp
 		Nonces         collections.Map[[]byte, uint64]                                                                      // key: queryId
 		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
 		QuerySequencer collections.Sequence
@@ -81,7 +82,7 @@ func NewKeeper(
 			sdk.IntValue,
 			NewTipsIndex(sb),
 		),
-		TotalTips:  collections.NewItem(sb, types.TotalTipsPrefix, "total_tips", sdk.IntValue),
+		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Int64Key, sdk.IntValue),
 		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
 		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc), NewAggregatesIndex(sb)),
 		Reports: collections.NewIndexedMap(sb,

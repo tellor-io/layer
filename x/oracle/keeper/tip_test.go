@@ -82,40 +82,40 @@ func (s *KeeperTestSuite) TestGetUserTips() {
 
 	res, err := s.oracleKeeper.GetUserTips(s.ctx, acc)
 	s.NoError(err)
-	s.Equal(math.ZeroInt(), res.Total)
-	s.Equal(acc.String(), res.Address)
+	s.Equal(math.ZeroInt(), res)
 
 	query := ReturnTestQueryMeta(math.NewInt(1 * 1e6))
-	s.oracleKeeper.Tips.Set(s.ctx, collections.Join(TRB_queryId, acc.Bytes()), query.Amount)
-
+	s.oracleKeeper.TipperTotal.Set(s.ctx, collections.Join(acc.Bytes(), s.ctx.BlockHeight()), query.Amount)
 	res, err = s.oracleKeeper.GetUserTips(s.ctx, acc)
 	s.NoError(err)
-	s.Equal(math.NewInt(1*1e6), res.Total)
-	s.Equal(acc.String(), res.Address)
+	s.Equal(math.NewInt(1*1e6), res)
 
 	query.QueryId = ETH_queryId
 	query.Id = 2
-	s.oracleKeeper.Tips.Set(s.ctx, collections.Join(ETH_queryId, acc.Bytes()), query.Amount)
+	// adding the flow here to show how its handled in msgTip
+	tipperTotal, err := s.oracleKeeper.TipperTotal.Get(s.ctx, collections.Join(acc.Bytes(), s.ctx.BlockHeight()))
+	s.NoError(err)
+	query.Amount = tipperTotal.Add(query.Amount)
+	s.oracleKeeper.TipperTotal.Set(s.ctx, collections.Join(acc.Bytes(), s.ctx.BlockHeight()), query.Amount)
 
 	res, err = s.oracleKeeper.GetUserTips(s.ctx, acc)
 	s.NoError(err)
-	s.Equal(math.NewInt(2*1e6), res.Total)
-	s.Equal(acc.String(), res.Address)
+	s.Equal(math.NewInt(2*1e6), res)
 }
 
 func (s *KeeperTestSuite) TestGetTotalTips() {
 	res, err := s.oracleKeeper.GetTotalTips(s.ctx)
 	s.NoError(err)
 	s.Equal(math.ZeroInt(), res)
-
-	s.oracleKeeper.TotalTips.Set(s.ctx, math.NewInt(100*1e6))
+	s.oracleKeeper.TipperTotal.Set(s.ctx, collections.Join(sample.AccAddressBytes().Bytes(), s.ctx.BlockHeight()), math.NewInt(100*1e6))
+	s.oracleKeeper.TotalTips.Set(s.ctx, s.ctx.BlockHeight(), math.NewInt(100*1e6))
 	res, err = s.oracleKeeper.GetTotalTips(s.ctx)
 	s.NoError(err)
 	s.Equal(math.NewInt(100*1e6), res)
 }
 
 func (s *KeeperTestSuite) TestAddtoTotalTips() {
-	s.oracleKeeper.TotalTips.Set(s.ctx, math.NewInt(1*1e6))
+	s.oracleKeeper.TotalTips.Set(s.ctx, s.ctx.BlockHeight(), math.NewInt(1*1e6))
 	beforeTotalTips, err := s.oracleKeeper.GetTotalTips(s.ctx)
 	s.NoError(err)
 	s.Equal(math.NewInt(1*1e6), beforeTotalTips)

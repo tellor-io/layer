@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	layer "github.com/tellor-io/layer/types"
@@ -74,32 +73,23 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		return nil, err
 	}
 
+	// update totals
+	if err := k.Keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
+		return nil, err
+	}
+	if err := k.Keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
+		return nil, err
+	}
+
 	prevTip, err := k.Keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get previous tip: %w", err)
 	}
-	// placeholder
-	tippertip := tip.Amount
+
 	if !prevTip.IsNil() {
 		tip = tip.AddAmount(prevTip)
 	}
 	err = k.Keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
-	if err != nil {
-		return nil, err
-	}
-
-	// update tipper total
-	ks := collections.Join(tipper.Bytes(), ctx.BlockHeight())
-	tipperTotal, err := k.Keeper.TipperTotal.Get(ctx, ks)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		tipperTotal = math.ZeroInt()
-	}
-	tipperTotal = tipperTotal.Add(tippertip)
-	err = k.Keeper.TipperTotal.Set(ctx, ks, tipperTotal)
-	// err = k.Keeper.AddtoTotalTips(ctx, tip.Amount)
 	if err != nil {
 		return nil, err
 	}

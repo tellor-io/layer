@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
@@ -33,7 +32,7 @@ type BankKeeper interface {
 
 type OracleKeeper interface {
 	GetTotalTips(ctx context.Context) (math.Int, error)
-	GetUserTips(ctx context.Context, tipper sdk.AccAddress) (oracletypes.UserTipTotal, error)
+	GetUserTips(ctx context.Context, tipper sdk.AccAddress) (math.Int, error)
 	GetTotalTipsAtBlock(ctx context.Context, blockNumber int64) (math.Int, error)
 	GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, tipper sdk.AccAddress) (math.Int, error)
 }

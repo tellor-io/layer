@@ -42,7 +42,7 @@ service Query {
 
   // Queries a list of GetUserTipTotal items.
   rpc GetUserTipTotal(QueryGetUserTipTotalRequest) returns (QueryGetUserTipTotalResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}/{query_data}";
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}";
   }
 
   // Queries a list of GetAggregatedReport items.
@@ -110,11 +110,14 @@ message QueryGetCurrentTipResponse {
 
 message QueryGetUserTipTotalRequest {
   string tipper = 1;
-  bytes query_data = 2;
 }
 
 message QueryGetUserTipTotalResponse {
-  UserTipTotal totalTips = 1;
+  string total_tips = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message QueryGetCurrentAggregatedReportRequest {

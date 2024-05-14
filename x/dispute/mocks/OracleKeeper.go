@@ -9,8 +9,6 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -92,18 +90,18 @@ func (_m *OracleKeeper) GetTotalTipsAtBlock(ctx context.Context, blockNumber int
 }
 
 // GetUserTips provides a mock function with given fields: ctx, tipper
-func (_m *OracleKeeper) GetUserTips(ctx context.Context, tipper types.AccAddress) (oracletypes.UserTipTotal, error) {
+func (_m *OracleKeeper) GetUserTips(ctx context.Context, tipper types.AccAddress) (math.Int, error) {
 	ret := _m.Called(ctx, tipper)
 
-	var r0 oracletypes.UserTipTotal
+	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (oracletypes.UserTipTotal, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, error)); ok {
 		return rf(ctx, tipper)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) oracletypes.UserTipTotal); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) math.Int); ok {
 		r0 = rf(ctx, tipper)
 	} else {
-		r0 = ret.Get(0).(oracletypes.UserTipTotal)
+		r0 = ret.Get(0).(math.Int)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {

@@ -13,21 +13,21 @@ paths:
           schema:
             type: object
             properties:
-              queryId:
+              query_id:
                 type: string
               timestamp:
                 type: string
-              aggregateValue:
+              aggregate_value:
                 type: string
-              aggregatePower:
+              aggregate_power:
                 type: string
               checkpoint:
                 type: string
-              attestationTimestamp:
+              attestation_timestamp:
                 type: string
-              previousReportTimestamp:
+              previous_report_timestamp:
                 type: string
-              nextReportTimestamp:
+              next_report_timestamp:
                 type: string
         default:
           description: An unexpected error response.
@@ -114,7 +114,7 @@ paths:
                   reporterPower:
                     type: string
                     format: int64
-                  standardDeviation:
+                  standard_deviation:
                     type: number
                     format: double
                   reporters:
@@ -238,7 +238,6 @@ paths:
           in: path
           required: true
           type: string
-          format: byte
         - name: timestamp
           in: path
           required: true
@@ -246,7 +245,7 @@ paths:
           format: int64
       tags:
         - Query
-  /layer/bridge/get_evm_address_by_validator_address/{validatorAddress}:
+  /layer/bridge/get_evm_address_by_validator_address/{validator_address}:
     get:
       operationId: LayerBridgeGetEvmAddressByValidatorAddress
       responses:
@@ -255,7 +254,7 @@ paths:
           schema:
             type: object
             properties:
-              evmAddress:
+              evm_address:
                 type: string
         default:
           description: An unexpected error response.
@@ -276,7 +275,7 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: validatorAddress
+        - name: validator_address
           in: path
           required: true
           type: string
@@ -292,7 +291,7 @@ paths:
           schema:
             type: object
             properties:
-              bridgeValidatorSet:
+              bridge_validator_set:
                 type: array
                 items:
                   type: object
@@ -322,7 +321,7 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /layer/bridge/get_snapshots_by_report/{queryId}/{timestamp}:
+  /layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}:
     get:
       operationId: LayerBridgeGetSnapshotsByReport
       responses:
@@ -354,7 +353,7 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: queryId
+        - name: query_id
           in: path
           required: true
           type: string
@@ -373,7 +372,7 @@ paths:
           schema:
             type: object
             properties:
-              validatorCheckpoint:
+              validator_checkpoint:
                 type: string
         default:
           description: An unexpected error response.
@@ -406,12 +405,12 @@ paths:
             properties:
               checkpoint:
                 type: string
-              valsetHash:
+              valset_hash:
                 type: string
               timestamp:
                 type: string
                 format: int64
-              powerThreshold:
+              power_threshold:
                 type: string
                 format: int64
         default:
@@ -487,7 +486,7 @@ paths:
           schema:
             type: object
             properties:
-              bridgeValidatorSet:
+              bridge_validator_set:
                 type: array
                 items:
                   type: object
@@ -611,6 +610,9 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+                properties:
+                  team_address:
+                    type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -632,6 +634,601 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_qid/{query_id}:
+    get:
+      summary: Queries a list of GetReportsbyQid items.
+      operationId: LayerOracleGetReportsbyQid
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reports:
+                type: object
+                properties:
+                  microReports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                          title: reporter is the address of the reporter
+                        power:
+                          type: string
+                          format: int64
+                          title: >-
+                            the power of the reporter based on total tokens
+                            normalized
+                        query_type:
+                          type: string
+                          title: string identifier of the data spec
+                        query_id:
+                          type: string
+                          format: byte
+                          title: hash of the query data
+                        aggregate_method:
+                          type: string
+                          title: >-
+                            aggregate method to use for aggregating all the
+                            reports for the query id
+                        value:
+                          type: string
+                          title: hex string of the response value
+                        timestamp:
+                          type: string
+                          format: date-time
+                          title: timestamp of when the report was created
+                        cyclelist:
+                          type: boolean
+                          title: >-
+                            indicates if the report's query id is in the
+                            cyclelist
+                        block_number:
+                          type: string
+                          format: int64
+                          title: block number of when the report was created
+                      title: MicroReport represents data for a single report
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_id
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_reporter/{reporter}:
+    get:
+      operationId: LayerOracleGetReportsbyReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              microReports:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reporter:
+                      type: string
+                      title: reporter is the address of the reporter
+                    power:
+                      type: string
+                      format: int64
+                      title: >-
+                        the power of the reporter based on total tokens
+                        normalized
+                    query_type:
+                      type: string
+                      title: string identifier of the data spec
+                    query_id:
+                      type: string
+                      format: byte
+                      title: hash of the query data
+                    aggregate_method:
+                      type: string
+                      title: >-
+                        aggregate method to use for aggregating all the reports
+                        for the query id
+                    value:
+                      type: string
+                      title: hex string of the response value
+                    timestamp:
+                      type: string
+                      format: date-time
+                      title: timestamp of when the report was created
+                    cyclelist:
+                      type: boolean
+                      title: indicates if the report's query id is in the cyclelist
+                    block_number:
+                      type: string
+                      format: int64
+                      title: block number of when the report was created
+                  title: MicroReport represents data for a single report
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/oracle/get_reportsby_reporter_qid/{reporter}/{query_id}:
+    get:
+      operationId: LayerOracleGetReportsbyReporterQid
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reports:
+                type: object
+                properties:
+                  microReports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                          title: reporter is the address of the reporter
+                        power:
+                          type: string
+                          format: int64
+                          title: >-
+                            the power of the reporter based on total tokens
+                            normalized
+                        query_type:
+                          type: string
+                          title: string identifier of the data spec
+                        query_id:
+                          type: string
+                          format: byte
+                          title: hash of the query data
+                        aggregate_method:
+                          type: string
+                          title: >-
+                            aggregate method to use for aggregating all the
+                            reports for the query id
+                        value:
+                          type: string
+                          title: hex string of the response value
+                        timestamp:
+                          type: string
+                          format: date-time
+                          title: timestamp of when the report was created
+                        cyclelist:
+                          type: boolean
+                          title: >-
+                            indicates if the report's query id is in the
+                            cyclelist
+                        block_number:
+                          type: string
+                          format: int64
+                          title: block number of when the report was created
+                      title: MicroReport represents data for a single report
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          in: path
+          required: true
+          type: string
+        - name: query_id
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /layer/oracle/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: LayerOracleParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  minStakeAmount:
+                    type: string
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/GetDataBefore/{query_id}/{timestamp}:
+    get:
+      summary: Queries a list of GetAggregatedReport items.
+      operationId: LayerOracleGetDataBefore
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              report:
+                type: object
+                properties:
+                  query_id:
+                    type: string
+                    format: byte
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                  flagged:
+                    type: boolean
+                  nonce:
+                    type: string
+                    format: uint64
+                  aggregateReportIndex:
+                    type: string
+                    format: int64
+                  height:
+                    type: string
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_id
+          in: path
+          required: true
+          type: string
+          format: byte
+        - name: timestamp
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Query
+  /tellor-io/layer/oracle/current_cyclelist_query:
+    get:
+      summary: Queries a list of CurrentCyclelistQuery items.
+      operationId: LayerOracleCurrentCyclelistQuery
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              query_data:
+                type: string
+                format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_aggregated_report/{query_id}:
+    get:
+      summary: Queries a list of GetAggregatedReport items.
+      operationId: LayerOracleGetAggregatedReport
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              report:
+                type: object
+                properties:
+                  query_id:
+                    type: string
+                    format: byte
+                  aggregateValue:
+                    type: string
+                  aggregateReporter:
+                    type: string
+                  reporterPower:
+                    type: string
+                    format: int64
+                  standardDeviation:
+                    type: number
+                    format: double
+                  reporters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reporter:
+                          type: string
+                        power:
+                          type: string
+                          format: int64
+                  flagged:
+                    type: boolean
+                  nonce:
+                    type: string
+                    format: uint64
+                  aggregateReportIndex:
+                    type: string
+                    format: int64
+                  height:
+                    type: string
+                    format: int64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_id
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_current_tip/{query_data}:
+    get:
+      summary: Queries a list of GetCurrentTip items.
+      operationId: LayerOracleGetCurrentTip
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              tips:
+                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_data
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_time_based_rewards:
+    get:
+      summary: Queries a list of GetTimeBasedRewards items.
+      operationId: LayerOracleGetTimeBasedRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reward:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_user_tip_total/{tipper}/{query_data}:
+    get:
+      summary: Queries a list of GetUserTipTotal items.
+      operationId: LayerOracleGetUserTipTotal
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              totalTips:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  total:
+                    type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: tipper
+          in: path
+          required: true
+          type: string
+        - name: query_data
+          in: path
+          required: true
+          type: string
+          format: byte
       tags:
         - Query
   /tellor-io/layer/reporter/commission/{reporter_address}:
@@ -4547,12 +5144,6 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
-  layer.bridge.MsgClaimDepositResponse:
-    type: object
-  layer.bridge.MsgRequestAttestationsResponse:
-    type: object
-  layer.bridge.MsgWithdrawTokensResponse:
-    type: object
   layer.bridge.Aggregate:
     type: object
     properties:
@@ -4566,7 +5157,7 @@ definitions:
       reporterPower:
         type: string
         format: int64
-      standardDeviation:
+      standard_deviation:
         type: number
         format: double
       reporters:
@@ -4598,7 +5189,10 @@ definitions:
       power:
         type: string
         format: int64
-  layer.bridge.BridgeValidator:
+  layer.bridge.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  layer.bridge.QueryBridgeValidator:
     type: object
     properties:
       ethereumAddress:
@@ -4606,27 +5200,24 @@ definitions:
       power:
         type: string
         format: uint64
-  layer.bridge.Params:
-    type: object
-    description: Params defines the parameters for the module.
   layer.bridge.QueryGetAttestationDataBySnapshotResponse:
     type: object
     properties:
-      queryId:
+      query_id:
         type: string
       timestamp:
         type: string
-      aggregateValue:
+      aggregate_value:
         type: string
-      aggregatePower:
+      aggregate_power:
         type: string
       checkpoint:
         type: string
-      attestationTimestamp:
+      attestation_timestamp:
         type: string
-      previousReportTimestamp:
+      previous_report_timestamp:
         type: string
-      nextReportTimestamp:
+      next_report_timestamp:
         type: string
   layer.bridge.QueryGetAttestationsBySnapshotResponse:
     type: object
@@ -4651,7 +5242,7 @@ definitions:
           reporterPower:
             type: string
             format: int64
-          standardDeviation:
+          standard_deviation:
             type: number
             format: double
           reporters:
@@ -4724,12 +5315,12 @@ definitions:
   layer.bridge.QueryGetEvmAddressByValidatorAddressResponse:
     type: object
     properties:
-      evmAddress:
+      evm_address:
         type: string
   layer.bridge.QueryGetEvmValidatorsResponse:
     type: object
     properties:
-      bridgeValidatorSet:
+      bridge_validator_set:
         type: array
         items:
           type: object
@@ -4751,18 +5342,18 @@ definitions:
     properties:
       checkpoint:
         type: string
-      valsetHash:
+      valset_hash:
         type: string
       timestamp:
         type: string
         format: int64
-      powerThreshold:
+      power_threshold:
         type: string
         format: int64
   layer.bridge.QueryGetValidatorCheckpointResponse:
     type: object
     properties:
-      validatorCheckpoint:
+      validator_checkpoint:
         type: string
   layer.bridge.QueryGetValidatorTimestampByIndexResponse:
     type: object
@@ -4773,7 +5364,7 @@ definitions:
   layer.bridge.QueryGetValsetByTimestampResponse:
     type: object
     properties:
-      bridgeValidatorSet:
+      bridge_validator_set:
         type: array
         items:
           type: object
@@ -4842,8 +5433,17 @@ definitions:
       power:
         type: string
         format: int64
+  layer.bridge.MsgClaimDepositResponse:
+    type: object
+  layer.bridge.MsgRequestAttestationsResponse:
+    type: object
+  layer.bridge.MsgWithdrawTokensResponse:
+    type: object
   layer.dispute.Params:
     type: object
+    properties:
+      team_address:
+        type: string
     description: Params defines the parameters for the module.
   layer.dispute.QueryParamsResponse:
     type: object
@@ -4851,6 +5451,9 @@ definitions:
       params:
         description: params holds all the parameters of this module.
         type: object
+        properties:
+          team_address:
+            type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.dispute.DisputeCategory:
     type: string
@@ -4870,6 +5473,10 @@ definitions:
   layer.dispute.MsgAddFeeToDisputeResponse:
     type: object
   layer.dispute.MsgProposeDisputeResponse:
+    type: object
+  layer.dispute.MsgTallyVoteResponse:
+    type: object
+  layer.dispute.MsgUpdateTeamResponse:
     type: object
   layer.dispute.MsgVoteResponse:
     type: object
@@ -4917,6 +5524,245 @@ definitions:
         format: int64
         title: block number of when the report was created
     title: MicroReport represents data for a single report
+  layer.oracle.Params:
+    type: object
+    properties:
+      minStakeAmount:
+        type: string
+    description: Params defines the parameters for the module.
+  layer.oracle.QueryCurrentCyclelistQueryResponse:
+    type: object
+    properties:
+      query_data:
+        type: string
+        format: byte
+  layer.oracle.QueryGetAggregatedReportResponse:
+    type: object
+    properties:
+      report:
+        type: object
+        properties:
+          query_id:
+            type: string
+            format: byte
+          aggregateValue:
+            type: string
+          aggregateReporter:
+            type: string
+          reporterPower:
+            type: string
+            format: int64
+          standardDeviation:
+            type: number
+            format: double
+          reporters:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                power:
+                  type: string
+                  format: int64
+          flagged:
+            type: boolean
+          nonce:
+            type: string
+            format: uint64
+          aggregateReportIndex:
+            type: string
+            format: int64
+          height:
+            type: string
+            format: int64
+  layer.oracle.QueryGetCurrentTipResponse:
+    type: object
+    properties:
+      tips:
+        type: string
+  layer.oracle.QueryGetReportsbyQidResponse:
+    type: object
+    properties:
+      reports:
+        type: object
+        properties:
+          microReports:
+            type: array
+            items:
+              type: object
+              properties:
+                reporter:
+                  type: string
+                  title: reporter is the address of the reporter
+                power:
+                  type: string
+                  format: int64
+                  title: the power of the reporter based on total tokens normalized
+                query_type:
+                  type: string
+                  title: string identifier of the data spec
+                query_id:
+                  type: string
+                  format: byte
+                  title: hash of the query data
+                aggregate_method:
+                  type: string
+                  title: >-
+                    aggregate method to use for aggregating all the reports for
+                    the query id
+                value:
+                  type: string
+                  title: hex string of the response value
+                timestamp:
+                  type: string
+                  format: date-time
+                  title: timestamp of when the report was created
+                cyclelist:
+                  type: boolean
+                  title: indicates if the report's query id is in the cyclelist
+                block_number:
+                  type: string
+                  format: int64
+                  title: block number of when the report was created
+              title: MicroReport represents data for a single report
+  layer.oracle.QueryGetReportsbyReporterResponse:
+    type: object
+    properties:
+      microReports:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+              title: reporter is the address of the reporter
+            power:
+              type: string
+              format: int64
+              title: the power of the reporter based on total tokens normalized
+            query_type:
+              type: string
+              title: string identifier of the data spec
+            query_id:
+              type: string
+              format: byte
+              title: hash of the query data
+            aggregate_method:
+              type: string
+              title: >-
+                aggregate method to use for aggregating all the reports for the
+                query id
+            value:
+              type: string
+              title: hex string of the response value
+            timestamp:
+              type: string
+              format: date-time
+              title: timestamp of when the report was created
+            cyclelist:
+              type: boolean
+              title: indicates if the report's query id is in the cyclelist
+            block_number:
+              type: string
+              format: int64
+              title: block number of when the report was created
+          title: MicroReport represents data for a single report
+  layer.oracle.QueryGetTimeBasedRewardsResponse:
+    type: object
+    properties:
+      reward:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+  layer.oracle.QueryGetUserTipTotalResponse:
+    type: object
+    properties:
+      totalTips:
+        type: object
+        properties:
+          address:
+            type: string
+          total:
+            type: string
+  layer.oracle.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          minStakeAmount:
+            type: string
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.oracle.Reports:
+    type: object
+    properties:
+      microReports:
+        type: array
+        items:
+          type: object
+          properties:
+            reporter:
+              type: string
+              title: reporter is the address of the reporter
+            power:
+              type: string
+              format: int64
+              title: the power of the reporter based on total tokens normalized
+            query_type:
+              type: string
+              title: string identifier of the data spec
+            query_id:
+              type: string
+              format: byte
+              title: hash of the query data
+            aggregate_method:
+              type: string
+              title: >-
+                aggregate method to use for aggregating all the reports for the
+                query id
+            value:
+              type: string
+              title: hex string of the response value
+            timestamp:
+              type: string
+              format: date-time
+              title: timestamp of when the report was created
+            cyclelist:
+              type: boolean
+              title: indicates if the report's query id is in the cyclelist
+            block_number:
+              type: string
+              format: int64
+              title: block number of when the report was created
+          title: MicroReport represents data for a single report
+  layer.oracle.UserTipTotal:
+    type: object
+    properties:
+      address:
+        type: string
+      total:
+        type: string
+  layer.oracle.MsgCommitReportResponse:
+    type: object
+  layer.oracle.MsgSubmitValueResponse:
+    type: object
+  layer.oracle.MsgTipResponse:
+    type: object
+  layer.oracle.MsgUpdateCyclelistResponse:
+    type: object
+    description: MsgUpdateCycleResponse defines the Msg/UpdateCycle response type.
+  layer.oracle.MsgUpdateParamsResponse:
+    type: object
   layer.registry.ABIComponent:
     type: object
     properties:
