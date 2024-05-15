@@ -110,8 +110,11 @@ curl tellornode.com:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/c
 # other node id: 0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5
 # ALICE_NODE_ID=$(./layerd --node https://tellorlayer.com/rpc comet show-node-id)
 # echo "ALICE NODE ID: $ALICE_NODE_ID"
+# this command works and returns node id from querying the node but needs quotes stripped
+# curl tellornode.com:26657/status | jq '.result.node_info.id'
 ALICE_NODE_ID=0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5
 ALICE_ID=$ALICE_NODE_ID@54.166.101.67:26656
+echo "Alice id: $ALICE_ID"
 
 echo "Set persistent peers for node..."
 sed -i "s|persistent_peers = \"\"|persistent_peers = \"'$ALICE_ID'\"|g" ~/.layer/$NODE_NAME/config/config.toml
