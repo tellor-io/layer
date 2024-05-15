@@ -116,7 +116,7 @@ ALICE_ID=$ALICE_NODE_ID@http://tellornode.com:26656
 echo "Set persistent peers for node..."
 sed -i "s|persistent_peers = \"\"|persistent_peers = \"'$ALICE_ID'\"|g" ~/.layer/$NODE_NAME/config/config.toml
 
-sed -i "s|'MyDir'|${newdir}|g" myconf.conf
+
 echo "Set seeds for node..."
 sed -i "s|seeds = \"\"|seeds = \"'$ALICE_ID'\"|g" ~/.layer/$NODE_NAME/config/config.toml
 
