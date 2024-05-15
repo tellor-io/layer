@@ -49,7 +49,7 @@ func TestDefaultGenesis(t *testing.T) {
 		Params:   types.DefaultParams(),
 		Dataspec: types.GenesisDataSpec(),
 	}
-	k, ctx := keepertest.RegistryKeeper(t)
+	k, _, _, ctx := keepertest.RegistryKeeper(t)
 	registry.InitGenesis(ctx, k, genesisState)
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
@@ -60,8 +60,8 @@ func TestValidateGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
 	h := json.RawMessage(`{
-		"params": {}
-	  }`)
+        "params": {}
+      }`)
 
 	err := am.ValidateGenesis(appCodec, nil, h)
 	require.NoError(t, err)
@@ -79,19 +79,50 @@ func TestRegisterGRPCGatewayRoutes(t *testing.T) {
 	router.ServeHTTP(recorder, req)
 	//require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 }
+
 func TestNewAppModule(t *testing.T) {
+	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
+	k, _k2, _k3, _ := keepertest.RegistryKeeper(t)
+	am := registry.NewAppModule(appCodec, k, _k2, _k3)
+	require.NotNil(t, am)
 }
 
 func TestRegisterServices(t *testing.T) {
+	// mockConfigurator := new(mocks.Configurator)
+	// mockQueryServer := new(mocks.Server)
+	// mockMsgServer := new(mocks.Server)
 
+	// mockConfigurator.On("QueryServer").Return(mockQueryServer)
+	// mockConfigurator.On("MsgServer").Return(mockMsgServer)
+	// mockQueryServer.On("RegisterService", mock.Anything, mock.Anything).Return()
+	// mockMsgServer.On("RegisterService", mock.Anything, mock.Anything).Return()
+
+	// am := createAppModule(t)
+	// am.RegisterServices(mockConfigurator)
+
+	// require.Equal(t, true, mockConfigurator.AssertExpectations(t))
+	// require.Equal(t, true, mockQueryServer.AssertExpectations(t))
+	// require.Equal(t, true, mockMsgServer.AssertExpectations(t))
 }
 
 func TestRegisterInvariants(t *testing.T) {
 }
 
 func TestInitGenesis(t *testing.T) {
+	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
+	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
+	am := registry.NewAppModule(appCodec, k, _k2, _k3)
+	h := json.RawMessage(`{"params":{},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
+	am.InitGenesis(ctx, appCodec, h)
 }
 func TestExportGenesis(t *testing.T) {
+	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
+	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
+	am := registry.NewAppModule(appCodec, k, _k2, _k3)
+	h := json.RawMessage(`{"params":{},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
+	am.InitGenesis(ctx, appCodec, h)
+	gen := am.ExportGenesis(ctx, appCodec)
+	require.Equal(t, gen, h)
 }
 func TestConsensusVersion(t *testing.T) {
 }
