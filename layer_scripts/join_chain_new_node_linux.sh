@@ -42,8 +42,8 @@ sed -i 's/^keyring-backend = .*"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.la
 sed -i 's/^keyring-backend = .*"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/config/client.toml
 
 # # Add a validator account for node
-# echo "Adding validator account for node..."
-# ./layerd keys add $NODE_NAME --keyring-backend $KEYRING_BACKEND --home ~/.layer/$NODE_NAME
+echo "Creating account keys for node to be able to send and receive loya and stake..."
+./layerd keys add $NODE_NAME --keyring-backend $KEYRING_BACKEND --home ~/.layer/$NODE_NAME
 
 # Get address/account for node to use in gentx tx
 echo "Get address/account for node to use in gentx tx"
