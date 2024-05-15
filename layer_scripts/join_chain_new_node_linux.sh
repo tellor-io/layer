@@ -114,10 +114,10 @@ ALICE_NODE_ID=0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5
 ALICE_ID=$ALICE_NODE_ID@http://tellornode.com:26656
 
 echo "Set persistent peers for node..."
-sed -i 's/persistent_peers = ""/persistent_peers = "\'$ALICE_ID\'"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i "s/persistent_peers = \"\"/persistent_peers = \"'$ALICE_ID'\"/g" ~/.layer/$NODE_NAME/config/config.toml
 
 echo "Set seeds for node..."
-sed -i 's/seeds = ""/seeds = "'$ALICE_ID'"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i "s/seeds = \"\"/seeds = \"'$ALICE_ID'\"/g" ~/.layer/$NODE_NAME/config/config.toml
 
 
 echo "Starting chain for node..."
