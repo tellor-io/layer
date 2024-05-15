@@ -23,8 +23,8 @@ done
 
 # rm -r -f build
 
-# echo "Build with checksum using Makefile.."
-# make build-with-checksum
+echo "Build with checksum using Makefile.."
+make build-with-checksum
 
 
 # Build base image of layerd_i to be the image used across all containers
