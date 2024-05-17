@@ -11,3 +11,4 @@ evm/cache
 evm/node_modules
 evm/package-lock.json
 secrets.yaml
+.env

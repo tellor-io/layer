@@ -1,287 +1,202 @@
-const { AbiCoder } = require("@ethersproject/abi");
+// const { AbiCoder } = require("@ethersproject/abi");
 const { expect } = require("chai");
 const h = require("./helpers/helpers");
 var assert = require('assert');
 const web3 = require('web3');
-const { ethers } = require("hardhat");
+const { hre, ethers } = require("hardhat");
 
 describe("Function Tests - NewTransition", function() {
 
-  const tellorMaster = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
+  const TELLOR_MASTER = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
   const DEV_WALLET = "0x39E419bA25196794B595B2a595Ea8E527ddC9856"
   const PARACHUTE = "0x83eB2094072f6eD9F57d3F19f54820ee0BaE6084"
-  const BIGWALLET = "0xf977814e90da44bfa03b6295a0616a897441acec";
-  const GOVERNANCE = "0xB30b1B98d8276b80bC4f5aF9f9170ef3220EC27D"
-  const REPORTER = "0x0D4F81320d36d7B7Cf5fE7d1D547f63EcBD1a3E0"
+  const BIGWALLET = "0x5a52E96BAcdaBb82fd05763E25335261B270Efcb";
+  const GOVERNANCE_FLEX = "0xB30b1B98d8276b80bC4f5aF9f9170ef3220EC27D"
   const TELLORFLEX = "0x8cFc184c877154a8F9ffE0fe75649dbe5e2DBEbf"
-  const abiCoder = new ethers.utils.AbiCoder();
-  const keccak256 = ethers.utils.keccak256;
+  const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks layer unbonding period
+  const abiCoder = new ethers.AbiCoder();
   const ETH_QUERY_DATA_ARGS = abiCoder.encode(["string", "string"], ["eth", "usd"]);
   const ETH_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["SpotPrice", ETH_QUERY_DATA_ARGS]);
-  const ETH_QUERY_ID = web3.utils.keccak256(ETH_QUERY_DATA);
+  const ETH_QUERY_ID = h.hash(ETH_QUERY_DATA);
+  const ORACLE_ADDR_UPDATE_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"])
+  const ORACLE_ADDR_UPDATE_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_UPDATE_QUERY_DATA_ARGS])
+  const ORACLE_ADDR_UPDATE_QUERY_ID = h.hash(ORACLE_ADDR_UPDATE_QUERY_DATA);
 
   let accounts = null
-  let oracle = null
+  let flex = null
   let tellor = null
-  let governance = null
-  let govSigner = null
+  let govflex = null
   let devWallet = null
-  let totalSupply = null
-  let blockyOld1 = null
-  let blockyNew2 = null
-  let blockyNew3 = null
+  let blocky0 = null
+  let blocky1 = null
+  let blocky2 = null
+  let snapshot = null
 
-  beforeEach("deploy and setup Tellor360", async function() {
+  before(async function() {
+    // take hardhat network snapshot
+    snapshot = await h.takeSnapshot()
+  })
 
-    await hre.network.provider.request({
-      method: "hardhat_reset",
-      params: [{forking: {
-            jsonRpcUrl: hre.config.networks.hardhat.forking.url,
-            blockNumber:14768690
-          },},],
-      });
-
-    await hre.network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [PARACHUTE]}
-    )
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [BIGWALLET]}
-    )
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [DEV_WALLET]
-    })
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [REPORTER]
-    })
+  beforeEach("deploy and transition to Layer TokenBridge", async function() {
+    // restore from snapshot
+    await snapshot.restore()
+    await h.impersonateAccount(BIGWALLET)
 
     //account forks
     accounts = await ethers.getSigners()
     devWallet = await ethers.provider.getSigner(DEV_WALLET);
     bigWallet = await ethers.provider.getSigner(BIGWALLET);
-    reporter = await ethers.provider.getSigner(REPORTER)
 
     //contract forks
-    tellor = await ethers.getContractAt("contracts/oldContracts/contracts/interfaces/ITellor.sol:ITellor", tellorMaster)
-    governance = await ethers.getContractAt("contracts/oldContracts/contracts/interfaces/ITellor.sol:ITellor", CURR_GOV)
-    oldOracle = await ethers.getContractAt("contracts/oldContracts/contracts/interfaces/ITellor.sol:ITellor", TELLORFLEX)
-    parachute = await ethers.getContractAt("contracts/oldContracts/contracts/interfaces/ITellor.sol:ITellor",PARACHUTE, devWallet);
+    tellor = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor", TELLOR_MASTER)
+    govflex = await ethers.getContractAt("polygongovernance/contracts/Governance.sol:Governance", GOVERNANCE_FLEX)
+    flex = await ethers.getContractAt("tellorflex/contracts/TellorFlex.sol:TellorFlex", TELLORFLEX)
+    parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor",PARACHUTE, devWallet);
 
-    let oracleFactory = await ethers.getContractFactory("TellorFlex")
-    oracle = await oracleFactory.deploy(tellorMaster, 12*60*60, BigInt(100E18), BigInt(10E18), MINIMUM_STAKE_AMOUNT, TRB_QUERY_ID)
-    await oracle.deployed()
+    // get blobstream initial params
+    valTs = await h.getValsetTimestampByIndex(0)
+    valParams = await h.getValsetCheckpointParams(valTs)
+    valSet = await h.getValset(valParams.timestamp)
+    // deploy blobstream
+    blobstream = await ethers.deployContract(
+      "BlobstreamO", [
+      valParams.powerThreshold,
+      valParams.timestamp,
+      UNBONDING_PERIOD,
+      valParams.checkpoint,
+      DEV_WALLET
+    ]
+    )
+    // deploy tokenbridge
+    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER, await blobstream.getAddress(), TELLORFLEX])
+    // stake reporter
+    await tellor.connect(bigWallet).transfer(await accounts[0].getAddress(), h.toWei("1000"))
+    await tellor.connect(accounts[0]).approve(TELLORFLEX, h.toWei("1000"))
+    await flex.connect(accounts[0]).depositStake(h.toWei("1000"))
+    // report new oracle address
+    newOracleAddrReport = abiCoder.encode(["address"], [await tbridge.getAddress()])
+    await flex.connect(accounts[0]).submitValue(ORACLE_ADDR_UPDATE_QUERY_ID, newOracleAddrReport, 0, ORACLE_ADDR_UPDATE_QUERY_DATA)
+    await h.advanceTime(43201)
+    // update oracle address
+    await tellor.updateOracleAddress()
+    await h.advanceTime(86400 * 7)
+    await tellor.updateOracleAddress()
 
-    let governanceFactory = await ethers.getContractFactory("contracts/testing/TestGovernance.sol:TestGovernance")
-    newGovernance = await governanceFactory.deploy(oracle.address, DEV_WALLET)
-    await newGovernance.deployed()
-
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [newGovernance.address]
-    })
-    govSigner = await ethers.getSigner(newGovernance.address);
-    await accounts[10].sendTransaction({ to: newGovernance.address, value: ethers.utils.parseEther("1.0") });
-
-    await oracle.init(newGovernance.address)
-
-    // submit 2 queryId=70 values to new flex
-    await tellor.connect(devWallet).transfer(accounts[1].address, web3.utils.toWei("100"));
-    await tellor.connect(accounts[1]).approve(oracle.address, BigInt(10E18))
-    await oracle.connect(accounts[1]).depositStake(BigInt(10E18))
-    await oracle.connect(accounts[1]).submitValue(keccak256(h.uintTob32(70)), h.bytes(99), 0, h.uintTob32(70))
-    blockyNew1 = await h.getBlock()
-
-    await tellor.connect(devWallet).transfer(accounts[6].address, web3.utils.toWei("100"));
-    await tellor.connect(accounts[6]).approve(oracle.address, BigInt(10E18))
-    await oracle.connect(accounts[6]).depositStake(BigInt(10E18))
-    await oracle.connect(accounts[6]).submitValue(keccak256(h.uintTob32(70)), h.bytes(100), 0, h.uintTob32(70))
-    blockyNew2 = await h.getBlock()
-
-    // submit 1 queryId=1 value to new flex (required for 360 init)
-    await tellor.connect(devWallet).transfer(accounts[5].address, web3.utils.toWei("100"));
-    await tellor.connect(accounts[5]).approve(oracle.address, BigInt(10E18))
-    await oracle.connect(accounts[5]).depositStake(BigInt(10E18))
-    await oracle.connect(accounts[5]).submitValue(ETH_QUERY_ID, h.uintTob32(1000), 0, ETH_QUERY_DATA)
-    blockyNew3 = await h.getBlock()
-
-    //tellorx staker
-    await tellor.connect(devWallet).transfer(accounts[2].address, web3.utils.toWei("100"));
-    await tellor.connect(accounts[2]).depositStake()
-    
-
-    //disputed tellorx staker
-    await tellor.connect(devWallet).transfer(accounts[3].address, web3.utils.toWei("100"));
-    await tellor.connect(accounts[3]).depositStake()
-    await oldOracle.connect(accounts[3]).submitValue(h.uintTob32(70), h.bytes(200), 0, '0x')
-    blockyOld1 = await h.getBlock()
-
-    controllerFactory = await ethers.getContractFactory("Test360")
-    controller = await controllerFactory.deploy(oracle.address)
-    await controller.deployed()
-
-    let controllerAddressEncoded = ethers.utils.defaultAbiCoder.encode([ "address" ],[controller.address])
-    await governance.connect(devWallet).proposeVote(tellorMaster, 0x3c46a185, controllerAddressEncoded, 0)
-
-    let voteCount = await governance.getVoteCount()
-
-    await governance.connect(devWallet).vote(voteCount,true, false)
-    await governance.connect(bigWallet).vote(voteCount,true, false)
-    await governance.connect(reporter).vote(voteCount, true, false)
-
-    await h.advanceTime(86400 * 8)
-    await governance.tallyVotes(voteCount)
-    await h.advanceTime(86400 * 2.5)
-    totalSupply = await tellor.totalSupply()
-    await governance.executeVote(voteCount)
+    // submit some data
+    await flex.submitValue(ETH_QUERY_ID, h.uintTob32("100"), 0, ETH_QUERY_DATA)
+    blocky0 = await h.getBlock()
+    await h.advanceTime(43201)
+    await flex.submitValue(ETH_QUERY_ID, h.uintTob32("101"), 0, ETH_QUERY_DATA)
+    blocky1 = await h.getBlock()
+    await h.advanceTime(43201)
+    await flex.submitValue(ETH_QUERY_ID, h.uintTob32("102"), 0, ETH_QUERY_DATA)
+    blocky2 = await h.getBlock()
 
     // sleep 1 second for api rate limit
     await new Promise(r => setTimeout(r, 1000));
+    this.timeout(100000)
   });
 
-  it.only("decimals()", async function () {
-    expect(await tellor.decimals()).to.equal(18)
+  it("transition worked", async function() {
+    // check if new oracle address is set
+    expect(await tellor.getAddressVars(h.hash("_ORACLE_CONTRACT"))).to.equal(await tbridge.getAddress())
   })
 
-  it("getAddressVars()", async function () {
-    await tellor.connect(devWallet).init()
-    expect(await tellor.getAddressVars(h.hash("_ORACLE_CONTRACT"))).to.equal(oracle.address)
+  it("addStakingRewards()", async function () {
+    await tellor.connect(bigWallet).transfer(await accounts[0].getAddress(), h.toWei("1"))
+    await h.expectThrow(tbridge.connect(accounts[0]).addStakingRewards(h.toWei("1"))) // not approved
+    await tellor.connect(accounts[0]).approve(await tbridge.getAddress(), h.toWei("1"))
+    await tbridge.connect(accounts[0]).addStakingRewards(h.toWei("1"))
+    expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(h.toWei("1"))
   })
 
-  it("getLastNewValueById()", async function () {
-    // retrieve from old oracle
-    lastNewVal = await tellor.getLastNewValueById(70)
-    expect(lastNewVal[0]).to.equal(200)
-    expect(lastNewVal[1]).to.be.true
+  it("getDataBefore()", async function () {
+    dataBefore = await tbridge.getDataBefore(ETH_QUERY_ID, blocky1.timestamp)
+    expect(dataBefore[0]).to.equal(true)
+    expect(dataBefore[1]).to.equal(h.uintTob32("100"))
+    expect(dataBefore[2]).to.equal(blocky0.timestamp)
 
-    // INIT TELLORFLEX
-    await tellor.connect(devWallet).init()
+    dataBefore = await tbridge.getDataBefore(ETH_QUERY_ID, blocky2.timestamp)
+    expect(dataBefore[0]).to.equal(true)
+    expect(dataBefore[1]).to.equal(h.uintTob32("101"))
+    expect(dataBefore[2]).to.equal(blocky1.timestamp)
 
-    // retrieve from new oracle
-    lastNewVal = await tellor.getLastNewValueById(keccak256(h.uintTob32(70)))
-    expect(lastNewVal[0]).to.equal(100)
-    expect(lastNewVal[1]).to.be.true
+    // check for updateOracleAddress query id
+    dataBefore = await tbridge.getDataBefore(ORACLE_ADDR_UPDATE_QUERY_ID, blocky2.timestamp)
+    blocky = await h.getBlock()
+    expect(dataBefore[0]).to.equal(true)
+    expect(dataBefore[1]).to.equal(abiCoder.encode(["address"], [await tbridge.getAddress()]))
+    expect(dataBefore[2]).to.equal(blocky.timestamp)
 
-    // dispute last value
-    await oracle.connect(govSigner).removeValue(keccak256(h.uintTob32(70)), blockyNew2.timestamp)
-
-    // retrieve value
-    lastNewVal = await tellor.getLastNewValueById(keccak256(h.uintTob32(70)))
-    expect(lastNewVal[0]).to.equal(99)
-
-    // dispute first value
-    await oracle.connect(govSigner).removeValue(keccak256(h.uintTob32(70)), blockyNew1.timestamp)
-
-    // retrieve value
-    lastNewVal = await tellor.getLastNewValueById(keccak256(h.uintTob32(70)))
-    expect(lastNewVal[0]).to.equal(0)
+    // submit different oracle address
+    await h.advanceTime(43200)
+    badOracleAddrReport = abiCoder.encode(["address"], [await accounts[1].getAddress()])
+    await flex.connect(accounts[0]).submitValue(ORACLE_ADDR_UPDATE_QUERY_ID, badOracleAddrReport, 0, ORACLE_ADDR_UPDATE_QUERY_DATA)
+    blocky = await h.getBlock()
+    dataBefore = await tbridge.getDataBefore(ORACLE_ADDR_UPDATE_QUERY_ID, blocky.timestamp + 100)
+    blocky = await h.getBlock()
+    expect(dataBefore[0]).to.equal(true)
+    expect(dataBefore[1]).to.equal(abiCoder.encode(["address"], [await tbridge.getAddress()]))
+    expect(dataBefore[2]).to.equal(blocky.timestamp)
   })
 
-  it("getNewCurrentVariables()", async function () {
-    // retrieve from old oracle
-    currentVars = await tellor.getNewCurrentVariables()
-    encodedTime = abiCoder.encode(["uint256"], [blockyOld1.timestamp])
-    expect(currentVars[0]).to.equal(ethers.utils.keccak256(encodedTime))
+  it("getIndexForDataBefore()", async function () {
+    indexBefore = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky0.timestamp)
+    expect(indexBefore[0]).to.equal(true)
+    expect(indexBefore[1]).to.be.greaterThan(0)
 
-    // init tellor360
-    await tellor.connect(devWallet).init()
+    indexBefore1 = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky1.timestamp)
+    expect(indexBefore1[0]).to.equal(true)
+    expect(indexBefore1[1]).to.equal(BigInt(indexBefore[1]) + BigInt(1))
 
-    // retrieve from new oracle
-    currentVars = await tellor.getNewCurrentVariables()
-    encodedTime = abiCoder.encode(["uint256"], [blockyNew3.timestamp])
-    expect(currentVars[0]).to.equal(ethers.utils.keccak256(encodedTime))
+    indexBefore2 = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky2.timestamp)
+    expect(indexBefore2[0]).to.equal(true)
+    expect(indexBefore2[1]).to.equal(BigInt(indexBefore1[1]) + BigInt(1))
   })
 
-  it("getNewValueCountByRequestId()", async function () {
-    // retrieve from old oracle
-    newValCount = await tellor.getNewValueCountbyRequestId(70)
-    expect(newValCount).to.equal(1)
+  it("getNewValueCountbyQueryId()", async function () {
+    count = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
+    expect(count).to.be.greaterThan(0)
 
-    // init tellor360
-    await tellor.connect(devWallet).init()
-
-    // retrieve from new oracle
-    newValCount = await tellor.getNewValueCountbyRequestId(keccak256(h.uintTob32(70)))
-    expect(newValCount).to.equal(2)
-
-    // dispute last value
-    await oracle.connect(govSigner).removeValue(keccak256(h.uintTob32(70)), blockyNew2.timestamp)
-
-    // retrieve from new oracle
-    newValCount = await tellor.getNewValueCountbyRequestId(keccak256(h.uintTob32(70)))
-    expect(newValCount).to.equal(1)
-
-    // dispute first value
-    await oracle.connect(govSigner).removeValue(keccak256(h.uintTob32(70)), blockyNew1.timestamp)
-    
-    // retrieve from new oracle
-    newValCount = await tellor.getNewValueCountbyRequestId(keccak256(h.uintTob32(70)))
-    expect(newValCount).to.equal(0)
-
-    // get value count for requestId with 0 values
-    newValCount = await tellor.getNewValueCountbyRequestId(keccak256(h.uintTob32(71)))
-    expect(newValCount).to.equal(0)
+    await h.advanceTime(43200)
+    await flex.submitValue(ETH_QUERY_ID, h.uintTob32("103"), 0, ETH_QUERY_DATA)
+    count1 = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
+    expect(count1).to.equal(count + BigInt(1))
   })
 
-  it("getTimestampbyRequestIDandIndex()", async function () {
-    // retrieve from old oracle
-    timestampByIndex = await tellor.getTimestampbyRequestIDandIndex(70, 0)
-    expect(timestampByIndex).to.equal(blockyOld1.timestamp)
-
-    // INIT tellor360
-    await tellor.connect(devWallet).init()
-
-    // retrieve from new oracle
-    timestampByIndex = await tellor.getTimestampbyRequestIDandIndex(keccak256(h.uintTob32(70)), 0)
-    expect(timestampByIndex).to.equal(blockyNew1.timestamp)
+  it("getReporterByTimestamp()", async function () {
+    reporter = await tbridge.getReporterByTimestamp(ETH_QUERY_ID, blocky0.timestamp)
+    expect(reporter).to.equal(await accounts[0].getAddress())
   })
 
-  it("getUintVar()", async function () {
-    await tellor.connect(devWallet).init()
-    expect(await tellor.getUintVar(h.hash("_STAKE_AMOUNT"))).to.equal(h.toWei("100"))
+  it("getTimestampbyQueryIdandIndex()", async function () {
+    count = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
+    expect(count).to.be.greaterThan(0)
+
+    timestamp = await tbridge.getTimestampbyQueryIdandIndex(ETH_QUERY_ID, count - BigInt(1))
+    expect(timestamp).to.equal(blocky2.timestamp)
   })
 
-  it("isMigrated()", async function () {
-    expect(await tellor.isMigrated(DEV_WALLET)).to.be.true
-    await tellor.connect(devWallet).init()
-    expect(await tellor.isMigrated(DEV_WALLET)).to.be.true
-    expect(await tellor.isMigrated(oracle.address)).to.be.false
+  it("getTimeOfLastNewValue()", async function () {
+    time = await tbridge.getTimeOfLastNewValue()
+    expect(time).to.equal(blocky2.timestamp)
   })
 
-  it("name()", async function () {
-    expect(await tellor.name()).to.equal("Tellor Tributes")
-    await tellor.connect(devWallet).init()
-    expect(await tellor.name()).to.equal("Tellor Tributes")
+  it("isInDispute()", async function () {
+    expect(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp)).to.equal(false)
+    await tellor.connect(bigWallet).approve(GOVERNANCE_FLEX, h.toWei("100"))
+    await govflex.connect(bigWallet).beginDispute(ETH_QUERY_ID, blocky2.timestamp)
+    expect(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp)).to.equal(true)
   })
 
-  it("retrieveData()", async function () {
-    retrievedVal = await tellor["retrieveData(uint256,uint256)"](70, blockyOld1.timestamp);
-    expect(retrievedVal).to.equal(200)
-    await tellor.connect(devWallet).init()
-    retrievedVal = await tellor["retrieveData(uint256,uint256)"](keccak256(h.uintTob32(70)), blockyNew1.timestamp);
-    expect(retrievedVal).to.equal(99)
+  it("verify()", async function () {
+    expect(await tbridge.verify()).to.equal(9999)
   })
 
-  it("symbol()", async function () {
-    expect(await tellor.symbol()).to.equal("TRB")
-    await tellor.connect(devWallet).init()
-    expect(await tellor.symbol()).to.equal("TRB")
+  it("mintToOracle()", async function () {
+    expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(0)
+    await tellor.mintToOracle()
+    expect(await tellor.balanceOf(await tbridge.getAddress())).to.be.greaterThan(0)
   })
 
-  it("totalSupply()", async function () {
-    expect(await tellor.totalSupply()).to.equal(totalSupply)
-    await tellor.connect(devWallet).init()
-    expect(await tellor.totalSupply()).to.equal(totalSupply)
-  })
-
-  it("_sliceUint()", async function () {
-    expect(await tellor.sliceUintTest(h.uintTob32(123))).to.equal(123)
-    await tellor.connect(devWallet).init()
-    expect(await tellor.sliceUintTest(h.uintTob32(456))).to.equal(456)
-  })
 })

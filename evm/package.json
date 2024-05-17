@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "axios": "^1.6.8",
     "chai": "^4.3.10",

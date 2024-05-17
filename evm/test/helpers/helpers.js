@@ -9,6 +9,7 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs').promises;
 const { MsgRequestAttestations } = require('../../generated/layer/bridge/tx_pb.js');
+const { impersonateAccount, takeSnapshot } = require("@nomicfoundation/hardhat-network-helpers");
 
 const homeDirectory = os.homedir();
 const CHARLIE_MNEMONIC_FILE = path.join(homeDirectory, 'Desktop', 'charlie_mnemonic.txt');
@@ -626,6 +627,8 @@ module.exports = {
   getAttestationDataBySnapshot,
   getAttestationsBySnapshot,
   requestAttestations,
-  createCosmosWallet
+  createCosmosWallet,
+  impersonateAccount,
+  takeSnapshot
 };
 

@@ -8,6 +8,9 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 contract LayerTransition {
     ITellorFlex public tellorFlex;
     IERC20 public token;
+    bytes32 updateOracleQueryId = keccak256(
+            abi.encode("TellorOracleAddress", abi.encode(bytes("")))
+        );
 
     constructor(address _tellorFlex, address _token) {
         tellorFlex = ITellorFlex(_tellorFlex);
@@ -31,6 +34,9 @@ contract LayerTransition {
             bytes memory _value,
             uint256 _timestampRetrieved
         ) {
+            if (_queryId == updateOracleQueryId) {
+                return (true, abi.encode(address(this)), block.timestamp);
+            }
             return tellorFlex.getDataBefore(_queryId, _timestamp);
         }
 

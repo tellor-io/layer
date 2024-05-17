@@ -1,5 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-gas-reporter");
+require("dotenv").config();
 
 module.exports = {
   solidity: {
@@ -50,5 +51,19 @@ module.exports = {
         },
       },
     ],
+  },
+  networks: {
+    hardhat: {
+      accounts: {
+        mnemonic:
+          "nick lucian brenda kevin sam fiscal patch fly damp ocean produce wish",
+        count: 40,
+      },
+      forking: {
+        url: process.env.NODE_URL,
+        blockNumber: 19891853
+      },
+      allowUnlimitedContractSize: true
+    } //,
   },
 };
