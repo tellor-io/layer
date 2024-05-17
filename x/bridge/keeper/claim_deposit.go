@@ -16,9 +16,9 @@ import (
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex uint64) error {
+func (k Keeper) ClaimDepositHelper(ctx context.Context, depositId uint64, reportIndex uint64) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
-	queryId, err := k.getDepositQueryId(depositId)
+	queryId, err := k.GetDepositQueryId(depositId)
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 		return types.ErrReportTooYoung
 	}
 
-	recipient, amount, err := k.decodeDepositReportValue(ctx, aggregate.AggregateValue)
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
 	if err != nil {
 		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%w: %v", types.ErrInvalidDepositReportValue, err)
@@ -80,8 +80,8 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 	return nil
 }
 
-func (k Keeper) getDepositQueryId(depositId uint64) ([]byte, error) {
-	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))
+// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))
+func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
 
 	queryTypeString := "TRBBridge"
 	toLayerBool := true
@@ -130,8 +130,8 @@ func (k Keeper) getDepositQueryId(depositId uint64) ([]byte, error) {
 	return queryId, nil
 }
 
-func (k Keeper) decodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
-	// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount))
+// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount))
+func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
 
 	// prepare decoding
 	AddressType, err := abi.NewType("address", "", nil)

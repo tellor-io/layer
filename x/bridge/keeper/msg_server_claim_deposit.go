@@ -10,7 +10,7 @@ import (
 func (k msgServer) ClaimDeposit(goCtx context.Context, msg *types.MsgClaimDepositRequest) (*types.MsgClaimDepositResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.claimDeposit(sdkCtx, msg.DepositId, msg.Index); err != nil {
+	if err := k.ClaimDepositHelper(sdkCtx, msg.DepositId, msg.Index); err != nil {
 		return nil, err
 	}
 	return &types.MsgClaimDepositResponse{}, nil
