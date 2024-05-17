@@ -98,5 +98,17 @@ func TestConvertStringToType(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestSizeOfType(t *testing.T) {
+	res, err := sizeOfType("8")
+	require.NoError(t, err)
+	require.Equal(t, res, 8)
+}
+
+func TestIntValue(t *testing.T) {
+	typeArray := []string{"[int8]", "", ""}
+	res, err := intValue(typeArray, "123")
+	require.NoError(t, err)
+	require.Equal(t, res, big.NewInt(123))
 }

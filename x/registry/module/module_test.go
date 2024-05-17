@@ -125,8 +125,15 @@ func TestExportGenesis(t *testing.T) {
 	require.Equal(t, gen, h)
 }
 func TestConsensusVersion(t *testing.T) {
+	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
+	k, _k2, _k3, _ := keepertest.RegistryKeeper(t)
+	am := registry.NewAppModule(appCodec, k, _k2, _k3)
+	val := am.ConsensusVersion()
+	require.Equal(t, int(val), 1)
 }
 func TestInit(t *testing.T) {
+	baseRegistry.init()
+
 }
 func TestProvideModule(t *testing.T) {
 }
