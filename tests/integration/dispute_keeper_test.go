@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracleKeeper "github.com/tellor-io/layer/x/oracle/keeper"
@@ -193,7 +194,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(err)
 	s.True(s.bankKeeper.GetBalance(s.ctx, disputer, s.denom).IsLT(disputerBalanceBefore))
 
-	s.NoError(s.disputekeeper.CheckPrevoteDisputesForExpiration(s.ctx))
+	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.ctx, s.disputekeeper))
 
 	votes := []types.MsgVote{
 		{
@@ -375,7 +376,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
-	s.NoError(s.disputekeeper.CheckPrevoteDisputesForExpiration(s.ctx))
+	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.ctx, s.disputekeeper))
 
 	votersBalanceBefore := map[string]sdk.Coin{
 		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),

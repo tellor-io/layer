@@ -42,9 +42,9 @@ message MsgProposeDispute {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   layer.oracle.MicroReport report = 2;
-  DisputeCategory disputeCategory = 3;
+  DisputeCategory dispute_category = 3;
   cosmos.base.v1beta1.Coin fee = 4 [(gogoproto.nullable) = false];
-  bool payFromBond = 5;
+  bool pay_from_bond = 5;
 }
 
 message MsgProposeDisputeResponse {}
@@ -52,9 +52,9 @@ message MsgProposeDisputeResponse {}
 message MsgAddFeeToDispute {
   option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
-  uint64 disputeId = 2;
+  uint64 dispute_id = 2;
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
-  bool payFromBond = 4;
+  bool pay_from_bond = 4;
 }
 
 message MsgAddFeeToDisputeResponse {}

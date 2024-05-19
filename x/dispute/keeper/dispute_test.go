@@ -37,6 +37,7 @@ func (s *KeeperTestSuite) dispute() types.Dispute {
 		DisputeFee:      math.ZeroInt(),
 		ReportEvidence:  report,
 		Open:            true,
+		SlashAmount:     math.OneInt(),
 	}
 }
 func (s *KeeperTestSuite) TestGetOpenDisputes() {

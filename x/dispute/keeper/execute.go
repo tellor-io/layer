@@ -11,6 +11,127 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
+type VoterInfo struct {
+	Voter sdk.AccAddress
+	Power math.Int
+	Share math.Int
+}
+
+// Execute the transfer of fee after the vote on a dispute is complete
+func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
+	dispute, err := k.Disputes.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	vote, err := k.Votes.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	if vote.Executed || dispute.DisputeStatus != types.Resolved {
+		k.Logger(ctx).Info("can't execute vote, reason either vote has already executed: %v, or dispute not resolved: %v", vote.Executed, dispute.DisputeStatus)
+		return nil
+	}
+
+	var voters []VoterInfo
+	for _, id := range dispute.PrevDisputeIds {
+		iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		defer iter.Close()
+		for ; iter.Valid(); iter.Next() {
+			key, err := iter.PrimaryKey()
+			if err != nil {
+				return err
+			}
+			v, err := k.Voter.Get(ctx, key)
+			if err != nil {
+				return err
+			}
+			voters = append(voters, VoterInfo{Voter: key.K2(), Power: v.VoterPower, Share: math.ZeroInt()})
+
+		}
+	}
+	// amount of dispute fee to return to fee payers or give to reporter
+	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
+	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
+	halfBurnAmount := dispute.BurnAmount.QuoRaw(2)
+	voterReward := halfBurnAmount
+	if len(voters) == 0 {
+		// if no voters, burn the entire burnAmount
+		halfBurnAmount = dispute.BurnAmount
+		// non voters get nothing
+		voterReward = math.ZeroInt()
+	}
+	switch vote.VoteResult {
+	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
+		// distribute the voterRewardunt equally among the voters and transfer it to their accounts
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
+			return err
+		}
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
+			return err
+		}
+		// refund the remaining dispute fee to the fee payers according to their payment method
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn, dispute.HashId); err != nil {
+			return err
+		}
+		// stake the slashed tokens back into the bonded pool for the reporter
+		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+			return err
+		}
+		vote.Executed = true
+		if err := k.Votes.Set(ctx, id, vote); err != nil {
+			return err
+		}
+	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
+			return err
+		}
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
+			return err
+		}
+		// refund the remaining dispute fee to the fee payers according to their payment method
+		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn, dispute.HashId); err != nil {
+			return err
+		}
+		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
+		if err := k.RewardReporterBondToFeePayers(ctx, dispute.FeePayers, dispute.SlashAmount); err != nil {
+			return err
+		}
+
+		vote.Executed = true
+		if err := k.Votes.Set(ctx, id, vote); err != nil {
+			return err
+		}
+	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		if err != nil {
+			return err
+		}
+		// burn half the burnAmount
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
+			return err
+		}
+		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
+		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusBurn)
+		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+			return err
+		}
+		vote.Executed = true
+		if err := k.Votes.Set(ctx, id, vote); err != nil {
+			return err
+		}
+	}
+	return k.BlockInfo.Remove(ctx, dispute.HashId)
+}
+
 func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInfo, remainingAmt math.Int, hashId []byte) error {
 	var outputs []banktypes.Output
 
