@@ -50,11 +50,7 @@ func DisputeKeeper(t testing.TB) (
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 
 	// Initialize params
-	err := k.OpenDisputes.Set(ctx, types.OpenDisputes{Ids: make([]uint64, 0)})
-	if err != nil {
-		panic(err)
-	}
-	err = k.Params.Set(ctx, types.DefaultParams())
+	err := k.Params.Set(ctx, types.DefaultParams())
 	if err != nil {
 		panic(err)
 	}

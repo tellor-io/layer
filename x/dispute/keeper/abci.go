@@ -128,54 +128,30 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
 
-func (k Keeper) ExecuteVotes(ctx context.Context, ids []uint64) error {
-	for _, id := range ids {
-		if err := k.ExecuteVote(ctx, id); err != nil {
-			return err
-		}
-
-	}
-	return nil
-}
-
 // set disputes to resolved if adding rounds has been exhausted
 // check if disputes can be removed due to expiration prior to commencing vote
-func (k Keeper) CheckPrevoteDisputesForExpiration(ctx context.Context) ([]uint64, error) {
-	openDisputes, err := k.OpenDisputes.Get(ctx)
+func (k Keeper) CheckPrevoteDisputesForExpiration(ctx context.Context) error {
+	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var expiredDisputes []uint64 // disputes that failed to begin vote (ie fee unpaid in full)
-	var activeDisputes []uint64
-
-	for _, disputeId := range openDisputes.Ids {
-		// get dispute by id
-		dispute, err := k.Disputes.Get(ctx, disputeId)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.PrimaryKey()
 		if err != nil {
-			return nil, err
+			return err
 		}
-
+		dispute, err := k.Disputes.Get(ctx, key)
+		if err != nil {
+			return err
+		}
 		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
-			// append to expired list
-			expiredDisputes = append(expiredDisputes, disputeId)
-		} else {
-			// append to active list if not expired
-			activeDisputes = append(activeDisputes, disputeId)
+			dispute.Open = false
+			dispute.DisputeStatus = types.Failed
+			if err := k.Disputes.Set(ctx, key, dispute); err != nil {
+				return err
+			}
 		}
 	}
-	// update active disputes list
-	openDisputes.Ids = activeDisputes
-	err = k.OpenDisputes.Set(ctx, openDisputes)
-	if err != nil {
-		return nil, err
-	}
-	for _, disputeId := range expiredDisputes {
-		// set dispute status to expired
-		err := k.SetDisputeStatus(ctx, disputeId, types.Failed)
-		if err != nil {
-			return nil, err
-		}
-	}
-	// return active list
-	return activeDisputes, nil
+	return nil
 }

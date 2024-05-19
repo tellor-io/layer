@@ -6,7 +6,8 @@ import (
 	"fmt"
 	gomath "math"
 	"math/big"
-	"time"
+
+	// "time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -21,11 +22,18 @@ import (
 func (k Keeper) GetDisputeByReporter(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) (types.Dispute, error) {
 	key := []byte(k.ReporterKey(ctx, r, c))
 
-	id, err := k.Disputes.Indexes.DisputeByReporter.MatchExact(ctx, key)
+	iter, err := k.Disputes.Indexes.DisputeByReporter.MatchExact(ctx, key)
 	if err != nil {
 		return types.Dispute{}, err
 	}
-
+	var id uint64
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		id, err = iter.PrimaryKey()
+		if err != nil {
+			return types.Dispute{}, err
+		}
+	}
 	return k.Disputes.Get(ctx, id)
 }
 
@@ -96,6 +104,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		}),
 		FeeTotal:       msg.Fee.Amount,
 		PrevDisputeIds: []uint64{disputeId},
+		Open:           true,
 	}
 	// Pay the dispute fee
 	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
@@ -117,14 +126,14 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 	if err != nil {
 		return err
 	}
-	return k.SetDispute(ctx, dispute)
+	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
 }
 
 // Slash and jail reporter
 func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory, hashId []byte) error {
 	reporterAddr := sdk.MustAccAddressFromBech32(report.Reporter)
 
-	slashFactor, jailDuration, err := k.GetSlashPercentageAndJailDuration(category)
+	slashFactor, jailDuration, err := GetSlashPercentageAndJailDuration(category)
 	if err != nil {
 		return err
 	}
@@ -134,10 +143,10 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	if err != nil {
 		return err
 	}
-	return k.jailReporter(ctx, reporterAddr, jailDuration)
+	return k.JailReporter(ctx, reporterAddr, jailDuration)
 }
 
-func (k Keeper) jailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration int64) error {
+func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration int64) error {
 	// noop for major duration, reporter is removed from store so no need to jail
 	if jailDuration == gomath.MaxInt64 {
 		return nil
@@ -146,7 +155,7 @@ func (k Keeper) jailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDu
 }
 
 // Get percentage of slash amount based on category
-func (k Keeper) GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, int64, error) {
+func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, int64, error) {
 	switch category {
 	case types.Warning:
 		return math.LegacyNewDecWithPrec(1, 2), 0, nil // 1%
@@ -188,6 +197,11 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 	if dispute.DisputeStatus != types.Unresolved {
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute status %s", dispute.DisputeId, dispute.DisputeStatus)
 	}
+
+	if !dispute.Open {
+		return fmt.Errorf("can't start a new round for this dispute %d; dispute closed", dispute.DisputeId)
+
+	}
 	// if dispute is not unresovled and dispute end time is before current block time then we can't update it
 	if dispute.DisputeEndTime.Before(ctx.BlockTime()) {
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
@@ -214,6 +228,9 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 		return err
 	}
 
+	if err := k.CloseDispute(ctx, dispute.DisputeId); err != nil {
+		return err
+	}
 	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
@@ -224,85 +241,14 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 	dispute.DisputeStartBlock = ctx.BlockHeight()
 	dispute.DisputeRound++
-	// from previous dispute id from open disputes
-	err := k.removeId(ctx, dispute.PrevDisputeIds[len(dispute.PrevDisputeIds)-1])
-	if err != nil {
-		return err
-	}
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 
-	err = k.SetDispute(ctx, dispute)
-	if err != nil {
-		return err
-	}
-	err = k.SetStartVote(ctx, dispute.DisputeId) // starting voting immediately
+	err := k.Disputes.Set(ctx, dispute.DisputeId, dispute)
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// remove dispute id from opendisputes after adding a new round
-func (k Keeper) removeId(ctx sdk.Context, disputeId uint64) error {
-	openDisputes, err := k.OpenDisputes.Get(ctx)
-	if err != nil {
-		return err
-	}
-	for i, id := range openDisputes.Ids {
-		if id == disputeId {
-			openDisputes.Ids[i] = openDisputes.Ids[len(openDisputes.Ids)-1]
-			openDisputes.Ids = openDisputes.Ids[:len(openDisputes.Ids)-1]
-			err = k.OpenDisputes.Set(ctx, openDisputes)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// Add time to dispute end time
-func (k Keeper) AddTimeToDisputeEndTime(ctx sdk.Context, id uint64, timeToAdd time.Duration) error {
-	dispute, err := k.Disputes.Get(ctx, id)
-	if err != nil {
-		return err
-	}
-	dispute.DisputeEndTime = dispute.DisputeEndTime.Add(timeToAdd)
-	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
-}
-
-// Append dispute id to open dispute ids
-func (k Keeper) AppendDisputeIdToOpenDisputeIds(ctx sdk.Context, disputeId uint64) error {
-	openDisputes, err := k.OpenDisputes.Get(ctx)
-	if err != nil {
-		return err
-	}
-	openDisputes.Ids = append(openDisputes.Ids, disputeId)
-	err = k.OpenDisputes.Set(ctx, openDisputes)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Set DISPUTE
-func (k Keeper) SetDispute(ctx sdk.Context, dispute types.Dispute) error {
-	if err := k.AppendDisputeIdToOpenDisputeIds(ctx, dispute.DisputeId); err != nil {
-		return err
-	}
-	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
-}
-
-// Set dispute status by dispute id
-func (k Keeper) SetDisputeStatus(ctx context.Context, id uint64, status types.DisputeStatus) error {
-	dispute, err := k.Disputes.Get(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	dispute.DisputeStatus = status
-	return k.Disputes.Set(ctx, id, dispute)
+	return k.SetStartVote(ctx, dispute.DisputeId) // starting voting immediately
 }
 
 func (k Keeper) SetBlockInfo(ctx context.Context, hashId []byte) error {
@@ -320,4 +266,22 @@ func (k Keeper) SetBlockInfo(ctx context.Context, hashId []byte) error {
 		TotalUserTips:      tips,
 	}
 	return k.BlockInfo.Set(ctx, hashId, blockInfo)
+}
+
+// close dispute by id
+func (k Keeper) CloseDispute(ctx context.Context, id uint64) error {
+	dispute, err := k.Disputes.Get(ctx, id)
+	if err != nil {
+		return err
+	}
+	dispute.Open = false
+	return k.Disputes.Set(ctx, id, dispute)
+}
+
+func (k Keeper) GetOpenDisputes(ctx context.Context) ([]uint64, error) {
+	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return iter.PrimaryKeys()
 }

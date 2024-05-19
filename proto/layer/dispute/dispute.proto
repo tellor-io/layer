@@ -65,6 +65,7 @@ message Dispute {
   repeated uint64 prev_dispute_ids = 15;
   // block number when this specific dispute was created
   int64 block_number = 16;
+  bool open = 17;
 }
 
 // DisputeCategory defines the severity of a dispute.

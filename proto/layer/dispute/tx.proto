@@ -19,7 +19,16 @@ service Msg {
   rpc Vote(MsgVote) returns (MsgVoteResponse);
   rpc UpdateTeam(MsgUpdateTeam) returns (MsgUpdateTeamResponse);
   rpc TallyVote(MsgTallyVote) returns (MsgTallyVoteResponse);
+  rpc ExecuteDispute(MsgExecuteDispute) returns (MsgExecuteDisputeResponse);
 }
+
+message MsgExecuteDispute {
+  option (cosmos.msg.v1.signer) = "caller_address";
+  string caller_address = 1;
+  uint64 dispute_id = 2;
+}
+
+message MsgExecuteDisputeResponse {}
 
 message MsgTallyVote {
   option (cosmos.msg.v1.signer) = "caller_address";

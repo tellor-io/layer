@@ -36,15 +36,6 @@ func (k Keeper) GetTotalSupply(ctx context.Context) math.Int {
 	return k.bankKeeper.GetSupply(ctx, layertypes.BondDenom).Amount
 }
 
-// Get total reporter power
-func (k Keeper) GetTotalReporterPower(ctx context.Context) (math.Int, error) {
-	tp, err := k.reporterKeeper.TotalReporterPower(ctx)
-	if err != nil {
-		return math.Int{}, err
-	}
-	return tp, nil
-}
-
 func ratio(total, part math.Int) math.LegacyDec {
 	if total.IsZero() {
 		return math.LegacyZeroDec()
@@ -100,6 +91,11 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
+	info, err := k.BlockInfo.Get(ctx, dispute.HashId)
+	if err != nil {
+		return err
+	}
+
 	totalRatio := math.LegacyZeroDec()
 	// init tallies
 	tallies := types.Tally{
@@ -159,13 +155,8 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		return err
 	}
 
-	totaltips, err := k.oracleKeeper.GetTotalTipsAtBlock(ctx, dispute.BlockNumber)
-	if err != nil {
-		return err
-	}
-
 	if userVoteSum.GT(math.ZeroInt()) {
-		totalRatio = totalRatio.Add(ratio(totaltips, userVoteSum))
+		totalRatio = totalRatio.Add(ratio(info.TotalUserTips, userVoteSum))
 
 		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
 
@@ -174,10 +165,6 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		scaledInvalid = scaledInvalid.Add(math.LegacyNewDecFromInt(tallies.Invalid.Users).Quo(userVoteSumDec))
 	}
 
-	totalReporterPower, err := k.GetTotalReporterPower(ctx)
-	if err != nil {
-		return err
-	}
 	reporterRatio := math.LegacyZeroDec()
 	reporterVoteSum := math.ZeroInt()
 	reportersRng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](id)
@@ -196,7 +183,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 			tallies.Invalid.Reporters = tallies.Invalid.Reporters.Add(value)
 		}
 		reporterVoteSum = reporterVoteSum.Add(value)
-		reporterRatio = reporterRatio.Add(ratio(totalReporterPower, reporterVoteSum))
+		reporterRatio = reporterRatio.Add(ratio(info.TotalReporterPower, reporterVoteSum))
 		totalRatio = totalRatio.Add(reporterRatio)
 		if totalRatio.GTE(math.LegacyNewDec(51)) {
 			return true, nil
@@ -222,7 +209,9 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		scaledAgainst = scaledAgainst.Quo(numGroups)
 		scaledInvalid = scaledInvalid.Quo(numGroups)
 		fmt.Println("quorum reached")
-		return k.UpdateDispute(ctx, id, types.Resolved, scaledSupport, scaledAgainst, scaledInvalid)
+		dispute.DisputeStatus = types.Resolved
+		dispute.Open = false
+		return k.UpdateDispute(ctx, id, dispute, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 
 	allvoters, err := k.GetVoters(ctx, id)
@@ -263,28 +252,28 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		scaledInvalid = scaledInvalid.Add(invalidTokenHolders).Quo(numGroups)
 	}
 	if totalRatio.GTE(math.LegacyNewDec(51)) {
-
-		return k.UpdateDispute(ctx, id, types.Resolved, scaledSupport, scaledAgainst, scaledInvalid)
+		dispute.DisputeStatus = types.Resolved
+		dispute.Open = false
+		return k.UpdateDispute(ctx, id, dispute, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
 	if vote.VoteEnd.Before(sdkctx.BlockTime()) {
 		fmt.Println("quorum not reached")
-		disputeStatus := types.Unresolved
+		dispute.DisputeStatus = types.Unresolved
 		// check if rounds have been exhausted or dispute has expired in order to disperse funds
 		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
-			disputeStatus = types.Resolved
+			dispute.DisputeStatus = types.Resolved
+			dispute.Open = false
 		}
 		if len(allvoters) == 0 {
-			if err := k.SetDisputeStatus(ctx, id, disputeStatus); err != nil {
+
+			if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 				return err
 			}
-			if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
-				return err
-			}
-			return nil
+			return k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
 		}
-		return k.UpdateDispute(ctx, id, disputeStatus, scaledSupport, scaledAgainst, scaledInvalid)
+		return k.UpdateDispute(ctx, id, dispute, scaledSupport, scaledAgainst, scaledInvalid, false)
 	} else {
 		return errors.New("vote period not ended and quorum not reached")
 	}
@@ -294,31 +283,33 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 func (k Keeper) UpdateDispute(
 	ctx context.Context,
 	id uint64,
-	status types.DisputeStatus,
-	scaledSupport, scaledAgainst, scaledInvalid math.LegacyDec) error {
+	dispute types.Dispute,
+	scaledSupport, scaledAgainst, scaledInvalid math.LegacyDec, quorum bool) error {
+	if err := k.Disputes.Set(ctx, id, dispute); err != nil {
+		return err
+	}
+	var result types.VoteResult
 	switch {
 	case scaledSupport.GT(scaledAgainst) && scaledSupport.GT(scaledInvalid):
-		if err := k.SetDisputeStatus(ctx, id, status); err != nil {
-			return err
-		}
-		if err := k.SetVoteResult(ctx, id, types.VoteResult_SUPPORT); err != nil {
-			return err
+		if quorum {
+			result = types.VoteResult_SUPPORT
+		} else {
+			result = types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT
 		}
 	case scaledAgainst.GT(scaledSupport) && scaledAgainst.GT(scaledInvalid):
-		if err := k.SetDisputeStatus(ctx, id, status); err != nil {
-			return err
-		}
-		if err := k.SetVoteResult(ctx, id, types.VoteResult_AGAINST); err != nil {
-			return err
+		if quorum {
+			result = types.VoteResult_AGAINST
+		} else {
+			result = types.VoteResult_NO_QUORUM_MAJORITY_AGAINST
 		}
 	case scaledInvalid.GT(scaledSupport) && scaledInvalid.GT(scaledAgainst):
-		if err := k.SetDisputeStatus(ctx, id, status); err != nil {
-			return err
-		}
-		if err := k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID); err != nil {
-			return err
+		if quorum {
+			result = types.VoteResult_INVALID
+		} else {
+			result = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
 		}
 	default:
+		return errors.New("no majority")
 	}
-	return nil
+	return k.SetVoteResult(ctx, id, result)
 }

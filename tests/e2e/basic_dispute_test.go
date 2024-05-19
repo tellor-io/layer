@@ -188,7 +188,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:  reporter.Reporter,
-		Power:     reporter.TotalTokens.Int64(),
+		Power:     reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
 		Timestamp: s.ctx.BlockTime(),
@@ -208,7 +208,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	disputes, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
+	disputes, err := s.disputekeeper.GetOpenDisputes(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
@@ -322,7 +322,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	report = oracletypes.MicroReport{
 		Reporter:  reporter.Reporter,
-		Power:     reporter.TotalTokens.Int64(),
+		Power:     reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
 		Timestamp: s.ctx.BlockTime(),
@@ -413,12 +413,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
 
-	err = s.disputekeeper.Tallyvote(s.ctx, 1)
-	require.NoError(err)
-	err = s.disputekeeper.Tallyvote(s.ctx, 2)
-	require.NoError(err)
-	_, err = s.app.BeginBlocker(s.ctx)
-	require.NoError(err)
+	require.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
+	require.NoError(s.disputekeeper.Tallyvote(s.ctx, 2))
+	require.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
+	require.NoError(s.disputekeeper.ExecuteVote(s.ctx, 2))
 
 	// vote is executed
 	vote, err = s.disputekeeper.Votes.Get(s.ctx, dispute.DisputeId)
@@ -432,7 +430,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, false)
 
 	// get open disputes
-	disputes, err = s.disputekeeper.OpenDisputes.Get(s.ctx)
+	disputes, err = s.disputekeeper.GetOpenDisputes(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 
@@ -491,7 +489,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	report = oracletypes.MicroReport{
 		Reporter:    reporter.Reporter,
-		Power:       reporter.TotalTokens.Int64(),
+		Power:       reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.ctx.BlockTime(),

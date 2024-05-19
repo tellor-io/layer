@@ -22,7 +22,6 @@ var (
 	DisputesPrefix                           = collections.NewPrefix(1)
 	DisputesByReporterIndexPrefix            = collections.NewPrefix(2)
 	DisputesCountIndexPrefix                 = collections.NewPrefix(3)
-	OpenDisputeIdsPrefix                     = collections.NewPrefix(4)
 	VotesPrefix                              = collections.NewPrefix(5)
 	VoterVotePrefix                          = collections.NewPrefix(6)
 	VotersByIdIndexPrefix                    = collections.NewPrefix(7)
@@ -32,6 +31,7 @@ var (
 	TeamVoterPrefix                          = collections.NewPrefix(11)
 	UsersGroupPrefix                         = collections.NewPrefix(12)
 	BlockInfoPrefix                          = collections.NewPrefix(13)
+	OpenDisputesIndexPrefix                  = collections.NewPrefix(14)
 )
 
 func KeyPrefix(p string) []byte {

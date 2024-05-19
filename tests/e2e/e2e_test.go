@@ -429,7 +429,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 
 	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	disputes, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
+	disputes, err := s.disputekeeper.GetOpenDisputes(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
@@ -536,7 +536,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 
 	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	disputes, err = s.disputekeeper.OpenDisputes.Get(s.ctx)
+	disputes, err = s.disputekeeper.GetOpenDisputes(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
@@ -683,7 +683,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// require.NoError(err)
 	// require.NotNil(voteResponse)
 
-	totalTips, err := s.disputekeeper.GetTotalReporterPower(s.ctx)
+	totalTips, err := s.disputekeeper.BlockInfo.Get(s.ctx, dispute.HashId)
 	require.NoError(err)
 	fmt.Println("totalTips: ", totalTips)
 
