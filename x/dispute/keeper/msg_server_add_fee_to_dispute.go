@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -12,6 +14,9 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 ) (*types.MsgAddFeeToDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if msg.Amount.Denom != layer.BondDenom {
+		return nil, errors.New("fee must be paid in loya")
+	}
 	dispute, err := k.Disputes.Get(ctx, msg.DisputeId)
 	if err != nil {
 		return nil, err

@@ -19,7 +19,7 @@ import (
 func report() oracletypes.MicroReport {
 	return oracletypes.MicroReport{
 		Reporter:    sample.AccAddressBytes().String(),
-		Power:       int64(100),
+		Power:       int64(1),
 		QueryId:     []byte{},
 		Value:       "0x",
 		Timestamp:   time.Unix(1696516597, 0),
@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) dispute() types.Dispute {
 		DisputeFee:      math.ZeroInt(),
 		ReportEvidence:  report,
 		Open:            true,
-		SlashAmount:     math.OneInt(),
+		SlashAmount:     math.NewInt(10000),
 	}
 }
 func (s *KeeperTestSuite) TestGetOpenDisputes() {
@@ -134,7 +134,7 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter)).Return(reporter, nil)
 	s.bankKeeper.On("HasBalance", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), disputeMsg.Fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), types.ModuleName, sdk.NewCoins(disputeMsg.Fee)).Return(nil)
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter), int64(100), int64(1), math.NewInt(1000000), mock.Anything).Return(nil)
+	s.reporterKeeper.On("EscrowReporterStake", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter), int64(1), int64(1), math.NewInt(10000), mock.Anything).Return(nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter), int64(0)).Return(nil)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
@@ -148,7 +148,7 @@ func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 	report := report()
 	dispute := s.dispute()
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, int64(1), math.NewInt(1000000), dispute.HashId).Return(nil)
+	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, int64(1), math.NewInt(10000), dispute.HashId).Return(nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, int64(0)).Return(nil)
 	s.NoError(s.disputeKeeper.SlashAndJailReporter(s.ctx, report, dispute.DisputeCategory, dispute.HashId))
 }
