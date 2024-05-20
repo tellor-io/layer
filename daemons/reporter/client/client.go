@@ -108,9 +108,12 @@ func (c *Client) Start(
 	} else {
 		panic("homeDir is empty")
 	}
+	c.logger.Info("Keyring backend", "backend", c.cosmosCtx.Keyring.Backend())
+	c.logger.Info("Keyring dir", "dir", c.cosmosCtx.KeyringDir)
+	c.logger.Info("Account Name", "name", accountName)
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
-		panic(fmt.Errorf("error getting address from keyring: %v", err))
+		panic(fmt.Errorf("error getting address from keyring: %v : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
 	} else {
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
@@ -282,8 +285,9 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 
 func (c *Client) GetNodeHomeDir() string {
 	globalHome := os.ExpandEnv("$HOME/.layer")
+	c.logger.Info("GlobalHome", "GlobalHome", globalHome)
 	nodeHome := os.Getenv("LAYERD_NODE_HOME")
-
+	c.logger.Info("NodeHome", "NodeHome", nodeHome)
 	if strings.HasPrefix(nodeHome, globalHome+"/") {
 		return nodeHome
 	}

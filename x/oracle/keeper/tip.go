@@ -76,10 +76,11 @@ func (k Keeper) AddtoTotalTips(ctx context.Context, tip math.Int) error {
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return k.TotalTips.Set(ctx, tip)
+		} else {
+			return err
 		}
-	} else {
-		return err
 	}
-	totalTips = totalTips.Add(totalTips)
+
+	totalTips = totalTips.Add(tip)
 	return k.TotalTips.Set(ctx, totalTips)
 }

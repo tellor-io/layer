@@ -10,5 +10,15 @@ evm/artifacts
 evm/cache
 evm/node_modules
 evm/package-lock.json
+prod-sim/deskAlice
+prod-sim/deskBob
+prod-sim/nodeCarol
+prod-sim/sentryAlice
+prod-sim/sentryBob
+prod-sim/valAlice
+prod-sim/valBob
+prod-sim/kmsAlice
+prod-sim/kmsBob
+build/*
 secrets.yaml
 .env
