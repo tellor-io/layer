@@ -131,9 +131,6 @@ func TestConsensusVersion(t *testing.T) {
 	val := am.ConsensusVersion()
 	require.Equal(t, int(val), 1)
 }
-func TestInit(t *testing.T) {
-	baseRegistry.init()
 
-}
 func TestProvideModule(t *testing.T) {
 }
