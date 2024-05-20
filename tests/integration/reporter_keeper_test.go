@@ -277,7 +277,124 @@ func DelegateToReporterSingleValidator(
 	return err
 }
 
-// create multiple validators
-// stake 5 delegators with each validator
-// create one reporter
-// delegate 5 delegators to the reporter with token sources from each validator for each delegator
+type DelegatorSources struct {
+	Sources []int64
+}
+type Sources struct {
+	ReporterSources  []int64
+	DelegatorSources []DelegatorSources
+}
+
+type Return struct {
+	ReporterAcc   sdk.AccAddress
+	DelegatorAccs []sdk.AccAddress
+}
+
+func (s *IntegrationTestSuite) Reporters() (sdk.AccAddress, sdk.AccAddress) {
+	// create 5 validators
+	_, valAccs, _ := s.createValidatorAccs([]int64{1000, 900, 800, 700, 600, 500, 400, 300, 200, 100})
+	reporterAddr := sample.AccAddressBytes()
+	delegatorI := sample.AccAddressBytes()
+	delegatorII := sample.AccAddressBytes()
+	delegatorIII := sample.AccAddressBytes()
+	delegatorIV := sample.AccAddressBytes()
+	reporter2Addr := sample.AccAddressBytes()
+	delegatorV := sample.AccAddressBytes()
+	delegatorVI := sample.AccAddressBytes()
+	delegatorVII := sample.AccAddressBytes()
+	delegatorVIII := sample.AccAddressBytes()
+	// mint tokens to reporter and delegators
+	s.mintTokens(reporterAddr, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorI, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorII, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorIII, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorIV, math.NewInt(1000*1e6))
+	s.mintTokens(reporter2Addr, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorV, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorVI, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorVII, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorVIII, math.NewInt(1000*1e6))
+
+	for _, n := range valAccs[:5] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		_, err = s.stakingKeeper.Delegate(s.ctx, reporterAddr, math.NewInt(200*1e6), stakingtypes.Unbonded, val, true)
+		s.NoError(err)
+	}
+	reporter1TokenSources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[0].String(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[1].String(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[2].String(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[3].String(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[4].String(), Amount: math.NewInt(200 * 1e6)},
+	}
+	reporter1Delegators := []sdk.AccAddress{delegatorI, delegatorII, delegatorIII, delegatorIV}
+	// reporter2
+	for _, n := range valAccs[5:] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		_, err = s.stakingKeeper.Delegate(s.ctx, reporter2Addr, math.NewInt(100*1e6), stakingtypes.Unbonded, val, true)
+		s.NoError(err)
+	}
+	reporter2TokenSources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[5].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[6].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[7].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[8].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[9].String(), Amount: math.NewInt(100 * 1e6)},
+	}
+	reporter2Delegators := []sdk.AccAddress{delegatorV, delegatorVI, delegatorVII, delegatorVIII}
+	for _, n := range valAccs[:5] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		for _, del := range reporter1Delegators {
+			_, err = s.stakingKeeper.Delegate(s.ctx, del, math.NewInt(100*1e6), stakingtypes.Unbonded, val, true)
+			s.NoError(err)
+		}
+	}
+
+	DelSources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[0].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[1].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[2].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[3].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[4].String(), Amount: math.NewInt(100 * 1e6)},
+	}
+	for _, n := range valAccs[5:] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		for _, del := range reporter2Delegators {
+			_, err = s.stakingKeeper.Delegate(s.ctx, del, math.NewInt(100*1e6), stakingtypes.Unbonded, val, true)
+			s.NoError(err)
+		}
+	}
+	Del2Sources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[5].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[6].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[7].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[8].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[9].String(), Amount: math.NewInt(100 * 1e6)},
+	}
+
+	_ = Del2Sources
+	server := keeper.NewMsgServerImpl(s.reporterkeeper)
+	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+	createReporter1Msg := reportertypes.NewMsgCreateReporter(reporterAddr.String(), math.NewIntFromUint64(1000*1e6), reporter1TokenSources, &commission)
+	_, err := server.CreateReporter(s.ctx, createReporter1Msg)
+	s.NoError(err)
+	createReporter2Msg := reportertypes.NewMsgCreateReporter(reporter2Addr.String(), math.NewIntFromUint64(500*1e6), reporter2TokenSources, &commission)
+	_, err = server.CreateReporter(s.ctx, createReporter2Msg)
+	s.NoError(err)
+
+	for _, del := range reporter1Delegators {
+		_, err = server.DelegateReporter(s.ctx, reportertypes.NewMsgDelegateReporter(del.String(), reporterAddr.String(), math.NewIntFromUint64(500*1e6), DelSources))
+		s.NoError(err)
+	}
+	for _, del := range reporter2Delegators {
+		_, err = server.DelegateReporter(s.ctx, reportertypes.NewMsgDelegateReporter(del.String(), reporter2Addr.String(), math.NewIntFromUint64(500*1e6), Del2Sources))
+		s.NoError(err)
+	}
+
+	return reporterAddr, reporter2Addr
+}

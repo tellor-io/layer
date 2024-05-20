@@ -31,9 +31,11 @@ var (
 	ReporterDelegatorsIndexPrefix       = collections.NewPrefix(20)
 	TokenOriginSnapshotPrefix           = collections.NewPrefix(21)
 	DelegatorTipsPrefix                 = collections.NewPrefix(22)
-	StakeTrackerPrefix                  = collections.NewPrefix(23)
+	DelegatorBlockIndexPrefix           = collections.NewPrefix(23)
+	DelegatorCheckpointPrefix           = collections.NewPrefix(24)
+	ReporterCheckpointPrefix            = collections.NewPrefix(25)
+	DisputedDelegationAmountsPrefix     = collections.NewPrefix(26)
+	FeePaidFromStakePrefix              = collections.NewPrefix(27)
+	TotalPowerPrefix                    = collections.NewPrefix(28)
+	StakeTrackerPrefix                  = collections.NewPrefix(29)
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}

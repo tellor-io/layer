@@ -19,4 +19,5 @@ var (
 	ErrMinimumTRBrequired      = sdkerrors.Register(ModuleName, 10, "Minimum fee amount is 1 TRB")
 	ErrInvalidFeeDenom         = sdkerrors.Register(ModuleName, 11, "invalid fee denom")
 	ErrInvalidDisputeCategory  = sdkerrors.Register(ModuleName, 12, "invalid dispute category")
+	ErrInvalidSigner           = sdkerrors.Register(ModuleName, 13, "expected teamaccount as only signer for updateTeam message")
 )

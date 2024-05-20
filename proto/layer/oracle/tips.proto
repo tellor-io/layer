@@ -7,18 +7,11 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
-// Tips is a struct that contains the query data and the amount it was tipped
-message Tips {
-  // query_data is the query data that was tipped
+// // Tips is a struct that contains the query data and the amount it was tipped
+message Tip {
   bytes query_data = 1;
   // the amount that was tipped
   string amount = 2 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable) = false
-  ];
-  // totalTips is the total amount of tips for this query data so far
-  string total_tips = 3 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false

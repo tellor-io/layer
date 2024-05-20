@@ -73,6 +73,14 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		return nil, err
 	}
 
+	// update totals
+	if err := k.Keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
+		return nil, err
+	}
+	if err := k.Keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
+		return nil, err
+	}
+
 	prevTip, err := k.Keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get previous tip: %w", err)
@@ -82,10 +90,6 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		tip = tip.AddAmount(prevTip)
 	}
 	err = k.Keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
-	if err != nil {
-		return nil, err
-	}
-	err = k.Keeper.AddtoTotalTips(ctx, tip.Amount)
 	if err != nil {
 		return nil, err
 	}

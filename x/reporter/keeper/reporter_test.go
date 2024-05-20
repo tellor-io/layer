@@ -55,7 +55,8 @@ func TestUpdateOrRemoveReporter(t *testing.T) {
 	// Add the reporter to the keeper
 	err := k.Reporters.Set(ctx, reporterAddr, rep)
 	require.NoError(t, err)
-
+	err = k.UpdateTotalPower(ctx, rep.TotalTokens, false)
+	require.NoError(t, err)
 	// Call the UpdateOrRemoveReporter function with a reduction amount of 50
 	err = k.UpdateOrRemoveReporter(ctx, reporterAddr, rep, math.NewInt(50))
 	require.NoError(t, err)
