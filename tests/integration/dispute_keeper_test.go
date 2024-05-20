@@ -630,7 +630,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
 	s.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
 	s.ErrorContains(s.disputekeeper.Tallyvote(s.ctx, 1), "vote already tallied")
-	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
+	s.Error(s.disputekeeper.ExecuteVote(s.ctx, 1), "dispute is not resolved yet")
 	// start another dispute round
 	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
 	s.NoError(err)

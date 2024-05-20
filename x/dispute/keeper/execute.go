@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,13 +25,17 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return err
 	}
 
+	if dispute.DisputeStatus != types.Resolved {
+		return errors.New("can't execute, dispute not resolved")
+	}
+
 	vote, err := k.Votes.Get(ctx, id)
 	if err != nil {
 		return err
 	}
-	if vote.Executed || dispute.DisputeStatus != types.Resolved {
-		k.Logger(ctx).Info("can't execute vote, reason either vote has already executed: %v, or dispute not resolved: %v", vote.Executed, dispute.DisputeStatus)
-		return nil
+
+	if vote.Executed {
+		return errors.New("vote already executed")
 	}
 
 	var voters []VoterInfo
@@ -128,6 +133,8 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
+	case types.VoteResult_NO_TALLY:
+		return errors.New("vote hasn't been tallied yet")
 	}
 	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
