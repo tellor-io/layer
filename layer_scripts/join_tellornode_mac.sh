@@ -64,12 +64,12 @@ sed -i '' 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/c
 echo setting ip address for connections
 export QUOTED_IP_ADDRESS="$(dig TXT +short o-o.myaddr.l.google.com @ns1.google.com)"
 export NODE_IP_ADDRESS=${QUOTED_IP_ADDRESS//\"/}
-sed -i '' 's/external_address = ""/external_address = "tcp:\/\/'$NODE_IP_ADDRESS':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+#sed -i '' 's/external_address = ""/external_address = "tcp:\/\/'$NODE_IP_ADDRESS':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
 #retrieve tellornode node ID for seeding dave's node
 export QUOTED_TELLORNODE_ID="$(curl tellornode.com:26657/status | jq '.result.node_info.id')"
 export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
-sed -i '' 's/seeds = ""/seeds = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+#sed -i '' 's/seeds = ""/seeds = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
 # Modify keyring-backend in client.toml for node
 echo "Modifying keyring-backend in client.toml for node..."
@@ -77,4 +77,4 @@ sed -i '' 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/$NODE_
 # update for main dir as well. why is this needed?
 sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds="$TELLORNODE_ID@tellornode.com:26656"

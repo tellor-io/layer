@@ -65,6 +65,10 @@ echo "ALICE: $ALICE"
 echo "Adding genesis account for alice..."
 ./layerd genesis add-genesis-account $ALICE 100000000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
+# Create a tx to give faucet loyas to have on hold to give to users
+echo "Adding genesis account for alice..."
+./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000000loya
+
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
 ./layerd genesis gentx alice 100000000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
