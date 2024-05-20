@@ -50,7 +50,7 @@ func (k Keeper) ClaimDepositHelper(ctx context.Context, depositId uint64, report
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
-	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 1*time.Second {
+	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 12*time.Hour {
 		return types.ErrReportTooYoung
 	}
 
@@ -167,6 +167,7 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 
 	recipientString := reportValueDecoded[1].(string)
 	amountBigInt := reportValueDecoded[2].(*big.Int)
+	fmt.Println("amountBigInt in function: ", amountBigInt)
 
 	// convert layer recipient to cosmos address
 	layerRecipientAddress, err := sdk.AccAddressFromBech32(recipientString)
@@ -176,6 +177,7 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 	}
 
 	amountDecimalConverted := amountBigInt.Int64() / 1e12
+	fmt.Println("amountDecimalConverted in function: ", amountDecimalConverted)
 
 	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted)
 	amountCoins := sdk.NewCoins(amountCoin)

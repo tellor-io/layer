@@ -304,9 +304,8 @@ func (c *Client) EncodeQueryData(depositReceipt DepositReceipt) ([]byte, error) 
 	return queryDataEncoded, nil
 }
 
+// replicate solidity encoding, abi.encode(address ethSender, string layerRecipient, uint256 amount)
 func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error) {
-	// replicate solidity encoding, abi.encode(address ethSender, string layerRecipient, uint256 amount)
-
 	// prepare encoding
 	AddressType, err := abi.NewType("address", "", nil)
 	if err != nil {

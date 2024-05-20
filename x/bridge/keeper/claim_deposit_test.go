@@ -36,15 +36,71 @@ func TestDecodeDepositReportValue(t *testing.T) {
 	}
 	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
 	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
-	amountUint64 := big.NewInt(100 * 1e12)
-	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	amountAggregate := big.NewInt(100 * 1e12)
+	fmt.Println("amount in report:", amountAggregate)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
 	require.NoError(t, err)
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	fmt.Println("recipient.StrinG: ", recipient.String())
-	fmt.Println("amount: ", amount)
+	require.Equal(t, recipient.String(), layerAddressString)
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	fmt.Println("amount from decoding:", amount)
 	require.NoError(t, err)
+
+	// decode big numbers
+	amountAggregate = big.NewInt(1).Mul(big.NewInt(10_000), big.NewInt(1e18))
+	fmt.Println("amount in report:", amountAggregate)
+	reportValueArgsEncoded, err = reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
+	require.NoError(t, err)
+	reportValueString = hex.EncodeToString(reportValueArgsEncoded)
+
+	recipient, amount, err = k.DecodeDepositReportValue(ctx, reportValueString)
+	require.Equal(t, recipient.String(), layerAddressString)
+	fmt.Println("amount from decoding:", amount)
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	require.NoError(t, err)
+
+}
+
+func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	badString := "0x"
+	_, _, err := k.DecodeDepositReportValue(ctx, badString)
+	require.Error(t, err)
+
+	emptyString := ""
+	_, _, err = k.DecodeDepositReportValue(ctx, emptyString)
+	require.Error(t, err)
+
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+	}
+
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
+	amountUint64 := big.NewInt(100 * 1e12)
+	_, err = reportValueArgs.Pack(layerAddressString, ethAddress, amountUint64)
+	require.Error(t, err)
+	_, err = reportValueArgs.Pack(layerAddressString, amountUint64, ethAddress)
+	require.Error(t, err)
+	_, err = reportValueArgs.Pack(ethAddress, amountUint64, layerAddressString)
+	require.Error(t, err)
+	_, err = reportValueArgs.Pack(amountUint64, layerAddressString, ethAddress)
+	require.Error(t, err)
+	_, err = reportValueArgs.Pack(amountUint64, ethAddress, layerAddressString)
+	require.Error(t, err)
 
 }
 
@@ -102,11 +158,12 @@ func TestClaimDepositHelper(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
+		ReporterPower:        int64(90 * 1e6),
 	}
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	//advance 2 seconds
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(2 * time.Second))
-	totalBondedTokens := math.NewInt(0 * 1e6)
+	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
@@ -117,5 +174,18 @@ func TestClaimDepositHelper(t *testing.T) {
 
 	err = k.ClaimDepositHelper(sdkCtx, depositId, reportIndex)
 	require.NoError(t, err)
+	// check that deposit status is now claimed
+
+	// report no aggregate
+
+	// report flagged aggregate
+
+	// already claimed
+
+	// total reporter power err
+
+	// not enough power
+
+	// report too young
 
 }
