@@ -42,20 +42,6 @@ func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) error {
 	return k.Votes.Set(ctx, id, vote)
 }
 
-/*
-someone votes then store the voter info part of is the voter's power?
-
-in tally when team voter
-team = math.NewInt
-teamVoter, err := k.TeamVoter.Get(ctx, id)
-if err != nil {
-	if !errors.Is(err, collections.ErrNotFound) {
-		return err
-	} else {
-		team = math.ZeroInt()
-	}
-*/
-
 func (k Keeper) TeamVote(ctx context.Context, id uint64) (math.Int, error) {
 	teamTally := math.ZeroInt()
 	voted, err := k.TeamVoter.Has(ctx, id)
