@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
@@ -80,7 +81,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 func (s *KeeperTestSuite) TestQueryGetAggregatedReportNilRequest() {
 	require := s.Require()
 
-	_, err := s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, nil)
+	_, err := s.queryClient.GetAggregatedReport(s.ctx, nil)
 	require.ErrorContains(err, "invalid request")
 }
 
@@ -103,7 +104,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReportNoAvailableTimestamps() {
 	// submit without setting aggregate report
 	s.TestSubmitValue()
 
-	_, err = s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, queryIdBytes)
+	_, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryIdBytes)})
 	require.ErrorContains(err, "no available reports")
 
 }

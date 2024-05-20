@@ -1,22 +1,23 @@
 package e2e_test
 
 import (
+	"encoding/hex"
 	"time"
 
-	utils "github.com/tellor-io/layer/utils"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
-	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	utils "github.com/tellor-io/layer/utils"
+	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	math "cosmossdk.io/math"
+	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	math "cosmossdk.io/math"
 )
 
 func (s *E2ETestSuite) TestDisputes() {
@@ -155,10 +156,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryId,
+		QueryId: hex.EncodeToString(queryId),
 	}
 	// aggregated report is stored correctly
-	result, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	queryServer := oraclekeeper.NewQuerier(s.oraclekeeper)
+	result, err := queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest)
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
@@ -289,10 +291,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryId,
+		QueryId: hex.EncodeToString(queryId),
 	}
 	// aggregated report is stored correctly
-	result, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	result, err = queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest)
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
@@ -447,10 +449,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryId,
+		QueryId: hex.EncodeToString(queryId),
 	}
 	// check that aggregated report is stored correctly
-	result, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	result, err = queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest)
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)

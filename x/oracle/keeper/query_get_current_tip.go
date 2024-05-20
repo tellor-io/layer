@@ -14,10 +14,12 @@ func (q Querier) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTi
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	queryId, err := utils.QueryIDFromDataString(req.QueryData)
+	qdata, err := utils.QueryBytesFromString(req.QueryData)
 	if err != nil {
 		return nil, err
 	}
+
+	queryId := utils.QueryIDFromData(qdata)
 
 	tips, err := q.keeper.GetQueryTip(ctx, queryId)
 	if err != nil {
@@ -26,7 +28,7 @@ func (q Querier) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTi
 
 	return &types.QueryGetCurrentTipResponse{
 		Tips: &types.Tips{
-			QueryData: queryId, // TODO: avoid returning the same data as the request
+			QueryData: qdata, // TODO: avoid returning the same data as the request
 			Amount:    tips,
 		},
 	}, nil
