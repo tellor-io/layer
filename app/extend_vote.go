@@ -103,7 +103,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
-		h.logger.Info("EVM address not found for operator address", "operatorAddress", operatorAddress)
+		h.logger.Info("EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)
@@ -118,12 +118,9 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	}
 	// generate oracle attestations and include them via vote extensions
 	blockHeight := ctx.BlockHeight() - 1
-	// reports := h.oracleKeeper.GetAggregatedReportsByHeight(ctx, int64(blockHeight))
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
 	if err != nil {
-		if strings.Contains(err.Error(), "collections: not found") {
-			h.logger.Info("No attestation requests found for height", "height", blockHeight)
-		} else {
+		if !strings.Contains(err.Error(), "collections: not found") {
 			return nil, err
 		}
 	} else {
