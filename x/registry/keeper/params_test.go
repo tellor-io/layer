@@ -8,8 +8,8 @@ import (
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
-func TestGetParams(t *testing.T) {
-	k, ctx := testkeeper.RegistryKeeper(t)
+func TestSetAndGetParams(t *testing.T) {
+	k, _, _, ctx := testkeeper.RegistryKeeper(t)
 	params := types.DefaultParams()
 
 	k.SetParams(ctx, params)

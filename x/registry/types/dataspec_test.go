@@ -265,3 +265,66 @@ func TestMixedEncoding(t *testing.T) {
 		})
 	}
 }
+
+func TestGenesisDataSpec(t *testing.T) {
+	val := GenesisDataSpec()
+	require.NotNil(t, val)
+	require.Equal(t, val.ResponseValueType, "uint256")
+	require.Equal(t, val.AggregationMethod, "weighted-median")
+	require.Equal(t, val.Registrar, "genesis")
+}
+
+func TestValidateValue(t *testing.T) {
+	var dataspec = DataSpec{
+		ResponseValueType: "uint256",
+		AbiComponents: []*ABIComponent{
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+		},
+		AggregationMethod: "weighted-median",
+	}
+	err := dataspec.ValidateValue("0x0000000000000000000000000000000000000000000000000000000000000009")
+	require.NoError(t, err)
+}
+
+func TestDecodeValue(t *testing.T) {
+	var dataspec = DataSpec{
+		ResponseValueType: "uint256",
+		AbiComponents: []*ABIComponent{
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+		},
+		AggregationMethod: "weighted-median",
+	}
+	val, err := dataspec.DecodeValue("0x0000000000000000000000000000000000000000000000000000000000000009")
+	require.NoError(t, err)
+	require.Equal(t, val, "[9]")
+}
+
+func TestMakeArgMarshaller(t *testing.T) {
+	var dataspec = DataSpec{
+		ResponseValueType: "uint256",
+		AbiComponents: []*ABIComponent{
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+		},
+		AggregationMethod: "weighted-median",
+	}
+	val := dataspec.MakeArgMarshaller()
+	require.Equal(t, val[0].Name, "asset")
+	require.Equal(t, val[1].Name, "currency")
+}
+
+func TestMakeAruments(t *testing.T) {
+	var dataspec = DataSpec{
+		ResponseValueType: "uint256",
+		AbiComponents: []*ABIComponent{
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+		},
+		AggregationMethod: "weighted-median",
+	}
+	val := dataspec.MakeArgMarshaller()
+	args := MakeArguments(val)
+	require.Equal(t, args[0].Name, "asset")
+}

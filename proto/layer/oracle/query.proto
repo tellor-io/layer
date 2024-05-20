@@ -2,85 +2,75 @@ syntax = "proto3";
 
 package layer.oracle;
 
+import "amino/amino.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
+import "layer/oracle/aggregate.proto";
+import "layer/oracle/micro_report.proto";
 import "layer/oracle/params.proto";
 import "layer/oracle/reports.proto";
-import "layer/oracle/micro_report.proto";
 import "layer/oracle/tips.proto";
 import "layer/oracle/user_tip.proto";
-import "layer/oracle/aggregate.proto";
-import "amino/amino.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  
   // Parameters queries the parameters of the module.
-  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/layer/oracle/params";
-  
   }
-  
+
   // Queries a list of GetReportsbyQid items.
-  rpc GetReportsbyQid         (QueryGetReportsbyQidRequest        ) returns (QueryGetReportsbyQidResponse     ) {
+  rpc GetReportsbyQid(QueryGetReportsbyQidRequest) returns (QueryGetReportsbyQidResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{query_id}";
-  
   }
-  rpc GetReportsbyReporter    (QueryGetReportsbyReporterRequest   ) returns (QueryGetReportsbyReporterResponse) {
+  rpc GetReportsbyReporter(QueryGetReportsbyReporterRequest) returns (QueryGetReportsbyReporterResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter/{reporter}";
-  
   }
-  rpc GetReportsbyReporterQid (QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse     ) {
+  rpc GetReportsbyReporterQid(QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{query_id}";
-  
   }
-  
+
   // Queries a list of GetCurrentTip items.
-  rpc GetCurrentTip (QueryGetCurrentTipRequest) returns (QueryGetCurrentTipResponse) {
+  rpc GetCurrentTip(QueryGetCurrentTipRequest) returns (QueryGetCurrentTipResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_current_tip/{query_data}";
-  
   }
-  
+
   // Queries a list of GetUserTipTotal items.
-  rpc GetUserTipTotal (QueryGetUserTipTotalRequest) returns (QueryGetUserTipTotalResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}/{query_data}";
-  
+  rpc GetUserTipTotal(QueryGetUserTipTotalRequest) returns (QueryGetUserTipTotalResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}";
   }
-  
+
   // Queries a list of GetAggregatedReport items.
-  rpc GetAggregatedReport (QueryGetCurrentAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
+  rpc GetAggregatedReport(QueryGetCurrentAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{query_id}";
-  
   }
-  
+
   // Queries a list of GetAggregatedReport items.
-  rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
+  rpc GetDataBefore(QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{query_id}/{timestamp}";
-  
   }
-  
+
   // Queries a list of GetTimeBasedRewards items.
-  rpc GetTimeBasedRewards (QueryGetTimeBasedRewardsRequest) returns (QueryGetTimeBasedRewardsResponse) {
+  rpc GetTimeBasedRewards(QueryGetTimeBasedRewardsRequest) returns (QueryGetTimeBasedRewardsResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_time_based_rewards";
-  
   }
-  
+
   // Queries a list of CurrentCyclelistQuery items.
-  rpc CurrentCyclelistQuery (QueryCurrentCyclelistQueryRequest) returns (QueryCurrentCyclelistQueryResponse) {
+  rpc CurrentCyclelistQuery(QueryCurrentCyclelistQueryRequest) returns (QueryCurrentCyclelistQueryResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/current_cyclelist_query";
-  
   }
 }
+
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
@@ -111,16 +101,23 @@ message QueryGetCurrentTipRequest {
 }
 
 message QueryGetCurrentTipResponse {
-  Tips tips = 1;
+  string tips = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message QueryGetUserTipTotalRequest {
-  string tipper    = 1;
-  bytes query_data = 2;
+  string tipper = 1;
 }
 
 message QueryGetUserTipTotalResponse {
-  UserTipTotal totalTips = 1;
+  string total_tips = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message QueryGetCurrentAggregatedReportRequest {
@@ -139,7 +136,11 @@ message QueryGetDataBeforeRequest {
 message QueryGetTimeBasedRewardsRequest {}
 
 message QueryGetTimeBasedRewardsResponse {
-  cosmos.base.v1beta1.Coin reward = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin", (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cosmos.base.v1beta1.Coin reward = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
 message QueryCurrentCyclelistQueryRequest {}
@@ -147,4 +148,3 @@ message QueryCurrentCyclelistQueryRequest {}
 message QueryCurrentCyclelistQueryResponse {
   string query_data = 1;
 }
-

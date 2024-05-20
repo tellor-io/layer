@@ -32,6 +32,9 @@ type (
 		ReporterHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ReporterHistoricalRewards]
 		ReporterDisputeEvents          collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ReporterDisputeEvent]
 		TokenOriginSnapshot            collections.Map[collections.Pair[sdk.AccAddress, int64], types.DelegationsPreUpdate]
+		DisputedDelegationAmounts      collections.Map[[]byte, types.DelegationsPreUpdate]
+		FeePaidFromStake               collections.Map[[]byte, types.DelegationsPreUpdate]
+		TotalPower                     collections.Map[int64, math.Int]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -42,6 +45,9 @@ type (
 
 		stakingKeeper types.StakingKeeper
 		bankKeeper    types.BankKeeper
+
+		ReporterCheckpoint  collections.Map[collections.Pair[[]byte, int64], math.Int]
+		DelegatorCheckpoint collections.Map[collections.Pair[[]byte, int64], math.Int]
 	}
 )
 
@@ -79,6 +85,11 @@ func NewKeeper(
 		stakingKeeper:                  stakingKeeper,
 		bankKeeper:                     bankKeeper,
 		DelegatorTips:                  collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", sdk.AccAddressKey, sdk.IntValue),
+		ReporterCheckpoint:             collections.NewMap(sb, types.ReporterCheckpointPrefix, "reporter_checkpoint", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), sdk.IntValue),
+		DelegatorCheckpoint:            collections.NewMap(sb, types.DelegatorCheckpointPrefix, "delegator_checkpoint", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), sdk.IntValue),
+		DisputedDelegationAmounts:      collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsPreUpdate](cdc)),
+		FeePaidFromStake:               collections.NewMap(sb, types.FeePaidFromStakePrefix, "fee_paid_from_stake", collections.BytesKey, codec.CollValue[types.DelegationsPreUpdate](cdc)),
+		TotalPower:                     collections.NewMap(sb, types.TotalPowerPrefix, "total_power", collections.Int64Key, sdk.IntValue),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -96,6 +107,32 @@ func (k Keeper) GetAuthority() string {
 // Logger returns a module-specific logger.
 func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](delegator).EndInclusive(blockNumber).Descending()
+	tokens := math.ZeroInt()
+	err := k.DelegatorCheckpoint.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value math.Int) (stop bool, err error) {
+		tokens = value
+		return true, nil
+	})
+	if err != nil {
+		return math.Int{}, err
+	}
+	return tokens, nil
+}
+
+func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](reporter).EndInclusive(blockNumber).Descending()
+	tokens := math.ZeroInt()
+	err := k.ReporterCheckpoint.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value math.Int) (stop bool, err error) {
+		tokens = value
+		return true, nil
+	})
+	if err != nil {
+		return math.Int{}, err
+	}
+	return tokens, nil
 }
 
 func (k Keeper) TrackStakeChange(ctx context.Context) error {

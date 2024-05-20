@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -14,12 +13,11 @@ var _ = strconv.Itoa(0)
 
 func CmdGetUserTipTotal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-user-tip-total [tipper] [query-data]",
+		Use:   "get-user-tip-total [tipper]",
 		Short: "Query getUserTipTotal",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			reqTipper := args[0]
-			reqQueryData := args[1]
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -28,14 +26,8 @@ func CmdGetUserTipTotal() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			queryDataBz, err := utils.QueryBytesFromString(reqQueryData)
-			if err != nil {
-				return err
-			}
-
 			params := &types.QueryGetUserTipTotalRequest{
-				Tipper:    reqTipper,
-				QueryData: queryDataBz,
+				Tipper: reqTipper,
 			}
 
 			res, err := queryClient.GetUserTipTotal(cmd.Context(), params)

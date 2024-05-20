@@ -27,9 +27,6 @@ func (q Querier) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTi
 	}
 
 	return &types.QueryGetCurrentTipResponse{
-		Tips: &types.Tips{
-			QueryData: qdata, // TODO: avoid returning the same data as the request
-			Amount:    tips,
-		},
+		Tips: tips,
 	}, nil
 }

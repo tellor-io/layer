@@ -610,6 +610,9 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+                properties:
+                  team_address:
+                    type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -5665,6 +5668,9 @@ definitions:
     type: object
   layer.dispute.Params:
     type: object
+    properties:
+      team_address:
+        type: string
     description: Params defines the parameters for the module.
   layer.dispute.QueryParamsResponse:
     type: object
@@ -5672,6 +5678,9 @@ definitions:
       params:
         description: params holds all the parameters of this module.
         type: object
+        properties:
+          team_address:
+            type: string
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.dispute.DisputeCategory:
     type: string
@@ -5691,6 +5700,10 @@ definitions:
   layer.dispute.MsgAddFeeToDisputeResponse:
     type: object
   layer.dispute.MsgProposeDisputeResponse:
+    type: object
+  layer.dispute.MsgTallyVoteResponse:
+    type: object
+  layer.dispute.MsgUpdateTeamResponse:
     type: object
   layer.dispute.MsgVoteResponse:
     type: object

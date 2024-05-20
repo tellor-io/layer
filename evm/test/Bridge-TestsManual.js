@@ -3,11 +3,7 @@ const { ethers, network } = require("hardhat");
 const h = require("./helpers/helpers");
 var assert = require('assert');
 const web3 = require('web3');
-const { prependOnceListener } = require("process");
-const BN = ethers.BigNumber.from
-const abiCoder = new ethers.utils.AbiCoder();
-const axios = require('axios');
-
+const abiCoder = new ethers.AbiCoder();
 
 describe("BlobstreamO - Manual Function and e2e Tests", function () {
 
@@ -21,7 +17,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
     beforeEach(async function () {
         accounts = await ethers.getSigners();
         guardian = accounts[10]
-        initialValAddrs = [accounts[1].address, accounts[2].address]
+        initialValAddrs = [accounts[1].getAddress(), accounts[2].getAddress()]
         initialPowers = [1, 2]
         threshold = 2
         blocky = await h.getBlock()
@@ -33,7 +29,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
         await bridge.deployed();
 
         const BridgeCaller = await ethers.getContractFactory("BridgeCaller");
-        bridgeCaller = await BridgeCaller.deploy(bridge.address);
+        bridgeCaller = await BridgeCaller.deploy(await bridge.getAddress());
         await bridgeCaller.deployed();
     });
 
@@ -45,7 +41,7 @@ describe("BlobstreamO - Manual Function and e2e Tests", function () {
     })
 
     it("updateValidatorSet", async function () {
-        newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
+        newValAddrs = [await accounts[1].getAddress(), await accounts[2].getAddress(), await accounts[3].getAddress()]
         newPowers = [1, 2, 3]
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)

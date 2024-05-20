@@ -151,6 +151,7 @@ func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, 
 	for _, subCmd := range cmds {
 		cmd.AddCommand(subCmd)
 	}
+	cmd.AddCommand(AddTeamAccountCmd(app.DefaultNodeHome))
 	return cmd
 }
 

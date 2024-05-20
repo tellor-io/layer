@@ -9,6 +9,7 @@ const os = require('os');
 const path = require('path');
 const fs = require('fs').promises;
 const { MsgRequestAttestations } = require('../../generated/layer/bridge/tx_pb.js');
+const { impersonateAccount, takeSnapshot } = require("@nomicfoundation/hardhat-network-helpers");
 
 const homeDirectory = os.homedir();
 const CHARLIE_MNEMONIC_FILE = path.join(homeDirectory, 'Desktop', 'charlie_mnemonic.txt');
@@ -16,7 +17,7 @@ const CHARLIE_MNEMONIC_FILE = path.join(homeDirectory, 'Desktop', 'charlie_mnemo
 
 const hash = web3.utils.keccak256;
 var assert = require('assert');
-const abiCoder = new ethers.utils.AbiCoder();
+const abiCoder = new ethers.AbiCoder();
 
 getLatestBlockNumber = async () => {
   url = "http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest"
@@ -46,9 +47,9 @@ getValsetCheckpointParams = async (timestamp) => {
     const response = await axios.get(url)
     checkpointParams = {
       checkpoint: '0x' + response.data.checkpoint,
-      valsetHash: '0x' + response.data.valsetHash,
+      valsetHash: '0x' + response.data.valset_hash,
       timestamp: response.data.timestamp,
-      powerThreshold: response.data.powerThreshold
+      powerThreshold: response.data.power_threshold
     }
     return checkpointParams
   } catch (error) {
@@ -60,11 +61,11 @@ getValset = async (timestamp) => {
   url = "http://localhost:1317/layer/bridge/get_valset_by_timestamp/" + timestamp
   try {
     const response = await axios.get(url)
-    valsetResponse = response.data.bridgeValidatorSet
+    valsetResponse = response.data.bridge_validator_set
     valset = []
     for (i = 0; i < valsetResponse.length; i++) {
       valset.push({
-        addr: '0x' + valsetResponse[i].ethereumAddress,
+        addr: valsetResponse[i].ethereumAddress,
         power: valsetResponse[i].power
       })
     }
@@ -83,15 +84,18 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
     // get sha256 hash of the message
     // const digestArrayified = ethers.utils.arrayify(digest);
     // messageHash = ethers.utils.sha256Hash(digestArrayified);
-    const messageHash = ethers.utils.sha256(checkpoint);
+    console.log("sigsResponse", sigsResponse)
+    console.log("checkpoint", checkpoint)
+    const messageHash = ethers.sha256(checkpoint);
+    console.log("messageHash", messageHash)
     for (let i = 0; i < sigsResponse.length; i++) {
       const signature = sigsResponse[i];
-      if (signature.length === 130) {
+      if (signature.length === 128) {
         // try v = 27
         let v = 27;
-        let r = '0x' + signature.slice(2, 66);
-        let s = '0x' + signature.slice(66, 130);
-        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+        let r = '0x' + signature.slice(0, 64);
+        let s = '0x' + signature.slice(64, 128);
+        let recoveredAddress = ethers.recoverAddress(messageHash, {
           r: r,
           s: s,
           v: v,
@@ -101,7 +105,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
         if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
           // try v = 28 if v = 27 did not match
           v = 28;
-          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+          recoveredAddress = ethers.recoverAddress(messageHash, {
             r: r,
             s: s,
             v: v,
@@ -116,8 +120,8 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
         }
         sigs.push({
           v: v,
-          r: '0x' + signature.slice(2, 66),
-          s: '0x' + signature.slice(66, 130),
+          r: '0x' + signature.slice(0, 64),
+          s: '0x' + signature.slice(64, 128),
         });
       } else {
         sigs.push({
@@ -248,15 +252,15 @@ getAttestationDataBySnapshot = async (snapshot) => {
     const response = await axios.get(url)
     attestationDataReturned = response.data
     attestationData = {
-      queryId: '0x' + attestationDataReturned.queryId,
+      queryId: '0x' + attestationDataReturned.query_id,
       report: {
-        value: '0x' + attestationDataReturned.aggregateValue,
+        value: '0x' + attestationDataReturned.aggregate_value,
         timestamp: attestationDataReturned.timestamp,
-        aggregatePower: attestationDataReturned.aggregatePower,
-        previousTimestamp: attestationDataReturned.previousReportTimestamp,
-        nextTimestamp: attestationDataReturned.nextReportTimestamp
+        aggregatePower: attestationDataReturned.aggregate_power,
+        previousTimestamp: attestationDataReturned.previous_report_timestamp,
+        nextTimestamp: attestationDataReturned.next_report_timestamp
       },
-      attestationTimestamp: attestationDataReturned.attestationTimestamp
+      attestationTimestamp: attestationDataReturned.attestation_timestamp
     }
     return attestationData
   } catch (error) {
@@ -266,7 +270,7 @@ getAttestationDataBySnapshot = async (snapshot) => {
 
 getAttestationsBySnapshot = async (snapshot, valset) => {
   url = "http://localhost:1317/layer/bridge/get_attestations_by_snapshot/" + snapshot
-  const messageHash = ethers.utils.sha256('0x' + snapshot);
+  const messageHash = ethers.sha256('0x' + snapshot);
   try {
     const response = await axios.get(url)
     attestsResponse = response.data.attestations
@@ -278,14 +282,14 @@ getAttestationsBySnapshot = async (snapshot, valset) => {
         let v = 27
         let r = '0x' + attestation.slice(2, 66)
         let s = '0x' + attestation.slice(66, 130)
-        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+        let recoveredAddress = ethers.recoverAddress(messageHash, {
           r: r,
           s: s,
           v: v
         })
         if (recoveredAddress.toLowerCase() != valset[i].addr.toLowerCase()) {
           v = 28
-          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
+          recoveredAddress = ethers.recoverAddress(messageHash, {
             r: r,
             s: s,
             v: v
@@ -623,6 +627,8 @@ module.exports = {
   getAttestationDataBySnapshot,
   getAttestationsBySnapshot,
   requestAttestations,
-  createCosmosWallet
+  createCosmosWallet,
+  impersonateAccount,
+  takeSnapshot
 };
 
