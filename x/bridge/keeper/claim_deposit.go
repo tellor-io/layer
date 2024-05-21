@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"time"
 
@@ -45,7 +46,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId uint64, reportIndex 
 	if err != nil {
 		return err
 	}
-	powerThreshold := totalBondedTokens.Int64() * 2 / 3
+	powerThreshold := int64(math.Round(float64(totalBondedTokens.Int64()) * 2 / 3))
 	if aggregate.ReporterPower < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}

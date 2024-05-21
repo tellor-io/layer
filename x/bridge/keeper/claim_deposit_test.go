@@ -182,6 +182,118 @@ func TestClaimDeposit(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
+		ReporterPower:        int64(67),
+	}
+	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	totalBondedTokens := math.NewInt(100)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
+	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
+
+	depositId := uint64(0)
+	reportIndex := uint64(0)
+	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
+	require.NoError(t, err)
+	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
+	require.NoError(t, err)
+	require.Equal(t, depositClaimedResult.Claimed, true)
+}
+
+func TestClaimDepositNilAggregate(t *testing.T) {
+	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	queryId, _ := k.GetDepositQueryId(0)
+	currentTime := time.Now()
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(0)).Return(nil, currentTime, nil)
+
+	err := k.ClaimDeposit(ctx, 0, 0)
+	require.ErrorContains(t, err, "no aggregate found")
+
+}
+
+func TestClaimDepositReportFlaggedAggregate(t *testing.T) {
+	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	aggregateTimestamp := sdkCtx.BlockTime()
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+	}
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
+	amountUint64 := big.NewInt(100 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	require.NoError(t, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+	queryId, err := k.GetDepositQueryId(0)
+	require.NoError(t, err)
+	aggregate := &oracletypes.Aggregate{
+		QueryId:              queryId,
+		AggregateValue:       reportValueString,
+		AggregateReportIndex: int64(0),
+		ReporterPower:        int64(90 * 1e6),
+		Flagged:              true,
+	}
+	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	totalBondedTokens := math.NewInt(100 * 1e6)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
+	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
+
+	depositId := uint64(0)
+	reportIndex := uint64(0)
+	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
+	require.ErrorContains(t, err, "aggregate flagged")
+
+}
+
+func TestClaimDepositTotalReporterPowerErr(t *testing.T) {
+	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	aggregateTimestamp := sdkCtx.BlockTime()
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+	}
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
+	amountUint64 := big.NewInt(100 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	require.NoError(t, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+	queryId, err := k.GetDepositQueryId(0)
+	require.NoError(t, err)
+	aggregate := &oracletypes.Aggregate{
+		QueryId:              queryId,
+		AggregateValue:       reportValueString,
+		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(90 * 1e6),
 	}
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
@@ -199,37 +311,100 @@ func TestClaimDeposit(t *testing.T) {
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
 	require.Equal(t, depositClaimedResult.Claimed, true)
+
 }
 
-func TestClaimDepositHelperNilAggregate(t *testing.T) {
-	k, _, _, ok, _, _, ctx := setupKeeper(t)
+func TestClaimDepositNotEnoughPower(t *testing.T) {
+	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	queryId, _ := k.GetDepositQueryId(0)
-	currentTime := time.Now()
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(0)).Return(nil, currentTime, nil)
+	aggregateTimestamp := sdkCtx.BlockTime()
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+	}
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
+	amountUint64 := big.NewInt(100 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	require.NoError(t, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+	queryId, err := k.GetDepositQueryId(0)
+	require.NoError(t, err)
+	// 66/100
+	aggregate := &oracletypes.Aggregate{
+		QueryId:              queryId,
+		AggregateValue:       reportValueString,
+		AggregateReportIndex: int64(0),
+		ReporterPower:        int64(66),
+	}
+	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	totalBondedTokens := math.NewInt(100)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
+	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
-	err := k.ClaimDeposit(ctx, 0, 0)
-	require.ErrorContains(t, err, "no aggregate found")
-
+	depositId := uint64(0)
+	reportIndex := uint64(0)
+	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
+	require.ErrorContains(t, err, "insufficient reporter power")
 }
 
-func TestClaimDepositHelperReportFlaggedAggregate(t *testing.T) {
+func TestClaimDepositReportTooYoung(t *testing.T) {
+	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-}
+	aggregateTimestamp := sdkCtx.BlockTime()
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+	}
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
+	amountUint64 := big.NewInt(100 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	require.NoError(t, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+	queryId, err := k.GetDepositQueryId(0)
+	require.NoError(t, err)
+	aggregate := &oracletypes.Aggregate{
+		QueryId:              queryId,
+		AggregateValue:       reportValueString,
+		AggregateReportIndex: int64(0),
+		ReporterPower:        int64(90 * 1e6),
+	}
+	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	totalBondedTokens := math.NewInt(100 * 1e6)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
+	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
-func TestClaimDepositHelperTotalReporterPowerErr(t *testing.T) {
-
-}
-
-func TestClaimDepositHelperNotEnoughPower(t *testing.T) {
-
-}
-
-func TestClaimDepositHelperReportTooYoung(t *testing.T) {
-
+	depositId := uint64(0)
+	reportIndex := uint64(0)
+	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
+	require.ErrorContains(t, err, "report too young")
 }
 
 // report too young
