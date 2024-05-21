@@ -9,13 +9,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetUserTipTotal(goCtx context.Context, req *types.QueryGetUserTipTotalRequest) (*types.QueryGetUserTipTotalResponse, error) {
+func (q Querier) GetUserTipTotal(ctx context.Context, req *types.QueryGetUserTipTotalRequest) (*types.QueryGetUserTipTotalResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	tipper := sdk.MustAccAddressFromBech32(req.Tipper)
-	totalTips, err := k.GetUserTips(goCtx, tipper)
+	totalTips, err := q.keeper.GetUserTips(ctx, tipper)
 	if err != nil {
 		return nil, err
 	}

@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 
 	_, err := s.oracleKeeper.WeightedMedian(s.ctx, reports)
 	s.NoError(err)
-	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	res, err := s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId, "query id is not correct")
 	s.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
@@ -64,7 +64,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId, "query id is not correct")
@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId, "query id is not correct")
@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
 	s.oracleKeeper.WeightedMedian(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId, "query id is not correct")
