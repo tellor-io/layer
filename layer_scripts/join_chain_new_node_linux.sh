@@ -89,10 +89,13 @@ export QUOTED_TELLORNODE_ID="$(curl tellornode.com:26657/status | jq '.result.no
 # echo "Tellor node id: $TELLORNODE_ID"
 # sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 # sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i 's/seeds = ""/seeds = "0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i 's/persistent_peers = ""/persistent_peers = "0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
 echo "Node ID: $QUOTED_TELLORNODE_ID"
 echo "Path: @tellornode.com:26656"
-sleep 30
+
+sleep 60
 
 echo "Starting chain for node..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@tellornode.com:26656"
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5@tellornode.com:26656"
