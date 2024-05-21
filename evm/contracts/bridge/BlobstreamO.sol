@@ -4,15 +4,10 @@ pragma solidity 0.8.22;
 import "./ECDSA.sol";
 import "./Constants.sol";
 
-struct Validator {
-    address addr;
-    uint256 power;
-}
-
-struct Signature {
-    uint8 v;
-    bytes32 r;
-    bytes32 s;
+struct OracleAttestationData {
+    bytes32 queryId;
+    ReportData report;
+    uint256 attestationTimestamp;
 }
 
 struct ReportData {
@@ -23,11 +18,17 @@ struct ReportData {
     uint256 nextTimestamp;
 }
 
-struct OracleAttestationData {
-    bytes32 queryId;
-    ReportData report;
-    uint256 attestationTimestamp;
+struct Signature {
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
 }
+
+struct Validator {
+    address addr;
+    uint256 power;
+}
+
 
 /// @title BlobstreamO: Tellor Layer -> EVM, Oracle relay.
 /// @dev The relay relies on a set of signers to attest to some event on
@@ -35,28 +36,26 @@ struct OracleAttestationData {
 /// block. At least 2/3 of the voting power of the current
 /// view of the validator set must sign off on new relayed events.
 contract BlobstreamO is ECDSA {
+
     /*Storage*/
+    address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
     bytes32 public lastValidatorSetCheckpoint; ///Domain-separated commitment to the latest validator set.
     uint256 public powerThreshold; /// Voting power required to submit a new update.
-    uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
     uint256 public unbondingPeriod; /// Time period after which a validator can withdraw their stake.
-    address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
+    uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
+
     /*Events*/
-    event ValidatorSetUpdated(
-        uint256 _powerThreshold,
-        uint256 _validatorTimestamp,
-        bytes32 _validatorSetHash
-    );
+    event ValidatorSetUpdated(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
 
     /*Errors*/
     error InsufficientVotingPower();
     error InvalidSignature();
     error MalformedCurrentValidatorSet();
+    error NotConsensusValue();
     error NotGuardian();
     error StaleValidatorSet();
     error SuppliedValidatorSetInvalid();
     error ValidatorSetNotStale();
-    error NotConsensusValue();
 
     /*Functions*/
     /// @param _powerThreshold Initial voting power that is needed to approve operations
@@ -152,14 +151,6 @@ contract BlobstreamO is ECDSA {
     }
 
     /*Getter functions*/
-    function verifyOracleData(
-        OracleAttestationData calldata _attest,
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) external view returns (bool) {
-        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
-    }
-
     function verifyConsensusOracleData(
         OracleAttestationData calldata _attest,
         Validator[] calldata _currentValidatorSet,
@@ -170,6 +161,15 @@ contract BlobstreamO is ECDSA {
         }
         return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
     }
+
+    function verifyOracleData(
+        OracleAttestationData calldata _attest,
+        Validator[] calldata _currentValidatorSet,
+        Signature[] calldata _sigs
+    ) external view returns (bool) {
+        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
+    }
+
 
     /*Internal functions*/
     /// @dev Checks that enough voting power signed over a digest.

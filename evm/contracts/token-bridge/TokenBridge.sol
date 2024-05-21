@@ -1,25 +1,19 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity 0.8.22;
 
 import "../usingtellor/UsingTellor.sol";
-
-interface IERC20 {
-    function transfer(address recipient, uint256 amount) external returns (bool);
-    function balanceOf(address account) external view returns (uint256);
-    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-    function approve(address spender, uint256 amount) external returns (bool);
-}
+import "../interfaces/IERC20.sol";
 
 contract TokenBridge is UsingTellor {
     IERC20 public token;
+    uint256 public currentDepositLimit;
     uint256 public depositId;
-    uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
-    uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
+    uint256 public depositLimitUpdateTime;
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
     uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
-    uint256 public depositLimitUpdateTime;
-    uint256 public currentDepositLimit;
+    uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
+    uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
+
     mapping(uint256 => bool) public withdrawalClaimed;
     mapping(uint256 => DepositDetails) public deposits;
 
