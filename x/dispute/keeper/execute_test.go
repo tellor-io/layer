@@ -10,7 +10,57 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
-func (k *KeeperTestSuite) ExecuteVote() {}
+func (k *KeeperTestSuite) TestExecuteVote() {
+	dispute := k.dispute()
+
+	// slash amount = 10000
+	dispute.FeePayers = []types.PayerInfo{
+		{PayerAddress: sample.AccAddressBytes().String(), Amount: math.NewInt(800), FromBond: true},
+		{PayerAddress: sample.AccAddressBytes().String(), Amount: math.NewInt(200), FromBond: false},
+	}
+	vote := types.Vote{
+		Id:         dispute.DisputeId,
+		VoteEnd:    k.ctx.BlockTime(),
+		VoteResult: types.VoteResult_NO_TALLY,
+		Executed:   true,
+	}
+
+	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
+	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
+
+	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "can't execute, dispute not resolved")
+
+	dispute.DisputeEndTime = k.ctx.BlockTime()
+	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
+	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "can't execute, dispute not resolved")
+
+	vote.VoteResult = types.VoteResult_SUPPORT
+	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
+	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "vote already executed")
+
+	vote.Executed = false
+	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
+
+	modulAddr := authtypes.NewModuleAddress(types.ModuleName)
+	k.ctx = k.ctx.WithBlockTime(k.ctx.BlockTime().Add(1))
+
+	// mocks
+	k.bankKeeper.On("BurnCoins", k.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("loya", math.ZeroInt()))).Return(nil)
+	k.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(modulAddr, nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, sdk.MustAccAddressFromBech32(dispute.FeePayers[0].PayerAddress), dispute.HashId, math.NewInt(8000)).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(8000)))).Return(nil)
+	k.bankKeeper.On(
+		"InputOutputCoins", k.ctx,
+		banktypes.Input{Address: modulAddr.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(2000)))},
+		[]banktypes.Output{
+			{Address: dispute.FeePayers[1].PayerAddress, Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(2000)))},
+		}).Return(nil, nil)
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, dispute.FeePayers[0].PayerAddress, math.NewInt(8000)).Return(nil)
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, dispute.FeePayers[1].PayerAddress, math.NewInt(2000)).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(10000)))).Return(nil)
+
+	k.NoError(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId))
+}
 
 func (k *KeeperTestSuite) TestRefundDisputeFee() {
 	disputeFeeMinusBurn := math.NewInt(950)

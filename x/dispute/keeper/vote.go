@@ -20,18 +20,6 @@ func (k Keeper) initVoterClasses() *types.VoterClasses {
 	}
 }
 
-// Set vote results
-func (k Keeper) SetVoteResult(ctx context.Context, id uint64, result types.VoteResult) error {
-	vote, err := k.Votes.Get(ctx, id)
-	if err != nil {
-		return err
-	}
-	vote.VoteResult = result
-	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).BlockTime()
-
-	return k.Votes.Set(ctx, id, vote)
-}
-
 // Set vote start info for a dispute
 func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) error {
 	vote := types.Vote{
