@@ -189,16 +189,16 @@ contract BlobstreamO is ECDSA {
             revert StaleValidatorSet();
         }
         uint256 _cumulativePower = 0;
-        for (uint256 i = 0; i < _currentValidators.length; i++) {
+        for (uint256 _i = 0; _i < _currentValidators.length; _i++) {
             // If the signature is nil, then it's not present so continue.
-            if (_sigs[i].r == 0 && _sigs[i].s == 0 && _sigs[i].v == 0) {
+            if (_sigs[_i].r == 0 && _sigs[_i].s == 0 && _sigs[_i].v == 0) {
                 continue;
             }
             // Check that the current validator has signed off on the hash.
-            if (!_verifySig(_currentValidators[i].addr, _digest, _sigs[i])) {
+            if (!_verifySig(_currentValidators[_i].addr, _digest, _sigs[_i])) {
                 revert InvalidSignature();
             }
-            _cumulativePower += _currentValidators[i].power;
+            _cumulativePower += _currentValidators[_i].power;
             // Break early to avoid wasting gas.
             if (_cumulativePower >= _powerThreshold) {
                 break;

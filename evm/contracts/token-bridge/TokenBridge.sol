@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.22;
 
-import "../usingtellor/UsingTellor.sol";
+import "../bridge/BlobstreamO.sol";
 import "../interfaces/IERC20.sol";
 
-contract TokenBridge is UsingTellor {
+contract TokenBridge{
+    BlobstreamO public bridge;
     IERC20 public token;
     uint256 public currentDepositLimit;
     uint256 public depositId;
@@ -24,11 +25,12 @@ contract TokenBridge is UsingTellor {
         uint256 blockHeight;
     }
 
-    event Deposit(uint256 depositId, address sender, string recipient, uint256 amount);
-    event Withdrawal(uint256 depositId, string sender, address recipient, uint256 amount);
+    event Deposit(uint256 _depositId, address _sender, string _recipient, uint256 _amount);
+    event Withdrawal(uint256 _depositId, string _sender, address _recipient, uint256 _amount);
 
-    constructor(address _token, address _blobstream) UsingTellor(_blobstream) {
+    constructor(address _token, address _blobstream){
         token = IERC20(_token);
+        bridge = BlobstreamO(_blobstream);
         _depositLimit();
     }
 
@@ -51,7 +53,10 @@ contract TokenBridge is UsingTellor {
         require(_attest.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
         require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
-        require(isAnyConsensusValue(_attest, _valset, _sigs, MAX_ATTESTATION_AGE), "TokenBridge: invalid attestation");
+        //isAnyConsesnusValue here
+        require(bridge.verifyConsensusOracleData(_attest, _valset, _sigs), "Invalid attestation");
+        require(block.timestamp - _attest.attestationTimestamp <= MAX_ATTESTATION_AGE , "Attestation is too old");
+        //to here
         withdrawalClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attest.report.value, (address, string, uint256));
         uint256 _amountConverted = _amountLoya * 1e12; 

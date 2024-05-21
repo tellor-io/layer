@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// import "../usingtellor/UsingTellor.sol";
+// import "./UsingTellor.sol";
 
 // contract TellorUser is UsingTellor {
 //     uint256 public ethPrice;
