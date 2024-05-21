@@ -47,6 +47,9 @@ sed -i 's/^keyring-backend = .*"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.la
 echo "Adding validator account for alice..."
 ./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
+# echo "creating account for faucet..."
+# ./layerd keys add faucet --recover=true
+
 echo "set chain id in genesis file to layer..."
 sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
 sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/config/genesis.json
@@ -61,13 +64,16 @@ echo "Get address/account for alice to use in gentx tx"
 ALICE=$(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice)
 echo "ALICE: $ALICE"
 
+# echo "Get address for faucet account..."
+# FAUCET=$(./layerd keys show)
+
 # Create a tx to give alice loyas to stake
 echo "Adding genesis account for alice..."
 ./layerd genesis add-genesis-account $ALICE 100000000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 # Create a tx to give faucet loyas to have on hold to give to users
-echo "Adding genesis account for alice..."
-./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000000loya
+# echo "Adding genesis account for alice..."
+# ./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000000loya
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."

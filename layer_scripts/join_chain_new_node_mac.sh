@@ -33,6 +33,7 @@ echo "Initializing chain node for alice..."
 echo "creating keys for node"
 ./layerd keys add $NODE_NAME --home ~/.layer/$NODE_NAME --keyring-backend $KEYRING_BACKEND
 
+
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for $NODE_NAME..."
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/$NODE_NAME/config/config.toml
