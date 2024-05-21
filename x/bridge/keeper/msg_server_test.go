@@ -11,7 +11,7 @@ import (
 )
 
 func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {
-	k, ctx := keepertest.BridgeKeeper(t)
+	k, _, _, _, _, _, ctx := keepertest.BridgeKeeper(t)
 	return keeper.NewMsgServerImpl(k), ctx
 }
 

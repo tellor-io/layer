@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetParams(t *testing.T) {
-	k, ctx := testkeeper.BridgeKeeper(t)
+	k, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	params := types.DefaultParams()
 
 	k.Params.Set(ctx, params)

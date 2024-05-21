@@ -16,6 +16,7 @@ import (
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
+	// bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 )
 
 func AuthModule() configurator.ModuleOption {
@@ -104,6 +105,18 @@ func ReporterModule() configurator.ModuleOption {
 		}
 	}
 }
+
+// func BridgeModule() configurator.ModuleOption {
+// 	return func(config *configurator.Config) {
+// 		config.BeginBlockersOrder = append(config.BeginBlockersOrder, "bridge")
+// 		config.EndBlockersOrder = append(config.EndBlockersOrder, "bridge")
+// 		config.InitGenesisOrder = append(config.InitGenesisOrder, "bridge")
+// 		config.ModuleConfigs["bridge"] = &appv1alpha1.ModuleConfig{
+// 			Name:   "bridge",
+// 			Config: appconfig.WrapAny(&bridgemodulev1.Module{}),
+// 		}
+// 	}
+// }
 
 func DefaultStartUpConfig() sims.StartupConfig {
 	priv := secp256k1.GenPrivKey()
