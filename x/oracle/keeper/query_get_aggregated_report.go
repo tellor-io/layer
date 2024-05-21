@@ -3,17 +3,23 @@ package keeper
 import (
 	"context"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetAggregatedReport(ctx context.Context, req *types.QueryGetCurrentAggregatedReportRequest) (*types.QueryGetAggregatedReportResponse, error) {
+func (q Querier) GetAggregatedReport(ctx context.Context, req *types.QueryGetCurrentAggregatedReportRequest) (*types.QueryGetAggregatedReportResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	mostRecent, err := k.GetCurrentValueForQueryId(ctx, req.QueryId)
+	queryID, err := utils.QueryBytesFromString(req.QueryId)
+	if err != nil {
+		return nil, err
+	}
+
+	mostRecent, err := q.keeper.GetCurrentValueForQueryId(ctx, queryID)
 	if err != nil {
 		return nil, err
 	}
