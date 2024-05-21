@@ -1,17 +1,12 @@
-const { expect } = require("chai");
-const { ethers, network } = require("hardhat");
+const { ethers} = require("hardhat");
 const h = require("./helpers/helpers");
 var assert = require('assert');
-const web3 = require('web3');
-const { prependOnceListener } = require("process");
-const BN = ethers.BigNumber.from
 const abiCoder = new ethers.utils.AbiCoder();
-const axios = require('axios');
 
 
 describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
-    let bridge, valPower, accounts, validators, powers, initialValAddrs,
+    let bridge, accounts,initialValAddrs,
         initialPowers, threshold, valCheckpoint, valTimestamp, guardian,
         bridgeCaller;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
@@ -39,6 +34,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
     it("constructor", async function () {
         assert.equal(await bridge.powerThreshold(), threshold)
+        assert.equal(await bridge.guardian(), accounts[10])
         assert.equal(await bridge.validatorTimestamp(), valTimestamp)
         assert.equal(await bridge.unbondingPeriod(), UNBONDING_PERIOD)
         assert.equal(await bridge.lastValidatorSetCheckpoint(), valCheckpoint)
