@@ -311,17 +311,6 @@ func request_Query_GetUserTipTotal_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tipper", err)
 	}
 
-	val, ok = pathParams["query_data"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
-	}
-
-	protoReq.QueryData, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
-	}
-
 	msg, err := client.GetUserTipTotal(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -347,17 +336,6 @@ func local_request_Query_GetUserTipTotal_0(ctx context.Context, marshaler runtim
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tipper", err)
-	}
-
-	val, ok = pathParams["query_data"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_data")
-	}
-
-	protoReq.QueryData, err = runtime.Bytes(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_data", err)
 	}
 
 	msg, err := server.GetUserTipTotal(ctx, &protoReq)
@@ -1022,7 +1000,7 @@ var (
 
 	pattern_Query_GetCurrentTip_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_current_tip", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_GetUserTipTotal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_user_tip_total", "tipper", "query_data"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_GetUserTipTotal_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_user_tip_total", "tipper"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_GetAggregatedReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_aggregated_report", "query_id"}, "", runtime.AssumeColonVerbOpt(false)))
 

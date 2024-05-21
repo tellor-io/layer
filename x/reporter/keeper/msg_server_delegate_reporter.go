@@ -51,6 +51,9 @@ func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegat
 	if err := k.Keeper.ValidateAndSetAmount(ctx, delAddr, msg.TokenOrigins, msg.Amount); err != nil {
 		return nil, err
 	}
+	if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(delAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), delegation.Amount); err != nil {
+		return nil, err
+	}
 	if err := k.Delegators.Set(ctx, delAddr, delegation); err != nil {
 		return nil, err
 	}
@@ -60,7 +63,17 @@ func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegat
 	}
 	// update reporter total tokens
 	reporter.TotalTokens = reporter.TotalTokens.Add(msg.Amount)
+	if err := k.UpdateTotalPower(ctx, msg.Amount, false); err != nil {
+		return nil, err
+	}
+
+	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(repAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), reporter.TotalTokens); err != nil {
+		return nil, err
+	}
 	if err := k.Reporters.Set(ctx, repAddr, reporter); err != nil {
+		return nil, err
+	}
+	if err := k.AfterReporterModified(ctx, repAddr); err != nil {
 		return nil, err
 	}
 

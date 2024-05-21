@@ -40,6 +40,7 @@ type OracleAttestations struct {
 }
 
 type VoteExtTx struct {
+	BlockHeight        int64              `json:"block_height"`
 	OpAndEVMAddrs      OperatorAndEVM     `json:"op_and_evm_addrs"`
 	ValsetSigs         ValsetSignatures   `json:"valset_sigs"`
 	OracleAttestations OracleAttestations `json:"oracle_attestations"`
@@ -63,7 +64,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		return nil, err
 	}
 	proposalTxs := req.Txs
-	injectedVoteExtTx := OperatorAndEVM{}
+	injectedVoteExtTx := VoteExtTx{}
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
@@ -115,6 +116,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		}
 
 		injectedVoteExtTx := VoteExtTx{
+			BlockHeight:        req.Height,
 			OpAndEVMAddrs:      operatorAndEvm,
 			ValsetSigs:         valsetSigs,
 			OracleAttestations: oracleAttestations,

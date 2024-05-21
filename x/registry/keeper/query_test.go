@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	k, _ := testkeeper.RegistryKeeper(t)
+	k, _, _, _ := testkeeper.RegistryKeeper(t)
 	q := keeper.NewQuerier(k)
 	require.NotNil(t, q.Keeper)
 }

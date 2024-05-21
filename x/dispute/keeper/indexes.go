@@ -10,21 +10,29 @@ import (
 )
 
 type DisputesIndex struct {
-	DisputeByReporter *indexes.Unique[[]byte, uint64, types.Dispute]
+	DisputeByReporter *indexes.Multi[[]byte, uint64, types.Dispute]
+	OpenDisputes      *indexes.Multi[bool, uint64, types.Dispute]
 }
 
 func (a DisputesIndex) IndexesList() []collections.Index[uint64, types.Dispute] {
-	return []collections.Index[uint64, types.Dispute]{a.DisputeByReporter}
+	return []collections.Index[uint64, types.Dispute]{a.DisputeByReporter, a.OpenDisputes}
 }
 
 func NewDisputesIndex(sb *collections.SchemaBuilder) DisputesIndex {
 	return DisputesIndex{
-		DisputeByReporter: indexes.NewUnique(
+		DisputeByReporter: indexes.NewMulti(
 			sb, types.DisputesByReporterIndexPrefix, "dispute_by_reporter",
 			collections.BytesKey, collections.Uint64Key,
 			func(k uint64, dispute types.Dispute) ([]byte, error) {
 				reporterKey := fmt.Sprintf("%s:%x", dispute.ReportEvidence.Reporter, dispute.HashId)
 				return []byte(reporterKey), nil
+			},
+		),
+		OpenDisputes: indexes.NewMulti(
+			sb, types.OpenDisputesIndexPrefix, "open_disputes",
+			collections.BoolKey, collections.Uint64Key,
+			func(k uint64, dispute types.Dispute) (bool, error) {
+				return dispute.Open, nil
 			},
 		),
 	}

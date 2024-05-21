@@ -107,3 +107,23 @@ func NewQueryIndex(sb *collections.SchemaBuilder) queryMetaIndex {
 		),
 	}
 }
+
+type tipperTotalIndex struct {
+	BlockNumber *indexes.Unique[int64, collections.Pair[[]byte, int64], math.Int]
+}
+
+func (a tipperTotalIndex) IndexesList() []collections.Index[collections.Pair[[]byte, int64], math.Int] {
+	return []collections.Index[collections.Pair[[]byte, int64], math.Int]{a.BlockNumber}
+}
+
+func NewTippersIndex(sb *collections.SchemaBuilder) tipperTotalIndex {
+	return tipperTotalIndex{
+		BlockNumber: indexes.NewUnique(
+			sb, types.TipsBlockIndexPrefix, "tips_by_block",
+			collections.Int64Key, collections.PairKeyCodec(collections.BytesKey, collections.Int64Key),
+			func(k collections.Pair[[]byte, int64], v math.Int) (int64, error) {
+				return k.K2(), nil
+			},
+		),
+	}
+}

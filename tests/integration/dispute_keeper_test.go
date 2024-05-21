@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracleKeeper "github.com/tellor-io/layer/x/oracle/keeper"
@@ -55,9 +57,9 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 
 	// 2 here because dispute count starts from 1 and dispute count gives the next dispute id
 	s.Equal(uint64(2), s.disputekeeper.NextDisputeId(s.ctx))
-	open, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
+	open, err := s.disputekeeper.GetOpenDisputes(s.ctx)
 	s.NoError(err)
-	s.Equal(1, len(open.Ids))
+	s.Equal(1, len(open))
 
 	// check validator wasn't slashed/jailed
 	rep, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
@@ -171,11 +173,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:  repAcc.String(),
-		Power:     100,
-		QueryId:   qId,
-		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Reporter:    repAcc.String(),
+		Power:       100,
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.ctx.BlockHeight(),
 	}
 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
 	s.NoError(err)
@@ -191,9 +194,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(err)
 	s.True(s.bankKeeper.GetBalance(s.ctx, disputer, s.denom).IsLT(disputerBalanceBefore))
 
-	// start vote
-	ids, err := s.disputekeeper.CheckPrevoteDisputesForExpiration(s.ctx)
-	s.NoError(err)
+	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.ctx, s.disputekeeper))
 
 	votes := []types.MsgVote{
 		{
@@ -224,7 +225,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 	// // tally vote
-	err = s.disputekeeper.TallyVote(s.ctx, ids[0])
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
 	reporter, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
 	s.NoError(err)
@@ -232,7 +233,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	repTknBeforeExecuteVote := reporter.TotalTokens
 	disputerBalanceBeforeExecuteVote := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
 	// execute vote
-	err = s.disputekeeper.ExecuteVotes(s.ctx, ids)
+	err = s.disputekeeper.ExecuteVote(s.ctx, 1)
 	s.NoError(err)
 	reporter, err = s.reporterkeeper.Reporter(s.ctx, repAcc)
 	s.NoError(err)
@@ -310,13 +311,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.NoError(err)
 
 	ctx := s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
-	err = s.disputekeeper.TallyVote(ctx, 1)
+	err = s.disputekeeper.Tallyvote(ctx, 1)
 	s.NoError(err)
 
 	bond := reporter.Amount
-	// // execute vote
-	err = s.disputekeeper.ExecuteVotes(ctx, []uint64{1})
-	s.NoError(err)
+	// execute vote
+	s.NoError(s.disputekeeper.ExecuteVote(ctx, 1))
 
 	voteInfo, err := s.disputekeeper.Votes.Get(s.ctx, 1)
 	s.NoError(err)
@@ -376,9 +376,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
-	// start vote
-	ids, err := s.disputekeeper.CheckPrevoteDisputesForExpiration(s.ctx)
-	s.NoError(err)
+	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.ctx, s.disputekeeper))
 
 	votersBalanceBefore := map[string]sdk.Coin{
 		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
@@ -412,12 +410,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
 		s.NoError(err)
 	}
-	// tally vote
-	err = s.disputekeeper.Tally(s.ctx, ids)
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
 	// execute vote
-	err = s.disputekeeper.ExecuteVotes(s.ctx, ids)
-	s.NoError(err)
+	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
 	reporterAfter, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
 	s.NoError(err)
 	s.True(reporterAfter.Jailed)
@@ -542,7 +538,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		s.NoError(err)
 	}
 	// tally vote
-	err = s.disputekeeper.TallyVote(s.ctx, 1)
+	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
 	// execute vote
 	err = s.disputekeeper.ExecuteVote(s.ctx, 1)
@@ -577,432 +573,191 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	}
 }
 
-// func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
-// 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-// 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
+func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
+	reporter1Acc, reporter2Acc := s.Reporters()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
+	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
+	reporter1StakeBefore := reporter1.TotalTokens
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:    reporter1.Reporter,
+		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.ctx.BlockHeight(),
+	}
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	s.NoError(err)
+	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
+	disputer := sample.AccAddressBytes()
+	// mint disputer tokens
+	s.mintTokens(disputer, math.NewInt(100_000_000))
+	// disputer balance before proposing dispute
+	disputerBalanceBefore := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
+	disputeMsg := types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.denom, disputeFee),
+		DisputeCategory: types.Warning,
+	}
+	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
+	s.NoError(err)
+	// check disputer balance after proposing dispute
+	disputerBalanceAfter1stRound := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
+	s.True(disputerBalanceBefore.Amount.GT(disputerBalanceAfter1stRound.Amount))
+	// assert reporter tokens slashed and reporter jailed
+	reporter1, err = s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
+	reporter1TokensAfterDispute1stround := reporter1.TotalTokens
+	s.True(reporter1.Jailed)
+	s.True(reporter1.TotalTokens.LT(reporter1StakeBefore))
+	s.Equal(reporter1.TotalTokens, reporter1StakeBefore.Sub(disputeFee))
 
-// 	bal0, err := s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[0], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal0, math.NewInt(900_000_000))
+	voteMsg := types.MsgVote{
 
-// 	bal1, err := s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[1], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal1, math.NewInt(800_000_000))
+		Voter: reporter2Acc.String(),
+		Id:    1,
+		Vote:  types.VoteEnum_VOTE_INVALID,
+	}
+	_, err = msgServer.Vote(s.ctx, &voteMsg)
+	s.NoError(err)
 
-// 	bal2, err := s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[2], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal2, math.NewInt(700_000_000))
+	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
+	s.Error(err, "can't start a new round for this dispute 1; dispute status DISPUTE_STATUS_VOTING")
+	// forward time to end voting period pre execute vote
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+	s.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
+	s.ErrorContains(s.disputekeeper.Tallyvote(s.ctx, 1), "vote already tallied")
+	s.Error(s.disputekeeper.ExecuteVote(s.ctx, 1), "dispute is not resolved yet")
+	// start another dispute round
+	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
+	s.NoError(err)
+	disputerBalanceAfter2ndRound := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
+	s.Equal(disputerBalanceAfter1stRound.Amount.Sub(burnAmount.MulRaw(2)), disputerBalanceAfter2ndRound.Amount)
+	reporter1, err = s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
+	s.Equal(reporter1.TotalTokens, reporter1TokensAfterDispute1stround)
+	s.Error(s.disputekeeper.Tallyvote(s.ctx, 2), "vote period not ended and quorum not reached")
 
-// 	balStaking, err := s.bankKeeper.Balances.Get(s.ctx, collections.Join(s.stakingKeeper.GetBondedPool(s.ctx).GetAddress(), s.denom))
-// 	s.NoError(err)
-// 	s.Equal(balStaking, math.NewInt(601_000_000))
+	// voting that doesn't reach quorum
+	voteMsg = types.MsgVote{
 
-// 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	reporterStakeBefore := reporter.GetBondedTokens()
-// 	report := types.MicroReport{
-// 		Reporter:  addrs[0].String(),
-// 		Power:     reporter.GetConsensusPower(sdk.DefaultPowerReduction),
-// 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-// 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-// 		Timestamp: 1696516597,
-// 	}
-// 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
-// 	s.NoError(err)
-// 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
-// 	dispute := types.MsgProposeDispute{
-// 		Creator:         addrs[1].String(),
-// 		Report:          &report,
-// 		Fee:             sdk.NewCoin(s.denom, disputeFee),
-// 		DisputeCategory: types.Warning,
-// 	}
-// 	balanceBefore := s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	// Propose dispute pay half of the fee from account
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
+		Voter: reporter2Acc.String(),
+		Id:    2,
+		Vote:  types.VoteEnum_VOTE_INVALID,
+	}
 
-// 	bal0, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[0], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal0, math.NewInt(900_000_000))
+	_, err = msgServer.Vote(s.ctx, &voteMsg)
+	s.NoError(err)
 
-// 	bal1, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[1], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal1, math.NewInt(799_000_000))
+	// expire vote period
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.NoError(s.disputekeeper.Tallyvote(s.ctx, 2))
+	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 2))
+	// attempt to start another round
+	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
+	s.Error(err, "can't start a new round for this dispute 2; dispute status DISPUTE_STATUS_RESOLVED")
+	dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 2)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	vote, err := s.disputekeeper.Votes.Get(s.ctx, 2)
+	s.NoError(err)
+	s.True(vote.Executed)
+}
 
-// 	bal2, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[2], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal2, math.NewInt(700_000_000))
+func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
+	reporter1Acc, reporter2Acc := s.Reporters()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
+	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
 
-// 	balStaking, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(s.stakingKeeper.GetBondedPool(s.ctx).GetAddress(), s.denom))
-// 	s.NoError(err)
-// 	s.Equal(balStaking, math.NewInt(600_000_000))
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:    reporter1.Reporter,
+		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.ctx.BlockHeight(),
+	}
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	s.NoError(err)
 
-// 	moduleAccs := s.ModuleAccs()
-// 	balDispute, err := s.bankKeeper.Balances.Get(s.ctx, collections.Join(moduleAccs.dispute.GetAddress(), s.denom))
-// 	s.NoError(err)
-// 	s.Equal(balDispute, disputeFee.MulRaw(2)) // disputeFee + slashAmount
+	disputer := sample.AccAddressBytes()
+	// mint disputer tokens
+	s.mintTokens(disputer, math.NewInt(100_000_000))
 
-// 	balanceAfter := s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.True(balanceBefore.Amount.Sub(disputeFee).Equal(balanceAfter.Amount))
-// 	// check reporter stake
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore))
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-// 	// begin block
-// 	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime()}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+	disputeMsg := types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.denom, disputeFee),
+		DisputeCategory: types.Warning,
+	}
+	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
+	s.NoError(err)
 
-// 	votes := []types.MsgVote{
-// 		{
-// 			Voter: addrs[0].String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 	}
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.ctx, &votes[i])
-// 		s.NoError(err)
-// 	}
+	voteMsg := types.MsgVote{
+		Voter: reporter2Acc.String(),
+		Id:    1,
+		Vote:  types.VoteEnum_VOTE_INVALID,
+	}
 
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime()}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.Equal(err.Error(), "can't start a new round for this dispute 1; dispute status DISPUTE_STATUS_VOTING")
-// 	// check reporter stake
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore))
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-// 	// forward time to after vote end
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+	_, err = msgServer.Vote(s.ctx, &voteMsg)
+	s.NoError(err)
+	// forward time to expire dispute
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
+	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
 
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(2))), balanceAfter)
+}
 
-// 	// check reporter stake
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore)) // TODO: this double-check seems unnecessary
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
+	reporter1Acc, _ := s.Reporters()
+	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
+	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
 
-// 	// voting that doesn't reach quorum
-// 	votes = []types.MsgVote{
-// 		{
-// 			Voter: addrs[0].String(),
-// 			Id:    2,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 	}
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.ctx, &votes[i])
-// 		s.NoError(err)
-// 	}
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
+	reporterStakeBefore := reporter1.TotalTokens
 
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:    reporter1.Reporter,
+		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.ctx.BlockHeight(),
+	}
 
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(4))), balanceAfter)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	s.NoError(err)
 
-// 	// check reporter stake
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore))
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+	disputer := sample.AccAddressBytes()
+	// mint disputer tokens
+	s.mintTokens(disputer, math.NewInt(100_000_000))
 
-// 	// voting that doesn't reach quorum
-// 	votes = []types.MsgVote{
-// 		{
-// 			Voter: addrs[0].String(),
-// 			Id:    3,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 	}
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.ctx, &votes[i])
-// 		s.NoError(err)
-// 	}
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
+	disputeMsg := types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.denom, disputeFee),
+		DisputeCategory: types.Warning,
+	}
+	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
+	s.NoError(err)
 
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+	reporter1, err = s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
+	s.NotEqual(reporterStakeBefore, reporter1.TotalTokens)
 
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(8))), balanceAfter)
+	// forward time to expire dispute
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 
-// 	// check reporter stake
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore))
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
+	s.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
+	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
 
-// 	// voting that doesn't reach quorum
-// 	votes = []types.MsgVote{
-// 		{
-// 			Voter: addrs[0].String(),
-// 			Id:    4,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 	}
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.ctx, &votes[i])
-// 		s.NoError(err)
-// 	}
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.Equal(err.Error(), "can't start a new round for this dispute 4; dispute status DISPUTE_STATUS_VOTING")
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, burnAmount.MulRaw(16))), balanceAfter)
-
-// 	// check reporter stake
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.True(reporter.GetBondedTokens().LT(reporterStakeBefore))
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore.Sub(disputeFee))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	// voting that doesn't reach quorum
-// 	votes = []types.MsgVote{
-// 		{
-// 			Voter: addrs[0].String(),
-// 			Id:    5,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 	}
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.ctx, &votes[i])
-// 		s.NoError(err)
-// 	}
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-
-// 	// forward time to end vote
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, disputeFee)), balanceAfter)
-
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-
-// 	bal0, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[0], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal0, math.NewInt(900_000_000))
-
-// 	bal1, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[1], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal1, math.NewInt(795_500_000))
-
-// 	bal2, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[2], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal2, math.NewInt(700_000_000))
-
-// 	balStaking, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(s.stakingKeeper.GetBondedPool(s.ctx).GetAddress(), s.denom))
-// 	s.NoError(err)
-// 	s.Equal(balStaking, math.NewInt(600_000_000))
-
-// 	balDispute, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(moduleAccs.dispute.GetAddress(), s.denom))
-// 	s.NoError(err)
-// 	s.Equal(balDispute, math.NewInt(5_500_000)) // disputeFee + slashAmount + round 1(100000) + round 2(200000) + round 3(400000) + round 4(800000) + round 5(1000000) + round 6(1000000)
-
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, disputeFee)), balanceAfter)
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.TWO_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	balanceBefore = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	_, err = msgServer.ProposeDispute(s.ctx, &dispute)
-// 	s.NoError(err)
-// 	balanceAfter = s.bankKeeper.GetBalance(s.ctx, addrs[1], s.denom)
-// 	s.Equal(balanceBefore.Sub(sdk.NewCoin(s.denom, disputeFee)), balanceAfter)
-// 	// forward time and end dispute
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	// check reporter stake, stake should be restored due to invalid vote final result
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.Equal(reporter.GetBondedTokens(), reporterStakeBefore)
-
-// 	bal0, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[0], s.denom)) // voter reward half the total burn Amount(the 5%)
-// 	s.NoError(err)
-// 	s.Equal(bal0, math.NewInt(902_275_000))
-
-// 	bal1, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[1], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal1, math.NewInt(795_450_000))
-
-// 	bal2, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(addrs[2], s.denom))
-// 	s.NoError(err)
-// 	s.Equal(bal2, math.NewInt(700_000_000))
-
-// 	balStaking, err = s.bankKeeper.Balances.Get(s.ctx, collections.Join(s.stakingKeeper.GetBondedPool(s.ctx).GetAddress(), s.denom))
-// 	s.NoError(err)
-// 	s.Equal(balStaking, math.NewInt(601_000_000))
-// }
-
-// func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
-// 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-// 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
-// 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	reporterStakeBefore := reporter.GetBondedTokens()
-// 	report := types.MicroReport{
-// 		Reporter:  addrs[0].String(),
-// 		Power:     reporter.GetConsensusPower(sdk.DefaultPowerReduction),
-// 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-// 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-// 		Timestamp: 1696516597,
-// 	}
-// 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
-// 	s.NoError(err)
-// 	// Propose dispute pay half of the fee from account
-// 	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-// 		Creator:         addrs[1].String(),
-// 		Report:          &report,
-// 		Fee:             sdk.NewCoin(s.denom, disputeFee),
-// 		DisputeCategory: types.Warning,
-// 	})
-// 	s.NoError(err)
-// 	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	votes := []types.MsgVote{
-// 		{
-// 			Voter: addrs[0].String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 		{
-// 			Voter: addrs[1].String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_INVALID,
-// 		},
-// 	}
-
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.ctx, &votes[i])
-// 		s.NoError(err)
-// 	}
-// 	// forward time to expire dispute
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(86400*3 + 1))
-// 	header = tmproto.Header{Height: s.app.LastBlockHeight() + 1, AppHash: s.app.LastCommitID().Hash, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	reporterStakeAfter := reporter.GetBondedTokens()
-// 	// reporter stake should be restored after dispute expires for invalid vote
-// 	s.Equal(reporterStakeBefore, reporterStakeAfter)
-// }
-
-// func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
-// 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-// 	addrs, valAddrs := s.createValidators([]int64{100, 200, 300})
-// 	reporter, err := s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	reporterStakeBefore := reporter.GetBondedTokens()
-// 	report := types.MicroReport{
-// 		Reporter:  addrs[0].String(),
-// 		Power:     reporter.GetConsensusPower(sdk.DefaultPowerReduction),
-// 		QueryId:   "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992",
-// 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-// 		Timestamp: 1696516597,
-// 	}
-// 	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
-// 	s.NoError(err)
-// 	// Propose dispute pay half of the fee from account
-// 	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-// 		Creator:         addrs[1].String(),
-// 		Report:          &report,
-// 		Fee:             sdk.NewCoin(s.denom, disputeFee),
-// 		DisputeCategory: types.Warning,
-// 	})
-// 	s.NoError(err)
-
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.NotEqual(reporterStakeBefore, reporter.GetBondedTokens())
-// 	// forward time to end dispute
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS))
-// 	header := tmproto.Header{Height: s.app.LastBlockHeight() + 1, Time: s.ctx.BlockTime().Add(1)}
-// 	s.ctx = s.ctx.WithBlockHeader(header)
-// 	_, err = s.app.BeginBlocker(s.ctx)
-// 	s.NoError(err)
-// 	reporter, err = s.stakingKeeper.Validator(s.ctx, valAddrs[0])
-// 	s.NoError(err)
-// 	s.Equal(reporterStakeBefore, reporter.GetBondedTokens())
-// }
+	reporter1, err = s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
+	s.Equal(reporterStakeBefore, reporter1.TotalTokens)
+}
