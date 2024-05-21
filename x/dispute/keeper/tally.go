@@ -53,27 +53,6 @@ func calculateVotingPower(n, d math.Int) math.Int {
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
-func (k Keeper) CalculateVoterShare(ctx context.Context, voters []VoterInfo, totalTokens math.Int) ([]VoterInfo, math.Int) {
-	totalPower := math.ZeroInt()
-	for _, voter := range voters {
-		totalPower = totalPower.Add(voter.Power)
-	}
-
-	scalingFactor := layertypes.PowerReduction
-	totalShare := math.ZeroInt()
-	for i, v := range voters {
-		share := v.Power.Mul(scalingFactor).Quo(totalPower)
-		tokens := share.Mul(totalTokens).Quo(scalingFactor)
-		voters[i].Share = tokens
-		totalShare = totalShare.Add(tokens)
-	}
-	burnedRemainder := math.ZeroInt()
-	if totalTokens.GT(totalShare) {
-		burnedRemainder = totalTokens.Sub(totalShare)
-	}
-	return voters, burnedRemainder
-}
-
 func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	numGroups := math.LegacyNewDec(4)
 	scaledSupport := math.LegacyZeroDec()
