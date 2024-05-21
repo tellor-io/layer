@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +35,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byt
 	require.Equal(&types.MsgSubmitValueResponse{}, res)
 
 	queryId := utils.QueryIDFromData(queryData)
-	report, err := s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: queryId})
+	report, err := s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)
 
 	microReport := types.MicroReport{

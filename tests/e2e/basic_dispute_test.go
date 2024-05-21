@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"encoding/hex"
 	"time"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -155,10 +156,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryId,
+		QueryId: hex.EncodeToString(queryId),
 	}
 	// aggregated report is stored correctly
-	result, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	queryServer := oraclekeeper.NewQuerier(s.oraclekeeper)
+	result, err := queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest)
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
@@ -293,10 +295,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryId,
+		QueryId: hex.EncodeToString(queryId),
 	}
 	// aggregated report is stored correctly
-	result, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	result, err = queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest)
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
@@ -458,10 +460,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryId,
+		QueryId: hex.EncodeToString(queryId),
 	}
 	// check that aggregated report is stored correctly
-	result, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest)
+	result, err = queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest)
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)

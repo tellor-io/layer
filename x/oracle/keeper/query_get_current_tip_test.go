@@ -50,6 +50,6 @@ func (s *KeeperTestSuite) TestGetCurrentTip() {
 }
 
 func (s *KeeperTestSuite) TestGetCurrentTipInvalidRequest() {
-	_, err := s.oracleKeeper.GetCurrentTip(s.ctx, nil)
+	_, err := s.queryClient.GetCurrentTip(s.ctx, nil)
 	s.ErrorContains(err, "invalid request")
 }

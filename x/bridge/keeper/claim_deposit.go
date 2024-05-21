@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"time"
 
@@ -16,9 +17,9 @@ import (
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex uint64) error {
+func (k Keeper) ClaimDeposit(ctx context.Context, depositId uint64, reportIndex uint64) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
-	queryId, err := k.getDepositQueryId(depositId)
+	queryId, err := k.GetDepositQueryId(depositId)
 	if err != nil {
 		return err
 	}
@@ -45,7 +46,7 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 	if err != nil {
 		return err
 	}
-	powerThreshold := totalBondedTokens.Int64() * 2 / 3
+	powerThreshold := int64(math.Round(float64(totalBondedTokens.Int64()) * 2 / 3))
 	if aggregate.ReporterPower < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
@@ -54,7 +55,7 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 		return types.ErrReportTooYoung
 	}
 
-	recipient, amount, err := k.decodeDepositReportValue(ctx, aggregate.AggregateValue)
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
 	if err != nil {
 		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%w: %v", types.ErrInvalidDepositReportValue, err)
@@ -80,8 +81,8 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 	return nil
 }
 
-func (k Keeper) getDepositQueryId(depositId uint64) ([]byte, error) {
-	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))
+// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))
+func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
 
 	queryTypeString := "TRBBridge"
 	toLayerBool := true
@@ -130,8 +131,8 @@ func (k Keeper) getDepositQueryId(depositId uint64) ([]byte, error) {
 	return queryId, nil
 }
 
-func (k Keeper) decodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
-	// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount))
+// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount))
+func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
 
 	// prepare decoding
 	AddressType, err := abi.NewType("address", "", nil)
@@ -175,9 +176,9 @@ func (k Keeper) decodeDepositReportValue(ctx context.Context, reportValue string
 		return nil, sdk.Coins{}, err
 	}
 
-	amountDecimalConverted := amountBigInt.Int64() / 1e12
+	amountDecimalConverted := amountBigInt.Div(amountBigInt, big.NewInt(1e12))
 
-	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted)
+	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted.Int64())
 	amountCoins := sdk.NewCoins(amountCoin)
 
 	return layerRecipientAddress, amountCoins, nil

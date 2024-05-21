@@ -139,7 +139,7 @@ func (k Keeper) initializeQuery(ctx context.Context, querydata []byte) (types.Qu
 	if err != nil {
 		return types.QueryMeta{}, err
 	}
-	dataSpec, err := k.GetDataSpec(sdk.UnwrapSDKContext(ctx), queryType)
+	dataSpec, err := k.GetDataSpec(ctx, queryType)
 	if err != nil {
 		return types.QueryMeta{}, err
 	}

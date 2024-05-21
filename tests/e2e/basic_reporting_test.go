@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"encoding/hex"
 	"time"
 
 	"cosmossdk.io/math"
@@ -200,9 +201,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	s.NoError(err)
 	// check that aggregated report is stored
 	getAggReportRequest1 := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryIdEth,
+		QueryId: hex.EncodeToString(queryIdEth),
 	}
-	result1, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest1)
+	queryServer := oraclekeeper.NewQuerier(s.oraclekeeper)
+	result1, err := queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest1)
 	require.NoError(err)
 	require.Equal(result1.Report.Height, int64(2))
 	require.Equal(result1.Report.AggregateReportIndex, int64(0))
@@ -275,10 +277,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	s.NoError(err)
 	// create get aggregated report query
 	getAggReportRequest2 := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryIdTrb,
+		QueryId: hex.EncodeToString(queryIdTrb),
 	}
 	// check that aggregated report is stored correctly
-	result2, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest2)
+	result2, err := queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest2)
 	require.NoError(err)
 	require.Equal(int64(0), result2.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result2.Report.AggregateValue)
@@ -383,10 +385,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	// create get aggreagted report query
 	getAggReportRequest1 = oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryIdEth,
+		QueryId: hex.EncodeToString(queryIdEth),
 	}
 	// check that the aggregated report is stored correctly
-	result1, err = s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequest1)
+	result1, err = queryServer.GetAggregatedReport(s.ctx, &getAggReportRequest1)
 	require.NoError(err)
 	require.Equal(result1.Report.AggregateReportIndex, int64(0))
 	require.Equal(result1.Report.AggregateValue, encodeValue(5000))
@@ -460,10 +462,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	// create get aggregated report query
 	getAggReportRequestTrb := oracletypes.QueryGetCurrentAggregatedReportRequest{
-		QueryId: queryIdTrb,
+		QueryId: hex.EncodeToString(queryIdTrb),
 	}
 	// query aggregated report
-	resultTrb, err := s.oraclekeeper.GetAggregatedReport(s.ctx, &getAggReportRequestTrb)
+	resultTrb, err := queryServer.GetAggregatedReport(s.ctx, &getAggReportRequestTrb)
 	require.NoError(err)
 	require.Equal(resultTrb.Report.AggregateReportIndex, int64(0))
 	require.Equal(resultTrb.Report.AggregateValue, encodeValue(1_000_000))

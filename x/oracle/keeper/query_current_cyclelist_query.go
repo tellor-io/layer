@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
@@ -13,9 +14,10 @@ func (k Querier) CurrentCyclelistQuery(ctx context.Context, req *types.QueryCurr
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	querydata, err := k.GetCurrentQueryInCycleList(ctx)
+	querydata, err := k.keeper.GetCurrentQueryInCycleList(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryCurrentCyclelistQueryResponse{QueryData: querydata}, nil
+
+	return &types.QueryCurrentCyclelistQueryResponse{QueryData: hex.EncodeToString(querydata)}, nil
 }

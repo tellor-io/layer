@@ -7,9 +7,9 @@ import (
 var _ types.QueryServer = Querier{}
 
 type Querier struct {
-	Keeper
+	keeper Keeper
 }
 
 func NewQuerier(keeper Keeper) Querier {
-	return Querier{Keeper: keeper}
+	return Querier{keeper: keeper}
 }

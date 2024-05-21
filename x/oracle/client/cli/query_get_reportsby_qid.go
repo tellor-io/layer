@@ -27,13 +27,8 @@ func CmdGetReportsbyQid() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			qIdBz, err := utils.QueryBytesFromString(reqQId)
-			if err != nil {
-				return err
-			}
-
 			params := &types.QueryGetReportsbyQidRequest{
-				QueryId: qIdBz,
+				QueryId: reqQId,
 			}
 
 			res, err := queryClient.GetReportsbyQid(cmd.Context(), params)

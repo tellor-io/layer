@@ -15,10 +15,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
+	"github.com/tellor-io/layer/x/bridge/mocks"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-func BridgeKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+func BridgeKeeper(t testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -31,14 +32,20 @@ func BridgeKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
+	accountKeeper := new(mocks.AccountKeeper)
+	bankKeeper := new(mocks.BankKeeper)
+	oracleKeeper := new(mocks.OracleKeeper)
+	reporterKeeper := new(mocks.ReporterKeeper)
+	stakingKeeper := new(mocks.StakingKeeper)
+
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
+		stakingKeeper,
+		accountKeeper,
+		oracleKeeper,
+		bankKeeper,
+		reporterKeeper,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
@@ -46,5 +53,5 @@ func BridgeKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	// Initialize params
 	k.Params.Set(ctx, types.DefaultParams())
 
-	return k, ctx
+	return k, accountKeeper, bankKeeper, oracleKeeper, reporterKeeper, stakingKeeper, ctx
 }
