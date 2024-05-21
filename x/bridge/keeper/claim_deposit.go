@@ -16,7 +16,7 @@ import (
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-func (k Keeper) ClaimDepositHelper(ctx context.Context, depositId uint64, reportIndex uint64) error {
+func (k Keeper) ClaimDeposit(ctx context.Context, depositId uint64, reportIndex uint64) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
 	queryId, err := k.GetDepositQueryId(depositId)
 	if err != nil {
@@ -167,7 +167,6 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 
 	recipientString := reportValueDecoded[1].(string)
 	amountBigInt := reportValueDecoded[2].(*big.Int)
-	fmt.Println("amountBigInt in function: ", amountBigInt)
 
 	// convert layer recipient to cosmos address
 	layerRecipientAddress, err := sdk.AccAddressFromBech32(recipientString)
@@ -176,10 +175,9 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 		return nil, sdk.Coins{}, err
 	}
 
-	amountDecimalConverted := amountBigInt.Int64() / 1e12
-	fmt.Println("amountDecimalConverted in function: ", amountDecimalConverted)
+	amountDecimalConverted := amountBigInt.Div(amountBigInt, big.NewInt(1e12))
 
-	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted)
+	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted.Int64())
 	amountCoins := sdk.NewCoins(amountCoin)
 
 	return layerRecipientAddress, amountCoins, nil

@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -36,8 +35,7 @@ func TestDecodeDepositReportValue(t *testing.T) {
 	}
 	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
 	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
-	amountAggregate := big.NewInt(100 * 1e12)
-	fmt.Println("amount in report:", amountAggregate)
+	amountAggregate := big.NewInt(1 * 1e12) // 1 loya, 0.00001 trb
 	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
 	require.NoError(t, err)
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
@@ -45,22 +43,48 @@ func TestDecodeDepositReportValue(t *testing.T) {
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	require.Equal(t, recipient.String(), layerAddressString)
 	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
-	fmt.Println("amount from decoding:", amount)
 	require.NoError(t, err)
 
 	// decode big numbers
-	amountAggregate = big.NewInt(1).Mul(big.NewInt(10_000), big.NewInt(1e18))
-	fmt.Println("amount in report:", amountAggregate)
+	amountAggregate = big.NewInt(1).Mul(big.NewInt(10), big.NewInt(1e18)) // 10 trb
 	reportValueArgsEncoded, err = reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
 	require.NoError(t, err)
 	reportValueString = hex.EncodeToString(reportValueArgsEncoded)
 
 	recipient, amount, err = k.DecodeDepositReportValue(ctx, reportValueString)
 	require.Equal(t, recipient.String(), layerAddressString)
-	fmt.Println("amount from decoding:", amount)
 	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
 	require.NoError(t, err)
 
+	amountAggregate = big.NewInt(1).Mul(big.NewInt(1_000), big.NewInt(1e18)) // 1,000 trb
+	reportValueArgsEncoded, err = reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
+	require.NoError(t, err)
+	reportValueString = hex.EncodeToString(reportValueArgsEncoded)
+
+	recipient, amount, err = k.DecodeDepositReportValue(ctx, reportValueString)
+	require.Equal(t, recipient.String(), layerAddressString)
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	require.NoError(t, err)
+
+	amountAggregate = big.NewInt(1).Mul(big.NewInt(10_000), big.NewInt(1e18)) // 10,000 trb
+	reportValueArgsEncoded, err = reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
+	require.NoError(t, err)
+	reportValueString = hex.EncodeToString(reportValueArgsEncoded)
+
+	recipient, amount, err = k.DecodeDepositReportValue(ctx, reportValueString)
+	require.Equal(t, recipient.String(), layerAddressString)
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	require.NoError(t, err)
+
+	amountAggregate = big.NewInt(1).Mul(big.NewInt(1_000_000), big.NewInt(1e18)) // 1,000,000 trb
+	reportValueArgsEncoded, err = reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate)
+	require.NoError(t, err)
+	reportValueString = hex.EncodeToString(reportValueArgsEncoded)
+
+	recipient, amount, err = k.DecodeDepositReportValue(ctx, reportValueString)
+	require.Equal(t, recipient.String(), layerAddressString)
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	require.NoError(t, err)
 }
 
 func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
@@ -128,13 +152,13 @@ func TestGetDepositQueryId(t *testing.T) {
 	require.NotNil(t, queryId)
 }
 
-func TestClaimDepositHelper(t *testing.T) {
+func TestClaimDeposit(t *testing.T) {
 	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	aggregateTimestamp := sdkCtx.BlockTime()
 
+	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -160,9 +184,8 @@ func TestClaimDepositHelper(t *testing.T) {
 		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(90 * 1e6),
 	}
-	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	//advance 2 seconds
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
@@ -171,21 +194,42 @@ func TestClaimDepositHelper(t *testing.T) {
 
 	depositId := uint64(0)
 	reportIndex := uint64(0)
-
-	err = k.ClaimDepositHelper(sdkCtx, depositId, reportIndex)
+	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
 	require.NoError(t, err)
-	// check that deposit status is now claimed
+	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
+	require.NoError(t, err)
+	require.Equal(t, depositClaimedResult.Claimed, true)
+}
 
-	// report no aggregate
+func TestClaimDepositHelperNilAggregate(t *testing.T) {
+	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	// report flagged aggregate
+	queryId, _ := k.GetDepositQueryId(0)
+	currentTime := time.Now()
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(0)).Return(nil, currentTime, nil)
 
-	// already claimed
-
-	// total reporter power err
-
-	// not enough power
-
-	// report too young
+	err := k.ClaimDeposit(ctx, 0, 0)
+	require.ErrorContains(t, err, "no aggregate found")
 
 }
+
+func TestClaimDepositHelperReportFlaggedAggregate(t *testing.T) {
+
+}
+
+func TestClaimDepositHelperTotalReporterPowerErr(t *testing.T) {
+
+}
+
+func TestClaimDepositHelperNotEnoughPower(t *testing.T) {
+
+}
+
+func TestClaimDepositHelperReportTooYoung(t *testing.T) {
+
+}
+
+// report too young
