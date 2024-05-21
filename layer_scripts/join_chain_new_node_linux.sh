@@ -82,17 +82,17 @@ echo "Getting genesis from runnning node....."
 curl tellornode.com:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
 curl tellornode.com:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
-#export QUOTED_TELLORNODE_ID="$(curl tellornode.com:26657/status | jq '.result.node_info.id')"
-#export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
-
 export QUOTED_TELLORNODE_ID="$(curl tellornode.com:26657/status | jq '.result.node_info.id')"
-echo "Quoted node id: $QUOTED_TELLORNODE_ID"
-export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
-echo "NODE ID: $TELLORNODE_ID"
-echo "Tellor node id: $TELLORNODE_ID"
-sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
-sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+#export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
+#export TELLORNODE_ID=${echo "$QUOTED_TELLORNODE_ID" | tr -d "'\"" }
+# echo "NODE ID: $TELLORNODE_ID"
+# echo "Tellor node id: $TELLORNODE_ID"
+# sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+# sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
+echo "Node ID: $QUOTED_TELLORNODE_ID"
+echo "Path: @tellornode.com:26656"
+sleep 30
 
 echo "Starting chain for node..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@tellornode.com:26656"
