@@ -84,10 +84,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
     // get sha256 hash of the message
     // const digestArrayified = ethers.utils.arrayify(digest);
     // messageHash = ethers.utils.sha256Hash(digestArrayified);
-    console.log("sigsResponse", sigsResponse)
-    console.log("checkpoint", checkpoint)
     const messageHash = ethers.sha256(checkpoint);
-    console.log("messageHash", messageHash)
     for (let i = 0; i < sigsResponse.length; i++) {
       const signature = sigsResponse[i];
       if (signature.length === 128) {
@@ -100,7 +97,6 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
           s: s,
           v: v,
         });
-        console.log("recoveredAddress27", recoveredAddress)
         // check if recovered address matches the validator address
         if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
           // try v = 28 if v = 27 did not match
@@ -110,7 +106,6 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
             s: s,
             v: v,
           });
-          console.log("recoveredAddress28", recoveredAddress)
           if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
             // If neither worked, use default values
             v = 0;
@@ -437,19 +432,6 @@ domainSeparateOracleAttestationData = (attestationData, valCheckpoint) => {
   const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
   enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"],
     [DOMAIN_SEPARATOR, attestationData.queryId, attestationData.report.value, attestationData.report.timestamp, attestationData.report.aggregatePower, attestationData.report.previousTimestamp, attestationData.report.nextTimestamp, valCheckpoint, attestationData.attestTimestamp])
-
-  // print everything
-  console.log("DOMAIN_SEPARATOR", DOMAIN_SEPARATOR)
-  console.log("attestationData.queryId", attestationData.queryId)
-  console.log("attestationData.report.value", attestationData.report.value)
-  console.log("attestationData.report.timestamp", attestationData.report.timestamp)
-  console.log("attestationData.report.aggregatePower", attestationData.report.aggregatePower)
-  console.log("attestationData.report.previousTimestamp", attestationData.report.previousTimestamp)
-  console.log("attestationData.report.nextTimestamp", attestationData.report.nextTimestamp)
-  console.log("valCheckpoint", valCheckpoint)
-  console.log("attestationData.attestTimestamp", attestationData.attestTimestamp)
-  console.log("dataDigest", hash(enc))
-  console.log("enc", enc)
   return hash(enc)
 }
 

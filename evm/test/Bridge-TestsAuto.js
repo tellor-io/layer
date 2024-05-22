@@ -11,8 +11,8 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
         initialPowers, threshold, valCheckpoint, valTimestamp, guardian,
         bridgeCaller;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
-
     const ETH_USD_QUERY_ID = "0x83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+    const PAST_REPORT_TS = 0
 
     beforeEach(async function () {
         accounts = await ethers.getSigners();
@@ -38,32 +38,22 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
     it("query layer api, deploy and verify with real params", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
-        console.log("valsetTimestamp0: ", vts0)
-        console.log("valsetCheckpointParams0: ", vp0)
 
-        console.log("deploying bridge...")
         bridge = await ethers.deployContract("BlobstreamO", [vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, await guardian.getAddress()]);
 
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
         valSet0 = await h.getValset(vp0.timestamp)
         valSet1 = await h.getValset(vp1.timestamp)
-        console.log("valSet0: ", valSet0)
-        console.log("valSet1: ", valSet1)
 
         vsigs1 = await h.getValsetSigs(vp1.timestamp, valSet0, vp1.checkpoint)
-        console.log("valsetSigs1: ", vsigs1)
 
-        console.log("updating validator set...")
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
 
         ethUsdRep0 = await h.getCurrentAggregateReport(ETH_USD_QUERY_ID)
-        console.log("ethUsdRep0: ", ethUsdRep0)
         snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, ethUsdRep0.report.timestamp)
-        console.log("snapshots: ", snapshots)
         lastSnapshot = snapshots[snapshots.length - 1]
         attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
-        console.log("attestationData: ", attestationData)
 
         oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
         if (oattests.length == 0) {
@@ -72,36 +62,40 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             await h.sleep(2)
             oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
         }
-        console.log("oattests: ", oattests)
 
-        console.log("verifying oracle data...")
         await bridge.verifyOracleData(
             attestationData,
             valSet1,
             oattests,
         )
+        // log instructions for "optimistic value" test
+        queryIdWithout0x = ETH_USD_QUERY_ID.slice(2)
+        if (PAST_REPORT_TS == 0) {
+            console.log("to test 'optimistic value', run:")
+            console.log("./layerd tx bridge request-attestations %s %s --from charlie --chain-id layer --home ~/.layer/alice", queryIdWithout0x, attestationData.report.timestamp)
+            console.log("update 'PAST_REPORT_TS' to %s", attestationData.report.timestamp)
+        }
     })
 
     it("optimistic value", async function () {
-        // request new attestations on layer and update PAST_REPORT_TS
-        const PAST_REPORT_TS = 1715379735
+        // request new attestations on layer and update PAST_REPORT_TS above
+
+        if (PAST_REPORT_TS == 0) {
+            assert.fail("PAST_REPORT_TS is 0. Please request new attestations and update PAST_REPORT_TS above")
+        }
         
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
-        console.log("vp0: ", vp0)
 
-        console.log("deploying bridge...")
         bridge = await ethers.deployContract("BlobstreamO", [vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address]);
 
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
-        console.log("vp1: ", vp1)
         valSet0 = await h.getValset(vp0.timestamp)
         valSet1 = await h.getValset(vp1.timestamp)
 
         vsigs1 = await h.getValsetSigs(vp1.timestamp, valSet0, vp1.checkpoint)
         
-        console.log("updating validator set...")
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
 
 
@@ -110,13 +104,10 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
         currentTime = currentBlock.timestamp
         currentTime = currentTime - 10
         pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
-        console.log("pastReport: ", pastReport)
 
         snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, PAST_REPORT_TS)
-        console.log("snapshots: ", snapshots)
         lastSnapshot = snapshots[1]
         attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
-        console.log("attestationData: ", attestationData)
 
         oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
         if (oattests.length == 0) {
@@ -125,14 +116,11 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             await h.sleep(2)
             oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
         }
-        console.log("oattests: ", oattests)
 
-        console.log("verifying oracle data...")
         assert(await bridge.verifyOracleData(
             attestationData,
             valSet1,
             oattests,
         ))
-        console.log("oracle data verified")
     })
 })

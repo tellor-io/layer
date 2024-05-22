@@ -9,7 +9,7 @@ import { LayerTransition } from "./LayerTransition.sol";
 contract TokenBridge is UsingTellor, LayerTransition {
     uint256 public depositId;
     uint256 public constant MAX_ATTESTATION_AGE = 12 hours;
-    uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
+    uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // =100/depositLimitPercentage
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
     uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
     uint256 public depositLimitUpdateTime;

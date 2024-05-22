@@ -52,7 +52,9 @@ module.exports = {
       },
     ],
   },
+  defaultNetwork: "hardhat",
   networks: {
+    // hardhat: {},
     hardhat: {
       accounts: {
         mnemonic:
@@ -64,6 +66,6 @@ module.exports = {
         blockNumber: 19891853
       },
       allowUnlimitedContractSize: true
-    } //,
+    },
   },
 };

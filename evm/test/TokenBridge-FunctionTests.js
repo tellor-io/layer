@@ -6,7 +6,7 @@ const web3 = require('web3');
 const { prependOnceListener } = require("process");
 const abiCoder = new ethers.AbiCoder();
 
-
+// network: hardhat{}
 describe("TokenBridge - Function Tests", async function () {
 
     let blobstream, accounts, guardian, tbridge, token, blocky0,
@@ -25,7 +25,7 @@ describe("TokenBridge - Function Tests", async function () {
         accounts = await ethers.getSigners();
         guardian = accounts[10]
         // get inital layer valset params
-        valTs = await h.getValsetTimestampByIndex(0)
+        valTs = await h.getValsetTimestampByIndex(1)
         valParams = await h.getValsetCheckpointParams(valTs)
         valSet = await h.getValset(valParams.timestamp)
         // deploy contracts
@@ -55,8 +55,9 @@ describe("TokenBridge - Function Tests", async function () {
     })
 
     it("withdrawFromLayer", async function () {
+        // on layer, need to request withdraw, then fast-forward layer time, then request new attestations,
+        // then call withdraw in tokenbridge contract
         agg = await h.getCurrentAggregateReport(WITHDRAW1_QUERY_ID)
-
         snapshots = await h.getSnapshotsByReport(WITHDRAW1_QUERY_ID, agg.report.timestamp)
         lastSnapshot = snapshots[snapshots.length - 1]
         attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
