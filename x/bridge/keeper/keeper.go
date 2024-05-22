@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -115,18 +116,22 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 		return nil, err
 	}
 
-	bridgeValset := make([]*types.BridgeValidator, len(validators))
+	var bridgeValset []*types.BridgeValidator
 
-	for i, validator := range validators {
+	for _, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
 		if err != nil {
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
-			return nil, err
+			continue // Skip this validator if the EVM address is not found
 		}
-		bridgeValset[i] = &types.BridgeValidator{
+		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddress.EVMAddress,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
-		}
+		})
+	}
+
+	if len(bridgeValset) == 0 {
+		return nil, errors.New("no validators found")
 	}
 
 	// Sort the validators
@@ -243,7 +248,6 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 		// TODO: handle error?
 	}
 	if valsetIdx.Index == 0 {
-		// TODO: no need to set signatures for the first valset
 		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
 		err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
 		if err != nil {
@@ -976,7 +980,6 @@ func (k Keeper) EncodeOracleAttestationData(
 func (k Keeper) GetAttestationRequestsByHeight(ctx context.Context, height uint64) (*types.AttestationRequests, error) {
 	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, height)
 	if err != nil {
-		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return nil, err
 	}
 	return &attestRequests, nil

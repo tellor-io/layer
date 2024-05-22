@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -14,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power int64, incycle bool) error {
+func (k Keeper) setValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power int64, incycle bool) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
@@ -29,6 +30,8 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.Q
 	if err := dataSpec.ValidateValue(val); err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to validate value: %v", err))
 	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	queryId := utils.QueryIDFromData(queryData)
 	report := types.MicroReport{
 		Reporter:        reporter.String(),
@@ -37,9 +40,9 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.Q
 		QueryId:         queryId,
 		Value:           val,
 		AggregateMethod: dataSpec.AggregationMethod,
-		Timestamp:       ctx.BlockTime(),
+		Timestamp:       sdkCtx.BlockTime(),
 		Cyclelist:       incycle,
-		BlockNumber:     ctx.BlockHeight(),
+		BlockNumber:     sdkCtx.BlockHeight(),
 	}
 
 	query.HasRevealedReports = true
@@ -51,14 +54,14 @@ func (k Keeper) setValue(ctx sdk.Context, reporter sdk.AccAddress, query types.Q
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
 }
 
-func (k Keeper) VerifyCommit(ctx sdk.Context, reporter string, value, salt, hash string) bool {
+func (k Keeper) VerifyCommit(ctx context.Context, reporter string, value, salt, hash string) bool {
 	// calculate commitment
 	calculatedCommit := oracleutils.CalculateCommitment(value, salt)
 	// compare calculated commitment with the one stored
 	return calculatedCommit == hash
 }
 
-func (k Keeper) GetDataSpec(ctx sdk.Context, queryType string) (regTypes.DataSpec, error) {
+func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.DataSpec, error) {
 	// get data spec from registry by query type to validate value
 	dataSpec, err := k.registryKeeper.GetSpec(ctx, queryType)
 	if err != nil {

@@ -45,6 +45,8 @@ var (
 	CyclelistPrefix             = collections.NewPrefix(17)
 	QueryTypeIndexPrefix        = collections.NewPrefix(18)
 	AggregatesHeightIndexPrefix = collections.NewPrefix(19)
+	TipsBlockIndexPrefix        = collections.NewPrefix(20)
+	TipperTotalPrefix           = collections.NewPrefix(21)
 )
 
 func KeyPrefix(p string) []byte {

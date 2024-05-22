@@ -151,23 +151,35 @@ contract BlobstreamO is ECDSA {
     }
 
     /*Getter functions*/
-    function verifyConsensusOracleData(
-        OracleAttestationData calldata _attest,
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) external view returns (bool) {
-        if (_attest.report.aggregatePower < powerThreshold) {
-            revert NotConsensusValue();
-        }
-        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
-    }
-
     function verifyOracleData(
-        OracleAttestationData calldata _attest,
+        OracleAttestationData calldata _attestData,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
     ) external view returns (bool) {
-        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
+        if (_currentValidatorSet.length != _sigs.length) {
+            revert MalformedCurrentValidatorSet();
+        }
+        // Check that the supplied current validator set matches the saved checkpoint.
+        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
+            _currentValidatorSet
+        );
+        if (
+            _domainSeparateValidatorSetHash(
+                powerThreshold,
+                validatorTimestamp,
+                _currentValidatorSetHash
+            ) != lastValidatorSetCheckpoint
+        ) {
+            revert SuppliedValidatorSetInvalid();
+        }
+        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attestData);
+        _checkValidatorSignatures(
+            _currentValidatorSet,
+            _sigs,
+            _dataDigest,
+            powerThreshold
+        );
+        return true;
     }
 
 
@@ -260,42 +272,6 @@ contract BlobstreamO is ECDSA {
                 )
             );
     }
-
-    /// @notice Used for verifying oracle data attestations
-    /// @param _attestData The oracle attestation data
-    /// @param _currentValidatorSet The current validator set
-    /// @param _sigs The attestations 
-    function _verifyOracleData(
-        OracleAttestationData calldata _attestData,
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) internal view returns (bool) {
-        if (_currentValidatorSet.length != _sigs.length) {
-            revert MalformedCurrentValidatorSet();
-        }
-        // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
-            _currentValidatorSet
-        );
-        if (
-            _domainSeparateValidatorSetHash(
-                powerThreshold,
-                validatorTimestamp,
-                _currentValidatorSetHash
-            ) != lastValidatorSetCheckpoint
-        ) {
-            revert SuppliedValidatorSetInvalid();
-        }
-        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attestData);
-        _checkValidatorSignatures(
-            _currentValidatorSet,
-            _sigs,
-            _dataDigest,
-            powerThreshold
-        );
-        return true;
-    }
-
     /// @notice Utility function to verify Tellor Layer signatures
     /// @param _signer The address that signed the message.
     /// @param _digest The digest that was signed.

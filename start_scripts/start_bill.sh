@@ -6,7 +6,7 @@ clear
 # Stop execution if any command fails
 set -e
 
-KEYRING_BACKEND="os"
+KEYRING_BACKEND="test"
 
 # Define paths to the node directories
 echo "Defining paths..."
@@ -94,8 +94,11 @@ echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 
 # Stake Bill as a validator
 echo "Staking bill as a validator..."
-# layerd tx staking create-validator $NODE2_HOME_DIR/config/validator.json --from bill --keyring-backend test --keyring-dir $HOME/.layer/ --chain-id layer
 ./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id layer --home ~/.layer/bill
+
+# Modify keyring-backend in client.toml for bill
+echo "Modifying keyring-backend in client.toml for bill..."
+sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~/.layer/bill/config/client.toml
 
 # Start the second node
 echo "Starting the second node..."

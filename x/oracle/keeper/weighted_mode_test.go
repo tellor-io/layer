@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	aggregates, err := s.oracleKeeper.WeightedMode(s.ctx, reports)
 	s.Nil(err)
 	s.NotNil(aggregates)
-	res, err := s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId})
+	res, err := s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId, "query id is not correct")
 	s.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	}
 
 	s.oracleKeeper.WeightedMode(s.ctx, reports)
-	res, err = s.oracleKeeper.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: qId2})
+	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId2)})
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId2, "query id is not correct")
 	s.Equal(res.Report.AggregateReporter, expectedReporter, "aggregate reporter is not correct")

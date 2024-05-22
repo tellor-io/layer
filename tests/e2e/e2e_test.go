@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	collections "cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -428,7 +429,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 
 	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	disputes, err := s.disputekeeper.OpenDisputes.Get(s.ctx)
+	disputes, err := s.disputekeeper.GetOpenDisputes(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
@@ -535,7 +536,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 
 	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	disputes, err = s.disputekeeper.OpenDisputes.Get(s.ctx)
+	disputes, err = s.disputekeeper.GetOpenDisputes(s.ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
 	// dispute is created correctly
@@ -682,20 +683,20 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// require.NoError(err)
 	// require.NotNil(voteResponse)
 
-	totalTips, err := s.disputekeeper.GetTotalTips(s.ctx)
+	totalTips, err := s.disputekeeper.BlockInfo.Get(s.ctx, dispute.HashId)
 	require.NoError(err)
 	fmt.Println("totalTips: ", totalTips)
 
 	totalReporterPower, err := s.reporterkeeper.TotalReporterPower(s.ctx)
 	require.NoError(err)
 	fmt.Println("total reporter power: ", totalReporterPower.Quo(sdk.DefaultPowerReduction))
-	reporter1Power, err := s.disputekeeper.GetReporterPower(s.ctx, disputedRep.Reporter)
+	reporter1Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, sdk.MustAccAddressFromBech32(disputedRep.Reporter)))
 	require.NoError(err)
 	fmt.Println("reporter1 Power: ", reporter1Power)
-	reporter2Power, err := s.disputekeeper.GetReporterPower(s.ctx, disputer.Reporter)
+	reporter2Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, sdk.MustAccAddressFromBech32(disputer.Reporter)))
 	require.NoError(err)
 	fmt.Println("reporter2 Power: ", reporter2Power)
-	reporter3Power, err := s.disputekeeper.GetReporterPower(s.ctx, thirdReporter.Reporter)
+	reporter3Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, sdk.MustAccAddressFromBech32(thirdReporter.Reporter)))
 	require.NoError(err)
 	fmt.Println("reporter3 Power: ", reporter3Power)
 

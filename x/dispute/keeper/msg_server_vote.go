@@ -45,11 +45,36 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if vote.VoteEnd.Before(ctx.BlockTime()) {
 		return nil, types.ErrVotingPeriodEnded
 	}
-
-	err = k.Keeper.SetTally(ctx, voterAcc, msg.Vote, vote)
+	bI, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
 		return nil, err
 	}
+	teampower, err := k.SetTeamVote(ctx, msg.Id, voterAcc)
+	if err != nil {
+		return nil, err
+	}
+	upower, err := k.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber)
+	if err != nil {
+		return nil, err
+	}
+	upower = calculateVotingPower(upower, bI.TotalUserTips)
+	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
+	if err != nil {
+		return nil, err
+	}
+	repP = calculateVotingPower(repP, bI.TotalReporterPower)
+	acctBal, err := k.GetAccountBalance(ctx, voterAcc)
+	if err != nil {
+		return nil, err
+	}
+	totalSupply := k.GetTotalSupply(ctx)
 
+	voterVote := types.Voter{
+		Vote:       msg.Vote,
+		VoterPower: teampower.Add(upower).Add(repP).Add(calculateVotingPower(acctBal, totalSupply)),
+	}
+	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc), voterVote); err != nil {
+		return nil, err
+	}
 	return &types.MsgVoteResponse{}, nil
 }

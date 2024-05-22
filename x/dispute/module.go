@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
@@ -20,7 +19,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
-	"github.com/tellor-io/layer/x/dispute/client/cli"
+
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
@@ -83,16 +82,6 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
-// GetTxCmd returns the root Tx command for the module. The subcommands of this root command are used by end-users to generate new transactions containing messages defined in the module
-func (a AppModuleBasic) GetTxCmd() *cobra.Command {
-	return cli.GetTxCmd()
-}
-
-// GetQueryCmd returns the root query command for the module. The subcommands of this root command are used by end-users to generate new queries to the subset of the state defined by the module
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd(types.StoreKey)
-}
-
 // ----------------------------------------------------------------------------
 // AppModule
 // ----------------------------------------------------------------------------
@@ -151,16 +140,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	ids, err := am.keeper.CheckPrevoteDisputesForExpiration(sdkCtx)
-	if err != nil {
-		return err
-	}
-	err = am.keeper.Tally(sdkCtx, ids)
-	if err != nil {
-		return err
-	}
-	return am.keeper.ExecuteVotes(sdkCtx, ids)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 // ----------------------------------------------------------------------------
@@ -194,6 +174,7 @@ type DisputeOutputs struct {
 }
 
 func ProvideModule(in DisputeInputs) DisputeOutputs {
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -202,6 +183,7 @@ func ProvideModule(in DisputeInputs) DisputeOutputs {
 		in.OracleKeeper,
 		in.ReporterKeeper,
 	)
+
 	m := NewAppModule(
 		in.Cdc,
 		k,

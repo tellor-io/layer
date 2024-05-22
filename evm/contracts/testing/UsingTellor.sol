@@ -36,7 +36,8 @@ contract UsingTellor {
         Signature[] calldata _sigs,
         uint256 _maxAttestationAge
     ) public view returns(bool) {
-        require(bridge.verifyConsensusOracleData(_attest, _currentValidatorSet, _sigs), "Invalid attestation");
+        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid attestation");
+        require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
         return true;
     }
@@ -47,7 +48,8 @@ contract UsingTellor {
         Signature[] calldata _sigs,
         uint256 _maxAttestationAge
     ) public view returns(bool) {
-        require(bridge.verifyConsensusOracleData(_attest, _currentValidatorSet, _sigs), "Invalid attestation");
+        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs), "Invalid attestation");
+        require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         require(block.timestamp - _attest.attestationTimestamp <= _maxAttestationAge, "Attestation is too old");
         require(_attest.report.nextTimestamp == 0, "Report is not latest");
         return true;

@@ -50,7 +50,7 @@ func (k Keeper) claimDeposit(ctx context.Context, depositId uint64, reportIndex 
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
-	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 1*time.Second {
+	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 12*time.Hour {
 		return types.ErrReportTooYoung
 	}
 
