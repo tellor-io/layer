@@ -22,7 +22,7 @@ func (k *KeeperTestSuite) TestExecuteDispute() {
 	dispute := k.dispute()
 	dispute.BurnAmount = math.NewInt(500)
 	dispute.PrevDisputeIds = []uint64{1}
-	dispute.FeePayers = []types.PayerInfo{{PayerAddress: feePayer.String(), Amount: math.NewInt(250)}}
+	dispute.FeePayers = []types.PayerInfo{{PayerAddress: feePayer, Amount: math.NewInt(250)}}
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, 1, dispute))
 
 	vote := types.Vote{
@@ -47,13 +47,13 @@ func (k *KeeperTestSuite) TestExecuteDispute() {
 	k.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(modulAddr, nil)
 	k.bankKeeper.On("InputOutputCoins", k.ctx, banktypes.Input{Address: modulAddr.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(250)))}, []banktypes.Output{{Address: voter.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(250)))}}).Return(nil, nil)
 	k.bankKeeper.On("InputOutputCoins", k.ctx, banktypes.Input{Address: modulAddr.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(9500)))}, []banktypes.Output{{Address: feePayer.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(9500)))}}).Return(nil, nil)
-	k.reporterKeeper.On("AddAmountToStake", k.ctx, feePayer.String(), math.NewInt(10000)).Return(nil)
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, feePayer, math.NewInt(10000)).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(10000)))).Return(nil)
 
 	vote.VoteResult = types.VoteResult_SUPPORT
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, 1, vote))
 
-	k.NoError(k.disputeKeeper.Voter.Set(k.ctx, collections.Join(uint64(1), voter), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.OneInt()}))
+	k.NoError(k.disputeKeeper.Voter.Set(k.ctx, collections.Join(uint64(1), voter.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.OneInt()}))
 	resp, err = k.msgServer.ExecuteDispute(k.ctx, &msg)
 	k.NoError(err)
 	k.NotNil(resp)

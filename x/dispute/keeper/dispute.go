@@ -67,7 +67,7 @@ func (k Keeper) ReporterKey(ctx sdk.Context, r oracletypes.MicroReport, c types.
 }
 
 // Set new dispute
-func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) error {
+func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.MsgProposeDispute) error {
 	disputeId := k.NextDisputeId(ctx)
 	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
 	// slash amount
@@ -97,7 +97,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		DisputeFee:     disputeFee.Sub(fivePercent),
 		ReportEvidence: *msg.Report,
 		FeePayers: append(feeList, types.PayerInfo{
-			PayerAddress: msg.Creator,
+			PayerAddress: sender,
 			Amount:       msg.Fee.Amount,
 			FromBond:     msg.PayFromBond,
 			BlockNumber:  ctx.BlockHeight(),
@@ -107,7 +107,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, msg types.MsgProposeDispute) erro
 		Open:           true,
 	}
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
+	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
 		return err
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
@@ -193,7 +193,7 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, repAddr string, category types.Di
 }
 
 // Update existing dispute when conditions are met
-func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg types.MsgProposeDispute) error {
+func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute types.Dispute, msg types.MsgProposeDispute) error {
 	if dispute.DisputeStatus != types.Unresolved {
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute status %s", dispute.DisputeId, dispute.DisputeStatus)
 	}
@@ -224,7 +224,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, dispute types.Dispute, msg type
 	}
 
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, msg.Creator, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
+	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
 		return err
 	}
 

@@ -28,8 +28,7 @@ func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sd
 }
 
 // Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, sender string, fee sdk.Coin, fromBond bool, hashId []byte) error {
-	proposer := sdk.MustAccAddressFromBech32(sender)
+func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.Coin, fromBond bool, hashId []byte) error {
 	if fromBond {
 		// pay fee from given validator
 		err := k.PayFromBond(ctx, proposer, fee, hashId)

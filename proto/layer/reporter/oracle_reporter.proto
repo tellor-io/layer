@@ -12,7 +12,7 @@ option go_package = "github.com/tellor-io/layer/x/reporter/types";
 // OracleReporter is the struct that holds the data for a reporter
 message OracleReporter {
   // reporter is the address of the reporter
-  string reporter = 1;
+  bytes reporter = 1;
   // tokens is the amount of tokens the reporter has
   string total_tokens = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",

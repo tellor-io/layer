@@ -215,6 +215,10 @@ func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool)
 	}
 
 	val := validators.Validators[0]
+	valAcc, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+	if err != nil {
+		return err
+	}
 
 	// stake reporter transaction, reporter is determined by LAYERD_NODE_HOME environment variable
 	// should make this configurable by user :time.Sleep(time.Second)todo
@@ -222,7 +226,7 @@ func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool)
 	amtToStake := math.NewInt(1_000_000) // one TRB
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), time.Now())
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: amtToStake}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc, Amount: amtToStake}
 	msgCreateReporter := &reportertypes.MsgCreateReporter{
 		Reporter:     c.accAddr.String(),
 		Amount:       amtToStake,

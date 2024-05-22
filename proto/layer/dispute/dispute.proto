@@ -102,7 +102,7 @@ enum DisputeStatus {
 // fee payer's info that was involved in paying the dispute fee in order to start the dispute
 message PayerInfo {
   // fee payer's Account address
-  string payer_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bytes payer_address = 1;
   // amount paid
   string amount = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
