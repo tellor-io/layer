@@ -53,27 +53,6 @@ func calculateVotingPower(n, d math.Int) math.Int {
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
-func (k Keeper) CalculateVoterShare(ctx context.Context, voters []VoterInfo, totalTokens math.Int) ([]VoterInfo, math.Int) {
-	totalPower := math.ZeroInt()
-	for _, voter := range voters {
-		totalPower = totalPower.Add(voter.Power)
-	}
-
-	scalingFactor := layertypes.PowerReduction
-	totalShare := math.ZeroInt()
-	for i, v := range voters {
-		share := v.Power.Mul(scalingFactor).Quo(totalPower)
-		tokens := share.Mul(totalTokens).Quo(scalingFactor)
-		voters[i].Share = tokens
-		totalShare = totalShare.Add(tokens)
-	}
-	burnedRemainder := math.ZeroInt()
-	if totalTokens.GT(totalShare) {
-		burnedRemainder = totalTokens.Sub(totalShare)
-	}
-	return voters, burnedRemainder
-}
-
 func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	numGroups := math.LegacyNewDec(4)
 	scaledSupport := math.LegacyZeroDec()
@@ -211,7 +190,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		fmt.Println("quorum reached")
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
-		return k.UpdateDispute(ctx, id, dispute, scaledSupport, scaledAgainst, scaledInvalid, true)
+		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 
 	allvoters, err := k.GetVoters(ctx, id)
@@ -254,7 +233,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	if totalRatio.GTE(math.LegacyNewDec(51)) {
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
-		return k.UpdateDispute(ctx, id, dispute, scaledSupport, scaledAgainst, scaledInvalid, true)
+		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
@@ -271,9 +250,11 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 			if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 				return err
 			}
-			return k.SetVoteResult(ctx, id, types.VoteResult_NO_QUORUM_MAJORITY_INVALID)
+			vote.VoteResult = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
+			vote.VoteEnd = sdkctx.BlockTime()
+			return k.Votes.Set(ctx, id, vote)
 		}
-		return k.UpdateDispute(ctx, id, dispute, scaledSupport, scaledAgainst, scaledInvalid, false)
+		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false)
 	} else {
 		return errors.New("vote period not ended and quorum not reached")
 	}
@@ -284,6 +265,7 @@ func (k Keeper) UpdateDispute(
 	ctx context.Context,
 	id uint64,
 	dispute types.Dispute,
+	vote types.Vote,
 	scaledSupport, scaledAgainst, scaledInvalid math.LegacyDec, quorum bool) error {
 	if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 		return err
@@ -311,5 +293,7 @@ func (k Keeper) UpdateDispute(
 	default:
 		return errors.New("no majority")
 	}
-	return k.SetVoteResult(ctx, id, result)
+	vote.VoteResult = result
+	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).BlockTime()
+	return k.Votes.Set(ctx, id, vote)
 }

@@ -68,10 +68,13 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		return nil, err
 	}
 	totalSupply := k.GetTotalSupply(ctx)
-
+	voterPower := teampower.Add(upower).Add(repP).Add(calculateVotingPower(acctBal, totalSupply))
+	if voterPower.IsZero() {
+		return nil, errors.New("voter power is zero")
+	}
 	voterVote := types.Voter{
 		Vote:       msg.Vote,
-		VoterPower: teampower.Add(upower).Add(repP).Add(calculateVotingPower(acctBal, totalSupply)),
+		VoterPower: voterPower,
 	}
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc), voterVote); err != nil {
 		return nil, err
