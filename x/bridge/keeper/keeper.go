@@ -167,6 +167,7 @@ func (k Keeper) CompareBridgeValidators(ctx context.Context) (bool, error) {
 	}
 
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	fmt.Println("get err : ", err)
 	if err != nil {
 		k.Logger(ctx).Info("No saved bridge validator set found")
 		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
