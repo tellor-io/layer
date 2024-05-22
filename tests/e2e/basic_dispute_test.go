@@ -96,7 +96,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	var createReporterMsg reportertypes.MsgCreateReporter
 	reporterAddress := reporterDelToVal.delegatorAddress.String()
 	amount := math.NewInt(4000 * 1e6)
-	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4000 * 1e6)}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAccountValAddrs[0], Amount: math.NewInt(4000 * 1e6)}
 	// 0% commission for reporter staking to validator
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
@@ -111,13 +111,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	// check that reporter was created in Reporters collections
 	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(reporter.Reporter, reporterAccount.String())
+	require.Equal(reporter.Reporter, reporterAccount.Bytes())
 	require.Equal(reporter.TotalTokens, math.NewInt(4000*1e6))
 	require.Equal(reporter.Jailed, false)
 	// check on reporter in Delegators collections
 	rkDelegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(rkDelegation.Reporter, reporterAccount.String())
+	require.Equal(rkDelegation.Reporter, reporterAccount.Bytes())
 	require.Equal(rkDelegation.Amount, math.NewInt(4000*1e6))
 	// check on reporter/validator delegation
 	skDelegation, err := s.stakingKeeper.Delegation(s.ctx, reporterAccount, valBz)
@@ -139,7 +139,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	value := encodeValue(100_000)
 	require.NoError(err)
 	reveal := oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
@@ -164,7 +164,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
-	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
+	require.Equal(sdk.AccAddress(reporter.Reporter).String(), result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
 	require.Equal(int64(4000), result.Report.ReporterPower)
 	require.Equal(int64(1), result.Report.Height)
@@ -189,7 +189,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
-		Reporter:  reporter.Reporter,
+		Reporter:  sdk.AccAddress(reporter.Reporter).String(),
 		Power:     reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
@@ -198,7 +198,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute := disputetypes.MsgProposeDispute{
-		Creator:         reporter.Reporter,
+		Creator:         sdk.AccAddress(reporter.Reporter).String(),
 		Report:          &report,
 		DisputeCategory: disputetypes.Warning,
 		Fee:             disputeFee,
@@ -245,7 +245,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// create msgUnJailReporter
 	msgUnjailReporter := reportertypes.MsgUnjailReporter{
-		ReporterAddress: reporter.Reporter,
+		ReporterAddress: sdk.AccAddress(reporter.Reporter).String(),
 	}
 	// send unjailreporter tx
 	_, err = msgServerReporter.UnjailReporter(s.ctx, &msgUnjailReporter)
@@ -278,7 +278,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	value = encodeValue(100_000)
 	require.NoError(err)
 	reveal = oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
@@ -302,7 +302,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
-	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
+	require.Equal(sdk.AccAddress(reporter.Reporter).String(), result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
 	require.Equal(int64(4000), result.Report.ReporterPower)
 	require.Equal(int64(4), result.Report.Height)
@@ -323,7 +323,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	disputeFee = sdk.NewCoin(s.denom, fivePercent)
 
 	report = oracletypes.MicroReport{
-		Reporter:  reporter.Reporter,
+		Reporter:  sdk.AccAddress(reporter.Reporter).String(),
 		Power:     reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
@@ -332,7 +332,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         reporter.Reporter,
+		Creator:         sdk.AccAddress(reporter.Reporter).String(),
 		Report:          &report,
 		DisputeCategory: disputetypes.Minor,
 		Fee:             disputeFee,
@@ -374,7 +374,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// create vote tx msg
 	msgVote := disputetypes.MsgVote{
-		Voter: reporter.Reporter,
+		Voter: sdk.AccAddress(reporter.Reporter).String(),
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
@@ -396,7 +396,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(disputekeeper.THREE_DAYS))
 	// call unjail function
 	msgUnjailReporter = reportertypes.MsgUnjailReporter{
-		ReporterAddress: reporter.Reporter,
+		ReporterAddress: sdk.AccAddress(reporter.Reporter).String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.ctx, &msgUnjailReporter)
 	require.NoError(err)
@@ -443,7 +443,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	value = encodeValue(100_000)
 	require.NoError(err)
 	reveal = oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
@@ -467,7 +467,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(int64(0), result.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result.Report.AggregateValue)
-	require.Equal(reporter.Reporter, result.Report.AggregateReporter)
+	require.Equal(sdk.AccAddress(reporter.Reporter).String(), result.Report.AggregateReporter)
 	require.Equal(queryId, result.Report.QueryId)
 	require.Equal(int64(7), result.Report.Height)
 
@@ -490,7 +490,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	disputeFee = sdk.NewCoin(s.denom, oneHundredPercent)
 
 	report = oracletypes.MicroReport{
-		Reporter:    reporter.Reporter,
+		Reporter:    sdk.AccAddress(reporter.Reporter).String(),
 		Power:       reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
@@ -500,7 +500,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// create msg for propose dispute tx
 
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         reporter.Reporter,
+		Creator:         sdk.AccAddress(reporter.Reporter).String(),
 		Report:          &report,
 		DisputeCategory: disputetypes.Major,
 		Fee:             disputeFee,
@@ -527,7 +527,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
-	fee, err := s.disputekeeper.GetDisputeFee(s.ctx, reporter.Reporter, disputetypes.Major)
+	fee, err := s.disputekeeper.GetDisputeFee(s.ctx, sdk.AccAddress(reporter.Reporter).String(), disputetypes.Major)
 	require.NoError(err)
 	require.GreaterOrEqual(msgProposeDispute.Fee.Amount.Uint64(), fee.Uint64())
 
@@ -546,7 +546,7 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// create vote tx msg
 	msgVote = disputetypes.MsgVote{
-		Voter: reporter.Reporter,
+		Voter: sdk.AccAddress(reporter.Reporter).String(),
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}

@@ -22,11 +22,9 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 		return errorsmod.Wrapf(types.ErrTokenAmountMismatch, "got %v as amount, but sum of token origins is %v", amount, _amt)
 	}
 	for _, origin := range originAmounts {
-		valAddr, err := sdk.ValAddressFromBech32(origin.ValidatorAddress)
-		if err != nil {
-			return err
-		}
-		tokenSource, err := k.TokenOrigin.Get(ctx, collections.Join(delegator, valAddr))
+		valAddr := sdk.ValAddress(origin.ValidatorAddress)
+
+		tokenSource, err := k.TokenOrigin.Get(ctx, collections.Join(delegator.Bytes(), valAddr.Bytes()))
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
 				return errorsmod.Wrapf(err, "unable to fetch token origin")
@@ -51,7 +49,7 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 			return errorsmod.Wrapf(types.ErrInsufficientTokens, "insufficient tokens bonded with validator %v", valAddr)
 		}
 		tokenSource = sum
-		if err := k.TokenOrigin.Set(ctx, collections.Join(delegator, valAddr), tokenSource); err != nil {
+		if err := k.TokenOrigin.Set(ctx, collections.Join(delegator.Bytes(), valAddr.Bytes()), tokenSource); err != nil {
 			return err
 		}
 	}
@@ -73,7 +71,7 @@ func (k Keeper) UpdateOrRemoveDelegator(ctx context.Context, delAddr sdk.AccAddr
 	if err != nil {
 		return err
 	}
-	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.GetReporter()))
+	reporterVal := sdk.ValAddress(reporter.GetReporter())
 	return k.AfterDelegationModified(ctx, delAddr, reporterVal, del.Amount)
 }
 
@@ -101,7 +99,7 @@ func (k Keeper) UpdateOrRemoveReporter(ctx context.Context, key sdk.AccAddress, 
 
 }
 
-func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], srcAmount math.Int, amt math.Int) (err error) {
+func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[[]byte, []byte], srcAmount math.Int, amt math.Int) (err error) {
 	// amount is the current staked amount in staking mod
 	// so if current amount is zero remove the source
 	if amt.IsZero() {
@@ -110,7 +108,7 @@ func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[s
 	return k.TokenOrigin.Set(ctx, key, amt)
 }
 
-func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], currentAmount math.Int, newAmount math.Int) error {
+func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[[]byte, []byte], currentAmount math.Int, newAmount math.Int) error {
 	if newAmount.GTE(currentAmount) {
 		return k.TokenOrigin.Remove(ctx, key)
 	}

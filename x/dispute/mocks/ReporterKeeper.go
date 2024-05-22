@@ -19,11 +19,11 @@ type ReporterKeeper struct {
 }
 
 // AddAmountToStake provides a mock function with given fields: ctx, addr, amt
-func (_m *ReporterKeeper) AddAmountToStake(ctx context.Context, addr string, amt math.Int) error {
+func (_m *ReporterKeeper) AddAmountToStake(ctx context.Context, addr cosmos_sdktypes.AccAddress, amt math.Int) error {
 	ret := _m.Called(ctx, addr, amt)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, math.Int) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress, math.Int) error); ok {
 		r0 = rf(ctx, addr, amt)
 	} else {
 		r0 = ret.Error(0)

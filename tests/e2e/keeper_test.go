@@ -322,9 +322,11 @@ func (s *E2ETestSuite) CreateReporters(numReporters int, valAddrs []sdk.ValAddre
 		createReporterMsg.Reporter = acc.String()
 		createReporterMsg.Amount = math.NewInt(1000 * 1e6)
 		createReporterMsg.Commission = &commission
+		valAddr, err := sdk.ValAddressFromBech32(vals[i].GetOperator())
+		require.NoError(err)
 		createReporterMsg.TokenOrigins = []*reportertypes.TokenOrigin{
 			{
-				ValidatorAddress: vals[i].GetOperator(),
+				ValidatorAddress: valAddr.Bytes(),
 				Amount:           math.NewInt(1000 * 1e6),
 			},
 		}
@@ -335,7 +337,7 @@ func (s *E2ETestSuite) CreateReporters(numReporters int, valAddrs []sdk.ValAddre
 		// verify in collections
 		rkDelegation, err := s.reporterkeeper.Delegators.Get(s.ctx, acc)
 		require.NoError(err)
-		require.Equal(rkDelegation.Reporter, acc.String())
+		require.Equal(rkDelegation.Reporter, acc.Bytes())
 		require.Equal(rkDelegation.Amount, math.NewInt(1000*1e6))
 		// check on reporter/validator delegation
 		skDelegation, err := s.stakingKeeper.Delegation(s.ctx, acc, valBz)

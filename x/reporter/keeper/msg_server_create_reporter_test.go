@@ -33,15 +33,15 @@ func TestCreateReporter(t *testing.T) {
 	valIII := stakingtypes.Validator{OperatorAddress: validatorIII.String(), Tokens: math.NewInt(100), DelegatorShares: math.LegacyNewDec(50)}
 	originAmounts := []*types.TokenOrigin{
 		{
-			ValidatorAddress: validatorI.String(),
+			ValidatorAddress: validatorI,
 			Amount:           math.NewInt(50),
 		},
 		{
-			ValidatorAddress: validatorII.String(),
+			ValidatorAddress: validatorII,
 			Amount:           math.NewInt(30),
 		},
 		{
-			ValidatorAddress: validatorIII.String(),
+			ValidatorAddress: validatorIII,
 			Amount:           math.NewInt(20),
 		},
 	}

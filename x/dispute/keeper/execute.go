@@ -170,9 +170,9 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInf
 		coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
 		if !recipient.FromBond {
 			accInputTotal = accInputTotal.Add(amt.TruncateInt())
-			outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), coins))
+			outputs = append(outputs, banktypes.NewOutput(recipient.PayerAddress, coins))
 		} else {
-			if err := k.ReturnFeetoStake(ctx, sdk.MustAccAddressFromBech32(recipient.PayerAddress), hashId, amt.TruncateInt()); err != nil {
+			if err := k.ReturnFeetoStake(ctx, recipient.PayerAddress, hashId, amt.TruncateInt()); err != nil {
 				return err
 			}
 		}

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -32,14 +33,14 @@ func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegat
 			if err := k.BeforeDelegationCreated(ctx, reporter); err != nil {
 				return nil, err
 			}
-			delegation.Reporter = msg.Reporter
+			delegation.Reporter = repAddr
 			delegation.Amount = msg.Amount
 		}
 	}
 	if err == nil {
 		// found delegation, update the amount
 		// validate right reporter selected
-		if delegation.Reporter != msg.Reporter {
+		if !bytes.Equal(delegation.Reporter, repAddr.Bytes()) {
 			return nil, errorsmod.Wrapf(types.ErrInvalidReporter, "Reporter mismatch for delegated address %s, expected %s, got %s", msg.Delegator, delegation.Reporter, msg.Reporter)
 		}
 		// **********************  BeforeDelegationModified  hook **************************************

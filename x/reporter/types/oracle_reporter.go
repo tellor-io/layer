@@ -9,8 +9,9 @@ import (
 )
 
 func NewOracleReporter(reporter string, totalAmount math.Int, commission *stakingtypes.Commission) OracleReporter {
+	repAcc := sdk.MustAccAddressFromBech32(reporter)
 	return OracleReporter{
-		Reporter:    reporter,
+		Reporter:    repAcc,
 		TotalTokens: totalAmount,
 		Commission:  commission,
 	}

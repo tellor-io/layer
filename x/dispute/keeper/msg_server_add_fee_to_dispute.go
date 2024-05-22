@@ -13,7 +13,10 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	msg *types.MsgAddFeeToDispute,
 ) (*types.MsgAddFeeToDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
+	sender, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
 	if msg.Amount.Denom != layer.BondDenom {
 		return nil, errors.New("fee must be paid in loya")
 	}
@@ -30,7 +33,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		return nil, types.ErrDisputeFeeAlreadyMet
 	}
 	// Pay fee
-	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.Amount, msg.PayFromBond, dispute.HashId); err != nil {
+	if err := k.Keeper.PayDisputeFee(ctx, sender, msg.Amount, msg.PayFromBond, dispute.HashId); err != nil {
 		return nil, err
 	}
 	// Don't take payment more than slash amount
@@ -39,7 +42,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		msg.Amount.Amount = fee
 	}
 	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
-		PayerAddress: msg.Creator,
+		PayerAddress: sender.Bytes(),
 		Amount:       msg.Amount.Amount,
 		FromBond:     msg.PayFromBond,
 		BlockNumber:  ctx.BlockHeight(),

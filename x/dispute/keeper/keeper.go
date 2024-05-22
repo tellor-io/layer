@@ -33,10 +33,10 @@ type (
 		reporterKeeper                     types.ReporterKeeper
 		Disputes                           *collections.IndexedMap[uint64, types.Dispute, DisputesIndex] // dispute id -> dispute
 		Votes                              collections.Map[uint64, types.Vote]
-		Voter                              *collections.IndexedMap[collections.Pair[uint64, sdk.AccAddress], types.Voter, VotersVoteIndex]
+		Voter                              *collections.IndexedMap[collections.Pair[uint64, []byte], types.Voter, VotersVoteIndex]
 		TeamVoter                          collections.Map[uint64, bool]
-		UsersGroup                         collections.Map[collections.Pair[uint64, sdk.AccAddress], math.Int]
-		ReportersGroup                     collections.Map[collections.Pair[uint64, sdk.AccAddress], math.Int]
+		UsersGroup                         collections.Map[collections.Pair[uint64, []byte], math.Int]
+		ReportersGroup                     collections.Map[collections.Pair[uint64, []byte], math.Int]
 		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]
 		BlockInfo                          collections.Map[[]byte, types.BlockInfo]
 	}
@@ -61,11 +61,11 @@ func NewKeeper(
 		reporterKeeper:                     reporterKeeper,
 		Disputes:                           collections.NewIndexedMap(sb, types.DisputesPrefix, "disputes", collections.Uint64Key, codec.CollValue[types.Dispute](cdc), NewDisputesIndex(sb)),
 		Votes:                              collections.NewMap(sb, types.VotesPrefix, "votes", collections.Uint64Key, codec.CollValue[types.Vote](cdc)),
-		Voter:                              collections.NewIndexedMap(sb, types.VoterVotePrefix, "voter_vote", collections.PairKeyCodec(collections.Uint64Key, sdk.AccAddressKey), codec.CollValue[types.Voter](cdc), NewVotersIndex(sb)),
+		Voter:                              collections.NewIndexedMap(sb, types.VoterVotePrefix, "voter_vote", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.Voter](cdc), NewVotersIndex(sb)),
 		ReportersWithDelegatorsVotedBefore: collections.NewMap(sb, types.ReportersWithDelegatorsVotedBeforePrefix, "reporters_with_delegators_voted_before", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), sdk.IntValue),
-		ReportersGroup:                     collections.NewMap(sb, types.ReporterPowerIndexPrefix, "reporters_group", collections.PairKeyCodec(collections.Uint64Key, sdk.AccAddressKey), sdk.IntValue),
+		ReportersGroup:                     collections.NewMap(sb, types.ReporterPowerIndexPrefix, "reporters_group", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), sdk.IntValue),
 		TeamVoter:                          collections.NewMap(sb, types.TeamVoterPrefix, "team_voter", collections.Uint64Key, collections.BoolValue),
-		UsersGroup:                         collections.NewMap(sb, types.UsersGroupPrefix, "users_group", collections.PairKeyCodec(collections.Uint64Key, sdk.AccAddressKey), sdk.IntValue),
+		UsersGroup:                         collections.NewMap(sb, types.UsersGroupPrefix, "users_group", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), sdk.IntValue),
 		BlockInfo:                          collections.NewMap(sb, types.BlockInfoPrefix, "block_info", collections.BytesKey, codec.CollValue[types.BlockInfo](cdc)),
 	}
 }

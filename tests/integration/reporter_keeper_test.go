@@ -54,8 +54,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	// register reporter in reporter module
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
-
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewIntFromUint64(100 * 1e6)}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr[0], Amount: math.NewIntFromUint64(100 * 1e6)}
 	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators[reporter].delegatorAddress.String(), math.NewIntFromUint64(100*1e6), []*reportertypes.TokenOrigin{&source}, &commission)
 	server := keeper.NewMsgServerImpl(s.reporterkeeper)
 	_, err = server.CreateReporter(s.ctx, createReporterMsg)
@@ -63,11 +62,11 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 	s.Equal(oracleReporter.TotalTokens, math.NewInt(100*1e6))
 
 	// add delegation to reporter
-	source = reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewInt(25 * 1e6)}
+	source = reportertypes.TokenOrigin{ValidatorAddress: valAddr[0], Amount: math.NewInt(25 * 1e6)}
 	delegationI := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
@@ -78,7 +77,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -94,7 +93,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorII].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIIReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIIReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -110,7 +109,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIIIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorIII].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIIIReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIIIReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -126,7 +125,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIVReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorIV].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIVReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIVReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -173,14 +172,16 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
 func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
 	delegators := s.TestRegisteringReporterDelegators()
 	server := keeper.NewMsgServerImpl(s.reporterkeeper)
-	source := reportertypes.TokenOrigin{ValidatorAddress: delegators[delegatorI].validator.GetOperator()}
+	valAcc, err := sdk.ValAddressFromBech32(delegators[delegatorI].validator.GetOperator())
+	s.NoError(err)
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc.Bytes()}
 	// delegatorI undelegates from reporter
 	source.Amount = math.NewInt(5 * 1e6)
 	delegationI := reportertypes.NewMsgUndelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		[]*reportertypes.TokenOrigin{&source},
 	)
-	_, err := server.UndelegateReporter(s.ctx, delegationI)
+	_, err = server.UndelegateReporter(s.ctx, delegationI)
 	s.NoError(err)
 
 	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
@@ -249,8 +250,7 @@ func createReporterStakedWithValidator(ctx sdk.Context, k keeper.Keeper, sk repo
 	if err != nil {
 		return nil, err
 	}
-
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: stake}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.Bytes(), Amount: stake}
 	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators["delegator0"].delegatorAddress.String(), stake, []*reportertypes.TokenOrigin{&source}, &commission)
 	server := keeper.NewMsgServerImpl(k)
 	_, err = server.CreateReporter(ctx, createReporterMsg)
@@ -322,11 +322,11 @@ func (s *IntegrationTestSuite) Reporters() (sdk.AccAddress, sdk.AccAddress) {
 		s.NoError(err)
 	}
 	reporter1TokenSources := []*reportertypes.TokenOrigin{
-		{ValidatorAddress: valAccs[0].String(), Amount: math.NewInt(200 * 1e6)},
-		{ValidatorAddress: valAccs[1].String(), Amount: math.NewInt(200 * 1e6)},
-		{ValidatorAddress: valAccs[2].String(), Amount: math.NewInt(200 * 1e6)},
-		{ValidatorAddress: valAccs[3].String(), Amount: math.NewInt(200 * 1e6)},
-		{ValidatorAddress: valAccs[4].String(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[0].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[1].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[2].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[3].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[4].Bytes(), Amount: math.NewInt(200 * 1e6)},
 	}
 	reporter1Delegators := []sdk.AccAddress{delegatorI, delegatorII, delegatorIII, delegatorIV}
 	// reporter2
@@ -337,11 +337,11 @@ func (s *IntegrationTestSuite) Reporters() (sdk.AccAddress, sdk.AccAddress) {
 		s.NoError(err)
 	}
 	reporter2TokenSources := []*reportertypes.TokenOrigin{
-		{ValidatorAddress: valAccs[5].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[6].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[7].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[8].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[9].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[5].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[6].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[7].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[8].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[9].Bytes(), Amount: math.NewInt(100 * 1e6)},
 	}
 	reporter2Delegators := []sdk.AccAddress{delegatorV, delegatorVI, delegatorVII, delegatorVIII}
 	for _, n := range valAccs[:5] {
@@ -354,11 +354,11 @@ func (s *IntegrationTestSuite) Reporters() (sdk.AccAddress, sdk.AccAddress) {
 	}
 
 	DelSources := []*reportertypes.TokenOrigin{
-		{ValidatorAddress: valAccs[0].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[1].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[2].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[3].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[4].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[0].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[1].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[2].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[3].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[4].Bytes(), Amount: math.NewInt(100 * 1e6)},
 	}
 	for _, n := range valAccs[5:] {
 		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
@@ -369,11 +369,11 @@ func (s *IntegrationTestSuite) Reporters() (sdk.AccAddress, sdk.AccAddress) {
 		}
 	}
 	Del2Sources := []*reportertypes.TokenOrigin{
-		{ValidatorAddress: valAccs[5].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[6].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[7].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[8].String(), Amount: math.NewInt(100 * 1e6)},
-		{ValidatorAddress: valAccs[9].String(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[5].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[6].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[7].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[8].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[9].Bytes(), Amount: math.NewInt(100 * 1e6)},
 	}
 
 	_ = Del2Sources

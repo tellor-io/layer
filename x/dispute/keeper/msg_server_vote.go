@@ -32,7 +32,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		return nil, err
 	}
 
-	voted, err := k.Voter.Has(ctx, collections.Join(msg.Id, voterAcc))
+	voted, err := k.Voter.Has(ctx, collections.Join(msg.Id, voterAcc.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		Vote:       msg.Vote,
 		VoterPower: voterPower,
 	}
-	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc), voterVote); err != nil {
+	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
 	}
 	return &types.MsgVoteResponse{}, nil

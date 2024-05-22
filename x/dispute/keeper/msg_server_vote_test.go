@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestVote() {
 	s.bankKeeper.On("GetSupply", s.ctx, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
 	s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, s.ctx.BlockHeight(), addr).Return(math.NewInt(1), nil)
 	s.reporterKeeper.On("Delegation", s.ctx, addr).Return(reportertypes.Delegation{
-		Reporter: addr.String(),
+		Reporter: addr.Bytes(),
 		Amount:   math.NewInt(1),
 	}, nil)
 	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), s.ctx.BlockHeight()).Return(math.NewInt(1), nil)
@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestVote() {
 	_, err = s.msgServer.Vote(s.ctx, &voteMsg)
 	s.Error(err)
 
-	voterVote, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), addr))
+	voterVote, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), addr.Bytes()))
 	s.NoError(err)
 
 	s.Equal(voterVote.Vote, types.VoteEnum_VOTE_SUPPORT)
@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestVote() {
 	s.NoError(err)
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
-	s.Equal(keys[0].K2(), addr)
+	s.Equal(keys[0].K2(), addr.Bytes())
 	s.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
 	s.Equal(vote.Id, uint64(1))
 }

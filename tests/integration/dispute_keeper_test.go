@@ -92,7 +92,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	})
 	s.NoError(err)
-	vtr, err := s.disputekeeper.Voter.Get(s.ctx, collections.Join(uint64(1), disputer))
+	vtr, err := s.disputekeeper.Voter.Get(s.ctx, collections.Join(uint64(1), disputer.Bytes()))
 	s.NoError(err)
 	s.Equal(types.VoteEnum_VOTE_SUPPORT, vtr.Vote)
 	v, err := s.disputekeeper.Votes.Get(s.ctx, 1)
@@ -102,7 +102,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.NoError(err)
 	voters, err := iter.PrimaryKeys()
 	s.NoError(err)
-	s.Equal(voters[0].K2(), disputer)
+	s.Equal(voters[0].K2(), disputer.Bytes())
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
@@ -596,7 +596,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	reporter1StakeBefore := reporter1.TotalTokens
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    reporter1.Reporter,
+		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
 		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
@@ -690,7 +690,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    reporter1.Reporter,
+		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
 		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
@@ -738,7 +738,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    reporter1.Reporter,
+		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
 		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",

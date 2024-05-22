@@ -121,15 +121,16 @@ func (s *KeeperTestSuite) TestReporterKey() {
 
 func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	report := report()
+	creator := sample.AccAddressBytes()
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         sample.AccAddressBytes().String(),
+		Creator:         creator.String(),
 		Report:          &report,
 		DisputeCategory: types.Warning,
 		Fee:             sdk.NewCoin("loya", math.NewInt(100)),
 		PayFromBond:     false,
 	}
 
-	reporter := &reportertypes.OracleReporter{Reporter: report.Reporter, TotalTokens: math.NewInt(10000)}
+	reporter := &reportertypes.OracleReporter{Reporter: sdk.MustAccAddressFromBech32(report.Reporter).Bytes(), TotalTokens: math.NewInt(10000)}
 	// mock dependency modules
 	s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter)).Return(reporter, nil)
 	s.bankKeeper.On("HasBalance", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), disputeMsg.Fee).Return(true)
@@ -139,7 +140,8 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
 
-	s.NoError(s.disputeKeeper.SetNewDispute(s.ctx, disputeMsg))
+	s.NoError(s.disputeKeeper.SetNewDispute(s.ctx, creator, disputeMsg))
+
 	return disputeMsg
 }
 
@@ -247,6 +249,7 @@ func (s *KeeperTestSuite) TestGetDisputeFee() {
 
 func (s *KeeperTestSuite) TestAddDisputeRound() {
 	msg := s.TestSetNewDispute()
+	sender := sdk.MustAccAddressFromBech32(msg.Creator)
 	dispute, err := s.disputeKeeper.Disputes.Get(s.ctx, 1)
 	s.NoError(err)
 
@@ -256,9 +259,9 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 	// 	Creator:         sample.AccAddressBytes().String(),
 	// 	Report:          &oracletypes.MicroReport{},
 	fee := sdk.NewCoin("loya", math.NewInt(10))
-	s.bankKeeper.On("HasBalance", s.ctx, sdk.MustAccAddressFromBech32(msg.Creator), fee).Return(true)
-	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sdk.MustAccAddressFromBech32(msg.Creator), types.ModuleName, sdk.NewCoins(fee)).Return(nil)
-	s.NoError(s.disputeKeeper.AddDisputeRound(s.ctx, dispute, msg))
+	s.bankKeeper.On("HasBalance", s.ctx, sender, fee).Return(true)
+	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sender, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
+	s.NoError(s.disputeKeeper.AddDisputeRound(s.ctx, sender, dispute, msg))
 
 	dispute1, err := s.disputeKeeper.Disputes.Get(s.ctx, 1)
 	s.NoError(err)
@@ -266,7 +269,7 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 	s.True(!dispute1.Open)
 	s.Equal(uint64(1), dispute1.DisputeRound)
 	// attempt to start a new round for a closed dispute
-	s.Error(s.disputeKeeper.AddDisputeRound(s.ctx, dispute1, msg), "can't start a new round for this dispute 1; dispute closed")
+	s.Error(s.disputeKeeper.AddDisputeRound(s.ctx, sender, dispute1, msg), "can't start a new round for this dispute 1; dispute closed")
 
 	dispute2, err := s.disputeKeeper.Disputes.Get(s.ctx, 2)
 	s.NoError(err)

@@ -93,8 +93,8 @@ func (x *fastReflection_Delegation) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Delegation) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Reporter != "" {
-		value := protoreflect.ValueOfString(x.Reporter)
+	if len(x.Reporter) != 0 {
+		value := protoreflect.ValueOfBytes(x.Reporter)
 		if !f(fd_Delegation_reporter, value) {
 			return
 		}
@@ -121,7 +121,7 @@ func (x *fastReflection_Delegation) Range(f func(protoreflect.FieldDescriptor, p
 func (x *fastReflection_Delegation) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.reporter.Delegation.reporter":
-		return x.Reporter != ""
+		return len(x.Reporter) != 0
 	case "layer.reporter.Delegation.amount":
 		return x.Amount != ""
 	default:
@@ -141,7 +141,7 @@ func (x *fastReflection_Delegation) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_Delegation) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.reporter.Delegation.reporter":
-		x.Reporter = ""
+		x.Reporter = nil
 	case "layer.reporter.Delegation.amount":
 		x.Amount = ""
 	default:
@@ -162,7 +162,7 @@ func (x *fastReflection_Delegation) Get(descriptor protoreflect.FieldDescriptor)
 	switch descriptor.FullName() {
 	case "layer.reporter.Delegation.reporter":
 		value := x.Reporter
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.reporter.Delegation.amount":
 		value := x.Amount
 		return protoreflect.ValueOfString(value)
@@ -187,7 +187,7 @@ func (x *fastReflection_Delegation) Get(descriptor protoreflect.FieldDescriptor)
 func (x *fastReflection_Delegation) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.reporter.Delegation.reporter":
-		x.Reporter = value.Interface().(string)
+		x.Reporter = value.Bytes()
 	case "layer.reporter.Delegation.amount":
 		x.Amount = value.Interface().(string)
 	default:
@@ -228,7 +228,7 @@ func (x *fastReflection_Delegation) Mutable(fd protoreflect.FieldDescriptor) pro
 func (x *fastReflection_Delegation) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.reporter.Delegation.reporter":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.reporter.Delegation.amount":
 		return protoreflect.ValueOfString("")
 	default:
@@ -404,7 +404,7 @@ func (x *fastReflection_Delegation) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -414,23 +414,25 @@ func (x *fastReflection_Delegation) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Reporter = string(dAtA[iNdEx:postIndex])
+				x.Reporter = append(x.Reporter[:0], dAtA[iNdEx:postIndex]...)
+				if x.Reporter == nil {
+					x.Reporter = []byte{}
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -519,7 +521,7 @@ type Delegation struct {
 	unknownFields protoimpl.UnknownFields
 
 	// reporter is the address of the reporter being delegated to
-	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
 	// amount is the amount of tokens delegated
 	Amount string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -544,11 +546,11 @@ func (*Delegation) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_delegation_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Delegation) GetReporter() string {
+func (x *Delegation) GetReporter() []byte {
 	if x != nil {
 		return x.Reporter
 	}
-	return ""
+	return nil
 }
 
 func (x *Delegation) GetAmount() string {
@@ -570,7 +572,7 @@ var file_layer_reporter_delegation_proto_rawDesc = []byte{
 	0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x6d, 0x0a, 0x0a, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
 	0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12,
 	0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
 	0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
 	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4,

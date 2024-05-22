@@ -21,17 +21,17 @@ type (
 		storeService                   store.KVStoreService
 		Params                         collections.Item[types.Params]
 		Tracker                        collections.Item[types.StakeTracker]
-		Reporters                      collections.Map[sdk.AccAddress, types.OracleReporter]
-		DelegatorTips                  collections.Map[sdk.AccAddress, math.Int]
-		Delegators                     *collections.IndexedMap[sdk.AccAddress, types.Delegation, ReporterDelegatorsIndex]
-		TokenOrigin                    collections.Map[collections.Pair[sdk.AccAddress, sdk.ValAddress], math.Int]
-		ReportersAccumulatedCommission collections.Map[sdk.ValAddress, types.ReporterAccumulatedCommission]
-		ReporterOutstandingRewards     collections.Map[sdk.ValAddress, types.ReporterOutstandingRewards]
-		ReporterCurrentRewards         collections.Map[sdk.ValAddress, types.ReporterCurrentRewards]
-		DelegatorStartingInfo          collections.Map[collections.Pair[sdk.ValAddress, sdk.AccAddress], types.DelegatorStartingInfo]
-		ReporterHistoricalRewards      collections.Map[collections.Pair[sdk.ValAddress, uint64], types.ReporterHistoricalRewards]
-		ReporterDisputeEvents          collections.Map[collections.Triple[sdk.ValAddress, uint64, uint64], types.ReporterDisputeEvent]
-		TokenOriginSnapshot            collections.Map[collections.Pair[sdk.AccAddress, int64], types.DelegationsPreUpdate]
+		Reporters                      collections.Map[[]byte, types.OracleReporter]
+		DelegatorTips                  collections.Map[[]byte, math.Int]
+		Delegators                     *collections.IndexedMap[[]byte, types.Delegation, ReporterDelegatorsIndex]
+		TokenOrigin                    collections.Map[collections.Pair[[]byte, []byte], math.Int]
+		ReportersAccumulatedCommission collections.Map[[]byte, types.ReporterAccumulatedCommission]
+		ReporterOutstandingRewards     collections.Map[[]byte, types.ReporterOutstandingRewards]
+		ReporterCurrentRewards         collections.Map[[]byte, types.ReporterCurrentRewards]
+		DelegatorStartingInfo          collections.Map[collections.Pair[[]byte, []byte], types.DelegatorStartingInfo]
+		ReporterHistoricalRewards      collections.Map[collections.Pair[[]byte, uint64], types.ReporterHistoricalRewards]
+		ReporterDisputeEvents          collections.Map[collections.Triple[[]byte, uint64, uint64], types.ReporterDisputeEvent]
+		TokenOriginSnapshot            collections.Map[collections.Pair[[]byte, int64], types.DelegationsPreUpdate]
 		DisputedDelegationAmounts      collections.Map[[]byte, types.DelegationsPreUpdate]
 		FeePaidFromStake               collections.Map[[]byte, types.DelegationsPreUpdate]
 		TotalPower                     collections.Map[int64, math.Int]
@@ -70,21 +70,21 @@ func NewKeeper(
 
 		Params:                         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Tracker:                        collections.NewItem(sb, types.StakeTrackerPrefix, "tracker", codec.CollValue[types.StakeTracker](cdc)),
-		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", sdk.AccAddressKey, codec.CollValue[types.OracleReporter](cdc)),
-		Delegators:                     collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", sdk.AccAddressKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
-		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_delegator_validator", collections.PairKeyCodec(sdk.AccAddressKey, sdk.ValAddressKey), sdk.IntValue),
-		ReportersAccumulatedCommission: collections.NewMap(sb, types.ReporterAccumulatedCommissionPrefix, "reporters_accumulated_commission", sdk.ValAddressKey, codec.CollValue[types.ReporterAccumulatedCommission](cdc)),
-		ReporterOutstandingRewards:     collections.NewMap(sb, types.ReporterOutstandingRewardsPrefix, "reporter_outstanding_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterOutstandingRewards](cdc)),
-		ReporterCurrentRewards:         collections.NewMap(sb, types.ReporterCurrentRewardsPrefix, "reporters_current_rewards", sdk.ValAddressKey, codec.CollValue[types.ReporterCurrentRewards](cdc)),
-		DelegatorStartingInfo:          collections.NewMap(sb, types.DelegatorStartingInfoPrefix, "delegators_starting_info", collections.PairKeyCodec(sdk.ValAddressKey, sdk.AccAddressKey), codec.CollValue[types.DelegatorStartingInfo](cdc)),
-		ReporterHistoricalRewards:      collections.NewMap(sb, types.ReporterHistoricalRewardsPrefix, "reporter_historical_rewards", collections.PairKeyCodec(sdk.ValAddressKey, collections.Uint64Key), codec.CollValue[types.ReporterHistoricalRewards](cdc)),
-		ReporterDisputeEvents:          collections.NewMap(sb, types.ReporterDisputeEventPrefix, "reporter_dispute_events", collections.TripleKeyCodec(sdk.ValAddressKey, collections.Uint64Key, collections.Uint64Key), codec.CollValue[types.ReporterDisputeEvent](cdc)),
-		TokenOriginSnapshot:            collections.NewMap(sb, types.TokenOriginSnapshotPrefix, "token_origin_snapshot", collections.PairKeyCodec(sdk.AccAddressKey, collections.Int64Key), codec.CollValue[types.DelegationsPreUpdate](cdc)),
+		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", collections.BytesKey, codec.CollValue[types.OracleReporter](cdc)),
+		Delegators:                     collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", collections.BytesKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
+		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_delegator_validator", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), sdk.IntValue),
+		ReportersAccumulatedCommission: collections.NewMap(sb, types.ReporterAccumulatedCommissionPrefix, "reporters_accumulated_commission", collections.BytesKey, codec.CollValue[types.ReporterAccumulatedCommission](cdc)),
+		ReporterOutstandingRewards:     collections.NewMap(sb, types.ReporterOutstandingRewardsPrefix, "reporter_outstanding_rewards", collections.BytesKey, codec.CollValue[types.ReporterOutstandingRewards](cdc)),
+		ReporterCurrentRewards:         collections.NewMap(sb, types.ReporterCurrentRewardsPrefix, "reporters_current_rewards", collections.BytesKey, codec.CollValue[types.ReporterCurrentRewards](cdc)),
+		DelegatorStartingInfo:          collections.NewMap(sb, types.DelegatorStartingInfoPrefix, "delegators_starting_info", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), codec.CollValue[types.DelegatorStartingInfo](cdc)),
+		ReporterHistoricalRewards:      collections.NewMap(sb, types.ReporterHistoricalRewardsPrefix, "reporter_historical_rewards", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.ReporterHistoricalRewards](cdc)),
+		ReporterDisputeEvents:          collections.NewMap(sb, types.ReporterDisputeEventPrefix, "reporter_dispute_events", collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.Uint64Key), codec.CollValue[types.ReporterDisputeEvent](cdc)),
+		TokenOriginSnapshot:            collections.NewMap(sb, types.TokenOriginSnapshotPrefix, "token_origin_snapshot", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.DelegationsPreUpdate](cdc)),
 		authority:                      authority,
 		logger:                         logger,
 		stakingKeeper:                  stakingKeeper,
 		bankKeeper:                     bankKeeper,
-		DelegatorTips:                  collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", sdk.AccAddressKey, sdk.IntValue),
+		DelegatorTips:                  collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", collections.BytesKey, sdk.IntValue),
 		ReporterCheckpoint:             collections.NewMap(sb, types.ReporterCheckpointPrefix, "reporter_checkpoint", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), sdk.IntValue),
 		DelegatorCheckpoint:            collections.NewMap(sb, types.DelegatorCheckpointPrefix, "delegator_checkpoint", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), sdk.IntValue),
 		DisputedDelegationAmounts:      collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsPreUpdate](cdc)),

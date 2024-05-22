@@ -204,7 +204,9 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	var createReporterMsg reportertypes.MsgCreateReporter
 	reporterAddress := delegators[reporter].delegatorAddress.String()
 	amount := math.NewInt(100 * 1e6)
-	source := reportertypes.TokenOrigin{ValidatorAddress: validatorSet[1].GetOperator(), Amount: math.NewInt(100 * 1e6)}
+	valAcc, err := sdk.ValAddressFromBech32(validatorSet[1].GetOperator())
+	require.NoError(err)
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc, Amount: math.NewInt(100 * 1e6)}
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
 	// fill in createReporterMsg
@@ -218,12 +220,12 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	// check that reporter was created correctly
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	require.NoError(err)
-	require.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	require.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 	require.Equal(oracleReporter.TotalTokens, math.NewInt(100*1e6))
 	require.Equal(oracleReporter.Jailed, false)
 
 	// define delegation source
-	source = reportertypes.TokenOrigin{ValidatorAddress: validatorSet[1].GetOperator(), Amount: math.NewInt(25 * 1e6)}
+	source = reportertypes.TokenOrigin{ValidatorAddress: valAcc, Amount: math.NewInt(25 * 1e6)}
 	delegationMsg := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
@@ -235,7 +237,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require.NoError(err)
 	delegationReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
 	require.NoError(err)
-	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	require.Equal(delegationReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 }
 
 func (s *E2ETestSuite) TestUnstaking() {
@@ -339,7 +341,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 
 	// delegate to bad reporter
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.OperatorAddress, Amount: math.NewInt(500 * 1e6)}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valsValAddrs[0], Amount: math.NewInt(500 * 1e6)}
 	msgDelegate := reportertypes.NewMsgDelegateReporter(delAccAddr.String(), badReporter.String(), math.NewInt(500*1e6), []*reportertypes.TokenOrigin{&source})
 	_, err = msgServerReporter.DelegateReporter(s.ctx, msgDelegate)
 	require.NoError(err)
@@ -372,7 +374,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	value := encodeValue(10_000)
 	require.NoError(err)
 	reveal := oracletypes.MsgSubmitValue{
-		Creator:   disputedRep.Reporter,
+		Creator:   sdk.AccAddress(disputedRep.Reporter).String(),
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
@@ -408,7 +410,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
-		Reporter:  disputedRep.Reporter,
+		Reporter:  sdk.AccAddress(disputedRep.Reporter).String(),
 		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
@@ -417,7 +419,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute := disputetypes.MsgProposeDispute{
-		Creator:         disputer.Reporter,
+		Creator:         sdk.AccAddress(disputer.Reporter).String(),
 		Report:          &report,
 		DisputeCategory: disputetypes.Warning,
 		Fee:             disputeFee,
@@ -461,7 +463,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	value = encodeValue(10_000)
 	require.NoError(err)
 	reveal = oracletypes.MsgSubmitValue{
-		Creator:   disputedRep.Reporter,
+		Creator:   sdk.AccAddress(disputedRep.Reporter).String(),
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
@@ -470,7 +472,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// disputed reporter can report after calling unjail function
 	msgUnjail := reportertypes.MsgUnjailReporter{
-		ReporterAddress: disputedRep.Reporter,
+		ReporterAddress: sdk.AccAddress(disputedRep.Reporter).String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.ctx, &msgUnjail)
 	require.NoError(err)
@@ -487,8 +489,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	initCoins = sdk.NewCoin(s.denom, math.NewInt(10_000*1e6))
 	require.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	// send from module to account
-	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, sdk.MustAccAddressFromBech32(disputer.Reporter), sdk.NewCoins(initCoins)))
-	require.Equal(initCoins, s.bankKeeper.GetBalance(s.ctx, sdk.MustAccAddressFromBech32(disputer.Reporter), s.denom))
+	require.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, disputer.Reporter, sdk.NewCoins(initCoins)))
+	require.Equal(initCoins, s.bankKeeper.GetBalance(s.ctx, disputer.Reporter, s.denom))
 
 	// advance time and block height to expire the query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(7 * time.Second))
@@ -515,7 +517,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// get microreport for dispute
 	report = oracletypes.MicroReport{
-		Reporter:  disputedRep.Reporter,
+		Reporter:  sdk.AccAddress(disputedRep.Reporter).String(),
 		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
@@ -524,7 +526,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         disputer.Reporter,
+		Creator:         sdk.AccAddress(disputer.Reporter).String(),
 		Report:          &report,
 		DisputeCategory: disputetypes.Warning,
 		Fee:             disputeFee,
@@ -570,7 +572,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	queryId = utils.QueryIDFromData(cycleListQuery)
 	reveal = oracletypes.MsgSubmitValue{
-		Creator:   disputedRep.Reporter,
+		Creator:   sdk.AccAddress(disputedRep.Reporter).String(),
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
@@ -579,7 +581,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// disputed reporter can report after calling unjail function
 	msgUnjail = reportertypes.MsgUnjailReporter{
-		ReporterAddress: disputedRep.Reporter,
+		ReporterAddress: sdk.AccAddress(disputedRep.Reporter).String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.ctx, &msgUnjail)
 	require.NoError(err)
@@ -608,7 +610,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	disputeFee = sdk.NewCoin(s.denom, fivePercent)
 
 	report = oracletypes.MicroReport{
-		Reporter:  disputedRep.Reporter,
+		Reporter:  sdk.AccAddress(disputedRep.Reporter).String(),
 		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   queryId,
 		Value:     value,
@@ -617,7 +619,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         disputer.Reporter,
+		Creator:         sdk.AccAddress(disputer.Reporter).String(),
 		Report:          &report,
 		DisputeCategory: disputetypes.Minor,
 		Fee:             disputeFee,
@@ -642,7 +644,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// vote from disputer
 	msgVote := disputetypes.MsgVote{
-		Voter: disputer.Reporter,
+		Voter: sdk.AccAddress(disputer.Reporter).String(),
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
@@ -652,7 +654,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// vote from disputed reporter
 	msgVote = disputetypes.MsgVote{
-		Voter: disputedRep.Reporter,
+		Voter: sdk.AccAddress(disputedRep.Reporter).String(),
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
@@ -664,7 +666,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	thirdReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[2])
 	require.NoError(err)
 	msgVote = disputetypes.MsgVote{
-		Voter: thirdReporter.Reporter,
+		Voter: sdk.AccAddress(thirdReporter.Reporter).String(),
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
@@ -690,13 +692,13 @@ func (s *E2ETestSuite) TestDisputes2() {
 	totalReporterPower, err := s.reporterkeeper.TotalReporterPower(s.ctx)
 	require.NoError(err)
 	fmt.Println("total reporter power: ", totalReporterPower.Quo(sdk.DefaultPowerReduction))
-	reporter1Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, sdk.MustAccAddressFromBech32(disputedRep.Reporter)))
+	reporter1Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, disputedRep.Reporter))
 	require.NoError(err)
 	fmt.Println("reporter1 Power: ", reporter1Power)
-	reporter2Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, sdk.MustAccAddressFromBech32(disputer.Reporter)))
+	reporter2Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, disputer.Reporter))
 	require.NoError(err)
 	fmt.Println("reporter2 Power: ", reporter2Power)
-	reporter3Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, sdk.MustAccAddressFromBech32(thirdReporter.Reporter)))
+	reporter3Power, err := s.disputekeeper.ReportersGroup.Get(s.ctx, collections.Join(dispute.DisputeId, thirdReporter.Reporter))
 	require.NoError(err)
 	fmt.Println("reporter3 Power: ", reporter3Power)
 

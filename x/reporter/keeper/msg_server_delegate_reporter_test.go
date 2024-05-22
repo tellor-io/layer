@@ -26,18 +26,18 @@ func TestDelegateReporter(t *testing.T) {
 		Amount:    math.NewInt(100),
 		TokenOrigins: []*types.TokenOrigin{
 			{
-				ValidatorAddress: validatorI.String(),
+				ValidatorAddress: validatorI,
 				Amount:           math.NewInt(50),
 			},
 			{
-				ValidatorAddress: validatorII.String(),
+				ValidatorAddress: validatorII,
 				Amount:           math.NewInt(50),
 			},
 		},
 	}
 
 	// add the reporter to the keeper
-	reporter := types.OracleReporter{Reporter: repAddr.String(), TotalTokens: math.NewInt(200)}
+	reporter := types.OracleReporter{Reporter: repAddr, TotalTokens: math.NewInt(200)}
 	err := k.Reporters.Set(ctx, repAddr, reporter)
 	require.NoError(t, err)
 	// call distr hooks
@@ -67,5 +67,5 @@ func TestDelegateReporter(t *testing.T) {
 	// Check if the delegation was added correctly
 	delegation, err := k.Delegators.Get(ctx, delAddr)
 	require.NoError(t, err)
-	require.Equal(t, repAddr.String(), delegation.Reporter)
+	require.Equal(t, repAddr.Bytes(), delegation.Reporter)
 }
