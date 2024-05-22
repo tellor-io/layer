@@ -13,7 +13,7 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
 	KeyTeamAddress     = []byte("TeamAddress")
-	DefaultTeamAddress = authtypes.NewModuleAddress("trbFakeAddress").String() // TODO: Determine the default value
+	DefaultTeamAddress = authtypes.NewModuleAddress("trbFakeAddress") // TODO: Determine the default value
 )
 
 // ParamKeyTable the param key table for launch module
@@ -23,10 +23,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams(
-	team string,
+	team sdk.AccAddress,
 ) Params {
+	fmt.Println("team: ", team)
 	return Params{
-		TeamAddress: team,
+		TeamAddress: team.Bytes(),
 	}
 }
 
@@ -60,11 +61,10 @@ func (p Params) String() string {
 }
 
 func validateTeamAddress(v interface{}) error {
-	teamAddress, ok := v.(string)
+	_, ok := v.([]byte)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
 
-	_, err := sdk.AccAddressFromBech32(teamAddress)
-	return err
+	return nil
 }

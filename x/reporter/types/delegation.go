@@ -2,11 +2,13 @@ package types
 
 import (
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewDelegation(reporter string, amount math.Int) Delegation {
+	repAcc := sdk.MustAccAddressFromBech32(reporter)
 	return Delegation{
-		Reporter: reporter,
+		Reporter: repAcc,
 		Amount:   amount,
 	}
 }

@@ -22,10 +22,8 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 	}
 
 	// Calculate each delegator's share (including the reporter as a self-delegator)
-	repAddr, err := sdk.AccAddressFromBech32(reporter.Reporter)
-	if err != nil {
-		return err
-	}
+	repAddr := sdk.AccAddress(reporter.Reporter)
+
 	delAddrs, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
 		return err
@@ -38,7 +36,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 			return err
 		}
 
-		rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](key)
+		rng := collections.NewPrefixedPairRange[[]byte, []byte](key)
 		iter, err := k.TokenOrigin.Iterate(ctx, rng)
 		if err != nil {
 			return err
@@ -56,8 +54,8 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 				return err
 			}
 			feeTracker = append(feeTracker, &types.TokenOriginInfo{
-				DelegatorAddress: source.Key.K1().String(),
-				ValidatorAddress: source.Key.K2().String(),
+				DelegatorAddress: source.Key.K1(),
+				ValidatorAddress: source.Key.K2(),
 				Amount:           share.TruncateInt(),
 			})
 		}
@@ -229,10 +227,10 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 
 func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error {
 	// get origins at height
-	rng := collections.NewPrefixedPairRange[sdk.AccAddress, int64](reporterAddr).EndInclusive(height).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](reporterAddr).EndInclusive(height).Descending()
 	var firstValue *types.DelegationsPreUpdate
 
-	err := k.TokenOriginSnapshot.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, int64], value types.DelegationsPreUpdate) (stop bool, err error) {
+	err := k.TokenOriginSnapshot.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsPreUpdate) (stop bool, err error) {
 		firstValue = &value
 		return true, nil
 	})
@@ -253,14 +251,9 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			delegatorShare = delegatorShare.Add(leftover.ToLegacyDec())
 		}
 
-		delAddr, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
-		if err != nil {
-			return err
-		}
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
-		if err != nil {
-			return err
-		}
+		delAddr := sdk.AccAddress(del.DelegatorAddress)
+		valAddr := sdk.ValAddress(del.ValidatorAddress)
+
 		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare)
 		if err != nil {
 			return err
@@ -281,7 +274,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			}
 			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
 				DelegatorAddress: del.DelegatorAddress,
-				ValidatorAddress: dstVAl.String(),
+				ValidatorAddress: dstVAl,
 				Amount:           remaining,
 			})
 		}
