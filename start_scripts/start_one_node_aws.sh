@@ -98,7 +98,7 @@ sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' 
 sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26656"/laddr = "tcp:\/\/0.0.0.0:26656"/g' ~/.layer/alice/config/config.toml
 
 sed -i 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' ~/.layer/alice/config/app.toml
-sed -i 's/^address = "localhost:9090"/address = "tcp:\/\/0.0.0.0:9090"/g' ~/.layer/alice/config/app.toml
+sed -i 's/^address = "localhost:9090"/address = "0.0.0.0:9090"/g' ~/.layer/alice/config/app.toml
 
 
 # Modify cors to accept *
