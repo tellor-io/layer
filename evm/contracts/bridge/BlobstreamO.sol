@@ -7,12 +7,12 @@ import "./Constants.sol";
 struct OracleAttestationData {
     bytes32 queryId;
     ReportData report;
-    uint256 attestationTimestamp;
+    uint256 attestationTimestamp;//timestamp of validatorSignatures on report
 }
 
 struct ReportData {
     bytes value;
-    uint256 timestamp;
+    uint256 timestamp;//timestamp of reporter signature aggregation
     uint256 aggregatePower;
     uint256 previousTimestamp;
     uint256 nextTimestamp;
@@ -151,6 +151,10 @@ contract BlobstreamO is ECDSA {
     }
 
     /*Getter functions*/
+    /// @notice This getter verifies a given piece of data vs Validator signatures
+    /// @param _attestData The data being verified
+    /// @param _currentValdatorSet array of current validator set
+    /// @param _sigs Signatures.
     function verifyOracleData(
         OracleAttestationData calldata _attestData,
         Validator[] calldata _currentValidatorSet,
