@@ -1,9 +1,9 @@
 package bridge
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
 	modulev1 "github.com/tellor-io/layer/api/layer/bridge"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

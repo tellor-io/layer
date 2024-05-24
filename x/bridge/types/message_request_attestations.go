@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -10,7 +11,7 @@ const TypeMsgRequestAttestations = "request_attestations"
 
 var _ sdk.Msg = &MsgRequestAttestations{}
 
-func NewMsgRequestAttestations(creator string, queryId string, timestamp string) *MsgRequestAttestations {
+func NewMsgRequestAttestations(creator, queryId, timestamp string) *MsgRequestAttestations {
 	return &MsgRequestAttestations{
 		Creator:   creator,
 		QueryId:   queryId,

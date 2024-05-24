@@ -12,7 +12,7 @@ import (
 func TestParamsQuery(t *testing.T) {
 	k, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	params := types.DefaultParams()
-	k.Params.Set(ctx, params)
+	require.NoError(t, k.Params.Set(ctx, params))
 
 	response, err := keeper.NewQuerier(k).Params(ctx, &types.QueryParamsRequest{})
 	require.NoError(t, err)

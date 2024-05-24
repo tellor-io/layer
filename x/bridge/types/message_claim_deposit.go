@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -10,7 +11,7 @@ const TypeMsgClaimDeposit = "claim_deposit"
 
 var _ sdk.Msg = &MsgClaimDepositRequest{}
 
-func NewMsgClaimDepositRequest(creator string, depositId uint64, reportIndex uint64) *MsgClaimDepositRequest {
+func NewMsgClaimDepositRequest(creator string, depositId, reportIndex uint64) *MsgClaimDepositRequest {
 	return &MsgClaimDepositRequest{
 		Creator:   creator,
 		DepositId: depositId,
