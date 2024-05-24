@@ -1,15 +1,16 @@
 package keeper
 
 import (
-	"cosmossdk.io/log"
+	layer "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/mint/types"
 
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	layer "github.com/tellor-io/layer/types"
-	"github.com/tellor-io/layer/x/mint/types"
 )
 
 // Keeper of the mint store

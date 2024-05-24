@@ -25,13 +25,20 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return err
 	}
 
-	if dispute.DisputeStatus != types.Resolved {
-		return errors.New("can't execute, dispute not resolved")
-	}
-
 	vote, err := k.Votes.Get(ctx, id)
 	if err != nil {
 		return err
+	}
+
+	if vote.VoteResult != types.VoteResult_NO_TALLY && dispute.DisputeEndTime.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		dispute.DisputeStatus = types.Resolved
+		if err := k.Disputes.Set(ctx, id, dispute); err != nil {
+			return err
+		}
+	}
+
+	if dispute.DisputeStatus != types.Resolved {
+		return errors.New("can't execute, dispute not resolved")
 	}
 
 	if vote.Executed {
@@ -39,6 +46,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	}
 
 	var voters []VoterInfo
+	totalVoterPower := math.ZeroInt()
 	for _, id := range dispute.PrevDisputeIds {
 		iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
 		if err != nil {
@@ -47,16 +55,20 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 
 		defer iter.Close()
 		for ; iter.Valid(); iter.Next() {
-			key, err := iter.PrimaryKey()
+			voterKey, err := iter.PrimaryKey()
 			if err != nil {
 				return err
 			}
-			v, err := k.Voter.Get(ctx, key)
+			v, err := k.Voter.Get(ctx, voterKey)
 			if err != nil {
 				return err
 			}
-			voters = append(voters, VoterInfo{Voter: key.K2(), Power: v.VoterPower, Share: math.ZeroInt()})
-
+			voters = append(voters, VoterInfo{
+				Voter: voterKey.K2(),
+				Power: v.VoterPower,
+				Share: math.ZeroInt(), // initialize, share is calculated later
+			})
+			totalVoterPower = totalVoterPower.Add(v.VoterPower)
 		}
 	}
 	// amount of dispute fee to return to fee payers or give to reporter
@@ -73,7 +85,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 		// distribute the voterRewardunt equally among the voters and transfer it to their accounts
-		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward, totalVoterPower)
 		if err != nil {
 			return err
 		}
@@ -94,7 +106,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward, totalVoterPower)
 		if err != nil {
 			return err
 		}
@@ -116,7 +128,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
-		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward)
+		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward, totalVoterPower)
 		if err != nil {
 			return err
 		}
@@ -158,9 +170,9 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInf
 		coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
 		if !recipient.FromBond {
 			accInputTotal = accInputTotal.Add(amt.TruncateInt())
-			outputs = append(outputs, banktypes.NewOutput(sdk.MustAccAddressFromBech32(recipient.PayerAddress), coins))
+			outputs = append(outputs, banktypes.NewOutput(recipient.PayerAddress, coins))
 		} else {
-			if err := k.ReturnFeetoStake(ctx, sdk.MustAccAddressFromBech32(recipient.PayerAddress), hashId, amt.TruncateInt()); err != nil {
+			if err := k.ReturnFeetoStake(ctx, recipient.PayerAddress, hashId, amt.TruncateInt()); err != nil {
 				return err
 			}
 		}
@@ -174,26 +186,35 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInf
 }
 
 func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
-	totalFeesPaid := math.ZeroInt()
+	totalFeesPaid := math.LegacyZeroDec()
 	for _, feeInfo := range feePayers {
-		totalFeesPaid = totalFeesPaid.Add(feeInfo.Amount)
+		totalFeesPaid = totalFeesPaid.Add(math.LegacyNewDecFromInt(feeInfo.Amount))
 	}
+	// convert reporterbond to decimal
+	bond := math.LegacyNewDecFromInt(reporterBond)
 	// divvy up the reporter bond among the fee payers based how much they paid
 	// paid it in as a stake in staking module
-	for _, feeInfo := range feePayers {
-		amt := feeInfo.Amount.Quo(totalFeesPaid).Mul(reporterBond)
-		if err := k.reporterKeeper.AddAmountToStake(ctx, feeInfo.PayerAddress, amt); err != nil {
+	remainder := math.LegacyZeroDec()
+	for i, feeInfo := range feePayers {
+		fee := math.LegacyNewDecFromBigInt(feeInfo.Amount.BigInt())
+		amt := fee.Quo(totalFeesPaid).Mul(bond)
+		remainder = remainder.Add(amt.Sub(amt.TruncateDec()))
+		if i == len(feePayers)-1 {
+			amt = amt.Add(remainder)
+		}
+
+		if err := k.reporterKeeper.AddAmountToStake(ctx, feeInfo.PayerAddress, amt.TruncateInt()); err != nil {
 			return err
 		}
 	}
 
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reporterBond)))
 }
-func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount math.Int) (math.Int, error) {
+func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount math.Int, totalVoterPower math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
 		return totalAmount, nil
 	}
-	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount)
+	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount, totalVoterPower)
 	totalAmount = totalAmount.Sub(burnedRemainder)
 	var outputs []banktypes.Output
 	for _, v := range tokenDistribution {
@@ -206,4 +227,22 @@ func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmoun
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, totalAmount)))
 	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+}
+
+func (k Keeper) CalculateVoterShare(
+	ctx context.Context, voters []VoterInfo, totalTokens math.Int,
+	totalPower math.Int) ([]VoterInfo, math.Int) {
+	scalingFactor := layer.PowerReduction
+	totalShare := math.ZeroInt()
+	for i, v := range voters {
+		share := v.Power.Mul(scalingFactor).Quo(totalPower)
+		tokens := share.Mul(totalTokens).Quo(scalingFactor)
+		voters[i].Share = tokens
+		totalShare = totalShare.Add(tokens)
+	}
+	burnedRemainder := math.ZeroInt()
+	if totalTokens.GT(totalShare) {
+		burnedRemainder = totalTokens.Sub(totalShare)
+	}
+	return voters, burnedRemainder
 }

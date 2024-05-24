@@ -62,7 +62,7 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 	// reflect changes only when token/power decreases
 	// update the reporter tokens and the delegator's tokens to reflect the new power numbers
 	// also need to update the token origins to reflect the new changes when the delegator's tokens are updated
-	exists, err := h.k.TokenOrigin.Has(ctx, collections.Join(delAddr, valAddr))
+	exists, err := h.k.TokenOrigin.Has(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 		}
 		tokenAmount := validator.TokensFromSharesTruncated(delegation.GetShares()).TruncateInt()
 		// get token origin
-		sourced, err := h.k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+		sourced, err := h.k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 		if err != nil {
 			return err
 		}
@@ -89,11 +89,11 @@ func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddre
 			if err != nil {
 				return err
 			}
-			repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
+			repAddr := delegator.Reporter
 
 			// get the difference in the token change to reduce delegation and reporter tokens by.
 			diff := sourced.Sub(tokenAmount)
-			if err := h.k.UpdateOrRemoveSource(ctx, collections.Join(delAddr, valAddr), sourced, tokenAmount); err != nil {
+			if err := h.k.UpdateOrRemoveSource(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), sourced, tokenAmount); err != nil {
 				return err
 			}
 
@@ -139,11 +139,11 @@ func (k Keeper) GetTokenSourcesForReporter(ctx context.Context, repAddr sdk.AccA
 		if err != nil {
 			return types.DelegationsPreUpdate{}, err
 		}
-		rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](key)
-		err = k.TokenOrigin.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, sdk.ValAddress], value sdkmath.Int) (bool, error) {
+		rng := collections.NewPrefixedPairRange[[]byte, []byte](key)
+		err = k.TokenOrigin.Walk(ctx, rng, func(key collections.Pair[[]byte, []byte], value sdkmath.Int) (bool, error) {
 			tokenSources = append(tokenSources, &types.TokenOriginInfo{
-				DelegatorAddress: key.K1().String(),
-				ValidatorAddress: key.K2().String(),
+				DelegatorAddress: key.K1(),
+				ValidatorAddress: key.K2(),
 				Amount:           value,
 			})
 			return false, nil

@@ -108,7 +108,7 @@ func AddTeamAccountCmd(defaultNodeHome string) *cobra.Command {
 			appState[authtypes.ModuleName] = authGenStateBz
 
 			disputeGenState := disputetypes.GetGenesisStateFromAppState(cdc, appState)
-			disputeGenState.Params.TeamAddress = genAccount.GetAddress().String()
+			disputeGenState.Params.TeamAddress = genAccount.GetAddress()
 
 			disputeGenStateBz, err := cdc.MarshalJSON(disputeGenState)
 			if err != nil {

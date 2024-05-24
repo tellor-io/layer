@@ -6,15 +6,16 @@ import (
 	"testing"
 	"time"
 
-	math "cosmossdk.io/math"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	math "cosmossdk.io/math"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestDecodeDepositReportValue(t *testing.T) {
@@ -125,7 +126,6 @@ func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
 	require.Error(t, err)
 	_, err = reportValueArgs.Pack(amountUint64, ethAddress, layerAddressString)
 	require.Error(t, err)
-
 }
 
 func TestGetDepositQueryId(t *testing.T) {
@@ -215,7 +215,6 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 
 	err := k.ClaimDeposit(ctx, 0, 0)
 	require.ErrorContains(t, err, "no aggregate found")
-
 }
 
 func TestClaimDepositFlaggedAggregate(t *testing.T) {
@@ -413,5 +412,4 @@ func TestClaimDepositSpam(t *testing.T) {
 		err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
 		require.ErrorContains(t, err, "deposit already claimed")
 	}
-
 }

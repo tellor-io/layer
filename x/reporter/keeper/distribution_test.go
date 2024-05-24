@@ -129,7 +129,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 	// delegation mock
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -187,7 +187,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -253,7 +253,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -331,7 +331,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -349,7 +349,7 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 
 	// second delegation
 	delegatorII := sdk.AccAddress([]byte("delegator2"))
-	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationII := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.BeforeDelegationCreated(sdkCtx, reporter)
 	require.NoError(t, err)
 	err = k.Delegators.Set(sdkCtx, delegatorII, delegationII)
@@ -406,7 +406,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -456,7 +456,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -527,7 +527,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -553,7 +553,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// second delegation
 	delegatorII := sdk.AccAddress([]byte("delegator2"))
-	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationII := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.BeforeDelegationCreated(sdkCtx, reporter)
 	require.NoError(t, err)
 	err = k.Delegators.Set(sdkCtx, delegatorII, delegationII)
@@ -616,7 +616,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -637,7 +637,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// second delegation
 	delegatorII := sdk.AccAddress([]byte("delegator2"))
-	delegationII := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationII := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.BeforeDelegationCreated(sdkCtx, reporter)
 	require.NoError(t, err)
 	err = k.Delegators.Set(sdkCtx, delegatorII, delegationII)
@@ -785,7 +785,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	// self delegation
 	delegatorI := reporterAccI
-	delegationI := types.Delegation{Reporter: reporterAccI.String(), Amount: math.NewInt(100)}
+	delegationI := types.Delegation{Reporter: reporterAccI.Bytes(), Amount: math.NewInt(100)}
 	err = k.Delegators.Set(sdkCtx, delegatorI, delegationI)
 	require.NoError(t, err)
 
@@ -895,7 +895,7 @@ func SlashReporter(
 func getRepHistoricalReferenceCount(k keeper.Keeper, ctx sdk.Context) int {
 	count := 0
 	err := k.ReporterHistoricalRewards.Walk(
-		ctx, nil, func(key collections.Pair[sdk.ValAddress, uint64], rewards types.ReporterHistoricalRewards) (stop bool, err error) {
+		ctx, nil, func(key collections.Pair[[]byte, uint64], rewards types.ReporterHistoricalRewards) (stop bool, err error) {
 			count += int(rewards.ReferenceCount)
 			return false, nil
 		},
@@ -918,6 +918,6 @@ func CallCreateReporterHooks(sdkCtx sdk.Context, k keeper.Keeper, delegator sdk.
 	if err != nil {
 		return err
 	}
-	reporterVal := sdk.MustAccAddressFromBech32(reporter.GetReporter())
-	return k.AfterDelegationModified(sdkCtx, delegator, reporterVal.Bytes(), stake)
+
+	return k.AfterDelegationModified(sdkCtx, delegator, reporter.GetReporter(), stake)
 }

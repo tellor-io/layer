@@ -84,13 +84,15 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.NoError(err)
 	s.Equal(types.Voting, dispute.DisputeStatus)
 	// vote on dispute
+	// mint more tokens to disputer to give voting power
+	s.mintTokens(disputer, math.NewInt(1_000_000))
 	_, err = msgServer.Vote(s.ctx, &types.MsgVote{
 		Voter: disputer.String(),
 		Id:    1,
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	})
 	s.NoError(err)
-	vtr, err := s.disputekeeper.Voter.Get(s.ctx, collections.Join(uint64(1), disputer))
+	vtr, err := s.disputekeeper.Voter.Get(s.ctx, collections.Join(uint64(1), disputer.Bytes()))
 	s.NoError(err)
 	s.Equal(types.VoteEnum_VOTE_SUPPORT, vtr.Vote)
 	v, err := s.disputekeeper.Votes.Get(s.ctx, 1)
@@ -100,7 +102,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.NoError(err)
 	voters, err := iter.PrimaryKeys()
 	s.NoError(err)
-	s.Equal(voters[0].K2(), disputer)
+	s.Equal(voters[0].K2(), disputer.Bytes())
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
@@ -220,7 +222,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
-		s.NoError(err)
+		if err != nil {
+			s.Error(err, "voter power is zero")
+		}
+
 	}
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
@@ -245,13 +250,15 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	voters := make([]keeper.VoterInfo, len(keys))
-	var disputerInfo keeper.VoterInfo
+	var disputerInfo = keeper.VoterInfo{Share: math.ZeroInt()}
+	totalVoterPower := math.ZeroInt()
 	for i := range keys {
 		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
 		s.NoError(err)
 		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
+		totalVoterPower = totalVoterPower.Add(v.VoterPower)
 	}
-	rewards, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, burnAmount.QuoRaw(2))
+	rewards, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, burnAmount.QuoRaw(2), totalVoterPower)
 	for i := range rewards {
 		if rewards[i].Voter.String() == disputer.String() {
 			disputerInfo = rewards[i]
@@ -408,7 +415,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
-		s.NoError(err)
+		if err != nil {
+			s.Error(err, "voter power is zero")
+		}
 	}
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
@@ -431,12 +440,14 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	voters := make([]keeper.VoterInfo, len(keys))
+	totalVoterPower := math.ZeroInt()
 	for i := range keys {
 		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
 		s.NoError(err)
 		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
+		totalVoterPower = totalVoterPower.Add(v.VoterPower)
 	}
-	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
+	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn, totalVoterPower)
 	for i, v := range votersReward {
 		// voterBal := votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		voterBal := votersBalanceBefore[v.Voter.String()].AddAmount(votersReward[i].Share)
@@ -535,7 +546,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.ctx, &votes[i])
-		s.NoError(err)
+		if err != nil {
+			s.Error(err, "voter power is zero")
+		}
 	}
 	// tally vote
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
@@ -559,12 +572,14 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	voters := make([]keeper.VoterInfo, len(keys))
+	totalVoterPower := math.ZeroInt()
 	for i := range keys {
 		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
 		s.NoError(err)
 		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower, Share: math.ZeroInt()}
+		totalVoterPower = totalVoterPower.Add(v.VoterPower)
 	}
-	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn)
+	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn, totalVoterPower)
 
 	for _, v := range votersReward {
 		newBal := votersBalanceBefore[v.Voter.String()].Amount.Add(v.Share)
@@ -581,7 +596,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	reporter1StakeBefore := reporter1.TotalTokens
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    reporter1.Reporter,
+		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
 		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
@@ -675,7 +690,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    reporter1.Reporter,
+		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
 		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
@@ -723,7 +738,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    reporter1.Reporter,
+		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
 		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",

@@ -662,7 +662,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), s.ctx.BlockTime())
 	_, err = createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
 	s.Nil(err)
-	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.String(), Amount: stakeAmount}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.Bytes(), Amount: stakeAmount}
 	err = DelegateToReporterSingleValidator(s.ctx, s.reporterkeeper, repAcc, delegator2, valAddr, []*reportertypes.TokenOrigin{&source}, stakeAmount)
 	s.Nil(err)
 

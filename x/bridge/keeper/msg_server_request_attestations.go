@@ -6,10 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgRequestAttestations) (*types.MsgRequestAttestationsResponse, error) {

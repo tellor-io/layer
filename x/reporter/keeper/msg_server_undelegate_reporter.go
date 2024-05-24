@@ -19,22 +19,19 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 		return nil, err
 	}
 	// fetch reporter
-	repAddr := sdk.MustAccAddressFromBech32(delegation.Reporter)
+	repAddr := sdk.AccAddress(delegation.Reporter)
 	reporter, err := k.Reporters.Get(ctx, repAddr)
 	if err != nil {
 		return nil, err
 	}
 	var reducedbyAmount = math.ZeroInt()
 	for _, source := range msg.TokenOrigins {
-		valAddr, err := sdk.ValAddressFromBech32(source.ValidatorAddress)
+		valAddr := sdk.ValAddress(source.ValidatorAddress)
+		currentSourceAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 		if err != nil {
 			return nil, err
 		}
-		currentSourceAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
-		if err != nil {
-			return nil, err
-		}
-		err = k.UndelegateSource(ctx, collections.Join(delAddr, valAddr), currentSourceAmt, source.Amount)
+		err = k.UndelegateSource(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), currentSourceAmt, source.Amount)
 		if err != nil {
 			return nil, err
 		}

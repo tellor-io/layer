@@ -28,5 +28,4 @@ func TestMsgClaimDeposit(t *testing.T) {
 
 	// _, err = msgServer.ClaimDeposit(ctx, msgClaimDeposit)
 	// require.NoError(t, err)
-
 }
