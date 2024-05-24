@@ -46,8 +46,8 @@ contract TokenBridge is LayerTransition{
     }
 
     /// @notice deposits tokens from Ethereum to layer
-    /// @param _uint256 amount of tokens to bridge over
-    /// @param _string your cosmos address on layer (don't get it wrong!!)
+    /// @param _amount amount of tokens to bridge over
+    /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
         require(_amount > 0, "TokenBridge: amount must be greater than 0");
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");

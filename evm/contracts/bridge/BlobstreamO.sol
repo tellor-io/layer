@@ -153,7 +153,7 @@ contract BlobstreamO is ECDSA {
     /*Getter functions*/
     /// @notice This getter verifies a given piece of data vs Validator signatures
     /// @param _attestData The data being verified
-    /// @param _currentValdatorSet array of current validator set
+    /// @param _currentValidatorSet array of current validator set
     /// @param _sigs Signatures.
     function verifyOracleData(
         OracleAttestationData calldata _attestData,

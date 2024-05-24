@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.22;
 
-import {IBridgeProxy} from "../interfaces/IBridgeProxy.sol";
+import {IBridgeProxy} from "../../interfaces/IBridgeProxy.sol";
 
 /**
  @author Tellor Inc.
