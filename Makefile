@@ -157,7 +157,7 @@ mock-gen-daemon:
 	@go run github.com/vektra/mockery/v2 --name=ExchangeToMarketPrices --dir=$(CURDIR)/daemons/pricefeed/client/types --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=GrpcClient --dir=$(CURDIR)/daemons/types --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=Logger --dir=$(GOPATH)/pkg/mod/cosmossdk.io/log@$(COSMOS_LOG_VERSION) --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=PricefeedMutableMarketConfigs --dir=$(CURDIR)/daemons/pricefeed/client/types --recursive --output=$(CURDIR)/daemons/mocks
+	@go run github.com/vektra/mockery/v2 --name=PricefeedMutableMarketConfigs --dir=$(CURDIR)/daemons/pricefeed/client/types --filename=PriceFeedMutableMarketConfigs.go --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=QueryClient --dir=$(CURDIR)/testutil/grpc --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=$(CURDIR)/daemons/types --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=$(CURDIR)/lib/time --recursive --output=$(CURDIR)/daemons/mocks
