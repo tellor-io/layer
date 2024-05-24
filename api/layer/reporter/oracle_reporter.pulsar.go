@@ -101,8 +101,8 @@ func (x *fastReflection_OracleReporter) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_OracleReporter) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Reporter != "" {
-		value := protoreflect.ValueOfString(x.Reporter)
+	if len(x.Reporter) != 0 {
+		value := protoreflect.ValueOfBytes(x.Reporter)
 		if !f(fd_OracleReporter_reporter, value) {
 			return
 		}
@@ -147,7 +147,7 @@ func (x *fastReflection_OracleReporter) Range(f func(protoreflect.FieldDescripto
 func (x *fastReflection_OracleReporter) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.reporter.OracleReporter.reporter":
-		return x.Reporter != ""
+		return len(x.Reporter) != 0
 	case "layer.reporter.OracleReporter.total_tokens":
 		return x.TotalTokens != ""
 	case "layer.reporter.OracleReporter.commission":
@@ -173,7 +173,7 @@ func (x *fastReflection_OracleReporter) Has(fd protoreflect.FieldDescriptor) boo
 func (x *fastReflection_OracleReporter) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.reporter.OracleReporter.reporter":
-		x.Reporter = ""
+		x.Reporter = nil
 	case "layer.reporter.OracleReporter.total_tokens":
 		x.TotalTokens = ""
 	case "layer.reporter.OracleReporter.commission":
@@ -200,7 +200,7 @@ func (x *fastReflection_OracleReporter) Get(descriptor protoreflect.FieldDescrip
 	switch descriptor.FullName() {
 	case "layer.reporter.OracleReporter.reporter":
 		value := x.Reporter
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.reporter.OracleReporter.total_tokens":
 		value := x.TotalTokens
 		return protoreflect.ValueOfString(value)
@@ -234,7 +234,7 @@ func (x *fastReflection_OracleReporter) Get(descriptor protoreflect.FieldDescrip
 func (x *fastReflection_OracleReporter) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.reporter.OracleReporter.reporter":
-		x.Reporter = value.Interface().(string)
+		x.Reporter = value.Bytes()
 	case "layer.reporter.OracleReporter.total_tokens":
 		x.TotalTokens = value.Interface().(string)
 	case "layer.reporter.OracleReporter.commission":
@@ -293,7 +293,7 @@ func (x *fastReflection_OracleReporter) Mutable(fd protoreflect.FieldDescriptor)
 func (x *fastReflection_OracleReporter) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.reporter.OracleReporter.reporter":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.reporter.OracleReporter.total_tokens":
 		return protoreflect.ValueOfString("")
 	case "layer.reporter.OracleReporter.commission":
@@ -526,7 +526,7 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -536,23 +536,25 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Reporter = string(dAtA[iNdEx:postIndex])
+				x.Reporter = append(x.Reporter[:0], dAtA[iNdEx:postIndex]...)
+				if x.Reporter == nil {
+					x.Reporter = []byte{}
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -733,7 +735,7 @@ type OracleReporter struct {
 	unknownFields protoimpl.UnknownFields
 
 	// reporter is the address of the reporter
-	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
 	// tokens is the amount of tokens the reporter has
 	TotalTokens string `protobuf:"bytes,2,opt,name=total_tokens,json=totalTokens,proto3" json:"total_tokens,omitempty"`
 	// commission for the reporter
@@ -764,11 +766,11 @@ func (*OracleReporter) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_oracle_reporter_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *OracleReporter) GetReporter() string {
+func (x *OracleReporter) GetReporter() []byte {
 	if x != nil {
 		return x.Reporter
 	}
-	return ""
+	return nil
 }
 
 func (x *OracleReporter) GetTotalTokens() string {
@@ -816,7 +818,7 @@ var file_layer_reporter_oracle_reporter_proto_rawDesc = []byte{
 	0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x22, 0xa6, 0x02, 0x0a, 0x0e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x52, 0x65, 0x70, 0x6f,
 	0x72, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
 	0x12, 0x4e, 0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x73,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74,

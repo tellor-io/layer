@@ -91,7 +91,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	var createReporterMsg reportertypes.MsgCreateReporter
 	reporterAddress := reporterDelToVal.delegatorAddress.String()
 	amount := math.NewInt(4000 * 1e6)
-	source := reportertypes.TokenOrigin{ValidatorAddress: validator.OperatorAddress, Amount: math.NewInt(4000 * 1e6)}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valBz, Amount: math.NewInt(4000 * 1e6)}
 	// 0% commission for reporter staking to validator
 	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
@@ -106,13 +106,13 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that reporter was created in Reporters collections
 	reporter, err := s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(reporter.Reporter, reporterAccount.String())
+	require.Equal(reporter.Reporter, reporterAccount.Bytes())
 	require.Equal(reporter.TotalTokens, math.NewInt(4000*1e6))
 	require.Equal(reporter.Jailed, false)
 	// check on reporter in Delegators collections
 	rkDelegation, err := s.reporterkeeper.Delegators.Get(s.ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(rkDelegation.Reporter, reporterAccount.String())
+	require.Equal(rkDelegation.Reporter, reporterAccount.Bytes())
 	require.Equal(rkDelegation.Amount, math.NewInt(4000*1e6))
 	// check on reporter/validator delegation
 	skDelegation, err := s.stakingKeeper.Delegation(s.ctx, reporterAccount, valBz)
@@ -147,7 +147,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	hash1 := oracleutils.CalculateCommitment(value1, salt1)
 	// create commit1 msg
 	commit1 := oracletypes.MsgCommitReport{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListEth,
 		Hash:      hash1,
 	}
@@ -183,7 +183,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create reveal msg
 	require.NoError(err)
 	reveal1 := oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListEth,
 		Value:     value1,
 		Salt:      salt1,
@@ -209,7 +209,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(result1.Report.Height, int64(2))
 	require.Equal(result1.Report.AggregateReportIndex, int64(0))
 	require.Equal(result1.Report.AggregateValue, encodeValue(4500))
-	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(result1.Report.AggregateReporter, sdk.AccAddress(reporter.Reporter).String())
 	require.Equal(result1.Report.QueryId, queryIdEth)
 	require.Equal(int64(4000), result1.Report.ReporterPower)
 	// check that tbr is no longer in timeBasedRewards module acct
@@ -260,7 +260,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	value2 := encodeValue(100_000)
 	require.NoError(err)
 	reveal2 := oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListTrb,
 		Value:     value2,
 	}
@@ -284,7 +284,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.Equal(int64(0), result2.Report.AggregateReportIndex)
 	require.Equal(encodeValue(100_000), result2.Report.AggregateValue)
-	require.Equal(reporter.Reporter, result2.Report.AggregateReporter)
+	require.Equal(sdk.AccAddress(reporter.Reporter).String(), result2.Report.AggregateReporter)
 	require.Equal(queryIdTrb, result2.Report.QueryId)
 	require.Equal(int64(4000), result2.Report.ReporterPower)
 	require.Equal(int64(3), result2.Report.Height)
@@ -328,7 +328,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create tip msg
 	tipAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100))
 	msgTip := oracletypes.MsgTip{
-		Tipper:    reporter.Reporter,
+		Tipper:    sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListEth,
 		Amount:    tipAmount,
 	}
@@ -347,7 +347,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	value1 = encodeValue(5000)
 	hash1 = oracleutils.CalculateCommitment(value1, salt1)
 	commit1 = oracletypes.MsgCommitReport{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListEth,
 		Hash:      hash1,
 	}
@@ -370,7 +370,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// create reveal msg
 	value1 = encodeValue(5000)
 	reveal1 = oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListEth,
 		Value:     value1,
 		Salt:      salt1,
@@ -392,7 +392,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.Equal(result1.Report.AggregateReportIndex, int64(0))
 	require.Equal(result1.Report.AggregateValue, encodeValue(5000))
-	require.Equal(result1.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(result1.Report.AggregateReporter, sdk.AccAddress(reporter.Reporter).String())
 	require.Equal(queryIdEth, result1.Report.QueryId)
 	require.Equal(int64(4000), result1.Report.ReporterPower)
 	require.Equal(int64(5), result1.Report.Height)
@@ -434,7 +434,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 
 	// create tip msg
 	msgTip = oracletypes.MsgTip{
-		Tipper:    reporter.Reporter,
+		Tipper:    sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListTrb,
 		Amount:    tipAmount,
 	}
@@ -448,7 +448,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(tipAcctBalance, tipAmount.Sub(twoPercent))
 	// create submit msg
 	revealMsgTrb := oracletypes.MsgSubmitValue{
-		Creator:   reporter.Reporter,
+		Creator:   sdk.AccAddress(reporter.Reporter).String(),
 		QueryData: cycleListTrb,
 		Value:     encodeValue(1_000_000),
 	}
@@ -469,7 +469,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.Equal(resultTrb.Report.AggregateReportIndex, int64(0))
 	require.Equal(resultTrb.Report.AggregateValue, encodeValue(1_000_000))
-	require.Equal(resultTrb.Report.AggregateReporter, reporter.Reporter)
+	require.Equal(resultTrb.Report.AggregateReporter, sdk.AccAddress(reporter.Reporter).String())
 	require.Equal(queryIdTrb, resultTrb.Report.QueryId)
 	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
 	require.Equal(int64(6), resultTrb.Report.Height)

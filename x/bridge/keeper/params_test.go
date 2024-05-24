@@ -12,7 +12,7 @@ func TestGetParams(t *testing.T) {
 	k, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	params := types.DefaultParams()
 
-	k.Params.Set(ctx, params)
+	require.NoError(t, k.Params.Set(ctx, params))
 
 	p, err := k.Params.Get(ctx)
 	require.NoError(t, err)

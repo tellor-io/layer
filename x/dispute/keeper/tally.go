@@ -14,7 +14,7 @@ import (
 )
 
 func (k Keeper) GetVoters(ctx context.Context, id uint64) (
-	[]collections.KeyValue[collections.Pair[uint64, sdk.AccAddress], types.Voter], error) {
+	[]collections.KeyValue[collections.Pair[uint64, []byte], types.Voter], error) {
 	iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
 	if err != nil {
 		return nil, err
@@ -92,7 +92,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		if err != nil {
 			return err
 		}
-		vote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr))
+		vote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr.Bytes()))
 		if err != nil {
 			return err
 		}
@@ -113,8 +113,8 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 
 	// get user group
 	userVoteSum := math.ZeroInt()
-	userRng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](id)
-	err = k.UsersGroup.Walk(ctx, userRng, func(key collections.Pair[uint64, sdk.AccAddress], value math.Int) (stop bool, err error) {
+	userRng := collections.NewPrefixedPairRange[uint64, []byte](id)
+	err = k.UsersGroup.Walk(ctx, userRng, func(key collections.Pair[uint64, []byte], value math.Int) (stop bool, err error) {
 		vote, err := k.Voter.Get(ctx, key)
 		if err != nil {
 			return true, err
@@ -146,8 +146,8 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 
 	reporterRatio := math.LegacyZeroDec()
 	reporterVoteSum := math.ZeroInt()
-	reportersRng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](id)
-	err = k.ReportersGroup.Walk(ctx, reportersRng, func(key collections.Pair[uint64, sdk.AccAddress], value math.Int) (stop bool, err error) {
+	reportersRng := collections.NewPrefixedPairRange[uint64, []byte](id)
+	err = k.ReportersGroup.Walk(ctx, reportersRng, func(key collections.Pair[uint64, []byte], value math.Int) (stop bool, err error) {
 		vote, err := k.Voter.Get(ctx, key)
 
 		if err != nil {

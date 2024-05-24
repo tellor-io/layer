@@ -5,23 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
+	"github.com/tellor-io/layer/x/mint/keeper"
+	"github.com/tellor-io/layer/x/mint/types"
+
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
-	"github.com/tellor-io/layer/x/mint/keeper"
-	"github.com/tellor-io/layer/x/mint/types"
 )
 
 var (
@@ -77,14 +76,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {}
-
-// GetTxCmd returns no root tx command for the mint module.
-func (AppModuleBasic) GetTxCmd() *cobra.Command { return nil }
-
-// GetQueryCmd returns the root query command for the mint module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return nil
-}
 
 // ----------------------------------------------------------------------------
 // AppModule
@@ -155,7 +146,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 func init() {
 	appmodule.Register(&mintmodulev1.Module{},
 		appmodule.Provide(ProvideModule))
-
 }
 
 type MintInputs struct {

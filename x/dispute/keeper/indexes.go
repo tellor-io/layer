@@ -5,7 +5,6 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -39,19 +38,19 @@ func NewDisputesIndex(sb *collections.SchemaBuilder) DisputesIndex {
 }
 
 type VotersVoteIndex struct {
-	VotersById *indexes.Multi[uint64, collections.Pair[uint64, sdk.AccAddress], types.Voter]
+	VotersById *indexes.Multi[uint64, collections.Pair[uint64, []byte], types.Voter]
 }
 
-func (a VotersVoteIndex) IndexesList() []collections.Index[collections.Pair[uint64, sdk.AccAddress], types.Voter] {
-	return []collections.Index[collections.Pair[uint64, sdk.AccAddress], types.Voter]{a.VotersById}
+func (a VotersVoteIndex) IndexesList() []collections.Index[collections.Pair[uint64, []byte], types.Voter] {
+	return []collections.Index[collections.Pair[uint64, []byte], types.Voter]{a.VotersById}
 }
 
 func NewVotersIndex(sb *collections.SchemaBuilder) VotersVoteIndex {
 	return VotersVoteIndex{
 		VotersById: indexes.NewMulti(
 			sb, types.VotersByIdIndexPrefix, "voters_by_id",
-			collections.Uint64Key, collections.PairKeyCodec(collections.Uint64Key, sdk.AccAddressKey),
-			func(k collections.Pair[uint64, sdk.AccAddress], _ types.Voter) (uint64, error) {
+			collections.Uint64Key, collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+			func(k collections.Pair[uint64, []byte], _ types.Voter) (uint64, error) {
 				return k.K1(), nil
 			},
 		),

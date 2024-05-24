@@ -9,5 +9,5 @@ option go_package = "github.com/tellor-io/layer/x/dispute/types";
 // Params defines the parameters for the module.
 message Params {
   option (gogoproto.goproto_stringer) = false;
-  string team_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bytes team_address = 1;
 }

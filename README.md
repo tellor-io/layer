@@ -47,6 +47,14 @@ To create a transaction, in another terminal:
 To see all available commands:
 `layerd`
 
+
+## Linting
+To lint per folder:
+`make lint-folder-fix FOLDER="x/mint"`
+
+To lint all files:
+`make lint`
+
 ## Maintainers <a name="maintainers"> </a>
 
 This repository is maintained by the [Tellor team](https://github.com/orgs/tellor-io/people)

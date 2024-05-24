@@ -5,11 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"cosmossdk.io/errors"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/errors"
 )
 
 func (q Querier) GetAttestationsBySnapshot(ctx context.Context, req *types.QueryGetAttestationsBySnapshotRequest) (*types.QueryGetAttestationsBySnapshotResponse, error) {

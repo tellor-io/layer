@@ -34,10 +34,10 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 	s.bankKeeper.On("HasBalance", s.ctx, acct, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, acct, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
 	// from account
-	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct.String(), fee, false, []byte("hash")))
+	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct, fee, false, []byte("hash")))
 	// from bond
 	s.reporterKeeper.On("FeefromReporterStake", s.ctx, acct, math.OneInt(), []byte("hash")).Return(nil)
-	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct.String(), fee, true, []byte("hash")))
+	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct, fee, true, []byte("hash")))
 }
 
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
