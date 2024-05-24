@@ -1,13 +1,15 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (k *KeeperTestSuite) TestExecuteVote() {
@@ -104,6 +106,7 @@ func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", reporterBond))).Return(nil)
 	k.NoError(k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feePayers, reporterBond))
 }
+
 func (k *KeeperTestSuite) TestRewardVoters() {
 	remaining, err := k.disputeKeeper.RewardVoters(k.ctx, []keeper.VoterInfo{{Voter: sample.AccAddressBytes(), Power: math.OneInt(), Share: math.ZeroInt()}}, math.ZeroInt(), math.ZeroInt())
 	k.NoError(err)

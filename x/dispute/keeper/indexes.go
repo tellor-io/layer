@@ -3,9 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 type DisputesIndex struct {

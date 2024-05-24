@@ -37,6 +37,7 @@ var (
 func KeyPrefix(p string) []byte {
 	return []byte(p)
 }
+
 func ParamsKeyPrefix() []byte {
 	return KeyPrefix(ParamsKey)
 }
