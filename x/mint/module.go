@@ -5,22 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
+	"github.com/tellor-io/layer/x/mint/keeper"
+	"github.com/tellor-io/layer/x/mint/types"
+
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-
-	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
-	"github.com/tellor-io/layer/x/mint/keeper"
-	"github.com/tellor-io/layer/x/mint/types"
 )
 
 var (
@@ -146,7 +146,6 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 func init() {
 	appmodule.Register(&mintmodulev1.Module{},
 		appmodule.Provide(ProvideModule))
-
 }
 
 type MintInputs struct {

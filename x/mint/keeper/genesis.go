@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/mint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the x/mint store with data from the genesis state.
@@ -10,7 +11,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, ak types.AccountKeeper, gen *types.
 	minter := types.DefaultMinter()
 	minter.BondDenom = gen.BondDenom
 	k.SetMinter(ctx, minter)
-
 }
 
 // ExportGenesis returns a x/mint GenesisState for the given context.

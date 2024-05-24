@@ -5,6 +5,7 @@ import (
 	"time"
 
 	cosmosmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -39,7 +40,7 @@ func (m Minter) Validate() error {
 
 // CalculateBlockProvision returns the total number of coins that should be
 // minted due to time elapsed for the current block.
-func (m Minter) CalculateBlockProvision(current time.Time, previous time.Time) (sdk.Coin, error) {
+func (m Minter) CalculateBlockProvision(current, previous time.Time) (sdk.Coin, error) {
 	if current.Before(previous) {
 		return sdk.Coin{}, fmt.Errorf("current time %v cannot be before previous time %v", current, previous)
 	}

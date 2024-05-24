@@ -63,10 +63,10 @@ lint-fix:
 	@./scripts/go-lint-all.bash --fix
 
 # Lint specific folders
-lint-folder:
-	@echo "--> Running linter for specified folders: $(FOLDERS)"
+lint-folder-fix:
+	@echo "--> Running linter for specified folders: $(FOLDER)"
 	$(MAKE) lint-install
-	@./scripts/go-lint-all.bash $(FOLDERS)
+	@./scripts/go-lint-all.bash $(FOLDER) --fix
 
 .PHONY: lint lint-fix lint-folder
 

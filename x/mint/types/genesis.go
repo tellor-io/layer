@@ -2,13 +2,12 @@ package types
 
 import (
 	"errors"
-
 )
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(bondDenom string) *GenesisState {
 	return &GenesisState{
-		BondDenom:   bondDenom,
+		BondDenom: bondDenom,
 	}
 }
 
