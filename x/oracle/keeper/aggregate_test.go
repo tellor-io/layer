@@ -8,17 +8,18 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
-	layer "github.com/tellor-io/layer/types"
 	layertypes "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func createMicroReportForQuery(reporterAdd, aggMethod, value string, power int64, timestamp time.Time) types.MicroReport {
@@ -56,7 +57,7 @@ func encodeValue(number float64) string {
 	return encodedString
 }
 
-func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Time) (agg *types.Aggregate, queryId []byte, rep1 sdk.AccAddress, rep2 sdk.AccAddress, err error) {
+func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Time) (agg *types.Aggregate, queryId []byte, rep1, rep2 sdk.AccAddress, err error) {
 	rep1 = sample.AccAddressBytes()
 	rep2 = sample.AccAddressBytes()
 	queryId = []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
@@ -107,7 +108,6 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	err := s.oracleKeeper.Query.Set(ctx, queryData.QueryId, queryData)
 	s.NoError(err)
 
-	//val := "0x0000000000000000000000000000000000000000000000a3bc78653c25d80000"
 	val := encodeValue(1.00)
 	report_one := createMicroReportForQuery(rep1.String(), "weighted-median", val, 1000000000, time.Now())
 	report_two := createMicroReportForQuery(rep2.String(), "weighted-median", val, 1000000000, time.Now())
@@ -131,7 +131,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 
 	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
-	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layer.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
+	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)

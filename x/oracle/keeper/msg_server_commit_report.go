@@ -5,13 +5,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/utils"
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
@@ -66,7 +67,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	// bool to check if query is in cycle
 	incycle := bytes.Equal(msg.QueryData, cycleQuery)
 
-	isBridgeDeposit := query.QueryType == "TRBBridge"
+	isBridgeDeposit := query.QueryType == TRBBridgeQueryType
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()

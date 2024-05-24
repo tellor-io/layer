@@ -4,15 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) setValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power int64, incycle bool) error {
@@ -54,7 +55,7 @@ func (k Keeper) setValue(ctx context.Context, reporter sdk.AccAddress, query typ
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
 }
 
-func (k Keeper) VerifyCommit(ctx context.Context, reporter string, value, salt, hash string) bool {
+func (k Keeper) VerifyCommit(ctx context.Context, reporter, value, salt, hash string) bool {
 	// calculate commitment
 	calculatedCommit := oracleutils.CalculateCommitment(value, salt)
 	// compare calculated commitment with the one stored

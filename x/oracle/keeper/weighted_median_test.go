@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"encoding/hex"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestWeightedMedian() {
@@ -63,7 +64,8 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	s.NoError(err)
 	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
@@ -95,7 +97,8 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	s.NoError(err)
 	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
@@ -126,7 +129,8 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	s.NoError(err)
 	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)

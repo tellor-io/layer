@@ -3,11 +3,12 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (q Querier) GetTimeBasedRewards(ctx context.Context, req *types.QueryGetTimeBasedRewardsRequest) (*types.QueryGetTimeBasedRewardsResponse, error) {
