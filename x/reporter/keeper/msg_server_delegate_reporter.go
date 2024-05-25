@@ -5,11 +5,12 @@ import (
 	"context"
 	"errors"
 
-	errorsmod "cosmossdk.io/errors"
+	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (k msgServer) DelegateReporter(goCtx context.Context, msg *types.MsgDelegateReporter) (*types.MsgDelegateReporterResponse, error) {

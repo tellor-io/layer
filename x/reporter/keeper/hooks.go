@@ -3,9 +3,10 @@ package keeper
 import (
 	"context"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
-	"github.com/tellor-io/layer/x/reporter/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

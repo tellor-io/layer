@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tellor-io/layer/x/reporter/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddress, originAmounts []*types.TokenOrigin, amount math.Int) error {
@@ -96,10 +97,9 @@ func (k Keeper) UpdateOrRemoveReporter(ctx context.Context, key sdk.AccAddress, 
 		return err
 	}
 	return k.AfterReporterModified(ctx, key)
-
 }
 
-func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[[]byte, []byte], srcAmount math.Int, amt math.Int) (err error) {
+func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[[]byte, []byte], srcAmount, amt math.Int) (err error) {
 	// amount is the current staked amount in staking mod
 	// so if current amount is zero remove the source
 	if amt.IsZero() {
@@ -108,7 +108,7 @@ func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[[
 	return k.TokenOrigin.Set(ctx, key, amt)
 }
 
-func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[[]byte, []byte], currentAmount math.Int, newAmount math.Int) error {
+func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[[]byte, []byte], currentAmount, newAmount math.Int) error {
 	if newAmount.GTE(currentAmount) {
 		return k.TokenOrigin.Remove(ctx, key)
 	}
@@ -127,7 +127,6 @@ func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (*types.Or
 }
 
 func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
-
 	return k.TotalPowerAtBlock(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight())
 }
 

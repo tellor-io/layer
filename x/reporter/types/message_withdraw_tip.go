@@ -2,13 +2,14 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ sdk.Msg = &MsgWithdrawTip{}
 
-func NewMsgWithdrawTip(validatorAddress string, delegatorAddress string) *MsgWithdrawTip {
+func NewMsgWithdrawTip(validatorAddress, delegatorAddress string) *MsgWithdrawTip {
 	return &MsgWithdrawTip{
 		ValidatorAddress: validatorAddress,
 		DelegatorAddress: delegatorAddress,
