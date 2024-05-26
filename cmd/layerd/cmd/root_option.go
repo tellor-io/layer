@@ -24,10 +24,8 @@ func (o *RootCmdOption) setCustomizeStartCmd(f func(startCmd *cobra.Command)) {
 func GetOptionWithCustomStartCmd() *RootCmdOption {
 	option := newRootCmdOption()
 	f := func(cmd *cobra.Command) {
-
 		// Add daemon flags.
 		daemonflags.AddDaemonFlagsToCmd(cmd)
-
 	}
 	option.setCustomizeStartCmd(f)
 	return option

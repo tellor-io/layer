@@ -10,6 +10,66 @@ import (
 	"runtime/debug"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/cosmos/ibc-go/modules/capability"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibcporttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	"github.com/spf13/cast"
+	_ "github.com/tellor-io/layer/app/config"
+	appflags "github.com/tellor-io/layer/app/flags"
+	"github.com/tellor-io/layer/daemons/configs"
+	"github.com/tellor-io/layer/daemons/constants"
+	daemonflags "github.com/tellor-io/layer/daemons/flags"
+	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
+	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
+	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
+	daemonserver "github.com/tellor-io/layer/daemons/server"
+	medianserver "github.com/tellor-io/layer/daemons/server/median"
+	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
+	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+
+	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
+	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
+	"github.com/tellor-io/layer/docs"
+	bridgemodule "github.com/tellor-io/layer/x/bridge"
+	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
+	bridgemoduletypes "github.com/tellor-io/layer/x/bridge/types"
+	disputemodule "github.com/tellor-io/layer/x/dispute"
+	disputemodulekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	disputemoduletypes "github.com/tellor-io/layer/x/dispute/types"
+	"github.com/tellor-io/layer/x/mint"
+	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle"
+	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oraclemoduletypes "github.com/tellor-io/layer/x/oracle/types"
+	registrymodulekeeper "github.com/tellor-io/layer/x/registry/keeper"
+	registrymodule "github.com/tellor-io/layer/x/registry/module"
+	registrymoduletypes "github.com/tellor-io/layer/x/registry/types"
+	reportermodulekeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportermodule "github.com/tellor-io/layer/x/reporter/module"
+	reportermoduletypes "github.com/tellor-io/layer/x/reporter/types"
+	"google.golang.org/grpc"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
@@ -26,9 +86,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	abci "github.com/cometbft/cometbft/abci/types"
-	tmos "github.com/cometbft/cometbft/libs/os"
-	dbm "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -86,71 +144,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibcporttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
-	"github.com/spf13/cast"
-	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
-	medianserver "github.com/tellor-io/layer/daemons/server/median"
-	"github.com/tellor-io/layer/x/mint"
-	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
-	minttypes "github.com/tellor-io/layer/x/mint/types"
-	"google.golang.org/grpc"
-
-	oraclemodule "github.com/tellor-io/layer/x/oracle"
-	oraclemodulekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	oraclemoduletypes "github.com/tellor-io/layer/x/oracle/types"
-	registrymodulekeeper "github.com/tellor-io/layer/x/registry/keeper"
-	registrymodule "github.com/tellor-io/layer/x/registry/module"
-	registrymoduletypes "github.com/tellor-io/layer/x/registry/types"
-
-	disputemodule "github.com/tellor-io/layer/x/dispute"
-	disputemodulekeeper "github.com/tellor-io/layer/x/dispute/keeper"
-	disputemoduletypes "github.com/tellor-io/layer/x/dispute/types"
-
-	reportermodulekeeper "github.com/tellor-io/layer/x/reporter/keeper"
-	reportermodule "github.com/tellor-io/layer/x/reporter/module"
-	reportermoduletypes "github.com/tellor-io/layer/x/reporter/types"
-
-	_ "github.com/tellor-io/layer/app/config"
-
-	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
-	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
-	bridgemodule "github.com/tellor-io/layer/x/bridge"
-	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"
-	bridgemoduletypes "github.com/tellor-io/layer/x/bridge/types"
-
-	// this line is used by starport scaffolding # stargate/app/moduleImport
-
-	"github.com/tellor-io/layer/docs"
-
-	appflags "github.com/tellor-io/layer/app/flags"
-	"github.com/tellor-io/layer/daemons/configs"
-	"github.com/tellor-io/layer/daemons/constants"
-	daemonflags "github.com/tellor-io/layer/daemons/flags"
-	daemonserver "github.com/tellor-io/layer/daemons/server"
-	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-
-	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
-	reporterclient "github.com/tellor-io/layer/daemons/reporter/client"
-	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 )
 
 const (
@@ -401,7 +394,7 @@ func New(
 		txConfigOpts,
 	)
 	if err != nil {
-		panic(fmt.Errorf("failed to create new TxConfig with options: %v", err))
+		panic(fmt.Errorf("failed to create new TxConfig with options: %w", err))
 	}
 	app.txConfig = txConfig
 	app.StakingKeeper = stakingkeeper.NewKeeper(
@@ -523,7 +516,7 @@ func New(
 	icaModule := ica.NewAppModule(&icaControllerKeeper, &app.ICAHostKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
-	// Create evidence Keeper for to register the IBC light client misbehaviour evidence route
+	// Create evidence Keeper for to register the IBC light client misbehavior evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),

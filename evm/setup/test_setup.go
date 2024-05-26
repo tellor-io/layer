@@ -43,7 +43,7 @@ func main() {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Failed to read response body: %v", err)
+		log.Fatalf("failed to read response body: %v", err)
 	}
 
 	var result map[string]interface{}
@@ -189,5 +189,4 @@ func main() {
 	}
 
 	log.Printf("Response data written to %s", filePath)
-
 }

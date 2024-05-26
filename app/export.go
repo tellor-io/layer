@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	storetypes "cosmossdk.io/store/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
+	storetypes "cosmossdk.io/store/types"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -54,7 +56,7 @@ func (app *App) ExportAppStateAndValidators(
 // prepForZeroHeightGenesis prepares for a fresh genesis
 //
 // NOTE zero height genesis is a temporary feature which will be deprecated
-// in favour of export at a block height
+// in favor of export at a block height
 func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
 	applyAllowedAddrs := false
 

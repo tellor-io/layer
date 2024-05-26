@@ -37,7 +37,6 @@ func (bankModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 				Exponent: 0,
 			},
 			{
-				Denom:    DisplayDenom, //ie Ether
 				Exponent: 6,
 			},
 		},

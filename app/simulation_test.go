@@ -10,12 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	evidencetypes "cosmossdk.io/x/evidence/types"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/app"
+
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -32,10 +37,6 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	"github.com/stretchr/testify/require"
-
-	"github.com/tellor-io/layer/app"
 )
 
 type storeKeysPrefixes struct {
@@ -316,8 +317,9 @@ func TestAppImportExport(t *testing.T) {
 
 	ctxA := bApp.NewContextLegacy(true, tmproto.Header{Height: bApp.LastBlockHeight()})
 	ctxB := newApp.NewContextLegacy(true, tmproto.Header{Height: bApp.LastBlockHeight()})
-	newApp.ModuleManager().InitGenesis(ctxB, bApp.AppCodec(), genesisState)
-	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	_, err = newApp.ModuleManager().InitGenesis(ctxB, bApp.AppCodec(), genesisState)
+	require.NoError(t, err)
+	require.NoError(t, newApp.StoreConsensusParams(ctxB, exported.ConsensusParams))
 
 	fmt.Printf("comparing stores...\n")
 
