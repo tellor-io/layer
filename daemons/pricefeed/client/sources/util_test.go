@@ -17,11 +17,9 @@ const (
 	deltaPrecision = 0.000000001
 )
 
-var (
-	positiveTagValidationError = errors.New(
-		"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
-			"failed on the 'positive-float-string' tag",
-	)
+var errpositiveTagValidation = errors.New(
+	"key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
+		"failed on the 'positive-float-string' tag",
 )
 
 func TestIsExchangeError_Mixed(t *testing.T) {
@@ -75,15 +73,15 @@ func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.
 		},
 		"Failure - negative float": {
 			testValue:     "-12345.6",
-			expectedError: positiveTagValidationError,
+			expectedError: errpositiveTagValidation,
 		},
 		"Failure - empty string": {
 			testValue:     "",
-			expectedError: positiveTagValidationError,
+			expectedError: errpositiveTagValidation,
 		},
 		"Failure - text": {
 			testValue:     "cat",
-			expectedError: positiveTagValidationError,
+			expectedError: errpositiveTagValidation,
 		},
 	}
 
@@ -110,7 +108,6 @@ func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.
 
 func TestGetOnlyTickerAndExponent(t *testing.T) {
 	tests := map[string]struct {
-		//parameters
 		tickerToExponent map[string]int32
 		exchange         string
 

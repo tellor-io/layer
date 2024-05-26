@@ -7,8 +7,6 @@ import (
 	"syscall"
 	"time"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
@@ -18,6 +16,10 @@ import (
 	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/lib/prices"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type PriceEncoder interface {
@@ -160,7 +162,7 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 		// If the index price is not valid due to insufficient pricing data, return an error.
 		if numPricesMedianized < int(conversionDetails.AdjustByMarketDetails.MinExchanges) {
 			err = fmt.Errorf(
-				"Could not retrieve index price for market %v: "+
+				"could not retrieve index price for market %v: "+
 					"expected median price from %v exchanges, but got %v exchanges",
 				conversionDetails.AdjustByMarketDetails.MarketId,
 				conversionDetails.AdjustByMarketDetails.MinExchanges,
@@ -221,9 +223,8 @@ func (p PriceEncoderImpl) convertPriceUpdate(marketPriceTimestamp *types.MarketP
 func (p *PriceEncoderImpl) UpdatePrice(marketPriceTimestamp *types.MarketPriceTimestamp) {
 	// Convert price.
 	price, err := p.convertPriceUpdate(marketPriceTimestamp)
-
 	if err != nil {
-		var logMethod = p.logger.Info
+		logMethod := p.logger.Info
 		// When the price encoder starts, we expect that some conversions will fail as we are filling the cache with
 		// enough valid prices to generate a valid index price for our adjustment markets. In order to avoid spurious
 		// alerts, only emit error logs if the grace period has passed.
@@ -325,7 +326,7 @@ func (p *PriceEncoderImpl) ProcessPriceFetcherResponse(response *price_fetcher.P
 				response.Err,
 				p.GetExchangeId(),
 			)
-		} else if errors.Is(response.Err, constants.RateLimitingError) {
+		} else if errors.Is(response.Err, constants.ErrRateLimiting) {
 			// Log an error if there are rate limiting errors in the ingested buffered channel prices.
 			p.logger.Error(
 				FailedToUpdateExchangePrice,

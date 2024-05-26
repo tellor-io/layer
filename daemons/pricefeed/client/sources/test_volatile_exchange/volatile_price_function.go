@@ -73,7 +73,7 @@ func VolatileExchangePriceFunction(
 	waveValue := math.Cos(radians)
 
 	// The price value is centered around `AveragePrice` with an amplitude of `Amplitude`.
-	price := float64(TestVolatileExchangeParams.AveragePrice) * (1 + TestVolatileExchangeParams.Amplitude*waveValue)
+	price := TestVolatileExchangeParams.AveragePrice * (1 + TestVolatileExchangeParams.Amplitude*waveValue)
 
 	volatile_exchange_ticker := VolatileExchangeTicker{
 		Pair:  "TEST-USD",

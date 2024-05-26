@@ -37,35 +37,35 @@ type MarketParam struct {
 func (mp *MarketParam) Validate() error {
 	// Validate pair.
 	if mp.Pair == "" {
-		return fmt.Errorf("Invalid input: Pair cannot be empty")
+		return fmt.Errorf("invalid input: Pair cannot be empty")
 	}
 
 	if mp.MinExchanges == 0 {
-		return fmt.Errorf("Min exchanges must be greater than zero")
+		return fmt.Errorf("min exchanges must be greater than zero")
 	}
 
 	// Validate min price change.
 	if mp.MinPriceChangePpm == 0 || mp.MinPriceChangePpm >= MaxPriceChangePpm {
 		return fmt.Errorf(
-			"Invalid input Min price change in parts-per-million must be greater than 0 and less than %d",
+			"invalid input Min price change in parts-per-million must be greater than 0 and less than %d",
 			MaxPriceChangePpm)
 	}
 
 	if err := IsValidJSON(mp.ExchangeConfigJson); err != nil {
 		return fmt.Errorf(
-			"Invalid input: ExchangeConfigJson string is not valid: err=%v, input=%v",
+			"invalid input: ExchangeConfigJson string is not valid: err=%w, input=%v",
 			err,
 			mp.ExchangeConfigJson,
 		)
 	}
 
 	if mp.QueryData == "" {
-		return fmt.Errorf("Invalid input: QueryData cannot be empty")
+		return fmt.Errorf("invalid input: QueryData cannot be empty")
 	}
 	// try to decode query data from hex to bytes if this fails then return error
 	_, err := hex.DecodeString(mp.QueryData)
 	if err != nil {
-		return fmt.Errorf("Invalid input: QueryData is not valid hex: %v", err)
+		return fmt.Errorf("invalid input: QueryData is not valid hex: %w", err)
 	}
 
 	return nil

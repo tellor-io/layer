@@ -8,16 +8,16 @@ import (
 	"time"
 
 	appflags "github.com/tellor-io/layer/app/flags"
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-
-	"cosmossdk.io/log"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/flags"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
 	libtime "github.com/tellor-io/layer/lib/time"
+
+	"cosmossdk.io/log"
 )
 
 // Client encapsulates the logic for executing and cleanly stopping all subtasks associated with the

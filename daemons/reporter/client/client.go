@@ -7,24 +7,23 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/flags"
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const defaultGas = uint64(300000)
@@ -113,8 +112,7 @@ func (c *Client) Start(
 	c.logger.Info("Account Name", "name", accountName)
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
-		panic(fmt.Errorf("error getting address from keyring: %v : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
-	} else {
+		panic(fmt.Errorf("error getting address from keyring: %w : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
@@ -241,11 +239,11 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	if err != nil {
 		querydata, err = c.CurrentQuery(ctx)
 		if err != nil {
-			return fmt.Errorf("error calling 'CurrentQuery': %v", err)
+			return fmt.Errorf("error calling 'CurrentQuery': %w", err)
 		}
 		value, err = c.median(querydata)
 		if err != nil {
-			return fmt.Errorf("error getting median from median client': %v", err)
+			return fmt.Errorf("error getting median from median client': %w", err)
 		}
 	} else {
 		// delete this
@@ -255,7 +253,7 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	// Salt and hash the value
 	salt, err := oracleutils.Salt(32)
 	if err != nil {
-		return fmt.Errorf("error generating salt: %v", err)
+		return fmt.Errorf("error generating salt: %w", err)
 	}
 	hash := oracleutils.CalculateCommitment(value, salt)
 
@@ -268,11 +266,11 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 
 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
 	if err != nil {
-		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %v", err)
+		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %w", err)
 	}
 	err = c.sendTx(ctx, msgCommit, &seq)
 	if err != nil {
-		return fmt.Errorf("error generating 'MsgCommitReport': %v", err)
+		return fmt.Errorf("error generating 'MsgCommitReport': %w", err)
 	}
 
 	// ***********************MsgSubmitValue***************************

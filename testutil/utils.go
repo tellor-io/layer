@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, queryId []byte) []oracletypes.MicroReport {

@@ -4,13 +4,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/lib/metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // MarketToExchangePrices maintains price info for multiple markets. Each
@@ -37,7 +38,8 @@ func NewMarketToExchangePrices(maxPriceAge time.Duration) *MarketToExchangePrice
 // only updated if the timestamp on the updates are greater than the timestamp
 // on existing prices.
 func (mte *MarketToExchangePrices) UpdatePrices(
-	updates []*servertypes.MarketPriceUpdate) {
+	updates []*servertypes.MarketPriceUpdate,
+) {
 	mte.Lock()
 	defer mte.Unlock()
 	for _, marketPriceUpdate := range updates {

@@ -4,10 +4,9 @@ import (
 	"context"
 	"net"
 
+	"github.com/tellor-io/layer/daemons/constants"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/tellor-io/layer/daemons/constants"
 )
 
 // GrpcClientImpl is the struct that implements the `GrpcClient` interface.

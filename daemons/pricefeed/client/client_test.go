@@ -4,43 +4,37 @@ import (
 	"context"
 	"errors"
 	"fmt"
-
 	"net"
 	"sort"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	appflags "github.com/tellor-io/layer/app/flags"
 	pricefeed_constants "github.com/tellor-io/layer/daemons/constants"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
+	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
-
+	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
 	daemonserver "github.com/tellor-io/layer/daemons/server"
+	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	pricefeed_types "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/testutil/appoptions"
+	"github.com/tellor-io/layer/testutil/client"
+	"github.com/tellor-io/layer/testutil/constants"
 	daemontestutils "github.com/tellor-io/layer/testutil/daemons"
 	grpc_util "github.com/tellor-io/layer/testutil/grpc"
-
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/daemons/mocks"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
-
-	"github.com/tellor-io/layer/testutil/client"
-	"github.com/tellor-io/layer/testutil/constants"
 )
 
-var (
-	subTaskRunnerImpl = SubTaskRunnerImpl{}
-)
+var subTaskRunnerImpl = SubTaskRunnerImpl{}
 
 // FakeSubTaskRunner acts as a dummy struct replacing `SubTaskRunner` that simply advances the
 // counter for each task in a threadsafe manner and allows awaiting go-routine completion. This
@@ -110,12 +104,6 @@ const (
 	connectionFailsErrorMsg      = "Failed to create connection"
 	closeConnectionFailsErrorMsg = "Failed to close connection"
 	fiveKilobytes                = 5 * 1024
-)
-
-var (
-	validExchangeId               = constants.ExchangeId1
-	closeConnectionFailsError     = errors.New(closeConnectionFailsErrorMsg)
-	testExchangeQueryConfigLength = len(constants.TestExchangeQueryConfigs)
 )
 
 func TestFixedBufferSize(t *testing.T) {
@@ -794,13 +782,13 @@ func generateBufferedChannelAndExchangeToMarketPrices(
 	*types.ExchangeToMarketPricesImpl,
 	map[types.ExchangeId]chan *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
+	t.Helper()
 	_etmp, err := types.NewExchangeToMarketPrices(exchangeIds)
 	etmp := _etmp.(*types.ExchangeToMarketPricesImpl)
 	require.NoError(t, err)
 	require.NotNil(t, etmp)
 
-	exchangeIdToBufferedChannel :=
-		map[types.ExchangeId]chan *price_fetcher.PriceFetcherSubtaskResponse{}
+	exchangeIdToBufferedChannel := map[types.ExchangeId]chan *price_fetcher.PriceFetcherSubtaskResponse{}
 	for _, exchangeId := range exchangeIds {
 		bCh := make(chan *price_fetcher.PriceFetcherSubtaskResponse, maxBufferedChannelLength)
 		exchangeIdToBufferedChannel[exchangeId] = bCh
@@ -817,6 +805,7 @@ func runPriceEncoderSequentially(
 	bCh chan *price_fetcher.PriceFetcherSubtaskResponse,
 	writes []*types.MarketPriceTimestamp,
 ) {
+	t.Helper()
 	// Make sure there are not more write than the `bufferedChannel` can hold.
 	require.True(t, len(writes) <= maxBufferedChannelLength)
 

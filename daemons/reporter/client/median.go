@@ -34,7 +34,7 @@ func (c *Client) median(querydata []byte) (string, error) {
 
 	value, err := prices.EncodePrice(float64(val), mp.Exponent)
 	if err != nil {
-		return "", fmt.Errorf("faild to encode price: %v", err)
+		return "", fmt.Errorf("faild to encode price: %w", err)
 	}
 	return value, nil
 }

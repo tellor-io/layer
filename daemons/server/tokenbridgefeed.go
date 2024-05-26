@@ -4,10 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	// pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
-
-	// pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
-
 	"github.com/tellor-io/layer/daemons/server/types"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 )
@@ -34,11 +30,10 @@ func (s *TokenBridgeFeedServer) GetPendingDepositReport(
 	response *types.GetPendingDepositReportResponse,
 	err error,
 ) {
-
 	// This panic is an unexpected condition because we initialize the market price cache in app initialization before
 	// starting the server or daemons.
 	if s.tokenDepositsCache == nil {
-		panic(fmt.Errorf("server not initialized correclty, tokenDepositsCache not initialized"))
+		panic(fmt.Errorf("server not initialized correctly, tokenDepositsCache not initialized"))
 	}
 
 	report, err := s.tokenDepositsCache.GetOldestReport()
