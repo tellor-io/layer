@@ -7,26 +7,25 @@ import (
 	"strconv"
 	"time"
 
-	collections "cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/utils"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
-	// oracleutils "github.com/tellor-io/layer/x/oracle/utils"
-
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	collections "cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *E2ETestSuite) TestNoInitialMint() {
@@ -123,9 +122,9 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 		s.accountKeeper.NewAccountWithAddress(s.ctx, testAddresses[i])
 		validator, err := stakingtypes.NewValidator(valAddresses[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
 		require.NoError(err)
-		s.stakingKeeper.SetValidator(s.ctx, validator)
-		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+		s.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
+		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator))
+		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator))
 
 		randomStakeAmount := rand.Intn(5000-1000+1) + 1000
 		require.True(randomStakeAmount >= 1000 && randomStakeAmount <= 5000, "randomStakeAmount is not within the expected range")
@@ -245,7 +244,8 @@ func (s *E2ETestSuite) TestUnstaking() {
 
 	// create 5 validators with 5_000 TRB
 	accaddr, valaddr, _ := s.CreateValidators(5)
-	s.stakingKeeper.EndBlocker(s.ctx)
+	_, err := s.stakingKeeper.EndBlocker(s.ctx)
+	require.NoError(err)
 	// all validators are bonded
 	validators, err := s.stakingKeeper.GetAllValidators(s.ctx)
 	require.NoError(err)
@@ -303,7 +303,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	//---------------------------------------------------------------------------
 	_, err := s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	valsAcctAddrs, valsValAddrs, vals := s.CreateValidators(3)
 	require.NotNil(valsAcctAddrs)
 	repsAccs := s.CreateReporters(3, valsValAddrs, vals)
@@ -325,11 +325,11 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(1)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	pk := secp256k1.GenPrivKey()
 	delAcc := s.convertToAccAddress([]secp256k1.PrivKey{*pk})
-	delAccAddr := sdk.AccAddress(delAcc[0])
+	delAccAddr := delAcc[0]
 	initCoins := sdk.NewCoin(s.denom, math.NewInt(500*1e6))
 	s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, delAccAddr, sdk.NewCoins(initCoins)))
@@ -397,7 +397,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(3)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	disputer, err := s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[1])
 	require.NoError(err)
@@ -508,7 +508,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(5)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	// disputerBal := disputer.TotalTokens
 	disputedBal = disputedRep.TotalTokens
@@ -559,7 +559,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(6)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	disputedRep, err = s.reporterkeeper.Reporters.Get(s.ctx, repsAccs[0])
 	require.NoError(err)
@@ -603,7 +603,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(7)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	balBeforeDispute := disputedRep.TotalTokens
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
@@ -640,7 +640,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(8)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	// vote from disputer
 	msgVote := disputetypes.MsgVote{
@@ -756,7 +756,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(9)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 10 - open minor dispute, pay from not bond from reporter 1
@@ -764,7 +764,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(10)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 11 - vote on minor dispute
@@ -772,7 +772,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(11)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 12 - resolve dispute, direct reveal again
@@ -780,7 +780,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(12)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 13 - open major dispute, pay from bond from reporter 1
@@ -788,7 +788,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(13)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 14 - vote on major dispute
@@ -796,7 +796,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(14)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 15 - resolve dispute, direct reveal again
@@ -804,7 +804,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(15)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 16 - open major dispute, pay from not bond from reporter 1
@@ -812,7 +812,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(16)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 17 - vote on major dispute
@@ -820,7 +820,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(17)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	//---------------------------------------------------------------------------
 	// Height 18 - resolve dispute, direct reveal again
@@ -828,6 +828,5 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.ctx = s.ctx.WithBlockHeight(18)
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
-
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 }

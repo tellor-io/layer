@@ -1,22 +1,23 @@
 package setup
 
 import (
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	"cosmossdk.io/core/appconfig"
-	"cosmossdk.io/math"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
-	// bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
+
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
+	"github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func AuthModule() configurator.ModuleOption {

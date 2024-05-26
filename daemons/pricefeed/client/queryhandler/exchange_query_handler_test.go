@@ -164,7 +164,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: true,
-			expectedError:    fmt.Errorf("Severe unexpected error: no market id for ticker: %s", noMarketTicker),
+			expectedError:    fmt.Errorf("severe unexpected error: no market id for ticker: %s", noMarketTicker),
 		},
 		"Failure - no marketIds queried": {
 			marketIds: []types.MarketId{},
@@ -174,7 +174,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    errors.New("At least one marketId must be queried"),
+			expectedError:    errors.New("at least one marketId must be queried"),
 		},
 		"Failure - market config not defined for market": {
 			marketIds: []types.MarketId{FAKEUSD_ID},
@@ -184,7 +184,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    fmt.Errorf("No market config for market: %v", FAKEUSD_ID),
+			expectedError:    fmt.Errorf("no market config for market: %v", FAKEUSD_ID),
 		},
 		"Failure - market price exponent not defined for market": {
 			marketIds: []types.MarketId{noPriceExponentMarketId},
@@ -194,7 +194,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    fmt.Errorf("No market price exponent for id: %v", noPriceExponentMarketId),
+			expectedError:    fmt.Errorf("no market price exponent for id: %v", noPriceExponentMarketId),
 		},
 		"Failure - query fails": {
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
@@ -252,7 +252,7 @@ func TestQuery(t *testing.T) {
 			),
 			expectApiRequest: true,
 			expectedError: fmt.Errorf(
-				"Severe unexpected error: no market id for ticker: %v",
+				"severe unexpected error: no market id for ticker: %v",
 				noMarketTicker,
 			),
 		},

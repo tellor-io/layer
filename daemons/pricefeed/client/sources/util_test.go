@@ -18,7 +18,7 @@ const (
 )
 
 var errpositiveTagValidation = errors.New(
-	"key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
+	"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
 		"failed on the 'positive-float-string' tag",
 )
 
@@ -137,7 +137,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			tickerToExponent: map[string]int32{},
 			exchange:         exchange_common.EXCHANGE_ID_BINANCE,
 			expectedError: errors.New(
-				"Invalid market price exponent map for Binance price function of length: 0, expected length 1",
+				"invalid market price exponent map for Binance price function of length: 0, expected length 1",
 			),
 		},
 
@@ -148,7 +148,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			},
 			exchange: exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedError: errors.New(
-				"Invalid market price exponent map for Bitfinex price function of length: 2, expected length 1",
+				"invalid market price exponent map for Bitfinex price function of length: 2, expected length 1",
 			),
 		},
 	}
@@ -216,7 +216,7 @@ func TestGetUint64MedianFromShiftedBigFloatValues(t *testing.T) {
 			bigFloatSlice: []*big.Float{},
 			exponent:      0,
 			expectedError: errors.New(
-				"Invalid input: big float slice must contain values to medianize",
+				"invalid input: big float slice must contain values to medianize",
 			),
 		},
 		"Failure - underflow": {

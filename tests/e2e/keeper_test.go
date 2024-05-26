@@ -6,81 +6,70 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/math"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/stretchr/testify/suite"
+	"github.com/tellor-io/layer/app/config"
+	testutils "github.com/tellor-io/layer/tests"
+	_ "github.com/tellor-io/layer/x/dispute"
+	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+	_ "github.com/tellor-io/layer/x/mint"
+	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
+	_ "github.com/tellor-io/layer/x/oracle"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
+	_ "github.com/tellor-io/layer/x/registry/module"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	_ "github.com/tellor-io/layer/x/reporter/module"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-
-	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tellor-io/layer/app/config"
-	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
-	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
-	minttypes "github.com/tellor-io/layer/x/mint/types"
-	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
 	// _ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	// _ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
-	_ "github.com/tellor-io/layer/x/dispute"
-	_ "github.com/tellor-io/layer/x/mint"
-	_ "github.com/tellor-io/layer/x/oracle"
-	_ "github.com/tellor-io/layer/x/reporter/module"
-
-	// _ "github.com/cosmos/cosmos-sdk/x/staking"
-
-	testutils "github.com/tellor-io/layer/tests"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	_ "github.com/tellor-io/layer/x/registry/module"
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
-
-	"testing"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -184,7 +173,6 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 }
 
 func (s *E2ETestSuite) SetupTest() {
-
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
@@ -248,9 +236,9 @@ func (s *E2ETestSuite) CreateValidators(numValidators int) ([]sdk.AccAddress, []
 		validator, err := stakingtypes.NewValidator(validatorsAddrs[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
 		require.NoError(err)
 		validators[i] = validator
-		s.stakingKeeper.SetValidator(s.ctx, validator)
-		s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+		s.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
+		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator))
+		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator))
 
 		_, err = s.stakingKeeper.Delegate(s.ctx, accountsAddrs[i], math.NewInt(5000*1e6), stakingtypes.Unbonded, validator, true)
 		require.NoError(err)
@@ -356,14 +344,6 @@ func (s *E2ETestSuite) mintTokens(addr sdk.AccAddress, amount sdk.Coin) {
 	s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(ctx, authtypes.Minter, addr, sdk.NewCoins(amount)))
 }
 
-func (s *E2ETestSuite) newKeysWithTokens() (sdk.AccAddress, cryptotypes.PrivKey, cryptotypes.PubKey) {
-	PrivKey := secp256k1.GenPrivKey()
-	PubKey := PrivKey.PubKey()
-	Addr := sdk.AccAddress(PubKey.Address())
-	s.mintTokens(Addr, sdk.NewCoin(s.denom, math.NewInt(1000000)))
-	return Addr, PrivKey, PubKey
-}
-
 // func (s *E2ETestSuite) microReport() (disputetypes.MicroReport, sdk.ValAddress) {
 // 	vals, err := s.stakingKeeper.GetAllValidators(s.ctx)
 // 	s.Require().NoError(err)
@@ -423,19 +403,9 @@ func (s *E2ETestSuite) CreateAccountsWithTokens(numofAccs int, amountOfTokens in
 // 	return addrs, valAddrs
 // }
 
-func (s *E2ETestSuite) addTestAddrs(accNum int, accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
-	initCoins := sdk.NewCoin(s.denom, accAmt)
-	for _, addr := range testAddrs {
-		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
-		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, addr, sdk.NewCoins(initCoins)))
-	}
-
-	return testAddrs
-}
-
 type ModuleAccs struct {
-	staking authtypes.AccountI
-	dispute authtypes.AccountI
+	staking sdk.AccountI
+	dispute sdk.AccountI
 }
 
 func (s *E2ETestSuite) ModuleAccs() ModuleAccs {
@@ -472,7 +442,10 @@ func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorA
 		return fmt.Errorf("validator %s is already jailed", validatorAddress)
 	}
 
-	k.Jail(ctx, consensusAddress)
+	err = k.Jail(ctx, consensusAddress)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -506,45 +479,6 @@ func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorA
 // 	return nil
 // }
 
-func (s *E2ETestSuite) createValidatorAccs(powers []int64) []sdk.AccAddress {
-	ctx := s.ctx
-	acctNum := len(powers)
-	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
-	amount := new(big.Int).Mul(big.NewInt(1000), base)
-	privKeys := CreateRandomPrivateKeys(acctNum)
-	testAddrs := s.convertToAccAddress(privKeys)
-	addrs := s.addTestAddrs(acctNum, math.NewIntFromBigInt(amount), testAddrs)
-	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-
-	for i, pk := range privKeys {
-		account := authtypes.BaseAccount{
-			Address:       testAddrs[i].String(),
-			PubKey:        codectypes.UnsafePackAny(pk.PubKey()),
-			AccountNumber: uint64(i + 1),
-		}
-		s.accountKeeper.SetAccount(s.ctx, &account)
-		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk.PubKey(), stakingtypes.Description{})
-		s.NoError(err)
-		s.stakingKeeper.SetValidator(ctx, val)
-		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
-		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
-		// call hooks for distribution init
-		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
-		if err != nil {
-			panic(err)
-		}
-		err = s.distrKeeper.Hooks().AfterValidatorCreated(ctx, valBz)
-		err = s.distrKeeper.Hooks().BeforeDelegationCreated(ctx, addrs[i], valBz)
-		err = s.distrKeeper.Hooks().AfterDelegationModified(ctx, addrs[i], valBz)
-	}
-
-	_, err := s.stakingKeeper.EndBlocker(ctx)
-	s.NoError(err)
-
-	return addrs
-}
-
 // inspired by telliot python code
 func encodeValue(number float64) string {
 	strNumber := fmt.Sprintf("%.18f", number)
@@ -566,38 +500,6 @@ func encodeValue(number float64) string {
 	encodedString := hex.EncodeToString(encodedBytes)
 	return encodedString
 }
-
-func (s *E2ETestSuite) oracleKeeper() (queryClient oracletypes.QueryClient, msgServer oracletypes.MsgServer) {
-	oracletypes.RegisterQueryServer(s.queryHelper, &oracletypes.UnimplementedQueryServer{})
-	oracletypes.RegisterInterfaces(s.interfaceRegistry)
-	queryClient = oracletypes.NewQueryClient(s.queryHelper)
-	msgServer = oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
-	return
-}
-
-func (s *E2ETestSuite) disputeKeeper() (queryClient disputetypes.QueryClient, msgServer disputetypes.MsgServer) {
-	disputetypes.RegisterQueryServer(s.queryHelper, disputekeeper.NewQuerier(s.disputekeeper))
-	disputetypes.RegisterInterfaces(s.interfaceRegistry)
-	queryClient = disputetypes.NewQueryClient(s.queryHelper)
-	msgServer = disputekeeper.NewMsgServerImpl(s.disputekeeper)
-	return
-}
-
-func (s *E2ETestSuite) registryKeeper() (queryClient registrytypes.QueryClient, msgServer registrytypes.MsgServer) {
-	registrytypes.RegisterQueryServer(s.queryHelper, registrykeeper.NewQuerier(s.registrykeeper))
-	registrytypes.RegisterInterfaces(s.interfaceRegistry)
-	queryClient = registrytypes.NewQueryClient(s.queryHelper)
-	msgServer = registrykeeper.NewMsgServerImpl(s.registrykeeper)
-	return
-}
-
-// func (s *E2ETestSuite) mintKeeper() (queryClient minttypes.QueryClient) {
-// 	// minttypes.RegisterQueryServer(s.queryHelper, mintkeeper.NewQuerier(s.mintkeeper))
-// 	// minttypes.RegisterInterfaces(s.interfaceRegistry)
-// 	queryClient = minttypes.NewQueryClient(s.queryHelper)
-// 	// msgServer = mintkeeper.NewMsgServerImpl(s.mintkeeper)
-// 	return
-// }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(E2ETestSuite))

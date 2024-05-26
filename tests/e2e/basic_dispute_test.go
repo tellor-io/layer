@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	utils "github.com/tellor-io/layer/utils"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
@@ -14,10 +13,12 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	math "cosmossdk.io/math"
+
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *E2ETestSuite) TestDisputes() {
@@ -49,9 +50,9 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.accountKeeper.NewAccountWithAddress(s.ctx, valAccount[0])
 	validator, err := stakingtypes.NewValidator(valAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "created validator"})
 	require.NoError(err)
-	s.stakingKeeper.SetValidator(s.ctx, validator)
-	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-	s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+	require.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
+	require.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator))
+	require.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator))
 	// self delegate from validator account to itself
 	_, err = s.stakingKeeper.Delegate(s.ctx, valAccount[0], math.NewInt(int64(4000)*1e8), stakingtypes.Unbonded, validator, true)
 	require.NoError(err)
@@ -69,7 +70,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = s.stakingKeeper.EndBlocker(s.ctx)
 	s.NoError(err)
 
-	//create a self delegated reporter from a different account
 	type Delegator struct {
 		delegatorAddress sdk.AccAddress
 		validator        stakingtypes.Validator
@@ -129,7 +129,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 1 - direct reveal for cycle list
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 	// get new cycle list query data
@@ -173,7 +173,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 2 - create a dispute
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -229,7 +229,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 3 - unjail reporter
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	err = s.disputekeeper.Tallyvote(s.ctx, dispute.DisputeId)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -265,7 +265,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 4 - direct reveal for cycle list again
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.app.BeginBlocker(s.ctx)
@@ -314,7 +314,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 5 - open minor dispute
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -351,7 +351,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 6 - vote on minor dispute
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
 	err = s.disputekeeper.Tallyvote(s.ctx, 2)
@@ -413,7 +413,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 7 - minor dispute ends and another direct reveal for cycle list
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	require.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
 	require.NoError(s.disputekeeper.Tallyvote(s.ctx, 2))
@@ -478,7 +478,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 8 - open major dispute for report
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -520,7 +520,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 9 - vote on major dispute
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	err = s.disputekeeper.Tallyvote(s.ctx, 3)
 	require.Error(err, "vote period not ended and quorum not reached")
@@ -574,7 +574,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 10 - dispute is resolved, reporter no longer a reporter
 	// ---------------------------------------------------------------------------
 	// s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	// _, err = s.app.BeginBlocker(s.ctx)
 	// require.NoError(err)
 
@@ -584,5 +584,4 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	// reporter, err = s.reporterkeeper.Reporters.Get(s.ctx, reporterAccount)
 	// require.NoError(err)
-
 }
