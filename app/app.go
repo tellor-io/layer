@@ -44,7 +44,6 @@ import (
 	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-
 	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
@@ -905,7 +904,10 @@ func New(
 	// app.mm.SetOrderMigrations(custom order)
 
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	err = app.mm.RegisterServices(app.configurator)
+	if err != nil {
+		panic(err)
+	}
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 	reflectionSvc, err := runtimeservices.NewReflectionService()
