@@ -48,7 +48,7 @@ echo "Adding validator account for alice..."
 ./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "creating account for faucet..."
-./layerd keys add faucet --recover=true
+./layerd keys add faucet --recover=true --keyring-backend test
 
 echo "set chain id in genesis file to layer..."
 sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
