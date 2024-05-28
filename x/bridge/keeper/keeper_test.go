@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"context"
 	"crypto/ecdsa"
-	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
 	"testing"
@@ -488,6 +487,7 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 	fmt.Println("res: ", res)
 }
 
+// needs finished
 func TestEncodeAndHashValidatorSet(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
@@ -506,8 +506,11 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, encodedBridgeValSet)
 	require.NotNil(t, bridgeValSetHash)
+
+	// verify encoding
 }
 
+// needs finished
 func TestPowerDiff(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
@@ -564,8 +567,14 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	require.NotNil(t, ctx)
 
 	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
-	require.NoError(t, err)
 	require.NotNil(t, privateKey)
+	require.NoError(t, err)
+
+	pkCoord := &ecdsa.PublicKey{
+		X: privateKey.X,
+		Y: privateKey.Y,
+	}
+	addressExpected := crypto.PubkeyToAddress(*pkCoord).Hex()
 
 	msgA := "TellorLayer: Initial bridge signature A"
 	msgB := "TellorLayer: Initial bridge signature B"
@@ -586,26 +595,23 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
 	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
 
-	r1, s1, err := ecdsa.Sign(rand.Reader, privateKey, msgDoubleHashBytesA)
+	sigA, err := crypto.Sign(msgDoubleHashBytesA, privateKey)
 	require.NoError(t, err)
-	require.NotNil(t, r1)
-	require.NotNil(t, s1)
+	require.NotNil(t, sigA)
 
-	r2, s2, err := ecdsa.Sign(rand.Reader, privateKey, msgDoubleHashBytesB)
+	sigB, err := crypto.Sign(msgDoubleHashBytesB, privateKey)
 	require.NoError(t, err)
-	require.NotNil(t, r2)
-	require.NotNil(t, s2)
-	fmt.Println("r1: ", r1)
-	fmt.Println("s1: ", s1)
-	fmt.Println("r2: ", r2)
-	fmt.Println("s2: ", s2)
+	require.NotNil(t, sigB)
 
-	address, err := k.EVMAddressFromSignatures(ctx, msgDoubleHashBytesA, msgDoubleHashBytesB)
+	evmAddress, err := k.EVMAddressFromSignatures(ctx, sigA, sigB)
 	require.NoError(t, err)
-	require.NotNil(t, address)
+	require.NotNil(t, evmAddress)
+
+	require.Equal(t, addressExpected, evmAddress.Hex())
 
 }
 
+// needs finished
 func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
@@ -658,6 +664,7 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 
 }
 
+// needs finished
 func TestSetBridgeValsetSignature(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
