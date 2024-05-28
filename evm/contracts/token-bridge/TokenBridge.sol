@@ -18,7 +18,6 @@ contract TokenBridge is LayerTransition{
     uint256 public depositLimitRecord;//amount you can bridge per limit period
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
     uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
-    uint256 public constant MAX_ATTESTATION_AGE = 12 hours;//max of how old an attestation can be for withdrawal from layer
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
 
     mapping(uint256 => bool) public withdrawalClaimed;
@@ -74,7 +73,6 @@ contract TokenBridge is LayerTransition{
         require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
         //isAnyConsesnusValue here
         bridge.verifyOracleData(_attest, _valset, _sigs);
-        require(block.timestamp - _attest.attestationTimestamp <= MAX_ATTESTATION_AGE , "Attestation is too old");
         require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawalClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attest.report.value, (address, string, uint256));
