@@ -26,7 +26,6 @@ func (q Querier) GetEvmValidators(ctx context.Context, req *types.QueryGetEvmVal
 			EthereumAddress: common.Bytes2Hex(val.EthereumAddress),
 			Power:           val.Power,
 		})
-
 	}
 
 	return &types.QueryGetEvmValidatorsResponse{BridgeValidatorSet: qValidatorSet}, nil

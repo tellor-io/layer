@@ -9,14 +9,14 @@ import (
 )
 
 func (k msgServer) UpdateCyclelist(ctx context.Context, req *types.MsgUpdateCyclelist) (*types.MsgUpdateCyclelistResponse, error) {
-	if k.GetAuthority() != req.Authority {
-		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
+	if k.keeper.GetAuthority() != req.Authority {
+		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.keeper.GetAuthority(), req.Authority)
 	}
 
-	if err := k.Cyclelist.Clear(ctx, nil); err != nil {
+	if err := k.keeper.Cyclelist.Clear(ctx, nil); err != nil {
 		return nil, err
 	}
-	if err := k.InitCycleListQuery(ctx, req.Cyclelist); err != nil {
+	if err := k.keeper.InitCycleListQuery(ctx, req.Cyclelist); err != nil {
 		return nil, err
 	}
 

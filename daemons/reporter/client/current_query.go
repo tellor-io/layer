@@ -14,8 +14,11 @@ func (c *Client) CurrentQuery(ctx context.Context) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error calling 'CurrentCyclelistQuery': %v", err)
 	}
-	qid := utils.QueryIDFromData(response.QueryData)
+	qid, err := utils.QueryIDFromDataString(response.QueryData)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing query id from response: %v", err)
+	}
 
 	c.logger.Info("ReporterDaemon", "next query id in cycle list", hex.EncodeToString(qid))
-	return response.QueryData, nil
+	return qid, nil
 }

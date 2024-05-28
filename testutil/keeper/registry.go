@@ -18,10 +18,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/registry/keeper"
+	"github.com/tellor-io/layer/x/registry/mocks"
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
-func RegistryKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
+func RegistryKeeper(t testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -45,5 +46,8 @@ func RegistryKeeper(t testing.TB) (keeper.Keeper, sdk.Context) {
 	// Initialize params
 	k.SetParams(ctx, types.DefaultParams())
 
-	return k, ctx
+	accountKeeper := new(mocks.AccountKeeper)
+	bankKeeper := new(mocks.BankKeeper)
+
+	return k, accountKeeper, bankKeeper, ctx
 }

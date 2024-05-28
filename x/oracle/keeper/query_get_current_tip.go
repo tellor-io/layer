@@ -9,19 +9,24 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTipRequest) (*types.QueryGetCurrentTipResponse, error) {
+func (q Querier) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTipRequest) (*types.QueryGetCurrentTipResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	queryId := utils.QueryIDFromData(req.QueryData)
-	tips, err := k.GetQueryTip(ctx, queryId)
+	qdata, err := utils.QueryBytesFromString(req.QueryData)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryGetCurrentTipResponse{Tips: &types.Tips{
-		QueryData: req.QueryData, // TODO: avoid returning the same data as the request
-		Amount:    tips,
-	}}, nil
+	queryId := utils.QueryIDFromData(qdata)
+
+	tips, err := q.keeper.GetQueryTip(ctx, queryId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryGetCurrentTipResponse{
+		Tips: tips,
+	}, nil
 }

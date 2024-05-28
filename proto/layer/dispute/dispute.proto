@@ -63,6 +63,9 @@ message Dispute {
   ];
   // list of dispute ids that preceded before this current round began
   repeated uint64 prev_dispute_ids = 15;
+  // block number when this specific dispute was created
+  int64 block_number = 16;
+  bool open = 17;
 }
 
 // DisputeCategory defines the severity of a dispute.
@@ -99,7 +102,7 @@ enum DisputeStatus {
 // fee payer's info that was involved in paying the dispute fee in order to start the dispute
 message PayerInfo {
   // fee payer's Account address
-  string payer_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bytes payer_address = 1;
   // amount paid
   string amount = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
@@ -112,4 +115,19 @@ message PayerInfo {
   // keeping track of this in case the bond was used
   // in order to reward the reporters' delegators in the future
   int64 block_number = 4;
+}
+
+message BlockInfo {
+  // total reporter power at block
+  string total_reporter_power = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // total user tips at block
+  string total_user_tips = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }

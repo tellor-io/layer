@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -75,7 +76,7 @@ func (k Querier) DelegatorReporter(ctx context.Context, req *types.QueryDelegato
 		return nil, err
 	}
 
-	return &types.QueryDelegatorReporterResponse{Reporter: delegator.GetReporter()}, nil
+	return &types.QueryDelegatorReporterResponse{Reporter: sdk.AccAddress(delegator.GetReporter()).String()}, nil
 }
 
 // ReporterStake queries the total tokens of a reporter
@@ -116,7 +117,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 		return nil, err
 	}
 
-	if reporter.GetReporter() != delegation.GetReporter() {
+	if !bytes.Equal(reporter.GetReporter(), delegation.GetReporter()) {
 		return nil, types.ErrReporterMismatch
 	}
 

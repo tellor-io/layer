@@ -19,8 +19,7 @@ import (
 // It retrieves the revealed reports from the reports store, by query.
 // calculates the aggregate report for each query using either the weighted-median or weighted-mode method.
 // Rewards based on the source are then allocated to the reporters.
-func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
-
+func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
 	idsIterator, err := k.Query.Indexes.HasReveals.MatchExact(ctx, true)
 	if err != nil {
@@ -33,10 +32,13 @@ func (k Keeper) SetAggregatedReport(ctx sdk.Context) (err error) {
 		return err
 	}
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime()
+
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
 	for _, query := range queries {
-		if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
+		if query.Expiration.Add(offset).Before(blockTime) {
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
 			if err != nil {
 				return err

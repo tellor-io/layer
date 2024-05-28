@@ -19,7 +19,7 @@ func TestUndelegateSource(t *testing.T) {
 	// Create a test key
 	reporterAddr := sdk.AccAddress([]byte("reporter"))
 	validatorAddr := sdk.ValAddress([]byte("validator"))
-	key := collections.Join(reporterAddr, validatorAddr)
+	key := collections.Join(reporterAddr.Bytes(), validatorAddr.Bytes())
 
 	// Add the token origin to the keeper
 	err := k.TokenOrigin.Set(ctx, key, math.NewInt(100))
@@ -48,14 +48,15 @@ func TestUpdateOrRemoveReporter(t *testing.T) {
 	// Create a test reporter
 	reporterAddr := sdk.AccAddress([]byte("reporter"))
 	rep := types.OracleReporter{
-		Reporter:    reporterAddr.String(),
+		Reporter:    reporterAddr,
 		TotalTokens: math.NewInt(100),
 	}
 
 	// Add the reporter to the keeper
 	err := k.Reporters.Set(ctx, reporterAddr, rep)
 	require.NoError(t, err)
-
+	err = k.UpdateTotalPower(ctx, rep.TotalTokens, false)
+	require.NoError(t, err)
 	// Call the UpdateOrRemoveReporter function with a reduction amount of 50
 	err = k.UpdateOrRemoveReporter(ctx, reporterAddr, rep, math.NewInt(50))
 	require.NoError(t, err)
@@ -82,11 +83,11 @@ func TestUpdateOrRemoveDelegator(t *testing.T) {
 
 	// Create a test delegation
 	delegation := types.Delegation{
-		Reporter: delegatorAddr.String(),
+		Reporter: delegatorAddr,
 		Amount:   math.NewInt(100),
 	}
 	reporter := types.OracleReporter{
-		Reporter:    key.String(),
+		Reporter:    key,
 		TotalTokens: math.NewInt(100),
 	}
 	err := k.Reporters.Set(ctx, key, reporter)
@@ -137,15 +138,15 @@ func TestValidateAndSetAmount(t *testing.T) {
 	valIII := stakingtypes.Validator{OperatorAddress: validatorIII.String(), Tokens: math.NewInt(100), DelegatorShares: math.LegacyNewDec(50)}
 	originAmounts := []*types.TokenOrigin{
 		{
-			ValidatorAddress: validatorI.String(),
+			ValidatorAddress: validatorI,
 			Amount:           math.NewInt(50),
 		},
 		{
-			ValidatorAddress: validatorII.String(),
+			ValidatorAddress: validatorII,
 			Amount:           math.NewInt(30),
 		},
 		{
-			ValidatorAddress: validatorIII.String(),
+			ValidatorAddress: validatorIII,
 			Amount:           math.NewInt(20),
 		},
 	}
@@ -168,17 +169,17 @@ func TestValidateAndSetAmount(t *testing.T) {
 	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
 	// check if the token origin is set correctly for validatorI
-	amt, err := k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
+	amt, err := k.TokenOrigin.Get(ctx, collections.Join(delegator.Bytes(), validatorI.Bytes()))
 	require.NoError(t, err)
 	require.Equal(t, math.NewInt(50), amt)
 
 	// set origin amount before calling ValidateAndSetAmount
 	// and check if the token origin is updated correctly
 	// should not treat it as a new origin
-	k.TokenOrigin.Set(ctx, collections.Join(delegator, validatorI), math.NewInt(50))
+	k.TokenOrigin.Set(ctx, collections.Join(delegator.Bytes(), validatorI.Bytes()), math.NewInt(50))
 	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
-	amt, err = k.TokenOrigin.Get(ctx, collections.Join(delegator, validatorI))
+	amt, err = k.TokenOrigin.Get(ctx, collections.Join(delegator.Bytes(), validatorI.Bytes()))
 	require.NoError(t, err)
 	require.Equal(t, math.NewInt(100), amt)
 

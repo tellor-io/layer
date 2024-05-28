@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -155,7 +156,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, reporterVal sdk.V
 		return nil, err
 	}
 	// assert the right reporter for sanity
-	if del.GetReporter() != reporter.GetReporter() {
+	if !bytes.Equal(del.GetReporter(), reporter.GetReporter()) {
 		return nil, types.ErrReporterMismatch
 	}
 
@@ -191,7 +192,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, reporterVal sdk.ValAdd
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.DelegatorStartingInfo.Set(ctx, collections.Join(reporterVal, delAddr), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
+	return k.DelegatorStartingInfo.Set(ctx, collections.Join(reporterVal.Bytes(), delAddr.Bytes()), types.NewDelegatorStartingInfo(previousPeriod, stake, uint64(sdkCtx.BlockHeight())))
 }
 
 // increment the reference count for a historical rewards value
@@ -199,7 +200,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, reporterVal sdk.ValAdd
 // It retrieves the historical rewards for the reporter and period from the store, increments the reference count,
 // and updates the store with the modified historical rewards.
 func (k Keeper) incrementReferenceCount(ctx context.Context, reporterVal sdk.ValAddress, period uint64) error {
-	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal, period))
+	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal.Bytes(), period))
 	if err != nil {
 		return err
 	}
@@ -207,7 +208,7 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, reporterVal sdk.Val
 		panic("reference count should never exceed 2")
 	}
 	historical.ReferenceCount++
-	return k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterVal, period), historical)
+	return k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterVal.Bytes(), period), historical)
 }
 
 // withdrawDelegationRewards withdraws the delegation rewards for a specific delegator.
@@ -215,10 +216,10 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, reporterVal sdk.Val
 // updates the outstanding rewards, burns the remainder, decrements the reference count of the starting period,
 // and removes the delegator starting info. Finally, it emits an event for the withdrawal of rewards.
 func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.OracleReporter, delAddr sdk.AccAddress, del types.Delegation) (sdk.Coins, error) {
-	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.Reporter))
+	reporterVal := sdk.ValAddress(reporter.Reporter)
 
 	// check existence of delegator starting info
-	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(reporterVal, delAddr))
+	hasInfo, err := k.DelegatorStartingInfo.Has(ctx, collections.Join(reporterVal.Bytes(), delAddr.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +276,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.Or
 	_ = remainder
 
 	// decrement reference count of starting period
-	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(reporterVal, delAddr))
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(reporterVal.Bytes(), delAddr.Bytes()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
@@ -287,7 +288,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.Or
 	}
 
 	// remove delegator starting info
-	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(reporterVal, delAddr))
+	err = k.DelegatorStartingInfo.Remove(ctx, collections.Join(reporterVal.Bytes(), delAddr.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +304,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.Or
 		sdk.NewEvent(
 			types.EventTypeWithdrawRewards,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, finalRewards.String()),
-			sdk.NewAttribute(types.AttributeKeyReporter, reporter.GetReporter()),
+			sdk.NewAttribute(types.AttributeKeyReporter, sdk.AccAddress(reporter.GetReporter()).String()),
 			sdk.NewAttribute(types.AttributeKeyDelegator, delAddr.String()),
 		),
 	)
@@ -316,7 +317,7 @@ func (k Keeper) withdrawDelegationRewards(ctx context.Context, reporter types.Or
 // It returns the rewards as sdk.DecCoins and an error if any.
 func (k Keeper) CalculateDelegationRewards(ctx context.Context, reporterVal sdk.ValAddress, delAddr sdk.AccAddress, del types.Delegation, endingPeriod uint64) (rewards sdk.DecCoins, err error) {
 	// fetch starting info for delegation
-	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(reporterVal, delAddr))
+	startingInfo, err := k.DelegatorStartingInfo.Get(ctx, collections.Join(reporterVal.Bytes(), delAddr.Bytes()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return sdk.DecCoins{}, err
 	}
@@ -417,7 +418,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, reporterVal sdk.
 // increment reporter period, returning the period just ended
 func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporter types.OracleReporter) (uint64, error) {
 	// fetch current rewards
-	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.Reporter))
+	reporterVal := sdk.ValAddress(reporter.Reporter)
 	rewards, err := k.ReporterCurrentRewards.Get(ctx, reporterVal)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return 0, err
@@ -449,7 +450,7 @@ func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporter types.Orac
 	}
 
 	// fetch historical rewards for last period
-	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal, rewards.Period-1))
+	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal.Bytes(), rewards.Period-1))
 	if err != nil {
 		return 0, err
 	}
@@ -463,7 +464,7 @@ func (k Keeper) IncrementReporterPeriod(ctx context.Context, reporter types.Orac
 	}
 
 	// set new historical rewards with reference count of 1
-	err = k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterVal, rewards.Period), types.NewReporterHistoricalRewards(cumRewardRatio.Add(current...), 1))
+	err = k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterVal.Bytes(), rewards.Period), types.NewReporterHistoricalRewards(cumRewardRatio.Add(current...), 1))
 	if err != nil {
 		return 0, err
 	}
@@ -492,12 +493,12 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, reporterV
 	}
 
 	// return staking * (ending - starting)
-	starting, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal, startingPeriod))
+	starting, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal.Bytes(), startingPeriod))
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
 
-	ending, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal, endingPeriod))
+	ending, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterVal.Bytes(), endingPeriod))
 	if err != nil {
 		return sdk.DecCoins{}, err
 	}
@@ -513,7 +514,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx context.Context, reporterV
 
 // decrement the reference count for a historical rewards value, and delete if zero references remain
 func (k Keeper) decrementReferenceCount(ctx context.Context, reporterAddr sdk.ValAddress, period uint64) error {
-	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterAddr, period))
+	historical, err := k.ReporterHistoricalRewards.Get(ctx, collections.Join(reporterAddr.Bytes(), period))
 	if err != nil {
 		return err
 	}
@@ -523,15 +524,15 @@ func (k Keeper) decrementReferenceCount(ctx context.Context, reporterAddr sdk.Va
 	}
 	historical.ReferenceCount--
 	if historical.ReferenceCount == 0 {
-		return k.ReporterHistoricalRewards.Remove(ctx, collections.Join(reporterAddr, period))
+		return k.ReporterHistoricalRewards.Remove(ctx, collections.Join(reporterAddr.Bytes(), period))
 	}
 
-	return k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterAddr, period), historical)
+	return k.ReporterHistoricalRewards.Set(ctx, collections.Join(reporterAddr.Bytes(), period), historical)
 }
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store
 func (k Keeper) GetTotalRewards(ctx context.Context) (totalRewards sdk.DecCoins) {
-	err := k.ReporterOutstandingRewards.Walk(ctx, nil, func(_ sdk.ValAddress, rewards types.ReporterOutstandingRewards) (stop bool, err error) {
+	err := k.ReporterOutstandingRewards.Walk(ctx, nil, func(_ []byte, rewards types.ReporterOutstandingRewards) (stop bool, err error) {
 		totalRewards = totalRewards.Add(rewards.Rewards...)
 		return false, nil
 	},
@@ -557,11 +558,11 @@ func (k Keeper) GetReporterOutstandingRewardsCoins(ctx context.Context, reporter
 func (k Keeper) IterateReporterDisputeEventsBetween(ctx context.Context, reporterVal sdk.ValAddress, startingHeight, endingHeight uint64,
 	handler func(height uint64, event types.ReporterDisputeEvent) (stop bool),
 ) error {
-	rng := new(collections.Range[collections.Triple[sdk.ValAddress, uint64, uint64]]).
-		StartInclusive(collections.Join3(reporterVal, startingHeight, uint64(0))).
-		EndExclusive(collections.Join3(reporterVal, endingHeight+1, uint64(gomath.MaxUint64)))
+	rng := new(collections.Range[collections.Triple[[]byte, uint64, uint64]]).
+		StartInclusive(collections.Join3(reporterVal.Bytes(), startingHeight, uint64(0))).
+		EndExclusive(collections.Join3(reporterVal.Bytes(), endingHeight+1, uint64(gomath.MaxUint64)))
 
-	err := k.ReporterDisputeEvents.Walk(ctx, rng, func(k collections.Triple[sdk.ValAddress, uint64, uint64], ev types.ReporterDisputeEvent) (stop bool, err error) {
+	err := k.ReporterDisputeEvents.Walk(ctx, rng, func(k collections.Triple[[]byte, uint64, uint64], ev types.ReporterDisputeEvent) (stop bool, err error) {
 		height := k.K2()
 		if handler(height, ev) {
 			return true, nil
@@ -576,9 +577,9 @@ func (k Keeper) IterateReporterDisputeEventsBetween(ctx context.Context, reporte
 }
 
 func (k Keeper) initializeReporter(ctx context.Context, reporter types.OracleReporter) error {
-	valBz := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.Reporter))
+	valBz := sdk.ValAddress(reporter.Reporter)
 	// set initial historical rewards (period 0) with reference count of 1
-	err := k.ReporterHistoricalRewards.Set(ctx, collections.Join(valBz, uint64(0)), types.NewReporterHistoricalRewards(sdk.DecCoins{}, 1))
+	err := k.ReporterHistoricalRewards.Set(ctx, collections.Join(valBz.Bytes(), uint64(0)), types.NewReporterHistoricalRewards(sdk.DecCoins{}, 1))
 	if err != nil {
 		return err
 	}
@@ -627,8 +628,8 @@ func (k Keeper) updateReporterDisputeFraction(ctx context.Context, reporterVal s
 
 	return k.ReporterDisputeEvents.Set(
 		ctx,
-		collections.Join3[sdk.ValAddress, uint64, uint64](
-			reporterVal,
+		collections.Join3[[]byte, uint64, uint64](
+			reporterVal.Bytes(),
 			height,
 			newPeriod,
 		),
@@ -685,13 +686,13 @@ func (k Keeper) AfterReporterRemoved(ctx context.Context, reporterVal sdk.ValAdd
 	}
 
 	// clear disputes
-	err = k.ReporterDisputeEvents.Clear(ctx, collections.NewPrefixedTripleRange[sdk.ValAddress, uint64, uint64](reporterVal))
+	err = k.ReporterDisputeEvents.Clear(ctx, collections.NewPrefixedTripleRange[[]byte, uint64, uint64](reporterVal.Bytes()))
 	if err != nil {
 		return err
 	}
 
 	// clear historical rewards
-	err = k.ReporterHistoricalRewards.Clear(ctx, collections.NewPrefixedPairRange[sdk.ValAddress, uint64](reporterVal))
+	err = k.ReporterHistoricalRewards.Clear(ctx, collections.NewPrefixedPairRange[[]byte, uint64](reporterVal.Bytes()))
 	if err != nil {
 		return err
 	}
@@ -723,25 +724,17 @@ func (k Keeper) BeforeDelegationModified(ctx context.Context, delAddr sdk.AccAdd
 
 // create new delegation period record
 func (k Keeper) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, reporterVal sdk.ValAddress, stake math.Int) error {
-	delegator, err := k.Delegators.Get(ctx, delAddr)
-	if err != nil {
-		return err
-	}
-	repAddr := sdk.MustAccAddressFromBech32(delegator.Reporter)
+	return k.initializeDelegation(ctx, reporterVal, delAddr, stake)
+}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	snapshotKey := collections.Join(repAddr, sdkCtx.BlockHeight())
+func (k Keeper) AfterReporterModified(ctx context.Context, repAddr sdk.AccAddress) error {
+	snapshotKey := collections.Join(repAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight())
 	// get all the token origins for the reporter
 	tokenSources, err := k.GetTokenSourcesForReporter(ctx, repAddr)
 	if err != nil {
 		return err
 	}
-	err = k.TokenOriginSnapshot.Set(ctx, snapshotKey, tokenSources)
-	if err != nil {
-		return err
-	}
-
-	return k.initializeDelegation(ctx, reporterVal, delAddr, stake)
+	return k.TokenOriginSnapshot.Set(ctx, snapshotKey, tokenSources)
 }
 
 // record the dispute event
@@ -750,7 +743,7 @@ func (k Keeper) BeforeReporterDisputed(ctx context.Context, valAddr sdk.ValAddre
 }
 
 func (k Keeper) GetTokenOriginsAtHeight(ctx context.Context, repAddr sdk.AccAddress, height int64) (types.DelegationsPreUpdate, error) {
-	return k.TokenOriginSnapshot.Get(ctx, collections.Join(repAddr, height))
+	return k.TokenOriginSnapshot.Get(ctx, collections.Join(repAddr.Bytes(), height))
 }
 
 func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error {
@@ -765,10 +758,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	netReward := math.LegacyNewDecFromInt(reward).Sub(commission)
 
 	// Calculate each delegator's share (including the reporter as a self-delegator)
-	repAddr, err := sdk.AccAddressFromBech32(reporter.Reporter)
-	if err != nil {
-		return err
-	}
+	repAddr := sdk.AccAddress(reporter.Reporter)
 	delAddrs, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
 		return err
@@ -784,7 +774,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 			return err
 		}
 		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(reporter.TotalTokens))
-		if key.Equals(repAddr) {
+		if bytes.Equal(key, repAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}
 		err = k.DelegatorTips.Set(ctx, key, delegatorShare.TruncateInt())
@@ -796,20 +786,17 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	return nil
 }
 
-func (k Keeper) returnSlashedTokens(ctx context.Context, repAddr sdk.AccAddress, blockHeight int64, _ math.Int) error {
+func (k Keeper) returnSlashedTokens(ctx context.Context, hashId []byte) error {
 
-	snapshot, err := k.GetTokenOriginsAtHeight(ctx, repAddr, blockHeight)
+	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
 		return err
 	}
 	// amt should be equal to sum of snapshot origins
-	// var totalAmt = math.ZeroInt()
 	for _, source := range snapshot.TokenOrigins {
 		// totalAmt = totalAmt.Add(source.Amount)
-		valAddr, err := sdk.ValAddressFromBech32(source.ValidatorAddress)
-		if err != nil {
-			return err
-		}
+		valAddr := sdk.ValAddress(source.ValidatorAddress)
+
 		var val stakingtypes.Validator
 		val, err = k.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
@@ -825,10 +812,7 @@ func (k Keeper) returnSlashedTokens(ctx context.Context, repAddr sdk.AccAddress,
 			}
 			val = vals[0]
 		}
-		delAddr, err := sdk.AccAddressFromBech32(source.DelegatorAddress)
-		if err != nil {
-			return err
-		}
+		delAddr := sdk.AccAddress(source.DelegatorAddress)
 
 		_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Unbonded, val, false)
 		if err != nil {
@@ -837,64 +821,76 @@ func (k Keeper) returnSlashedTokens(ctx context.Context, repAddr sdk.AccAddress,
 
 	}
 
-	// assert totalAmt == amt
-	return nil
+	return k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
-
-func (k Keeper) GetBondedValidators(ctx context.Context, max uint32) ([]stakingtypes.Validator, error) {
-	validators := make([]stakingtypes.Validator, max)
-
-	iterator, err := k.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer iterator.Close()
-
-	i := 0
-	for ; iterator.Valid() && i < int(max); iterator.Next() {
-		address := iterator.Value()
-		validator, err := k.stakingKeeper.GetValidator(ctx, address)
-		if err != nil {
-			return nil, fmt.Errorf("validator record not found for address: %X", address)
-		}
-
-		if validator.IsBonded() {
-			validators[i] = validator
-			i++
-		}
-	}
-
-	return validators[:i], nil // trim
-}
-
-func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, height int64, reward math.Int) error {
-	repAcc, err := sdk.AccAddressFromBech32(reporterAddr)
+func (k Keeper) feeRefundNoReporter(ctx context.Context, hashId []byte, amt math.Int) error {
+	refundTo, err := k.FeePaidFromStake.Get(ctx, hashId)
 	if err != nil {
 		return err
 	}
+	initialTotalAmount := math.ZeroInt()
+
+	for _, recipient := range refundTo.TokenOrigins {
+		initialTotalAmount = initialTotalAmount.Add(recipient.Amount)
+	}
+
+	for _, source := range refundTo.TokenOrigins {
+		// divide amounts depending on how much source paid
+		share := amt.Mul(source.Amount).Quo(initialTotalAmount)
+		share = share.Mul(amt)
+
+		valAddr := sdk.ValAddress(source.ValidatorAddress)
+
+		var val stakingtypes.Validator
+		val, err = k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				return err
+			}
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			if len(vals) == 0 {
+				return errors.New("no validators found in staking module to return tokens to")
+			}
+			val = vals[0]
+		}
+		delAddr := sdk.AccAddress(source.DelegatorAddress)
+
+		_, err = k.stakingKeeper.Delegate(ctx, delAddr, share, stakingtypes.Unbonded, val, false)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return k.FeePaidFromStake.Remove(ctx, hashId)
+}
+func (k Keeper) FeeRefund(ctx context.Context, repAcc sdk.AccAddress, hashId []byte, amt math.Int) error {
 	reporter, err := k.Reporters.Get(ctx, repAcc)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return err
 		}
-		return k.returnSlashedTokens(ctx, repAcc, height, reward)
+		return k.feeRefundNoReporter(ctx, hashId, amt)
 	}
 
-	snapshot, err := k.GetTokenOriginsAtHeight(ctx, repAcc, height)
+	snapshot, err := k.FeePaidFromStake.Get(ctx, hashId)
 	if err != nil {
 		return err
 	}
 
+	initialTotalAmount := math.ZeroInt()
 	for _, source := range snapshot.TokenOrigins {
+		initialTotalAmount = initialTotalAmount.Add(source.Amount)
+	}
+
+	for _, source := range snapshot.TokenOrigins {
+
 		// attempt to get delegation in reporter module first
-		valAddr, err := sdk.ValAddressFromBech32(source.ValidatorAddress)
-		if err != nil {
-			return err
-		}
-		delAddr, err := sdk.AccAddressFromBech32(source.DelegatorAddress)
-		if err != nil {
-			return err
-		}
+		valAddr := sdk.ValAddress(source.ValidatorAddress)
+		delAddr := sdk.AccAddress(source.DelegatorAddress)
 		del, err := k.Delegators.Get(ctx, delAddr)
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
@@ -903,14 +899,19 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			// if delegator no longer exists, create a new one and
 			// delegate tokens to a randomly selected bonded validator
 			del.Amount = source.Amount
-			del.Reporter = repAcc.String()
-			// call hooks :todo
+			del.Reporter = repAcc.Bytes()
+
 			if err := k.BeforeDelegationCreated(ctx, reporter); err != nil {
+				return err
+			}
+
+			if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(delAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), del.Amount); err != nil {
 				return err
 			}
 			if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
 				return err
 			}
+
 			if err := k.AfterDelegationModified(ctx, delAddr, repAcc.Bytes(), del.Amount); err != nil {
 				return err
 			}
@@ -926,7 +927,8 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			if err != nil {
 				return err
 			}
-			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr, newVal), source.Amount); err != nil {
+
+			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr.Bytes(), newVal.Bytes()), source.Amount); err != nil {
 				return err
 			}
 			_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, vals[0], false)
@@ -936,46 +938,27 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			continue
 		}
 		// if delegator exists, add tokens to it
-		// call hooks :todo
 		if err := k.BeforeDelegationModified(ctx, delAddr, del, reporter); err != nil {
 			return err
 		}
 		del.Amount = del.Amount.Add(source.Amount)
-
+		if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(delAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), del.Amount); err != nil {
+			return err
+		}
 		if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
 			return err
 		}
+
 		if err := k.AfterDelegationModified(ctx, delAddr, repAcc.Bytes(), del.Amount); err != nil {
 			return err
 		}
 		// get token origin and see if it still exists
-		prevAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+		prevAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
 				return err
 			}
-			/*
-				// you can try the same previous validator even though it doesn't exist in tokenorigin store
-				// or just directly use go for a random bonded validator
-				// validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
-				// if err != nil {
-				// 	if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
-				// 		return err
-				// 	}
-				// }
-				// if err != nil || !validator.IsBonded() {
-				// 	vals, err := k.GetBondedValidators(ctx, 1)
-				// 	if err != nil {
-				// 		return err
-				// 	}
-				// 	validator = vals[0]
-				// 	valAddr, err = sdk.ValAddressFromBech32(validator.GetOperator())
-				// 	if err != nil {
-				// 		return err
-				// 	}
 
-				// }
-			*/
 			vals, err := k.GetBondedValidators(ctx, 1)
 			if err != nil {
 				return err
@@ -987,7 +970,7 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			}
 			// should probably make sure the random validator is not in tokenOrigin store first
 			// to avoid overwriting
-			randoAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr, randoValAddr))
+			randoAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), randoValAddr.Bytes()))
 			if err != nil {
 				if !errors.Is(err, collections.ErrNotFound) {
 					return err
@@ -996,9 +979,11 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			if randoAmt.IsNil() {
 				randoAmt = math.ZeroInt()
 			}
+
 			randoAmt = randoAmt.Add(source.Amount)
+
 			// if token origin no longer exists, set it
-			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), randoAmt); err != nil {
+			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), randoAmt); err != nil {
 				return err
 			}
 			_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, randoValidator, false)
@@ -1027,7 +1012,7 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 				return err
 			}
 			// double check to make sure the random validator is not in tokenOrigin store first
-			prevAmt, err = k.TokenOrigin.Get(ctx, collections.Join(delAddr, valAddr))
+			prevAmt, err = k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
 			if err != nil {
 				if !errors.Is(err, collections.ErrNotFound) {
 					return err
@@ -1038,7 +1023,234 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 			prevAmt = math.ZeroInt()
 		}
 		prevAmt = prevAmt.Add(source.Amount)
-		if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr, valAddr), prevAmt); err != nil {
+
+		if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), prevAmt); err != nil {
+			return err
+		}
+		_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, validator, false)
+		if err != nil {
+			return err
+		}
+		continue
+
+	}
+	reporter.TotalTokens = reporter.TotalTokens.Add(amt)
+
+	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(repAcc.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), reporter.TotalTokens); err != nil {
+		return err
+	}
+	if err := k.Reporters.Set(ctx, repAcc, reporter); err != nil {
+		return err
+	}
+	if err := k.UpdateTotalPower(ctx, amt, false); err != nil {
+		return err
+	}
+	if err := k.AfterReporterModified(ctx, repAcc); err != nil {
+		return err
+	}
+	return k.FeePaidFromStake.Remove(ctx, hashId)
+}
+func (k Keeper) UpdateTotalPower(ctx context.Context, amt math.Int, subtract bool) error {
+	rng := new(collections.Range[int64]).EndInclusive(sdk.UnwrapSDKContext(ctx).BlockHeight()).Descending()
+	totalPower := math.ZeroInt()
+	err := k.TotalPower.Walk(ctx, rng, func(_ int64, power math.Int) (stop bool, err error) {
+		totalPower = power
+		return true, nil
+	})
+	if err != nil {
+		return err
+	}
+	height := sdk.UnwrapSDKContext(ctx).BlockHeight()
+	if subtract {
+		if totalPower.IsZero() || totalPower.LT(amt) {
+			panic("total power should never be below zero")
+		}
+
+		totalPower = totalPower.Sub(amt)
+		return k.TotalPower.Set(ctx, height, totalPower)
+	}
+
+	totalPower = totalPower.Add(amt)
+	return k.TotalPower.Set(ctx, height, totalPower)
+
+}
+func (k Keeper) GetBondedValidators(ctx context.Context, max uint32) ([]stakingtypes.Validator, error) {
+	validators := make([]stakingtypes.Validator, max)
+
+	iterator, err := k.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+
+	i := 0
+	for ; iterator.Valid() && i < int(max); iterator.Next() {
+		address := iterator.Value()
+		validator, err := k.stakingKeeper.GetValidator(ctx, address)
+		if err != nil {
+			return nil, fmt.Errorf("validator record not found for address: %X", address)
+		}
+
+		if validator.IsBonded() {
+			validators[i] = validator
+			i++
+		}
+	}
+
+	return validators[:i], nil // trim
+}
+
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, reward math.Int, hashId []byte) error {
+	repAcc, err := sdk.AccAddressFromBech32(reporterAddr)
+	if err != nil {
+		return err
+	}
+	reporter, err := k.Reporters.Get(ctx, repAcc)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		return k.returnSlashedTokens(ctx, hashId)
+	}
+
+	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
+	if err != nil {
+		return err
+	}
+
+	for _, source := range snapshot.TokenOrigins {
+		// attempt to get delegation in reporter module first
+		valAddr := sdk.ValAddress(source.ValidatorAddress)
+		delAddr := sdk.AccAddress(source.DelegatorAddress)
+
+		del, err := k.Delegators.Get(ctx, delAddr)
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+			// if delegator no longer exists, create a new one and
+			// delegate tokens to a randomly selected bonded validator
+			del.Amount = source.Amount
+			del.Reporter = repAcc.Bytes()
+			// call hooks :todo
+			if err := k.BeforeDelegationCreated(ctx, reporter); err != nil {
+				return err
+			}
+
+			if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(delAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), del.Amount); err != nil {
+				return err
+			}
+			if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
+				return err
+			}
+			if err := k.AfterDelegationModified(ctx, delAddr, repAcc.Bytes(), del.Amount); err != nil {
+				return err
+			}
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			// this should never happen since chains need validators to run
+			if len(vals) == 0 {
+				return errors.New("no validators found in staking module to return tokens to")
+			}
+			newVal, err := sdk.ValAddressFromBech32(vals[0].GetOperator())
+			if err != nil {
+				return err
+			}
+			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr.Bytes(), newVal.Bytes()), source.Amount); err != nil {
+				return err
+			}
+			_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, vals[0], false)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+		// if delegator exists, add tokens to it
+		if err := k.BeforeDelegationModified(ctx, delAddr, del, reporter); err != nil {
+			return err
+		}
+		del.Amount = del.Amount.Add(source.Amount)
+		if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(delAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), del.Amount); err != nil {
+			return err
+		}
+		if err := k.Delegators.Set(ctx, delAddr, del); err != nil {
+			return err
+		}
+		if err := k.AfterDelegationModified(ctx, delAddr, repAcc.Bytes(), del.Amount); err != nil {
+			return err
+		}
+		// get token origin and see if it still exists
+		prevAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			randoValidator := vals[0]
+			randoValAddr, err := sdk.ValAddressFromBech32(randoValidator.GetOperator())
+			if err != nil {
+				return err
+			}
+			// should probably make sure the random validator is not in tokenOrigin store first
+			// to avoid overwriting
+			randoAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), randoValAddr.Bytes()))
+			if err != nil {
+				if !errors.Is(err, collections.ErrNotFound) {
+					return err
+				}
+			}
+			if randoAmt.IsNil() {
+				randoAmt = math.ZeroInt()
+			}
+			randoAmt = randoAmt.Add(source.Amount)
+			// if token origin no longer exists, set it
+			if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), randoAmt); err != nil {
+				return err
+			}
+			_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, randoValidator, false)
+			if err != nil {
+				return err
+			}
+			continue
+
+		}
+		// at this stage the validator exists in tokenorigin store meaning key(delagator, validator) exists
+		// first we see if stored validator is bonded
+		validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
+				return err
+			}
+		}
+		if err != nil || !validator.IsBonded() {
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
+			}
+			validator = vals[0]
+			valAddr, err = sdk.ValAddressFromBech32(validator.GetOperator())
+			if err != nil {
+				return err
+			}
+			// double check to make sure the random validator is not in tokenOrigin store first
+			prevAmt, err = k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
+			if err != nil {
+				if !errors.Is(err, collections.ErrNotFound) {
+					return err
+				}
+			}
+		}
+		if prevAmt.IsNil() {
+			prevAmt = math.ZeroInt()
+		}
+		prevAmt = prevAmt.Add(source.Amount)
+		if err := k.TokenOrigin.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), prevAmt); err != nil {
 			return err
 		}
 		_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, stakingtypes.Bonded, validator, false)
@@ -1049,14 +1261,23 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, reporterAddr string, he
 
 	}
 	reporter.TotalTokens = reporter.TotalTokens.Add(reward)
-	return k.Reporters.Set(ctx, repAcc, reporter)
-}
-
-func (k Keeper) AddAmountToStake(ctx context.Context, addr string, amt math.Int) error {
-	acc, err := sdk.AccAddressFromBech32(addr)
-	if err != nil {
+	if err := k.UpdateTotalPower(ctx, reward, false); err != nil {
 		return err
 	}
+
+	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(repAcc.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), reporter.TotalTokens); err != nil {
+		return err
+	}
+	if err := k.Reporters.Set(ctx, repAcc, reporter); err != nil {
+		return err
+	}
+	if err := k.AfterReporterModified(ctx, repAcc); err != nil {
+		return err
+	}
+	return k.DisputedDelegationAmounts.Remove(ctx, hashId)
+}
+
+func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) error {
 	vals, err := k.GetBondedValidators(ctx, 1)
 	if err != nil {
 		return err

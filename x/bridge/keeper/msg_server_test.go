@@ -10,8 +10,9 @@ import (
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-func setupMsgServer(t testing.TB) (types.MsgServer, context.Context) {
-	k, ctx := keepertest.BridgeKeeper(t)
+func setupMsgServer(tb testing.TB) (types.MsgServer, context.Context) {
+	tb.Helper()
+	k, _, _, _, _, _, ctx := keepertest.BridgeKeeper(tb)
 	return keeper.NewMsgServerImpl(k), ctx
 }
 

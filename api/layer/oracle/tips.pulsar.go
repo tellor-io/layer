@@ -15,29 +15,27 @@ import (
 )
 
 var (
-	md_Tips            protoreflect.MessageDescriptor
-	fd_Tips_query_data protoreflect.FieldDescriptor
-	fd_Tips_amount     protoreflect.FieldDescriptor
-	fd_Tips_total_tips protoreflect.FieldDescriptor
+	md_Tip            protoreflect.MessageDescriptor
+	fd_Tip_query_data protoreflect.FieldDescriptor
+	fd_Tip_amount     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_oracle_tips_proto_init()
-	md_Tips = File_layer_oracle_tips_proto.Messages().ByName("Tips")
-	fd_Tips_query_data = md_Tips.Fields().ByName("query_data")
-	fd_Tips_amount = md_Tips.Fields().ByName("amount")
-	fd_Tips_total_tips = md_Tips.Fields().ByName("total_tips")
+	md_Tip = File_layer_oracle_tips_proto.Messages().ByName("Tip")
+	fd_Tip_query_data = md_Tip.Fields().ByName("query_data")
+	fd_Tip_amount = md_Tip.Fields().ByName("amount")
 }
 
-var _ protoreflect.Message = (*fastReflection_Tips)(nil)
+var _ protoreflect.Message = (*fastReflection_Tip)(nil)
 
-type fastReflection_Tips Tips
+type fastReflection_Tip Tip
 
-func (x *Tips) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Tips)(x)
+func (x *Tip) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_Tip)(x)
 }
 
-func (x *Tips) slowProtoReflect() protoreflect.Message {
+func (x *Tip) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_oracle_tips_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -49,43 +47,43 @@ func (x *Tips) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_Tips_messageType fastReflection_Tips_messageType
-var _ protoreflect.MessageType = fastReflection_Tips_messageType{}
+var _fastReflection_Tip_messageType fastReflection_Tip_messageType
+var _ protoreflect.MessageType = fastReflection_Tip_messageType{}
 
-type fastReflection_Tips_messageType struct{}
+type fastReflection_Tip_messageType struct{}
 
-func (x fastReflection_Tips_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Tips)(nil)
+func (x fastReflection_Tip_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_Tip)(nil)
 }
-func (x fastReflection_Tips_messageType) New() protoreflect.Message {
-	return new(fastReflection_Tips)
+func (x fastReflection_Tip_messageType) New() protoreflect.Message {
+	return new(fastReflection_Tip)
 }
-func (x fastReflection_Tips_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Tips
+func (x fastReflection_Tip_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_Tip
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_Tips) Descriptor() protoreflect.MessageDescriptor {
-	return md_Tips
+func (x *fastReflection_Tip) Descriptor() protoreflect.MessageDescriptor {
+	return md_Tip
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Tips) Type() protoreflect.MessageType {
-	return _fastReflection_Tips_messageType
+func (x *fastReflection_Tip) Type() protoreflect.MessageType {
+	return _fastReflection_Tip_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Tips) New() protoreflect.Message {
-	return new(fastReflection_Tips)
+func (x *fastReflection_Tip) New() protoreflect.Message {
+	return new(fastReflection_Tip)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_Tips) Interface() protoreflect.ProtoMessage {
-	return (*Tips)(x)
+func (x *fastReflection_Tip) Interface() protoreflect.ProtoMessage {
+	return (*Tip)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -93,22 +91,16 @@ func (x *fastReflection_Tips) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_Tips) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_Tip) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.QueryData) != 0 {
 		value := protoreflect.ValueOfBytes(x.QueryData)
-		if !f(fd_Tips_query_data, value) {
+		if !f(fd_Tip_query_data, value) {
 			return
 		}
 	}
 	if x.Amount != "" {
 		value := protoreflect.ValueOfString(x.Amount)
-		if !f(fd_Tips_amount, value) {
-			return
-		}
-	}
-	if x.TotalTips != "" {
-		value := protoreflect.ValueOfString(x.TotalTips)
-		if !f(fd_Tips_total_tips, value) {
+		if !f(fd_Tip_amount, value) {
 			return
 		}
 	}
@@ -125,19 +117,17 @@ func (x *fastReflection_Tips) Range(f func(protoreflect.FieldDescriptor, protore
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_Tips) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_Tip) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.oracle.Tips.query_data":
+	case "layer.oracle.Tip.query_data":
 		return len(x.QueryData) != 0
-	case "layer.oracle.Tips.amount":
+	case "layer.oracle.Tip.amount":
 		return x.Amount != ""
-	case "layer.oracle.Tips.total_tips":
-		return x.TotalTips != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tips"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tip"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Tips does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Tip does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -147,19 +137,17 @@ func (x *fastReflection_Tips) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Tips) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_Tip) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.oracle.Tips.query_data":
+	case "layer.oracle.Tip.query_data":
 		x.QueryData = nil
-	case "layer.oracle.Tips.amount":
+	case "layer.oracle.Tip.amount":
 		x.Amount = ""
-	case "layer.oracle.Tips.total_tips":
-		x.TotalTips = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tips"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tip"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Tips does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Tip does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -169,22 +157,19 @@ func (x *fastReflection_Tips) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Tips) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Tip) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.oracle.Tips.query_data":
+	case "layer.oracle.Tip.query_data":
 		value := x.QueryData
 		return protoreflect.ValueOfBytes(value)
-	case "layer.oracle.Tips.amount":
+	case "layer.oracle.Tip.amount":
 		value := x.Amount
-		return protoreflect.ValueOfString(value)
-	case "layer.oracle.Tips.total_tips":
-		value := x.TotalTips
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tips"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tip"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Tips does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Tip does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -198,19 +183,17 @@ func (x *fastReflection_Tips) Get(descriptor protoreflect.FieldDescriptor) proto
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Tips) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_Tip) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.oracle.Tips.query_data":
+	case "layer.oracle.Tip.query_data":
 		x.QueryData = value.Bytes()
-	case "layer.oracle.Tips.amount":
+	case "layer.oracle.Tip.amount":
 		x.Amount = value.Interface().(string)
-	case "layer.oracle.Tips.total_tips":
-		x.TotalTips = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tips"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tip"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Tips does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Tip does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -224,48 +207,44 @@ func (x *fastReflection_Tips) Set(fd protoreflect.FieldDescriptor, value protore
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Tips) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Tip) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Tips.query_data":
-		panic(fmt.Errorf("field query_data of message layer.oracle.Tips is not mutable"))
-	case "layer.oracle.Tips.amount":
-		panic(fmt.Errorf("field amount of message layer.oracle.Tips is not mutable"))
-	case "layer.oracle.Tips.total_tips":
-		panic(fmt.Errorf("field total_tips of message layer.oracle.Tips is not mutable"))
+	case "layer.oracle.Tip.query_data":
+		panic(fmt.Errorf("field query_data of message layer.oracle.Tip is not mutable"))
+	case "layer.oracle.Tip.amount":
+		panic(fmt.Errorf("field amount of message layer.oracle.Tip is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tips"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tip"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Tips does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Tip does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Tips) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Tip) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Tips.query_data":
+	case "layer.oracle.Tip.query_data":
 		return protoreflect.ValueOfBytes(nil)
-	case "layer.oracle.Tips.amount":
-		return protoreflect.ValueOfString("")
-	case "layer.oracle.Tips.total_tips":
+	case "layer.oracle.Tip.amount":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tips"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Tip"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Tips does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Tip does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Tips) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_Tip) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.Tips", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.Tip", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -273,7 +252,7 @@ func (x *fastReflection_Tips) WhichOneof(d protoreflect.OneofDescriptor) protore
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Tips) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_Tip) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -284,7 +263,7 @@ func (x *fastReflection_Tips) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Tips) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_Tip) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -296,7 +275,7 @@ func (x *fastReflection_Tips) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_Tips) IsValid() bool {
+func (x *fastReflection_Tip) IsValid() bool {
 	return x != nil
 }
 
@@ -306,9 +285,9 @@ func (x *fastReflection_Tips) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_Tip) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Tips)
+		x := input.Message.Interface().(*Tip)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -328,10 +307,6 @@ func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.TotalTips)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -342,7 +317,7 @@ func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Tips)
+		x := input.Message.Interface().(*Tip)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -360,13 +335,6 @@ func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.TotalTips) > 0 {
-			i -= len(x.TotalTips)
-			copy(dAtA[i:], x.TotalTips)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TotalTips)))
-			i--
-			dAtA[i] = 0x1a
 		}
 		if len(x.Amount) > 0 {
 			i -= len(x.Amount)
@@ -393,7 +361,7 @@ func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Tips)
+		x := input.Message.Interface().(*Tip)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -425,10 +393,10 @@ func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Tips: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Tip: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Tips: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Tip: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -497,38 +465,6 @@ func (x *fastReflection_Tips) ProtoMethods() *protoiface.Methods {
 				}
 				x.Amount = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalTips", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.TotalTips = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -577,22 +513,19 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Tips is a struct that contains the query data and the amount it was tipped
-type Tips struct {
+// // Tips is a struct that contains the query data and the amount it was tipped
+type Tip struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// query_data is the query data that was tipped
 	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	// the amount that was tipped
 	Amount string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	// totalTips is the total amount of tips for this query data so far
-	TotalTips string `protobuf:"bytes,3,opt,name=total_tips,json=totalTips,proto3" json:"total_tips,omitempty"`
 }
 
-func (x *Tips) Reset() {
-	*x = Tips{}
+func (x *Tip) Reset() {
+	*x = Tip{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_oracle_tips_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -600,34 +533,27 @@ func (x *Tips) Reset() {
 	}
 }
 
-func (x *Tips) String() string {
+func (x *Tip) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Tips) ProtoMessage() {}
+func (*Tip) ProtoMessage() {}
 
-// Deprecated: Use Tips.ProtoReflect.Descriptor instead.
-func (*Tips) Descriptor() ([]byte, []int) {
+// Deprecated: Use Tip.ProtoReflect.Descriptor instead.
+func (*Tip) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_tips_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Tips) GetQueryData() []byte {
+func (x *Tip) GetQueryData() []byte {
 	if x != nil {
 		return x.QueryData
 	}
 	return nil
 }
 
-func (x *Tips) GetAmount() string {
+func (x *Tip) GetAmount() string {
 	if x != nil {
 		return x.Amount
-	}
-	return ""
-}
-
-func (x *Tips) GetTotalTips() string {
-	if x != nil {
-		return x.TotalTips
 	}
 	return ""
 }
@@ -640,29 +566,24 @@ var file_layer_oracle_tips_proto_rawDesc = []byte{
 	0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
-	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb6, 0x01, 0x0a, 0x04, 0x54, 0x69, 0x70,
-	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61,
-	0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2,
-	0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x06, 0x61,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x4a, 0x0a, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x74,
-	0x69, 0x70, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda,
-	0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f,
-	0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x09, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x69, 0x70,
-	0x73, 0x42, 0x9b, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x09, 0x54, 0x69, 0x70, 0x73, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f,
-	0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72,
-	0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61,
-	0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x69, 0x0a, 0x03, 0x54, 0x69, 0x70, 0x12,
+	0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x43,
+	0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b,
+	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
+	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d,
+	0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x42, 0x9b, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x09, 0x54, 0x69, 0x70, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63,
+	0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -679,7 +600,7 @@ func file_layer_oracle_tips_proto_rawDescGZIP() []byte {
 
 var file_layer_oracle_tips_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_layer_oracle_tips_proto_goTypes = []interface{}{
-	(*Tips)(nil), // 0: layer.oracle.Tips
+	(*Tip)(nil), // 0: layer.oracle.Tip
 }
 var file_layer_oracle_tips_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -696,7 +617,7 @@ func file_layer_oracle_tips_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_layer_oracle_tips_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Tips); i {
+			switch v := v.(*Tip); i {
 			case 0:
 				return &v.state
 			case 1:

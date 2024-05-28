@@ -22,11 +22,9 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 		return errorsmod.Wrapf(types.ErrTokenAmountMismatch, "got %v as amount, but sum of token origins is %v", amount, _amt)
 	}
 	for _, origin := range originAmounts {
-		valAddr, err := sdk.ValAddressFromBech32(origin.ValidatorAddress)
-		if err != nil {
-			return err
-		}
-		tokenSource, err := k.TokenOrigin.Get(ctx, collections.Join(delegator, valAddr))
+		valAddr := sdk.ValAddress(origin.ValidatorAddress)
+
+		tokenSource, err := k.TokenOrigin.Get(ctx, collections.Join(delegator.Bytes(), valAddr.Bytes()))
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
 				return errorsmod.Wrapf(err, "unable to fetch token origin")
@@ -45,15 +43,13 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 		}
 		// check if the delegator has enough tokens bonded with validator, this would be the sum
 		// of what is currently delegated to reporter plus the amount being added in this transaction
-		// todo: further documentation
-		// LTE doesnt work ? 
 		sum := tokenSource.Add(origin.Amount)
 		tokensFromShares := validator.TokensFromShares(delegation.GetShares()).TruncateInt()
 		if tokensFromShares.LT(sum) {
 			return errorsmod.Wrapf(types.ErrInsufficientTokens, "insufficient tokens bonded with validator %v", valAddr)
 		}
 		tokenSource = sum
-		if err := k.TokenOrigin.Set(ctx, collections.Join(delegator, valAddr), tokenSource); err != nil {
+		if err := k.TokenOrigin.Set(ctx, collections.Join(delegator.Bytes(), valAddr.Bytes()), tokenSource); err != nil {
 			return err
 		}
 	}
@@ -68,11 +64,14 @@ func (k Keeper) UpdateOrRemoveDelegator(ctx context.Context, delAddr sdk.AccAddr
 		return k.Delegators.Remove(ctx, delAddr)
 	}
 	del.Amount = del.Amount.Sub(amt)
+	if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(delAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), del.Amount); err != nil {
+		return err
+	}
 	err := k.Delegators.Set(ctx, delAddr, del)
 	if err != nil {
 		return err
 	}
-	reporterVal := sdk.ValAddress(sdk.MustAccAddressFromBech32(reporter.GetReporter()))
+	reporterVal := sdk.ValAddress(reporter.GetReporter())
 	return k.AfterDelegationModified(ctx, delAddr, reporterVal, del.Amount)
 }
 
@@ -85,11 +84,22 @@ func (k Keeper) UpdateOrRemoveReporter(ctx context.Context, key sdk.AccAddress, 
 		return k.AfterReporterRemoved(ctx, reporterVal)
 	}
 	rep.TotalTokens = rep.TotalTokens.Sub(amt)
-	return k.Reporters.Set(ctx, key, rep)
+	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(key.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), rep.TotalTokens); err != nil {
+		return err
+	}
+
+	if err := k.Reporters.Set(ctx, key, rep); err != nil {
+		return err
+	}
+
+	if err := k.UpdateTotalPower(ctx, amt, true); err != nil {
+		return err
+	}
+	return k.AfterReporterModified(ctx, key)
 
 }
 
-func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], srcAmount math.Int, amt math.Int) (err error) {
+func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[[]byte, []byte], srcAmount math.Int, amt math.Int) (err error) {
 	// amount is the current staked amount in staking mod
 	// so if current amount is zero remove the source
 	if amt.IsZero() {
@@ -98,7 +108,7 @@ func (k Keeper) UpdateOrRemoveSource(ctx context.Context, key collections.Pair[s
 	return k.TokenOrigin.Set(ctx, key, amt)
 }
 
-func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[sdk.AccAddress, sdk.ValAddress], currentAmount math.Int, newAmount math.Int) error {
+func (k Keeper) UndelegateSource(ctx context.Context, key collections.Pair[[]byte, []byte], currentAmount math.Int, newAmount math.Int) error {
 	if newAmount.GTE(currentAmount) {
 		return k.TokenOrigin.Remove(ctx, key)
 	}
@@ -117,18 +127,21 @@ func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (*types.Or
 }
 
 func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
+
+	return k.TotalPowerAtBlock(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight())
+}
+
+func (k Keeper) TotalPowerAtBlock(ctx context.Context, blockHeight int64) (math.Int, error) {
 	totalPower := math.ZeroInt()
-	iter, err := k.Reporters.Iterate(ctx, nil)
-	if err != nil {
-		return math.Int{}, err
-	}
-	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		reporter, err := iter.Value()
-		if err != nil {
-			return math.Int{}, err
-		}
-		totalPower = totalPower.Add(reporter.TotalTokens)
-	}
-	return totalPower, nil
+	rng := new(collections.Range[int64]).EndInclusive(blockHeight).Descending()
+	err := k.TotalPower.Walk(ctx, rng, func(key int64, value math.Int) (stop bool, err error) {
+		totalPower = value
+		return true, nil
+	})
+	return totalPower, err
+}
+
+// alias
+func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types.Delegation, error) {
+	return k.Delegators.Get(ctx, delegator)
 }

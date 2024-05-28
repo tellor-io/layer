@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -45,6 +46,12 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	}
 	// create a new reporter
 	newOracleReporter := types.NewOracleReporter(msg.Reporter, msg.Amount, &commission)
+	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(reporter.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), newOracleReporter.TotalTokens); err != nil {
+		return nil, err
+	}
+	if err := k.UpdateTotalPower(ctx, newOracleReporter.TotalTokens, false); err != nil {
+		return nil, err
+	}
 	if err := k.Reporters.Set(ctx, reporter, newOracleReporter); err != nil {
 		return nil, err
 	}
@@ -60,11 +67,17 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	}
 	// ************************************************************************************************
 	newDelegation := types.NewDelegation(msg.Reporter, msg.Amount)
+	if err := k.DelegatorCheckpoint.Set(ctx, collections.Join(reporter.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), newDelegation.Amount); err != nil {
+		return nil, err
+	}
 	if err := k.Delegators.Set(ctx, reporter, newDelegation); err != nil {
 		return nil, err
 	}
 	// **********************  AfterDelegationModified  hook **************************************
 	if err := k.Keeper.AfterDelegationModified(ctx, reporter, sdk.ValAddress(reporter), newDelegation.Amount); err != nil {
+		return nil, err
+	}
+	if err := k.AfterReporterModified(ctx, reporter); err != nil {
 		return nil, err
 	}
 	// ************************************************************************************************

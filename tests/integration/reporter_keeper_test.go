@@ -54,8 +54,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	// register reporter in reporter module
 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
 		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
-
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewIntFromUint64(100 * 1e6)}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr[0], Amount: math.NewIntFromUint64(100 * 1e6)}
 	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators[reporter].delegatorAddress.String(), math.NewIntFromUint64(100*1e6), []*reportertypes.TokenOrigin{&source}, &commission)
 	server := keeper.NewMsgServerImpl(s.reporterkeeper)
 	_, err = server.CreateReporter(s.ctx, createReporterMsg)
@@ -63,11 +62,11 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 
 	oracleReporter, err := s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
-	s.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(oracleReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 	s.Equal(oracleReporter.TotalTokens, math.NewInt(100*1e6))
 
 	// add delegation to reporter
-	source = reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: math.NewInt(25 * 1e6)}
+	source = reportertypes.TokenOrigin{ValidatorAddress: valAddr[0], Amount: math.NewInt(25 * 1e6)}
 	delegationI := reportertypes.NewMsgDelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		delegators[reporter].delegatorAddress.String(),
@@ -78,7 +77,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -94,7 +93,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorII].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIIReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIIReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -110,7 +109,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIIIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorIII].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIIIReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIIIReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -126,7 +125,7 @@ func (s *IntegrationTestSuite) TestRegisteringReporterDelegators() map[string]De
 	s.NoError(err)
 	delegationIVReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorIV].delegatorAddress)
 	s.NoError(err)
-	s.Equal(delegationIVReporter.Reporter, delegators[reporter].delegatorAddress.String())
+	s.Equal(delegationIVReporter.Reporter, delegators[reporter].delegatorAddress.Bytes())
 
 	oracleReporter, err = s.reporterkeeper.Reporters.Get(s.ctx, delegators[reporter].delegatorAddress)
 	s.NoError(err)
@@ -173,14 +172,16 @@ func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromValidator() {
 func (s *IntegrationTestSuite) TestDelegatorIundelegatesFromReporter() {
 	delegators := s.TestRegisteringReporterDelegators()
 	server := keeper.NewMsgServerImpl(s.reporterkeeper)
-	source := reportertypes.TokenOrigin{ValidatorAddress: delegators[delegatorI].validator.GetOperator()}
+	valAcc, err := sdk.ValAddressFromBech32(delegators[delegatorI].validator.GetOperator())
+	s.NoError(err)
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc.Bytes()}
 	// delegatorI undelegates from reporter
 	source.Amount = math.NewInt(5 * 1e6)
 	delegationI := reportertypes.NewMsgUndelegateReporter(
 		delegators[delegatorI].delegatorAddress.String(),
 		[]*reportertypes.TokenOrigin{&source},
 	)
-	_, err := server.UndelegateReporter(s.ctx, delegationI)
+	_, err = server.UndelegateReporter(s.ctx, delegationI)
 	s.NoError(err)
 
 	delegationIReporter, err := s.reporterkeeper.Delegators.Get(s.ctx, delegators[delegatorI].delegatorAddress)
@@ -249,8 +250,7 @@ func createReporterStakedWithValidator(ctx sdk.Context, k keeper.Keeper, sk repo
 	if err != nil {
 		return nil, err
 	}
-
-	source := reportertypes.TokenOrigin{ValidatorAddress: val.GetOperator(), Amount: stake}
+	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.Bytes(), Amount: stake}
 	createReporterMsg := reportertypes.NewMsgCreateReporter(delegators["delegator0"].delegatorAddress.String(), stake, []*reportertypes.TokenOrigin{&source}, &commission)
 	server := keeper.NewMsgServerImpl(k)
 	_, err = server.CreateReporter(ctx, createReporterMsg)
@@ -277,7 +277,124 @@ func DelegateToReporterSingleValidator(
 	return err
 }
 
-// create multiple validators
-// stake 5 delegators with each validator
-// create one reporter
-// delegate 5 delegators to the reporter with token sources from each validator for each delegator
+type DelegatorSources struct {
+	Sources []int64
+}
+type Sources struct {
+	ReporterSources  []int64
+	DelegatorSources []DelegatorSources
+}
+
+type Return struct {
+	ReporterAcc   sdk.AccAddress
+	DelegatorAccs []sdk.AccAddress
+}
+
+func (s *IntegrationTestSuite) Reporters() (sdk.AccAddress, sdk.AccAddress) {
+	// create 5 validators
+	_, valAccs, _ := s.createValidatorAccs([]int64{1000, 900, 800, 700, 600, 500, 400, 300, 200, 100})
+	reporterAddr := sample.AccAddressBytes()
+	delegatorI := sample.AccAddressBytes()
+	delegatorII := sample.AccAddressBytes()
+	delegatorIII := sample.AccAddressBytes()
+	delegatorIV := sample.AccAddressBytes()
+	reporter2Addr := sample.AccAddressBytes()
+	delegatorV := sample.AccAddressBytes()
+	delegatorVI := sample.AccAddressBytes()
+	delegatorVII := sample.AccAddressBytes()
+	delegatorVIII := sample.AccAddressBytes()
+	// mint tokens to reporter and delegators
+	s.mintTokens(reporterAddr, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorI, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorII, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorIII, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorIV, math.NewInt(1000*1e6))
+	s.mintTokens(reporter2Addr, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorV, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorVI, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorVII, math.NewInt(1000*1e6))
+	s.mintTokens(delegatorVIII, math.NewInt(1000*1e6))
+
+	for _, n := range valAccs[:5] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		_, err = s.stakingKeeper.Delegate(s.ctx, reporterAddr, math.NewInt(200*1e6), stakingtypes.Unbonded, val, true)
+		s.NoError(err)
+	}
+	reporter1TokenSources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[0].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[1].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[2].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[3].Bytes(), Amount: math.NewInt(200 * 1e6)},
+		{ValidatorAddress: valAccs[4].Bytes(), Amount: math.NewInt(200 * 1e6)},
+	}
+	reporter1Delegators := []sdk.AccAddress{delegatorI, delegatorII, delegatorIII, delegatorIV}
+	// reporter2
+	for _, n := range valAccs[5:] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		_, err = s.stakingKeeper.Delegate(s.ctx, reporter2Addr, math.NewInt(100*1e6), stakingtypes.Unbonded, val, true)
+		s.NoError(err)
+	}
+	reporter2TokenSources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[5].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[6].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[7].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[8].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[9].Bytes(), Amount: math.NewInt(100 * 1e6)},
+	}
+	reporter2Delegators := []sdk.AccAddress{delegatorV, delegatorVI, delegatorVII, delegatorVIII}
+	for _, n := range valAccs[:5] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		for _, del := range reporter1Delegators {
+			_, err = s.stakingKeeper.Delegate(s.ctx, del, math.NewInt(100*1e6), stakingtypes.Unbonded, val, true)
+			s.NoError(err)
+		}
+	}
+
+	DelSources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[0].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[1].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[2].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[3].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[4].Bytes(), Amount: math.NewInt(100 * 1e6)},
+	}
+	for _, n := range valAccs[5:] {
+		val, err := s.stakingKeeper.GetValidator(s.ctx, n)
+		s.NoError(err)
+		for _, del := range reporter2Delegators {
+			_, err = s.stakingKeeper.Delegate(s.ctx, del, math.NewInt(100*1e6), stakingtypes.Unbonded, val, true)
+			s.NoError(err)
+		}
+	}
+	Del2Sources := []*reportertypes.TokenOrigin{
+		{ValidatorAddress: valAccs[5].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[6].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[7].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[8].Bytes(), Amount: math.NewInt(100 * 1e6)},
+		{ValidatorAddress: valAccs[9].Bytes(), Amount: math.NewInt(100 * 1e6)},
+	}
+
+	_ = Del2Sources
+	server := keeper.NewMsgServerImpl(s.reporterkeeper)
+	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+		math.LegacyNewDecWithPrec(1, 1), s.ctx.BlockTime())
+	createReporter1Msg := reportertypes.NewMsgCreateReporter(reporterAddr.String(), math.NewIntFromUint64(1000*1e6), reporter1TokenSources, &commission)
+	_, err := server.CreateReporter(s.ctx, createReporter1Msg)
+	s.NoError(err)
+	createReporter2Msg := reportertypes.NewMsgCreateReporter(reporter2Addr.String(), math.NewIntFromUint64(500*1e6), reporter2TokenSources, &commission)
+	_, err = server.CreateReporter(s.ctx, createReporter2Msg)
+	s.NoError(err)
+
+	for _, del := range reporter1Delegators {
+		_, err = server.DelegateReporter(s.ctx, reportertypes.NewMsgDelegateReporter(del.String(), reporterAddr.String(), math.NewIntFromUint64(500*1e6), DelSources))
+		s.NoError(err)
+	}
+	for _, del := range reporter2Delegators {
+		_, err = server.DelegateReporter(s.ctx, reportertypes.NewMsgDelegateReporter(del.String(), reporter2Addr.String(), math.NewIntFromUint64(500*1e6), Del2Sources))
+		s.NoError(err)
+	}
+
+	return reporterAddr, reporter2Addr
+}

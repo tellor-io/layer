@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -10,7 +11,7 @@ const TypeMsgWithdrawTokens = "withdraw_tokens"
 
 var _ sdk.Msg = &MsgWithdrawTokens{}
 
-func NewMsgWithdrawTokens(creator string, recipient string, amount sdk.Coin) *MsgWithdrawTokens {
+func NewMsgWithdrawTokens(creator, recipient string, amount sdk.Coin) *MsgWithdrawTokens {
 	return &MsgWithdrawTokens{
 		Creator:   creator,
 		Recipient: recipient,

@@ -9,10 +9,10 @@ import (
 )
 
 func TestGetParams(t *testing.T) {
-	k, ctx := testkeeper.BridgeKeeper(t)
+	k, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	params := types.DefaultParams()
 
-	k.Params.Set(ctx, params)
+	require.NoError(t, k.Params.Set(ctx, params))
 
 	p, err := k.Params.Get(ctx)
 	require.NoError(t, err)

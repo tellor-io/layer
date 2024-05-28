@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
 
@@ -11,7 +13,13 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	msg *types.MsgAddFeeToDispute,
 ) (*types.MsgAddFeeToDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
+	sender, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, err
+	}
+	if msg.Amount.Denom != layer.BondDenom {
+		return nil, errors.New("fee must be paid in loya")
+	}
 	dispute, err := k.Disputes.Get(ctx, msg.DisputeId)
 	if err != nil {
 		return nil, err
@@ -25,7 +33,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		return nil, types.ErrDisputeFeeAlreadyMet
 	}
 	// Pay fee
-	if err := k.Keeper.PayDisputeFee(ctx, msg.Creator, msg.Amount, msg.PayFromBond); err != nil {
+	if err := k.Keeper.PayDisputeFee(ctx, sender, msg.Amount, msg.PayFromBond, dispute.HashId); err != nil {
 		return nil, err
 	}
 	// Don't take payment more than slash amount
@@ -34,14 +42,14 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		msg.Amount.Amount = fee
 	}
 	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
-		PayerAddress: msg.Creator,
+		PayerAddress: sender.Bytes(),
 		Amount:       msg.Amount.Amount,
 		FromBond:     msg.PayFromBond,
 		BlockNumber:  ctx.BlockHeight(),
 	})
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory); err != nil {
+		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return nil, err
 		}
 		// begin voting immediately

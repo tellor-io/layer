@@ -6,26 +6,25 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	gomath "math"
 	"math/big"
+	"sort"
 	"time"
 
-	gomath "math"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	math "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
-
-	"sort"
-
-	"github.com/tellor-io/layer/x/bridge/types"
 )
 
 type (
@@ -115,18 +114,22 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 		return nil, err
 	}
 
-	bridgeValset := make([]*types.BridgeValidator, len(validators))
+	var bridgeValset []*types.BridgeValidator
 
-	for i, validator := range validators {
+	for _, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
 		if err != nil {
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
-			return nil, err
+			continue // Skip this validator if the EVM address is not found
 		}
-		bridgeValset[i] = &types.BridgeValidator{
+		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddress.EVMAddress,
 			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
-		}
+		})
+	}
+
+	if len(bridgeValset) == 0 {
+		return nil, errors.New("no validators found")
 	}
 
 	// Sort the validators
@@ -243,7 +246,6 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 		// TODO: handle error?
 	}
 	if valsetIdx.Index == 0 {
-		// TODO: no need to set signatures for the first valset
 		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
 		err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
 		if err != nil {
@@ -392,7 +394,7 @@ func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx context.Context, timest
 	return &valsetSigs, nil
 }
 
-func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet []byte, bridgeValidatorSetHash []byte, err error) {
+func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *types.BridgeValidatorSet) (encodedBridgeValidatorSet, bridgeValidatorSetHash []byte, err error) {
 	// Define Go equivalent of the Solidity Validator struct
 	type Validator struct {
 		Addr  common.Address
@@ -452,7 +454,7 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 	return finalEncoded, valSetHash, nil
 }
 
-func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c types.BridgeValidatorSet) float64 {
+func (k Keeper) PowerDiff(ctx context.Context, b, c types.BridgeValidatorSet) float64 {
 	powers := map[string]int64{}
 	var totalPower int64
 	for _, bv := range b.BridgeValidatorSet {
@@ -482,7 +484,7 @@ func (k Keeper) PowerDiff(ctx context.Context, b types.BridgeValidatorSet, c typ
 	return relativeDiff
 }
 
-func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB []byte) (common.Address, error) {
+func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte) (common.Address, error) {
 	msgA := "TellorLayer: Initial bridge signature A"
 	msgB := "TellorLayer: Initial bridge signature B"
 
@@ -526,7 +528,7 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB 
 	}
 }
 
-func (k Keeper) tryRecoverAddressWithBothIDs(sig []byte, msgHash []byte) ([]common.Address, error) {
+func (k Keeper) tryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Address, error) {
 	var addrs []common.Address
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)
@@ -608,7 +610,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 	return nil
 }
 
-func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string, snapshot []byte, sig []byte) error {
+func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string, snapshot, sig []byte) error {
 	// get the evm address associated with the operator address
 	ethAddress, err := k.OperatorToEVMAddressMap.Get(ctx, operatorAddress)
 	if err != nil {
@@ -820,11 +822,11 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	// set snapshot to snapshot data map
 	snapshotData := types.AttestationSnapshotData{
 		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
-		AttestationTimestamp: int64(attestationTimestamp.Unix()),
-		PrevReportTimestamp:  int64(tsBefore.Unix()),
-		NextReportTimestamp:  int64(tsAfter.Unix()),
+		AttestationTimestamp: attestationTimestamp.Unix(),
+		PrevReportTimestamp:  tsBefore.Unix(),
+		NextReportTimestamp:  tsAfter.Unix(),
 		QueryId:              queryId,
-		Timestamp:            int64(timestamp.Unix()),
+		Timestamp:            timestamp.Unix(),
 	}
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshotBytes, snapshotData)
 	if err != nil {
@@ -885,13 +887,13 @@ func (k Keeper) EncodeOracleAttestationData(
 ) ([]byte, error) {
 	// domainSeparator is bytes "tellorNewReport"
 	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-	NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR, err := hex.DecodeString(domainSep)
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, err := hex.DecodeString(domainSep)
 	if err != nil {
 		return nil, err
 	}
 	// Convert domain separator to bytes32
 	var domainSepBytes32 [32]byte
-	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
+	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
 
 	// Convert queryId to bytes32
 	var queryIdBytes32 [32]byte
@@ -976,7 +978,6 @@ func (k Keeper) EncodeOracleAttestationData(
 func (k Keeper) GetAttestationRequestsByHeight(ctx context.Context, height uint64) (*types.AttestationRequests, error) {
 	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, height)
 	if err != nil {
-		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return nil, err
 	}
 	return &attestRequests, nil

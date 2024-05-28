@@ -10,14 +10,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (k Keeper) GetTimeBasedRewards(goCtx context.Context, req *types.QueryGetTimeBasedRewardsRequest) (*types.QueryGetTimeBasedRewardsResponse, error) {
+func (q Querier) GetTimeBasedRewards(ctx context.Context, req *types.QueryGetTimeBasedRewardsRequest) (*types.QueryGetTimeBasedRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	rewards := k.getTimeBasedRewards(ctx)
+	rewards := q.keeper.getTimeBasedRewards(ctx)
 
 	return &types.QueryGetTimeBasedRewardsResponse{Reward: sdk.NewCoin(layer.BondDenom, rewards)}, nil
 }

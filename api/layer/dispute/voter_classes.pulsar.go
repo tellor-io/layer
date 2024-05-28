@@ -16,7 +16,7 @@ import (
 
 var (
 	md_VoterClasses              protoreflect.MessageDescriptor
-	fd_VoterClasses_validators   protoreflect.FieldDescriptor
+	fd_VoterClasses_reporters    protoreflect.FieldDescriptor
 	fd_VoterClasses_tokenHolders protoreflect.FieldDescriptor
 	fd_VoterClasses_users        protoreflect.FieldDescriptor
 	fd_VoterClasses_team         protoreflect.FieldDescriptor
@@ -25,7 +25,7 @@ var (
 func init() {
 	file_layer_dispute_voter_classes_proto_init()
 	md_VoterClasses = File_layer_dispute_voter_classes_proto.Messages().ByName("VoterClasses")
-	fd_VoterClasses_validators = md_VoterClasses.Fields().ByName("validators")
+	fd_VoterClasses_reporters = md_VoterClasses.Fields().ByName("reporters")
 	fd_VoterClasses_tokenHolders = md_VoterClasses.Fields().ByName("tokenHolders")
 	fd_VoterClasses_users = md_VoterClasses.Fields().ByName("users")
 	fd_VoterClasses_team = md_VoterClasses.Fields().ByName("team")
@@ -96,9 +96,9 @@ func (x *fastReflection_VoterClasses) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_VoterClasses) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Validators != "" {
-		value := protoreflect.ValueOfString(x.Validators)
-		if !f(fd_VoterClasses_validators, value) {
+	if x.Reporters != "" {
+		value := protoreflect.ValueOfString(x.Reporters)
+		if !f(fd_VoterClasses_reporters, value) {
 			return
 		}
 	}
@@ -135,8 +135,8 @@ func (x *fastReflection_VoterClasses) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_VoterClasses) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.dispute.VoterClasses.validators":
-		return x.Validators != ""
+	case "layer.dispute.VoterClasses.reporters":
+		return x.Reporters != ""
 	case "layer.dispute.VoterClasses.tokenHolders":
 		return x.TokenHolders != ""
 	case "layer.dispute.VoterClasses.users":
@@ -159,8 +159,8 @@ func (x *fastReflection_VoterClasses) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_VoterClasses) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.dispute.VoterClasses.validators":
-		x.Validators = ""
+	case "layer.dispute.VoterClasses.reporters":
+		x.Reporters = ""
 	case "layer.dispute.VoterClasses.tokenHolders":
 		x.TokenHolders = ""
 	case "layer.dispute.VoterClasses.users":
@@ -183,8 +183,8 @@ func (x *fastReflection_VoterClasses) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_VoterClasses) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.dispute.VoterClasses.validators":
-		value := x.Validators
+	case "layer.dispute.VoterClasses.reporters":
+		value := x.Reporters
 		return protoreflect.ValueOfString(value)
 	case "layer.dispute.VoterClasses.tokenHolders":
 		value := x.TokenHolders
@@ -215,8 +215,8 @@ func (x *fastReflection_VoterClasses) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_VoterClasses) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.dispute.VoterClasses.validators":
-		x.Validators = value.Interface().(string)
+	case "layer.dispute.VoterClasses.reporters":
+		x.Reporters = value.Interface().(string)
 	case "layer.dispute.VoterClasses.tokenHolders":
 		x.TokenHolders = value.Interface().(string)
 	case "layer.dispute.VoterClasses.users":
@@ -243,8 +243,8 @@ func (x *fastReflection_VoterClasses) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_VoterClasses) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.dispute.VoterClasses.validators":
-		panic(fmt.Errorf("field validators of message layer.dispute.VoterClasses is not mutable"))
+	case "layer.dispute.VoterClasses.reporters":
+		panic(fmt.Errorf("field reporters of message layer.dispute.VoterClasses is not mutable"))
 	case "layer.dispute.VoterClasses.tokenHolders":
 		panic(fmt.Errorf("field tokenHolders of message layer.dispute.VoterClasses is not mutable"))
 	case "layer.dispute.VoterClasses.users":
@@ -264,7 +264,7 @@ func (x *fastReflection_VoterClasses) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_VoterClasses) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.dispute.VoterClasses.validators":
+	case "layer.dispute.VoterClasses.reporters":
 		return protoreflect.ValueOfString("")
 	case "layer.dispute.VoterClasses.tokenHolders":
 		return protoreflect.ValueOfString("")
@@ -341,7 +341,7 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Validators)
+		l = len(x.Reporters)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -407,10 +407,10 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.Validators) > 0 {
-			i -= len(x.Validators)
-			copy(dAtA[i:], x.Validators)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Validators)))
+		if len(x.Reporters) > 0 {
+			i -= len(x.Reporters)
+			copy(dAtA[i:], x.Reporters)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reporters)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -465,7 +465,7 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Validators", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporters", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -493,7 +493,7 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Validators = string(dAtA[iNdEx:postIndex])
+				x.Reporters = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -626,6 +626,560 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_VoteGroup              protoreflect.MessageDescriptor
+	fd_VoteGroup_users        protoreflect.FieldDescriptor
+	fd_VoteGroup_reporters    protoreflect.FieldDescriptor
+	fd_VoteGroup_tokenHolders protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_dispute_voter_classes_proto_init()
+	md_VoteGroup = File_layer_dispute_voter_classes_proto.Messages().ByName("VoteGroup")
+	fd_VoteGroup_users = md_VoteGroup.Fields().ByName("users")
+	fd_VoteGroup_reporters = md_VoteGroup.Fields().ByName("reporters")
+	fd_VoteGroup_tokenHolders = md_VoteGroup.Fields().ByName("tokenHolders")
+}
+
+var _ protoreflect.Message = (*fastReflection_VoteGroup)(nil)
+
+type fastReflection_VoteGroup VoteGroup
+
+func (x *VoteGroup) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_VoteGroup)(x)
+}
+
+func (x *VoteGroup) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_dispute_voter_classes_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_VoteGroup_messageType fastReflection_VoteGroup_messageType
+var _ protoreflect.MessageType = fastReflection_VoteGroup_messageType{}
+
+type fastReflection_VoteGroup_messageType struct{}
+
+func (x fastReflection_VoteGroup_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_VoteGroup)(nil)
+}
+func (x fastReflection_VoteGroup_messageType) New() protoreflect.Message {
+	return new(fastReflection_VoteGroup)
+}
+func (x fastReflection_VoteGroup_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_VoteGroup
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_VoteGroup) Descriptor() protoreflect.MessageDescriptor {
+	return md_VoteGroup
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_VoteGroup) Type() protoreflect.MessageType {
+	return _fastReflection_VoteGroup_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_VoteGroup) New() protoreflect.Message {
+	return new(fastReflection_VoteGroup)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_VoteGroup) Interface() protoreflect.ProtoMessage {
+	return (*VoteGroup)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_VoteGroup) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Users) != 0 {
+		value := protoreflect.ValueOfBytes(x.Users)
+		if !f(fd_VoteGroup_users, value) {
+			return
+		}
+	}
+	if len(x.Reporters) != 0 {
+		value := protoreflect.ValueOfBytes(x.Reporters)
+		if !f(fd_VoteGroup_reporters, value) {
+			return
+		}
+	}
+	if len(x.TokenHolders) != 0 {
+		value := protoreflect.ValueOfBytes(x.TokenHolders)
+		if !f(fd_VoteGroup_tokenHolders, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_VoteGroup) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.dispute.VoteGroup.users":
+		return len(x.Users) != 0
+	case "layer.dispute.VoteGroup.reporters":
+		return len(x.Reporters) != 0
+	case "layer.dispute.VoteGroup.tokenHolders":
+		return len(x.TokenHolders) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteGroup) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.dispute.VoteGroup.users":
+		x.Users = nil
+	case "layer.dispute.VoteGroup.reporters":
+		x.Reporters = nil
+	case "layer.dispute.VoteGroup.tokenHolders":
+		x.TokenHolders = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_VoteGroup) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.dispute.VoteGroup.users":
+		value := x.Users
+		return protoreflect.ValueOfBytes(value)
+	case "layer.dispute.VoteGroup.reporters":
+		value := x.Reporters
+		return protoreflect.ValueOfBytes(value)
+	case "layer.dispute.VoteGroup.tokenHolders":
+		value := x.TokenHolders
+		return protoreflect.ValueOfBytes(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteGroup does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteGroup) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.dispute.VoteGroup.users":
+		x.Users = value.Bytes()
+	case "layer.dispute.VoteGroup.reporters":
+		x.Reporters = value.Bytes()
+	case "layer.dispute.VoteGroup.tokenHolders":
+		x.TokenHolders = value.Bytes()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteGroup) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.VoteGroup.users":
+		panic(fmt.Errorf("field users of message layer.dispute.VoteGroup is not mutable"))
+	case "layer.dispute.VoteGroup.reporters":
+		panic(fmt.Errorf("field reporters of message layer.dispute.VoteGroup is not mutable"))
+	case "layer.dispute.VoteGroup.tokenHolders":
+		panic(fmt.Errorf("field tokenHolders of message layer.dispute.VoteGroup is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_VoteGroup) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.VoteGroup.users":
+		return protoreflect.ValueOfBytes(nil)
+	case "layer.dispute.VoteGroup.reporters":
+		return protoreflect.ValueOfBytes(nil)
+	case "layer.dispute.VoteGroup.tokenHolders":
+		return protoreflect.ValueOfBytes(nil)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteGroup does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_VoteGroup) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.VoteGroup", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_VoteGroup) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteGroup) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_VoteGroup) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_VoteGroup) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*VoteGroup)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Users)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Reporters)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.TokenHolders)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*VoteGroup)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.TokenHolders) > 0 {
+			i -= len(x.TokenHolders)
+			copy(dAtA[i:], x.TokenHolders)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TokenHolders)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Reporters) > 0 {
+			i -= len(x.Reporters)
+			copy(dAtA[i:], x.Reporters)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reporters)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Users) > 0 {
+			i -= len(x.Users)
+			copy(dAtA[i:], x.Users)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Users)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*VoteGroup)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VoteGroup: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VoteGroup: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Users = append(x.Users[:0], dAtA[iNdEx:postIndex]...)
+				if x.Users == nil {
+					x.Users = []byte{}
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporters", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Reporters = append(x.Reporters[:0], dAtA[iNdEx:postIndex]...)
+				if x.Reporters == nil {
+					x.Reporters = []byte{}
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TokenHolders", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TokenHolders = append(x.TokenHolders[:0], dAtA[iNdEx:postIndex]...)
+				if x.TokenHolders == nil {
+					x.TokenHolders = []byte{}
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -644,7 +1198,7 @@ type VoterClasses struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Validators   string `protobuf:"bytes,1,opt,name=validators,proto3" json:"validators,omitempty"`
+	Reporters    string `protobuf:"bytes,1,opt,name=reporters,proto3" json:"reporters,omitempty"`
 	TokenHolders string `protobuf:"bytes,2,opt,name=tokenHolders,proto3" json:"tokenHolders,omitempty"`
 	Users        string `protobuf:"bytes,3,opt,name=users,proto3" json:"users,omitempty"`
 	Team         string `protobuf:"bytes,4,opt,name=team,proto3" json:"team,omitempty"`
@@ -670,9 +1224,9 @@ func (*VoterClasses) Descriptor() ([]byte, []int) {
 	return file_layer_dispute_voter_classes_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *VoterClasses) GetValidators() string {
+func (x *VoterClasses) GetReporters() string {
 	if x != nil {
-		return x.Validators
+		return x.Reporters
 	}
 	return ""
 }
@@ -698,6 +1252,57 @@ func (x *VoterClasses) GetTeam() string {
 	return ""
 }
 
+type VoteGroup struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Users        []byte `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
+	Reporters    []byte `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
+	TokenHolders []byte `protobuf:"bytes,3,opt,name=tokenHolders,proto3" json:"tokenHolders,omitempty"`
+}
+
+func (x *VoteGroup) Reset() {
+	*x = VoteGroup{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_dispute_voter_classes_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *VoteGroup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VoteGroup) ProtoMessage() {}
+
+// Deprecated: Use VoteGroup.ProtoReflect.Descriptor instead.
+func (*VoteGroup) Descriptor() ([]byte, []int) {
+	return file_layer_dispute_voter_classes_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *VoteGroup) GetUsers() []byte {
+	if x != nil {
+		return x.Users
+	}
+	return nil
+}
+
+func (x *VoteGroup) GetReporters() []byte {
+	if x != nil {
+		return x.Reporters
+	}
+	return nil
+}
+
+func (x *VoteGroup) GetTokenHolders() []byte {
+	if x != nil {
+		return x.TokenHolders
+	}
+	return nil
+}
+
 var File_layer_dispute_voter_classes_proto protoreflect.FileDescriptor
 
 var file_layer_dispute_voter_classes_proto_rawDesc = []byte{
@@ -707,37 +1312,43 @@ var file_layer_dispute_voter_classes_proto_rawDesc = []byte{
 	0x74, 0x65, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67,
 	0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0xb0, 0x02, 0x0a, 0x0c, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61,
-	0x73, 0x73, 0x65, 0x73, 0x12, 0x4b, 0x0a, 0x0a, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde,
-	0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,
-	0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0a, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x73, 0x12, 0x4f, 0x0a, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72,
-	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f,
+	0x6f, 0x74, 0x6f, 0x22, 0xae, 0x02, 0x0a, 0x0c, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61,
+	0x73, 0x73, 0x65, 0x73, 0x12, 0x49, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f,
 	0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61,
 	0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65,
-	0x72, 0x73, 0x12, 0x41, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x2e, 0x49, 0x6e, 0x74, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12,
+	0x4f, 0x0a, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
+	0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49,
+	0x6e, 0x74, 0x52, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x73,
+	0x12, 0x41, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
+	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4,
+	0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x05, 0x75, 0x73,
+	0x65, 0x72, 0x73, 0x12, 0x3f, 0x0a, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
-	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x05,
-	0x75, 0x73, 0x65, 0x72, 0x73, 0x12, 0x3f, 0x0a, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
-	0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74,
-	0x52, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x42, 0xa9, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x11, 0x56, 0x6f,
-	0x74, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65,
-	0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xa2,
-	0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x44, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x04,
+	0x74, 0x65, 0x61, 0x6d, 0x22, 0x63, 0x0a, 0x09, 0x56, 0x6f, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x12, 0x14, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c,
+	0x52, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x22, 0x0a, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f,
+	0x6c, 0x64, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0c, 0x74, 0x6f, 0x6b,
+	0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x73, 0x42, 0xa9, 0x01, 0x0a, 0x11, 0x63, 0x6f,
+	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42,
+	0x11, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -752,9 +1363,10 @@ func file_layer_dispute_voter_classes_proto_rawDescGZIP() []byte {
 	return file_layer_dispute_voter_classes_proto_rawDescData
 }
 
-var file_layer_dispute_voter_classes_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_layer_dispute_voter_classes_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_layer_dispute_voter_classes_proto_goTypes = []interface{}{
 	(*VoterClasses)(nil), // 0: layer.dispute.VoterClasses
+	(*VoteGroup)(nil),    // 1: layer.dispute.VoteGroup
 }
 var file_layer_dispute_voter_classes_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -782,6 +1394,18 @@ func file_layer_dispute_voter_classes_proto_init() {
 				return nil
 			}
 		}
+		file_layer_dispute_voter_classes_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*VoteGroup); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -789,7 +1413,7 @@ func file_layer_dispute_voter_classes_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_dispute_voter_classes_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

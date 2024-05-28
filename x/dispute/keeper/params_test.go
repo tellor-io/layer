@@ -12,7 +12,9 @@ func TestGetParams(t *testing.T) {
 	k, _, _, _, _, ctx := testkeeper.DisputeKeeper(t)
 	params := types.DefaultParams()
 
-	k.SetParams(ctx, params)
+	k.Params.Set(ctx, params)
 
-	require.EqualValues(t, params, k.GetParams(ctx))
+	params, err := k.Params.Get(ctx)
+	require.NoError(t, err)
+	require.EqualValues(t, params, params)
 }

@@ -15,17 +15,15 @@ import (
 )
 
 // FeefromReporterStake deducts the fee from the reporter's stake used mainly for paying dispute from bond
-func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int) error {
+func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
 	}
 
 	// Calculate each delegator's share (including the reporter as a self-delegator)
-	repAddr, err := sdk.AccAddressFromBech32(reporter.Reporter)
-	if err != nil {
-		return err
-	}
+	repAddr := sdk.AccAddress(reporter.Reporter)
+
 	delAddrs, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
 		return err
@@ -38,7 +36,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 			return err
 		}
 
-		rng := collections.NewPrefixedPairRange[sdk.AccAddress, sdk.ValAddress](key)
+		rng := collections.NewPrefixedPairRange[[]byte, []byte](key)
 		iter, err := k.TokenOrigin.Iterate(ctx, rng)
 		if err != nil {
 			return err
@@ -47,6 +45,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 		if err != nil {
 			return err
 		}
+		feeTracker := make([]*types.TokenOriginInfo, 0, len(delegatorSources))
 		for _, source := range delegatorSources {
 			srcAmt := math.LegacyNewDecFromInt(source.Value)
 			share := srcAmt.Quo(totaltokens).Mul(math.LegacyNewDecFromInt(amt))
@@ -54,6 +53,27 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 			if err != nil {
 				return err
 			}
+			feeTracker = append(feeTracker, &types.TokenOriginInfo{
+				DelegatorAddress: source.Key.K1(),
+				ValidatorAddress: source.Key.K2(),
+				Amount:           share.TruncateInt(),
+			})
+		}
+
+		has, err := k.FeePaidFromStake.Has(ctx, hashId)
+		if err != nil {
+			return err
+		}
+		if has {
+			preFeeTracker, err := k.FeePaidFromStake.Get(ctx, hashId)
+			if err != nil {
+				return err
+			}
+
+			feeTracker = append(feeTracker, preFeeTracker.TokenOrigins...)
+		}
+		if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsPreUpdate{TokenOrigins: feeTracker}); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -92,7 +112,7 @@ func (k Keeper) getDstValidator(ctx context.Context, delAddr sdk.AccAddress, val
 	return nil, errors.New("redelegation to destination validator not found")
 }
 
-func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.Int) (math.Int, error) {
+func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, tokens math.Int) (math.Int, error) {
 	ubd, err := k.stakingKeeper.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if err != nil {
 		return math.Int{}, err
@@ -101,14 +121,14 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 		return math.Int{}, types.ErrNoUnbondingDelegationEntries
 	}
 	for i, u := range ubd.Entries {
-		if u.Balance.LT(shares) {
-			shares = shares.Sub(u.Balance)
+		if u.Balance.LT(tokens) {
+			tokens = tokens.Sub(u.Balance)
 			ubd.RemoveEntry(int64(i))
 		} else {
-			u.Balance = u.Balance.Sub(shares)
-			u.InitialBalance = u.InitialBalance.Sub(shares)
+			u.Balance = u.Balance.Sub(tokens)
+			u.InitialBalance = u.InitialBalance.Sub(tokens)
 			ubd.Entries[i] = u
-			shares = math.ZeroInt()
+			tokens = math.ZeroInt()
 			break
 		}
 	}
@@ -121,29 +141,41 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 	if err != nil {
 		return math.Int{}, err
 	}
-	return shares, nil
+	return tokens, nil
 
 }
 
-func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec) (math.LegacyDec, error) {
+func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec) (math.LegacyDec, error) {
 	// get delegation
 	del, err := k.stakingKeeper.GetDelegation(ctx, delAddr, valAddr)
 	if err != nil {
-		return shares, err
+		return math.LegacyDec{}, err
 	}
-	if del.Shares.GTE(shares) {
-		_, err := k.stakingKeeper.Unbond(ctx, delAddr, valAddr, shares)
+	validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+
+	// convert current delegation shares to tokens
+	currentTokens := validator.TokensFromShares(del.Shares)
+
+	if currentTokens.GTE(delTokens) {
+		shares, err := validator.SharesFromTokens(delTokens.TruncateInt())
 		if err != nil {
-			return shares, err
+			return math.LegacyDec{}, err
+		}
+		_, err = k.stakingKeeper.Unbond(ctx, delAddr, valAddr, shares)
+		if err != nil {
+			return math.LegacyDec{}, err
 		}
 		return math.LegacyZeroDec(), nil
 	} else {
-		shares = shares.Sub(del.Shares)
+		delTokens = delTokens.Sub(currentTokens)
 		_, err := k.stakingKeeper.Unbond(ctx, delAddr, valAddr, del.Shares)
 		if err != nil {
-			return shares, err
+			return math.LegacyDec{}, err
 		}
-		return shares, nil
+		return delTokens, nil
 	}
 
 }
@@ -164,8 +196,8 @@ func (k Keeper) moveTokensFromValidator(ctx context.Context, valAddr sdk.ValAddr
 	}
 	return k.tokensToDispute(ctx, fromPool, amount)
 }
-func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec) (math.Int, error) {
-	remainingFromdel, err := k.deductFromdelegation(ctx, delAddr, valAddr, shares)
+func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec) (math.Int, error) {
+	remainingFromdel, err := k.deductFromdelegation(ctx, delAddr, valAddr, delTokens)
 	if err != nil {
 		if !errors.Is(err, stakingtypes.ErrNoDelegation) {
 			return math.Int{}, err
@@ -173,7 +205,7 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 	}
 
 	if remainingFromdel.IsZero() {
-		if err := k.moveTokensFromValidator(ctx, valAddr, shares.TruncateInt()); err != nil {
+		if err := k.moveTokensFromValidator(ctx, valAddr, delTokens.TruncateInt()); err != nil {
 			return math.Int{}, err
 		}
 		return remainingFromdel.TruncateInt(), nil
@@ -193,12 +225,12 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 
 }
 
-func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int) error {
+func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error {
 	// get origins at height
-	rng := collections.NewPrefixedPairRange[sdk.AccAddress, int64](reporterAddr).StartInclusive(height)
+	rng := collections.NewPrefixedPairRange[[]byte, int64](reporterAddr).EndInclusive(height).Descending()
 	var firstValue *types.DelegationsPreUpdate
 
-	err := k.TokenOriginSnapshot.Walk(ctx, rng, func(key collections.Pair[sdk.AccAddress, int64], value types.DelegationsPreUpdate) (stop bool, err error) {
+	err := k.TokenOriginSnapshot.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsPreUpdate) (stop bool, err error) {
 		firstValue = &value
 		return true, nil
 	})
@@ -207,20 +239,30 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	}
 
 	totalTokens := layertypes.PowerReduction.MulRaw(power)
-	for _, del := range firstValue.TokenOrigins {
+	disputeTokens := make([]*types.TokenOriginInfo, 0)
+	leftover := amt
+	for i, del := range firstValue.TokenOrigins {
+
 		delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
-		delAddr, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
-		if err != nil {
-			return err
+
+		leftover = leftover.Sub(delegatorShare.TruncateInt())
+
+		if i == len(firstValue.TokenOrigins)-1 {
+			delegatorShare = delegatorShare.Add(leftover.ToLegacyDec())
 		}
-		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
-		if err != nil {
-			return err
-		}
+
+		delAddr := sdk.AccAddress(del.DelegatorAddress)
+		valAddr := sdk.ValAddress(del.ValidatorAddress)
+
 		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare)
 		if err != nil {
 			return err
 		}
+		disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
+			DelegatorAddress: del.DelegatorAddress,
+			ValidatorAddress: del.ValidatorAddress,
+			Amount:           delegatorShare.TruncateInt().Sub(remaining),
+		})
 		if !remaining.IsZero() {
 			dstVAl, err := k.getDstValidator(ctx, delAddr, valAddr)
 			if err != nil {
@@ -230,9 +272,17 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			if err != nil {
 				return err
 			}
+			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
+				DelegatorAddress: del.DelegatorAddress,
+				ValidatorAddress: dstVAl,
+				Amount:           remaining,
+			})
 		}
 	}
-	return nil
+
+	// after escrow you should keep a new snapshot of the amounts from each that were taken instead of relying on the original snapshot
+	// then you can delete it after the slashed tokens are returned
+	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsPreUpdate{TokenOrigins: disputeTokens})
 }
 
 func (k Keeper) tokensToDispute(ctx context.Context, fromPool string, amount math.Int) error {

@@ -213,3 +213,53 @@ func TestValueDecoded(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValueDecodable(t *testing.T) {
+	val := "0x0000000000000000000000000000000000000000000000000000000000000009"
+	err := IsValueDecodable(val, "int8")
+	require.NoError(t, err)
+}
+
+func TestDecodeParamatypes(t *testing.T) {
+	var dataSpec = DataSpec{
+		DocumentHash:      "",
+		ResponseValueType: "uint256",
+		AbiComponents: []*ABIComponent{
+			{Name: "metric", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+			{Name: "collection", FieldType: "tuple[]",
+				NestedComponent: []*ABIComponent{
+					{Name: "chainName", FieldType: "string"},
+					{Name: "collectionAddress", FieldType: "address"},
+				},
+			},
+			{Name: "tokens", FieldType: "tuple[]",
+				NestedComponent: []*ABIComponent{
+					{Name: "chainName", FieldType: "string"},
+					{Name: "tokenName", FieldType: "string"},
+					{Name: "tokenAddress", FieldType: "address"},
+				},
+			},
+		},
+	}
+	encodedDataSpec, err := dataSpec.EncodeData("MimicryMacroMarketMashup",
+		`[
+	"market-cap",
+	"usd",
+	[
+		["ethereum-mainnet","0x50f5474724e0Ee42D9a4e711ccFB275809Fd6d4a"],
+		["ethereum-mainnet","0xF87E31492Faf9A91B02Ee0dEAAd50d51d56D5d4d"],
+		["ethereum-mainnet","0x34d85c9CDeB23FA97cb08333b511ac86E1C4E258"]
+	],
+	[
+		["ethereum-mainnet","sand","0x3845badAde8e6dFF049820680d1F14bD3903a5d0"],
+		["ethereum-mainnet","mana","0x0F5D2fB29fb7d3CFeE444a200298f468908cC942"],
+		["ethereum-mainnet","ape","0x4d224452801ACEd8B2F0aebE155379bb5D594381"]
+	]
+	]`)
+	_, resultBytes, err := DecodeQueryType(encodedDataSpec)
+	res, err := DecodeParamtypes(resultBytes, dataSpec.AbiComponents)
+	require.NoError(t, err)
+	expectedDecodedResult := `["market-cap","usd",[{"chainName":"ethereum-mainnet","collectionAddress":"0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a"},{"chainName":"ethereum-mainnet","collectionAddress":"0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d"},{"chainName":"ethereum-mainnet","collectionAddress":"0x34d85c9cdeb23fa97cb08333b511ac86e1c4e258"}],[{"chainName":"ethereum-mainnet","tokenName":"sand","tokenAddress":"0x3845badade8e6dff049820680d1f14bd3903a5d0"},{"chainName":"ethereum-mainnet","tokenName":"mana","tokenAddress":"0x0f5d2fb29fb7d3cfee444a200298f468908cc942"},{"chainName":"ethereum-mainnet","tokenName":"ape","tokenAddress":"0x4d224452801aced8b2f0aebe155379bb5d594381"}]]`
+	require.Equal(t, res, expectedDecodedResult)
+}

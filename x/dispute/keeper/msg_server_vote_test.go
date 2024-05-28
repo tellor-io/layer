@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *KeeperTestSuite) TestVote() {
@@ -15,10 +15,13 @@ func (s *KeeperTestSuite) TestVote() {
 
 	// mock dependency modules
 	s.bankKeeper.On("GetBalance", s.ctx, addr, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
-	s.oracleKeeper.On("GetUserTips", s.ctx, addr).Return(oracletypes.UserTipTotal{Address: addr.String(), Total: math.NewInt(1)}, nil)
 	s.bankKeeper.On("GetSupply", s.ctx, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
-	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
-	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, s.ctx.BlockHeight(), addr).Return(math.NewInt(1), nil)
+	s.reporterKeeper.On("Delegation", s.ctx, addr).Return(reportertypes.Delegation{
+		Reporter: addr.Bytes(),
+		Amount:   math.NewInt(1),
+	}, nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), s.ctx.BlockHeight()).Return(math.NewInt(1), nil)
 
 	voteMsg := types.MsgVote{
 		Voter: addr.String(),
@@ -32,7 +35,7 @@ func (s *KeeperTestSuite) TestVote() {
 	_, err = s.msgServer.Vote(s.ctx, &voteMsg)
 	s.Error(err)
 
-	voterVote, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), addr))
+	voterVote, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), addr.Bytes()))
 	s.NoError(err)
 
 	s.Equal(voterVote.Vote, types.VoteEnum_VOTE_SUPPORT)
@@ -45,7 +48,7 @@ func (s *KeeperTestSuite) TestVote() {
 	s.NoError(err)
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
-	s.Equal(keys[0].K2(), addr)
+	s.Equal(keys[0].K2(), addr.Bytes())
 	s.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
 	s.Equal(vote.Id, uint64(1))
 }

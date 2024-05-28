@@ -13,7 +13,7 @@ func TestParamsQuery(t *testing.T) {
 	k, _, _, _, _, ctx := testkeeper.DisputeKeeper(t)
 	q := keeper.NewQuerier(k)
 	params := types.DefaultParams()
-	k.SetParams(ctx, params)
+	k.Params.Set(ctx, params)
 
 	response, err := q.Params(ctx, &types.QueryParamsRequest{})
 	require.NoError(t, err)
