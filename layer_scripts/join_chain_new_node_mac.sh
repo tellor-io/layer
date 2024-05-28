@@ -12,6 +12,8 @@ NODE_MONIKER="billmoniker"
 NODE_NAME="bill"
 
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
+## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
+export LAYER_NODE_URL=
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
@@ -67,22 +69,15 @@ rm -f ~/.layer/config/genesis.json
 rm -f ~/.layer/$NODE_NAME/config/genesis.json
 # get genesis file from running node's rpc
 echo "Getting genesis from runnning node....."
-curl tellornode.com:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
-curl tellornode.com:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
+curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
+curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
-# current running SSL NGINX VERSION node id: 5a47f0cd16e3a6b35a222cbc461b9ab6695cc9d5
-# other node id: 0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5
-# ALICE_NODE_ID=$(./layerd --node https://tellorlayer.com/rpc comet show-node-id)
-# echo "ALICE NODE ID: $ALICE_NODE_ID"
-# ALICE_NODE_ID=0ae46718d9d95ab32bc12f5b4587a9a13dc85ca5
-# ALICE_ID=$ALICE_NODE_ID@tellornode.com:26657
-
-export QUOTED_TELLORNODE_ID="$(curl tellornode.com:26657/status | jq '.result.node_info.id')"
+export QUOTED_TELLORNODE_ID="$(curl $LAYER_NODE_URL:26657/status | jq '.result.node_info.id')"
 export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
 echo "Tellor node id: $TELLORNODE_ID"
-sed -i '' 's/seeds = ""/seeds = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
-sed -i '' 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@tellornode.com:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i '' 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i '' 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
 
 echo "Starting chain for node..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@tellornode.com:26656"
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
