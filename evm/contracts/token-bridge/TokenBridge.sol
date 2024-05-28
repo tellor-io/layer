@@ -73,10 +73,9 @@ contract TokenBridge is LayerTransition{
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
         require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
         //isAnyConsesnusValue here
-        require(bridge.verifyOracleData(_attest, _valset, _sigs), "Invalid attestation");
+        bridge.verifyOracleData(_attest, _valset, _sigs);
         require(block.timestamp - _attest.attestationTimestamp <= MAX_ATTESTATION_AGE , "Attestation is too old");
         require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
-        //to here
         withdrawalClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attest.report.value, (address, string, uint256));
         uint256 _amountConverted = _amountLoya * 1e12; 

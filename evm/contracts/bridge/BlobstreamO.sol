@@ -159,7 +159,7 @@ contract BlobstreamO is ECDSA {
         OracleAttestationData calldata _attestData,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
-    ) external view returns (bool) {
+    ) external view{
         if (_currentValidatorSet.length != _sigs.length) {
             revert MalformedCurrentValidatorSet();
         }
@@ -183,7 +183,6 @@ contract BlobstreamO is ECDSA {
             _dataDigest,
             powerThreshold
         );
-        return true;
     }
 
 
