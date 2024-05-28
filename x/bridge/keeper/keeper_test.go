@@ -487,7 +487,6 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 	fmt.Println("res: ", res)
 }
 
-// needs finished
 func TestEncodeAndHashValidatorSet(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
@@ -507,7 +506,24 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 	require.NotNil(t, encodedBridgeValSet)
 	require.NotNil(t, bridgeValSetHash)
 
-	// verify encoding
+	bridgeValSet2 := bridgetypes.BridgeValidatorSet{
+		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator10"),
+				Power:           10000000,
+			},
+			{
+				EthereumAddress: []byte("validator100"),
+				Power:           20000,
+			},
+		},
+	}
+	encodedBridgeValSet2, bridgeValSetHash2, err := k.EncodeAndHashValidatorSet(ctx, &bridgeValSet2)
+	require.NoError(t, err)
+	require.NotNil(t, encodedBridgeValSet2)
+	require.NotNil(t, bridgeValSetHash2)
+	require.NotEqual(t, bridgeValSetHash, bridgeValSetHash2)
+	require.NotEqual(t, encodedBridgeValSet, encodedBridgeValSet2)
 }
 
 // needs finished
@@ -566,6 +582,7 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
+	// https://goethereumbook.org/signature-generate/
 	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
 	require.NotNil(t, privateKey)
 	require.NoError(t, err)
@@ -617,6 +634,8 @@ func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
+	_, err := k.TryRecoverAddressWithBothIDs([]byte{}, []byte{})
+	require.Error(t, err)
 }
 
 func TestSetEVMAddressByOperator(t *testing.T) {
