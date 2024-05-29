@@ -38,7 +38,7 @@ func (k Keeper) ValidateAndSetAmount(ctx context.Context, delegator sdk.AccAddre
 		if err != nil {
 			return errorsmod.Wrapf(err, "failed to fetch validator for source tokens %v", origin)
 		}
-		delegation, err := k.stakingKeeper.Delegation(ctx, delegator, valAddr)
+		delegation, err := k.stakingKeeper.GetDelegation(ctx, delegator, valAddr)
 		if err != nil {
 			return err
 		}

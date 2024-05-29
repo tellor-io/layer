@@ -17,4 +17,5 @@ message Delegation {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+  uint64 delegation_count = 3;
 }
