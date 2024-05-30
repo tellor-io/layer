@@ -1,3 +1,4 @@
+//nolint:stylecheck // ignore stylecheck for this file
 package sources
 
 import (
@@ -17,6 +18,7 @@ const (
 	deltaPrecision = 0.000000001
 )
 
+//lint:ignore ST1005 This is a test error
 var errpositiveTagValidation = errors.New(
 	"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
 		"failed on the 'positive-float-string' tag",

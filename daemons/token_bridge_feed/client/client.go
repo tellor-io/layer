@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -107,8 +108,12 @@ type DepositReport struct {
 	Value     string
 }
 
-func (c *Client) QueryAPI(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
+	parsedUrl, err := url.ParseRequestURI(urlStr)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Get(parsedUrl.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to make API request: %w", err)
 	}

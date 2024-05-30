@@ -239,7 +239,10 @@ func (app *App) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []str
 		ctx,
 		func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 			info.StartHeight = 0
-			app.SlashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			err = app.SlashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			if err != nil {
+				panic(err)
+			}
 			return false
 		},
 	)

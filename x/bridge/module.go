@@ -139,6 +139,10 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// todo: handle genesis state better?
+	if sdkCtx.BlockHeight() == 1 {
+		return nil
+	}
 	_, err := am.keeper.CompareBridgeValidators(sdkCtx)
 	if err != nil {
 		return err
