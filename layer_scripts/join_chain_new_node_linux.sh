@@ -10,10 +10,11 @@ KEYRING_BACKEND="test"
 PASSWORD="password"
 NODE_MONIKER="billmoniker"
 NODE_NAME="bill"
+RUNNING_NODE_ID=add3c560ed48fa00324b2bfaa6383f1fccb16e96
 
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=
+export LAYER_NODE_URL=tellornode.com
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
@@ -86,18 +87,18 @@ curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/
 
 export QUOTED_TELLORNODE_ID="$(curl $LAYER_NODE_URL:26657/status | jq '.result.node_info.id')"
 #export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
-export TELLORNODE_ID=${echo "$QUOTED_TELLORNODE_ID" | tr -d "'\"" }
-echo "NODE ID: $TELLORNODE_ID"
+# export TELLORNODE_ID=${echo "$QUOTED_TELLORNODE_ID" | tr -d "'\"" }
+# echo "NODE ID: $TELLORNODE_ID"
 # echo "Tellor node id: $TELLORNODE_ID"
 # sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@$LAYER_NODE_URL:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 # sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@$LAYER_NODE_URL:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
-sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
-sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i 's/seeds = ""/seeds = "'$RUNNING_NODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i 's/persistent_peers = ""/persistent_peers = "'$RUNNING_NODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
 echo "Node ID: $QUOTED_TELLORNODE_ID"
-echo "Path: @$LAYER_NODE_URL:26656"
+echo "Path: $RUNNING_NODE_ID@$LAYER_NODE_URL:26656"
 
-sleep 60
+sleep 30
 
 echo "Starting chain for node..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$RUNNING_NODE_ID@$LAYER_NODE_URL:26656"
