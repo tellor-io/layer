@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"encoding/hex"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestWeightedMode() {
@@ -102,7 +103,8 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 		},
 	}
 
-	s.oracleKeeper.WeightedMode(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMode(s.ctx, reports)
+	s.NoError(err)
 	res, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId2)})
 	s.Nil(err)
 	s.Equal(res.Report.QueryId, qId2, "query id is not correct")

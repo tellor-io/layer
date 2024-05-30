@@ -7,7 +7,7 @@ import (
 func (s *KeeperTestSuite) TestGetParams() {
 	params := types.DefaultParams()
 
-	s.oracleKeeper.SetParams(s.ctx, params)
+	s.NoError(s.oracleKeeper.SetParams(s.ctx, params))
 	p, err := s.oracleKeeper.GetParams(s.ctx)
 	s.NoError(err)
 	s.EqualValues(params, p)

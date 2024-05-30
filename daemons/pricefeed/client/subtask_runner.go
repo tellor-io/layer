@@ -6,24 +6,23 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_encoder"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
+	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
+	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/lib/metrics"
 
 	"cosmossdk.io/log"
-	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-var (
-	HttpClient = http.Client{
-		Transport: &http.Transport{MaxConnsPerHost: constants.MaxConnectionsPerExchange},
-	}
-)
+var HttpClient = http.Client{
+	Transport: &http.Transport{MaxConnsPerHost: constants.MaxConnectionsPerExchange},
+}
 
 // SubTaskRunnerImpl is the struct that implements the `SubTaskRunner` interface.
 type SubTaskRunnerImpl struct{}
@@ -91,7 +90,6 @@ func (s *SubTaskRunnerImpl) StartPriceEncoder(
 		logger,
 		bCh,
 	)
-
 	if err != nil {
 		panic(err)
 	}
@@ -200,7 +198,7 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 			} else {
 				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
 				// Record update failure for the daemon health check.
-				c.ReportFailure(fmt.Errorf("failed to run price updater task loop for price daemon; %v", err))
+				c.ReportFailure(fmt.Errorf("failed to run price updater task loop for price daemon; %w", err))
 			}
 
 		case <-stop:

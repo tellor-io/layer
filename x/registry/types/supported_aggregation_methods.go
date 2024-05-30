@@ -5,9 +5,7 @@ const (
 	WeightedMode   = "weighted-mode"
 )
 
-var (
-	SupportedAggregationMethod = map[string]bool{
-		WeightedMedian: true,
-		WeightedMode:   true,
-	}
-)
+var SupportedAggregationMethod = map[string]bool{
+	WeightedMedian: true,
+	WeightedMode:   true,
+}

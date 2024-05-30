@@ -5,16 +5,16 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-
-	errorsmod "cosmossdk.io/errors"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 
+	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	layertypes "github.com/tellor-io/layer/types"
 )
 
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
@@ -106,7 +106,8 @@ func (k Keeper) directReveal(ctx context.Context,
 	value string,
 	reporterAddr sdk.AccAddress,
 	votingPower int64,
-	incycle bool) error {
+	incycle bool,
+) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
 

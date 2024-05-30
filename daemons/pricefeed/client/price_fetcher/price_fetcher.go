@@ -7,18 +7,19 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-
-	"cosmossdk.io/log"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/lib"
 	"github.com/tellor-io/layer/lib/metrics"
 	"gopkg.in/typ.v4/lists"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // PriceFetcherSubtaskResponse represents a transformed exchange API response that contains price
@@ -290,7 +291,7 @@ func (pf *PriceFetcher) runSubTask(
 				exchangeId,
 				nil,
 				fmt.Errorf(
-					"Invalid price of 0 for exchange: '%v' and market: %v",
+					"invalid price of 0 for exchange: '%v' and market: %v",
 					exchangeId,
 					price.MarketId,
 				),

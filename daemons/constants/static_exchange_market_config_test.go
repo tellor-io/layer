@@ -3,11 +3,10 @@ package constants
 import (
 	"testing"
 
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
+	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
 	"github.com/tellor-io/layer/testutil/json"
 )
 
@@ -183,11 +182,10 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 
 			// Uncomment to update the exchange data used for various testnet deploys after changing the
 			// TestnetExchangeMarketConfig.
-			//f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-			//require.NoError(t, err)
-			//defer f.Close()
-			//_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
-			//require.NoError(t, err)
+			// f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+			// require.NoError(t, err)
+			// defer f.Close()
+			// _, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
 
 			actualExchangeConfigJson := json.CompactJsonString(t, configs[tc.id])
 			expectedExchangeConfigJson := pricefeed.ReadJsonTestFile(t, tc.expectedExchangeConfigJsonFile)

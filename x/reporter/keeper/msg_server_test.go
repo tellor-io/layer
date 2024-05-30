@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
 )
 
-func setupMsgServer(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, types.MsgServer, context.Context) {
-	k, sk, bk, ctx := setupKeeper(t)
+func setupMsgServer(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, types.MsgServer, context.Context) {
+	tb.Helper()
+	k, sk, bk, ctx := setupKeeper(tb)
 	return k, sk, bk, keeper.NewMsgServerImpl(k), ctx
 }
 

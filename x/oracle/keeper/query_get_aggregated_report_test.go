@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 
 	// expectedAggregate := types.Aggregate{
 	// 	QueryId:           queryId,
-	// 	AggregateValue:    "000000000000000000000000000000000000000000000058528649cf80ee0000",
+	// 	AggregateValue:    value,
 	// 	AggregateReporter: Addr.String(),
 	// 	ReporterPower:     validatorData.GetConsensusPower(sdk.DefaultPowerReduction),
 	// 	StandardDeviation: 0,
@@ -75,7 +75,6 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	// require.Equal(expectedAggregate.Flagged, aggregate.Report.Flagged)
 	// require.Equal(expectedAggregate.Nonce, aggregate.Report.Nonce)
 	// require.Equal(expectedAggregate.AggregateReportIndex, aggregate.Report.AggregateReportIndex)
-
 }
 
 func (s *KeeperTestSuite) TestQueryGetAggregatedReportNilRequest() {
@@ -106,5 +105,4 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReportNoAvailableTimestamps() {
 
 	_, err = s.queryClient.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryIdBytes)})
 	require.ErrorContains(err, "no available reports")
-
 }

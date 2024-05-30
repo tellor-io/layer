@@ -4,19 +4,18 @@ import (
 	"errors"
 	"testing"
 
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-
-	"cosmossdk.io/math"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	pricefeed_cosntants "github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/mocks"
+	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
+	"github.com/tellor-io/layer/lib"
+	"github.com/tellor-io/layer/testutil/constants"
 	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
 
 	"cosmossdk.io/log"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/daemons/mocks"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	"github.com/tellor-io/layer/lib"
-	"github.com/tellor-io/layer/testutil/constants"
+	"cosmossdk.io/math"
 )
 
 const (
@@ -24,8 +23,8 @@ const (
 )
 
 var (
-	exchangeQueryHandlerFailure = errors.New("Failed to query exchange")
-	tickerNotAvailable          = errors.New("Ticker not listed")
+	errexchangeQueryHandlerFailure = errors.New("failed to query exchange")
+	errtickerNotAvailable          = errors.New("ticker not listed")
 )
 
 // TestRunTaskLoop tests that different exchange configurations results in the expected queries being made, and prices
@@ -129,11 +128,11 @@ func TestRunTaskLoop(t *testing.T) {
 			bCh := newTestPriceFetcherBufferedChannel()
 
 			queryHandler := generateMockExchangeQueryHandler()
-
+			config := tc.mutableExchangeConfig
 			pf, err := NewPriceFetcher(
 				tc.queryConfig,
 				tc.queryDetails,
-				&tc.mutableExchangeConfig,
+				&config,
 				tc.mutableMarketConfigs,
 				queryHandler,
 				log.NewNopLogger(),
@@ -178,7 +177,7 @@ func TestRunTaskLoop(t *testing.T) {
 				marketsPerCall = len(tc.mutableExchangeConfig.MarketToMarketConfig)
 			}
 			queryHandler.AssertNumberOfCalls(t, "Query", expectedQueries)
-			for i := 0; i < len(tc.expectedMarketIdsCalled); i = i + marketsPerCall {
+			for i := 0; i < len(tc.expectedMarketIdsCalled); i += marketsPerCall {
 				assertQueryHandlerCalledWithMarkets(
 					t,
 					queryHandler,
@@ -333,11 +332,11 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			bCh := newTestPriceFetcherBufferedChannel()
 
 			queryHandler := generateMockExchangeQueryHandler()
-
+			config := tc.initialMutableExchangeConfig
 			pf, err := NewPriceFetcher(
 				tc.queryConfig,
 				tc.queryDetails,
-				&tc.initialMutableExchangeConfig,
+				&config,
 				tc.initialMarketConfig,
 				queryHandler,
 				log.NewNopLogger(),
@@ -360,8 +359,8 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 					require.Equal(t, tc.initialMarketConfig[i].Id, taskLoopDefinition.marketIds[i])
 				}
 			}
-
-			err = pf.UpdateMutableExchangeConfig(&tc.updateMutableExchangeConfig, tc.updateMarketConfig)
+			updateConfig := tc.updateMutableExchangeConfig
+			err = pf.UpdateMutableExchangeConfig(&updateConfig, tc.updateMarketConfig)
 			require.NoError(t, err)
 
 			taskLoopDefinition = pf.getTaskLoopDefinition()
@@ -508,10 +507,11 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			// Setup for testing.
 			bCh := newTestPriceFetcherBufferedChannel()
 			queryHandler := generateMockExchangeQueryHandler()
+			config := tc.initialMutableExchangeConfig
 			pf, err := NewPriceFetcher(
 				tc.queryConfig,
 				tc.queryDetails,
-				&tc.initialMutableExchangeConfig,
+				&config,
 				tc.initialMarketConfigs,
 				queryHandler,
 				log.NewNopLogger(),
@@ -523,9 +523,9 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			for i := 0; i < taskLoopIterations; i++ {
 				pf.RunTaskLoop(&daemontypes.RequestHandlerImpl{})
 			}
-
+			updateConfig := tc.updateMutableExchangeConfig
 			// No race conditions should affect the market output of the previous or following task loops.
-			err = pf.UpdateMutableExchangeConfig(&tc.updateMutableExchangeConfig, tc.updateMarketConfigs)
+			err = pf.UpdateMutableExchangeConfig(&updateConfig, tc.updateMarketConfigs)
 			require.NoError(t, err)
 
 			// Run sub-task a specified number of iterations.
@@ -632,8 +632,8 @@ func TestRunSubTask_Mixed(t *testing.T) {
 		expectedErrors []error
 	}{
 		"Failure - failed to query exchange": {
-			responseError:  exchangeQueryHandlerFailure,
-			expectedErrors: []error{exchangeQueryHandlerFailure},
+			responseError:  errexchangeQueryHandlerFailure,
+			expectedErrors: []error{errexchangeQueryHandlerFailure},
 		},
 		"Mixed - returned prices have a 0": {
 			responsePriceTimestamps: []*types.MarketPriceTimestamp{
@@ -647,7 +647,7 @@ func TestRunSubTask_Mixed(t *testing.T) {
 				constants.Market8_TimeT_Price1,
 			},
 			expectedErrors: []error{
-				errors.New("Invalid price of 0 for exchange: 'Exchange1' and market: 7"),
+				errors.New("invalid price of 0 for exchange: 'Exchange1' and market: 7"),
 			},
 		},
 		"Mixed - unavailable tickers": {
@@ -655,7 +655,7 @@ func TestRunSubTask_Mixed(t *testing.T) {
 				constants.Market8_TimeT_Price1,
 			},
 			responseUnavailableMarkets: map[types.MarketId]error{
-				constants.MarketId8: tickerNotAvailable,
+				constants.MarketId8: errtickerNotAvailable,
 			},
 			expectedPrices: []*types.MarketPriceTimestamp{
 				constants.Market8_TimeT_Price1,
@@ -824,6 +824,7 @@ func assertQueryHandlerCalledWithMarkets(
 	markets []types.MarketId,
 	marketConfigs []*types.MutableMarketConfig,
 ) {
+	t.Helper()
 	marketExponents := make(map[types.MarketId]types.Exponent)
 	for _, market := range markets {
 		marketExponents[market] = constants.CanonicalMarketExponents[market]

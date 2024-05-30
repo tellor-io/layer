@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	pf_constants "github.com/tellor-io/layer/daemons/constants"
@@ -19,6 +18,8 @@ import (
 	pft "github.com/tellor-io/layer/daemons/pricefeed/types"
 	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/testutil/constants"
+
+	"cosmossdk.io/log"
 )
 
 const (
@@ -33,6 +34,7 @@ func generateBufferedChannelAndExchangeToMarketPrices(
 	types.ExchangeToMarketPrices,
 	chan *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
+	t.Helper()
 	etmp, err := types.NewExchangeToMarketPrices(exchangeIds)
 	require.NoError(t, err)
 
@@ -42,6 +44,7 @@ func generateBufferedChannelAndExchangeToMarketPrices(
 }
 
 func genNewPriceEncoder(t *testing.T) *PriceEncoderImpl {
+	t.Helper()
 	etmp, bCh := generateBufferedChannelAndExchangeToMarketPrices(t, []types.ExchangeId{constants.ExchangeId1})
 	pe, err := NewPriceEncoder(
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
@@ -349,7 +352,7 @@ func TestProcessPriceFetcherResponse_Error(t *testing.T) {
 			expectedReason: metrics.HttpGetTimeout,
 		},
 		"Rate limit error": {
-			err:            pf_constants.RateLimitingError,
+			err:            pf_constants.ErrRateLimiting,
 			logAsError:     true,
 			expectedReason: metrics.RateLimit,
 		},

@@ -3,14 +3,14 @@ package reporter
 import (
 	"math/rand"
 
+	"github.com/tellor-io/layer/testutil/sample"
+	reportersimulation "github.com/tellor-io/layer/x/reporter/simulation"
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	"github.com/tellor-io/layer/testutil/sample"
-	reportersimulation "github.com/tellor-io/layer/x/reporter/simulation"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 // avoid unused import issue
@@ -59,7 +59,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 

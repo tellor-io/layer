@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgUpdateParams(t *testing.T) {

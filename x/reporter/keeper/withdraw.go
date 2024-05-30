@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layertypes "github.com/tellor-io/layer/types"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // FeefromReporterStake deducts the fee from the reporter's stake used mainly for paying dispute from bond
@@ -82,7 +84,6 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 func (k Keeper) feeFromStake(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount math.LegacyDec,
 ) (math.Int, error) {
-
 	returnAmount, err := k.stakingKeeper.Unbond(ctx, delAddr, valAddr, sharesAmount)
 	if err != nil {
 		return math.Int{}, err
@@ -142,7 +143,6 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 		return math.Int{}, err
 	}
 	return tokens, nil
-
 }
 
 func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec) (math.LegacyDec, error) {
@@ -177,7 +177,6 @@ func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress
 		}
 		return delTokens, nil
 	}
-
 }
 
 func (k Keeper) moveTokensFromValidator(ctx context.Context, valAddr sdk.ValAddress, amount math.Int) error {
@@ -196,6 +195,7 @@ func (k Keeper) moveTokensFromValidator(ctx context.Context, valAddr sdk.ValAddr
 	}
 	return k.tokensToDispute(ctx, fromPool, amount)
 }
+
 func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec) (math.Int, error) {
 	remainingFromdel, err := k.deductFromdelegation(ctx, delAddr, valAddr, delTokens)
 	if err != nil {
@@ -222,7 +222,6 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 		}
 		return remainingUnbonding, nil
 	}
-
 }
 
 func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error {

@@ -3,12 +3,13 @@ package types
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	"github.com/tellor-io/layer/lib/metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // ExchangeToPrice maintains multiple prices from different exchanges for

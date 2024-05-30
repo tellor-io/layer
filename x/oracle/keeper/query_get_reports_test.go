@@ -3,15 +3,13 @@ package keeper_test
 import (
 	"encoding/hex"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestGetReportsByQueryId() {
-
 	stakedReporter, queryIdStr := s.TestSubmitValue()
-
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	req := &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)}
 

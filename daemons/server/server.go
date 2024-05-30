@@ -3,14 +3,16 @@ package server
 import (
 	"net"
 
-	// "syscall"
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/lib/metrics"
+
+	// "syscall"
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // Server struct defines the shared gRPC server for all daemons.
@@ -75,10 +77,8 @@ func (server *Server) Start() {
 	// oldValue := syscall.Umask(constants.UmaskUserReadWriteOnly)
 
 	ln, err := net.Listen(constants.UnixProtocol, server.socketAddress)
-
 	// Restore umask bits back to previous value so that the entire process is not restricted to `UmaskUserReadWriteOnly`.
 	// syscall.Umask(oldValue)
-
 	if err != nil {
 		server.logger.Error("Failed to listen to daemon gRPC server", "error", err)
 		panic(err)

@@ -5,10 +5,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
@@ -17,6 +13,11 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reporterKeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
@@ -157,7 +158,6 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
-
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
@@ -250,7 +250,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	voters := make([]keeper.VoterInfo, len(keys))
-	var disputerInfo = keeper.VoterInfo{Share: math.ZeroInt()}
+	disputerInfo := keeper.VoterInfo{Share: math.ZeroInt()}
 	totalVoterPower := math.ZeroInt()
 	for i := range keys {
 		v, err := s.disputekeeper.Voter.Get(s.ctx, keys[i])
@@ -334,7 +334,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
-
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
@@ -460,13 +459,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	disputerDelgation, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, disputer)
 	s.NoError(err)
 	s.True(disputerDelgation.Equal(math.NewInt(1_000_000)))
-
-	// get module account balance
-	s.bankKeeper.Balances.Get(s.ctx, collections.Join(authtypes.NewModuleAddress(types.ModuleName), s.denom))
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
-
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
@@ -631,7 +626,6 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.Equal(reporter1.TotalTokens, reporter1StakeBefore.Sub(disputeFee))
 
 	voteMsg := types.MsgVote{
-
 		Voter: reporter2Acc.String(),
 		Id:    1,
 		Vote:  types.VoteEnum_VOTE_INVALID,
@@ -658,7 +652,6 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 
 	// voting that doesn't reach quorum
 	voteMsg = types.MsgVote{
-
 		Voter: reporter2Acc.String(),
 		Id:    2,
 		Vote:  types.VoteEnum_VOTE_INVALID,
@@ -725,7 +718,6 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 	s.NoError(s.disputekeeper.Tallyvote(s.ctx, 1))
 	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
-
 }
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {

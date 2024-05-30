@@ -1,17 +1,19 @@
 package types
 
 import (
+	"github.com/tellor-io/layer/utils"
+
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tellor-io/layer/utils"
 )
 
 const TypeMsgTip = "tip"
 
 var _ sdk.Msg = &MsgTip{}
 
-func NewMsgTip(tipper string, queryData string, amount sdk.Coin) *MsgTip {
+func NewMsgTip(tipper, queryData string, amount sdk.Coin) *MsgTip {
 	queryDataBz, err := utils.QueryBytesFromString(queryData)
 	if err != nil {
 		panic(err)

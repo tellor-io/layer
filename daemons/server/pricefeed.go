@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
-
 	"github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	"github.com/tellor-io/layer/lib/metrics"
+
+	errorsmod "cosmossdk.io/errors"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // PriceFeedServer defines the fields required for price updates.
@@ -51,7 +51,7 @@ func (s *Server) UpdateMarketPrices(
 	// This panic is an unexpected condition because we initialize the market price cache in app initialization before
 	// starting the server or daemons.
 	if s.marketToExchange == nil {
-		panic(fmt.Errorf("server not initialized correclty, marketToExchange not initialized"))
+		panic(fmt.Errorf("server not initialized correctly, marketToExchange not initialized"))
 	}
 
 	if err = validateMarketPricesUpdatesMessage(req); err != nil {

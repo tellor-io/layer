@@ -5,23 +5,22 @@ import (
 	"encoding/json"
 	"fmt"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
+	"github.com/tellor-io/layer/x/dispute/keeper"
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
-
-	"github.com/tellor-io/layer/x/dispute/keeper"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 var (
@@ -63,7 +62,7 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
 
-// DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default GenesisState need to be defined by the module developer and is primarily used for testing
+// DefaultGenesis returns a default GenesisState for the module, marshaled to json.RawMessage. The default GenesisState need to be defined by the module developer and is primarily used for testing
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
@@ -79,7 +78,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(fmt.Sprintf("failed to register gRPC gateway routes: %v", err))
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -174,7 +175,6 @@ type DisputeOutputs struct {
 }
 
 func ProvideModule(in DisputeInputs) DisputeOutputs {
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,

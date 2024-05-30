@@ -10,7 +10,7 @@ import (
 
 const (
 	SocketPath                   = "/tmp/daemons.sock"
-	UserReadWriteOnlyPermissions = os.FileMode(0600)
+	UserReadWriteOnlyPermissions = os.FileMode(0o600)
 	DefaultPermissions           = os.FileMode(0x180)
 )
 

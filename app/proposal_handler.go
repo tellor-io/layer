@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/ethereum/go-ethereum/common"
+
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 type ProposalHandler struct {
@@ -260,7 +262,7 @@ func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, c
 	return operatorAddresses, timestamps, signatures, nil
 }
 
-func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses []string, evmAddresses []string) error {
+func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses, evmAddresses []string) error {
 	for i, operatorAddress := range operatorAddresses {
 		bzAddress := common.HexToAddress(evmAddresses[i])
 		err := h.bridgeKeeper.SetEVMAddressByOperator(ctx, operatorAddress, bzAddress.Bytes())
@@ -273,7 +275,6 @@ func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses []s
 }
 
 func (h *ProposalHandler) ValidatorOperatorAddressFromVote(ctx sdk.Context, vote abci.ExtendedVoteInfo) (string, error) {
-
 	consAddress := vote.Validator.Address
 	validator, err := h.stakingKeeper.GetValidatorByConsAddr(ctx, consAddress)
 	if err != nil {

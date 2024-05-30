@@ -4,12 +4,6 @@ import (
 	"encoding/hex"
 	"time"
 
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	utils "github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
@@ -17,6 +11,14 @@ import (
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *E2ETestSuite) TestBasicReporting() {
@@ -42,9 +44,9 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	s.accountKeeper.NewAccountWithAddress(s.ctx, valAccount[0])
 	validator, err := stakingtypes.NewValidator(valAccountValAddrs[0].String(), pubKey[0], stakingtypes.Description{Moniker: "created validator"})
 	require.NoError(err)
-	s.stakingKeeper.SetValidator(s.ctx, validator)
-	s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator)
-	s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator)
+	s.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
+	s.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator))
+	s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator))
 	// self delegate from validator account to itself
 	_, err = s.stakingKeeper.Delegate(s.ctx, valAccount[0], math.NewInt(int64(4000)*1e8), stakingtypes.Unbonded, validator, true)
 	require.NoError(err)
@@ -62,7 +64,6 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	_, err = s.stakingKeeper.EndBlocker(s.ctx)
 	s.NoError(err)
 
-	//create a self delegated reporter from a different account
 	type Delegator struct {
 		delegatorAddress sdk.AccAddress
 		validator        stakingtypes.Validator
@@ -165,7 +166,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// Height 2
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(commitHeight + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -241,7 +242,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// Height 3
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 

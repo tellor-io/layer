@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	"github.com/tellor-io/layer/x/dispute/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

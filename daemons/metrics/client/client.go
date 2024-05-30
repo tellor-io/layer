@@ -4,11 +4,13 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/cosmos/cosmos-sdk/version"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/lib/metrics"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 var (
@@ -26,7 +28,7 @@ func Start(
 	ctx context.Context,
 	logger log.Logger,
 ) {
-	ticker := time.NewTicker(time.Duration(METRICS_DAEMON_LOOP_DELAY_DURATION * time.Millisecond))
+	ticker := time.NewTicker(METRICS_DAEMON_LOOP_DELAY_DURATION * time.Millisecond)
 	defer ticker.Stop()
 	for ; true; <-ticker.C {
 		RunMetricsDaemonTaskLoop(

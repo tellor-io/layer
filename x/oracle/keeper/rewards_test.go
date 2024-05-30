@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/x/oracle/keeper"
 
 	"cosmossdk.io/math"
-	"github.com/tellor-io/layer/x/oracle/keeper"
 )
 
 var reward = math.NewInt(100)

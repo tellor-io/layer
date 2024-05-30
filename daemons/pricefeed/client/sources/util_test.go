@@ -1,3 +1,4 @@
+//nolint:stylecheck // ignore stylecheck for this file
 package sources
 
 import (
@@ -17,11 +18,10 @@ const (
 	deltaPrecision = 0.000000001
 )
 
-var (
-	positiveTagValidationError = errors.New(
-		"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
-			"failed on the 'positive-float-string' tag",
-	)
+//lint:ignore ST1005 This is a test error
+var errpositiveTagValidation = errors.New(
+	"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
+		"failed on the 'positive-float-string' tag",
 )
 
 func TestIsExchangeError_Mixed(t *testing.T) {
@@ -75,15 +75,15 @@ func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.
 		},
 		"Failure - negative float": {
 			testValue:     "-12345.6",
-			expectedError: positiveTagValidationError,
+			expectedError: errpositiveTagValidation,
 		},
 		"Failure - empty string": {
 			testValue:     "",
-			expectedError: positiveTagValidationError,
+			expectedError: errpositiveTagValidation,
 		},
 		"Failure - text": {
 			testValue:     "cat",
-			expectedError: positiveTagValidationError,
+			expectedError: errpositiveTagValidation,
 		},
 	}
 
@@ -110,7 +110,6 @@ func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.
 
 func TestGetOnlyTickerAndExponent(t *testing.T) {
 	tests := map[string]struct {
-		//parameters
 		tickerToExponent map[string]int32
 		exchange         string
 
@@ -140,7 +139,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			tickerToExponent: map[string]int32{},
 			exchange:         exchange_common.EXCHANGE_ID_BINANCE,
 			expectedError: errors.New(
-				"Invalid market price exponent map for Binance price function of length: 0, expected length 1",
+				"invalid market price exponent map for Binance price function of length: 0, expected length 1",
 			),
 		},
 
@@ -151,7 +150,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			},
 			exchange: exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedError: errors.New(
-				"Invalid market price exponent map for Bitfinex price function of length: 2, expected length 1",
+				"invalid market price exponent map for Bitfinex price function of length: 2, expected length 1",
 			),
 		},
 	}
@@ -219,7 +218,7 @@ func TestGetUint64MedianFromShiftedBigFloatValues(t *testing.T) {
 			bigFloatSlice: []*big.Float{},
 			exponent:      0,
 			expectedError: errors.New(
-				"Invalid input: big float slice must contain values to medianize",
+				"invalid input: big float slice must contain values to medianize",
 			),
 		},
 		"Failure - underflow": {

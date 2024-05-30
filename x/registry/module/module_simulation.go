@@ -3,14 +3,15 @@ package registry
 import (
 	"math/rand"
 
+	"github.com/tellor-io/layer/testutil/sample"
+	registrysimulation "github.com/tellor-io/layer/x/registry/simulation"
+	"github.com/tellor-io/layer/x/registry/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/tellor-io/layer/testutil/sample"
-	registrysimulation "github.com/tellor-io/layer/x/registry/simulation"
-	"github.com/tellor-io/layer/x/registry/types"
 )
 
 // avoid unused import issue
@@ -23,10 +24,6 @@ var (
 )
 
 const (
-	opWeightMsgRegisterQuery = "op_weight_msg_register_query"
-	// TODO: Determine the simulation weight value
-	defaultWeightMsgRegisterQuery int = 100
-
 	opWeightMsgRegisterSpec = "op_weight_msg_register_spec"
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgRegisterSpec int = 100
@@ -51,7 +48,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
 }
 

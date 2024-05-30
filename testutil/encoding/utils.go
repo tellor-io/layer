@@ -3,7 +3,14 @@ package encoding
 import (
 	"testing"
 
+	"github.com/cosmos/ibc-go/modules/capability"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/x/upgrade"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -18,12 +25,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/ibc-go/modules/capability"
-	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-
-	"github.com/stretchr/testify/require"
 )
 
 // GetTestEncodingCfg returns an encoding config for testing purposes.
@@ -50,6 +51,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 
 // EncodeMessageToAny converts a message to an Any object for protobuf encoding.
 func EncodeMessageToAny(t *testing.T, msg sdk.Msg) *codectypes.Any {
+	t.Helper()
 	any, err := codectypes.NewAnyWithValue(msg)
 	require.NoError(t, err)
 	return any

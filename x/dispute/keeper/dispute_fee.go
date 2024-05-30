@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Pay fee from account
@@ -46,7 +48,6 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.
 
 // return slashed tokens when reporter either wins dispute or dispute is invalid
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
-
 	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.ReportEvidence.Reporter, dispute.SlashAmount, dispute.HashId)
 	if err != nil {
 		return err
@@ -57,7 +58,6 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) 
 }
 
 func (k Keeper) ReturnFeetoStake(ctx context.Context, repAcc sdk.AccAddress, hashId []byte, remainingAmt math.Int) error {
-
 	err := k.reporterKeeper.FeeRefund(ctx, repAcc, hashId, remainingAmt)
 	if err != nil {
 		return err

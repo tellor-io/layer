@@ -5,16 +5,19 @@ import (
 	"errors"
 	"fmt"
 
+	layertypes "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	layertypes "github.com/tellor-io/layer/types"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func (k Keeper) GetVoters(ctx context.Context, id uint64) (
-	[]collections.KeyValue[collections.Pair[uint64, []byte], types.Voter], error) {
+	[]collections.KeyValue[collections.Pair[uint64, []byte], types.Voter], error,
+) {
 	iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
 	if err != nil {
 		return nil, err
@@ -149,7 +152,6 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	reportersRng := collections.NewPrefixedPairRange[uint64, []byte](id)
 	err = k.ReportersGroup.Walk(ctx, reportersRng, func(key collections.Pair[uint64, []byte], value math.Int) (stop bool, err error) {
 		vote, err := k.Voter.Get(ctx, key)
-
 		if err != nil {
 			return true, err
 		}
@@ -258,7 +260,6 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	} else {
 		return errors.New("vote period not ended and quorum not reached")
 	}
-
 }
 
 func (k Keeper) UpdateDispute(
@@ -266,7 +267,8 @@ func (k Keeper) UpdateDispute(
 	id uint64,
 	dispute types.Dispute,
 	vote types.Vote,
-	scaledSupport, scaledAgainst, scaledInvalid math.LegacyDec, quorum bool) error {
+	scaledSupport, scaledAgainst, scaledInvalid math.LegacyDec, quorum bool,
+) error {
 	if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 		return err
 	}

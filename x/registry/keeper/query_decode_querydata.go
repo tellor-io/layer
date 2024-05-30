@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQuerydataRequest) (*types.QueryDecodeQuerydataResponse, error) {
@@ -24,6 +25,9 @@ func (k Querier) DecodeQuerydata(goCtx context.Context, req *types.QueryDecodeQu
 	exists, err := k.Keeper.HasSpec(ctx, queryType)
 	if !exists {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("can't decode query data for query type which doesn't exist in store: %v", queryType))
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check if data spec exists: %v", err))
 	}
 	dataSpec, err := k.Keeper.GetSpec(ctx, queryType)
 	if err != nil {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tellor-io/layer/x/registry/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SetDataSpec sets the data specification for a given query type.

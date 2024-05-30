@@ -4,12 +4,17 @@ import (
 	"fmt"
 	"testing"
 
-	sdkTypes "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
+
+	sdkTypes "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+)
+
+const (
+	testQueryType = "testQueryType"
 )
 
 func TestNewKeeper(t *testing.T) {
@@ -22,7 +27,6 @@ func TestNewKeeper(t *testing.T) {
 func TestGetAuthority(t *testing.T) {
 	ms, ctx, k := setupMsgServer(t)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
-	queryType := "testQueryType"
 	spec := types.DataSpec{
 		DocumentHash:      "testHash",
 		ResponseValueType: "uint256",
@@ -32,7 +36,7 @@ func TestGetAuthority(t *testing.T) {
 	// Register spec
 	registerSpecInput := &types.MsgRegisterSpec{
 		Registrar: "creator1",
-		QueryType: queryType,
+		QueryType: testQueryType,
 		Spec:      spec,
 	}
 	_, err := ms.RegisterSpec(ctx, registerSpecInput)
