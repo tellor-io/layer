@@ -20,7 +20,7 @@ import (
 	"github.com/tellor-io/layer/x/mint/types"
 )
 
-func MintKeeper(t testing.TB) (keeper.Keeper, *mocks.AccountKeeper, sdk.Context) {
+func MintKeeper(t testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
@@ -41,5 +41,5 @@ func MintKeeper(t testing.TB) (keeper.Keeper, *mocks.AccountKeeper, sdk.Context)
 		bankKeeper,
 	)
 
-	return k, accountKeeper, ctx
+	return k, accountKeeper, bankKeeper, ctx
 }

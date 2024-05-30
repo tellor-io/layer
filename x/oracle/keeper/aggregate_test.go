@@ -15,7 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
-	layer "github.com/tellor-io/layer/types"
 	layertypes "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -131,7 +130,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 
 	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
-	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layer.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
+	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -197,10 +196,18 @@ func (s *KeeperTestSuite) TestGetDataBeforePublic() {
 	jumpForward := reportedAt.Unix() + (60 * 5)
 	queryAt := time.Unix(jumpForward, 0)
 
+	goback := reportedAt.Unix() - (60 * 5)
+	earlyQuery := time.Unix(goback, 0)
+
 	s.ctx = s.ctx.WithBlockTime(queryAt)
 	retAggregate, err := s.oracleKeeper.GetDataBeforePublic(s.ctx, qId, queryAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
+
+	s.ctx = s.ctx.WithBlockTime(reportedAt)
+	nilAggregate, err := s.oracleKeeper.GetDataBeforePublic(s.ctx, qId, earlyQuery)
+	s.Nil(nilAggregate)
+	s.NotNil(err)
 }
 
 func (s *KeeperTestSuite) TestGetCurrentValueForQueryId() {

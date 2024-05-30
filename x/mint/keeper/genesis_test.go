@@ -10,7 +10,7 @@ import (
 
 func TestGenesis(t *testing.T) {
 	genesisState := types.NewGenesisState("loya")
-	k, ak, ctx := keepertest.MintKeeper(t)
+	k, ak, _, ctx := keepertest.MintKeeper(t)
 	k.InitGenesis(ctx, ak, genesisState)
 	got := k.ExportGenesis(ctx)
 	require.NotNil(t, got)
