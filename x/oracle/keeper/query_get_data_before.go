@@ -21,7 +21,7 @@ func (q Querier) GetDataBefore(goCtx context.Context, req *types.QueryGetDataBef
 	}
 
 	t := time.Unix(req.Timestamp, 0)
-	report, err := q.keeper.getDataBefore(goCtx, qId, t)
+	report, err := q.keeper.GetDataBefore(goCtx, qId, t)
 	if err != nil {
 		return nil, err
 	}
