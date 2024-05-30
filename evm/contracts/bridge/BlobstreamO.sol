@@ -3,6 +3,7 @@ pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
+//import "hardhat/console.sol";
 
 struct OracleAttestationData {
     bytes32 queryId;
@@ -116,9 +117,7 @@ contract BlobstreamO is ECDSA {
             revert MalformedCurrentValidatorSet();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
-            _currentValidatorSet
-        );
+        bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
         if (
             _domainSeparateValidatorSetHash(
                 powerThreshold,
@@ -149,7 +148,7 @@ contract BlobstreamO is ECDSA {
             _newValidatorSetHash
         );
     }
-
+    
     /*Getter functions*/
     /// @notice This getter verifies a given piece of data vs Validator signatures
     /// @param _attestData The data being verified
@@ -164,9 +163,7 @@ contract BlobstreamO is ECDSA {
             revert MalformedCurrentValidatorSet();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
-            _currentValidatorSet
-        );
+        bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
         if (
             _domainSeparateValidatorSetHash(
                 powerThreshold,
@@ -176,7 +173,19 @@ contract BlobstreamO is ECDSA {
         ) {
             revert SuppliedValidatorSetInvalid();
         }
-        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attestData);
+        bytes32 _dataDigest = keccak256(
+                abi.encode(
+                    NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR,
+                    _attestData.queryId,
+                    _attestData.report.value,
+                    _attestData.report.timestamp,
+                    _attestData.report.aggregatePower,
+                    _attestData.report.previousTimestamp,
+                    _attestData.report.nextTimestamp,
+                    lastValidatorSetCheckpoint,
+                    _attestData.attestationTimestamp
+                )
+            );
         _checkValidatorSignatures(
             _currentValidatorSet,
             _sigs,
@@ -184,7 +193,6 @@ contract BlobstreamO is ECDSA {
             powerThreshold
         );
     }
-
 
     /*Internal functions*/
     /// @dev Checks that enough voting power signed over a digest.
@@ -224,37 +232,6 @@ contract BlobstreamO is ECDSA {
         }
     }
 
-    /// @dev Computes the hash of a validator set.
-    /// @param _validators The validator set to hash.
-    /// @return The hash of the validator set.
-    function _computeValidatorSetHash(
-        Validator[] calldata _validators
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encode(_validators));
-    }
-
-    /// @dev A hash of all relevant information about the oracle attestation.
-    /// @param _attest The oracle attestation.
-    /// @return The domain separated hash of the oracle attestation.
-    function _domainSeparateOracleAttestationData(
-        OracleAttestationData calldata _attest
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR,
-                    _attest.queryId,
-                    _attest.report.value,
-                    _attest.report.timestamp,
-                    _attest.report.aggregatePower,
-                    _attest.report.previousTimestamp,
-                    _attest.report.nextTimestamp,
-                    lastValidatorSetCheckpoint,
-                    _attest.attestationTimestamp
-                )
-            );
-    }
-
     /// @dev A hash of all relevant information about the validator set.
     /// @param _powerThreshold Amount of voting power needed to approve operations. (2/3 of total)
     /// @param _validatorTimestamp The timestamp of the block where validator set is updated.
@@ -285,7 +262,7 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         Signature calldata _sig
     ) internal pure returns (bool) {
-        bytes32 _digestSha256 = sha256(abi.encodePacked(_digest));
-        return _signer == ECDSA.recover(_digestSha256, _sig.v, _sig.r, _sig.s);
+        _digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _digest));
+        return _signer == ecrecover(_digest, _sig.v, _sig.r, _sig.s);
     }
 }
