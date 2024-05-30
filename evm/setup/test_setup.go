@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 )
@@ -31,11 +32,13 @@ import (
 // validators: http://localhost:1317/layer/bridge/blockvalidators?height=555
 // header: http://localhost:1317/layer/bridge/blockheadermerkleevm?height=1763
 
-func main() {
-	// *** get latest block number ***
-	url := "http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest"
-
-	resp, err := http.Get(url)
+func request(urlStr string) ([]byte, error) {
+	// Parse and validate the URL
+	parsedUrl, err := url.ParseRequestURI(urlStr)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Get(parsedUrl.String())
 	if err != nil {
 		log.Fatalf("Failed to send request to Cosmos API: %v", err)
 	}
@@ -43,7 +46,32 @@ func main() {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("failed to read response body: %v", err)
+		return nil, err
+	}
+	return body, nil
+}
+
+func createfile(filePath string, body []byte) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+	// *** get latest block number ***
+	url := "http://localhost:1317/cosmos/base/tendermint/v1beta1/blocks/latest"
+	body, err := request(url)
+	if err != nil {
+		log.Fatalf("Failed to read response body: %v", err)
 	}
 
 	var result map[string]interface{}
@@ -61,14 +89,7 @@ func main() {
 
 	// *** query block validators ***
 	url = "http://localhost:1317/layer/bridge/blockvalidators?height=" + height
-
-	resp, err = http.Get(url)
-	if err != nil {
-		log.Fatalf("Failed to send request to Cosmos API: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err = io.ReadAll(resp.Body)
+	body, err = request(url)
 	if err != nil {
 		log.Fatalf("Failed to read response body: %v", err)
 	}
@@ -94,15 +115,9 @@ func main() {
 	// Replace with your desired file path
 	filePath := "setup/data/validators.json"
 
-	file, err := os.Create(filePath)
+	err = createfile(filePath, body)
 	if err != nil {
 		log.Fatalf("Failed to create file: %v", err)
-	}
-	defer file.Close()
-
-	_, err = file.Write(body)
-	if err != nil {
-		log.Fatalf("Failed to write to file: %v", err)
 	}
 
 	log.Printf("Response data written to %s", filePath)
@@ -134,15 +149,7 @@ func main() {
 	// }
 
 	url = "http://localhost:1317/layer/bridge/blockheadermerkleevm?height=" + height
-
-	resp, err = http.Get(url)
-	if err != nil {
-		log.Fatalf("Failed to send request to Cosmos API: %v", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err = io.ReadAll(resp.Body)
+	body, err = request(url)
 	if err != nil {
 		log.Fatalf("Failed to read response body: %v", err)
 	}
@@ -177,15 +184,9 @@ func main() {
 	// Replace with your desired file path
 	filePath = "setup/data/blockheadermerkleparts.json"
 
-	file, err = os.Create(filePath)
+	err = createfile(filePath, body)
 	if err != nil {
 		log.Fatalf("Failed to create file: %v", err)
-	}
-	defer file.Close()
-
-	_, err = file.Write(body)
-	if err != nil {
-		log.Fatalf("Failed to write to file: %v", err)
 	}
 
 	log.Printf("Response data written to %s", filePath)
