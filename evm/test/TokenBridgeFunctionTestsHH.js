@@ -117,7 +117,7 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(userBal.toString(), h.toWei("999"))
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
-        await tbridge.depositLimit()
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         assert.equal(await tbridge.depositId(), 1)
         depositDetails = await tbridge.deposits(1)
@@ -128,22 +128,22 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(await tbridge.depositId(), 1)
         await h.advanceTime(43200)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) * BigInt(2) / BigInt(10)
-        await tbridge.depositLimit()
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
     it("depositLimit", async function () {
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
-        await tbridge.depositLimit()
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         await token.approve(await tbridge.getAddress(), h.toWei("900"))
         depositAmount = h.toWei("2")
         await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
-        await tbridge.depositLimit()
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         await h.advanceTime(43200)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) / BigInt(5)
-        await tbridge.depositLimit()
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
 })

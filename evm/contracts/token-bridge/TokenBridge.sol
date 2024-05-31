@@ -41,7 +41,7 @@ contract TokenBridge is LayerTransition{
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
     constructor(address _token, address _blobstream, address _tellorFlex) LayerTransition(_tellorFlex, _token){
         bridge = BlobstreamO(_blobstream);
-         _refreshDepositLimit();
+        _refreshDepositLimit();
     }
 
     /// @notice deposits tokens from Ethereum to layer
@@ -82,6 +82,17 @@ contract TokenBridge is LayerTransition{
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
+    function depositLimit() external view returns (uint256) {
+        if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
+            return _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
+        }
+        else{
+            return depositLimitRecord;
+        }
+    }
+
+    /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
             uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
@@ -90,4 +101,6 @@ contract TokenBridge is LayerTransition{
         }
         return depositLimitRecord;
     }
+
+
 }
