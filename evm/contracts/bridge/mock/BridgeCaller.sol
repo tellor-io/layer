@@ -17,7 +17,7 @@ contract BridgeCaller {
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
     ) public {
-        require(bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs));
+        bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs);
         oracleData = _attest.report.value;
         oracleDataTimestamp = _attest.report.timestamp;
     }

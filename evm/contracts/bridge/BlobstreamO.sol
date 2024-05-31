@@ -3,10 +3,20 @@ pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
+//import "hardhat/console.sol";
 
-struct Validator {
-    address addr;
-    uint256 power;
+struct OracleAttestationData {
+    bytes32 queryId;
+    ReportData report;
+    uint256 attestationTimestamp;//timestamp of validatorSignatures on report
+}
+
+struct ReportData {
+    bytes value;
+    uint256 timestamp;//timestamp of reporter signature aggregation
+    uint256 aggregatePower;
+    uint256 previousTimestamp;
+    uint256 nextTimestamp;
 }
 
 struct Signature {
@@ -15,19 +25,11 @@ struct Signature {
     bytes32 s;
 }
 
-struct ReportData {
-    bytes value;
-    uint256 timestamp;
-    uint256 aggregatePower;
-    uint256 previousTimestamp;
-    uint256 nextTimestamp;
+struct Validator {
+    address addr;
+    uint256 power;
 }
 
-struct OracleAttestationData {
-    bytes32 queryId;
-    ReportData report;
-    uint256 attestationTimestamp;
-}
 
 /// @title BlobstreamO: Tellor Layer -> EVM, Oracle relay.
 /// @dev The relay relies on a set of signers to attest to some event on
@@ -35,28 +37,26 @@ struct OracleAttestationData {
 /// block. At least 2/3 of the voting power of the current
 /// view of the validator set must sign off on new relayed events.
 contract BlobstreamO is ECDSA {
+
     /*Storage*/
+    address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
     bytes32 public lastValidatorSetCheckpoint; ///Domain-separated commitment to the latest validator set.
     uint256 public powerThreshold; /// Voting power required to submit a new update.
-    uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
     uint256 public unbondingPeriod; /// Time period after which a validator can withdraw their stake.
-    address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
+    uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
+
     /*Events*/
-    event ValidatorSetUpdated(
-        uint256 _powerThreshold,
-        uint256 _validatorTimestamp,
-        bytes32 _validatorSetHash
-    );
+    event ValidatorSetUpdated(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
 
     /*Errors*/
     error InsufficientVotingPower();
     error InvalidSignature();
     error MalformedCurrentValidatorSet();
+    error NotConsensusValue();
     error NotGuardian();
     error StaleValidatorSet();
     error SuppliedValidatorSetInvalid();
     error ValidatorSetNotStale();
-    error NotConsensusValue();
 
     /*Functions*/
     /// @param _powerThreshold Initial voting power that is needed to approve operations
@@ -117,9 +117,7 @@ contract BlobstreamO is ECDSA {
             revert MalformedCurrentValidatorSet();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
-            _currentValidatorSet
-        );
+        bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
         if (
             _domainSeparateValidatorSetHash(
                 powerThreshold,
@@ -150,25 +148,50 @@ contract BlobstreamO is ECDSA {
             _newValidatorSetHash
         );
     }
-
+    
     /*Getter functions*/
+    /// @notice This getter verifies a given piece of data vs Validator signatures
+    /// @param _attestData The data being verified
+    /// @param _currentValidatorSet array of current validator set
+    /// @param _sigs Signatures.
     function verifyOracleData(
-        OracleAttestationData calldata _attest,
+        OracleAttestationData calldata _attestData,
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
-    ) external view returns (bool) {
-        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
-    }
-
-    function verifyConsensusOracleData(
-        OracleAttestationData calldata _attest,
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) external view returns (bool) {
-        if (_attest.report.aggregatePower < powerThreshold) {
-            revert NotConsensusValue();
+    ) external view{
+        if (_currentValidatorSet.length != _sigs.length) {
+            revert MalformedCurrentValidatorSet();
         }
-        return _verifyOracleData(_attest, _currentValidatorSet, _sigs);
+        // Check that the supplied current validator set matches the saved checkpoint.
+        bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
+        if (
+            _domainSeparateValidatorSetHash(
+                powerThreshold,
+                validatorTimestamp,
+                _currentValidatorSetHash
+            ) != lastValidatorSetCheckpoint
+        ) {
+            revert SuppliedValidatorSetInvalid();
+        }
+        bytes32 _dataDigest = keccak256(
+                abi.encode(
+                    NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR,
+                    _attestData.queryId,
+                    _attestData.report.value,
+                    _attestData.report.timestamp,
+                    _attestData.report.aggregatePower,
+                    _attestData.report.previousTimestamp,
+                    _attestData.report.nextTimestamp,
+                    lastValidatorSetCheckpoint,
+                    _attestData.attestationTimestamp
+                )
+            );
+        _checkValidatorSignatures(
+            _currentValidatorSet,
+            _sigs,
+            _dataDigest,
+            powerThreshold
+        );
     }
 
     /*Internal functions*/
@@ -189,16 +212,16 @@ contract BlobstreamO is ECDSA {
             revert StaleValidatorSet();
         }
         uint256 _cumulativePower = 0;
-        for (uint256 i = 0; i < _currentValidators.length; i++) {
+        for (uint256 _i = 0; _i < _currentValidators.length; _i++) {
             // If the signature is nil, then it's not present so continue.
-            if (_sigs[i].r == 0 && _sigs[i].s == 0 && _sigs[i].v == 0) {
+            if (_sigs[_i].r == 0 && _sigs[_i].s == 0 && _sigs[_i].v == 0) {
                 continue;
             }
             // Check that the current validator has signed off on the hash.
-            if (!_verifySig(_currentValidators[i].addr, _digest, _sigs[i])) {
+            if (!_verifySig(_currentValidators[_i].addr, _digest, _sigs[_i])) {
                 revert InvalidSignature();
             }
-            _cumulativePower += _currentValidators[i].power;
+            _cumulativePower += _currentValidators[_i].power;
             // Break early to avoid wasting gas.
             if (_cumulativePower >= _powerThreshold) {
                 break;
@@ -207,37 +230,6 @@ contract BlobstreamO is ECDSA {
         if (_cumulativePower < _powerThreshold) {
             revert InsufficientVotingPower();
         }
-    }
-
-    /// @dev Computes the hash of a validator set.
-    /// @param _validators The validator set to hash.
-    /// @return The hash of the validator set.
-    function _computeValidatorSetHash(
-        Validator[] calldata _validators
-    ) internal pure returns (bytes32) {
-        return keccak256(abi.encode(_validators));
-    }
-
-    /// @dev A hash of all relevant information about the oracle attestation.
-    /// @param _attest The oracle attestation.
-    /// @return The domain separated hash of the oracle attestation.
-    function _domainSeparateOracleAttestationData(
-        OracleAttestationData calldata _attest
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encode(
-                    NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR,
-                    _attest.queryId,
-                    _attest.report.value,
-                    _attest.report.timestamp,
-                    _attest.report.aggregatePower,
-                    _attest.report.previousTimestamp,
-                    _attest.report.nextTimestamp,
-                    lastValidatorSetCheckpoint,
-                    _attest.attestationTimestamp
-                )
-            );
     }
 
     /// @dev A hash of all relevant information about the validator set.
@@ -260,42 +252,6 @@ contract BlobstreamO is ECDSA {
                 )
             );
     }
-
-    /// @notice Used for verifying oracle data attestations
-    /// @param _attestData The oracle attestation data
-    /// @param _currentValidatorSet The current validator set
-    /// @param _sigs The attestations 
-    function _verifyOracleData(
-        OracleAttestationData calldata _attestData,
-        Validator[] calldata _currentValidatorSet,
-        Signature[] calldata _sigs
-    ) internal view returns (bool) {
-        if (_currentValidatorSet.length != _sigs.length) {
-            revert MalformedCurrentValidatorSet();
-        }
-        // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = _computeValidatorSetHash(
-            _currentValidatorSet
-        );
-        if (
-            _domainSeparateValidatorSetHash(
-                powerThreshold,
-                validatorTimestamp,
-                _currentValidatorSetHash
-            ) != lastValidatorSetCheckpoint
-        ) {
-            revert SuppliedValidatorSetInvalid();
-        }
-        bytes32 _dataDigest = _domainSeparateOracleAttestationData(_attestData);
-        _checkValidatorSignatures(
-            _currentValidatorSet,
-            _sigs,
-            _dataDigest,
-            powerThreshold
-        );
-        return true;
-    }
-
     /// @notice Utility function to verify Tellor Layer signatures
     /// @param _signer The address that signed the message.
     /// @param _digest The digest that was signed.
@@ -306,7 +262,7 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         Signature calldata _sig
     ) internal pure returns (bool) {
-        bytes32 _digestSha256 = sha256(abi.encodePacked(_digest));
-        return _signer == ECDSA.recover(_digestSha256, _sig.v, _sig.r, _sig.s);
+        _digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _digest));
+        return _signer == ecrecover(_digest, _sig.v, _sig.r, _sig.s);
     }
 }
