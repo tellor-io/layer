@@ -19,6 +19,7 @@ export LAYER_NODE_URL=tellornode.com
 
 echo "Getting the address of your node to use for faucet request"
 NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
+echo "Node Address: $NODE_ADDRESS"
 
 echo "Calling faucet to fund account..."
 curl -X POST localhost:3000/faucetRequest/user/$NODE_ADDRESS/amount/$AMOUNT_IN_TRB
@@ -33,5 +34,5 @@ echo "Making a tx to create validator..."
   --chain-id=layer \
   --gas="auto" \
   --gas-prices="0.0025loya" \
-  --from=$NODE_NAME \
+  --from=$NODE_ADDRESS \
   --node=$LAYER_NODE_URL:26657
