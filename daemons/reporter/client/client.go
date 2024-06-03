@@ -196,7 +196,7 @@ func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool)
 			return err
 		}
 		if len(validators.Validators) == 0 {
-			c.logger.Info("No validators found, waiting for validators to be available")
+			c.logger.Info("No validators found for this delegator, delegate to a validator first to be able to make a report")
 			time.Sleep(time.Second)
 		} else {
 			break

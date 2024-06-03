@@ -18,11 +18,12 @@ export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 export LAYER_NODE_URL=tellornode.com
 
 echo "Getting the address of your node to use for faucet request"
-NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
+#NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
+NODE_ADDRESS=tellor1f4e4v7ascen5ug5uhmw8j6uc8073e4x2jwrlqv
 echo "Node Address: $NODE_ADDRESS"
 
-echo "Calling faucet to fund account..."
-curl -X POST localhost:3000/faucetRequest/user/$NODE_ADDRESS/amount/$AMOUNT_IN_TRB
+#echo "Calling faucet to fund account..."
+#curl -X POST localhost:3000/faucetRequest/user/$NODE_ADDRESS/amount/$AMOUNT_IN_TRB
 
 sleep 10
 
@@ -36,3 +37,16 @@ echo "Making a tx to create validator..."
   --gas-prices="0.0025loya" \
   --from=$NODE_ADDRESS \
   --node=$LAYER_NODE_URL:26657
+
+# ./layerd tx staking create-validator \
+#   --amount=10000000000 \
+#   --pubkey=$(./layerd comet show-validator --home ~/.layer/bill) \
+#   --moniker=billmoniker \
+#   --chain-id=layer \
+#   --gas="auto" \
+#   --gas-prices="0.0025loya" \
+#   --from=tellor1f4e4v7ascen5ug5uhmw8j6uc8073e4x2jwrlqv \
+#   --node=tellornode.com:26657
+
+
+#./layerd tx staking create-validator ./validator.json --from tellor1twkchzm4nhxpmy0t35f389krcxhkj9987a53h9 --home ~/.layer/bill --chain-id layer --node="http://tellornode.com:26657"

@@ -10,7 +10,7 @@ KEYRING_BACKEND="test"
 PASSWORD="password"
 NODE_MONIKER="billmoniker"
 NODE_NAME="bill"
-RUNNING_NODE_ID=1ad2e421d968992b6e5543d93510b71a718e50f3
+RUNNING_NODE_ID=98be1e35e82c440ca567d4864d9cd12c84b7db3f
 
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
@@ -47,7 +47,8 @@ sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/config/app.toml
 # Get address/account for node to use in gentx tx
 echo "Get address/account for node"
 NODE=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$NODE_NAME)
-echo "NODE: $NODE"
+echo "NODE address: $NODE"
+sleep 10
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."
@@ -98,7 +99,7 @@ sed -i 's/persistent_peers = ""/persistent_peers = "'$RUNNING_NODE_ID'@'$LAYER_N
 echo "Node ID: $QUOTED_TELLORNODE_ID"
 echo "Path: $RUNNING_NODE_ID@$LAYER_NODE_URL:26656"
 
-sleep 30
+sleep 300
 
 echo "Starting chain for node..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$RUNNING_NODE_ID@$LAYER_NODE_URL:26656"
