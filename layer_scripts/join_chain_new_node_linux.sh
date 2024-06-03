@@ -10,7 +10,7 @@ KEYRING_BACKEND="test"
 PASSWORD="password"
 NODE_MONIKER="billmoniker"
 NODE_NAME="bill"
-RUNNING_NODE_ID=98be1e35e82c440ca567d4864d9cd12c84b7db3f
+RUNNING_NODE_ID=f5f6ce5d15ea80683b9133b19e245f9b27daab67
 
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
@@ -98,8 +98,6 @@ sed -i 's/persistent_peers = ""/persistent_peers = "'$RUNNING_NODE_ID'@'$LAYER_N
 
 echo "Node ID: $QUOTED_TELLORNODE_ID"
 echo "Path: $RUNNING_NODE_ID@$LAYER_NODE_URL:26656"
-
-sleep 300
 
 echo "Starting chain for node..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$RUNNING_NODE_ID@$LAYER_NODE_URL:26656"
