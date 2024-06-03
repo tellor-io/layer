@@ -7,12 +7,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	"github.com/tellor-io/layer/daemons/server/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var _ types.MedianValuesServiceServer = &medianServer{}
@@ -50,7 +51,6 @@ func (s *medianServer) GetAllMedianValues(ctx context.Context, req *types.GetAll
 		})
 	}
 	return &types.GetAllMedianValuesResponse{MedianValues: medianValues}, nil
-
 }
 
 func (s *medianServer) GetMedianValue(ctx context.Context, req *types.GetMedianValueRequest) (*types.GetMedianValueResponse, error) {
@@ -81,5 +81,7 @@ func StartMedianServer(
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
 ) {
 	types.RegisterMedianValuesServiceServer(server, NewMedianValuesServer(clientCtx, marketToExchange, marketParams))
-	types.RegisterMedianValuesServiceHandlerClient(context.Background(), mux, types.NewMedianValuesServiceClient(clientCtx))
+	if err := types.RegisterMedianValuesServiceHandlerClient(context.Background(), mux, types.NewMedianValuesServiceClient(clientCtx)); err != nil {
+		panic(fmt.Errorf("failed to register gRPC server: %w", err))
+	}
 }

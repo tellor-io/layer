@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) DecodeValue(goCtx context.Context, req *types.QueryDecodeValueRequest) (*types.QueryDecodeValueResponse, error) {

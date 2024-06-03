@@ -3,11 +3,12 @@ package simulation
 import (
 	"math/rand"
 
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func SimulateMsgTip(

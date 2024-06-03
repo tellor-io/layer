@@ -3,10 +3,10 @@ package ante
 import (
 	"errors"
 
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/x/reporter/keeper"
-
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

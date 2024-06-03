@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
-	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tellor-io/layer/x/registry/types"
+
+	errorsmod "cosmossdk.io/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDataSpec) (*types.MsgUpdateDataSpecResponse, error) {

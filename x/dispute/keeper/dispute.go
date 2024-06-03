@@ -7,15 +7,14 @@ import (
 	gomath "math"
 	"math/big"
 
-	// "time"
+	layertypes "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	layertypes "github.com/tellor-io/layer/types"
-	"github.com/tellor-io/layer/x/dispute/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 // Get dispute by reporter key
@@ -200,7 +199,6 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 
 	if !dispute.Open {
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute closed", dispute.DisputeId)
-
 	}
 	// if dispute is not unresovled and dispute end time is before current block time then we can't update it
 	if dispute.DisputeEndTime.Before(ctx.BlockTime()) {

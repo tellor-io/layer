@@ -3,10 +3,12 @@ package keeper
 import (
 	"context"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndelegateReporter) (*types.MsgUndelegateReporterResponse, error) {
@@ -24,7 +26,7 @@ func (k msgServer) UndelegateReporter(goCtx context.Context, msg *types.MsgUndel
 	if err != nil {
 		return nil, err
 	}
-	var reducedbyAmount = math.ZeroInt()
+	reducedbyAmount := math.ZeroInt()
 	for _, source := range msg.TokenOrigins {
 		valAddr := sdk.ValAddress(source.ValidatorAddress)
 		currentSourceAmt, err := k.TokenOrigin.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))

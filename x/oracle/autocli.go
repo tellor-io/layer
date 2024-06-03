@@ -1,9 +1,9 @@
 package oracle
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
 	modulev1 "github.com/tellor-io/layer/api/layer/oracle"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

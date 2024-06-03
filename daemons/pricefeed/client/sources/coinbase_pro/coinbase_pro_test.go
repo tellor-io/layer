@@ -35,9 +35,8 @@ var (
 
 func TestCoinbaseProPriceFunction_Mixed(t *testing.T) {
 	// Test response strings.
-	var (
-		BtcResponseString = pricefeed.ReadJsonTestFile(t, "btc_ticker.json")
-	)
+
+	BtcResponseString := pricefeed.ReadJsonTestFile(t, "btc_ticker.json")
 
 	tests := map[string]struct {
 		// parameters
@@ -125,7 +124,7 @@ func TestCoinbaseProPriceFunction_Mixed(t *testing.T) {
 			medianFunctionFails: true,
 			expectedPriceMap:    make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: testutil.MedianizationError,
+				BTCUSDC_TICKER: testutil.ErrMedianization,
 			},
 		},
 		"Success - integers": {

@@ -3,11 +3,12 @@ package types
 import (
 	context "context"
 
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)

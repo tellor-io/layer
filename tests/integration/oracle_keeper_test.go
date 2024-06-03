@@ -5,6 +5,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
+	"github.com/tellor-io/layer/utils"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
@@ -13,15 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/tellor-io/layer/utils"
-	minttypes "github.com/tellor-io/layer/x/mint/types"
-
-	"github.com/tellor-io/layer/testutil"
-	"github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *IntegrationTestSuite) TestTipping() {
@@ -251,7 +251,8 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			power:         5,
 		},
 	}
-	msgServer.Tip(s.ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
+	_, err := msgServer.Tip(s.ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
+	s.Nil(err)
 	addr := make([]sdk.AccAddress, len(reporters))
 	for _, r := range reporters {
 		s.T().Run(r.name, func(t *testing.T) {
@@ -272,7 +273,8 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	}
 	// advance time to expire query and aggregate report
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
-	s.app.EndBlocker(s.ctx)                                             // EndBlocker aggregates reports
+	_, err = s.app.EndBlocker(s.ctx)
+	s.Nil(err)
 	// check median
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	queryServer := keeper.NewQuerier(s.oraclekeeper)
@@ -331,7 +333,7 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal1.Id)
 	s.NoError(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour * 24 * 2))
-	gov.EndBlocker(s.ctx, s.govKeeper)
+	s.NoError(gov.EndBlocker(s.ctx, s.govKeeper))
 	proposal1, err = s.govKeeper.Proposals.Get(s.ctx, proposal1.Id)
 	s.NoError(err)
 	s.True(proposal1.Status == v1.StatusPassed)
@@ -440,7 +442,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			_, err = s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			s.NoError(err)
 			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
 			s.Equal(tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease), afterBalance.Amount)
 		})
@@ -500,7 +503,8 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			delegator:            reporterAddr3,
 		},
 	}
-	s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
+	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
+	s.NoError(err)
 
 	queryServer := keeper.NewQuerier(s.oraclekeeper)
 	res, _ := queryServer.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
@@ -511,10 +515,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			_, err = s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			s.NoError(err)
 			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
 			expectedAfterBalance := tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease)
-			tolerance := expectedAfterBalance.SubRaw(1) //due to rounding int
+			tolerance := expectedAfterBalance.SubRaw(1)
 			withinTolerance := expectedAfterBalance.Equal(afterBalance.Amount) || tolerance.Equal(afterBalance.Amount)
 			s.True(withinTolerance)
 		})
@@ -681,7 +686,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
-	s.oraclekeeper.Query.Set(s.ctx, queryId, query)
+	s.NoError(s.oraclekeeper.Query.Set(s.ctx, queryId, query))
 	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
 	s.Nil(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal

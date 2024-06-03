@@ -7,10 +7,9 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
-
-	"cosmossdk.io/log"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -18,6 +17,8 @@ import (
 	"github.com/spf13/viper"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
+
+	"cosmossdk.io/log"
 )
 
 type Client struct {
@@ -74,8 +75,10 @@ func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositRe
 }
 
 func (c *Client) start(ctx context.Context) {
-
-	c.InitializeDeposits()
+	if err := c.InitializeDeposits(); err != nil {
+		c.logger.Error("Failed to initialize deposits", "error", err)
+		return
+	}
 	ticker := time.NewTicker(180 * time.Second)
 	defer ticker.Stop()
 
@@ -105,10 +108,14 @@ type DepositReport struct {
 	Value     string
 }
 
-func (c *Client) QueryAPI(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
+	parsedUrl, err := url.ParseRequestURI(urlStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make API request: %v", err)
+		return nil, err
+	}
+	resp, err := http.Get(parsedUrl.String())
+	if err != nil {
+		return nil, fmt.Errorf("failed to make API request: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -118,7 +125,7 @@ func (c *Client) QueryAPI(url string) ([]byte, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read API response: %v", err)
+		return nil, fmt.Errorf("failed to read API response: %w", err)
 	}
 
 	return body, nil
@@ -127,11 +134,11 @@ func (c *Client) QueryAPI(url string) ([]byte, error) {
 func (c *Client) InitializeDeposits() error {
 	ethApiKey, err := c.getEthApiKey()
 	if err != nil {
-		return fmt.Errorf("failed to get ETH API key: %v", err)
+		return fmt.Errorf("failed to get ETH API key: %w", err)
 	}
 	eclient, err := ethclient.Dial("wss://eth-sepolia.g.alchemy.com/v2/" + ethApiKey)
 	if err != nil {
-		return fmt.Errorf("failed to connect to the Ethereum client: %v", err)
+		return fmt.Errorf("failed to connect to the Ethereum client: %w", err)
 	}
 
 	c.ethClient = eclient
@@ -140,14 +147,14 @@ func (c *Client) InitializeDeposits() error {
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
-		return fmt.Errorf("failed to instantiate a TokenBridge contract: %v", err)
+		return fmt.Errorf("failed to instantiate a TokenBridge contract: %w", err)
 	}
 
 	c.bridgeContract = bridgeContract
 
 	latestDepositId, err := c.QueryCurrentDepositId()
 	if err != nil {
-		return fmt.Errorf("failed to query the latest deposit ID: %v", err)
+		return fmt.Errorf("failed to query the latest deposit ID: %w", err)
 	}
 
 	c.lastReportedDepositId = latestDepositId
@@ -158,7 +165,7 @@ func (c *Client) InitializeDeposits() error {
 func (c *Client) QueryTokenBridgeContract() error {
 	latestDepositId, err := c.QueryCurrentDepositId()
 	if err != nil {
-		return fmt.Errorf("failed to query the latest deposit ID: %v", err)
+		return fmt.Errorf("failed to query the latest deposit ID: %w", err)
 	}
 
 	if c.lastReportedDepositId == nil {
@@ -170,13 +177,13 @@ func (c *Client) QueryTokenBridgeContract() error {
 
 		depositTicket, err := c.QueryDepositDetails(nextDepositId)
 		if err != nil {
-			return fmt.Errorf("failed to query deposit details: %v", err)
+			return fmt.Errorf("failed to query deposit details: %w", err)
 		}
 
 		// Check if the block height is final
 		isFinal, err := c.CheckForFinality(depositTicket.BlockHeight)
 		if err != nil {
-			return fmt.Errorf("failed to check if block height is final: %v", err)
+			return fmt.Errorf("failed to check if block height is final: %w", err)
 		}
 
 		if !isFinal {
@@ -209,7 +216,7 @@ func (c *Client) QueryCurrentDepositId() (*big.Int, error) {
 	// Query the latest deposit ID from the bridge contract
 	latestDepositId, err := c.bridgeContract.DepositId(nil)
 	if err != nil {
-		return latestDepositId, fmt.Errorf("failed to query latest deposit ID: %v", err)
+		return latestDepositId, fmt.Errorf("failed to query latest deposit ID: %w", err)
 	}
 
 	return latestDepositId, nil
@@ -219,7 +226,7 @@ func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error)
 	// Query depositDetails details for a specific depositDetails ID
 	depositDetails, err := c.bridgeContract.Deposits(nil, depositId)
 	if err != nil {
-		return DepositReceipt{}, fmt.Errorf("failed to query deposit details for ID %d: %v", depositId, err)
+		return DepositReceipt{}, fmt.Errorf("failed to query deposit details for ID %d: %w", depositId, err)
 	}
 
 	depositReceipt := DepositReceipt{
@@ -245,7 +252,7 @@ func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
 	var apiResponse APIResponse
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
-		return false, fmt.Errorf("error unmarshaling JSON: %v", err)
+		return false, fmt.Errorf("error unmarshaling JSON: %w", err)
 	}
 
 	// Find the highest exec_block_number

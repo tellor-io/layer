@@ -71,8 +71,8 @@ func TestKrakenPriceFunction_Mixed(t *testing.T) {
 			medianFunctionFails: true,
 			expectedPriceMap:    map[string]uint64{},
 			expectedUnavailableMap: map[string]error{
-				ETHUSDC_TICKER: testutil.MedianizationError,
-				BTCUSDC_TICKER: testutil.MedianizationError,
+				ETHUSDC_TICKER: testutil.ErrMedianization,
+				BTCUSDC_TICKER: testutil.ErrMedianization,
 			},
 		},
 		"Failure - Kraken API Error response": {

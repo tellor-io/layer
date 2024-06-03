@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/x/reporter/keeper"
+	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/tellor-io/layer/x/reporter/keeper"
-	"github.com/tellor-io/layer/x/reporter/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestAllocateTokensToReporterWithCommission(t *testing.T) {

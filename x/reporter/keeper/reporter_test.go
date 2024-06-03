@@ -3,14 +3,15 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestUndelegateSource(t *testing.T) {
@@ -42,6 +43,7 @@ func TestUndelegateSource(t *testing.T) {
 	_, err = k.TokenOrigin.Get(ctx, key)
 	require.Error(t, err)
 }
+
 func TestUpdateOrRemoveReporter(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 
@@ -74,6 +76,7 @@ func TestUpdateOrRemoveReporter(t *testing.T) {
 	_, err = k.Reporters.Get(ctx, reporterAddr)
 	require.Error(t, err)
 }
+
 func TestUpdateOrRemoveDelegator(t *testing.T) {
 	k, _, _, ctx := setupKeeper(t)
 
@@ -176,7 +179,7 @@ func TestValidateAndSetAmount(t *testing.T) {
 	// set origin amount before calling ValidateAndSetAmount
 	// and check if the token origin is updated correctly
 	// should not treat it as a new origin
-	k.TokenOrigin.Set(ctx, collections.Join(delegator.Bytes(), validatorI.Bytes()), math.NewInt(50))
+	require.NoError(t, k.TokenOrigin.Set(ctx, collections.Join(delegator.Bytes(), validatorI.Bytes()), math.NewInt(50)))
 	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(100))
 	require.NoError(t, err)
 	amt, err = k.TokenOrigin.Get(ctx, collections.Join(delegator.Bytes(), validatorI.Bytes()))
@@ -188,5 +191,4 @@ func TestValidateAndSetAmount(t *testing.T) {
 	originAmounts[0].Amount = math.NewInt(950)
 	err = k.ValidateAndSetAmount(ctx, delegator, originAmounts, math.NewInt(1000))
 	require.ErrorIs(t, err, types.ErrInsufficientTokens)
-
 }

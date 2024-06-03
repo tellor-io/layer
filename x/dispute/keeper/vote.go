@@ -5,10 +5,12 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func (k Keeper) initVoterClasses() *types.VoterClasses {
@@ -42,6 +44,7 @@ func (k Keeper) TeamVote(ctx context.Context, id uint64) (math.Int, error) {
 
 	return teamTally, nil
 }
+
 func (k Keeper) GetTeamAddress(ctx context.Context) (sdk.AccAddress, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
@@ -49,6 +52,7 @@ func (k Keeper) GetTeamAddress(ctx context.Context) (sdk.AccAddress, error) {
 	}
 	return params.TeamAddress, nil
 }
+
 func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress) (math.Int, error) {
 	teamAddr, err := k.GetTeamAddress(ctx)
 	if err != nil {

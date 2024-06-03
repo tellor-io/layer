@@ -5,10 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
+	"github.com/tellor-io/layer/x/reporter/keeper"
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -16,13 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
-	// this line is used by starport scaffolding # 1
-
-	modulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
-	"github.com/tellor-io/layer/x/reporter/keeper"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 var (
@@ -65,7 +64,7 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
 
-// DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage.
+// DefaultGenesis returns a default GenesisState for the module, marshaled to json.RawMessage.
 // The default GenesisState need to be defined by the module developer and is primarily used for testing.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())

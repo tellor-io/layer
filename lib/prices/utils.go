@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-
 	"github.com/shopspring/decimal"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 )
@@ -126,13 +125,13 @@ func EncodePrice(number float64, exponent int32) (string, error) {
 
 	uint256ABIType, err := abi.NewType("uint256", "", nil)
 	if err != nil {
-		return "", fmt.Errorf("error creating uint256 abi type, %v", err)
+		return "", fmt.Errorf("error creating uint256 abi type, %w", err)
 	}
 
 	arguments := abi.Arguments{{Type: uint256ABIType}}
 	encodedBytes, err := arguments.Pack(bigIntNumber)
 	if err != nil {
-		return "", fmt.Errorf("error packing arguments, %v", err)
+		return "", fmt.Errorf("error packing arguments, %w", err)
 	}
 
 	encodedString := hex.EncodeToString(encodedBytes)

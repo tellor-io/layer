@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/config"
 	"github.com/tellor-io/layer/cmd/layerd/cmd"
+
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 
 func main() {

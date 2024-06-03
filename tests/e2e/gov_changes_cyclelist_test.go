@@ -4,15 +4,17 @@ import (
 	"encoding/hex"
 	"time"
 
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
 	collections "cosmossdk.io/collections"
 	math "cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
@@ -46,7 +48,7 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	// Height 1 - submit proposal
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -90,7 +92,7 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	// Height 2 - vote on proposal
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -113,14 +115,14 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
 
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(48 * time.Hour)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(48 * time.Hour))
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
 	// Height 3 - proposal passes
 	//---------------------------------------------------------------------------
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
@@ -143,7 +145,7 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	// Height 4 - check cycle list
 	//---------------------------------------------------------------------------
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Duration(1 * time.Second)))
+	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 	_, err = s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 

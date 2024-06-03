@@ -1,9 +1,10 @@
 package dispute
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.

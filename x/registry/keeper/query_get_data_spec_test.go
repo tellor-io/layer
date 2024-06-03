@@ -33,10 +33,10 @@ func TestQueryGetDataSpec(t *testing.T) {
 	require.Equal(t, getSpec.Spec.ResponseValueType, "uint256")
 
 	// get unregistered spec
-	getSpec, err = querier.GetDataSpec(ctx, &types.QueryGetDataSpecRequest{QueryType: "badQueryType"})
+	_, err = querier.GetDataSpec(ctx, &types.QueryGetDataSpecRequest{QueryType: "badQueryType"})
 	require.ErrorContains(t, err, "data spec not registered")
 
 	// get empty spec
-	getSpec, err = querier.GetDataSpec(ctx, &types.QueryGetDataSpecRequest{})
+	_, err = querier.GetDataSpec(ctx, &types.QueryGetDataSpecRequest{})
 	require.ErrorContains(t, err, "query type cannot be empty")
 }

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/server/config"
 	appflags "github.com/tellor-io/layer/app/flags"
+	daemonflags "github.com/tellor-io/layer/daemons/flags"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	daemonflags "github.com/tellor-io/layer/daemons/flags"
 )
 
 // FakeAppOptions is a helper struct used for creating `servertypes.AppOptions` for simulator and end-to-end testing.

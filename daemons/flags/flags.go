@@ -4,9 +4,10 @@ import (
 	"os"
 	"strings"
 
-	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 )
 
 // List of CLI flags for Server and Client.
@@ -59,11 +60,6 @@ var defaultDaemonFlags *DaemonFlags
 // GetDefaultDaemonFlags returns the default values for the Daemon Flags using a singleton pattern.
 func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
-		accountName := GetKeyName()
-		if accountName == "" {
-			accountName = "alice"
-		}
-
 		defaultDaemonFlags = &DaemonFlags{
 			Shared: SharedFlags{
 				SocketAddress:               "/tmp/daemons.sock",

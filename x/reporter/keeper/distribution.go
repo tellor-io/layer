@@ -7,12 +7,13 @@ import (
 	"fmt"
 	gomath "math"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 // WithdrawReporterCommission withdraws the accumulated commission of a reporter.
@@ -787,7 +788,6 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 }
 
 func (k Keeper) returnSlashedTokens(ctx context.Context, hashId []byte) error {
-
 	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
 		return err
@@ -823,6 +823,7 @@ func (k Keeper) returnSlashedTokens(ctx context.Context, hashId []byte) error {
 
 	return k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
+
 func (k Keeper) feeRefundNoReporter(ctx context.Context, hashId []byte, amt math.Int) error {
 	refundTo, err := k.FeePaidFromStake.Get(ctx, hashId)
 	if err != nil {
@@ -867,6 +868,7 @@ func (k Keeper) feeRefundNoReporter(ctx context.Context, hashId []byte, amt math
 
 	return k.FeePaidFromStake.Remove(ctx, hashId)
 }
+
 func (k Keeper) FeeRefund(ctx context.Context, repAcc sdk.AccAddress, hashId []byte, amt math.Int) error {
 	reporter, err := k.Reporters.Get(ctx, repAcc)
 	if err != nil {
@@ -1050,6 +1052,7 @@ func (k Keeper) FeeRefund(ctx context.Context, repAcc sdk.AccAddress, hashId []b
 	}
 	return k.FeePaidFromStake.Remove(ctx, hashId)
 }
+
 func (k Keeper) UpdateTotalPower(ctx context.Context, amt math.Int, subtract bool) error {
 	rng := new(collections.Range[int64]).EndInclusive(sdk.UnwrapSDKContext(ctx).BlockHeight()).Descending()
 	totalPower := math.ZeroInt()
@@ -1072,8 +1075,8 @@ func (k Keeper) UpdateTotalPower(ctx context.Context, amt math.Int, subtract boo
 
 	totalPower = totalPower.Add(amt)
 	return k.TotalPower.Set(ctx, height, totalPower)
-
 }
+
 func (k Keeper) GetBondedValidators(ctx context.Context, max uint32) ([]stakingtypes.Validator, error) {
 	validators := make([]stakingtypes.Validator, max)
 

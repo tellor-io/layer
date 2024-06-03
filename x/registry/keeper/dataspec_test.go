@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/registry/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestQueryGetDataSpecSpec(t *testing.T) {
@@ -36,8 +37,8 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 	fmt.Println("specReturn2: ", specReturn)
 	require.Nil(t, err)
 	require.Equal(t, specReturn, spec1)
-
 }
+
 func TestSetDataSpec(t *testing.T) {
 	ms, ctx, k := setupMsgServer(t)
 	require.NotNil(t, ms)

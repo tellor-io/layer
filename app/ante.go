@@ -3,15 +3,12 @@ package app
 import (
 	"errors"
 
-	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-
 	rante "github.com/tellor-io/layer/x/reporter/ante"
-
 	"github.com/tellor-io/layer/x/reporter/keeper"
-
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 )
 
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.

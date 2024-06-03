@@ -156,7 +156,7 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx context.Context) (*types
 }
 
 // function for loading last saved bridge validator set and comparing it to current set
-func (k Keeper) CompareBridgeValidators(ctx context.Context) (bool, error) {
+func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error) {
 	// load current validator set in EVM compatible format
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
 	if err != nil {
@@ -243,7 +243,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	valsetIdx, err := k.LatestCheckpointIdx.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
-		// TODO: handle error?
+		return err
 	}
 	if valsetIdx.Index == 0 {
 		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))

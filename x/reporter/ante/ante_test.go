@@ -1,20 +1,20 @@
 package ante
 
 import (
+	"errors"
 	"testing"
 
-	"errors"
-
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/testutil/encoding"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestNewTrackStakeChangesDecorator(t *testing.T) {

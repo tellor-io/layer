@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"strconv"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	gometrics "github.com/hashicorp/go-metrics"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // IncrCountMetricWithLabels increases a count metric from a module with the provided labels by a count of 1.
-func IncrCountMetricWithLabels(module string, metric string, labels ...gometrics.Label) {
+func IncrCountMetricWithLabels(module, metric string, labels ...gometrics.Label) {
 	telemetry.IncrCounterWithLabels(
 		[]string{module, metric, Count},
 		1,
@@ -22,7 +22,7 @@ func IncrCountMetricWithLabels(module string, metric string, labels ...gometrics
 // IncrSuccessOrErrorCounter increments either the success or error counter for a given handler
 // based on whether the given error is nil or not. This function is intended to be called in a
 // defer block at the top of any function which returns an error.
-func IncrSuccessOrErrorCounter(err error, module string, handler string, callback string, labels ...gometrics.Label) {
+func IncrSuccessOrErrorCounter(err error, module, handler, callback string, labels ...gometrics.Label) {
 	successOrError := Success
 	if err != nil {
 		successOrError = Error
@@ -56,7 +56,7 @@ func GetLabelForIntValue(labelName string, labelValue int) gometrics.Label {
 }
 
 // GetLabelForStringValue returns a telemetry label for a given label and string value.
-func GetLabelForStringValue(labelName string, labelValue string) gometrics.Label {
+func GetLabelForStringValue(labelName, labelValue string) gometrics.Label {
 	return telemetry.NewLabel(labelName, labelValue)
 }
 

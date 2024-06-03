@@ -1,10 +1,11 @@
 package keeper
 
 import (
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 type tipsIndex struct {

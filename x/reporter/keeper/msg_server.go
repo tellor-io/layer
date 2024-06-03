@@ -3,8 +3,9 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type msgServer struct {

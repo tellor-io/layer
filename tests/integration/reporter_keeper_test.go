@@ -3,12 +3,14 @@ package integration_test
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -261,7 +263,7 @@ func createReporterStakedWithValidator(ctx sdk.Context, k keeper.Keeper, sk repo
 }
 
 func DelegateToReporterSingleValidator(
-	ctx sdk.Context, k keeper.Keeper, repAddr sdk.AccAddress, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sources []*reportertypes.TokenOrigin, stake math.Int,
+	ctx sdk.Context, k keeper.Keeper, repAddr, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sources []*reportertypes.TokenOrigin, stake math.Int,
 ) error {
 	delegation := reportertypes.NewMsgDelegateReporter(
 		delAddr.String(),

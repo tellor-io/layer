@@ -1,9 +1,9 @@
 package registry
 
 import (
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
 	modulev1 "github.com/tellor-io/layer/api/layer/registry"
+
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

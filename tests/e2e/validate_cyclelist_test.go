@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-
 	utils "github.com/tellor-io/layer/utils"
 )
 

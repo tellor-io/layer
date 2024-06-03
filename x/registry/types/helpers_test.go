@@ -31,6 +31,7 @@ func TestIsQueryId64chars(t *testing.T) {
 		}
 	}
 }
+
 func TestHas0xPrefix(t *testing.T) {
 	// Test cases for strings with 0x prefix
 	stringsWith0xPrefix := []struct {

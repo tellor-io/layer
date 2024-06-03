@@ -3,10 +3,12 @@ package keeper
 import (
 	"context"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateReporter) (*types.MsgCreateReporterResponse, error) {

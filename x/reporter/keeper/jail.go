@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // send a reporter to jail

@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-
 	price_function "github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	clienttypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/lib"
 	libtime "github.com/tellor-io/layer/lib/time"
 )
@@ -18,9 +17,7 @@ const (
 	UnexpectedResponseStatusMessage = "Unexpected response status code of:"
 )
 
-var (
-	RateLimitingError = fmt.Errorf("status 429 - rate limit exceeded")
-)
+var ErrRateLimiting = fmt.Errorf("status 429 - rate limit exceeded")
 
 // ExchangeQueryHandlerImpl is the struct that implements the `ExchangeQueryHandler` interface.
 type ExchangeQueryHandlerImpl struct {
@@ -63,7 +60,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 ) (marketPriceTimestamps []*clienttypes.MarketPriceTimestamp, unavailableMarkets map[clienttypes.MarketId]error, err error) {
 	// 1) Validate `marketIds` contains at least one id.
 	if len(marketIds) == 0 {
-		return nil, nil, errors.New("At least one marketId must be queried")
+		return nil, nil, errors.New("at least one marketId must be queried")
 	}
 	// 2) Convert the list of `marketIds` to tickers that are specific for a given exchange. Create a mapping
 	// of tickers to price exponents and a reverse mapping of ticker back to `MarketId`.
@@ -73,11 +70,11 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	for _, marketId := range marketIds {
 		config, ok := exchangeConfig.MarketToMarketConfig[marketId]
 		if !ok {
-			return nil, nil, fmt.Errorf("No market config for market: %v", marketId)
+			return nil, nil, fmt.Errorf("no market config for market: %v", marketId)
 		}
 		priceExponent, ok := marketPriceExponent[marketId]
 		if !ok {
-			return nil, nil, fmt.Errorf("No market price exponent for id: %v", marketId)
+			return nil, nil, fmt.Errorf("no market price exponent for id: %v", marketId)
 		}
 
 		tickers = append(tickers, config.Ticker)
@@ -94,7 +91,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	}
 
 	if response.StatusCode == 429 {
-		return nil, nil, RateLimitingError
+		return nil, nil, ErrRateLimiting
 	}
 
 	// Verify response is not 4xx or 5xx.
@@ -120,7 +117,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	for ticker, price := range prices {
 		marketId, ok := tickerToMarketId[ticker]
 		if !ok {
-			return nil, nil, fmt.Errorf("Severe unexpected error: no market id for ticker: %v", ticker)
+			return nil, nil, fmt.Errorf("severe unexpected error: no market id for ticker: %v", ticker)
 		}
 
 		marketPriceTimestamp := &clienttypes.MarketPriceTimestamp{
@@ -136,7 +133,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	for ticker, error := range unavailableTickers {
 		marketId, ok := tickerToMarketId[ticker]
 		if !ok {
-			return nil, nil, fmt.Errorf("Severe unexpected error: no market id for ticker: %v", ticker)
+			return nil, nil, fmt.Errorf("severe unexpected error: no market id for ticker: %v", ticker)
 		}
 		unavailableMarkets[marketId] = error
 	}
@@ -145,5 +142,5 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 }
 
 func CreateRequestUrl(baseUrl string, tickers []string) string {
-	return strings.Replace(baseUrl, "$", strings.Join(tickers, ","), -1)
+	return strings.ReplaceAll(baseUrl, "$", strings.Join(tickers, ","))
 }
