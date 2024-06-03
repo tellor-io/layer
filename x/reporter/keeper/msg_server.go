@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	errorsmod "cosmossdk.io/errors"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type msgServer struct {

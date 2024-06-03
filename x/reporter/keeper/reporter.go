@@ -3,11 +3,10 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
-
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

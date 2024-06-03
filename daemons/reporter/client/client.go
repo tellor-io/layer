@@ -18,7 +18,6 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/log"
-	// "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"

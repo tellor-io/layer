@@ -43,7 +43,7 @@ func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) erro
 
 func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
 	return nil
-} //todo: handle for dispute event
+} // todo: handle for dispute event
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error { return nil }
 

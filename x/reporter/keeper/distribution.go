@@ -94,7 +94,6 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, hashId []byte) error {
 // called in dispute module after dispute is resolved
 // returns the fee to the delegators that paid minus burn amount
 func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error {
-
 	trackedFees, err := k.FeePaidFromStake.Get(ctx, hashId)
 	if err != nil {
 		return err

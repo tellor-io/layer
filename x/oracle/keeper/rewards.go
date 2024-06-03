@@ -46,7 +46,6 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 	var from string
 	if toStake {
 		from = types.ModuleName
-
 	} else {
 		from = minttypes.TimeBasedRewards
 	}

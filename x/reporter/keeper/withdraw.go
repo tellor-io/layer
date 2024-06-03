@@ -251,7 +251,6 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, delAddrs sdk.AccAd
 	burnedAmount := math.ZeroInt()
 	remainder := slashAmount
 	err = k.stakingKeeper.IterateDelegatorUnbondingDelegations(ctx, delAddrs, func(ubd stakingtypes.UnbondingDelegation) (stop bool) {
-
 		// perform slashing on all entries within the unbonding delegation
 		for i, entry := range ubd.Entries {
 			if remainder.IsZero() {
@@ -345,6 +344,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	// then you can delete it after the slashed tokens are returned
 	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens})
 }
+
 func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec) (math.Int, error) {
 	remainingFromdel, err := k.deductFromdelegation(ctx, delAddr, valAddr, delTokens)
 	if err != nil {
