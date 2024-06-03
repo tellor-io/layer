@@ -206,7 +206,7 @@ func (s *KeeperTestSuite) TestGetDataBefore() {
 	s.Equal(aggregate, retAggregate)
 
 	s.ctx = s.ctx.WithBlockTime(reportedAt)
-	nilAggregate, err := s.oracleKeeper.GetDataBeforePublic(s.ctx, qId, earlyQuery)
+	nilAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, earlyQuery)
 	s.Nil(nilAggregate)
 	s.NotNil(err)
 }
