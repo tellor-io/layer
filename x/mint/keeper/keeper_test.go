@@ -50,7 +50,6 @@ func (s *KeeperTestSuite) TestNewKeeper(t *testing.T) {
 	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
 	keys := storetypes.NewKVStoreKeys(types.StoreKey)
 
-	//kvStoreService := storetypes.NewKVStoreKey("mint")(registrytypes.StoreKey).(*storetypes.KVStoreKey)
 	keeper := keeper.NewKeeper(appCodec, keys[types.StoreKey], s.accountKeeper, s.bankKeeper)
 	s.NotNil(keeper)
 }
