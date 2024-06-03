@@ -4,24 +4,24 @@ import (
 	"encoding/hex"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, reportertypes.OracleReporter, []byte) {
+func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	require := s.Require()
 	// Commit
-	addr, stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, salt, queryData := s.TestCommitValue()
 	// forward block by 1 and reveal value
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 	// Submit value transaction with value revealed, this checks if the value is correctly hashed
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -39,7 +39,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, reportertypes.Oracl
 
 	microReport := types.MicroReport{
 		Reporter:        addr.String(),
-		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:           1,
 		QueryType:       "SpotPrice",
 		QueryId:         queryId,
 		AggregateMethod: "weighted-median",
@@ -55,14 +55,14 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, reportertypes.Oracl
 	}
 	require.Equal(&expectedReport, report)
 
-	return addr, stakedReporter, queryId
+	return addr, queryId
 }
 
 func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	// submit value with bad query data
 	badQueryData := []byte("stupidQueryData")
 
-	addr, stakedReporter, salt, _ := s.TestCommitValue()
+	addr, salt, _ := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -72,7 +72,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "invalid query data")
@@ -83,7 +83,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadValue() {
 
 	badValue := "00000F4240"
 
-	addr, stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadValue() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr.String()).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
@@ -101,8 +101,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadValue() {
 
 func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 	// submit correct value but wrong salt
-
-	addr, stakedReporter, _, queryData := s.TestCommitValue()
+	addr, _, queryData := s.TestCommitValue()
 
 	badSalt, err := oracleutils.Salt(32)
 	s.Nil(err)
@@ -115,7 +114,7 @@ func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
@@ -124,7 +123,7 @@ func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 	// try to submit value in same block as commit
 
-	addr, stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -139,46 +138,16 @@ func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 	// try to submit value 2 blocks after commit
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour))
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil) // submitreq.Salt = salt
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil) // submitreq.Salt = salt
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "missed commit reveal window")
 }
 
-// Note: no longer relevant since you can reveal without commit
-
-// func (s *KeeperTestSuite) TestSubmitWithNoCommit() {
-
-// 	// try to submit value without commit
-// 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-// 	salt, err := oracleutils.Salt(32)
-// 	s.Nil(err)
-
-// 	addr := sample.AccAddressBytes()
-
-// 	var submitreq = types.MsgSubmitValue{
-// 		Creator:   addr.String(),
-// 		QueryData: queryData,
-// 		Value:     value,
-// 		Salt:      salt,
-// 	}
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour))
-
-// 	stakedReporter := reportertypes.NewOracleReporter(
-// 		addr.String(),
-// 		math.NewInt(1_000_000),
-// 		nil,
-// 	)
-// 	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
-
-// 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-// 	s.ErrorContains(err, "no commits to reveal found")
-// }
-
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
 	// submit value with no creator
 
-	_, _, salt, queryData := s.TestCommitValue()
+	_, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		QueryData: queryData,
@@ -194,7 +163,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
 func (s *KeeperTestSuite) TestSubmitWithNoQueryData() {
 	// submit value with no query data
 
-	addr, _, salt, _ := s.TestCommitValue()
+	addr, salt, _ := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		Creator: addr.String(),
@@ -209,7 +178,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoQueryData() {
 
 func (s *KeeperTestSuite) TestSubmitWithNoValue() {
 	// submit value with no value
-	addr, _, salt, queryData := s.TestCommitValue()
+	addr, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -221,19 +190,3 @@ func (s *KeeperTestSuite) TestSubmitWithNoValue() {
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "value cannot be empty")
 }
-
-// Note: this test fails because logic allows for submit value with no salt
-
-// func (s *KeeperTestSuite) TestSubmitWithbadSalt() {
-// 	// submit value with no salt
-// 	queryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-// 	stakedReporter, _, queryData := s.TestCommitValue()
-// 	var submitreq = types.MsgSubmitValue{
-// 		Creator:   stakedReporter.GetReporter(),
-// 		QueryData: queryData,
-// 		Value:     value,
-// 	}
-// 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-// 	s.ErrorContains(err, "salt cannot be empty")
-
-// }

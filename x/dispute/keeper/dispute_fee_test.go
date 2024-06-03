@@ -50,7 +50,7 @@ func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 }
 
 func (k *KeeperTestSuite) TestReturnFeetoStake() {
-	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash")).Return(nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.OneInt()).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, math.OneInt()))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), math.OneInt()))
 }

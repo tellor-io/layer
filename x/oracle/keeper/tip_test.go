@@ -23,35 +23,6 @@ var (
 	ETH_queryId = []byte("0x83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 )
 
-// func (s *KeeperTestSuite) CreateFiveTestAccounts() []Accounts {
-// 	// accounts := make([]Accounts, 0, 5)
-// 	// for i := 0; i < 5; i++ {
-// 	// 	privKey := secp256k1.GenPrivKey()
-// 	// 	accountAddress := sdk.AccAddress(privKey.PubKey().Address())
-// 	// 	account := authtypes.BaseAccount{
-// 	// 		Address:       accountAddress.String(),
-// 	// 		PubKey:        codectypes.UnsafePackAny(privKey.PubKey()),
-// 	// 		AccountNumber: uint64(i + 1),
-// 	// 	}
-// 	// 	existingAccount := s.accountKeeper.GetAccount(s.ctx, accountAddress)
-// 	// 	if existingAccount == nil {
-// 	// 		s.accountKeeper.SetAccount(s.ctx, &account)
-// 	// 		accounts = append(accounts, Accounts{
-// 	// 			PrivateKey: *privKey,
-// 	// 			Account:    accountAddress,
-// 	// 		})
-// 	// 	}
-// 	// }
-// }
-// func (s *KeeperTestSuite) TestTransfer(t *testing.T) {
-// 	s.SetupTest()
-// 	privKey := secp256k1.GenPrivKey()
-// 	accountAddress := sdk.AccAddress(privKey.PubKey().Address())
-// 	tip := sdk.NewCoin("loya", math.NewInt(1000000))
-// 	ctx := context.Background()
-// 	res, err := s.oracleKeeper.transfer()
-// }
-
 func ReturnTestQueryMeta(tip math.Int) types.QueryMeta {
 	return types.QueryMeta{
 		Id:                    1,

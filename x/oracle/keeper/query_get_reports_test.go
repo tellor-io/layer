@@ -4,12 +4,10 @@ import (
 	"encoding/hex"
 
 	"github.com/tellor-io/layer/x/oracle/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestGetReportsByQueryId() {
-	addr, stakedReporter, queryIdStr := s.TestSubmitValue()
+	addr, queryIdStr := s.TestSubmitValue()
 
 	req := &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)}
 
@@ -18,7 +16,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 
 	MicroReport := &types.MicroReport{
 		Reporter:        addr.String(),
-		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:           1,
 		QueryType:       "SpotPrice",
 		QueryId:         queryIdStr,
 		AggregateMethod: "weighted-median",

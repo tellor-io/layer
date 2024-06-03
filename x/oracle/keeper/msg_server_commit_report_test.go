@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, reportertypes.OracleReporter, string, []byte) {
+func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -28,12 +28,8 @@ func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, reportertypes.Oracl
 
 	addr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		nil,
-	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
@@ -51,7 +47,7 @@ func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, reportertypes.Oracl
 	s.Nil(err)
 	s.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
 	s.Equal(commitValue.Reporter, addr.String())
-	return addr, stakedReporter, salt, queryData
+	return addr, salt, queryData
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
@@ -64,13 +60,8 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 
 	addr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		nil,
-	)
-
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
@@ -93,13 +84,8 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	hash := oracleutils.CalculateCommitment(value, salt)
 
 	addr := sample.AccAddressBytes()
-
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		nil,
-	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
@@ -145,12 +131,8 @@ func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 
 	randomAddr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		randomAddr.String(),
-		nil,
-	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(math.OneInt(), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   randomAddr.String(),
@@ -173,14 +155,7 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 
 	randomAddr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		randomAddr.String(),
-		nil,
-	)
-	stakedReporter.Jailed = true
-	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(&stakedReporter, nil)
-
-	s.Equal(true, stakedReporter.Jailed)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(math.Int{}, reportertypes.ErrReporterJailed)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   randomAddr.String(),
@@ -189,7 +164,7 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 	}
 
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "reporter is jailed")
+	s.ErrorContains(err, "reporter jailed")
 }
 
 func (s *KeeperTestSuite) TestCommitWithMissingCreator() {
