@@ -19,7 +19,7 @@ export LAYER_NODE_URL=tellornode.com
 
 echo "Getting the address of your node to use for faucet request"
 #NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
-NODE_ADDRESS=tellor1f4e4v7ascen5ug5uhmw8j6uc8073e4x2jwrlqv
+NODE_ADDRESS=tellor1an03jfmk657anlemwur5h06unj3t4k9jl8j2kv
 echo "Node Address: $NODE_ADDRESS"
 
 #echo "Calling faucet to fund account..."
