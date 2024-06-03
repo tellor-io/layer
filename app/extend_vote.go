@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
@@ -20,6 +21,7 @@ import (
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -34,7 +36,7 @@ type OracleKeeper interface {
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate
-	GetDataBeforePublic(ctx context.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
+	GetDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
 }
 
 type BridgeKeeper interface {
@@ -101,7 +103,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
-		return nil, err
+		return &abci.ResponseExtendVote{}, nil
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
@@ -109,7 +111,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)
-			return nil, err
+			return &abci.ResponseExtendVote{}, nil
 		}
 		// include the initial sig in the vote extension
 		initialSignature := InitialSignature{
@@ -122,7 +124,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	blockHeight := ctx.BlockHeight() - 1
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
 	if err != nil {
-		if !strings.Contains(err.Error(), "collections: not found") {
+		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
 		}
 	} else {

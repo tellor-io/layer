@@ -25,11 +25,11 @@ echo "Adding validator account..."
 
 # Create a tx to give the alice loyas to stake
 echo "Adding genesis account..."
-./layerd genesis add-genesis-account alice 10000000000000loya
+./layerd genesis add-genesis-account alice 10000000000000000loya
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx..."
-./layerd genesis gentx alice 1000000000000loya --chain-id layer
+./layerd genesis gentx alice 10000000000000loya --chain-id layer
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."

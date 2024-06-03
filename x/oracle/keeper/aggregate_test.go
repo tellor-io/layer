@@ -189,7 +189,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 	s.Equal(int64(100000000), res.ReporterPower)
 }
 
-func (s *KeeperTestSuite) TestGetDataBeforePublic() {
+func (s *KeeperTestSuite) TestGetDataBefore() {
 	reportedAt := time.Now()
 	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
 	s.NoError(err)
@@ -198,7 +198,7 @@ func (s *KeeperTestSuite) TestGetDataBeforePublic() {
 	queryAt := time.Unix(jumpForward, 0)
 
 	s.ctx = s.ctx.WithBlockTime(queryAt)
-	retAggregate, err := s.oracleKeeper.GetDataBeforePublic(s.ctx, qId, queryAt)
+	retAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, queryAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
 }

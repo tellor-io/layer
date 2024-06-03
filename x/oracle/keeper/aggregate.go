@@ -112,8 +112,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 }
 
 // getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
-// TODO: add a test for this function.
-func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+func (k Keeper) GetDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
 	var mostRecent *types.Aggregate
 	// This should get us the most recent aggregate, as they are walked in descending order
@@ -125,8 +124,7 @@ func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp tim
 		return false, nil
 	})
 	if err != nil {
-		// why panic here? should we return an error instead?
-		panic(err)
+		return nil, err
 	}
 
 	if mostRecent == nil {
@@ -134,10 +132,6 @@ func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp tim
 	}
 
 	return mostRecent, nil
-}
-
-func (k Keeper) GetDataBeforePublic(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
-	return k.getDataBefore(ctx, queryId, timestamp)
 }
 
 func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
