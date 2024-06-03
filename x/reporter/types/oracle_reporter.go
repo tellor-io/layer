@@ -9,12 +9,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func NewOracleReporter(reporter string, totalAmount math.Int, commission *stakingtypes.Commission) OracleReporter {
-	repAcc := sdk.MustAccAddressFromBech32(reporter)
+func NewOracleReporter(reporter string, commission *stakingtypes.Commission) OracleReporter {
 	return OracleReporter{
-		Reporter:    repAcc,
-		TotalTokens: totalAmount,
 		Commission:  commission,
+		TotalTokens: math.ZeroInt(),
 	}
 }
 

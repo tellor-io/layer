@@ -78,26 +78,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		reportersimulation.SimulateMsgCreateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
-	var weightMsgDelegateReporter int
-	simState.AppParams.GetOrGenerate(opWeightMsgDelegateReporter, &weightMsgDelegateReporter, nil,
+	var weightMsgChangeReporter int
+	simState.AppParams.GetOrGenerate(opWeightMsgUndelegateReporter, &weightMsgChangeReporter, nil,
 		func(_ *rand.Rand) {
-			weightMsgDelegateReporter = defaultWeightMsgDelegateReporter
+			weightMsgChangeReporter = defaultWeightMsgUndelegateReporter
 		},
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgDelegateReporter,
-		reportersimulation.SimulateMsgDelegateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	var weightMsgUndelegateReporter int
-	simState.AppParams.GetOrGenerate(opWeightMsgUndelegateReporter, &weightMsgUndelegateReporter, nil,
-		func(_ *rand.Rand) {
-			weightMsgUndelegateReporter = defaultWeightMsgUndelegateReporter
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgUndelegateReporter,
-		reportersimulation.SimulateMsgUndelegateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
+		weightMsgChangeReporter,
+		reportersimulation.SimulateMsgChangeReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgWithdrawTip int
@@ -128,18 +117,10 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			},
 		),
 		simulation.NewWeightedProposalMsg(
-			opWeightMsgDelegateReporter,
-			defaultWeightMsgDelegateReporter,
-			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				reportersimulation.SimulateMsgDelegateReporter(am.accountKeeper, am.bankKeeper, am.keeper)
-				return nil
-			},
-		),
-		simulation.NewWeightedProposalMsg(
 			opWeightMsgUndelegateReporter,
 			defaultWeightMsgUndelegateReporter,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				reportersimulation.SimulateMsgUndelegateReporter(am.accountKeeper, am.bankKeeper, am.keeper)
+				reportersimulation.SimulateMsgChangeReporter(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

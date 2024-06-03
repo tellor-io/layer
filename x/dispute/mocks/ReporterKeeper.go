@@ -71,13 +71,13 @@ func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr 
 	return r0
 }
 
-// FeeRefund provides a mock function with given fields: ctx, repAcc, hashId, amt
-func (_m *ReporterKeeper) FeeRefund(ctx context.Context, repAcc types.AccAddress, hashId []byte, amt math.Int) error {
-	ret := _m.Called(ctx, repAcc, hashId, amt)
+// FeeRefund provides a mock function with given fields: ctx, hashId, amt
+func (_m *ReporterKeeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error {
+	ret := _m.Called(ctx, hashId, amt)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, []byte, math.Int) error); ok {
-		r0 = rf(ctx, repAcc, hashId, amt)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, math.Int) error); ok {
+		r0 = rf(ctx, hashId, amt)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -161,39 +161,13 @@ func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.A
 	return r0
 }
 
-// Reporter provides a mock function with given fields: ctx, repAddr
-func (_m *ReporterKeeper) Reporter(ctx context.Context, repAddr types.AccAddress) (*reportertypes.OracleReporter, error) {
-	ret := _m.Called(ctx, repAddr)
-
-	var r0 *reportertypes.OracleReporter
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (*reportertypes.OracleReporter, error)); ok {
-		return rf(ctx, repAddr)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) *reportertypes.OracleReporter); ok {
-		r0 = rf(ctx, repAddr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*reportertypes.OracleReporter)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {
-		r1 = rf(ctx, repAddr)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ReturnSlashedTokens provides a mock function with given fields: ctx, repAddr, amt, hashId
-func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, repAddr string, amt math.Int, hashId []byte) error {
-	ret := _m.Called(ctx, repAddr, amt, hashId)
+// ReturnSlashedTokens provides a mock function with given fields: ctx, hashId
+func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, hashId []byte) error {
+	ret := _m.Called(ctx, hashId)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, math.Int, []byte) error); ok {
-		r0 = rf(ctx, repAddr, amt, hashId)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) error); ok {
+		r0 = rf(ctx, hashId)
 	} else {
 		r0 = ret.Error(0)
 	}

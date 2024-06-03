@@ -9,8 +9,6 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,27 +17,13 @@ type ReporterKeeper struct {
 	mock.Mock
 }
 
-// AllocateTokensToReporter provides a mock function with given fields: ctx, reporterAddr, tokens
-func (_m *ReporterKeeper) AllocateTokensToReporter(ctx context.Context, reporterAddr types.ValAddress, tokens types.DecCoins) error {
-	ret := _m.Called(ctx, reporterAddr, tokens)
+// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward, height
+func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.Int, height int64) error {
+	ret := _m.Called(ctx, reporterAddr, reward, height)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.ValAddress, types.DecCoins) error); ok {
-		r0 = rf(ctx, reporterAddr, tokens)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward
-func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.Int) error {
-	ret := _m.Called(ctx, reporterAddr, reward)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int) error); ok {
-		r0 = rf(ctx, reporterAddr, reward)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int, int64) error); ok {
+		r0 = rf(ctx, reporterAddr, reward, height)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -48,20 +32,18 @@ func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.A
 }
 
 // Reporter provides a mock function with given fields: ctx, repAddress
-func (_m *ReporterKeeper) Reporter(ctx context.Context, repAddress types.AccAddress) (*reportertypes.OracleReporter, error) {
+func (_m *ReporterKeeper) Reporter(ctx context.Context, repAddress types.AccAddress) (math.Int, error) {
 	ret := _m.Called(ctx, repAddress)
 
-	var r0 *reportertypes.OracleReporter
+	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (*reportertypes.OracleReporter, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, error)); ok {
 		return rf(ctx, repAddress)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) *reportertypes.OracleReporter); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) math.Int); ok {
 		r0 = rf(ctx, repAddress)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*reportertypes.OracleReporter)
-		}
+		r0 = ret.Get(0).(math.Int)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {

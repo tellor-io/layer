@@ -13,18 +13,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byte) {
+func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, reportertypes.OracleReporter, []byte) {
 	require := s.Require()
 	// Commit
-	stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, stakedReporter, salt, queryData := s.TestCommitValue()
 	// forward block by 1 and reveal value
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 	// Submit value transaction with value revealed, this checks if the value is correctly hashed
-	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.AccAddress(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	submitreq := types.MsgSubmitValue{
-		Creator:   sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator:   addr.String(),
 		QueryData: queryData,
 		Value:     value,
 		Salt:      salt,
@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byt
 	s.Nil(err)
 
 	microReport := types.MicroReport{
-		Reporter:        sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Reporter:        addr.String(),
 		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryType:       "SpotPrice",
 		QueryId:         queryId,
@@ -55,24 +55,24 @@ func (s *KeeperTestSuite) TestSubmitValue() (reportertypes.OracleReporter, []byt
 	}
 	require.Equal(&expectedReport, report)
 
-	return stakedReporter, queryId
+	return addr, stakedReporter, queryId
 }
 
 func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	// submit value with bad query data
 	badQueryData := []byte("stupidQueryData")
 
-	stakedReporter, salt, _ := s.TestCommitValue()
+	addr, stakedReporter, salt, _ := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
-		Creator:   sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator:   addr.String(),
 		QueryData: badQueryData,
 		Value:     value,
 		Salt:      salt,
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.AccAddress(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "invalid query data")
@@ -83,17 +83,17 @@ func (s *KeeperTestSuite) TestSubmitWithBadValue() {
 
 	badValue := "00000F4240"
 
-	stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, stakedReporter, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
-		Creator:   sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator:   addr.String(),
 		QueryData: queryData,
 		Value:     badValue,
 		Salt:      salt,
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.AccAddress(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr.String()).Return(&stakedReporter, nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
@@ -102,20 +102,20 @@ func (s *KeeperTestSuite) TestSubmitWithBadValue() {
 func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 	// submit correct value but wrong salt
 
-	stakedReporter, _, queryData := s.TestCommitValue()
+	addr, stakedReporter, _, queryData := s.TestCommitValue()
 
 	badSalt, err := oracleutils.Salt(32)
 	s.Nil(err)
 
 	submitreq := types.MsgSubmitValue{
-		Creator:   sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator:   addr.String(),
 		QueryData: queryData,
 		Value:     value,
 		Salt:      badSalt,
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.AccAddress(stakedReporter.GetReporter())).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
 
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
@@ -124,10 +124,10 @@ func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 	// try to submit value in same block as commit
 
-	stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, stakedReporter, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
-		Creator:   sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator:   addr.String(),
 		QueryData: queryData,
 		Value:     value,
 		Salt:      salt,
@@ -139,7 +139,7 @@ func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 	// try to submit value 2 blocks after commit
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour))
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, sdk.AccAddress(stakedReporter.GetReporter())).Return(&stakedReporter, nil) // submitreq.Salt = salt
+	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil) // submitreq.Salt = salt
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "missed commit reveal window")
@@ -178,7 +178,7 @@ func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
 	// submit value with no creator
 
-	_, salt, queryData := s.TestCommitValue()
+	_, _, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
 		QueryData: queryData,
@@ -194,10 +194,10 @@ func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
 func (s *KeeperTestSuite) TestSubmitWithNoQueryData() {
 	// submit value with no query data
 
-	stakedReporter, salt, _ := s.TestCommitValue()
+	addr, _, salt, _ := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
-		Creator: sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator: addr.String(),
 		Value:   value,
 		Salt:    salt,
 	}
@@ -209,10 +209,10 @@ func (s *KeeperTestSuite) TestSubmitWithNoQueryData() {
 
 func (s *KeeperTestSuite) TestSubmitWithNoValue() {
 	// submit value with no value
-	stakedReporter, salt, queryData := s.TestCommitValue()
+	addr, _, salt, queryData := s.TestCommitValue()
 
 	submitreq := types.MsgSubmitValue{
-		Creator:   sdk.AccAddress(stakedReporter.GetReporter()).String(),
+		Creator:   addr.String(),
 		QueryData: queryData,
 		Salt:      salt,
 	}

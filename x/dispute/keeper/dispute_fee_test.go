@@ -44,14 +44,13 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 	dispute := k.dispute()
-	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.ReportEvidence.Reporter, dispute.SlashAmount, dispute.HashId).Return(nil)
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.HashId).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
 }
 
 func (k *KeeperTestSuite) TestReturnFeetoStake() {
-	repAcc := sample.AccAddressBytes()
-	k.reporterKeeper.On("FeeRefund", k.ctx, repAcc, []byte("hash"), math.OneInt()).Return(nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash")).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, math.OneInt()))).Return(nil)
-	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, repAcc, []byte("hash"), math.OneInt()))
+	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), math.OneInt()))
 }

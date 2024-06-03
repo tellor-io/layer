@@ -29,6 +29,7 @@ type StakingKeeper interface {
 	TotalBondedTokens(context.Context) (math.Int, error)
 	GetValidatorSet() stakingtypes.ValidatorSet
 	IterateDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(delegation stakingtypes.Delegation) (stop bool)) error
+	IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd stakingtypes.UnbondingDelegation) (stop bool)) error
 	// Methods imported from account should be defined here
 }
 
@@ -44,12 +45,6 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	// Methods imported from bank should be defined here
-}
-
-// ParamSubspace defines the expected Subspace interface for parameters.
-type ParamSubspace interface {
-	Get(context.Context, []byte, interface{})
-	Set(context.Context, []byte, interface{})
 }
 
 // StakingHooks event hooks for staking validator object (noalias)

@@ -49,7 +49,7 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 	// mocks
 	k.bankKeeper.On("BurnCoins", k.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("loya", math.ZeroInt()))).Return(nil)
 	k.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(modulAddr, nil)
-	k.reporterKeeper.On("FeeRefund", k.ctx, sdk.AccAddress(dispute.FeePayers[0].PayerAddress), dispute.HashId, math.NewInt(8000)).Return(nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, dispute.HashId).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(8000)))).Return(nil)
 	k.bankKeeper.On(
 		"InputOutputCoins", k.ctx,
@@ -72,7 +72,7 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 	}
 	modulAddr := authtypes.NewModuleAddress(types.ModuleName)
 	k.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(modulAddr, nil)
-	k.reporterKeeper.On("FeeRefund", k.ctx, sdk.AccAddress(feePayers[0].PayerAddress), []byte("hash"), math.NewInt(760)).Return(nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash")).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(760)))).Return(nil)
 	k.bankKeeper.On(
 		"InputOutputCoins", k.ctx,

@@ -20,7 +20,7 @@ func SimulateMsgCreateReporter(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgCreateReporter{
-			Reporter: simAccount.Address.String(),
+			ReporterAddress: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the CreateReporter simulation

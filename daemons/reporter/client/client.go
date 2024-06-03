@@ -18,7 +18,7 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
+	// "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -141,10 +141,10 @@ func StartReporterDaemonTaskLoop(
 	stop <-chan bool,
 	ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
-	if err := client.CreateReporter(ctx, ctxGetter); err != nil {
-		client.logger.Error("Error creating reporter: %w", "err", err)
-		panic(err)
-	}
+	// if err := client.CreateReporter(ctx, ctxGetter); err != nil {
+	// 	client.logger.Error("Error creating reporter: %w", "err", err)
+	// 	panic(err)
+	// }
 
 	for {
 		select {
@@ -165,74 +165,74 @@ func StartReporterDaemonTaskLoop(
 }
 
 // MsgCreateReporter creates a staked reporter
-func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool) (sdk.Context, error)) error {
-	for {
-		latestHeight, err := c.LatestBlockHeight(ctx)
-		if err != nil {
-			c.logger.Error("Error getting latest block height: %v", err)
-			panic(err)
-		}
+// func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool) (sdk.Context, error)) error {
+// 	for {
+// 		latestHeight, err := c.LatestBlockHeight(ctx)
+// 		if err != nil {
+// 			c.logger.Error("Error getting latest block height: %v", err)
+// 			panic(err)
+// 		}
 
-		if latestHeight < 2 {
-			time.Sleep(time.Second)
-			continue
-		}
+// 		if latestHeight < 2 {
+// 			time.Sleep(time.Second)
+// 			continue
+// 		}
 
-		appCtx, err := ctxGetter(0, false)
-		if err != nil {
-			c.logger.Error("Error getting context: %v", err)
-			time.Sleep(time.Second * 5)
-			appCtx, err = ctxGetter(0, false)
-			if err != nil {
-				c.logger.Error("Error getting context: %v", err)
-				panic(err)
-			}
-		}
+// 		appCtx, err := ctxGetter(0, false)
+// 		if err != nil {
+// 			c.logger.Error("Error getting context: %v", err)
+// 			time.Sleep(time.Second * 5)
+// 			appCtx, err = ctxGetter(0, false)
+// 			if err != nil {
+// 				c.logger.Error("Error getting context: %v", err)
+// 				panic(err)
+// 			}
+// 		}
 
-		validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
-		if err != nil {
-			return err
-		}
-		if len(validators.Validators) == 0 {
-			c.logger.Info("No validators found, waiting for validators to be available")
-			time.Sleep(time.Second)
-		} else {
-			break
-		}
-	}
+// 		validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if len(validators.Validators) == 0 {
+// 			c.logger.Info("No validators found, waiting for validators to be available")
+// 			time.Sleep(time.Second)
+// 		} else {
+// 			break
+// 		}
+// 	}
 
-	// get reporter
-	appCtx, err := ctxGetter(0, false)
-	if err != nil {
-		return err
-	}
+// 	// get reporter
+// 	appCtx, err := ctxGetter(0, false)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
-	if err != nil {
-		return err
-	}
+// 	validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	val := validators.Validators[0]
-	valAcc, err := sdk.ValAddressFromBech32(val.OperatorAddress)
-	if err != nil {
-		return err
-	}
+// 	val := validators.Validators[0]
+// 	valAcc, err := sdk.ValAddressFromBech32(val.OperatorAddress)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	// stake reporter transaction, reporter is determined by LAYERD_NODE_HOME environment variable
-	// should make this configurable by user :time.Sleep(time.Second)todo
-	// staking 1 TRB
-	amtToStake := math.NewInt(1_000_000) // one TRB
-	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
-		math.LegacyNewDecWithPrec(1, 1), time.Now())
-	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc, Amount: amtToStake}
-	msgCreateReporter := &reportertypes.MsgCreateReporter{
-		Reporter:     c.accAddr.String(),
-		Amount:       amtToStake,
-		TokenOrigins: []*reportertypes.TokenOrigin{&source},
-		Commission:   &commission,
-	}
-	return c.sendTx(ctx, msgCreateReporter, nil)
-}
+// 	// stake reporter transaction, reporter is determined by LAYERD_NODE_HOME environment variable
+// 	// should make this configurable by user :time.Sleep(time.Second)todo
+// 	// staking 1 TRB
+// 	amtToStake := math.NewInt(1_000_000) // one TRB
+// 	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
+// 		math.LegacyNewDecWithPrec(1, 1), time.Now())
+// 	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc, Amount: amtToStake}
+// 	msgCreateReporter := &reportertypes.MsgCreateReporter{
+// 		Reporter:     c.accAddr.String(),
+// 		Amount:       amtToStake,
+// 		TokenOrigins: []*reportertypes.TokenOrigin{&source},
+// 		Commission:   &commission,
+// 	}
+// 	return c.sendTx(ctx, msgCreateReporter, nil)
+// }
 
 func (c *Client) SubmitReport(ctx context.Context) error {
 	querydata, value, err := c.deposits()

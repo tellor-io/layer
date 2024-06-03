@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, []byte) {
+func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, reportertypes.OracleReporter, string, []byte) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
@@ -30,7 +30,6 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 
 	stakedReporter := reportertypes.NewOracleReporter(
 		addr.String(),
-		math.NewInt(1_000_000),
 		nil,
 	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
@@ -52,7 +51,7 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 	s.Nil(err)
 	s.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
 	s.Equal(commitValue.Reporter, addr.String())
-	return stakedReporter, salt, queryData
+	return addr, stakedReporter, salt, queryData
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
@@ -67,7 +66,6 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 
 	stakedReporter := reportertypes.NewOracleReporter(
 		addr.String(),
-		math.NewInt(1_000_000),
 		nil,
 	)
 
@@ -98,7 +96,6 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 
 	stakedReporter := reportertypes.NewOracleReporter(
 		addr.String(),
-		math.NewInt(1_000_000),
 		nil,
 	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
@@ -150,7 +147,6 @@ func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 
 	stakedReporter := reportertypes.NewOracleReporter(
 		randomAddr.String(),
-		math.NewInt(1), // below the min stake amount
 		nil,
 	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
@@ -179,7 +175,6 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 
 	stakedReporter := reportertypes.NewOracleReporter(
 		randomAddr.String(),
-		math.NewInt(1_000_000),
 		nil,
 	)
 	stakedReporter.Jailed = true
