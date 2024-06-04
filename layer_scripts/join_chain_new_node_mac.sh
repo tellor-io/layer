@@ -6,10 +6,10 @@ clear
 # Stop execution if any command fails
 set -e
 
-KEYRING_BACKEND="test"
-PASSWORD="password"
+KEYRING_BACKEND=test
 NODE_MONIKER="billmoniker"
 NODE_NAME="bill"
+TELLORNODE_ID=
 
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
@@ -35,13 +35,12 @@ echo "Initializing chain node for alice..."
 echo "creating keys for node"
 ./layerd keys add $NODE_NAME --home ~/.layer/$NODE_NAME --keyring-backend $KEYRING_BACKEND
 
-
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for $NODE_NAME..."
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/$NODE_NAME/config/config.toml
 
 # Open up node to outside traffic
-echo "Open up node to outside traffice" 
+echo "Open up node to outside traffic" 
 sed -i '' 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i '' 's/^laddr = "tcp:\/\/127.0.0.1:26656"/laddr = "tcp:\/\/0.0.0.0:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
@@ -61,9 +60,9 @@ sed -i '' 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/c
 
 # Modify keyring-backend in client.toml for node
 echo "Modifying keyring-backend in client.toml for node..."
-sed -i '' 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/$NODE_NAME/config/client.toml
+sed -i '' 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/$NODE_NAME/config/client.toml
 # update for main dir as well. why is this needed?
-sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/config/client.toml
 
 rm -f ~/.layer/config/genesis.json
 rm -f ~/.layer/$NODE_NAME/config/genesis.json
@@ -72,9 +71,7 @@ echo "Getting genesis from runnning node....."
 curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
 curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
-export QUOTED_TELLORNODE_ID="$(curl $LAYER_NODE_URL:26657/status | jq '.result.node_info.id')"
-export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
-echo "Tellor node id: $TELLORNODE_ID"
+echo "Running Tellor node id: $TELLORNODE_ID"
 sed -i '' 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i '' 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
