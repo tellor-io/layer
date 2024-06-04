@@ -1,6 +1,13 @@
-Once the chain is running please select an rpc url of a current node to use in your set up of your node and set the LAYER_NODE_URL variable to that url (ex: tellor-example-node.com) with no quotes
+Requirements:
+    - must have sed, jq, and go(v1.22) installed properly on your computer
 
-After finding a node url to use call "curl NODE_URL:26657/status" this should return something like this:
+Creating a new node:
+
+If you are running everything in one terminal instance I recommend using screen sessions so that you can still query the chain and run other things after your node has started
+
+Once the chain is running please select an rpc url of a current node to use in your set up of your node and set the LAYER_NODE_URL variable to that url (ex: tellor-example-node.com) WITH NO QUOTES
+
+After finding a node url to use call "curl tellor-example-node.com:26657/status" this should return something like this:
 
 {
     "jsonrpc":"2.0",
@@ -39,9 +46,25 @@ After finding a node url to use call "curl NODE_URL:26657/status" this should re
     }
 }
 
-use the node_info.id value to set TELLORNODE_ID variable
+Use the node_info.id value to set TELLORNODE_ID variable with NO QUOTES
 
-Set the node name and moniker used for your node 
+Set the node name and moniker used for your node. Can be whatever name you want it to be
+    - will be used to name the folder that your node config is in. Should be in the default location of already set in the LAYERD_NODE_HOME variable as "$HOME/.layer/$NODE_NAME"
 
 run "sh ./layer_scripts/{selected version of script}.sh" inside of the layer base folder and it should set things up and start the chain thus making your node start syncing with your seed/peer
+
+
+Creating a validator:
+
+Assumes that you have a running and synced up node already
+
+1. Set variable values
+    - Use the same values you used for creating your node. Then select the amount of trb you would like to receive to from the faucet and stake for the new validator (1 TRB == 1e1*6 loya)
+
+2. Run script from layer base folder with command: sh ./layer_scripts/create_new_validator_{OS}.sh 
+
+3. After you have created your keys and made the transaction to create a new validator watch the output to ensure the returned validator info shows "status": 3
+    - if status != 3 then cancel the script with CTRL-C
+
+4. Whenever the script tells you to go to the terminal or screen session that your current node is running and stop the chain using CTRL-C. This will allow for the create validator script to restart the chain/node but this time it will run as a validator
 
