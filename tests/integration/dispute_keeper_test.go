@@ -304,7 +304,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 
 	disputer := s.newKeysWithTokens()
-	s.mintTokens(disputer, math.NewInt(10_000_000))
+	s.mintTokens(disputer, math.NewInt(20_000_000))
 
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
@@ -488,7 +488,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	disputerDelgation, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, disputer)
 	s.NoError(err)
 	fmt.Println(disputerDelgation)
-	s.True(disputerDelgation.Equal(math.NewInt(10_000_000)))
+	s.True(disputerDelgation.Equal(math.NewInt(20_000_000)))
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {

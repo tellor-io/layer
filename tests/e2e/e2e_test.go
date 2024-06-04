@@ -103,7 +103,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	// make addresses
 	testAddresses := simtestutil.CreateIncrementalAccounts(numValidators)
 	// mint 50k tokens to minter account and send to each address
-	initCoins := sdk.NewCoin(s.denom, math.NewInt(5000*1e6))
+	initCoins := sdk.NewCoin(s.denom, math.NewInt(10000*1e6))
 	for _, addr := range testAddresses {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, addr, sdk.NewCoins(initCoins)))
@@ -112,31 +112,32 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	valAddresses := simtestutil.ConvertAddrsToValAddrs(testAddresses)
 	// create pub keys for each address
 	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
-
+	stakingserver := stakingkeeper.NewMsgServerImpl(s.stakingKeeper)
 	// set each account with proper keepers
 	for i, pubKey := range pubKeys {
 		s.accountKeeper.NewAccountWithAddress(s.ctx, testAddresses[i])
-		validator, err := stakingtypes.NewValidator(valAddresses[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
-		require.NoError(err)
-		s.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
-		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator))
-		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator))
+		valMsg, err := stakingtypes.NewMsgCreateValidator(
+			valAddresses[i].String(),
+			pubKey,
+			sdk.NewInt64Coin(s.denom, 5000*1e6),
+			stakingtypes.Description{Moniker: strconv.Itoa(i)},
+			stakingtypes.CommissionRates{
+				Rate:          math.LegacyNewDecWithPrec(5, 1),
+				MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+				MaxChangeRate: math.LegacyNewDec(0),
+			},
+			math.OneInt())
+		s.NoError(err)
+		_, err = stakingserver.CreateValidator(s.ctx, valMsg)
+		s.NoError(err)
+		val, err := s.stakingKeeper.GetValidator(s.ctx, valAddresses[i])
+		s.NoError(err)
 
 		randomStakeAmount := rand.Intn(5000-1000+1) + 1000
 		require.True(randomStakeAmount >= 1000 && randomStakeAmount <= 5000, "randomStakeAmount is not within the expected range")
-		_, err = s.stakingKeeper.Delegate(s.ctx, testAddresses[i], math.NewInt(int64(randomStakeAmount)*1e6), stakingtypes.Unbonded, validator, true)
-		require.NoError(err)
-		// call hooks for distribution init
-		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
-		if err != nil {
-			panic(err)
-		}
-		err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
-		require.NoError(err)
-		err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, testAddresses[i], valBz)
-		require.NoError(err)
-		err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, testAddresses[i], valBz)
-		require.NoError(err)
+		msg := stakingtypes.MsgDelegate{DelegatorAddress: testAddresses[i].String(), ValidatorAddress: val.OperatorAddress, Amount: sdk.NewCoin(s.denom, math.NewInt(5000*1e6))}
+		_, err = stakingserver.Delegate(s.ctx, &msg)
+		s.NoError(err)
 	}
 
 	_, err := s.stakingKeeper.EndBlocker(s.ctx)
@@ -186,7 +187,6 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 		delegatorII:  {delegatorAddress: delegatorAccounts[2], validator: validatorSet[1], tokenAmount: math.NewInt(100 * 1e6)},
 		delegatorIII: {delegatorAddress: delegatorAccounts[3], validator: validatorSet[2], tokenAmount: math.NewInt(100 * 1e6)},
 	}
-	stakingserver := stakingkeeper.NewMsgServerImpl(s.stakingKeeper)
 	// delegate to validators
 	for _, del := range delegators {
 		_, err := stakingserver.Delegate(s.ctx, &stakingtypes.MsgDelegate{DelegatorAddress: del.delegatorAddress.String(), ValidatorAddress: del.validator.GetOperator(), Amount: sdk.NewCoin(s.denom, del.tokenAmount)})
@@ -356,6 +356,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
+	reportBlock := s.ctx.BlockHeight()
 	// send reveal message
 	revealResponse, err := msgServerOracle.SubmitValue(s.ctx, &reveal)
 	require.NoError(err)
@@ -388,11 +389,12 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
-		Reporter:  repsAccs[0].String(),
-		Power:     disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
-		QueryId:   queryId,
-		Value:     value,
-		Timestamp: revealTime,
+		Reporter:    repsAccs[0].String(),
+		Power:       disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:     queryId,
+		Value:       value,
+		Timestamp:   revealTime,
+		BlockNumber: reportBlock,
 	}
 
 	// create msg for propose dispute tx
@@ -408,18 +410,18 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = msgServerDispute.ProposeDispute(s.ctx, &msgProposeDispute)
 	require.NoError(err)
 
-	// burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
-	// disputes, err := s.disputekeeper.GetOpenDisputes(s.ctx)
-	// require.NoError(err)
-	// require.NotNil(disputes)
-	// // dispute is created correctly
-	// dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 1)
-	// require.NoError(err)
-	// require.Equal(dispute.DisputeId, uint64(1))
-	// require.Equal(dispute.DisputeStatus, disputetypes.Voting)
-	// require.Equal(dispute.DisputeCategory, disputetypes.Warning)
-	// require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	// require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[1].Bytes(), Amount: disputeFee.Amount, FromBond: true, BlockNumber: 3}})
+	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
+	disputes, err := s.disputekeeper.GetOpenDisputes(s.ctx)
+	require.NoError(err)
+	require.NotNil(disputes)
+	// dispute is created correctly
+	dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeId, uint64(1))
+	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
+	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
+	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[1].Bytes(), Amount: disputeFee.Amount, FromBond: true, BlockNumber: 3}})
 
 	// _, err = s.app.EndBlocker(s.ctx)
 	// require.NoError(err)

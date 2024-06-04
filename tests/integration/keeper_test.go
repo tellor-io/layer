@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/big"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -167,6 +168,7 @@ func (suite *IntegrationTestSuite) initKeepersWithmAccPerms(blockedAddrs map[str
 	)
 	suite.stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
+			suite.distrKeeper.Hooks(),
 			suite.reporterkeeper.Hooks(),
 		),
 	)
@@ -275,7 +277,7 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 	testAddrs := s.convertToAccAddress(privKeys)
 	addrs := s.addTestAddrs(math.NewIntFromBigInt(amount), testAddrs)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-
+	stakingServer := stakingkeeper.NewMsgServerImpl(s.stakingKeeper)
 	for i, pk := range privKeys {
 		account := authtypes.BaseAccount{
 			Address:       testAddrs[i].String(),
@@ -283,23 +285,27 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 			AccountNumber: uint64(i + 1),
 		}
 		s.accountKeeper.SetAccount(s.ctx, &account)
-		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk.PubKey(), stakingtypes.Description{})
+		valMsg, err := stakingtypes.NewMsgCreateValidator(
+			valAddrs[i].String(),
+			pk.PubKey(),
+			sdk.NewInt64Coin(s.denom, s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]).Int64()),
+			stakingtypes.Description{Moniker: strconv.Itoa(i)},
+			stakingtypes.CommissionRates{
+				Rate:          math.LegacyNewDecWithPrec(5, 1),
+				MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+				MaxChangeRate: math.LegacyNewDec(0),
+			},
+			math.OneInt())
 		s.NoError(err)
-		s.NoError(s.stakingKeeper.SetValidator(ctx, val))
-		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(ctx, val))
-		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val))
-		_, err = s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
+
+		_, err = stakingServer.CreateValidator(s.ctx, valMsg)
 		s.NoError(err)
-		// call hooks for distribution init
-		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
-		if err != nil {
-			panic(err)
-		}
-		err = s.distrKeeper.Hooks().AfterValidatorCreated(ctx, valBz)
+
+		val, err := s.stakingKeeper.GetValidator(ctx, valAddrs[i])
 		s.NoError(err)
-		err = s.distrKeeper.Hooks().BeforeDelegationCreated(ctx, addrs[i], valBz)
-		s.NoError(err)
-		err = s.distrKeeper.Hooks().AfterDelegationModified(ctx, addrs[i], valBz)
+		s.mintTokens(addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]))
+		msg := stakingtypes.MsgDelegate{DelegatorAddress: addrs[i].String(), ValidatorAddress: val.OperatorAddress, Amount: sdk.NewCoin(s.denom, s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]))}
+		_, err = stakingServer.Delegate(s.ctx, &msg)
 		s.NoError(err)
 	}
 

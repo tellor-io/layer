@@ -173,6 +173,7 @@ func (suite *E2ETestSuite) initKeepersWithmAccPerms(blockedAddrs map[string]bool
 	)
 	suite.stakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
+			suite.distrKeeper.Hooks(),
 			suite.reporterkeeper.Hooks(),
 		),
 	)
@@ -241,29 +242,32 @@ func (s *E2ETestSuite) CreateValidators(numValidators int) ([]sdk.AccAddress, []
 	// create pub keys for validators
 	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
 	validators := make([]stakingtypes.Validator, numValidators)
+	stakingServer := stakingkeeper.NewMsgServerImpl(s.stakingKeeper)
 	// set each account with proper keepers
 	for i, pubKey := range pubKeys {
 		s.accountKeeper.NewAccountWithAddress(s.ctx, accountsAddrs[i])
-		validator, err := stakingtypes.NewValidator(validatorsAddrs[i].String(), pubKey, stakingtypes.Description{Moniker: strconv.Itoa(i)})
-		require.NoError(err)
-		validators[i] = validator
-		s.NoError(s.stakingKeeper.SetValidator(s.ctx, validator))
-		s.NoError(s.stakingKeeper.SetValidatorByConsAddr(s.ctx, validator))
-		s.NoError(s.stakingKeeper.SetNewValidatorByPowerIndex(s.ctx, validator))
+		valMsg, err := stakingtypes.NewMsgCreateValidator(
+			validatorsAddrs[i].String(),
+			pubKey,
+			sdk.NewInt64Coin(s.denom, 100),
+			stakingtypes.Description{Moniker: strconv.Itoa(i)},
+			stakingtypes.CommissionRates{
+				Rate:          math.LegacyNewDecWithPrec(5, 1),
+				MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+				MaxChangeRate: math.LegacyNewDec(0),
+			},
+			math.OneInt())
+		s.NoError(err)
 
-		_, err = s.stakingKeeper.Delegate(s.ctx, accountsAddrs[i], math.NewInt(5000*1e6), stakingtypes.Unbonded, validator, true)
-		require.NoError(err)
-		// call hooks for distribution init
-		valBz, err := s.stakingKeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
-		if err != nil {
-			panic(err)
-		}
-		err = s.distrKeeper.Hooks().AfterValidatorCreated(s.ctx, valBz)
-		require.NoError(err)
-		err = s.distrKeeper.Hooks().BeforeDelegationCreated(s.ctx, accountsAddrs[i], valBz)
-		require.NoError(err)
-		err = s.distrKeeper.Hooks().AfterDelegationModified(s.ctx, accountsAddrs[i], valBz)
-		require.NoError(err)
+		_, err = stakingServer.CreateValidator(s.ctx, valMsg)
+		s.NoError(err)
+
+		val, err := s.stakingKeeper.GetValidator(s.ctx, validatorsAddrs[i])
+		s.NoError(err)
+		s.MintTokens(accountsAddrs[i], math.NewInt(5000*1e6))
+		msg := stakingtypes.MsgDelegate{DelegatorAddress: accountsAddrs[i].String(), ValidatorAddress: val.OperatorAddress, Amount: sdk.NewCoin(s.denom, math.NewInt(5000*1e6))}
+		_, err = stakingServer.Delegate(s.ctx, &msg)
+		s.NoError(err)
 	}
 
 	return accountsAddrs, validatorsAddrs, validators
