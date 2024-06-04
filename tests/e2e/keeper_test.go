@@ -269,7 +269,8 @@ func (s *E2ETestSuite) CreateValidators(numValidators int) ([]sdk.AccAddress, []
 		_, err = stakingServer.Delegate(s.ctx, &msg)
 		s.NoError(err)
 	}
-
+	_, err := s.stakingKeeper.EndBlocker(s.ctx)
+	s.NoError(err)
 	return accountsAddrs, validatorsAddrs, validators
 }
 
