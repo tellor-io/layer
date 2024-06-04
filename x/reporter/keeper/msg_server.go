@@ -34,7 +34,15 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if reporterExists {
 		return nil, errorsmod.Wrapf(types.ErrReporterExists, "cannot create reporter with address %s, it already exists", msg.ReporterAddress)
 	}
+	delegation, err := k.Keeper.Delegators.Get(goCtx, reporter.Bytes())
+	if err != nil {
+		return nil, err
+	}
 
+	delegation.Reporter = reporter.Bytes()
+	if err := k.Keeper.Delegators.Set(goCtx, reporter.Bytes(), delegation); err != nil {
+		return nil, err
+	}
 	minCommRate, err := k.MinCommissionRate(goCtx)
 	if err != nil {
 		return nil, err
@@ -50,7 +58,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	// create a new reporter
-	newReporter := types.NewOracleReporter(msg.ReporterAddress, &commission)
+	newReporter := types.NewOracleReporter(msg.ReporterAddress, delegation.Amount, &commission)
 	if err := k.Reporters.Set(goCtx, reporter.Bytes(), newReporter); err != nil {
 		return nil, err
 	}
@@ -63,6 +71,15 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 	delAddr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 	delegation, err := k.Keeper.Delegators.Get(goCtx, delAddr.Bytes())
 	if err != nil {
+		return nil, err
+	}
+	// move tokens
+	rep, err := k.Reporters.Get(goCtx, delegation.Reporter)
+	if err != nil {
+		return nil, err
+	}
+	rep.TotalTokens = rep.TotalTokens.Sub(delegation.Amount)
+	if err := k.Reporters.Set(goCtx, delegation.Reporter, rep); err != nil {
 		return nil, err
 	}
 
@@ -88,11 +105,19 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 	if len(keys) >= 100 {
 		return nil, errors.New("reporter is at max cap")
 	}
-
+	rep, err = k.Reporters.Get(goCtx, newReporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	rep.TotalTokens = rep.TotalTokens.Add(delegation.Amount)
+	if err := k.Reporters.Set(goCtx, newReporterAddr.Bytes(), rep); err != nil {
+		return nil, err
+	}
 	delegation.Reporter = newReporterAddr.Bytes()
 	if err := k.Keeper.Delegators.Set(goCtx, delAddr.Bytes(), delegation); err != nil {
 		return nil, err
 	}
+
 	return &types.MsgChangeReporterResponse{}, nil
 }
 
