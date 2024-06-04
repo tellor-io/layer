@@ -9,11 +9,11 @@ set -e
 KEYRING_BACKEND=test
 NODE_MONIKER="billmoniker"
 NODE_NAME="bill"
-TELLORNODE_ID=
+TELLORNODE_ID=f5f6ce5d15ea80683b9133b19e245f9b27daab67
 
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=
+export LAYER_NODE_URL=tellornode.com
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
