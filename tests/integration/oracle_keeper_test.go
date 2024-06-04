@@ -5,16 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *IntegrationTestSuite) TestTipping() {
@@ -106,7 +106,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
-
+	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
 	addr := s.newKeysWithTokens()
 
 	tip := sdk.NewCoin(s.denom, math.NewInt(1000))
@@ -125,13 +125,15 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.NoError(err)
 	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
-	newReporter, err := createReporter(s.ctx, int64(1), s.reporterkeeper)
-	s.Nil(err)
+	_, err = s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
+	s.NoError(err)
+	_, err = s.reporterkeeper.ReporterStake(s.ctx, repAccs[1])
+	s.NoError(err)
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
 	value := encodeValue(29266)
 	hash := oracleutils.CalculateCommitment(value, salt)
-	commit, reveal := report(newReporter.String(), value, salt, hash, ethQueryData)
+	commit, reveal := report(repAccs[0].String(), value, salt, hash, ethQueryData)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	_, err = msgServer.SubmitValue(s.ctx, &reveal)
@@ -144,7 +146,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	queryServer := keeper.NewQuerier(s.oraclekeeper)
 	res, err := queryServer.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)
-	s.Equal(res.Report.AggregateReporter, newReporter.String())
+	s.Equal(res.Report.AggregateReporter, repAccs[0].String())
 	// tip should be 0 after aggregated report
 	tips, err = s.oraclekeeper.GetQueryTip(s.ctx, queryId)
 	s.Nil(err)
@@ -206,8 +208,12 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 func (s *IntegrationTestSuite) TestMedianReports() {
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
+	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	tipper := s.newKeysWithTokens()
-
+	for _, rep := range repAccs {
+		_, err := s.reporterkeeper.ReporterStake(s.ctx, rep)
+		s.NoError(err)
+	}
 	reporters := []struct {
 		name          string
 		reporterIndex int
@@ -254,17 +260,15 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	_, err := msgServer.Tip(s.ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.denom, math.NewInt(1000))})
 	s.Nil(err)
 	addr := make([]sdk.AccAddress, len(reporters))
-	for _, r := range reporters {
+	for i, r := range reporters {
 		s.T().Run(r.name, func(t *testing.T) {
 			// create reporter
-			newReporter, err := createReporter(s.ctx, r.power, s.reporterkeeper)
-			s.Nil(err)
-			addr[r.reporterIndex] = newReporter
+			addr[r.reporterIndex] = repAccs[i]
 			salt, err := oracleutils.Salt(32)
 			s.Nil(err)
 			hash := oracleutils.CalculateCommitment(r.value, salt)
 			s.Nil(err)
-			commit, reveal := report(newReporter.String(), r.value, salt, hash, ethQueryData)
+			commit, reveal := report(repAccs[i].String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.CommitReport(s.ctx, &commit)
 			s.Nil(err)
 			_, err = msgServer.SubmitValue(s.ctx, &reveal)
@@ -343,23 +347,21 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
+	reporterPower := int64(1)
+	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{reporterPower})
+	stake, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
+	s.NoError(err)
 	// send timebasedrewards tokens to oracle module to pay reporters with
 	tipper := s.newKeysWithTokens()
 	reward := math.NewInt(100)
-	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
+	err = s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
 	s.NoError(err)
 
 	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
 	qId := utils.QueryIDFromData(ethQueryData)
 	value := []string{"000001"}
 
-	reporterPower := int64(1)
-	addr, err := createReporter(s.ctx, 1, s.reporterkeeper)
-	s.NoError(err)
-
-	reports := testutil.GenerateReports([]sdk.AccAddress{addr}, value, []int64{reporterPower}, qId)
-
-	bal1 := s.bankKeeper.GetBalance(s.ctx, addr, s.denom)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []int64{reporterPower}, qId)
 
 	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports[:1])
 	s.NoError(err)
@@ -371,24 +373,24 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	tbr, err := queryServer.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	amt, err := s.reporterkeeper.WithdrawDelegationRewards(s.ctx, addr.Bytes(), addr)
-	s.NoError(err)
-	s.True(amt.AmountOf(s.denom).GT(math.ZeroInt()))
 
-	bal2 := s.bankKeeper.GetBalance(s.ctx, addr, s.denom)
-	s.Equal(bal1.Amount.Add(reward), bal2.Amount, "current balance should be equal to previous balance + reward")
+	tip, err := s.reporterkeeper.DelegatorTips.Get(s.ctx, repAccs[0].Bytes())
+	s.NoError(err)
+	s.Equal(tip, reward, "reporter should get the reward")
+	// withdraw the reward
+	repServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
+	_, err = repServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: repAccs[0].String(), ValidatorAddress: valAddrs[0].String()})
+	s.NoError(err)
+	bond, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, repAccs[0])
+	s.NoError(err)
+	s.Equal(stake.Add(reward), bond, "current balance should be equal to previous balance + reward")
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
-	// send timebasedrewards tokens to oracle module to pay reporters with
-	tipper := s.newKeysWithTokens()
-	reward := math.NewInt(100)
-	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
-	s.NoError(err)
 
 	qId := utils.QueryIDFromData(ethQueryData)
 
@@ -396,35 +398,39 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	reporterPower1 := int64(1)
 	reporterPower2 := int64(2)
 	totalReporterPower := reporterPower1 + reporterPower2
-
-	reporterAddr, err := createReporter(s.ctx, 1, s.reporterkeeper)
+	repAccs, _, _ := s.createValidatorAccs([]int64{reporterPower1, reporterPower2})
+	reporterStake, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
 	s.NoError(err)
-	reporterAddr2, err := createReporter(s.ctx, 2, s.reporterkeeper)
+	reporterStake2, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[1])
 	s.NoError(err)
-
+	// send timebasedrewards tokens to oracle module to pay reporters with
+	tipper := s.newKeysWithTokens()
+	reward := math.NewInt(100)
+	err = s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
+	s.NoError(err)
 	// generate 2 reports for ethQueryData
-	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2}, value, []int64{reporterPower1, reporterPower2}, qId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []int64{reporterPower1, reporterPower2}, qId)
 
 	testCases := []struct {
 		name                 string
 		reporterIndex        int
-		beforeBalance        sdk.Coin
+		beforeBalance        math.Int
 		afterBalanceIncrease math.Int
 		delegator            sdk.AccAddress
 	}{
 		{
 			name:                 "reporter with 1 voting power",
 			reporterIndex:        0,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr, s.denom),
+			beforeBalance:        reporterStake,
 			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward),
-			delegator:            reporterAddr,
+			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 2 voting power",
 			reporterIndex:        1,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr2, s.denom),
+			beforeBalance:        reporterStake2,
 			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward),
-			delegator:            reporterAddr2,
+			delegator:            repAccs[1],
 		},
 	}
 	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports)
@@ -435,72 +441,72 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := queryServer.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err, "error allocating rewards")
-
+	reporterServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			_, err = s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			_, err = reporterServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: tc.delegator.String(), ValidatorAddress: sdk.ValAddress(tc.delegator).String()})
 			s.NoError(err)
-			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
-			s.Equal(tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease), afterBalance.Amount)
+			afterBalance, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, tc.delegator)
+			s.NoError(err)
+			s.Equal(tc.beforeBalance.Add(tc.afterBalanceIncrease), afterBalance)
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
-	tipper := s.newKeysWithTokens()
-	reward := math.NewInt(100)
-	err := s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
-	s.NoError(err)
-
 	values := []string{"000001", "000002", "000003", "000004"}
 
 	reporterPower1 := int64(1)
 	reporterPower2 := int64(2)
 	reporterPower3 := int64(3)
 	totalPower := reporterPower1 + reporterPower2 + reporterPower3
+	repAccs, _, _ := s.createValidatorAccs([]int64{reporterPower1, reporterPower2, reporterPower3})
+	reporterStake, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
+	s.NoError(err)
+	reporterStake2, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[1])
+	s.NoError(err)
+	reporterStake3, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[2])
+	s.NoError(err)
 
-	reporterAddr, err := createReporter(s.ctx, 1, s.reporterkeeper)
+	tipper := s.newKeysWithTokens()
+	reward := math.NewInt(100)
+	err = s.bankKeeper.SendCoinsFromAccountToModule(s.ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.denom, reward)))
 	s.NoError(err)
-	reporterAddr2, err := createReporter(s.ctx, 2, s.reporterkeeper)
-	s.NoError(err)
-	reporterAddr3, err := createReporter(s.ctx, 3, s.reporterkeeper)
-	s.NoError(err)
-
 	// generate 4 reports for ethQueryData
 	qId := utils.QueryIDFromData(ethQueryData)
-	reports := testutil.GenerateReports([]sdk.AccAddress{reporterAddr, reporterAddr2, reporterAddr3}, values, []int64{reporterPower1, reporterPower2, reporterPower3}, qId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []int64{reporterPower1, reporterPower2, reporterPower3}, qId)
 
 	testCases := []struct {
 		name                 string
 		reporterIndex        int
-		beforeBalance        sdk.Coin
+		beforeBalance        math.Int
 		afterBalanceIncrease math.Int
 		delegator            sdk.AccAddress
 	}{
 		{
 			name:                 "reporter with 100 voting power",
 			reporterIndex:        0,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr, s.denom),
+			beforeBalance:        reporterStake,
 			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward),
-			delegator:            reporterAddr,
+			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 200 voting power",
 			reporterIndex:        1,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr2, s.denom),
+			beforeBalance:        reporterStake2,
 			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward),
-			delegator:            reporterAddr2,
+			delegator:            repAccs[1],
 		},
 		{
 			name:                 "reporter with 300 voting power",
 			reporterIndex:        2,
-			beforeBalance:        s.bankKeeper.GetBalance(s.ctx, reporterAddr3, s.denom),
+			beforeBalance:        reporterStake3,
 			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward),
-			delegator:            reporterAddr3,
+			delegator:            repAccs[2],
 		},
 	}
 	_, err = s.oraclekeeper.WeightedMedian(s.ctx, reports[:3])
@@ -509,31 +515,38 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	queryServer := keeper.NewQuerier(s.oraclekeeper)
 	res, _ := queryServer.GetAggregatedReport(s.ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := queryServer.GetTimeBasedRewards(s.ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, false)
+	err = s.oraclekeeper.AllocateRewards(s.ctx, res.Report.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	reporterServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			_, err = s.reporterkeeper.WithdrawDelegationRewards(s.ctx, tc.delegator.Bytes(), tc.delegator)
+			_, err = reporterServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: tc.delegator.String(), ValidatorAddress: sdk.ValAddress(tc.delegator).String()})
 			s.NoError(err)
-			afterBalance := s.bankKeeper.GetBalance(s.ctx, tc.delegator, s.denom)
-			expectedAfterBalance := tc.beforeBalance.Amount.Add(tc.afterBalanceIncrease)
+			afterBalance, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, tc.delegator)
+			s.NoError(err)
+			expectedAfterBalance := tc.beforeBalance.Add(tc.afterBalanceIncrease)
 			tolerance := expectedAfterBalance.SubRaw(1)
-			withinTolerance := expectedAfterBalance.Equal(afterBalance.Amount) || tolerance.Equal(afterBalance.Amount)
+			withinTolerance := expectedAfterBalance.Equal(afterBalance) || tolerance.Equal(afterBalance)
 			s.True(withinTolerance)
 		})
 	}
 }
 
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
-	tipper := s.newKeysWithTokens()
+
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
-	// accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	_, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
+	s.NoError(err)
 	queryData1, err := s.oraclekeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
+
 	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	queryData3, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+
+	tipper := s.newKeysWithTokens()
 	msg := types.MsgTip{
 		Tipper:    tipper.String(),
 		QueryData: queryData2,
@@ -541,23 +554,22 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	}
 	_, err = msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
-	reporterAddr, err := createReporter(s.ctx, 1, s.reporterkeeper)
-	s.Nil(err)
+
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
 	hash := oracleutils.CalculateCommitment(value, salt)
 	s.Nil(err)
 	// commit report with query data in cycle list
-	commit, _ := report(reporterAddr.String(), value, salt, hash, queryData1)
+	commit, _ := report(repAccs[0].String(), value, salt, hash, queryData1)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list but has a tip
-	commit, _ = report(reporterAddr.String(), value, salt, hash, queryData2)
+	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData2)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.Nil(err)
 	// commit report with query data not in cycle list and has no tip
-	commit, _ = report(reporterAddr.String(), value, salt, hash, queryData3)
+	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.ctx, &commit)
 	s.ErrorContains(err, "query not part of cyclelist")
 }
@@ -567,16 +579,14 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	require := s.Require()
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
-	repAccs := s.CreateAccountsWithTokens(2, 100*1e6)
-
-	stakeAmount := math.NewInt(100 * 1e6)
+	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	stakeAmount, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
+	require.NoError(err)
 	tipAmount := math.NewInt(1000)
 
-	tipper := repAccs[0]
-	repAcc := repAccs[1]
+	tipper := s.newKeysWithTokens()
+
 	valAddr := valAddrs[0]
-	delegators := repAccs[1:]
 
 	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	queryId := utils.QueryIDFromData(queryData)
@@ -587,27 +597,22 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 		QueryData: queryData,
 		Amount:    sdk.NewCoin(s.denom, tipAmount),
 	}
-	_, err := msgServer.Tip(s.ctx, &msg)
-	s.Nil(err)
-
-	// create createReporterStakedWithValidator handles the delegation and staking plus the reporter creation
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	_, err = createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	_, err = msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 
 	// check delegation shares before reporting, should be equal to the stake amount
-	delBefore, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
+	delBefore, err := s.stakingKeeper.Delegation(s.ctx, repAccs[0].Bytes(), valAddr)
 	s.Nil(err)
 	s.True(delBefore.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation shares should be equal to the stake amount")
 
 	reporterPower := int64(1)
 	value := []string{"000001"}
-	reports := testutil.GenerateReports(repAccs[1:], value, []int64{reporterPower}, queryId)
+	reports := testutil.GenerateReports(repAccs, value, []int64{reporterPower}, queryId)
 	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
 	s.Nil(s.oraclekeeper.Query.Set(s.ctx, queryId, query))
-	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
@@ -624,11 +629,11 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	// create reporterMsgServer
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
 	// withdraw tip
-	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: repAcc.String(), ValidatorAddress: valAddr.String()})
+	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: repAccs[0].String(), ValidatorAddress: valAddr.String()})
 	require.NoError(err)
 
 	// delegation shares should increase after reporting and escrow balance should go back to 0
-	delAfter, err := s.stakingKeeper.Delegation(s.ctx, repAcc.Bytes(), valAddr)
+	delAfter, err := s.stakingKeeper.Delegation(s.ctx, repAccs[0].Bytes(), valAddr)
 	s.Nil(err)
 	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares plus the tip added") // 1000 - 2% tip
 	escrowBalance = s.bankKeeper.GetBalance(s.ctx, escrowAcct, s.denom)
@@ -638,18 +643,19 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	require := s.Require()
 	msgServer := keeper.NewMsgServerImpl(s.oraclekeeper)
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
-	accs := s.CreateAccountsWithTokens(3, 100*1e6)
+	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{1, 2})
+	reporterStake1, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[0])
+	require.NoError(err)
+	reporterStake2, err := s.reporterkeeper.ReporterStake(s.ctx, repAccs[1])
+	require.NoError(err)
 
-	stakeAmount := math.NewInt(100 * 1e6)
 	tipAmount := math.NewInt(1000)
 
-	tipper := accs[0]
-	repAcc := accs[1]
-	valAddr := valAddrs[0]
-	delegators := accs[1:]
-	delegator1 := accs[1]
-	delegator2 := accs[2]
+	tipper := s.newKeysWithTokens()
+	valAddr1 := valAddrs[0]
+	valAddr2 := valAddrs[1]
+	delegator1 := repAccs[0]
+	delegator2 := repAccs[1]
 
 	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 	queryId := utils.QueryIDFromData(queryData)
@@ -660,34 +666,29 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 		QueryData: queryData,
 		Amount:    sdk.NewCoin(s.denom, tipAmount),
 	}
-	_, err := msgServer.Tip(s.ctx, &msg)
-	s.Nil(err)
-
-	// create createReporterStakedWithValidator handles the delegation and staking plus the reporter creation with 50 percent commission
-	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), math.LegacyNewDecWithPrec(5, 1), s.ctx.BlockTime())
-	_, err = createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
-	s.Nil(err)
-	source := reportertypes.TokenOrigin{ValidatorAddress: valAddr.Bytes(), Amount: stakeAmount}
-	err = DelegateToReporterSingleValidator(s.ctx, s.reporterkeeper, repAcc, delegator2, valAddr, []*reportertypes.TokenOrigin{&source}, stakeAmount)
+	_, err = msgServer.Tip(s.ctx, &msg)
 	s.Nil(err)
 
 	// check delegation shares before reporting, should be equal to the stake amount
-	del1Before, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr)
+	del1Before, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr1)
 	s.Nil(err)
-	s.True(del1Before.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation 1 shares should be equal to the stake amount")
+	s.True(del1Before.GetShares().Equal(math.LegacyNewDecFromInt(reporterStake1)), "delegation 1 shares should be equal to the stake amount")
 
-	del2Before, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr)
+	del2Before, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr2)
 	s.Nil(err)
-	s.True(del2Before.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation 2 shares should be equal to the stake amount")
+	s.True(del2Before.GetShares().Equal(math.LegacyNewDecFromInt(reporterStake2)), "delegation 2 shares should be equal to the stake amount")
 
-	reporterPower := int64(2) // normalize by sdk.DefaultPowerReduction
-	value := []string{"000001"}
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAcc}, value, []int64{reporterPower}, queryId)
+	reporterPower := int64(1)
+	reporterPower2 := int64(2)
+	value := []string{"000001", "000002"}
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []int64{reporterPower, reporterPower2}, queryId)
 	query, err := s.oraclekeeper.Query.Get(s.ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
 	s.NoError(s.oraclekeeper.Query.Set(s.ctx, queryId, query))
-	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAcc.Bytes(), query.Id), reports[0])
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
+	s.Nil(err)
+	err = s.oraclekeeper.Reports.Set(s.ctx, collections.Join3(queryId, repAccs[1].Bytes(), query.Id), reports[1])
 	s.Nil(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
 	err = s.oraclekeeper.SetAggregatedReport(s.ctx)
@@ -703,21 +704,19 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 
 	// withdraw self delegation from tip escrow
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.reporterkeeper)
-	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: delegator1.String(), ValidatorAddress: valAddr.String()})
+	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: delegator1.String(), ValidatorAddress: valAddr1.String()})
 	require.NoError(err)
 
 	// delegation shares should increase after reporting and withdrawing
-	del1After, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr)
+	del1After, err := s.stakingKeeper.Delegation(s.ctx, delegator1.Bytes(), valAddr1)
 	s.Nil(err)
-	// 980 = 1000 - 2% tip, 980 / 2 = 490 for each delegator but with 50 percent commission for the reporter would be 490 + (490 / 2) = 735
-	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(735))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
+	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(327))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
 
 	// withdraw del2 delegation from tip escrow
-	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: delegator2.String(), ValidatorAddress: valAddr.String()})
+	_, err = reporterMsgServer.WithdrawTip(s.ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: delegator2.String(), ValidatorAddress: valAddr2.String()})
 	require.NoError(err)
 
-	// 980 - 735 = 245
-	del2After, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr)
+	del2After, err := s.stakingKeeper.Delegation(s.ctx, delegator2.Bytes(), valAddr2)
 	s.Nil(err)
-	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(245))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
+	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(653))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
 }

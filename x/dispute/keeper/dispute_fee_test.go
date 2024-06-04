@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 	dispute := k.dispute()
-	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.HashId).Return(nil)
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
 }

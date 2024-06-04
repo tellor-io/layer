@@ -29,7 +29,7 @@ func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
 	addr := sample.AccAddressBytes()
 
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
@@ -61,7 +61,7 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 	addr := sample.AccAddressBytes()
 
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 
 	addr := sample.AccAddressBytes()
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
@@ -132,7 +132,7 @@ func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 	randomAddr := sample.AccAddressBytes()
 
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(math.OneInt(), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, randomAddr).Return(math.OneInt(), nil)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   randomAddr.String(),
@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 
 	randomAddr := sample.AccAddressBytes()
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(math.Int{}, reportertypes.ErrReporterJailed)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, randomAddr).Return(math.Int{}, reportertypes.ErrReporterJailed)
 
 	commitreq := types.MsgCommitReport{
 		Creator:   randomAddr.String(),

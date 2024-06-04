@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
@@ -66,7 +67,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 
 			if !query.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, report.Reporters, query.Amount, true)
+				err = k.AllocateRewards(ctx, report.Reporters, query.Amount, types.ModuleName)
 				if err != nil {
 					return err
 				}
@@ -89,7 +90,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// Process time-based rewards for reporters.
 	tbr := k.getTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
-	return k.AllocateRewards(ctx, reportersToPay, tbr, false)
+	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }
 
 func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error {

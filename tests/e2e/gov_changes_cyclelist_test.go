@@ -29,11 +29,11 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	_, err := s.app.BeginBlocker(s.ctx)
 	require.NoError(err)
 
-	valAccAddrs, valValAddrs, vals := s.CreateValidators(5)
-	repAccAddrs := s.CreateReporters(5, valValAddrs, vals)
-	proposer := repAccAddrs[0]
+	valAccAddrs, _, _ := s.CreateValidators(5)
+	// repAccAddrs := s.CreateReporters(5, valValAddrs, vals)
+	proposer := valAccAddrs[0]
 	initCoins := sdk.NewCoin(s.denom, math.NewInt(500*1e6))
-	for _, rep := range repAccAddrs {
+	for _, rep := range valAccAddrs {
 		s.NoError(s.bankKeeper.MintCoins(s.ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
 		s.NoError(s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, authtypes.Minter, rep, sdk.NewCoins(initCoins)))
 	}

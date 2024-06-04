@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -99,7 +98,12 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 	if err != nil {
 		return math.Int{}, err
 	}
-	rep, err := k.Report.Get(ctx, collections.Join(del.Reporter, blockNumber))
+	rng := collections.NewPrefixedPairRange[[]byte, int64](del.Reporter).EndInclusive(blockNumber).Descending()
+	rep := types.DelegationsAmounts{}
+	err = k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsAmounts) (bool, error) {
+		rep = value
+		return true, nil
+	})
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -108,15 +112,21 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 			return r.Amount, nil
 		}
 	}
-	return math.Int{}, errors.New("delegator not found in token origins")
+	return math.ZeroInt(), nil
 }
 
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {
-	r, err := k.Report.Get(ctx, collections.Join(reporter, blockNumber))
+	rng := collections.NewPrefixedPairRange[[]byte, int64](reporter).EndInclusive(blockNumber).Descending()
+	total := math.ZeroInt()
+	err := k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsAmounts) (bool, error) {
+		total = value.Total
+		return true, nil
+	})
+
 	if err != nil {
 		return math.Int{}, err
 	}
-	return r.Total, nil
+	return total, nil
 }
 
 func (k Keeper) TrackStakeChange(ctx context.Context) error {

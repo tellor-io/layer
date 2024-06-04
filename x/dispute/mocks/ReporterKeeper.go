@@ -161,13 +161,13 @@ func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.A
 	return r0
 }
 
-// ReturnSlashedTokens provides a mock function with given fields: ctx, hashId
-func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, hashId []byte) error {
-	ret := _m.Called(ctx, hashId)
+// ReturnSlashedTokens provides a mock function with given fields: ctx, amt, hashId
+func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error {
+	ret := _m.Called(ctx, amt, hashId)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte) error); ok {
-		r0 = rf(ctx, hashId)
+	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) error); ok {
+		r0 = rf(ctx, amt, hashId)
 	} else {
 		r0 = ret.Error(0)
 	}

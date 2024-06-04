@@ -149,8 +149,7 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddre
 				MaxRate:       sdkmath.LegacyMustNewDecFromStr("0.2"),
 				MaxChangeRate: sdkmath.LegacyMustNewDecFromStr("0.01"),
 			}},
-			// Reporter: reporterKey,
-			// TotalTokens: sdkmath.ZeroInt(),
+			TotalTokens: sdkmath.ZeroInt(),
 		}); err != nil {
 			return err
 		}

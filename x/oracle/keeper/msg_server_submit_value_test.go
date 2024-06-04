@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 	// Submit value transaction with value revealed, this checks if the value is correctly hashed
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -72,7 +72,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "invalid query data")
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestSubmitWithBadValue() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
@@ -114,7 +114,7 @@ func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 	// try to submit value 2 blocks after commit
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour))
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(math.NewInt(1_000_000), nil) // submitreq.Salt = salt
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil) // submitreq.Salt = salt
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "missed commit reveal window")

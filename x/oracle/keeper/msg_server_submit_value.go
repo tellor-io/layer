@@ -29,7 +29,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 
 	// get reporter
-	reporterStake, err := k.keeper.reporterKeeper.Reporter(ctx, reporterAddr)
+	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +88,11 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
-	// todo: do we need to keep all the commits? also whats best do it here or aggregation?
 	// remove commit from store
-	// err = k.Keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgSubmitValueResponse{}, nil
 }
 

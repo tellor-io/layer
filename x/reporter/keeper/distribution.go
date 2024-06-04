@@ -46,11 +46,13 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 
 // ReturnSlashedTokens returns the slashed tokens to the delegators,
 // called in dispute module after dispute is resolved with result invalid or reporter wins
-func (k Keeper) ReturnSlashedTokens(ctx context.Context, hashId []byte) error {
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error {
 	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
 		return err
 	}
+	// possible additional tokens to give reporter in case of a dispute for the reporter
+	extra := amt.Sub(snapshot.Total)
 	for _, source := range snapshot.TokenOrigins {
 		valAddr := sdk.ValAddress(source.ValidatorAddress)
 
@@ -81,7 +83,12 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, hashId []byte) error {
 		} else {
 			tokenSrc = stakingtypes.Unbonded
 		}
-		_, err = k.stakingKeeper.Delegate(ctx, delAddr, source.Amount, tokenSrc, val, false)
+		shareAmt := math.LegacyNewDecFromInt(source.Amount)
+		if extra.IsPositive() {
+			// add extra tokens based on the share of the delegator
+			shareAmt = math.LegacyNewDecFromInt(source.Amount).Quo(math.LegacyNewDecFromInt(snapshot.Total)).Mul(math.LegacyNewDecFromInt(amt))
+		}
+		_, err = k.stakingKeeper.Delegate(ctx, delAddr, shareAmt.TruncateInt(), tokenSrc, val, false)
 		if err != nil {
 			return err
 		}

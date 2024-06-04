@@ -3,13 +3,13 @@ package integration_test
 import (
 	"bytes"
 	"encoding/hex"
+	"fmt"
 	"time"
 
-	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
-	oracleKeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reporterKeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -22,23 +22,30 @@ import (
 
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
-
-	repAccs := s.CreateAccountsWithTokens(2, 100*1e6)
-	stakeAmount := math.NewInt(100 * 1e6)
-
-	repAcc := repAccs[0]
 	valAddr := valAddrs[0]
-	delegators := repAccs
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	_, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	repAddr := sdk.AccAddress(valAddr)
+	valBond, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+	s.NoError(err)
+	dels, err := s.stakingKeeper.GetValidatorDelegations(s.ctx, valAddr)
 	s.NoError(err)
 
+	srcs := make([]*reportertypes.TokenOriginInfo, len(dels))
+	total := math.ZeroInt()
+	for i, del := range dels {
+		srcs[i] = &reportertypes.TokenOriginInfo{
+			DelegatorAddress: sdk.MustAccAddressFromBech32(del.DelegatorAddress).Bytes(),
+			ValidatorAddress: valAddr.Bytes(),
+			Amount:           valBond.TokensFromShares(del.Shares).TruncateInt(),
+		}
+		total = total.Add(srcs[i].Amount)
+	}
+	err = s.reporterkeeper.Report.Set(s.ctx, collections.Join(repAddr.Bytes(), s.ctx.BlockHeight()), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
+	s.NoError(err)
 	// assemble report with reporter to dispute
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:  repAcc.String(),
+		Reporter:  repAddr.String(),
 		Power:     100,
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
@@ -63,10 +70,10 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.Equal(1, len(open))
 
 	// check validator wasn't slashed/jailed
-	rep, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
+	rep, err := s.reporterkeeper.Reporter(s.ctx, repAddr.Bytes())
 	s.NoError(err)
 	// reporter tokens should be the same as the stake amount since fee wasn't fully paid
-	s.Equal(rep.TotalTokens, stakeAmount)
+	s.Equal(rep.TotalTokens, valBond.Tokens)
 	s.False(rep.Jailed)
 	// Add dispute fee to complete the fee and jail/slash validator
 	_, err = msgServer.AddFeeToDispute(s.ctx, &types.MsgAddFeeToDispute{
@@ -76,9 +83,9 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	})
 	s.NoError(err)
 	// check reporter was slashed/jailed after fee was added
-	rep, err = s.reporterkeeper.Reporter(s.ctx, repAcc)
+	rep, err = s.reporterkeeper.Reporter(s.ctx, repAddr.Bytes())
 	s.NoError(err)
-	s.Equal(rep.TotalTokens, stakeAmount.Sub(math.NewInt(1_000_000)))
+	s.Equal(rep.TotalTokens, valBond.Tokens.Sub(math.NewInt(1_000_000)))
 	s.True(rep.Jailed)
 
 	dispute, err := s.disputekeeper.Disputes.Get(s.ctx, 1)
@@ -111,19 +118,29 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 
-	repAccs := s.CreateAccountsWithTokens(2, 100*1e6)
-	stakeAmount := math.NewInt(100 * 1e6)
-
-	repAcc := repAccs[0]
 	valAddr := valAddrs[0]
-	delegators := repAccs
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	_, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	repAddr := sdk.AccAddress(valAddr)
+
+	valBond, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+	s.NoError(err)
+	dels, err := s.stakingKeeper.GetValidatorDelegations(s.ctx, valAddr)
 	s.NoError(err)
 
+	srcs := make([]*reportertypes.TokenOriginInfo, len(dels))
+	total := math.ZeroInt()
+	for i, del := range dels {
+		srcs[i] = &reportertypes.TokenOriginInfo{
+			DelegatorAddress: sdk.MustAccAddressFromBech32(del.DelegatorAddress).Bytes(),
+			ValidatorAddress: valAddr.Bytes(),
+			Amount:           valBond.TokensFromShares(del.Shares).TruncateInt(),
+		}
+		total = total.Add(srcs[i].Amount)
+	}
+	err = s.reporterkeeper.Report.Set(s.ctx, collections.Join(repAddr.Bytes(), s.ctx.BlockHeight()), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
+	s.NoError(err)
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    repAcc.String(),
+		Reporter:    repAddr.String(),
 		Power:       100,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
@@ -132,7 +149,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 	_, err = msgServer.ProposeDispute(s.ctx, &types.MsgProposeDispute{
-		Creator:         repAcc.String(),
+		Creator:         repAddr.String(),
 		Report:          &report,
 		DisputeCategory: types.Warning,
 		Fee:             sdk.NewCoin(s.denom, math.NewInt(1_000_000)), // one percent dispute fee
@@ -141,18 +158,18 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	s.NoError(err)
 
 	// check reporter was slashed/jailed after fee was added
-	rep, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
+	rep, err := s.reporterkeeper.Reporter(s.ctx, repAddr)
 	s.NoError(err)
-	s.Equal(rep.TotalTokens, stakeAmount.Sub(math.NewInt(2_000_000))) // two because fee was paid from bond (self dispute) and reporter was slashed
+	s.Equal(rep.TotalTokens, valBond.Tokens.Sub(math.NewInt(2_000_000))) // two because fee was paid from bond (self dispute) and reporter was slashed
 	s.True(rep.Jailed)
 
 	reporterServer := reporterKeeper.NewMsgServerImpl(s.reporterkeeper)
 	req := &reportertypes.MsgUnjailReporter{
-		ReporterAddress: repAcc.String(),
+		ReporterAddress: repAddr.String(),
 	}
 	_, err = reporterServer.UnjailReporter(s.ctx, req)
 	s.NoError(err)
-	rep, err = s.reporterkeeper.Reporter(s.ctx, repAcc)
+	rep, err = s.reporterkeeper.Reporter(s.ctx, repAddr)
 	s.NoError(err)
 	s.False(rep.Jailed)
 }
@@ -161,28 +178,40 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
-
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
-	stakeAmount := math.NewInt(100 * 1e6)
 	disputer := s.newKeysWithTokens()
-
-	repAcc := repAccs[0]
-	valAddr := valAddrs[0]
 	delegators := repAccs
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	_, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	valAddr := valAddrs[0]
+	repAddr := sdk.AccAddress(valAddr)
+
+	valBond, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+	s.NoError(err)
+	dels, err := s.stakingKeeper.GetValidatorDelegations(s.ctx, valAddr)
+	s.NoError(err)
+
+	srcs := make([]*reportertypes.TokenOriginInfo, len(dels))
+	total := math.ZeroInt()
+	for i, del := range dels {
+		srcs[i] = &reportertypes.TokenOriginInfo{
+			DelegatorAddress: sdk.MustAccAddressFromBech32(del.DelegatorAddress).Bytes(),
+			ValidatorAddress: valAddr.Bytes(),
+			Amount:           valBond.TokensFromShares(del.Shares).TruncateInt(),
+		}
+		total = total.Add(srcs[i].Amount)
+	}
+	err = s.reporterkeeper.Report.Set(s.ctx, collections.Join(repAddr.Bytes(), s.ctx.BlockHeight()), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
 	s.NoError(err)
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    repAcc.String(),
+		Reporter:    repAddr.String(),
 		Power:       100,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
 		BlockNumber: s.ctx.BlockHeight(),
 	}
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
 	disputerBalanceBefore := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
@@ -232,7 +261,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// // tally vote
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
-	reporter, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
+	reporter, err := s.reporterkeeper.Reporter(s.ctx, repAddr)
 	s.NoError(err)
 
 	repTknBeforeExecuteVote := reporter.TotalTokens
@@ -240,7 +269,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// execute vote
 	err = s.disputekeeper.ExecuteVote(s.ctx, 1)
 	s.NoError(err)
-	reporter, err = s.reporterkeeper.Reporter(s.ctx, repAcc)
+	reporter, err = s.reporterkeeper.Reporter(s.ctx, repAddr)
 	s.NoError(err)
 	s.True(reporter.TotalTokens.GT(repTknBeforeExecuteVote))
 	// // dispute fee returned so balance should be the same as before paying fee
@@ -274,27 +303,24 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 
-	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
-	stakeAmount := math.NewInt(100 * 1e6)
 	disputer := s.newKeysWithTokens()
+	s.mintTokens(disputer, math.NewInt(10_000_000))
 
-	repAcc := repAccs[0]
 	valAddr := valAddrs[0]
-	delegators := repAccs
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	reporter, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
-	s.NoError(err)
+	repAddr := sdk.AccAddress(valAddr)
 
+	stake, err := s.reporterkeeper.ReporterStake(s.ctx, repAddr)
+	s.NoError(err)
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:  repAcc.String(),
-		Power:     100,
+		Reporter:  repAddr.String(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
 	}
 
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 
 	// Propose dispute pay half of the fee from account
@@ -308,7 +334,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	vote := []types.MsgVote{
 		{
-			Voter: repAcc.String(),
+			Voter: repAddr.String(),
 			Id:    1,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
@@ -321,16 +347,17 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	err = s.disputekeeper.Tallyvote(ctx, 1)
 	s.NoError(err)
 
-	bond := reporter.Amount
+	bond := sdk.DefaultPowerReduction.MulRaw(report.Power)
 	// execute vote
 	s.NoError(s.disputekeeper.ExecuteVote(ctx, 1))
 
 	voteInfo, err := s.disputekeeper.Votes.Get(s.ctx, 1)
 	s.NoError(err)
 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, voteInfo.VoteResult)
-	rep, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
+
+	val, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
 	s.NoError(err)
-	s.True(rep.TotalTokens.Equal(bond))
+	s.True(val.Tokens.Equal(bond))
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
@@ -339,14 +366,13 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
-	stakeAmount := math.NewInt(100 * 1e6)
 	disputer := s.newKeysWithTokens()
 
-	repAcc := repAccs[0]
-	valAddr := valAddrs[0]
 	delegators := repAccs
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	reporter, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	valAddr := valAddrs[0]
+	repAddr := sdk.AccAddress(valAddr)
+
+	stake, err := s.reporterkeeper.ReporterStake(s.ctx, repAddr)
 	s.NoError(err)
 	disputerBefore, err := s.stakingKeeper.GetAllDelegatorDelegations(s.ctx, disputer)
 	s.NoError(err)
@@ -354,7 +380,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 
 	// mint tokens to voters
 	s.mintTokens(disputer, math.NewInt(100_000_000))
-	oracleServer := oracleKeeper.NewMsgServerImpl(s.oraclekeeper)
+	oracleServer := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
 		QueryData: ethQueryData,
@@ -365,13 +391,13 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:  repAcc.String(),
-		Power:     100,
+		Reporter:  repAddr.String(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
 	}
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 	fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
 	twoPercentBurn := fivePercentBurn.QuoRaw(2)
@@ -385,14 +411,14 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.ctx, s.disputekeeper))
 
 	votersBalanceBefore := map[string]sdk.Coin{
-		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		repAddr.String():       s.bankKeeper.GetBalance(s.ctx, repAddr, s.denom),
 		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
 		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
 		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
 	}
 	votes := []types.MsgVote{
 		{
-			Voter: repAcc.String(),
+			Voter: repAddr.String(),
 			Id:    1,
 			Vote:  types.VoteEnum_VOTE_SUPPORT,
 		},
@@ -418,17 +444,21 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 			s.Error(err, "voter power is zero")
 		}
 	}
+	fmt.Println("rep", repAddr.String())
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
 	// execute vote
 	s.NoError(s.disputekeeper.ExecuteVote(s.ctx, 1))
-	reporterAfter, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
+	reporterAfter, err := s.reporterkeeper.Reporter(s.ctx, repAddr)
 	s.NoError(err)
+	// should still be jailed
 	s.True(reporterAfter.Jailed)
-	s.True(reporterAfter.TotalTokens.LT(reporter.Amount))
+	fmt.Println(reporterAfter.TotalTokens, stake)
+	// total tokens should be the same since reward goes to stake and there is only one validator
+	s.True(reporterAfter.TotalTokens.Equal(stake))
 
 	votersBalanceAfter := map[string]sdk.Coin{
-		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		repAddr.String():       s.bankKeeper.GetBalance(s.ctx, repAddr, s.denom),
 		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
 		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
 		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
@@ -448,7 +478,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	}
 	votersReward, _ := s.disputekeeper.CalculateVoterShare(s.ctx, voters, twoPercentBurn, totalVoterPower)
 	for i, v := range votersReward {
-		// voterBal := votersBalanceBefore[i].Amount.Add(votersReward[addrs[i].String()])
 		voterBal := votersBalanceBefore[v.Voter.String()].AddAmount(votersReward[i].Share)
 		if bytes.Equal(disputer, votersReward[i].Voter) {
 			// disputer gets the dispute fee they paid minus the 5% burn for a one rounder dispute
@@ -458,7 +487,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	}
 	disputerDelgation, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, disputer)
 	s.NoError(err)
-	s.True(disputerDelgation.Equal(math.NewInt(1_000_000)))
+	fmt.Println(disputerDelgation)
+	s.True(disputerDelgation.Equal(math.NewInt(10_000_000)))
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
@@ -467,19 +497,17 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
-	stakeAmount := math.NewInt(100 * 1e6)
 	disputer := s.newKeysWithTokens()
 
-	repAcc := repAccs[0]
 	valAddr := valAddrs[0]
+	repAddr := sdk.AccAddress(valAddr)
 	delegators := repAccs
-	commission := reportertypes.NewCommissionWithTime(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec(), s.ctx.BlockTime())
-	reporterBefore, err := createReporterStakedWithValidator(s.ctx, s.reporterkeeper, s.stakingKeeper, valAddr, delegators, commission, stakeAmount)
+	stake, err := s.reporterkeeper.ReporterStake(s.ctx, repAddr)
 	s.NoError(err)
 
 	// tip to capture other group of voters 25% of the total power
 	s.mintTokens(disputer, math.NewInt(100_000_000))
-	oracleServer := oracleKeeper.NewMsgServerImpl(s.oraclekeeper)
+	oracleServer := oraclekeeper.NewMsgServerImpl(s.oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
 		QueryData: ethQueryData,
@@ -490,13 +518,13 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:  repAcc.String(),
-		Power:     100,
+		Reporter:  repAddr.String(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
 	}
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, repAcc.String(), types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 
 	fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
@@ -512,14 +540,14 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	})
 	s.NoError(err)
 	votersBalanceBefore := map[string]sdk.Coin{
-		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		repAddr.String():       s.bankKeeper.GetBalance(s.ctx, repAddr, s.denom),
 		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
 		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
 		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
 	}
 	votes := []types.MsgVote{
 		{
-			Voter: repAcc.String(),
+			Voter: repAddr.String(),
 			Id:    1,
 			Vote:  types.VoteEnum_VOTE_AGAINST,
 		},
@@ -545,18 +573,21 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 			s.Error(err, "voter power is zero")
 		}
 	}
+	val, err := s.stakingKeeper.GetValidator(s.ctx, valAddr)
+	s.NoError(err)
+	fmt.Println(val.Tokens)
 	// tally vote
 	err = s.disputekeeper.Tallyvote(s.ctx, 1)
 	s.NoError(err)
 	// execute vote
 	err = s.disputekeeper.ExecuteVote(s.ctx, 1)
 	s.NoError(err)
-	reporterAfterDispute, err := s.reporterkeeper.Reporter(s.ctx, repAcc)
+	reporterAfterDispute, err := s.reporterkeeper.Reporter(s.ctx, repAddr)
 	s.NoError(err)
-
-	s.Equal(reporterBefore.Amount.Add(disputeFeeMinusBurn), reporterAfterDispute.TotalTokens)
+	fmt.Println(reporterAfterDispute.TotalTokens, stake, disputeFeeMinusBurn)
+	s.Equal(stake.Add(disputeFeeMinusBurn), reporterAfterDispute.TotalTokens)
 	votersBalanceAfter := map[string]sdk.Coin{
-		repAcc.String():        s.bankKeeper.GetBalance(s.ctx, repAcc, s.denom),
+		repAddr.String():       s.bankKeeper.GetBalance(s.ctx, repAddr, s.denom),
 		disputer.String():      s.bankKeeper.GetBalance(s.ctx, disputer, s.denom),
 		delegators[1].String(): s.bankKeeper.GetBalance(s.ctx, delegators[1], s.denom),
 		delegators[2].String(): s.bankKeeper.GetBalance(s.ctx, delegators[2], s.denom),
@@ -584,24 +615,25 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
-	reporter1Acc, reporter2Acc := s.Reporters()
+	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	reporter1Acc := repAccs[0]
+	reporter2Acc := repAccs[1]
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	reporter1StakeBefore, err := s.reporterkeeper.ReporterStake(s.ctx, reporter1Acc)
 	s.NoError(err)
-	reporter1StakeBefore := reporter1.TotalTokens
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
-		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Reporter:    reporter1Acc.String(),
+		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
 		BlockNumber: s.ctx.BlockHeight(),
 	}
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
-	disputer := sample.AccAddressBytes()
+	disputer := s.newKeysWithTokens()
 	// mint disputer tokens
 	s.mintTokens(disputer, math.NewInt(100_000_000))
 	// disputer balance before proposing dispute
@@ -618,9 +650,11 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	disputerBalanceAfter1stRound := s.bankKeeper.GetBalance(s.ctx, disputer, s.denom)
 	s.True(disputerBalanceBefore.Amount.GT(disputerBalanceAfter1stRound.Amount))
 	// assert reporter tokens slashed and reporter jailed
-	reporter1, err = s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	rep1Tokens, err := s.stakingKeeper.GetDelegatorBonded(s.ctx, reporter1Acc)
 	s.NoError(err)
-	reporter1TokensAfterDispute1stround := reporter1.TotalTokens
+	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	s.NoError(err)
+	reporter1TokensAfterDispute1stround := rep1Tokens
 	s.True(reporter1.Jailed)
 	s.True(reporter1.TotalTokens.LT(reporter1StakeBefore))
 	s.Equal(reporter1.TotalTokens, reporter1StakeBefore.Sub(disputeFee))
@@ -676,24 +710,27 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
-	reporter1Acc, reporter2Acc := s.Reporters()
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	reporter1Acc := repAccs[0]
+	reporter2Acc := repAccs[1]
+
+	reporter1StakeBefore, err := s.reporterkeeper.ReporterStake(s.ctx, reporter1Acc)
 	s.NoError(err)
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
-		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Reporter:    reporter1Acc.String(),
+		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
 		BlockNumber: s.ctx.BlockHeight(),
 	}
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 
-	disputer := sample.AccAddressBytes()
+	disputer := s.newKeysWithTokens()
 	// mint disputer tokens
 	s.mintTokens(disputer, math.NewInt(100_000_000))
 
@@ -721,27 +758,27 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
-	reporter1Acc, _ := s.Reporters()
 	msgServer := keeper.NewMsgServerImpl(s.disputekeeper)
-	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
-	s.NoError(err)
+	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	reporter1Acc := repAccs[0]
 
-	reporterStakeBefore := reporter1.TotalTokens
+	reporterStakeBefore, err := s.reporterkeeper.ReporterStake(s.ctx, reporter1Acc)
+	s.NoError(err)
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
-		Reporter:    sdk.AccAddress(reporter1.Reporter).String(),
-		Power:       reporter1.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Reporter:    reporter1Acc.String(),
+		Power:       reporterStakeBefore.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
 		BlockNumber: s.ctx.BlockHeight(),
 	}
 
-	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report.Reporter, types.Warning)
+	disputeFee, err := s.disputekeeper.GetDisputeFee(s.ctx, report, types.Warning)
 	s.NoError(err)
 
-	disputer := sample.AccAddressBytes()
+	disputer := s.newKeysWithTokens()
 	// mint disputer tokens
 	s.mintTokens(disputer, math.NewInt(100_000_000))
 
@@ -754,7 +791,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	_, err = msgServer.ProposeDispute(s.ctx, &disputeMsg)
 	s.NoError(err)
 
-	reporter1, err = s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
+	reporter1, err := s.reporterkeeper.Reporter(s.ctx, reporter1Acc)
 	s.NoError(err)
 	s.NotEqual(reporterStakeBefore, reporter1.TotalTokens)
 

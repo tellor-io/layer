@@ -33,7 +33,7 @@ type RegistryKeeper interface {
 
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
-	Reporter(ctx context.Context, repAddress sdk.AccAddress) (math.Int, error)
+	ReporterStake(ctx context.Context, repAddress sdk.AccAddress) (math.Int, error)
 	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int, height int64) error
 }
 

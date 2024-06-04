@@ -48,7 +48,7 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.
 
 // return slashed tokens when reporter either wins dispute or dispute is invalid
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
-	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.HashId)
+	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.SlashAmount, dispute.HashId)
 	if err != nil {
 		return err
 	}

@@ -40,8 +40,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
-	valAccAddrs, valValAddrs, vals := s.CreateValidators(1)
-	repAccAddrs := s.CreateReporters(1, valValAddrs, vals)
+	valAccAddrs, valValAddrs, _ := s.CreateValidators(1)
+	// valAccAddrs := s.CreateReporters(1, valValAddrs, vals)
 
 	_, err = s.app.EndBlocker(s.ctx)
 	require.NoError(err)
@@ -61,18 +61,18 @@ func (s *E2ETestSuite) TestEditSpec() {
 	dataspec := registrytypes.DataSpec{
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
-		Registrar:         repAccAddrs[0].String(),
+		Registrar:         valAccAddrs[0].String(),
 		AbiComponents:     abiComponents,
 	}
 	_, err = registryMsgServer.RegisterSpec(s.ctx, &registrytypes.MsgRegisterSpec{
-		Registrar: repAccAddrs[0].String(),
+		Registrar: valAccAddrs[0].String(),
 		QueryType: "TWAP",
 		Spec:      dataspec,
 	})
 	require.NoError(err)
 	spec, err := s.registrykeeper.GetSpec(s.ctx, "TWAP")
 	require.NoError(err)
-	require.Equal(spec.Registrar, repAccAddrs[0].String())
+	require.Equal(spec.Registrar, valAccAddrs[0].String())
 	require.Equal(spec.AbiComponents, abiComponents)
 	require.Equal(spec.ResponseValueType, "uint256")
 	require.Equal(spec.AggregationMethod, "weighted-median")
@@ -117,7 +117,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	msgSubmit := oracletypes.MsgSubmitValue{
-		Creator:   repAccAddrs[0].String(),
+		Creator:   valAccAddrs[0].String(),
 		QueryData: encodedDataSpec,
 		Value:     encodeValue(5_000),
 	}
@@ -137,7 +137,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Second))
 
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
-		DelegatorAddress: repAccAddrs[0].String(),
+		DelegatorAddress: valAccAddrs[0].String(),
 		ValidatorAddress: valValAddrs[0].String(),
 	}
 	_, err = reporterMsgServer.WithdrawTip(s.ctx, &msgWithdrawTip)
@@ -174,7 +174,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	spec, err = s.registrykeeper.GetSpec(s.ctx, "TWAP")
 	require.NoError(err)
-	require.Equal(spec.Registrar, repAccAddrs[0].String())
+	require.Equal(spec.Registrar, valAccAddrs[0].String())
 	require.Equal(spec.AbiComponents, abiComponents)
 	require.Equal(spec.ResponseValueType, "uint256")
 	require.Equal(spec.AggregationMethod, "weighted-median")
@@ -252,7 +252,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	updatedSpec = registrytypes.DataSpec{
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
-		Registrar:         repAccAddrs[0].String(),
+		Registrar:         valAccAddrs[0].String(),
 		AbiComponents: []*registrytypes.ABIComponent{
 			{Name: "asset", FieldType: "string"},
 			{Name: "currency", FieldType: "string"},
@@ -339,7 +339,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 
 	spec, err = s.registrykeeper.GetSpec(s.ctx, "TWAP")
 	require.NoError(err)
-	require.Equal(spec.Registrar, repAccAddrs[0].String())
+	require.Equal(spec.Registrar, valAccAddrs[0].String())
 	require.Equal(spec.AbiComponents, abiComponents)
 	require.Equal(spec.ResponseValueType, "uint256")
 	require.Equal(spec.AggregationMethod, "weighted-median")

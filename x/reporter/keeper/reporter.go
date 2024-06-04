@@ -15,7 +15,7 @@ import (
 
 // Reporter returns the total power of a reporter that is bonded at time of the call
 // Store the set of delegations for the reporter at the current block height for dispute purposes to be referenced by block height
-func (k Keeper) Reporter(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
+func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, err
@@ -103,4 +103,8 @@ func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
 // alias
 func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types.Delegation, error) {
 	return k.Delegators.Get(ctx, delegator)
+}
+
+func (k Keeper) Reporter(ctx context.Context, reporter sdk.AccAddress) (types.OracleReporter, error) {
+	return k.Reporters.Get(ctx, reporter.Bytes())
 }

@@ -31,8 +31,8 @@ func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.A
 	return r0
 }
 
-// Reporter provides a mock function with given fields: ctx, repAddress
-func (_m *ReporterKeeper) Reporter(ctx context.Context, repAddress types.AccAddress) (math.Int, error) {
+// ReporterStake provides a mock function with given fields: ctx, repAddress
+func (_m *ReporterKeeper) ReporterStake(ctx context.Context, repAddress types.AccAddress) (math.Int, error) {
 	ret := _m.Called(ctx, repAddress)
 
 	var r0 math.Int

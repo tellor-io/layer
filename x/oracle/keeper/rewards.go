@@ -22,7 +22,7 @@ type ReportersReportCount struct {
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
-func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.AggregateReporter, reward math.Int, toStake bool) error {
+func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.AggregateReporter, reward math.Int, fromPool string) error {
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.
@@ -43,12 +43,6 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 		totalPower += r.Power
 	}
 
-	var from string
-	if toStake {
-		from = types.ModuleName
-	} else {
-		from = minttypes.TimeBasedRewards
-	}
 	for r, c := range reportCounts {
 		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward)
 		repoterAddr, err := sdk.AccAddressFromBech32(r)
@@ -61,7 +55,7 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 		}
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, from, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
 }
 
 func (k Keeper) getTimeBasedRewards(ctx context.Context) math.Int {

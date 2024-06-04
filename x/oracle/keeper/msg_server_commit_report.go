@@ -22,7 +22,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	}
 
 	// get reporter
-	reporterStake, err := k.keeper.reporterKeeper.Reporter(ctx, reporterAddr)
+	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr)
 	if err != nil {
 		return nil, err
 	}

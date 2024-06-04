@@ -50,7 +50,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "ChangeReporter",
 					Use:            "change-reporter [reporter-addr]",
 					Short:          "Execute the UndelegateReporter RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "token_origins"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				{
 					RpcMethod:      "UnjailReporter",

@@ -227,33 +227,6 @@ func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
 	return Addr
 }
 
-// func (s *IntegrationTestSuite) createValidators(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-// 	ctx := s.ctx
-// 	acctNum := len(powers)
-// 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
-// 	amount := new(big.Int).Mul(big.NewInt(1000), base)
-// 	testAddrs := simtestutil.CreateIncrementalAccounts(acctNum)
-// 	addrs := s.addTestAddrs(math.NewIntFromBigInt(amount), testAddrs)
-// 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
-// 	pks := simtestutil.CreateTestPubKeys(acctNum)
-
-// 	for i, pk := range pks {
-// 		s.accountKeeper.NewAccountWithAddress(ctx, testAddrs[i])
-
-// 		val, err := stakingtypes.NewValidator(valAddrs[i].String(), pk, stakingtypes.Description{})
-// 		s.NoError(err)
-// 		s.stakingKeeper.SetValidator(ctx, val)
-// 		s.stakingKeeper.SetValidatorByConsAddr(ctx, val)
-// 		s.stakingKeeper.SetNewValidatorByPowerIndex(ctx, val)
-// 		s.stakingKeeper.Delegate(ctx, addrs[i], s.stakingKeeper.TokensFromConsensusPower(ctx, powers[i]), stakingtypes.Unbonded, val, true)
-// 	}
-
-// 	_, err := s.stakingKeeper.EndBlocker(ctx)
-// 	s.NoError(err)
-
-// 	return addrs, valAddrs
-// }
-
 func (s *IntegrationTestSuite) addTestAddrs(accAmt math.Int, testAddrs []sdk.AccAddress) []sdk.AccAddress {
 	initCoins := sdk.NewCoin(s.denom, accAmt)
 	for _, addr := range testAddrs {
