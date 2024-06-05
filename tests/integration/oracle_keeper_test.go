@@ -5,14 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,8 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 func (s *IntegrationTestSuite) TestTipping() {
@@ -391,7 +391,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
-
 	qId := utils.QueryIDFromData(ethQueryData)
 
 	value := []string{"000001", "000002"}
@@ -535,7 +534,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 }
 
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
-
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]int64{100})
 	_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])

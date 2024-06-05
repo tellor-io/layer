@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	setup "github.com/tellor-io/layer/tests"
 	"github.com/tellor-io/layer/testutil/sample"
 	_ "github.com/tellor-io/layer/x/dispute"
 	_ "github.com/tellor-io/layer/x/oracle"
@@ -30,7 +31,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	setup "github.com/tellor-io/layer/tests"
 )
 
 var (

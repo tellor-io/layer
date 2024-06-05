@@ -122,7 +122,6 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 		total = value.Total
 		return true, nil
 	})
-
 	if err != nil {
 		return math.Int{}, err
 	}

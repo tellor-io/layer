@@ -2,9 +2,8 @@ package e2e_test
 
 import (
 	"encoding/hex"
-	"time"
-
 	"fmt"
+	"time"
 
 	"github.com/tellor-io/layer/testutil"
 	utils "github.com/tellor-io/layer/utils"

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+	setup "github.com/tellor-io/layer/tests"
 	_ "github.com/tellor-io/layer/x/dispute"
 	_ "github.com/tellor-io/layer/x/mint"
 	_ "github.com/tellor-io/layer/x/oracle"
@@ -12,10 +13,8 @@ import (
 	_ "github.com/tellor-io/layer/x/reporter/module"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
@@ -24,7 +23,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	setup "github.com/tellor-io/layer/tests"
 )
 
 const (
@@ -43,8 +41,8 @@ func (s *E2ETestSuite) SetupTest() {
 	s.Setup.SetupTest(s.T())
 }
 
-func JailValidator(Ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorAddress sdk.ValAddress, k stakingkeeper.Keeper) error {
-	validator, err := k.GetValidator(Ctx, validatorAddress)
+func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorAddress sdk.ValAddress, k stakingkeeper.Keeper) error {
+	validator, err := k.GetValidator(ctx, validatorAddress)
 	if err != nil {
 		return fmt.Errorf("validator %s not found", validatorAddress)
 	}
@@ -53,7 +51,7 @@ func JailValidator(Ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorA
 		return fmt.Errorf("validator %s is already jailed", validatorAddress)
 	}
 
-	err = k.Jail(Ctx, consensusAddress)
+	err = k.Jail(ctx, consensusAddress)
 	if err != nil {
 		return err
 	}

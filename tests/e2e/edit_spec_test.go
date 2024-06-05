@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
@@ -19,7 +20,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/tellor-io/layer/testutil"
 )
 
 func (s *E2ETestSuite) TestEditSpec() {

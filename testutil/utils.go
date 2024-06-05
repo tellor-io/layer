@@ -1,19 +1,16 @@
 package testutil
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math"
-
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
-	"encoding/hex"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, queryId []byte) []oracletypes.MicroReport {

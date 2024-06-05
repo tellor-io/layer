@@ -3,7 +3,9 @@ package setup
 import (
 	"strconv"
 	"testing"
+	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
@@ -11,90 +13,63 @@ import (
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
-
-	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	"cosmossdk.io/core/appconfig"
-	"cosmossdk.io/math"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
+	"github.com/tellor-io/layer/app/config"
+	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
-	Reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
-
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+	_ "github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
-
+	minttypes "github.com/tellor-io/layer/x/mint/types"
+	_ "github.com/tellor-io/layer/x/oracle"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
+	_ "github.com/tellor-io/layer/x/registry/module"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	_ "github.com/tellor-io/layer/x/reporter/module"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
-
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
-	"time"
-
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
-	"github.com/tellor-io/layer/app/config"
-
-	_ "github.com/tellor-io/layer/x/dispute"
-
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
-	_ "github.com/tellor-io/layer/x/mint"
-	minttypes "github.com/tellor-io/layer/x/mint/types"
-	_ "github.com/tellor-io/layer/x/oracle"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	_ "github.com/tellor-io/layer/x/registry/module"
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
-
-	_ "github.com/tellor-io/layer/x/reporter/module"
-
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
+	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
-
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
-
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -211,7 +186,7 @@ type SharedSetup struct {
 	Disputekeeper  disputekeeper.Keeper
 	Registrykeeper registrykeeper.Keeper
 	Mintkeeper     mintkeeper.Keeper
-	Reporterkeeper Reporterkeeper.Keeper
+	Reporterkeeper reporterkeeper.Keeper
 
 	Accountkeeper  authkeeper.AccountKeeper
 	Bankkeeper     bankkeeper.BaseKeeper
@@ -314,6 +289,7 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 }
 
 func (s *SharedSetup) SetupTest(t *testing.T) {
+	t.Helper()
 	s.require = require.New(t)
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()

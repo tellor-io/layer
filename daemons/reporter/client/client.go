@@ -140,7 +140,6 @@ func StartReporterDaemonTaskLoop(
 	stop <-chan bool,
 	ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
-
 	for {
 		select {
 		case <-ticker.C:

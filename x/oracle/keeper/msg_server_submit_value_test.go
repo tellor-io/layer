@@ -4,11 +4,12 @@ import (
 	"encoding/hex"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

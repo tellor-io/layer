@@ -318,17 +318,14 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, delAccAddr, sdk.NewCoins(initCoins)))
 
 	// delegate to validator 0
-	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valsValAddrs[0])
-	require.NoError(err)
 	s.Setup.MintTokens(delAccAddr, math.NewInt(500*1e6))
-
 	_, err = msgServerStaking.Delegate(s.Setup.Ctx, &stakingtypes.MsgDelegate{DelegatorAddress: delAccAddr.String(), ValidatorAddress: valsValAddrs[0].String(), Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(500*1e6))})
 	require.NoError(err)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	val, err = s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valsValAddrs[0])
+	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valsValAddrs[0])
 	require.NoError(err)
 	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, badReporter)
 	require.NoError(err)
@@ -378,14 +375,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	// disputer, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[1])
-	// require.NoError(err)
-
-	// disputerBal := disputer.TotalTokens
-	disputedBal := disputedRep.TotalTokens
-	onePercent := disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
-	disputeFee := sdk.NewCoin(s.Setup.Denom, onePercent) // warning should be 1% of bonded tokens
-
 	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
@@ -396,6 +385,12 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Timestamp:   revealTime,
 		BlockNumber: reportBlock,
 	}
+
+	// disputedBal := disputedRep.TotalTokens
+	// onePercent := disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
+	fee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, disputetypes.Warning)
+	require.NoError(err)
+	disputeFee := sdk.NewCoin(s.Setup.Denom, fee) // warning should be 1% of bonded tokens
 
 	// create msg for propose dispute tx
 	msgProposeDispute := disputetypes.MsgProposeDispute{
@@ -420,9 +415,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(dispute.DisputeId, uint64(1))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
-	fmt.Println(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount), burnAmount, dispute.BurnAmount, disputeFee)
-	// require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	// require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[1].Bytes(), Amount: disputeFee.Amount, FromBond: true, BlockNumber: 3}})
+	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[0].Bytes(), Amount: disputeFee.Amount, FromBond: true, BlockNumber: 3}})
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -493,10 +487,10 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	// disputerBal := disputer.TotalTokens
-	disputedBal = disputedRep.TotalTokens
-	onePercent = disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
-	disputeFee = sdk.NewCoin(s.Setup.Denom, onePercent) // warning should be 1% of bonded tokens
+	report.Power = disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64()
+	fee, err = s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, disputetypes.Warning)
+	require.NoError(err)
+	disputeFee = sdk.NewCoin(s.Setup.Denom, fee) // warning should be 1% of bonded tokens
 
 	// get microreport for dispute
 	report = oracletypes.MicroReport{
@@ -531,8 +525,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(dispute.DisputeId, uint64(2))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
-	// require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	// require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[1].Bytes(), Amount: disputeFee.Amount, FromBond: false, BlockNumber: 5}})
+	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[1].Bytes(), Amount: disputeFee.Amount, FromBond: false, BlockNumber: 5}})
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
