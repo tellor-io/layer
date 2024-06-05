@@ -177,16 +177,11 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
-		} else {
-			if len(voteExt.OracleAttestations) > 0 {
-				return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
-			}
-		}
-	} else {
-		// verify length of oracle attestations
-		if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
+		} else if len(voteExt.OracleAttestations) > 0 {
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
+	} else if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 	// verify the initial signature size
 	if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
