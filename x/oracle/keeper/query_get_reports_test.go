@@ -4,12 +4,10 @@ import (
 	"encoding/hex"
 
 	"github.com/tellor-io/layer/x/oracle/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestGetReportsByQueryId() {
-	stakedReporter, queryIdStr := s.TestSubmitValue()
+	addr, queryIdStr := s.TestSubmitValue()
 
 	req := &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)}
 
@@ -17,8 +15,8 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	s.Nil(err)
 
 	MicroReport := &types.MicroReport{
-		Reporter:        sdk.AccAddress(stakedReporter.GetReporter()).String(),
-		Power:           stakedReporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Reporter:        addr.String(),
+		Power:           1,
 		QueryType:       "SpotPrice",
 		QueryId:         queryIdStr,
 		AggregateMethod: "weighted-median",
@@ -33,11 +31,11 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 
 	s.Equal(expectedReports, report.Reports)
 
-	report2, err := s.queryClient.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: sdk.AccAddress(stakedReporter.GetReporter()).String()})
+	report2, err := s.queryClient.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: addr.String()})
 	s.NoError(err)
 	s.Equal(*expectedReports.MicroReports[0], report2.MicroReports[0])
 
-	report3, err := s.queryClient.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: sdk.AccAddress(stakedReporter.GetReporter()).String(), QueryId: hex.EncodeToString(queryIdStr)})
+	report3, err := s.queryClient.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: addr.String(), QueryId: hex.EncodeToString(queryIdStr)})
 	s.NoError(err)
 	s.EqualValues(expectedReports.MicroReports, report3.Reports.MicroReports)
 

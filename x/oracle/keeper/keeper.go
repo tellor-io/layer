@@ -35,17 +35,17 @@ type (
 		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, tipsIndex]       // key: queryId, tipper
 		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, int64], math.Int, tipperTotalIndex] // key: tipperAcc, blockNumber
 		// total tips given over time
-		TotalTips      collections.Map[int64, math.Int]                                                                     // key: blockNumber, value: total tips                                  // key: queryId, timestamp
-		Nonces         collections.Map[[]byte, uint64]                                                                      // key: queryId
-		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
-		QuerySequencer collections.Sequence
-		Query          *collections.IndexedMap[[]byte, types.QueryMeta, queryMetaIndex]
-		// the address capable of executing a MsgUpdateParams message. Typically, this
-		// should be the x/gov module account.                           // key: reporter, queryid                                                                       // keep track of the total tips
+		TotalTips          collections.Map[int64, math.Int]                                                                     // key: blockNumber, value: total tips                                  // key: queryId, timestamp
+		Nonces             collections.Map[[]byte, uint64]                                                                      // key: queryId
+		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
+		QuerySequencer     collections.Sequence
+		Query              *collections.IndexedMap[[]byte, types.QueryMeta, queryMetaIndex]                           // key: queryId
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, int64], types.Aggregate, aggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
 		Cyclelist          collections.Map[[]byte, []byte]
 		CyclelistSequencer collections.Sequence
-		authority          string
+		// the address capable of executing a MsgUpdateParams message. Typically, this
+		// should be the x/gov module account.
+		authority string
 	}
 )
 

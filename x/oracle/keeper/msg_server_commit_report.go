@@ -22,12 +22,9 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	}
 
 	// get reporter
-	reporter, err := k.keeper.reporterKeeper.Reporter(ctx, reporterAddr)
+	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr)
 	if err != nil {
 		return nil, err
-	}
-	if reporter.Jailed {
-		return nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", reporterAddr)
 	}
 
 	params, err := k.keeper.Params.Get(ctx)
@@ -35,8 +32,8 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 		return nil, err
 	}
 
-	if reporter.TotalTokens.LT(params.MinStakeAmount) {
-		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required amount is %s", reporter.TotalTokens, params.MinStakeAmount)
+	if reporterStake.LT(params.MinStakeAmount) {
+		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required amount is %s", reporterStake, params.MinStakeAmount)
 	}
 
 	// get query id bytes hash from query data

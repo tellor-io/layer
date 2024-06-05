@@ -12,13 +12,11 @@ import (
 
 // StakingKeeper defines the expected interface for the Staking module.
 type StakingKeeper interface {
-	Delegation(context.Context, sdk.AccAddress, sdk.ValAddress) (stakingtypes.DelegationI, error)
 	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
 	Delegate(
 		ctx context.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus,
 		validator stakingtypes.Validator, subtractAccount bool,
 	) (newShares math.LegacyDec, err error)
-	GetValidators(ctx context.Context, maxRetrieve uint32) (validators []stakingtypes.Validator, err error)
 	GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd stakingtypes.UnbondingDelegation, err error)
 	GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []stakingtypes.Redelegation, err error)
 	RemoveUnbondingDelegation(ctx context.Context, ubd stakingtypes.UnbondingDelegation) error
@@ -29,6 +27,9 @@ type StakingKeeper interface {
 	) (amount math.Int, err error)
 	ValidatorsPowerStoreIterator(ctx context.Context) (store.Iterator, error)
 	TotalBondedTokens(context.Context) (math.Int, error)
+	GetValidatorSet() stakingtypes.ValidatorSet
+	IterateDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(delegation stakingtypes.Delegation) (stop bool)) error
+	IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd stakingtypes.UnbondingDelegation) (stop bool)) error
 	// Methods imported from account should be defined here
 }
 
@@ -44,12 +45,6 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	// Methods imported from bank should be defined here
-}
-
-// ParamSubspace defines the expected Subspace interface for parameters.
-type ParamSubspace interface {
-	Get(context.Context, []byte, interface{})
-	Set(context.Context, []byte, interface{})
 }
 
 // StakingHooks event hooks for staking validator object (noalias)
