@@ -156,3 +156,47 @@ func (s *IntegrationTestSuite) TestGetBondedValidators() {
 		})
 	}
 }
+
+// see if delegators when they stake the reporter tokens increase
+func (s *IntegrationTestSuite) TestAddReporterTokens() {
+	valAccs, valAddrs, _ := s.Setup.CreateValidators(1)
+	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	valAcc := valAccs[0]
+	valAdd := valAddrs[0]
+	testCases := []struct {
+		name      string
+		delegator sdk.AccAddress
+	}{
+		{
+			name:      "one",
+			delegator: sample.AccAddressBytes(),
+		},
+		{
+			name:      "two",
+			delegator: sample.AccAddressBytes(),
+		},
+		{
+			name:      "three",
+			delegator: sample.AccAddressBytes(),
+		},
+	}
+	amt := math.NewInt(1000 * 1e6)
+	repBefore, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc)
+	s.NoError(err)
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.Setup.MintTokens(tc.delegator, amt)
+			msgDelegate := stakingtypes.NewMsgDelegate(
+				tc.delegator.String(),
+				valAdd.String(),
+				sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+			)
+			_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+			s.NoError(err)
+			repBefore.TotalTokens = repBefore.TotalTokens.Add(amt)
+			rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc)
+			s.NoError(err)
+			s.Equal(rep.TotalTokens, repBefore.TotalTokens)
+		})
+	}
+}
