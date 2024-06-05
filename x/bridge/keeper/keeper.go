@@ -465,7 +465,7 @@ func (k Keeper) PowerDiff(ctx context.Context, b, c types.BridgeValidatorSet) fl
 		powers[string(bv.EthereumAddress)] = power
 		totalPower += power
 	}
-	fmt.Println("totalPower1: ", totalPower)
+	fmt.Println("totalPower: ", totalPower)
 
 	for _, bv := range c.BridgeValidatorSet {
 		if val, ok := powers[string(bv.EthereumAddress)]; ok {
@@ -474,6 +474,8 @@ func (k Keeper) PowerDiff(ctx context.Context, b, c types.BridgeValidatorSet) fl
 			powers[string(bv.EthereumAddress)] = -int64(bv.GetPower())
 		}
 	}
+
+	fmt.Printf("powers: %v\n", powers)
 
 	var delta float64
 	for _, v := range powers {
