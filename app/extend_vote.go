@@ -179,22 +179,22 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 			return nil, err
 		} else {
 			if len(voteExt.OracleAttestations) > 0 {
-				return nil, fmt.Errorf("too many oracle attestations")
+				return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 			}
 		}
 	} else {
 		// verify length of oracle attestations
 		if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
-			return nil, fmt.Errorf("too many oracle attestations")
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
 	}
 	// verify the initial signature size
 	if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
-		return nil, fmt.Errorf("invalid initial signature size")
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 	// verify the valset signature size
 	if len(voteExt.ValsetSignature.Signature) > 65 {
-		return nil, fmt.Errorf("invalid valset signature size")
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
