@@ -1,23 +1,37 @@
-# Readme
+# `x/reporter`
 
-mocks
+## Abstract
 
-cd into reporter/mocks
-make mock-gen
+This module 
 
-Transactions:
+## ADRs
 
-MsgCreateReporter
-MsgDelegateReporter
-UndelegateReporter
-WithdrawReporterCommission
-WithdrawDelegatorReward
+adr
 
-Getters:
-Params
+## Transactions
+
+`MsgCreateReporter`
+`MsgDelegateReporter`
+`UndelegateReporter`
+`WithdrawReporterCommission`
+`WithdrawDelegatorReward`
+
+## Getters
+
+Params - get module parameters
+Reporter - get a reporter by address
 Reporters - get all staked reporters
 DelegatorReporter - get reporter a delegator is staked with.
 ReporterStake - get a reporter's total tokens.
 DelegationRewards - get rewards of a delegator
 ReporterOutstandingRewards - get all outstanding rewards for a reporter
 ReporterCommission - get a reporter's commission reward
+
+## Mocks
+
+1. cd into registry/mocks
+2. run `make mock-gen`
+
+## CLI
+
+### Example Commands

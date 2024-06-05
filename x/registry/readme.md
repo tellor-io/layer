@@ -1,4 +1,31 @@
-# How to Use
+# `x/registry`
+
+## Abstract
+
+This module 
+
+## ADRs
+
+adr
+
+## Transactions 
+
+`MsgRegisterSpec`
+`MsgUpdateSpec`
+
+## Getters
+
+`Params` - get module parameters
+`DecodeQueryData` - decode query data into query type and data fields
+`DecodeValue` - decode value into a string
+`GenerateQueryData` - generate query data for a given query type and data
+`GetDataSpec` - get data specification for a given query type
+
+
+## Mocks
+
+1. cd into registry/mocks
+2. run `make mock-gen`
 
 ## CLI
 
