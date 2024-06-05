@@ -7,14 +7,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdkTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	registry "github.com/tellor-io/layer/x/registry/module"
 	"github.com/tellor-io/layer/x/registry/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdkTypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
 func TestIsOnePerModuleType(t *testing.T) {
@@ -22,21 +23,25 @@ func TestIsOnePerModuleType(t *testing.T) {
 	am := registry.NewAppModuleBasic(appCodec)
 	am.IsOnePerModuleType()
 }
+
 func TestIsAppModule(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
 	am.IsAppModule()
 }
+
 func TestNewAppModuleBasic(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	appModule := registry.NewAppModuleBasic(appCodec)
 	require.NotNil(t, appModule)
 }
+
 func TestName(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
 	require.Equal(t, "registry", am.Name())
 }
+
 func TestRegisterLegacyAminoCode(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
@@ -56,6 +61,7 @@ func TestDefaultGenesis(t *testing.T) {
 	initGenesis := am.DefaultGenesis(appCodec)
 	require.NotNil(t, initGenesis)
 }
+
 func TestValidateGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
@@ -66,6 +72,7 @@ func TestValidateGenesis(t *testing.T) {
 	err := am.ValidateGenesis(appCodec, nil, h)
 	require.NoError(t, err)
 }
+
 func TestRegisterGRPCGatewayRoutes(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
@@ -77,7 +84,6 @@ func TestRegisterGRPCGatewayRoutes(t *testing.T) {
 	fmt.Println(req)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
-	//require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
 }
 
 func TestNewAppModule(t *testing.T) {
@@ -115,6 +121,7 @@ func TestInitGenesis(t *testing.T) {
 	h := json.RawMessage(`{"params":{},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
 	am.InitGenesis(ctx, appCodec, h)
 }
+
 func TestExportGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
@@ -124,6 +131,7 @@ func TestExportGenesis(t *testing.T) {
 	gen := am.ExportGenesis(ctx, appCodec)
 	require.Equal(t, gen, h)
 }
+
 func TestConsensusVersion(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, _ := keepertest.RegistryKeeper(t)

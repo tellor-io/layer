@@ -5,8 +5,9 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/log"
 	libtime "github.com/tellor-io/layer/lib/time"
+
+	"cosmossdk.io/log"
 )
 
 const (

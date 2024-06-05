@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {

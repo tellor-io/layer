@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	errorsmod "cosmossdk.io/errors"
 )
 
 func (k msgServer) UpdateCyclelist(ctx context.Context, req *types.MsgUpdateCyclelist) (*types.MsgUpdateCyclelistResponse, error) {

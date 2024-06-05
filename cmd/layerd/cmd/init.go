@@ -3,9 +3,10 @@ package cmd
 import (
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 	"github.com/tellor-io/layer/daemons/configs"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // AddInitCmdPostRunE adds a PostRunE to the `init` subcommand.

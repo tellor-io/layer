@@ -3,11 +3,12 @@ package token_bridge
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/tellor-io/layer/daemons/server/types"
 	tokenbridgeservertypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var _ types.TokenBridgeServiceServer = &tokenBridgeServer{}
@@ -45,5 +46,7 @@ func StartTokenBridgeServer(
 	pendingDeposits *tokenbridgeservertypes.DepositReports,
 ) {
 	types.RegisterTokenBridgeServiceServer(server, NewTokenBridgeServer(pendingDeposits))
-	types.RegisterTokenBridgeServiceHandlerClient(context.Background(), mux, types.NewTokenBridgeServiceClient(clientCtx))
+	if err := types.RegisterTokenBridgeServiceHandlerClient(context.Background(), mux, types.NewTokenBridgeServiceClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }

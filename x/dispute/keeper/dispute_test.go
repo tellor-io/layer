@@ -5,13 +5,14 @@ import (
 	gomath "math"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -40,6 +41,7 @@ func (s *KeeperTestSuite) dispute() types.Dispute {
 		SlashAmount:     math.NewInt(10000),
 	}
 }
+
 func (s *KeeperTestSuite) TestGetOpenDisputes() {
 	res, err := s.disputeKeeper.GetOpenDisputes(s.ctx)
 	s.Nil(err)
@@ -162,7 +164,6 @@ func (s *KeeperTestSuite) TestJailReporter() {
 }
 
 func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
-
 	testCases := []struct {
 		name                    string
 		cat                     types.DisputeCategory
@@ -206,7 +207,6 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 			}
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestGetDisputeFee() {
@@ -293,6 +293,7 @@ func (s *KeeperTestSuite) TestSetBlockInfo() {
 	s.NoError(err)
 	s.Equal(expectedBlockInfo, blockInfo)
 }
+
 func (s *KeeperTestSuite) TestCloseDispute() {
 	dispute := s.dispute()
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
@@ -308,5 +309,4 @@ func (s *KeeperTestSuite) TestCloseDispute() {
 	dispute, err = s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
 	s.NoError(err)
 	s.False(dispute.Open)
-
 }

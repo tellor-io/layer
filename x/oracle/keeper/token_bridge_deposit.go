@@ -4,13 +4,18 @@ import (
 	"reflect"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+const (
+	TRBBridgeQueryType = "TRBBridge"
 )
 
 func (k Keeper) tokenBridgeDepositCheck(queryData []byte) (types.QueryMeta, error) {
@@ -38,7 +43,7 @@ func (k Keeper) tokenBridgeDepositCheck(queryData []byte) (types.QueryMeta, erro
 	if reflect.TypeOf(queryDataDecodedPartial[0]).Kind() != reflect.String {
 		return types.QueryMeta{}, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data type")
 	}
-	if queryDataDecodedPartial[0].(string) != "TRBBridge" {
+	if queryDataDecodedPartial[0].(string) != TRBBridgeQueryType {
 		return types.QueryMeta{}, types.ErrNotTokenDeposit
 	}
 	// decode query data arguments
@@ -76,9 +81,9 @@ func (k Keeper) tokenBridgeDepositCheck(queryData []byte) (types.QueryMeta, erro
 
 	queryId := utils.QueryIDFromData(queryData)
 	query := types.QueryMeta{
-		RegistrySpecTimeframe: time.Duration(1 * time.Second),
+		RegistrySpecTimeframe: time.Second,
 		Expiration:            time.Now().Add(-48 * time.Hour),
-		QueryType:             "TRBBridge",
+		QueryType:             TRBBridgeQueryType,
 		QueryId:               queryId,
 		Amount:                math.NewInt(0),
 	}

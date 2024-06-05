@@ -46,7 +46,6 @@ func (s *KeeperTestSuite) TestGetCurrentTip() {
 	// require.Equal(trbTipTotal, trbTips2.Tips.Amount)
 	// require.Equal(trbQueryData, trbTips2.Tips.QueryData)
 	// require.Equal(trbTips2.Tips.Amount.Denom, "loya")
-
 }
 
 func (s *KeeperTestSuite) TestGetCurrentTipInvalidRequest() {

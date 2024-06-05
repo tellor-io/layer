@@ -1,17 +1,19 @@
 package types
 
 import (
+	"github.com/tellor-io/layer/utils"
+
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tellor-io/layer/utils"
 )
 
 const TypeMsgSubmitValue = "submit_value"
 
 var _ sdk.Msg = &MsgSubmitValue{}
 
-func NewMsgSubmitValue(creator string, queryData string, value string, salt string) *MsgSubmitValue {
+func NewMsgSubmitValue(creator, queryData, value, salt string) *MsgSubmitValue {
 	queryDataBz, err := utils.QueryBytesFromString(queryData)
 	if err != nil {
 		panic(err)

@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tellor-io/layer/x/registry/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SetParams sets the x/registry module parameters.

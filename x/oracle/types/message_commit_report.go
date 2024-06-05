@@ -1,17 +1,19 @@
 package types
 
 import (
+	"github.com/tellor-io/layer/utils"
+
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/tellor-io/layer/utils"
 )
 
 const TypeMsgCommitReport = "commit_report"
 
 var _ sdk.Msg = &MsgCommitReport{}
 
-func NewMsgCommitReport(creator string, queryData string, hash string) *MsgCommitReport {
+func NewMsgCommitReport(creator, queryData, hash string) *MsgCommitReport {
 	qDataBz, err := utils.QueryBytesFromString(queryData)
 	if err != nil {
 		panic(err)

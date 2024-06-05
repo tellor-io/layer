@@ -3,11 +3,12 @@ package price_fetcher
 import (
 	"testing"
 
-	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	"github.com/tellor-io/layer/testutil/constants"
+
+	"cosmossdk.io/log"
 )
 
 func TestGetNextNMarkets(t *testing.T) {

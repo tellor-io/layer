@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 // SetAggregatedReport calculates and allocates rewards to reporters based on aggregated reports.
@@ -110,8 +112,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 }
 
 // getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
-// TODO: add a test for this function.
-func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+func (k Keeper) GetDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
 	var mostRecent *types.Aggregate
 	// This should get us the most recent aggregate, as they are walked in descending order
@@ -122,10 +123,8 @@ func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp tim
 		}
 		return false, nil
 	})
-
 	if err != nil {
-		// why panic here? should we return an error instead?
-		panic(err)
+		return nil, err
 	}
 
 	if mostRecent == nil {
@@ -133,10 +132,6 @@ func (k Keeper) getDataBefore(ctx context.Context, queryId []byte, timestamp tim
 	}
 
 	return mostRecent, nil
-}
-
-func (k Keeper) GetDataBeforePublic(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
-	return k.getDataBefore(ctx, queryId, timestamp)
 }
 
 func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
@@ -147,7 +142,6 @@ func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (
 		mostRecent = &value
 		return true, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +156,6 @@ func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestam
 		mostRecent = key.K2()
 		return true, nil
 	})
-
 	if err != nil {
 		panic(err)
 	}
@@ -181,7 +174,6 @@ func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp
 		mostRecent = key.K2()
 		return true, nil
 	})
-
 	if err != nil {
 		panic(err)
 	}
@@ -238,7 +230,6 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 		mostRecentTimestamp = key.K2()
 		return true, nil // Stop after the first (most recent) match
 	})
-
 	if err != nil {
 		return nil, time.Time{}, err
 	}
@@ -266,7 +257,6 @@ func (k Keeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, tim
 		}
 		return false, nil // Continue if this is not the exact match
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +283,6 @@ func (k Keeper) GetAggregateByIndex(ctx context.Context, queryId []byte, index u
 		currentIndex++
 		return false, nil // Continue to the next aggregate
 	})
-
 	if err != nil {
 		return nil, time.Time{}, err
 	}

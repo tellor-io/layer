@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 type (

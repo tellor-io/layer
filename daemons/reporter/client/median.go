@@ -29,12 +29,12 @@ func (c *Client) median(querydata []byte) (string, error) {
 	mv := c.MarketToExchange.GetValidMedianPrices([]types.MarketParam{mp}, time.Now())
 	val, found := mv[mp.Id]
 	if !found {
-		return "", fmt.Errorf("no median values found for query data: %s", querydata)
+		return "", fmt.Errorf("no median values found for query data: %s", key)
 	}
 
 	value, err := prices.EncodePrice(float64(val), mp.Exponent)
 	if err != nil {
-		return "", fmt.Errorf("faild to encode price: %v", err)
+		return "", fmt.Errorf("faild to encode price: %w", err)
 	}
 	return value, nil
 }

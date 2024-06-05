@@ -5,25 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 
-	// this line is used by starport scaffolding # 1
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	abci "github.com/cometbft/cometbft/abci/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
-
-	"github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
@@ -67,7 +65,7 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
 
-// DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default GenesisState need to be defined by the module developer and is primarily used for testing
+// DefaultGenesis returns a default GenesisState for the module, marshaled to json.RawMessage. The default GenesisState need to be defined by the module developer and is primarily used for testing
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
@@ -83,7 +81,9 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -159,7 +159,6 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 func init() {
 	appmodule.Register(&oraclemodulev1.Module{},
 		appmodule.Provide(ProvideModule))
-
 }
 
 type OracleInputs struct {

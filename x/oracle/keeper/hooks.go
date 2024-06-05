@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/tellor-io/layer/x/oracle/types"
-
 	rtypes "github.com/tellor-io/layer/x/registry/types"
 )
 

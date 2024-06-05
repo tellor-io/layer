@@ -25,7 +25,6 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 
 	sort.SliceStable(reports, func(i, j int) bool {
 		return values[reports[i].Reporter].Cmp(values[reports[j].Reporter]) < 0
-
 	})
 
 	var totalReporterPower, weightedSum big.Int

@@ -20,7 +20,6 @@ var (
 	exchangeSideErrorResponsePatterns = []string{
 		// An error that occurs server-side on the exchange. These are generic error strings that are
 		// percolated up by go's http2 library.
-		// nolint:lll
 		// See https://stackoverflow.com/questions/45209168/http2-server-sent-goaway-and-closed-the-connection-laststreamid-1999
 		`http2: server sent GOAWAY and closed the connection`,
 
@@ -90,7 +89,7 @@ func GetOnlyTickerAndExponent(
 	// Verify exactly one market is expected from the response.
 	if len(tickerToExponent) != 1 {
 		return "", 0, fmt.Errorf(
-			"Invalid market price exponent map for %v price function of length: %v, expected length 1",
+			"invalid market price exponent map for %v price function of length: %v, expected length 1",
 			exchange,
 			len(tickerToExponent),
 		)
@@ -120,7 +119,7 @@ func GetUint64MedianFromReverseShiftedBigFloatValues(
 ) (uint64, error) {
 	// 1) Verify length of slice is > 0.
 	if len(bigFloatSlice) == 0 {
-		return 0, errors.New("Invalid input: big float slice must contain values to medianize")
+		return 0, errors.New("invalid input: big float slice must contain values to medianize")
 	}
 
 	// 2) Reverse shift big float price values by the exponent for the market.
@@ -154,7 +153,7 @@ func reverseShiftBigFloatSlice(
 	return updatedValues
 }
 
-func reverseShiftFloatWithPow10(value *big.Float, pow10 *big.Float, exponent int32) *big.Float {
+func reverseShiftFloatWithPow10(value, pow10 *big.Float, exponent int32) *big.Float {
 	if exponent == 0 {
 		return value
 	} else if exponent > 0 {

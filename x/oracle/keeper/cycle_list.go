@@ -8,7 +8,6 @@ import (
 )
 
 func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
-
 	iter, err := k.Cyclelist.Iterate(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -41,7 +40,6 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	default:
 		return nil
 	}
-
 }
 
 func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) {
@@ -60,7 +58,6 @@ func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) 
 
 // should be called only once when updating the cycle list
 func (k Keeper) InitCycleListQuery(ctx context.Context, queries [][]byte) error {
-
 	for _, querydata := range queries {
 
 		query, err := k.initializeQuery(ctx, querydata)
@@ -81,7 +78,6 @@ func (k Keeper) InitCycleListQuery(ctx context.Context, queries [][]byte) error 
 }
 
 func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist [][]byte) error {
-
 	for _, queryData := range cyclelist {
 		queryId := utils.QueryIDFromData(queryData)
 

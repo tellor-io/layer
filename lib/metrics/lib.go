@@ -3,8 +3,9 @@ package metrics
 import (
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // This file provides a main entrypoint for logging in the v4 protocol.
@@ -62,7 +63,7 @@ func AddSample(key string, val float32) {
 // Please try to use `AddSample` instead.
 // TODO(CLOB-1022) Roll our own calculations for timing on top of AddSample instead
 // of using MeasureSince.
-func ModuleMeasureSince(module string, key string, start time.Time) {
+func ModuleMeasureSince(module, key string, start time.Time) {
 	telemetry.ModuleMeasureSince(
 		module,
 		start,

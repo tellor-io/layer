@@ -6,24 +6,28 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/big"
 	"os"
 	"strings"
 	"time"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type OracleKeeper interface {
@@ -32,14 +36,14 @@ type OracleKeeper interface {
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate
-	GetDataBeforePublic(ctx context.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
+	GetDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*oracletypes.Aggregate, error)
 }
 
 type BridgeKeeper interface {
 	GetValidatorCheckpointFromStorage(ctx context.Context) (*bridgetypes.ValidatorCheckpoint, error)
 	Logger(ctx context.Context) log.Logger
 	GetEVMAddressByOperator(ctx context.Context, operatorAddress string) ([]byte, error)
-	EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB []byte) (common.Address, error)
+	EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte) (common.Address, error)
 	SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr []byte) error
 	GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
 	SetBridgeValsetSignature(ctx context.Context, operatorAddress string, timestamp uint64, signature string) error
@@ -49,7 +53,7 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (bridgetypes.ValidatorCheckpointParams, error)
 	GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr string, checkpointTimestamp uint64) (didSign bool, prevValsetIndex int64, err error)
 	GetAttestationRequestsByHeight(ctx context.Context, height uint64) (*bridgetypes.AttestationRequests, error)
-	SetOracleAttestation(ctx context.Context, operatorAddress string, snapshot []byte, sig []byte) error
+	SetOracleAttestation(ctx context.Context, operatorAddress string, snapshot, sig []byte) error
 }
 
 type StakingKeeper interface {
@@ -99,7 +103,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
-		return nil, err
+		return &abci.ResponseExtendVote{}, nil
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
@@ -107,7 +111,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("Failed to sign initial message", "error", err)
-			return nil, err
+			return &abci.ResponseExtendVote{}, nil
 		}
 		// include the initial sig in the vote extension
 		initialSignature := InitialSignature{
@@ -120,7 +124,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	blockHeight := ctx.BlockHeight() - 1
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
 	if err != nil {
-		if !strings.Contains(err.Error(), "collections: not found") {
+		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
 		}
 	} else {
@@ -180,13 +184,13 @@ func (h *VoteExtHandler) EncodeOracleAttestationData(
 ) ([]byte, error) {
 	// domainSeparator is bytes "tellorNewReport"
 	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-	NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR, err := hex.DecodeString(domainSep)
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, err := hex.DecodeString(domainSep)
 	if err != nil {
 		return nil, err
 	}
 	// Convert domain separator to bytes32
 	var domainSepBytes32 [32]byte
-	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPERATOR)
+	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
 
 	var queryIdBytes32 [32]byte
 	copy(queryIdBytes32[:], queryId)

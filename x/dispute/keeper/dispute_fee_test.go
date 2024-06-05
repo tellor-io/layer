@@ -1,13 +1,15 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestPayFromAccount() {

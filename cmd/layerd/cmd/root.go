@@ -5,10 +5,15 @@ import (
 	"io"
 	"os"
 
-	"cosmossdk.io/log"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/tellor-io/layer/app"
+
+	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
@@ -25,12 +30,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
-
-	// this line is used by starport scaffolding # root/moduleImport
-
-	"github.com/tellor-io/layer/app"
 )
 
 // NewRootCmd creates a new root command for a Cosmos SDK application
@@ -109,7 +108,6 @@ func initRootCmd(
 	txConfig client.TxConfig,
 	basicManager module.BasicManager,
 ) {
-
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basicManager, app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
@@ -215,7 +213,10 @@ func overwriteFlagDefaults(c *cobra.Command, defaults map[string]string) {
 	set := func(s *pflag.FlagSet, key, val string) {
 		if f := s.Lookup(key); f != nil {
 			f.DefValue = val
-			f.Value.Set(val)
+			err := f.Value.Set(val)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 	for key, val := range defaults {

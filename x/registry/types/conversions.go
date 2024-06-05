@@ -61,13 +61,11 @@ func ConvertTypeToReflectType(abiType string) (reflect.Type, error) {
 			return reflect.TypeOf(int16(0)), nil
 		case 32:
 			if matches[1] == "u" {
-
 				return reflect.TypeOf(uint32(0)), nil
 			}
 			return reflect.TypeOf(int32(0)), nil
 		case 64:
 			if matches[1] == "u" {
-
 				return reflect.TypeOf(uint64(0)), nil
 			}
 			return reflect.TypeOf(int64(0)), nil
@@ -102,7 +100,7 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 			var err error
 			arraySizeInt, err = strconv.Atoi(arraySize)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert string to integer for array size: %s", err)
+				return nil, fmt.Errorf("failed to convert string to integer for array size: %w", err)
 			}
 			if len(fieldlist) != arraySizeInt {
 				return nil, fmt.Errorf("array size mismatch: expected %d, got %d", arraySizeInt, len(fieldlist))
@@ -113,14 +111,14 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 
 		reflectype, err := ConvertTypeToReflectType(arrayType)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert ABI type to reflect type: %s", err)
+			return nil, fmt.Errorf("failed to convert ABI type to reflect type: %w", err)
 		}
 		slice := reflect.MakeSlice(reflect.SliceOf(reflectype), 0, arraySizeInt)
 
 		for _, field := range fieldlist {
 			value, err := ConvertStringToType(arrayType, field)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert string to type: %s", err)
+				return nil, fmt.Errorf("failed to convert string to type: %w", err)
 			}
 			slice = reflect.Append(slice, reflect.ValueOf(value))
 		}
@@ -132,7 +130,7 @@ func ConvertStringToType(dataType, dataField string) (interface{}, error) {
 	if matches := reInt.FindStringSubmatch(dataType); matches != nil {
 		value, err := intValue(matches, dataField)
 		if err != nil {
-			return nil, fmt.Errorf("failed to convert string to integer, err: %v", err)
+			return nil, fmt.Errorf("failed to convert string to integer, err: %w", err)
 		}
 		return value, nil
 	}
@@ -163,7 +161,7 @@ func sizeOfType(match string) (int, error) {
 	}
 	num, err := strconv.Atoi(match)
 	if err != nil {
-		return 0, fmt.Errorf("failed to convert string to integer for data type: %s", err)
+		return 0, fmt.Errorf("failed to convert string to integer for data type: %w", err)
 	}
 
 	return num, nil
@@ -172,7 +170,7 @@ func sizeOfType(match string) (int, error) {
 func intValue(matches []string, fieldValue string) (interface{}, error) {
 	size, err := sizeOfType(matches[2])
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert string to integer, err: %v", err)
+		return nil, fmt.Errorf("failed to convert string to integer, err: %w", err)
 	}
 	fieldValue = strings.TrimSpace(fieldValue)
 	Uint := matches[1] == "u"
@@ -182,7 +180,7 @@ func intValue(matches []string, fieldValue string) (interface{}, error) {
 			// Use ParseUint for unsigned types
 			value, err := strconv.ParseUint(fieldValue, 10, size)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert data field string to unsigned integer, err: %v", err)
+				return nil, fmt.Errorf("failed to convert data field string to unsigned integer, err: %w", err)
 			}
 			switch size {
 			case 8:
@@ -192,13 +190,13 @@ func intValue(matches []string, fieldValue string) (interface{}, error) {
 			case 32:
 				return uint32(value), nil
 			case 64:
-				return uint64(value), nil
+				return value, nil
 			}
 		} else {
 			// Use ParseInt for signed types
 			value, err := strconv.ParseInt(fieldValue, 10, size)
 			if err != nil {
-				return nil, fmt.Errorf("failed to convert data field string to integer, err: %v", err)
+				return nil, fmt.Errorf("failed to convert data field string to integer, err: %w", err)
 			}
 			switch size {
 			case 8:
@@ -208,7 +206,7 @@ func intValue(matches []string, fieldValue string) (interface{}, error) {
 			case 32:
 				return int32(value), nil
 			case 64:
-				return int64(value), nil
+				return value, nil
 			}
 		}
 	default:

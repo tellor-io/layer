@@ -65,7 +65,7 @@ func WriteDefaultMarketParamsToml(homeDir string) {
 	configFilePath := getMarketParamsConfigFilePath(homeDir)
 	if !tmos.FileExists(configFilePath) {
 		buffer := GenerateDefaultMarketParamsTomlString()
-		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
+		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 	}
 }
 

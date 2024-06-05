@@ -8,13 +8,12 @@ import (
 	"path/filepath"
 	"testing"
 
+	tmos "github.com/cometbft/cometbft/libs/os"
+	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/exchange_common"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-
-	tmos "github.com/cometbft/cometbft/libs/os"
-	"github.com/stretchr/testify/require"
 )
 
 var (
@@ -123,30 +122,30 @@ func TestGenerateDefaultExchangeTomlString(t *testing.T) {
 }
 
 func TestWriteDefaultPricefeedExchangeToml(t *testing.T) {
-	err := os.Mkdir("config", 0700)
+	err := os.Mkdir("config", 0o700)
 	require.NoError(t, err)
 	configs.WriteDefaultPricefeedExchangeToml("")
 
 	buffer, err := os.ReadFile(filePath)
 	require.NoError(t, err)
 
-	require.Equal(t, tomlString, string(buffer[:]))
+	require.Equal(t, tomlString, string(buffer))
 	os.RemoveAll("config")
 }
 
 func TestWriteDefaultPricefeedExchangeToml_FileExists(t *testing.T) {
 	helloWorld := "Hello World"
 
-	err := os.Mkdir("config", 0700)
+	err := os.Mkdir("config", 0o700)
 	require.NoError(t, err)
 
-	tmos.MustWriteFile(filePath, bytes.NewBuffer([]byte(helloWorld)).Bytes(), 0644)
+	tmos.MustWriteFile(filePath, bytes.NewBuffer([]byte(helloWorld)).Bytes(), 0o644)
 	configs.WriteDefaultPricefeedExchangeToml("")
 
 	buffer, err := os.ReadFile(filePath)
 	require.NoError(t, err)
 
-	require.Equal(t, helloWorld, string(buffer[:]))
+	require.Equal(t, helloWorld, string(buffer))
 	os.RemoveAll("config")
 }
 
@@ -202,7 +201,7 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			if !tc.doNotWriteFile {
-				err := os.Mkdir("config", 0700)
+				err := os.Mkdir("config", 0o700)
 				require.NoError(t, err)
 
 				file, err := os.Open(tc.exchangeConfigSourcePath)

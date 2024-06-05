@@ -11,7 +11,7 @@ import (
 func IsValueDecodable(value, datatype string) error {
 	_, err := DecodeValue(value, datatype)
 	if err != nil {
-		return fmt.Errorf("failed to unpack value: %v", err)
+		return fmt.Errorf("failed to unpack value: %w", err)
 	}
 	// fmt.Println("Decoded value: ", result[0]) todo: do we still need this ?
 	return nil
@@ -21,17 +21,17 @@ func DecodeValue(value, datatype string) ([]interface{}, error) {
 	value = Remove0xPrefix(value)
 	valueBytes, err := hex.DecodeString(value)
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode value string: %v", err)
+		return nil, fmt.Errorf("failed to decode value string: %w", err)
 	}
 
 	comp := []abi.ArgumentMarshaling{}
 	if strings.Contains(datatype, "(") && strings.Contains(datatype, ")") {
 		untrimmed := datatype
 		if strings.HasSuffix(datatype, "[]") {
-			datatype = "tuple[]"
+			datatype = Tuplearray
 			untrimmed = untrimmed[:len(untrimmed)-2]
 		} else {
-			datatype = "tuple"
+			datatype = Tuplenoarray
 		}
 		types := strings.Split(strings.Trim(untrimmed, "()"), ",")
 
@@ -50,7 +50,7 @@ func DecodeValue(value, datatype string) ([]interface{}, error) {
 
 	argType, err := abi.NewType(datatype, datatype, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new ABI type when decoding value: %v", err)
+		return nil, fmt.Errorf("failed to create new ABI type when decoding value: %w", err)
 	}
 	arg := abi.Argument{
 		Type: argType,
@@ -66,11 +66,11 @@ func DecodeQueryType(data []byte) (string, []byte, error) {
 	// Create an ABI arguments object based on the types
 	strArg, err := abi.NewType("string", "string", nil)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create string ABI type when decoding query type: %v", err)
+		return "", nil, fmt.Errorf("failed to create string ABI type when decoding query type: %w", err)
 	}
 	bytesArg, err := abi.NewType("bytes", "bytes", nil)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to create bytes ABI type when decoding query type: %v", err)
+		return "", nil, fmt.Errorf("failed to create bytes ABI type when decoding query type: %w", err)
 	}
 	args := abi.Arguments{
 		abi.Argument{Type: strArg},
@@ -78,7 +78,7 @@ func DecodeQueryType(data []byte) (string, []byte, error) {
 	}
 	result, err := args.Unpack(data)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to unpack query type: %v", err)
+		return "", nil, fmt.Errorf("failed to unpack query type: %w", err)
 	}
 	return result[0].(string), result[1].([]byte), nil
 }
@@ -100,11 +100,10 @@ func DecodeParamtypes(data []byte, component []*ABIComponent) (string, error) {
 
 	result, err := args.Unpack(data)
 	if err != nil {
-		return "", fmt.Errorf("failed to unpack query data into its fields: %v", err)
+		return "", fmt.Errorf("failed to unpack query data into its fields: %w", err)
 	}
 
 	return convertToJSON(result)
-
 }
 
 func convertToArgumentMarshaling(comp ABIComponent) abi.ArgumentMarshaling {

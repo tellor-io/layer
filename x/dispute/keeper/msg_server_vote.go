@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVoteResponse, error) {

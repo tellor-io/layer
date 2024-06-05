@@ -33,6 +33,8 @@ echo "Adding validator account for alice..."
 echo "charlie user..."
 ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
+# echo "creating account for faucet..."
+# ./layerd keys add faucet --recover=true
 
 # Update vote_extensions_enable_height in genesis.json for alice
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
@@ -43,6 +45,10 @@ echo "Adding genesis account for alice..."
 ./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "charlie..."
 ./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+
+
+# echo "Faucet..."
+# ./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 10000000000000loya --home ~/.layer/alice
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."

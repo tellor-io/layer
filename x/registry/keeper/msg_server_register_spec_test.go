@@ -48,7 +48,7 @@ func TestRegisterSpec(t *testing.T) {
 	// register each supported type
 	type1, type2, type3, type4 := "string", "bool", "address", "bytes"
 	type5, type6, type7, type8, type9, type10 := "int8", "int16", "int32", "int64", "int128", "int256"
-	type11, type12, type13, type14, type15 := "uint8", "uint16", "uint32", "uint64", "uint128" //uint256 already done
+	type11, type12, type13, type14, type15 := "uint8", "uint16", "uint32", "uint64", "uint128"
 
 	specInput = &types.MsgRegisterSpec{
 		Registrar: "creator1",
@@ -184,5 +184,4 @@ func TestRegisterSpec(t *testing.T) {
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
-
 }

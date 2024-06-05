@@ -63,7 +63,7 @@ func WriteDefaultPricefeedExchangeToml(homeDir string) {
 	configFilePath := getConfigFilePath(homeDir)
 	if !tmos.FileExists(configFilePath) {
 		buffer := GenerateDefaultExchangeTomlString()
-		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0644)
+		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 	}
 }
 

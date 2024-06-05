@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
+	regTypes "github.com/tellor-io/layer/x/registry/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/utils"
-	"github.com/tellor-io/layer/x/oracle/types"
-	regTypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 var offset = time.Second * 3

@@ -1,13 +1,13 @@
+//nolint:staticcheck // SA1019: grpc.DialContext is deprecated, use NewClient instead.
 package types
 
 import (
 	"context"
 	"net"
 
+	"github.com/tellor-io/layer/daemons/constants"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/tellor-io/layer/daemons/constants"
 )
 
 // GrpcClientImpl is the struct that implements the `GrpcClient` interface.
@@ -34,7 +34,6 @@ func (g *GrpcClientImpl) NewGrpcConnection(
 		socketAddress,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		// https://github.com/grpc/grpc-go/blob/master/dialoptions.go#L264
-		grpc.WithBlock(),
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
 			// Create a custom `net.Dialer` in order to specify `unix` as the desired network.
 			var dialer net.Dialer
@@ -52,7 +51,6 @@ func (g *GrpcClientImpl) NewTcpConnection(
 		ctx,
 		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
 	)
 }
 

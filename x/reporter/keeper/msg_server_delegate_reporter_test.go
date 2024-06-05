@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestDelegateReporter(t *testing.T) {

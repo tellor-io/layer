@@ -2,6 +2,7 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -10,7 +11,7 @@ const TypeMsgRegisterSpec = "register_spec"
 
 var _ sdk.Msg = &MsgRegisterSpec{}
 
-func NewMsgRegisterSpec(registrar string, queryType string, spec *DataSpec) *MsgRegisterSpec {
+func NewMsgRegisterSpec(registrar, queryType string, spec *DataSpec) *MsgRegisterSpec {
 	return &MsgRegisterSpec{
 		Registrar: registrar,
 		QueryType: queryType,
