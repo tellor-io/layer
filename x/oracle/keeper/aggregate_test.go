@@ -197,10 +197,18 @@ func (s *KeeperTestSuite) TestGetDataBefore() {
 	jumpForward := reportedAt.Unix() + (60 * 5)
 	queryAt := time.Unix(jumpForward, 0)
 
+	goback := reportedAt.Unix() - (60 * 5)
+	earlyQuery := time.Unix(goback, 0)
+
 	s.ctx = s.ctx.WithBlockTime(queryAt)
 	retAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, queryAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
+
+	s.ctx = s.ctx.WithBlockTime(reportedAt)
+	nilAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, earlyQuery)
+	s.Nil(nilAggregate)
+	s.NotNil(err)
 }
 
 func (s *KeeperTestSuite) TestGetCurrentValueForQueryId() {
