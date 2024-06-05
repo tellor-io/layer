@@ -82,12 +82,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
     const sigsResponse = response.data.signatures;
     const sigs = [];
     // get sha256 hash of the message
-    // const digestArrayified = ethers.utils.arrayify(digest);
-    // messageHash = ethers.utils.sha256Hash(digestArrayified);
-    console.log("sigsResponse", sigsResponse)
-    console.log("checkpoint", checkpoint)
     const messageHash = ethers.sha256(checkpoint);
-    console.log("messageHash", messageHash)
     for (let i = 0; i < sigsResponse.length; i++) {
       const signature = sigsResponse[i];
       if (signature.length === 128) {
@@ -100,7 +95,6 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
           s: s,
           v: v,
         });
-        console.log("recoveredAddress27", recoveredAddress)
         // check if recovered address matches the validator address
         if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
           // try v = 28 if v = 27 did not match
@@ -110,7 +104,6 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
             s: s,
             v: v,
           });
-          console.log("recoveredAddress28", recoveredAddress)
           if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
             // If neither worked, use default values
             v = 0;
@@ -242,7 +235,7 @@ getSnapshotsByReport = async (queryId, timestamp) => {
     snapshots = response.data.snapshots
     return snapshots
   } catch (error) {
-    console.log(error)
+    // console.log(error)
   }
 }
 

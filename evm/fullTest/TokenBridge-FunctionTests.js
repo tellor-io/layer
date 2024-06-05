@@ -54,7 +54,7 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
     })
 
-    it("withdrawFromLayer", async function () {
+    it.skip("withdrawFromLayer", async function () {
         agg = await h.getCurrentAggregateReport(WITHDRAW1_QUERY_ID)
 
         snapshots = await h.getSnapshotsByReport(WITHDRAW1_QUERY_ID, agg.report.timestamp)

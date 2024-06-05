@@ -69,47 +69,45 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             oattests,
         )
     })
+
     it("optimistic value", async function () {
         // request new attestations on layer and update PAST_REPORT_TS
-        const PAST_REPORT_TS = 1715379735
+        const PAST_REPORT_TS = 1717589054
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
-        console.log("vp0: ", vp0)
-        console.log("deploying bridge...")
         bridge = await ethers.deployContract("BlobstreamO", [vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address]);
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
-        console.log("vp1: ", vp1)
         valSet0 = await h.getValset(vp0.timestamp)
         valSet1 = await h.getValset(vp1.timestamp)
         vsigs1 = await h.getValsetSigs(vp1.timestamp, valSet0, vp1.checkpoint)
-        console.log("updating validator set...")
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
         // request new attestations
         currentBlock = await h.getBlock()
         currentTime = currentBlock.timestamp
-        currentTime = currentTime - 10
+        currentTime = currentTime - 60
         pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
-        console.log("pastReport: ", pastReport)
-        snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, PAST_REPORT_TS)
-        console.log("snapshots: ", snapshots)
-        lastSnapshot = snapshots[1]
-        attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
-        console.log("attestationData: ", attestationData)
-        oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
-        if (oattests.length == 0) {
-            sleeptime = 2
-            console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
-            await h.sleep(2)
+        try {
+            snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, PAST_REPORT_TS)
+            lastSnapshot = snapshots[1]
+            attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
             oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+            if (oattests.length == 0) {
+                sleeptime = 2
+                console.log("no attestations found, sleeping for ", sleeptime, " seconds...")
+                await h.sleep(2)
+                oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
+            }
+            assert(await bridge.verifyOracleData(
+                attestationData,
+                valSet1,
+                oattests,
+            ))
+            console.log("oracle data verified")
+        } catch (error) {
+            console.log("Please request new attestations for the past report timestamp: %s", pastReport.timestamp)
+            console.log("and update PAST_REPORT_TS variable.")
+            assert(false)
         }
-        console.log("oattests: ", oattests)
-        console.log("verifying oracle data...")
-        assert(await bridge.verifyOracleData(
-            attestationData,
-            valSet1,
-            oattests,
-        ))
-        console.log("oracle data verified")
     })
 })
