@@ -23,6 +23,8 @@ import (
 )
 
 func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
+	tb.Helper()
+
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())

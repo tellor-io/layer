@@ -352,7 +352,7 @@ func TestPriceEncoder_DoNotWriteError(t *testing.T) {
 		Price: nil,
 		Err:   errors.New("Failed to query"),
 	}
-	close(bCh)
+	defer close(bCh)
 
 	configs := genMockPricefeedMutableMarketConfigsForExchange(constants.ExchangeId1)
 
