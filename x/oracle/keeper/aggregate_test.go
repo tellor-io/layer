@@ -133,7 +133,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
 	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err = s.oracleKeeper.SetAggregatedReport(ctx)
@@ -197,10 +197,18 @@ func (s *KeeperTestSuite) TestGetDataBefore() {
 	jumpForward := reportedAt.Unix() + (60 * 5)
 	queryAt := time.Unix(jumpForward, 0)
 
+	goback := reportedAt.Unix() - (60 * 5)
+	earlyQuery := time.Unix(goback, 0)
+
 	s.ctx = s.ctx.WithBlockTime(queryAt)
 	retAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, queryAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
+
+	s.ctx = s.ctx.WithBlockTime(reportedAt)
+	nilAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, earlyQuery)
+	s.Nil(nilAggregate)
+	s.NotNil(err)
 }
 
 func (s *KeeperTestSuite) TestGetCurrentValueForQueryId() {

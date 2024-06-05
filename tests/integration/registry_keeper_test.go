@@ -9,7 +9,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestRegistryKeeper() {
-	ms := keeper.NewMsgServerImpl(s.registrykeeper)
+	ms := keeper.NewMsgServerImpl(s.Setup.Registrykeeper)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	queryType := "testQueryType"
 	spec := types.DataSpec{
@@ -24,7 +24,7 @@ func (s *IntegrationTestSuite) TestRegistryKeeper() {
 		QueryType: queryType,
 		Spec:      spec,
 	}
-	_, err := ms.RegisterSpec(s.ctx, registerSpecInput)
+	_, err := ms.RegisterSpec(s.Setup.Ctx, registerSpecInput)
 	s.NoError(err)
 	// Update spec
 	spec.ResponseValueType = "uint128"
@@ -33,11 +33,11 @@ func (s *IntegrationTestSuite) TestRegistryKeeper() {
 		QueryType: queryType,
 		Spec:      spec,
 	}
-	_, err = ms.UpdateDataSpec(s.ctx, updateSpecInput)
+	_, err = ms.UpdateDataSpec(s.Setup.Ctx, updateSpecInput)
 	s.NoError(err)
 
 	// Check if spec is updated
-	getSpec, err := s.registrykeeper.GetSpec(s.ctx, queryType)
+	getSpec, err := s.Setup.Registrykeeper.GetSpec(s.Setup.Ctx, queryType)
 	s.NoError(err)
 	s.Equal("uint128", getSpec.ResponseValueType)
 
@@ -50,6 +50,6 @@ func (s *IntegrationTestSuite) TestRegistryKeeper() {
 		QueryType: queryType,
 		Spec:      spec,
 	}
-	_, err = ms.UpdateDataSpec(s.ctx, updateSpecInput)
+	_, err = ms.UpdateDataSpec(s.Setup.Ctx, updateSpecInput)
 	s.ErrorContains(err, "invalidAuthority")
 }

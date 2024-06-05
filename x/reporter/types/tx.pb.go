@@ -5,11 +5,9 @@ package types
 
 import (
 	context "context"
-	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
-	types1 "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	types "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -129,10 +127,8 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
 type MsgCreateReporter struct {
-	Reporter     string                `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Amount       cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
-	TokenOrigins []*TokenOrigin        `protobuf:"bytes,3,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
-	Commission   *types.Commission     `protobuf:"bytes,4,opt,name=commission,proto3" json:"commission,omitempty"`
+	ReporterAddress string            `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+	Commission      *types.Commission `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission,omitempty"`
 }
 
 func (m *MsgCreateReporter) Reset()         { *m = MsgCreateReporter{} }
@@ -168,18 +164,11 @@ func (m *MsgCreateReporter) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateReporter proto.InternalMessageInfo
 
-func (m *MsgCreateReporter) GetReporter() string {
+func (m *MsgCreateReporter) GetReporterAddress() string {
 	if m != nil {
-		return m.Reporter
+		return m.ReporterAddress
 	}
 	return ""
-}
-
-func (m *MsgCreateReporter) GetTokenOrigins() []*TokenOrigin {
-	if m != nil {
-		return m.TokenOrigins
-	}
-	return nil
 }
 
 func (m *MsgCreateReporter) GetCommission() *types.Commission {
@@ -225,25 +214,23 @@ func (m *MsgCreateReporterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateReporterResponse proto.InternalMessageInfo
 
-type MsgDelegateReporter struct {
-	Delegator    string                `protobuf:"bytes,1,opt,name=delegator,proto3" json:"delegator,omitempty"`
-	Reporter     string                `protobuf:"bytes,2,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Amount       cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
-	TokenOrigins []*TokenOrigin        `protobuf:"bytes,4,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
+type MsgChangeReporter struct {
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	ReporterAddress  string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
 }
 
-func (m *MsgDelegateReporter) Reset()         { *m = MsgDelegateReporter{} }
-func (m *MsgDelegateReporter) String() string { return proto.CompactTextString(m) }
-func (*MsgDelegateReporter) ProtoMessage()    {}
-func (*MsgDelegateReporter) Descriptor() ([]byte, []int) {
+func (m *MsgChangeReporter) Reset()         { *m = MsgChangeReporter{} }
+func (m *MsgChangeReporter) String() string { return proto.CompactTextString(m) }
+func (*MsgChangeReporter) ProtoMessage()    {}
+func (*MsgChangeReporter) Descriptor() ([]byte, []int) {
 	return fileDescriptor_67b904a7aa978eb1, []int{4}
 }
-func (m *MsgDelegateReporter) XXX_Unmarshal(b []byte) error {
+func (m *MsgChangeReporter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDelegateReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgChangeReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDelegateReporter.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgChangeReporter.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -253,146 +240,47 @@ func (m *MsgDelegateReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *MsgDelegateReporter) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDelegateReporter.Merge(m, src)
+func (m *MsgChangeReporter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangeReporter.Merge(m, src)
 }
-func (m *MsgDelegateReporter) XXX_Size() int {
+func (m *MsgChangeReporter) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDelegateReporter) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDelegateReporter.DiscardUnknown(m)
+func (m *MsgChangeReporter) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangeReporter.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDelegateReporter proto.InternalMessageInfo
+var xxx_messageInfo_MsgChangeReporter proto.InternalMessageInfo
 
-func (m *MsgDelegateReporter) GetDelegator() string {
-	if m != nil {
-		return m.Delegator
-	}
-	return ""
-}
-
-func (m *MsgDelegateReporter) GetReporter() string {
-	if m != nil {
-		return m.Reporter
-	}
-	return ""
-}
-
-func (m *MsgDelegateReporter) GetTokenOrigins() []*TokenOrigin {
-	if m != nil {
-		return m.TokenOrigins
-	}
-	return nil
-}
-
-// MsgDelegateReporterResponse defines the response structure for executing a MsgDelegateReporter message.
-type MsgDelegateReporterResponse struct {
-}
-
-func (m *MsgDelegateReporterResponse) Reset()         { *m = MsgDelegateReporterResponse{} }
-func (m *MsgDelegateReporterResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgDelegateReporterResponse) ProtoMessage()    {}
-func (*MsgDelegateReporterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{5}
-}
-func (m *MsgDelegateReporterResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDelegateReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDelegateReporterResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDelegateReporterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDelegateReporterResponse.Merge(m, src)
-}
-func (m *MsgDelegateReporterResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDelegateReporterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDelegateReporterResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDelegateReporterResponse proto.InternalMessageInfo
-
-// MsgUndelegateReporter defines the Msg/UndelegateReporter request type.
-type MsgUndelegateReporter struct {
-	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	// token_origin is the token origin to undelegate from. If empty, all token origins are undelegated,
-	// else the amount field will be the amount to undelegate from the specified token origin.
-	TokenOrigins []*TokenOrigin `protobuf:"bytes,2,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
-}
-
-func (m *MsgUndelegateReporter) Reset()         { *m = MsgUndelegateReporter{} }
-func (m *MsgUndelegateReporter) String() string { return proto.CompactTextString(m) }
-func (*MsgUndelegateReporter) ProtoMessage()    {}
-func (*MsgUndelegateReporter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{6}
-}
-func (m *MsgUndelegateReporter) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgUndelegateReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgUndelegateReporter.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgUndelegateReporter) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUndelegateReporter.Merge(m, src)
-}
-func (m *MsgUndelegateReporter) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgUndelegateReporter) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUndelegateReporter.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgUndelegateReporter proto.InternalMessageInfo
-
-func (m *MsgUndelegateReporter) GetDelegatorAddress() string {
+func (m *MsgChangeReporter) GetDelegatorAddress() string {
 	if m != nil {
 		return m.DelegatorAddress
 	}
 	return ""
 }
 
-func (m *MsgUndelegateReporter) GetTokenOrigins() []*TokenOrigin {
+func (m *MsgChangeReporter) GetReporterAddress() string {
 	if m != nil {
-		return m.TokenOrigins
+		return m.ReporterAddress
 	}
-	return nil
+	return ""
 }
 
-type MsgUndelegateReporterResponse struct {
+type MsgChangeReporterResponse struct {
 }
 
-func (m *MsgUndelegateReporterResponse) Reset()         { *m = MsgUndelegateReporterResponse{} }
-func (m *MsgUndelegateReporterResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgUndelegateReporterResponse) ProtoMessage()    {}
-func (*MsgUndelegateReporterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{7}
+func (m *MsgChangeReporterResponse) Reset()         { *m = MsgChangeReporterResponse{} }
+func (m *MsgChangeReporterResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgChangeReporterResponse) ProtoMessage()    {}
+func (*MsgChangeReporterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{5}
 }
-func (m *MsgUndelegateReporterResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgChangeReporterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgUndelegateReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgChangeReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgUndelegateReporterResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgChangeReporterResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -402,188 +290,17 @@ func (m *MsgUndelegateReporterResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
-func (m *MsgUndelegateReporterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgUndelegateReporterResponse.Merge(m, src)
+func (m *MsgChangeReporterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgChangeReporterResponse.Merge(m, src)
 }
-func (m *MsgUndelegateReporterResponse) XXX_Size() int {
+func (m *MsgChangeReporterResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgUndelegateReporterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgUndelegateReporterResponse.DiscardUnknown(m)
+func (m *MsgChangeReporterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgChangeReporterResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgUndelegateReporterResponse proto.InternalMessageInfo
-
-// MsgWithdrawReporterCommission withdraws the full commission to the reporter
-// address.
-type MsgWithdrawReporterCommission struct {
-	ReporterAddress string `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
-}
-
-func (m *MsgWithdrawReporterCommission) Reset()         { *m = MsgWithdrawReporterCommission{} }
-func (m *MsgWithdrawReporterCommission) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawReporterCommission) ProtoMessage()    {}
-func (*MsgWithdrawReporterCommission) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{8}
-}
-func (m *MsgWithdrawReporterCommission) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawReporterCommission) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawReporterCommission.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawReporterCommission) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawReporterCommission.Merge(m, src)
-}
-func (m *MsgWithdrawReporterCommission) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawReporterCommission) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawReporterCommission.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawReporterCommission proto.InternalMessageInfo
-
-// MsgWithdrawReporterCommissionResponse defines the
-// Msg/WithdrawReporterCommission response type.
-type MsgWithdrawReporterCommissionResponse struct {
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-}
-
-func (m *MsgWithdrawReporterCommissionResponse) Reset()         { *m = MsgWithdrawReporterCommissionResponse{} }
-func (m *MsgWithdrawReporterCommissionResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawReporterCommissionResponse) ProtoMessage()    {}
-func (*MsgWithdrawReporterCommissionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{9}
-}
-func (m *MsgWithdrawReporterCommissionResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawReporterCommissionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawReporterCommissionResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawReporterCommissionResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawReporterCommissionResponse.Merge(m, src)
-}
-func (m *MsgWithdrawReporterCommissionResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawReporterCommissionResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawReporterCommissionResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawReporterCommissionResponse proto.InternalMessageInfo
-
-func (m *MsgWithdrawReporterCommissionResponse) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Amount
-	}
-	return nil
-}
-
-// MsgWithdrawDelegatorReward represents delegation withdrawal to a delegator
-// from a reporter.
-type MsgWithdrawDelegatorReward struct {
-	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	ReporterAddress  string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
-}
-
-func (m *MsgWithdrawDelegatorReward) Reset()         { *m = MsgWithdrawDelegatorReward{} }
-func (m *MsgWithdrawDelegatorReward) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawDelegatorReward) ProtoMessage()    {}
-func (*MsgWithdrawDelegatorReward) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{10}
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawDelegatorReward.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawDelegatorReward.Merge(m, src)
-}
-func (m *MsgWithdrawDelegatorReward) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawDelegatorReward) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawDelegatorReward.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawDelegatorReward proto.InternalMessageInfo
-
-// MsgWithdrawDelegatorRewardResponse defines the Msg/WithdrawDelegatorReward
-// response type.
-type MsgWithdrawDelegatorRewardResponse struct {
-	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
-}
-
-func (m *MsgWithdrawDelegatorRewardResponse) Reset()         { *m = MsgWithdrawDelegatorRewardResponse{} }
-func (m *MsgWithdrawDelegatorRewardResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawDelegatorRewardResponse) ProtoMessage()    {}
-func (*MsgWithdrawDelegatorRewardResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{11}
-}
-func (m *MsgWithdrawDelegatorRewardResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawDelegatorRewardResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawDelegatorRewardResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.Merge(m, src)
-}
-func (m *MsgWithdrawDelegatorRewardResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawDelegatorRewardResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawDelegatorRewardResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawDelegatorRewardResponse proto.InternalMessageInfo
-
-func (m *MsgWithdrawDelegatorRewardResponse) GetAmount() github_com_cosmos_cosmos_sdk_types.Coins {
-	if m != nil {
-		return m.Amount
-	}
-	return nil
-}
+var xxx_messageInfo_MsgChangeReporterResponse proto.InternalMessageInfo
 
 // MsgUnjailReporter defines the Msg/UnjailReporter request type.
 type MsgUnjailReporter struct {
@@ -594,7 +311,7 @@ func (m *MsgUnjailReporter) Reset()         { *m = MsgUnjailReporter{} }
 func (m *MsgUnjailReporter) String() string { return proto.CompactTextString(m) }
 func (*MsgUnjailReporter) ProtoMessage()    {}
 func (*MsgUnjailReporter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{12}
+	return fileDescriptor_67b904a7aa978eb1, []int{6}
 }
 func (m *MsgUnjailReporter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -631,7 +348,7 @@ func (m *MsgUnjailReporterResponse) Reset()         { *m = MsgUnjailReporterResp
 func (m *MsgUnjailReporterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUnjailReporterResponse) ProtoMessage()    {}
 func (*MsgUnjailReporterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{13}
+	return fileDescriptor_67b904a7aa978eb1, []int{7}
 }
 func (m *MsgUnjailReporterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -670,7 +387,7 @@ func (m *MsgWithdrawTip) Reset()         { *m = MsgWithdrawTip{} }
 func (m *MsgWithdrawTip) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawTip) ProtoMessage()    {}
 func (*MsgWithdrawTip) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{14}
+	return fileDescriptor_67b904a7aa978eb1, []int{8}
 }
 func (m *MsgWithdrawTip) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -721,7 +438,7 @@ func (m *MsgWithdrawTipResponse) Reset()         { *m = MsgWithdrawTipResponse{}
 func (m *MsgWithdrawTipResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawTipResponse) ProtoMessage()    {}
 func (*MsgWithdrawTipResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{15}
+	return fileDescriptor_67b904a7aa978eb1, []int{9}
 }
 func (m *MsgWithdrawTipResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -755,14 +472,8 @@ func init() {
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "layer.reporter.MsgUpdateParamsResponse")
 	proto.RegisterType((*MsgCreateReporter)(nil), "layer.reporter.MsgCreateReporter")
 	proto.RegisterType((*MsgCreateReporterResponse)(nil), "layer.reporter.MsgCreateReporterResponse")
-	proto.RegisterType((*MsgDelegateReporter)(nil), "layer.reporter.MsgDelegateReporter")
-	proto.RegisterType((*MsgDelegateReporterResponse)(nil), "layer.reporter.MsgDelegateReporterResponse")
-	proto.RegisterType((*MsgUndelegateReporter)(nil), "layer.reporter.MsgUndelegateReporter")
-	proto.RegisterType((*MsgUndelegateReporterResponse)(nil), "layer.reporter.MsgUndelegateReporterResponse")
-	proto.RegisterType((*MsgWithdrawReporterCommission)(nil), "layer.reporter.MsgWithdrawReporterCommission")
-	proto.RegisterType((*MsgWithdrawReporterCommissionResponse)(nil), "layer.reporter.MsgWithdrawReporterCommissionResponse")
-	proto.RegisterType((*MsgWithdrawDelegatorReward)(nil), "layer.reporter.MsgWithdrawDelegatorReward")
-	proto.RegisterType((*MsgWithdrawDelegatorRewardResponse)(nil), "layer.reporter.MsgWithdrawDelegatorRewardResponse")
+	proto.RegisterType((*MsgChangeReporter)(nil), "layer.reporter.MsgChangeReporter")
+	proto.RegisterType((*MsgChangeReporterResponse)(nil), "layer.reporter.MsgChangeReporterResponse")
 	proto.RegisterType((*MsgUnjailReporter)(nil), "layer.reporter.MsgUnjailReporter")
 	proto.RegisterType((*MsgUnjailReporterResponse)(nil), "layer.reporter.MsgUnjailReporterResponse")
 	proto.RegisterType((*MsgWithdrawTip)(nil), "layer.reporter.MsgWithdrawTip")
@@ -772,68 +483,49 @@ func init() {
 func init() { proto.RegisterFile("layer/reporter/tx.proto", fileDescriptor_67b904a7aa978eb1) }
 
 var fileDescriptor_67b904a7aa978eb1 = []byte{
-	// 973 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0x41, 0x4f, 0x24, 0x45,
-	0x14, 0x9e, 0x1a, 0x56, 0xe2, 0x3c, 0x76, 0x59, 0x68, 0x77, 0x61, 0x68, 0xa4, 0x07, 0x5a, 0x57,
-	0x11, 0x32, 0xdd, 0x81, 0xcd, 0x9a, 0xc8, 0x49, 0x87, 0xdd, 0xc3, 0x1e, 0x50, 0xd3, 0x82, 0x1a,
-	0x0f, 0x92, 0x82, 0xae, 0xf4, 0xd4, 0x32, 0xdd, 0x35, 0xe9, 0x2a, 0x60, 0xb9, 0x99, 0xf5, 0xa2,
-	0x1e, 0x8c, 0xfe, 0x01, 0xb3, 0x47, 0xe3, 0x89, 0x03, 0x17, 0x4f, 0x5e, 0xb9, 0xb9, 0xe1, 0x64,
-	0x3c, 0xac, 0x06, 0x12, 0xf1, 0x67, 0x98, 0xee, 0xae, 0xae, 0xe9, 0xe9, 0xe9, 0x99, 0x85, 0x04,
-	0xb3, 0x17, 0x86, 0xaa, 0xf7, 0xbd, 0x57, 0xdf, 0xfb, 0xfa, 0xab, 0xd7, 0x0d, 0x93, 0x2d, 0x7c,
-	0x40, 0x42, 0x3b, 0x24, 0x6d, 0x16, 0x0a, 0x12, 0xda, 0xe2, 0xb1, 0xd5, 0x0e, 0x99, 0x60, 0xda,
-	0x68, 0x1c, 0xb0, 0xd2, 0x80, 0x3e, 0x8e, 0x7d, 0x1a, 0x30, 0x3b, 0xfe, 0x9b, 0x40, 0x74, 0x63,
-	0x9b, 0x71, 0x9f, 0x71, 0x7b, 0x0b, 0x73, 0x62, 0xef, 0x2d, 0x6d, 0x11, 0x81, 0x97, 0xec, 0x6d,
-	0x46, 0x03, 0x19, 0x9f, 0x94, 0x71, 0x9f, 0x7b, 0xf6, 0xde, 0x52, 0xf4, 0x23, 0x03, 0x6f, 0xca,
-	0x00, 0x17, 0x78, 0x87, 0x06, 0x9e, 0xca, 0x95, 0x6b, 0x89, 0x9a, 0x4a, 0x50, 0x9b, 0xf1, 0xca,
-	0x4e, 0x16, 0x32, 0x74, 0xcb, 0x63, 0x1e, 0x4b, 0xf6, 0xa3, 0xff, 0xe4, 0xee, 0x74, 0xae, 0x97,
-	0x36, 0x0e, 0xb1, 0x9f, 0xa6, 0xcc, 0xe5, 0x1b, 0x65, 0x3b, 0x24, 0xd8, 0x64, 0x21, 0xf5, 0x52,
-	0xbe, 0xe6, 0xaf, 0x08, 0x6e, 0xae, 0x71, 0x6f, 0xa3, 0xed, 0x62, 0x41, 0x3e, 0x8e, 0x93, 0xb5,
-	0x77, 0xa1, 0x82, 0x77, 0x45, 0x93, 0x85, 0x54, 0x1c, 0x54, 0xd1, 0x2c, 0x9a, 0xaf, 0x34, 0xaa,
-	0x27, 0x47, 0xf5, 0x5b, 0x92, 0xce, 0x07, 0xae, 0x1b, 0x12, 0xce, 0x3f, 0x11, 0x21, 0x0d, 0x3c,
-	0xa7, 0x03, 0xd5, 0xde, 0x83, 0xe1, 0xe4, 0xf8, 0x6a, 0x79, 0x16, 0xcd, 0x8f, 0x2c, 0x4f, 0x58,
-	0xdd, 0x7a, 0x5a, 0x49, 0xfd, 0x46, 0xe5, 0xf8, 0x79, 0xad, 0xf4, 0xf3, 0xf9, 0xe1, 0x02, 0x72,
-	0x64, 0xc2, 0xca, 0xdd, 0x27, 0xe7, 0x87, 0x0b, 0x9d, 0x52, 0xdf, 0x9d, 0x1f, 0x2e, 0xcc, 0x26,
-	0xe4, 0x1f, 0x77, 0xe8, 0xe7, 0x78, 0x9a, 0x53, 0x30, 0x99, 0xdb, 0x72, 0x08, 0x6f, 0xb3, 0x80,
-	0x13, 0xf3, 0xdb, 0x32, 0x8c, 0xaf, 0x71, 0x6f, 0x35, 0x24, 0x58, 0x10, 0x47, 0x16, 0xd0, 0x74,
-	0x78, 0x35, 0x2d, 0x96, 0xf4, 0xe5, 0xa8, 0xb5, 0xb6, 0x0a, 0xc3, 0xd8, 0x67, 0xbb, 0x81, 0x88,
-	0xc9, 0x57, 0x1a, 0x8b, 0x11, 0xc9, 0x3f, 0x9f, 0xd7, 0x6e, 0x27, 0x5d, 0x73, 0x77, 0xc7, 0xa2,
-	0xcc, 0xf6, 0xb1, 0x68, 0x5a, 0x0f, 0x03, 0x71, 0x72, 0x54, 0x07, 0x29, 0xc7, 0xc3, 0x40, 0x38,
-	0x32, 0x55, 0x7b, 0x1f, 0x6e, 0x64, 0x35, 0xe6, 0xd5, 0xa1, 0xd9, 0xa1, 0xf9, 0x91, 0xe5, 0xe9,
-	0xbc, 0x10, 0xeb, 0x11, 0xe8, 0xa3, 0x18, 0xe3, 0x5c, 0x17, 0x9d, 0x05, 0xd7, 0x1a, 0x00, 0xdb,
-	0xcc, 0xf7, 0x29, 0xe7, 0x94, 0x05, 0xd5, 0x6b, 0xb1, 0x8e, 0xa6, 0x25, 0x8f, 0x4a, 0xbd, 0x22,
-	0xbd, 0x63, 0xad, 0x2a, 0xa4, 0x93, 0xc9, 0x5a, 0xb9, 0x11, 0x89, 0xa9, 0x3a, 0x33, 0xa7, 0x61,
-	0xaa, 0x47, 0x0a, 0x25, 0xd4, 0x3f, 0x08, 0x5e, 0x5b, 0xe3, 0xde, 0x7d, 0xd2, 0x22, 0x5e, 0x56,
-	0xaa, 0xd7, 0xa1, 0xe2, 0x26, 0x7b, 0x2c, 0xd5, 0xaa, 0xb3, 0xd1, 0x25, 0x64, 0xb9, 0xaf, 0x90,
-	0x43, 0x57, 0x28, 0xe4, 0xb5, 0x4b, 0x0a, 0xb9, 0x32, 0x1a, 0x3b, 0x4a, 0x51, 0x36, 0x67, 0x60,
-	0xba, 0xa0, 0x4f, 0xa5, 0xc3, 0x4f, 0x08, 0x6e, 0x47, 0x66, 0x0a, 0xdc, 0xbc, 0x12, 0x8b, 0x30,
-	0xae, 0xaa, 0x6c, 0xe2, 0xc4, 0xfb, 0x52, 0x91, 0x31, 0x15, 0x90, 0x77, 0xa2, 0x97, 0x77, 0xf9,
-	0xb2, 0xbc, 0x27, 0x22, 0xde, 0xbd, 0x27, 0x9a, 0x35, 0x98, 0x29, 0xe4, 0xa7, 0x3a, 0xf8, 0x1a,
-	0xc5, 0x88, 0xcf, 0xa8, 0x68, 0xba, 0x21, 0xde, 0x4f, 0xe3, 0x1d, 0x8f, 0x68, 0xab, 0x30, 0x96,
-	0x12, 0xe8, 0x6e, 0x64, 0xc0, 0xf5, 0xbe, 0x99, 0x66, 0xc8, 0xed, 0x95, 0x99, 0x6f, 0x9e, 0xd6,
-	0x4a, 0xff, 0x3e, 0xad, 0x95, 0x22, 0x9e, 0x3d, 0xf5, 0xcc, 0x1f, 0x11, 0xdc, 0x19, 0xc8, 0x22,
-	0xe5, 0xab, 0x35, 0x95, 0x4f, 0x50, 0xac, 0xd1, 0x54, 0xea, 0xf2, 0x68, 0xb4, 0x66, 0x2c, 0x4e,
-	0x83, 0xc6, 0xbd, 0xc8, 0x42, 0xbf, 0xfc, 0x55, 0x9b, 0xf7, 0xa8, 0x68, 0xee, 0x6e, 0x59, 0xdb,
-	0xcc, 0x97, 0xb3, 0x51, 0xfe, 0xd4, 0xb9, 0xbb, 0x63, 0x8b, 0x83, 0x36, 0xe1, 0x71, 0x02, 0x97,
-	0xc3, 0x25, 0xa9, 0x6f, 0x1e, 0x23, 0xd0, 0x33, 0x9c, 0xee, 0xa7, 0xda, 0x3a, 0x64, 0x1f, 0x87,
-	0xae, 0xf6, 0xa0, 0xef, 0x03, 0x1e, 0xa0, 0x4b, 0xef, 0xa3, 0x2f, 0x52, 0xb7, 0x7c, 0x59, 0x75,
-	0x8d, 0xac, 0xba, 0x05, 0x2e, 0xf8, 0x1e, 0x81, 0xd9, 0xbf, 0x95, 0x97, 0xa0, 0xed, 0x7e, 0x3c,
-	0x67, 0x37, 0x82, 0x47, 0x98, 0xb6, 0x9c, 0xce, 0x08, 0xf8, 0xff, 0x8d, 0x96, 0x4c, 0xb5, 0xee,
-	0x83, 0xd5, 0x5d, 0xf8, 0x0d, 0xc1, 0x68, 0x46, 0xa6, 0x75, 0xda, 0xbe, 0xaa, 0xa7, 0xfc, 0x21,
-	0x8c, 0xef, 0xe1, 0x16, 0x75, 0xbb, 0xca, 0x24, 0x8f, 0x79, 0xee, 0xe4, 0xa8, 0x3e, 0x23, 0xcb,
-	0x7c, 0x9a, 0x62, 0x72, 0xf5, 0xf6, 0x72, 0xfb, 0x7d, 0xaf, 0x7b, 0x15, 0x26, 0xba, 0x1b, 0x48,
-	0x7b, 0x5b, 0xfe, 0x7d, 0x18, 0x86, 0xd6, 0xb8, 0xa7, 0x7d, 0x0e, 0xd7, 0xbb, 0xde, 0xda, 0xb5,
-	0xfc, 0x8c, 0xc9, 0xbd, 0x1b, 0xf5, 0xb7, 0x5f, 0x00, 0x50, 0xee, 0xf9, 0x12, 0x46, 0x73, 0x2f,
-	0xce, 0xb9, 0x82, 0xd4, 0x6e, 0x88, 0xfe, 0xce, 0x0b, 0x21, 0xaa, 0xbe, 0x0b, 0x63, 0x3d, 0xef,
-	0x9b, 0x37, 0x0a, 0xd2, 0xf3, 0x20, 0x7d, 0xf1, 0x02, 0x20, 0x75, 0xca, 0x23, 0xd0, 0x0a, 0xa6,
-	0xf9, 0x9d, 0x22, 0x11, 0x7a, 0x60, 0x7a, 0xfd, 0x42, 0x30, 0x75, 0xd6, 0x13, 0x04, 0xfa, 0x80,
-	0xc1, 0x5b, 0x54, 0xad, 0x3f, 0x5c, 0xbf, 0x77, 0x29, 0xb8, 0x22, 0x71, 0x00, 0x93, 0xfd, 0x46,
-	0xdc, 0xc2, 0x80, 0x8a, 0x39, 0xac, 0xbe, 0x7c, 0x71, 0x6c, 0xd6, 0x31, 0xb9, 0x11, 0x30, 0x57,
-	0x28, 0x60, 0x16, 0x52, 0xe8, 0x98, 0xe2, 0xfb, 0xac, 0x6d, 0xc0, 0x48, 0xf6, 0x2e, 0x1b, 0x03,
-	0x28, 0xae, 0xd3, 0xb6, 0xfe, 0xd6, 0xe0, 0x78, 0x5a, 0x56, 0x7f, 0xe5, 0xab, 0x68, 0x96, 0x35,
-	0x1e, 0x1c, 0x9f, 0x1a, 0xe8, 0xd9, 0xa9, 0x81, 0xfe, 0x3e, 0x35, 0xd0, 0x0f, 0x67, 0x46, 0xe9,
-	0xd9, 0x99, 0x51, 0xfa, 0xe3, 0xcc, 0x28, 0x7d, 0xb1, 0x98, 0x19, 0x8a, 0x82, 0xb4, 0x5a, 0x2c,
-	0xac, 0x53, 0x66, 0xf7, 0x7c, 0x98, 0xc6, 0xd3, 0x71, 0x6b, 0x38, 0xfe, 0xa2, 0xbe, 0xfb, 0x5f,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x5b, 0xde, 0x80, 0xea, 0x5f, 0x0c, 0x00, 0x00,
+	// 668 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x41, 0x4f, 0x13, 0x41,
+	0x14, 0xee, 0x42, 0x24, 0x61, 0x30, 0x40, 0x37, 0x08, 0xa5, 0x84, 0x2d, 0x34, 0x46, 0x01, 0xc3,
+	0x6e, 0x80, 0xc4, 0x44, 0x6e, 0xb6, 0xe1, 0x58, 0x63, 0xaa, 0xa8, 0xf1, 0x20, 0x99, 0x76, 0x27,
+	0xd3, 0x91, 0xdd, 0x9d, 0xcd, 0xcc, 0x50, 0xe0, 0x66, 0x3c, 0x19, 0x4f, 0x5e, 0xbd, 0x71, 0xf4,
+	0xc8, 0x81, 0xc4, 0x78, 0xf2, 0xca, 0x91, 0x70, 0xf2, 0xa2, 0x31, 0x70, 0xc0, 0x9f, 0x61, 0x76,
+	0x77, 0x66, 0xcb, 0x4e, 0x17, 0x88, 0x89, 0x97, 0xb6, 0xf3, 0xde, 0xf7, 0xbe, 0xf9, 0xbe, 0x37,
+	0xf3, 0xa6, 0x60, 0xca, 0x83, 0xfb, 0x88, 0x39, 0x0c, 0x85, 0x94, 0x09, 0xc4, 0x1c, 0xb1, 0x67,
+	0x87, 0x8c, 0x0a, 0x6a, 0x8e, 0xc6, 0x09, 0x5b, 0x25, 0xca, 0x45, 0xe8, 0x93, 0x80, 0x3a, 0xf1,
+	0x67, 0x02, 0x29, 0x5b, 0x6d, 0xca, 0x7d, 0xca, 0x9d, 0x16, 0xe4, 0xc8, 0xe9, 0xae, 0xb4, 0x90,
+	0x80, 0x2b, 0x4e, 0x9b, 0x92, 0x40, 0xe6, 0xa7, 0x64, 0xde, 0xe7, 0xd8, 0xe9, 0xae, 0x44, 0x5f,
+	0x32, 0x71, 0x57, 0x26, 0xb8, 0x80, 0xdb, 0x24, 0xc0, 0x69, 0xad, 0x5c, 0x4b, 0xd4, 0x74, 0x82,
+	0xda, 0x8a, 0x57, 0x4e, 0xb2, 0x90, 0xa9, 0x09, 0x4c, 0x31, 0x4d, 0xe2, 0xd1, 0x2f, 0x19, 0x9d,
+	0xd1, 0xbc, 0x84, 0x90, 0x41, 0x5f, 0x95, 0xcc, 0xeb, 0x46, 0xe9, 0x36, 0x0a, 0xb6, 0x28, 0x23,
+	0x58, 0xe9, 0xad, 0x7e, 0x33, 0xc0, 0x58, 0x83, 0xe3, 0xcd, 0xd0, 0x85, 0x02, 0x3d, 0x8d, 0x8b,
+	0xcd, 0x87, 0x60, 0x18, 0xee, 0x88, 0x0e, 0x65, 0x44, 0xec, 0x97, 0x8c, 0x39, 0x63, 0x61, 0xb8,
+	0x56, 0x3a, 0x3d, 0x5a, 0x9e, 0x90, 0x72, 0x1e, 0xbb, 0x2e, 0x43, 0x9c, 0x3f, 0x13, 0x8c, 0x04,
+	0xb8, 0xd9, 0x83, 0x9a, 0x8f, 0xc0, 0x50, 0xb2, 0x7d, 0x69, 0x60, 0xce, 0x58, 0x18, 0x59, 0x9d,
+	0xb4, 0xb3, 0xfd, 0xb4, 0x13, 0xfe, 0xda, 0xf0, 0xf1, 0xaf, 0x4a, 0xe1, 0xcb, 0xc5, 0xe1, 0x92,
+	0xd1, 0x94, 0x05, 0xeb, 0x6b, 0xef, 0x2f, 0x0e, 0x97, 0x7a, 0x54, 0x1f, 0x2f, 0x0e, 0x97, 0xe6,
+	0x12, 0xf1, 0x7b, 0x3d, 0xf9, 0x9a, 0xce, 0xea, 0x34, 0x98, 0xd2, 0x42, 0x4d, 0xc4, 0x43, 0x1a,
+	0x70, 0x54, 0xfd, 0x6c, 0x80, 0x62, 0x83, 0xe3, 0x3a, 0x43, 0x50, 0xa0, 0xa6, 0x24, 0x30, 0x17,
+	0xc1, 0xb8, 0x22, 0xdb, 0x82, 0x89, 0x8b, 0xc4, 0x5f, 0x73, 0x4c, 0xc5, 0xa5, 0x39, 0xb3, 0x06,
+	0x40, 0x9b, 0xfa, 0x3e, 0xe1, 0x9c, 0xd0, 0x40, 0xfa, 0xa9, 0xda, 0xb2, 0x03, 0xea, 0xcc, 0xe4,
+	0x19, 0xda, 0xf5, 0x14, 0xd9, 0xbc, 0x54, 0xb5, 0x7e, 0x27, 0x32, 0xd5, 0xb7, 0x63, 0x75, 0x06,
+	0x4c, 0xf7, 0x49, 0x4b, 0x85, 0x7f, 0x95, 0xc2, 0x3b, 0x30, 0xc0, 0x3d, 0xe1, 0x1b, 0xa0, 0xe8,
+	0x22, 0x0f, 0x61, 0x28, 0xa8, 0xa6, 0xfc, 0x9a, 0x93, 0x19, 0x4f, 0x4b, 0x94, 0xa9, 0x7a, 0x8e,
+	0xff, 0x81, 0x1b, 0x58, 0xf4, 0xce, 0xac, 0x4f, 0x46, 0xae, 0xfa, 0xe5, 0x28, 0x5b, 0x19, 0xe1,
+	0xa9, 0xad, 0xdd, 0xd8, 0xd5, 0x66, 0xf0, 0x16, 0x12, 0x2f, 0x75, 0x55, 0xbf, 0xea, 0x38, 0xfe,
+	0x45, 0xce, 0xec, 0x87, 0x83, 0x4a, 0xe1, 0xcf, 0x41, 0xa5, 0x70, 0x5d, 0xb3, 0xb3, 0x1b, 0xa7,
+	0xaa, 0xbe, 0x1b, 0x60, 0xb4, 0xc1, 0xf1, 0x4b, 0x22, 0x3a, 0x2e, 0x83, 0xbb, 0xcf, 0x49, 0xf8,
+	0xbf, 0x3a, 0xfd, 0x04, 0x14, 0xbb, 0xd0, 0x23, 0x6e, 0x86, 0x26, 0x69, 0xf5, 0xfc, 0xe9, 0xd1,
+	0xf2, 0xac, 0xa4, 0x79, 0xa1, 0x30, 0x1a, 0x5f, 0x57, 0x8b, 0x5f, 0xd9, 0xf4, 0x12, 0x98, 0xcc,
+	0x1a, 0x50, 0xde, 0x56, 0x7f, 0x0e, 0x82, 0xc1, 0x06, 0xc7, 0xe6, 0x2b, 0x70, 0x3b, 0x33, 0xdc,
+	0x15, 0x7d, 0x28, 0xb5, 0x11, 0x2a, 0xdf, 0xbf, 0x01, 0xa0, 0x76, 0x30, 0xdf, 0x80, 0x51, 0x6d,
+	0xbe, 0xe6, 0x73, 0x4a, 0xb3, 0x90, 0xf2, 0xe2, 0x8d, 0x90, 0x0c, 0x7f, 0x76, 0x0c, 0x72, 0xf9,
+	0x33, 0x90, 0x7c, 0xfe, 0xdc, 0x3b, 0x19, 0xf1, 0x6b, 0x17, 0x32, 0x8f, 0x3f, 0x0b, 0xc9, 0xe5,
+	0xcf, 0xbf, 0x5d, 0xe6, 0x26, 0x18, 0xb9, 0x7c, 0xb3, 0xac, 0x9c, 0xca, 0x4b, 0xf9, 0xf2, 0xbd,
+	0xeb, 0xf3, 0x8a, 0xb6, 0x7c, 0xeb, 0x5d, 0xf4, 0x72, 0xd6, 0x36, 0x8e, 0xcf, 0x2c, 0xe3, 0xe4,
+	0xcc, 0x32, 0x7e, 0x9f, 0x59, 0xc6, 0xa7, 0x73, 0xab, 0x70, 0x72, 0x6e, 0x15, 0x7e, 0x9c, 0x5b,
+	0x85, 0xd7, 0x0f, 0x30, 0x11, 0x9d, 0x9d, 0x96, 0xdd, 0xa6, 0xbe, 0x23, 0x90, 0xe7, 0x51, 0xb6,
+	0x4c, 0xa8, 0xd3, 0xf7, 0x9a, 0x8a, 0xfd, 0x10, 0xf1, 0xd6, 0x50, 0xfc, 0x37, 0xb0, 0xf6, 0x37,
+	0x00, 0x00, 0xff, 0xff, 0x37, 0x8c, 0x21, 0x67, 0x14, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -853,16 +545,7 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
-	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
-	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
-	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
-	UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error)
-	// WithdrawReporterCommission defines a method to withdraw the
-	// full commission to the reporter address.
-	WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error)
-	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
-	// from a reporter.
-	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
+	ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -895,36 +578,9 @@ func (c *msgClient) CreateReporter(ctx context.Context, in *MsgCreateReporter, o
 	return out, nil
 }
 
-func (c *msgClient) DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error) {
-	out := new(MsgDelegateReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/DelegateReporter", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error) {
-	out := new(MsgUndelegateReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/UndelegateReporter", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error) {
-	out := new(MsgWithdrawReporterCommissionResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawReporterCommission", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error) {
-	out := new(MsgWithdrawDelegatorRewardResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawDelegatorReward", in, out, opts...)
+func (c *msgClient) ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error) {
+	out := new(MsgChangeReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/ChangeReporter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -956,16 +612,7 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
-	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
-	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
-	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
-	UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error)
-	// WithdrawReporterCommission defines a method to withdraw the
-	// full commission to the reporter address.
-	WithdrawReporterCommission(context.Context, *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error)
-	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
-	// from a reporter.
-	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
+	ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -982,17 +629,8 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 func (*UnimplementedMsgServer) CreateReporter(ctx context.Context, req *MsgCreateReporter) (*MsgCreateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReporter not implemented")
 }
-func (*UnimplementedMsgServer) DelegateReporter(ctx context.Context, req *MsgDelegateReporter) (*MsgDelegateReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DelegateReporter not implemented")
-}
-func (*UnimplementedMsgServer) UndelegateReporter(ctx context.Context, req *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UndelegateReporter not implemented")
-}
-func (*UnimplementedMsgServer) WithdrawReporterCommission(ctx context.Context, req *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawReporterCommission not implemented")
-}
-func (*UnimplementedMsgServer) WithdrawDelegatorReward(ctx context.Context, req *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegatorReward not implemented")
+func (*UnimplementedMsgServer) ChangeReporter(ctx context.Context, req *MsgChangeReporter) (*MsgChangeReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeReporter not implemented")
 }
 func (*UnimplementedMsgServer) UnjailReporter(ctx context.Context, req *MsgUnjailReporter) (*MsgUnjailReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnjailReporter not implemented")
@@ -1041,74 +679,20 @@ func _Msg_CreateReporter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_DelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDelegateReporter)
+func _Msg_ChangeReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgChangeReporter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DelegateReporter(ctx, in)
+		return srv.(MsgServer).ChangeReporter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/DelegateReporter",
+		FullMethod: "/layer.reporter.Msg/ChangeReporter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DelegateReporter(ctx, req.(*MsgDelegateReporter))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_UndelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUndelegateReporter)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UndelegateReporter(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/UndelegateReporter",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UndelegateReporter(ctx, req.(*MsgUndelegateReporter))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_WithdrawReporterCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawReporterCommission)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WithdrawReporterCommission(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/WithdrawReporterCommission",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawReporterCommission(ctx, req.(*MsgWithdrawReporterCommission))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_WithdrawDelegatorReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawDelegatorReward)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WithdrawDelegatorReward(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/WithdrawDelegatorReward",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawDelegatorReward(ctx, req.(*MsgWithdrawDelegatorReward))
+		return srv.(MsgServer).ChangeReporter(ctx, req.(*MsgChangeReporter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1162,20 +746,8 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateReporter_Handler,
 		},
 		{
-			MethodName: "DelegateReporter",
-			Handler:    _Msg_DelegateReporter_Handler,
-		},
-		{
-			MethodName: "UndelegateReporter",
-			Handler:    _Msg_UndelegateReporter_Handler,
-		},
-		{
-			MethodName: "WithdrawReporterCommission",
-			Handler:    _Msg_WithdrawReporterCommission_Handler,
-		},
-		{
-			MethodName: "WithdrawDelegatorReward",
-			Handler:    _Msg_WithdrawDelegatorReward_Handler,
+			MethodName: "ChangeReporter",
+			Handler:    _Msg_ChangeReporter_Handler,
 		},
 		{
 			MethodName: "UnjailReporter",
@@ -1283,36 +855,12 @@ func (m *MsgCreateReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			i = encodeVarintTx(dAtA, i, uint64(size))
 		}
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x12
 	}
-	if len(m.TokenOrigins) > 0 {
-		for iNdEx := len(m.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.TokenOrigins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	{
-		size := m.Amount.Size()
-		i -= size
-		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.Reporter) > 0 {
-		i -= len(m.Reporter)
-		copy(dAtA[i:], m.Reporter)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Reporter)))
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ReporterAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1342,7 +890,7 @@ func (m *MsgCreateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDelegateReporter) Marshal() (dAtA []byte, err error) {
+func (m *MsgChangeReporter) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1352,230 +900,12 @@ func (m *MsgDelegateReporter) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDelegateReporter) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgChangeReporter) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDelegateReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.TokenOrigins) > 0 {
-		for iNdEx := len(m.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.TokenOrigins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x22
-		}
-	}
-	{
-		size := m.Amount.Size()
-		i -= size
-		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.Reporter) > 0 {
-		i -= len(m.Reporter)
-		copy(dAtA[i:], m.Reporter)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Reporter)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Delegator) > 0 {
-		i -= len(m.Delegator)
-		copy(dAtA[i:], m.Delegator)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Delegator)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgDelegateReporterResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDelegateReporterResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDelegateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUndelegateReporter) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUndelegateReporter) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUndelegateReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.TokenOrigins) > 0 {
-		for iNdEx := len(m.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.TokenOrigins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x12
-		}
-	}
-	if len(m.DelegatorAddress) > 0 {
-		i -= len(m.DelegatorAddress)
-		copy(dAtA[i:], m.DelegatorAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.DelegatorAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgUndelegateReporterResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgUndelegateReporterResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgUndelegateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawReporterCommission) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawReporterCommission) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawReporterCommission) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.ReporterAddress) > 0 {
-		i -= len(m.ReporterAddress)
-		copy(dAtA[i:], m.ReporterAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.ReporterAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawReporterCommissionResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawReporterCommissionResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawReporterCommissionResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawDelegatorReward) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawDelegatorReward) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawDelegatorReward) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgChangeReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1597,7 +927,7 @@ func (m *MsgWithdrawDelegatorReward) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgWithdrawDelegatorRewardResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgChangeReporterResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1607,30 +937,16 @@ func (m *MsgWithdrawDelegatorRewardResponse) Marshal() (dAtA []byte, err error) 
 	return dAtA[:n], nil
 }
 
-func (m *MsgWithdrawDelegatorRewardResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgChangeReporterResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgWithdrawDelegatorRewardResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgChangeReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.Amount) > 0 {
-		for iNdEx := len(m.Amount) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.Amount[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintTx(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0xa
-		}
-	}
 	return len(dAtA) - i, nil
 }
 
@@ -1788,17 +1104,9 @@ func (m *MsgCreateReporter) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Reporter)
+	l = len(m.ReporterAddress)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	if len(m.TokenOrigins) > 0 {
-		for _, e := range m.TokenOrigins {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
 	}
 	if m.Commission != nil {
 		l = m.Commission.Size()
@@ -1816,97 +1124,7 @@ func (m *MsgCreateReporterResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgDelegateReporter) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Delegator)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.Reporter)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	if len(m.TokenOrigins) > 0 {
-		for _, e := range m.TokenOrigins {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgDelegateReporterResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgUndelegateReporter) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.DelegatorAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	if len(m.TokenOrigins) > 0 {
-		for _, e := range m.TokenOrigins {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgUndelegateReporterResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgWithdrawReporterCommission) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ReporterAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgWithdrawReporterCommissionResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *MsgWithdrawDelegatorReward) Size() (n int) {
+func (m *MsgChangeReporter) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1923,18 +1141,12 @@ func (m *MsgWithdrawDelegatorReward) Size() (n int) {
 	return n
 }
 
-func (m *MsgWithdrawDelegatorRewardResponse) Size() (n int) {
+func (m *MsgChangeReporterResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.Amount) > 0 {
-		for _, e := range m.Amount {
-			l = e.Size()
-			n += 1 + l + sovTx(uint64(l))
-		}
-	}
 	return n
 }
 
@@ -2188,7 +1400,7 @@ func (m *MsgCreateReporter) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2216,77 +1428,9 @@ func (m *MsgCreateReporter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Reporter = string(dAtA[iNdEx:postIndex])
+			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOrigins", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigin{})
-			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Commission", wireType)
 			}
@@ -2393,7 +1537,7 @@ func (m *MsgCreateReporterResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgDelegateReporter) Unmarshal(dAtA []byte) error {
+func (m *MsgChangeReporter) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2416,574 +1560,10 @@ func (m *MsgDelegateReporter) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDelegateReporter: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgChangeReporter: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDelegateReporter: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Delegator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Delegator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Reporter = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOrigins", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigin{})
-			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgDelegateReporterResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDelegateReporterResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDelegateReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUndelegateReporter) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUndelegateReporter: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUndelegateReporter: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenOrigins", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TokenOrigins = append(m.TokenOrigins, &TokenOrigin{})
-			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgUndelegateReporterResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgUndelegateReporterResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgUndelegateReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWithdrawReporterCommission) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawReporterCommission: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawReporterCommission: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWithdrawReporterCommissionResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawReporterCommissionResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawReporterCommissionResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = append(m.Amount, types1.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawDelegatorReward: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawDelegatorReward: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgChangeReporter: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3071,7 +1651,7 @@ func (m *MsgWithdrawDelegatorReward) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgWithdrawDelegatorRewardResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgChangeReporterResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3094,46 +1674,12 @@ func (m *MsgWithdrawDelegatorRewardResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawDelegatorRewardResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgChangeReporterResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawDelegatorRewardResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgChangeReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Amount = append(m.Amount, types1.Coin{})
-			if err := m.Amount[len(m.Amount)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

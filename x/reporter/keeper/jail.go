@@ -7,8 +7,6 @@ import (
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
-	"cosmossdk.io/collections"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -24,9 +22,6 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	reporter.JailedUntil = sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration))
 	reporter.Jailed = true
-	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(reporterAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), reporter.TotalTokens); err != nil {
-		return err
-	}
 	err = k.Reporters.Set(ctx, reporterAddr, reporter)
 	if err != nil {
 		return err
@@ -53,8 +48,5 @@ func (k Keeper) unjailReporter(ctx context.Context, reporterAddr sdk.AccAddress,
 	}
 
 	reporter.Jailed = false
-	if err := k.ReporterCheckpoint.Set(ctx, collections.Join(reporterAddr.Bytes(), sdkctx.BlockHeight()), reporter.TotalTokens); err != nil {
-		return err
-	}
 	return k.Reporters.Set(ctx, reporterAddr, reporter)
 }

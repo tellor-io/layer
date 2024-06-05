@@ -16,492 +16,6 @@ import (
 )
 
 var (
-	md_TokenOrigin                   protoreflect.MessageDescriptor
-	fd_TokenOrigin_validator_address protoreflect.FieldDescriptor
-	fd_TokenOrigin_amount            protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_reporter_token_origin_proto_init()
-	md_TokenOrigin = File_layer_reporter_token_origin_proto.Messages().ByName("TokenOrigin")
-	fd_TokenOrigin_validator_address = md_TokenOrigin.Fields().ByName("validator_address")
-	fd_TokenOrigin_amount = md_TokenOrigin.Fields().ByName("amount")
-}
-
-var _ protoreflect.Message = (*fastReflection_TokenOrigin)(nil)
-
-type fastReflection_TokenOrigin TokenOrigin
-
-func (x *TokenOrigin) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_TokenOrigin)(x)
-}
-
-func (x *TokenOrigin) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_reporter_token_origin_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_TokenOrigin_messageType fastReflection_TokenOrigin_messageType
-var _ protoreflect.MessageType = fastReflection_TokenOrigin_messageType{}
-
-type fastReflection_TokenOrigin_messageType struct{}
-
-func (x fastReflection_TokenOrigin_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_TokenOrigin)(nil)
-}
-func (x fastReflection_TokenOrigin_messageType) New() protoreflect.Message {
-	return new(fastReflection_TokenOrigin)
-}
-func (x fastReflection_TokenOrigin_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_TokenOrigin
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_TokenOrigin) Descriptor() protoreflect.MessageDescriptor {
-	return md_TokenOrigin
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_TokenOrigin) Type() protoreflect.MessageType {
-	return _fastReflection_TokenOrigin_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_TokenOrigin) New() protoreflect.Message {
-	return new(fastReflection_TokenOrigin)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_TokenOrigin) Interface() protoreflect.ProtoMessage {
-	return (*TokenOrigin)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_TokenOrigin) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.ValidatorAddress) != 0 {
-		value := protoreflect.ValueOfBytes(x.ValidatorAddress)
-		if !f(fd_TokenOrigin_validator_address, value) {
-			return
-		}
-	}
-	if x.Amount != "" {
-		value := protoreflect.ValueOfString(x.Amount)
-		if !f(fd_TokenOrigin_amount, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_TokenOrigin) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.reporter.TokenOrigin.validator_address":
-		return len(x.ValidatorAddress) != 0
-	case "layer.reporter.TokenOrigin.amount":
-		return x.Amount != ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.TokenOrigin"))
-		}
-		panic(fmt.Errorf("message layer.reporter.TokenOrigin does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_TokenOrigin) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.reporter.TokenOrigin.validator_address":
-		x.ValidatorAddress = nil
-	case "layer.reporter.TokenOrigin.amount":
-		x.Amount = ""
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.TokenOrigin"))
-		}
-		panic(fmt.Errorf("message layer.reporter.TokenOrigin does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_TokenOrigin) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.reporter.TokenOrigin.validator_address":
-		value := x.ValidatorAddress
-		return protoreflect.ValueOfBytes(value)
-	case "layer.reporter.TokenOrigin.amount":
-		value := x.Amount
-		return protoreflect.ValueOfString(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.TokenOrigin"))
-		}
-		panic(fmt.Errorf("message layer.reporter.TokenOrigin does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_TokenOrigin) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.reporter.TokenOrigin.validator_address":
-		x.ValidatorAddress = value.Bytes()
-	case "layer.reporter.TokenOrigin.amount":
-		x.Amount = value.Interface().(string)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.TokenOrigin"))
-		}
-		panic(fmt.Errorf("message layer.reporter.TokenOrigin does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_TokenOrigin) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.reporter.TokenOrigin.validator_address":
-		panic(fmt.Errorf("field validator_address of message layer.reporter.TokenOrigin is not mutable"))
-	case "layer.reporter.TokenOrigin.amount":
-		panic(fmt.Errorf("field amount of message layer.reporter.TokenOrigin is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.TokenOrigin"))
-		}
-		panic(fmt.Errorf("message layer.reporter.TokenOrigin does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_TokenOrigin) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.reporter.TokenOrigin.validator_address":
-		return protoreflect.ValueOfBytes(nil)
-	case "layer.reporter.TokenOrigin.amount":
-		return protoreflect.ValueOfString("")
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.TokenOrigin"))
-		}
-		panic(fmt.Errorf("message layer.reporter.TokenOrigin does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_TokenOrigin) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.TokenOrigin", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_TokenOrigin) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_TokenOrigin) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_TokenOrigin) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_TokenOrigin) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*TokenOrigin)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.ValidatorAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.Amount)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*TokenOrigin)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Amount) > 0 {
-			i -= len(x.Amount)
-			copy(dAtA[i:], x.Amount)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Amount)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.ValidatorAddress) > 0 {
-			i -= len(x.ValidatorAddress)
-			copy(dAtA[i:], x.ValidatorAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorAddress)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*TokenOrigin)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: TokenOrigin: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: TokenOrigin: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.ValidatorAddress = append(x.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-				if x.ValidatorAddress == nil {
-					x.ValidatorAddress = []byte{}
-				}
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Amount = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
 	md_TokenOriginInfo                   protoreflect.MessageDescriptor
 	fd_TokenOriginInfo_delegator_address protoreflect.FieldDescriptor
 	fd_TokenOriginInfo_validator_address protoreflect.FieldDescriptor
@@ -525,7 +39,7 @@ func (x *TokenOriginInfo) ProtoReflect() protoreflect.Message {
 }
 
 func (x *TokenOriginInfo) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_reporter_token_origin_proto_msgTypes[1]
+	mi := &file_layer_reporter_token_origin_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1053,78 +567,80 @@ func (x *fastReflection_TokenOriginInfo) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var _ protoreflect.List = (*_DelegationsPreUpdate_1_list)(nil)
+var _ protoreflect.List = (*_DelegationsAmounts_1_list)(nil)
 
-type _DelegationsPreUpdate_1_list struct {
+type _DelegationsAmounts_1_list struct {
 	list *[]*TokenOriginInfo
 }
 
-func (x *_DelegationsPreUpdate_1_list) Len() int {
+func (x *_DelegationsAmounts_1_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_DelegationsPreUpdate_1_list) Get(i int) protoreflect.Value {
+func (x *_DelegationsAmounts_1_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_DelegationsPreUpdate_1_list) Set(i int, value protoreflect.Value) {
+func (x *_DelegationsAmounts_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*TokenOriginInfo)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_DelegationsPreUpdate_1_list) Append(value protoreflect.Value) {
+func (x *_DelegationsAmounts_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*TokenOriginInfo)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_DelegationsPreUpdate_1_list) AppendMutable() protoreflect.Value {
+func (x *_DelegationsAmounts_1_list) AppendMutable() protoreflect.Value {
 	v := new(TokenOriginInfo)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_DelegationsPreUpdate_1_list) Truncate(n int) {
+func (x *_DelegationsAmounts_1_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_DelegationsPreUpdate_1_list) NewElement() protoreflect.Value {
+func (x *_DelegationsAmounts_1_list) NewElement() protoreflect.Value {
 	v := new(TokenOriginInfo)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_DelegationsPreUpdate_1_list) IsValid() bool {
+func (x *_DelegationsAmounts_1_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_DelegationsPreUpdate               protoreflect.MessageDescriptor
-	fd_DelegationsPreUpdate_token_origins protoreflect.FieldDescriptor
+	md_DelegationsAmounts               protoreflect.MessageDescriptor
+	fd_DelegationsAmounts_token_origins protoreflect.FieldDescriptor
+	fd_DelegationsAmounts_total         protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_reporter_token_origin_proto_init()
-	md_DelegationsPreUpdate = File_layer_reporter_token_origin_proto.Messages().ByName("DelegationsPreUpdate")
-	fd_DelegationsPreUpdate_token_origins = md_DelegationsPreUpdate.Fields().ByName("token_origins")
+	md_DelegationsAmounts = File_layer_reporter_token_origin_proto.Messages().ByName("DelegationsAmounts")
+	fd_DelegationsAmounts_token_origins = md_DelegationsAmounts.Fields().ByName("token_origins")
+	fd_DelegationsAmounts_total = md_DelegationsAmounts.Fields().ByName("total")
 }
 
-var _ protoreflect.Message = (*fastReflection_DelegationsPreUpdate)(nil)
+var _ protoreflect.Message = (*fastReflection_DelegationsAmounts)(nil)
 
-type fastReflection_DelegationsPreUpdate DelegationsPreUpdate
+type fastReflection_DelegationsAmounts DelegationsAmounts
 
-func (x *DelegationsPreUpdate) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_DelegationsPreUpdate)(x)
+func (x *DelegationsAmounts) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DelegationsAmounts)(x)
 }
 
-func (x *DelegationsPreUpdate) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_reporter_token_origin_proto_msgTypes[2]
+func (x *DelegationsAmounts) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_token_origin_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1135,43 +651,43 @@ func (x *DelegationsPreUpdate) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_DelegationsPreUpdate_messageType fastReflection_DelegationsPreUpdate_messageType
-var _ protoreflect.MessageType = fastReflection_DelegationsPreUpdate_messageType{}
+var _fastReflection_DelegationsAmounts_messageType fastReflection_DelegationsAmounts_messageType
+var _ protoreflect.MessageType = fastReflection_DelegationsAmounts_messageType{}
 
-type fastReflection_DelegationsPreUpdate_messageType struct{}
+type fastReflection_DelegationsAmounts_messageType struct{}
 
-func (x fastReflection_DelegationsPreUpdate_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_DelegationsPreUpdate)(nil)
+func (x fastReflection_DelegationsAmounts_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DelegationsAmounts)(nil)
 }
-func (x fastReflection_DelegationsPreUpdate_messageType) New() protoreflect.Message {
-	return new(fastReflection_DelegationsPreUpdate)
+func (x fastReflection_DelegationsAmounts_messageType) New() protoreflect.Message {
+	return new(fastReflection_DelegationsAmounts)
 }
-func (x fastReflection_DelegationsPreUpdate_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_DelegationsPreUpdate
+func (x fastReflection_DelegationsAmounts_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DelegationsAmounts
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_DelegationsPreUpdate) Descriptor() protoreflect.MessageDescriptor {
-	return md_DelegationsPreUpdate
+func (x *fastReflection_DelegationsAmounts) Descriptor() protoreflect.MessageDescriptor {
+	return md_DelegationsAmounts
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_DelegationsPreUpdate) Type() protoreflect.MessageType {
-	return _fastReflection_DelegationsPreUpdate_messageType
+func (x *fastReflection_DelegationsAmounts) Type() protoreflect.MessageType {
+	return _fastReflection_DelegationsAmounts_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_DelegationsPreUpdate) New() protoreflect.Message {
-	return new(fastReflection_DelegationsPreUpdate)
+func (x *fastReflection_DelegationsAmounts) New() protoreflect.Message {
+	return new(fastReflection_DelegationsAmounts)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_DelegationsPreUpdate) Interface() protoreflect.ProtoMessage {
-	return (*DelegationsPreUpdate)(x)
+func (x *fastReflection_DelegationsAmounts) Interface() protoreflect.ProtoMessage {
+	return (*DelegationsAmounts)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1179,10 +695,16 @@ func (x *fastReflection_DelegationsPreUpdate) Interface() protoreflect.ProtoMess
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_DelegationsPreUpdate) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_DelegationsAmounts) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if len(x.TokenOrigins) != 0 {
-		value := protoreflect.ValueOfList(&_DelegationsPreUpdate_1_list{list: &x.TokenOrigins})
-		if !f(fd_DelegationsPreUpdate_token_origins, value) {
+		value := protoreflect.ValueOfList(&_DelegationsAmounts_1_list{list: &x.TokenOrigins})
+		if !f(fd_DelegationsAmounts_token_origins, value) {
+			return
+		}
+	}
+	if x.Total != "" {
+		value := protoreflect.ValueOfString(x.Total)
+		if !f(fd_DelegationsAmounts_total, value) {
 			return
 		}
 	}
@@ -1199,15 +721,17 @@ func (x *fastReflection_DelegationsPreUpdate) Range(f func(protoreflect.FieldDes
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_DelegationsPreUpdate) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_DelegationsAmounts) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.reporter.DelegationsPreUpdate.token_origins":
+	case "layer.reporter.DelegationsAmounts.token_origins":
 		return len(x.TokenOrigins) != 0
+	case "layer.reporter.DelegationsAmounts.total":
+		return x.Total != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsPreUpdate"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsAmounts"))
 		}
-		panic(fmt.Errorf("message layer.reporter.DelegationsPreUpdate does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.reporter.DelegationsAmounts does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1217,15 +741,17 @@ func (x *fastReflection_DelegationsPreUpdate) Has(fd protoreflect.FieldDescripto
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_DelegationsPreUpdate) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_DelegationsAmounts) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.reporter.DelegationsPreUpdate.token_origins":
+	case "layer.reporter.DelegationsAmounts.token_origins":
 		x.TokenOrigins = nil
+	case "layer.reporter.DelegationsAmounts.total":
+		x.Total = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsPreUpdate"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsAmounts"))
 		}
-		panic(fmt.Errorf("message layer.reporter.DelegationsPreUpdate does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.reporter.DelegationsAmounts does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1235,19 +761,22 @@ func (x *fastReflection_DelegationsPreUpdate) Clear(fd protoreflect.FieldDescrip
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_DelegationsPreUpdate) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_DelegationsAmounts) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.reporter.DelegationsPreUpdate.token_origins":
+	case "layer.reporter.DelegationsAmounts.token_origins":
 		if len(x.TokenOrigins) == 0 {
-			return protoreflect.ValueOfList(&_DelegationsPreUpdate_1_list{})
+			return protoreflect.ValueOfList(&_DelegationsAmounts_1_list{})
 		}
-		listValue := &_DelegationsPreUpdate_1_list{list: &x.TokenOrigins}
+		listValue := &_DelegationsAmounts_1_list{list: &x.TokenOrigins}
 		return protoreflect.ValueOfList(listValue)
+	case "layer.reporter.DelegationsAmounts.total":
+		value := x.Total
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsPreUpdate"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsAmounts"))
 		}
-		panic(fmt.Errorf("message layer.reporter.DelegationsPreUpdate does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.reporter.DelegationsAmounts does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1261,17 +790,19 @@ func (x *fastReflection_DelegationsPreUpdate) Get(descriptor protoreflect.FieldD
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_DelegationsPreUpdate) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_DelegationsAmounts) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.reporter.DelegationsPreUpdate.token_origins":
+	case "layer.reporter.DelegationsAmounts.token_origins":
 		lv := value.List()
-		clv := lv.(*_DelegationsPreUpdate_1_list)
+		clv := lv.(*_DelegationsAmounts_1_list)
 		x.TokenOrigins = *clv.list
+	case "layer.reporter.DelegationsAmounts.total":
+		x.Total = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsPreUpdate"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsAmounts"))
 		}
-		panic(fmt.Errorf("message layer.reporter.DelegationsPreUpdate does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.reporter.DelegationsAmounts does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1285,45 +816,49 @@ func (x *fastReflection_DelegationsPreUpdate) Set(fd protoreflect.FieldDescripto
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_DelegationsPreUpdate) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_DelegationsAmounts) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.reporter.DelegationsPreUpdate.token_origins":
+	case "layer.reporter.DelegationsAmounts.token_origins":
 		if x.TokenOrigins == nil {
 			x.TokenOrigins = []*TokenOriginInfo{}
 		}
-		value := &_DelegationsPreUpdate_1_list{list: &x.TokenOrigins}
+		value := &_DelegationsAmounts_1_list{list: &x.TokenOrigins}
 		return protoreflect.ValueOfList(value)
+	case "layer.reporter.DelegationsAmounts.total":
+		panic(fmt.Errorf("field total of message layer.reporter.DelegationsAmounts is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsPreUpdate"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsAmounts"))
 		}
-		panic(fmt.Errorf("message layer.reporter.DelegationsPreUpdate does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.reporter.DelegationsAmounts does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_DelegationsPreUpdate) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_DelegationsAmounts) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.reporter.DelegationsPreUpdate.token_origins":
+	case "layer.reporter.DelegationsAmounts.token_origins":
 		list := []*TokenOriginInfo{}
-		return protoreflect.ValueOfList(&_DelegationsPreUpdate_1_list{list: &list})
+		return protoreflect.ValueOfList(&_DelegationsAmounts_1_list{list: &list})
+	case "layer.reporter.DelegationsAmounts.total":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsPreUpdate"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.DelegationsAmounts"))
 		}
-		panic(fmt.Errorf("message layer.reporter.DelegationsPreUpdate does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.reporter.DelegationsAmounts does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_DelegationsPreUpdate) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_DelegationsAmounts) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.DelegationsPreUpdate", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.DelegationsAmounts", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1331,7 +866,7 @@ func (x *fastReflection_DelegationsPreUpdate) WhichOneof(d protoreflect.OneofDes
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_DelegationsPreUpdate) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_DelegationsAmounts) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1342,7 +877,7 @@ func (x *fastReflection_DelegationsPreUpdate) GetUnknown() protoreflect.RawField
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_DelegationsPreUpdate) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_DelegationsAmounts) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1354,7 +889,7 @@ func (x *fastReflection_DelegationsPreUpdate) SetUnknown(fields protoreflect.Raw
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_DelegationsPreUpdate) IsValid() bool {
+func (x *fastReflection_DelegationsAmounts) IsValid() bool {
 	return x != nil
 }
 
@@ -1364,9 +899,9 @@ func (x *fastReflection_DelegationsPreUpdate) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_DelegationsAmounts) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*DelegationsPreUpdate)
+		x := input.Message.Interface().(*DelegationsAmounts)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1384,6 +919,10 @@ func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		l = len(x.Total)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1394,7 +933,7 @@ func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*DelegationsPreUpdate)
+		x := input.Message.Interface().(*DelegationsAmounts)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1412,6 +951,13 @@ func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Total) > 0 {
+			i -= len(x.Total)
+			copy(dAtA[i:], x.Total)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Total)))
+			i--
+			dAtA[i] = 0x12
 		}
 		if len(x.TokenOrigins) > 0 {
 			for iNdEx := len(x.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
@@ -1440,7 +986,7 @@ func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*DelegationsPreUpdate)
+		x := input.Message.Interface().(*DelegationsAmounts)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1472,10 +1018,10 @@ func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DelegationsPreUpdate: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DelegationsAmounts: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DelegationsPreUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DelegationsAmounts: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1511,6 +1057,38 @@ func (x *fastReflection_DelegationsPreUpdate) ProtoMethods() *protoiface.Methods
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TokenOrigins[len(x.TokenOrigins)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Total = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1560,66 +1138,24 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// TokenOrigin is a message to store the origin of a token
-type TokenOrigin struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	// validator_address is the address of the validator that tokens in staking are delegated to
-	ValidatorAddress []byte `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// amount is the amount of tokens to be delegated to a reporter from a delegation in staking
-	Amount string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (x *TokenOrigin) Reset() {
-	*x = TokenOrigin{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_reporter_token_origin_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *TokenOrigin) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TokenOrigin) ProtoMessage() {}
-
-// Deprecated: Use TokenOrigin.ProtoReflect.Descriptor instead.
-func (*TokenOrigin) Descriptor() ([]byte, []int) {
-	return file_layer_reporter_token_origin_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *TokenOrigin) GetValidatorAddress() []byte {
-	if x != nil {
-		return x.ValidatorAddress
-	}
-	return nil
-}
-
-func (x *TokenOrigin) GetAmount() string {
-	if x != nil {
-		return x.Amount
-	}
-	return ""
-}
-
+// TokenOriginInfo is the struct that holds the data of where tokens are staked
 type TokenOriginInfo struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// delegator_address is the address of the delegator
 	DelegatorAddress []byte `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	// validator_address is the address of the validator
 	ValidatorAddress []byte `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	Amount           string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	// amount is the amount of tokens staked
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *TokenOriginInfo) Reset() {
 	*x = TokenOriginInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_reporter_token_origin_proto_msgTypes[1]
+		mi := &file_layer_reporter_token_origin_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1633,7 +1169,7 @@ func (*TokenOriginInfo) ProtoMessage() {}
 
 // Deprecated: Use TokenOriginInfo.ProtoReflect.Descriptor instead.
 func (*TokenOriginInfo) Descriptor() ([]byte, []int) {
-	return file_layer_reporter_token_origin_proto_rawDescGZIP(), []int{1}
+	return file_layer_reporter_token_origin_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *TokenOriginInfo) GetDelegatorAddress() []byte {
@@ -1657,41 +1193,50 @@ func (x *TokenOriginInfo) GetAmount() string {
 	return ""
 }
 
-// reporter's snapshot of delegators' sources pre unbonding
-type DelegationsPreUpdate struct {
+// DelegationsAmounts is the struct that holds the data of delegations and amounts and the total
+type DelegationsAmounts struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// token_origin is the origin of the tokens that are about to be updated
+	// token_origins is the list of token origins for and where the amounts are staked
 	TokenOrigins []*TokenOriginInfo `protobuf:"bytes,1,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
+	// total amount of tokens in the list
+	Total string `protobuf:"bytes,2,opt,name=total,proto3" json:"total,omitempty"`
 }
 
-func (x *DelegationsPreUpdate) Reset() {
-	*x = DelegationsPreUpdate{}
+func (x *DelegationsAmounts) Reset() {
+	*x = DelegationsAmounts{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_reporter_token_origin_proto_msgTypes[2]
+		mi := &file_layer_reporter_token_origin_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *DelegationsPreUpdate) String() string {
+func (x *DelegationsAmounts) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DelegationsPreUpdate) ProtoMessage() {}
+func (*DelegationsAmounts) ProtoMessage() {}
 
-// Deprecated: Use DelegationsPreUpdate.ProtoReflect.Descriptor instead.
-func (*DelegationsPreUpdate) Descriptor() ([]byte, []int) {
-	return file_layer_reporter_token_origin_proto_rawDescGZIP(), []int{2}
+// Deprecated: Use DelegationsAmounts.ProtoReflect.Descriptor instead.
+func (*DelegationsAmounts) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_token_origin_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *DelegationsPreUpdate) GetTokenOrigins() []*TokenOriginInfo {
+func (x *DelegationsAmounts) GetTokenOrigins() []*TokenOriginInfo {
 	if x != nil {
 		return x.TokenOrigins
 	}
 	return nil
+}
+
+func (x *DelegationsAmounts) GetTotal() string {
+	if x != nil {
+		return x.Total
+	}
+	return ""
 }
 
 var File_layer_reporter_token_origin_proto protoreflect.FileDescriptor
@@ -1704,44 +1249,40 @@ var file_layer_reporter_token_origin_proto_rawDesc = []byte{
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67,
-	0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7f, 0x0a, 0x0b, 0x54, 0x6f, 0x6b, 0x65, 0x6e,
-	0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x12, 0x2b, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49,
-	0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74,
-	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xb0, 0x01, 0x0a, 0x0f, 0x54, 0x6f, 0x6b,
-	0x65, 0x6e, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x2b, 0x0a, 0x11,
-	0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74,
-	0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2b, 0x0a, 0x11, 0x76, 0x61, 0x6c,
-	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15,
+	0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb0, 0x01, 0x0a, 0x0f, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x2b, 0x0a, 0x11, 0x64,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2b, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
+	0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49,
+	0x6e, 0x74, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x9d, 0x01, 0x0a, 0x12, 0x44,
+	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x12, 0x44, 0x0a, 0x0d, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x5f, 0x6f, 0x72, 0x69, 0x67, 0x69,
+	0x6e, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x4f,
+	0x72, 0x69, 0x67, 0x69, 0x6e, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e,
+	0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x73, 0x12, 0x41, 0x0a, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74,
 	0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x49, 0x6e, 0x74, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x5c, 0x0a, 0x14, 0x44,
-	0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x50, 0x72, 0x65, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x12, 0x44, 0x0a, 0x0d, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x5f, 0x6f, 0x72, 0x69,
-	0x67, 0x69, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x54, 0x6f, 0x6b, 0x65,
-	0x6e, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0c, 0x74, 0x6f, 0x6b,
-	0x65, 0x6e, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x73, 0x42, 0xae, 0x01, 0x0a, 0x12, 0x63, 0x6f,
-	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
-	0x42, 0x10, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72,
-	0x74, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x3a, 0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x49, 0x6e, 0x74, 0x52, 0x05, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x42, 0xae, 0x01, 0x0a, 0x12, 0x63,
+	0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x42, 0x10, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x4f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c,
+	0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50,
+	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65,
+	0x72, 0x3a, 0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1756,14 +1297,13 @@ func file_layer_reporter_token_origin_proto_rawDescGZIP() []byte {
 	return file_layer_reporter_token_origin_proto_rawDescData
 }
 
-var file_layer_reporter_token_origin_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_layer_reporter_token_origin_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_layer_reporter_token_origin_proto_goTypes = []interface{}{
-	(*TokenOrigin)(nil),          // 0: layer.reporter.TokenOrigin
-	(*TokenOriginInfo)(nil),      // 1: layer.reporter.TokenOriginInfo
-	(*DelegationsPreUpdate)(nil), // 2: layer.reporter.DelegationsPreUpdate
+	(*TokenOriginInfo)(nil),    // 0: layer.reporter.TokenOriginInfo
+	(*DelegationsAmounts)(nil), // 1: layer.reporter.DelegationsAmounts
 }
 var file_layer_reporter_token_origin_proto_depIdxs = []int32{
-	1, // 0: layer.reporter.DelegationsPreUpdate.token_origins:type_name -> layer.reporter.TokenOriginInfo
+	0, // 0: layer.reporter.DelegationsAmounts.token_origins:type_name -> layer.reporter.TokenOriginInfo
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -1778,18 +1318,6 @@ func file_layer_reporter_token_origin_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_layer_reporter_token_origin_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TokenOrigin); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_reporter_token_origin_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*TokenOriginInfo); i {
 			case 0:
 				return &v.state
@@ -1801,8 +1329,8 @@ func file_layer_reporter_token_origin_proto_init() {
 				return nil
 			}
 		}
-		file_layer_reporter_token_origin_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DelegationsPreUpdate); i {
+		file_layer_reporter_token_origin_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DelegationsAmounts); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1820,7 +1348,7 @@ func file_layer_reporter_token_origin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_reporter_token_origin_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

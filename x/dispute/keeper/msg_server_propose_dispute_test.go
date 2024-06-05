@@ -9,7 +9,6 @@ import (
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
@@ -37,14 +36,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 		Fee:             fee,
 		PayFromBond:     false,
 	}
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
-	// mock dependency modules
-	s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
-	s.reporterKeeper.On("FeefromReporterStake", s.ctx, addr, math.NewInt(10_000)).Return(nil)
+
 	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, int64(1), int64(0), math.NewInt(10_000), mock.Anything).Return(nil)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)

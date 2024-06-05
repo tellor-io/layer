@@ -31,7 +31,7 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 	for _, r := range reports {
 		weightedSum.Add(&weightedSum, new(big.Int).Mul(values[r.Reporter], big.NewInt(r.Power)))
 		totalReporterPower.Add(&totalReporterPower, big.NewInt(r.Power))
-		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
+		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 	}
 
 	halfTotalPower := new(big.Int).Div(&totalReporterPower, big.NewInt(2))

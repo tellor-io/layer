@@ -46,8 +46,6 @@ func (s *medianServer) GetAllMedianValues(ctx context.Context, req *types.GetAll
 		medianValues = append(medianValues, &types.MedianValues{
 			MarketId: i,
 			Price:    value,
-			// TODO: add exponent as well here
-			// Exponent: ,
 		})
 	}
 	return &types.GetAllMedianValuesResponse{MedianValues: medianValues}, nil

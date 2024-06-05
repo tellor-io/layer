@@ -22,8 +22,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, sdk.Context) {
+func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
 	tb.Helper()
+
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	db := tmdb.NewMemDB()
 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
@@ -44,5 +45,5 @@ func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, sdk.Context
 		bankKeeper,
 	)
 
-	return k, accountKeeper, ctx
+	return k, accountKeeper, bankKeeper, ctx
 }
