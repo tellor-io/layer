@@ -173,20 +173,7 @@ func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddre
 	if err != nil {
 		return err
 	}
-	// delAmt, err := h.k.DelegatorAmount.Get(ctx, delAddr.Bytes())
-	// if err != nil {
-	// 	return err
-	// }
-	// delAmt = delAmt.Sub(temp)
-	// if delAmt.IsZero() {
-	// 	if err := h.k.DelegatorAmount.Remove(ctx, delAddr.Bytes()); err != nil {
-	// 		return err
-	// 	}
-	// } else {
-	// 	if err := h.k.DelegatorAmount.Set(ctx, delAddr.Bytes(), delAmt); err != nil {
-	// 		return err
-	// 	}
-	// }
+
 	del, err := h.k.Delegators.Get(ctx, delAddr)
 	if err != nil {
 		return err

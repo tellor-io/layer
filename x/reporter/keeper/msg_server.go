@@ -38,11 +38,21 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err != nil {
 		return nil, err
 	}
-
+	// remove tokens from reporter
+	// get old reporter
+	oldReporter, err := k.Reporters.Get(goCtx, delegation.Reporter)
+	if err != nil {
+		return nil, err
+	}
+	oldReporter.TotalTokens = oldReporter.TotalTokens.Sub(delegation.Amount)
+	if err := k.Reporters.Set(goCtx, delegation.Reporter, oldReporter); err != nil {
+		return nil, err
+	}
 	delegation.Reporter = reporter.Bytes()
 	if err := k.Keeper.Delegators.Set(goCtx, reporter.Bytes(), delegation); err != nil {
 		return nil, err
 	}
+
 	minCommRate, err := k.MinCommissionRate(goCtx)
 	if err != nil {
 		return nil, err
