@@ -11,7 +11,7 @@ contract TestTokenBridge is TokenBridge{
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
-    function depositLimit() external returns (uint256) {
+    function refreshDepositLimit() external returns (uint256) {
         return _refreshDepositLimit();
     }
 }

@@ -98,7 +98,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "RequestAttestations",
-					Use:            "RequestAttestations [creator] [query_id] [timestamp]",
+					Use:            "request-attestations [creator] [query_id] [timestamp]",
 					Short:          "Execute the RequestAttestations RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_id"}, {ProtoField: "timestamp"}},
 				},

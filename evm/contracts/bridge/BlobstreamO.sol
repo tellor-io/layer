@@ -3,7 +3,7 @@ pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
-//import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 struct OracleAttestationData {
     bytes32 queryId;
@@ -252,6 +252,7 @@ contract BlobstreamO is ECDSA {
                 )
             );
     }
+
     /// @notice Utility function to verify Tellor Layer signatures
     /// @param _signer The address that signed the message.
     /// @param _digest The digest that was signed.
@@ -262,7 +263,8 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         Signature calldata _sig
     ) internal pure returns (bool) {
-        _digest = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", _digest));
+        _digest = sha256(abi.encodePacked(_digest));
         return _signer == ecrecover(_digest, _sig.v, _sig.r, _sig.s);
     }
 }
+
