@@ -3,23 +3,22 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	auth "github.com/cosmos/cosmos-sdk/x/auth"
-	bank "github.com/cosmos/cosmos-sdk/x/bank"
-	staking "github.com/cosmos/cosmos-sdk/x/staking"
-
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/tellor-io/layer/app/config"
+	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/mint/keeper"
 	"github.com/tellor-io/layer/x/mint/mocks"
 	"github.com/tellor-io/layer/x/mint/types"
 
-	keepertest "github.com/tellor-io/layer/testutil/keeper"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	auth "github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 type KeeperTestSuite struct {
