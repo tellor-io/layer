@@ -23,6 +23,9 @@ type ReportersReportCount struct {
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
 func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.AggregateReporter, reward math.Int, fromPool string) error {
+	if reward.IsZero() {
+		return nil
+	}
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.

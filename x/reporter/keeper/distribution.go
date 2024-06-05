@@ -35,7 +35,16 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}
-		err = k.DelegatorTips.Set(ctx, del.DelegatorAddress, delegatorShare.TruncateInt())
+		// get delegator's tips and add the new tip
+		oldTips, err := k.DelegatorTips.Get(ctx, del.DelegatorAddress)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				oldTips = math.ZeroInt()
+			} else {
+				return err
+			}
+		}
+		err = k.DelegatorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare.TruncateInt()))
 		if err != nil {
 			return err
 		}
