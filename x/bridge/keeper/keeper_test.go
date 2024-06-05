@@ -226,7 +226,7 @@ func TestCompareBridgeValidators(t *testing.T) {
 	require.Nil(t, lastSavedBridgeValidators.BridgeValidatorSet)
 
 	// set BridgeValSet, should hit false because no BridgeValSet exists yet
-	res, err := k.CompareBridgeValidators(ctx)
+	res, err := k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
 	require.False(t, res)
 
@@ -237,7 +237,7 @@ func TestCompareBridgeValidators(t *testing.T) {
 	require.Equal(t, len(lastSavedBridgeValidators.BridgeValidatorSet), 2)
 
 	// should return false since valset has not changed
-	res, err = k.CompareBridgeValidators(ctx)
+	res, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
 	require.False(t, res)
 
@@ -293,7 +293,7 @@ func TestCompareBridgeValidators(t *testing.T) {
 	require.NoError(t, err)
 
 	// should return true since valset has changed
-	res, err = k.CompareBridgeValidators(ctx)
+	res, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
 	fmt.Println("res: ", res)
 
@@ -533,55 +533,95 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 	require.NotEqual(t, encodedBridgeValSet, encodedBridgeValSet2)
 }
 
-// needs finished
 func TestPowerDiff(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	bridgeValSetA := bridgetypes.BridgeValidatorSet{
+	// empty to 0
+	bridgeValSetEmpty := bridgetypes.BridgeValidatorSet{}
+	bridgeValSet0 := bridgetypes.BridgeValidatorSet{
 		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
-				Power:           1000,
-			},
-		},
-	}
-
-	bridgeValSetB := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
-			{
-				EthereumAddress: []byte("validator1"),
-				Power:           1000,
-			},
-			{
-				EthereumAddress: []byte("validator2"),
-				Power:           2000,
-			},
-		},
-	}
-
-	relativeDiff := k.PowerDiff(ctx, bridgeValSetA, bridgeValSetB)
-	fmt.Println("A to B: ", relativeDiff)
-	require.Equal(t, relativeDiff, float64(2))
-
-	bridgeValSetC := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
-			{
-				EthereumAddress: []byte("validator3"),
 				Power:           0,
 			},
 		},
 	}
 
-	relativeDiff = k.PowerDiff(ctx, bridgeValSetB, bridgeValSetC)
-	fmt.Println("B to C: ", relativeDiff)
+	relativeDiff := k.PowerDiff(ctx, bridgeValSetEmpty, bridgeValSet0)
+	require.Equal(t, relativeDiff, float64(0))
 
-	relativeDiff = k.PowerDiff(ctx, bridgeValSetC, bridgeValSetB)
-	fmt.Println("C to B: ", relativeDiff)
+	// 0 to 100, returns 0 if valset b is 0
+	bridgeValSet100 := bridgetypes.BridgeValidatorSet{
+		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator1"),
+				Power:           100,
+			},
+		},
+	}
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet0, bridgeValSet100)
+	require.Equal(t, relativeDiff, float64(0))
 
-	relativeDiff = k.PowerDiff(ctx, bridgeValSetB, bridgeValSetB)
-	fmt.Println("B to B: ", relativeDiff)
+	// 100 to 104 (increase just under 5%)
+	bridgeValSet104 := bridgetypes.BridgeValidatorSet{
+		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator1"),
+				Power:           100,
+			},
+			{
+				EthereumAddress: []byte("validator2"),
+				Power:           4,
+			},
+		},
+	}
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet100, bridgeValSet104)
+	require.Equal(t, relativeDiff, float64(0.04))
+
+	// 104 to 110 (increase just over 5%)
+	bridgeValSet110 := bridgetypes.BridgeValidatorSet{
+		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator1"),
+				Power:           100,
+			},
+			{
+				EthereumAddress: []byte("validator2"),
+				Power:           10,
+			},
+		},
+	}
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet104, bridgeValSet110)
+	require.Greater(t, relativeDiff, float64(0.05))
+	require.Less(t, relativeDiff, float64(0.06))
+
+	// 110 to 104 (decrease just over 5%)
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet110, bridgeValSet104)
+	require.Greater(t, relativeDiff, float64(0.05))
+	require.Less(t, relativeDiff, float64(0.06))
+
+	// 104 to 100 (decrease just under 5%)
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet104, bridgeValSet100)
+	require.Less(t, relativeDiff, float64(0.05))
+	require.Greater(t, relativeDiff, float64(0.03))
+
+	// 100 to 100,000 (big increase)
+	bridgeValSet100_000 := bridgetypes.BridgeValidatorSet{
+		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator1"),
+				Power:           100_000,
+			},
+		},
+	}
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet100, bridgeValSet100_000)
+	require.Equal(t, relativeDiff, float64(999))
+
+	// 100,000 to 100 (big decrease)
+	relativeDiff = k.PowerDiff(ctx, bridgeValSet100_000, bridgeValSet100)
+	require.Equal(t, relativeDiff, float64(0.999))
 }
 
 func TestEVMAddressFromSignatures(t *testing.T) {
