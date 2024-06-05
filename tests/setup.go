@@ -34,9 +34,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
-
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	_ "github.com/tellor-io/layer/x/reporter/module"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -285,6 +287,9 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 	)
 	s.distrKeeper = distrkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Stakingkeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	s.Reporterkeeper = reporterkeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(reportertypes.StoreKey).(*storetypes.KVStoreKey)), log.NewNopLogger(), authtypes.NewModuleAddress(govtypes.ModuleName).String(), s.Stakingkeeper, s.Bankkeeper,
 	)
 	s.Oraclekeeper = oraclekeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Registrykeeper, s.Reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),

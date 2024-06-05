@@ -529,7 +529,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeStartBlock, disputeStartHeight)
 	// todo: handle reporter removal
 	reporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
-	require.NoError(err)
+	require.ErrorContains(err, "not found")
 
 	// create vote tx msg
 	msgVote = disputetypes.MsgVote{
