@@ -395,3 +395,48 @@ func (s *SharedSetup) ConvertToAccAddress(priv []ed25519.PrivKey) []sdk.AccAddre
 	}
 	return testAddrs
 }
+
+func (s *SharedSetup) CreateValidator(numValidators int) ([]sdk.AccAddress, []sdk.ValAddress, []stakingtypes.Validator) {
+	require := s.require
+
+	// create account that will become a validator
+	accountsAddrs := simtestutil.CreateIncrementalAccounts(numValidators)
+	// mint numTrb for each validator
+	initCoins := sdk.NewCoin(s.Denom, math.NewInt(5000*1e6))
+	for _, acc := range accountsAddrs {
+		// mint to module
+		require.NoError(s.Bankkeeper.MintCoins(s.Ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		// send from module to account
+		require.NoError(s.Bankkeeper.SendCoinsFromModuleToAccount(s.Ctx, authtypes.Minter, acc, sdk.NewCoins(initCoins)))
+		require.Equal(initCoins, s.Bankkeeper.GetBalance(s.Ctx, acc, s.Denom))
+	}
+
+	// get val address for each account
+	validatorsAddrs := simtestutil.ConvertAddrsToValAddrs(accountsAddrs)
+	// create pub keys for validators
+	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
+	validators := make([]stakingtypes.Validator, numValidators)
+	stakingServer := stakingkeeper.NewMsgServerImpl(s.Stakingkeeper)
+	// set each account with proper keepers
+	for i, pubKey := range pubKeys {
+		s.Accountkeeper.NewAccountWithAddress(s.Ctx, accountsAddrs[i])
+		valMsg, err := stakingtypes.NewMsgCreateValidator(
+			validatorsAddrs[i].String(),
+			pubKey,
+			sdk.NewInt64Coin(s.Denom, 100),
+			stakingtypes.Description{Moniker: strconv.Itoa(i)},
+			stakingtypes.CommissionRates{
+				Rate:          math.LegacyNewDecWithPrec(5, 1),
+				MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+				MaxChangeRate: math.LegacyNewDec(0),
+			},
+			math.OneInt())
+		require.NoError(err)
+
+		_, err = stakingServer.CreateValidator(s.Ctx, valMsg)
+		require.NoError(err)
+	}
+	_, err := s.Stakingkeeper.EndBlocker(s.Ctx)
+	require.NoError(err)
+	return accountsAddrs, validatorsAddrs, validators
+}

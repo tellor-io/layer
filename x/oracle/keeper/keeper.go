@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -174,5 +175,32 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe 
 			return err
 		}
 	}
+	return nil
+}
+
+func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroReport) error {
+	iter, err := k.Aggregates.Indexes.MicroHeight.MatchExact(ctx, report.BlockNumber)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		aggregatekey, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		if bytes.Equal(aggregatekey.K1(), report.QueryId) {
+			aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
+			if err != nil {
+				return err
+			}
+			reporter := aggregate.Reporters[aggregate.AggregateReportIndex].Reporter
+			if sdk.MustAccAddressFromBech32(reporter).Equals(sdk.MustAccAddressFromBech32(report.Reporter)) {
+				aggregate.Flagged = true
+				return k.Aggregates.Set(ctx, aggregatekey, aggregate)
+			}
+		}
+	}
+
 	return nil
 }

@@ -56,6 +56,7 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 		ReporterPower:        totalReporterPower,
 		Reporters:            modeReporters,
 		AggregateReportIndex: modeReportIndex,
+		MicroHeight:          modeReport.BlockNumber,
 	}
 
 	err := k.SetAggregate(ctx, &aggregateReport)

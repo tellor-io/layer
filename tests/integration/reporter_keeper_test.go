@@ -222,3 +222,69 @@ func (s *IntegrationTestSuite) TestDelegatorCount() {
 	s.NoError(err)
 	s.Equal(uint64(5), del.DelegationCount)
 }
+
+// add 100 delegators to a reporter and check if the delegator count is 100
+// and what happens when the 101st delegator tries to delegate
+func (s *IntegrationTestSuite) TestMaxDelegatorCount() {
+	valAccs, valAddrs, _ := s.Setup.CreateValidator(1)
+	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	valAcc := valAccs[0]
+	valAdd := valAddrs[0]
+	k1 := valAcc
+	var k2 sdk.AccAddress
+	// delegate a 100 delegators
+	for i := 0; i < 100; i++ {
+		delegatorAddr := sample.AccAddressBytes()
+		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
+		msgDelegate := stakingtypes.NewMsgDelegate(
+			delegatorAddr.String(),
+			valAdd.String(),
+			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+		)
+		if i == 99 {
+			k2 = delegatorAddr
+		}
+		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		s.NoError(err)
+	}
+
+	// check delegator count
+	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc)
+	s.NoError(err)
+	s.Equal(uint64(100), rep.DelegatorsCount)
+	// check how many reporters are there
+	iter, err := s.Setup.Reporterkeeper.Reporters.Iterate(s.Setup.Ctx, nil)
+	s.NoError(err)
+	list, err := iter.Keys()
+	s.NoError(err)
+	s.Equal(2, len(list))
+
+	rep1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, k1)
+	s.NoError(err)
+	s.Equal(uint64(100), rep1.DelegatorsCount)
+	rep2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, k2)
+	s.NoError(err)
+	s.Equal(uint64(1), rep2.DelegatorsCount)
+
+	// delegate 102nd delegator
+	delegatorAddr := sample.AccAddressBytes()
+	s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
+	msgDelegate := stakingtypes.NewMsgDelegate(
+		delegatorAddr.String(),
+		valAdd.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	_, err = stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+	s.NoError(err)
+
+	// check delegator count
+	iter, err = s.Setup.Reporterkeeper.Reporters.Iterate(s.Setup.Ctx, nil)
+	s.NoError(err)
+	list, err = iter.Keys()
+	s.NoError(err)
+	s.Equal(3, len(list))
+	// delegator should be come a third reporter
+	rep3, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, delegatorAddr)
+	s.NoError(err)
+	s.Equal(uint64(1), rep3.DelegatorsCount)
+}
