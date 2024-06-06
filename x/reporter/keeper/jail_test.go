@@ -4,11 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 )
 
 func TestJailReporter(t *testing.T) {
