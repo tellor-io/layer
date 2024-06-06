@@ -65,7 +65,6 @@ type VoteExtHandler struct {
 	oracleKeeper OracleKeeper
 	bridgeKeeper BridgeKeeper
 	codec        codec.Codec
-	// cosmosCtx    sdk.Context
 }
 
 type OracleAttestation struct {
@@ -168,7 +167,31 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	// TODO: implement the logic to verify the vote extension
+	var voteExt BridgeVoteExtension
+	err := json.Unmarshal(req.VoteExtension, &voteExt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal vote extension: %w", err)
+	}
+	// ensure oracle attestations length is less than or equal to the number of attestation requests
+	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(ctx.BlockHeight()-1))
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		} else if len(voteExt.OracleAttestations) > 0 {
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+	} else if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+	// verify the initial signature size
+	if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+	// verify the valset signature size
+	if len(voteExt.ValsetSignature.Signature) > 65 {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
