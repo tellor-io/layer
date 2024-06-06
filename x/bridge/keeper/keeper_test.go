@@ -292,10 +292,9 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 	err = k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
 	require.NoError(t, err)
 
-	// should return true since valset has changed
-	res, err = k.CompareAndSetBridgeValidators(ctx)
+	_, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
-	// require.True(t, res)
+	// require.True(t, res) TODO: hit remainder of fcn
 
 }
 
@@ -319,8 +318,6 @@ func TestSetBridgeValidatorParams(t *testing.T) {
 	params, err := k.Params.Get(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, params)
-	//BridgeValsetByTimestampMap
-	//BridgeValsetSignaturesMap
 
 	bridgeValSet = bridgetypes.BridgeValidatorSet{
 		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
@@ -369,8 +366,6 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, checkpoint)
 	lastCheckpointIdx, err = k.LatestCheckpointIdx.Get(ctx)
-	//ValidatorCheckpointIdxMap
-	//ValsetTimestampToIdxMap
 	require.NoError(t, err)
 	require.Equal(t, lastCheckpointIdx.Index, uint64(1))
 
@@ -691,7 +686,6 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 
 }
 
-// needs finished
 func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
@@ -931,6 +925,5 @@ func TestSetBridgeValsetByTimestamp(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, bridgeValSet)
 	require.Equal(t, bridgeValSet.BridgeValidatorSet, valset.BridgeValidatorSet)
-	
 
 }
