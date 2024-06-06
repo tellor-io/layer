@@ -6,14 +6,14 @@ clear
 # Stop execution if any command fails
 set -e
 
-KEYRING_BACKEND="test"
-PASSWORD="password"
-NODE_MONIKER="billmoniker"
-NODE_NAME="bill"
-
-export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=
+export LAYER_NODE_URL=tellornode.com
+export KEYRING_BACKEND="test"
+export NODE_MONIKER="billmoniker"
+export NODE_NAME="bill"
+export TELLORNODE_ID=f5f6ce5d15ea80683b9133b19e245f9b27daab67
+export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
+
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
@@ -31,10 +31,6 @@ echo "Initializing the chain..."
 echo "Initializing chain node for node..."
 ./layerd init $NODE_MONIKER --chain-id layer --home ~/.layer/$NODE_NAME
 
-# # Add a validator account for node
-echo "Creating account keys for node to be able to send and receive loya and stake..."
-./layerd keys add $NODE_NAME --keyring-backend $KEYRING_BACKEND --home ~/.layer/$NODE_NAME
-
 echo "Change denom to loya in config files..."
 sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/$NODE_NAME/config/app.toml
 sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/config/app.toml
@@ -42,11 +38,6 @@ sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/config/app.toml
 echo "Set Chain Id to layer in client config file..."
 sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/$NODE_NAME/config/app.toml
 sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/config/app.toml
-
-# Get address/account for node to use in gentx tx
-echo "Get address/account for node"
-NODE=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$NODE_NAME)
-echo "NODE: $NODE"
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."
@@ -84,20 +75,10 @@ echo "Getting genesis from runnning node....."
 curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
 curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
-export QUOTED_TELLORNODE_ID="$(curl $LAYER_NODE_URL:26657/status | jq '.result.node_info.id')"
-#export TELLORNODE_ID=${QUOTED_TELLORNODE_ID//\"/}
-export TELLORNODE_ID=${echo "$QUOTED_TELLORNODE_ID" | tr -d "'\"" }
-echo "NODE ID: $TELLORNODE_ID"
-# echo "Tellor node id: $TELLORNODE_ID"
-# sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@$LAYER_NODE_URL:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
-# sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@$LAYER_NODE_URL:26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
-echo "Node ID: $QUOTED_TELLORNODE_ID"
-echo "Path: @$LAYER_NODE_URL:26656"
-
-sleep 60
+echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 
 echo "Starting chain for node..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"

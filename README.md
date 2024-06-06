@@ -1,61 +1,52 @@
-[![Tests](https://github.com/tellor-io/layer/actions/workflows/go.yml/badge.svg)](https://github.com/tellor-io/layer/actions/workflows/go.yml)
+# Tellor Layer<br/><br/>
 
 <p align="center">
+  <a href="https://github.com/tellor-io/layer/actions/workflows/go.yml">
+    <img src="https://github.com/tellor-io/layer/actions/workflows/go.yml/badge.svg" alt="Tests" />
+  </a>
   <a href='https://twitter.com/WeAreTellor'>
-    <img src= 'https://img.shields.io/twitter/url/http/shields.io.svg?style=social' alt='Twitter WeAreTellor' />
+    <img src='https://img.shields.io/twitter/url/http/shields.io.svg?style=social' alt='Twitter WeAreTellor' />
   </a>
 </p>
 
-## Overview <a name="overview"> </a>  
+## Overview <a name="overview"> </a>
 
-<b>Tellor Layer</b> is a stand alone L1 built using the cosmos sdk for the purpose of coming to consensus on any subjective data.  It works by using tendermint to agree upon requested data and its values, and in cases where consensus is not reached, falls back to relying on an optimistic approach given reported values can be disputed.
+<b>Tellor Layer</b> is a stand alone L1 built using the cosmos sdk for the purpose of coming to
+consensus on any subjective data. It works by using a network of staked parties who are
+crypto-economically incentivized to honestly report requested data.
 
-For more in-depth information about Layer, checkout the [TellorLayer - tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf).
+For more in-depth information, checkout the [Tellor Layer tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf) and our [ADRs](https://github.com/tellor-io/layer/tree/main/adr).
+
+## Starting a New Chain:
+
+1) Select the start script that works for you
+  - `start_one_node.sh` is for those who want to run a chain with a single validator in a mac environment
+  - `start_one_node_aws.sh` is for those who want a chain with a single validator and the option to import a faucet account from a seed phrase to be used in a linux environment
+  - `start_two_chains.sh` (mac environment) sets up two nodes/validators and starts one of them from this script. Then to start the other validator you would run the `start_bill.sh` script 
+
+2) Run the selected script from the base layer folder:
+`sh ./start_scripts/{selected_script}`
+
+## Joining a Running Chain:
+
+To find more information please go to the layer_scripts folder.
+
+Here you will find a detailed breakdown for how to join a chain as a node and how to create a new validator for the chain 
 
 ## Tests
 
 To run all tests:
 `go test -v ./...`
 
-## Starting the Chain (Without Ignite):
-
-1) Remove old test chains (if present):
-`rm -rf ~/.layer`
-2) Go build layerd:
-`go build ./cmd/layerd`
-3) Initialize the chain:
-`./layerd init layer  --chain-id layer-test-1`
-4) Add a validator account:
-`./layerd keys add alice`
-5) Create a tx to Give the alice loyas to stake:
-`./layerd genesis add-genesis-account alice 10000000000000loya`
-6) Create a tx to Stake some loyas for alice:
-`./layerd genesis gentx alice 1000000000000loya  --chain-id layer-test-1`
-7) Add the transactions to the genesis block:
-`./layerd genesis collect-gentxs`
-8) Start the chain:
-`./layerd start`
-
-## Starting the Chain With Ignite CLI:
-
-To start the chain locally with Ignite CLI:
-`ignite chain serve`
-
-To create a transaction, in another terminal:
-`layerd tx [command]`
-
-To see all available commands:
-`layerd`
-
-
 ## Linting
+
 To lint per folder:
 `make lint-folder-fix FOLDER="x/mint"`
 
 To lint all files:
 `make lint`
 
-## Maintainers <a name="maintainers"> </a>
+## Maintainers<a name="maintainers"> </a>
 
 This repository is maintained by the [Tellor team](https://github.com/orgs/tellor-io/people)
 
@@ -63,10 +54,12 @@ This repository is maintained by the [Tellor team](https://github.com/orgs/tello
 
 Check out our issues log here on Github or feel free to reach out anytime [info@tellor.io](mailto:info@tellor.io)
 
-## Copyright
+## Community<a name="community"> </a>  
 
-Tellor Inc. 2022 
+- [Official Website](https://tellor.io/)
+- [Discord](https://discord.gg/n7drGjh)
+- [Twitter](https://twitter.com/wearetellor)
 
-### Tools
+## Copyright<a name="copyright"> </a>  
 
-1. Install [golangci-lint](https://golangci-lint.run/usage/install/) 1.55.2
+Tellor Inc. 2024
