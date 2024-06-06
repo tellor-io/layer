@@ -17,35 +17,21 @@ crypto-economically incentivized to honestly report requested data.
 
 For more in-depth information, checkout the [Tellor Layer tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf) and our [ADRs](https://github.com/tellor-io/layer/tree/main/adr).
 
-## Starting the Chain (Without Ignite):
+## Starting a New Chain:
 
-1) Remove old test chains (if present):
-`rm -rf ~/.layer`
-2) Go build layerd:
-`go build ./cmd/layerd`
-3) Initialize the chain:
-`./layerd init layer  --chain-id layer-test-1`
-4) Add a validator account:
-`./layerd keys add alice`
-5) Create a tx to Give the alice loyas to stake:
-`./layerd genesis add-genesis-account alice 10000000000000loya`
-6) Create a tx to Stake some loyas for alice:
-`./layerd genesis gentx alice 1000000000000loya  --chain-id layer-test-1`
-7) Add the transactions to the genesis block:
-`./layerd genesis collect-gentxs`
-8) Start the chain:
-`./layerd start`
+1) Select the start script that works for you
+  - `start_one_node.sh` is for those who want to run a chain with a single validator in a mac environment
+  - `start_one_node_aws.sh` is for those who want a chain with a single validator and the option to import a faucet account from a seed phrase to be used in a linux environment
+  - `start_two_chains.sh` (mac environment) sets up two nodes/validators and starts one of them from this script. Then to start the other validator you would run the `start_bill.sh` script 
 
-## Starting the Chain With Ignite CLI:
+2) Run the selected script from the base layer folder:
+`sh ./start_scripts/{selected_script}`
 
-To start the chain locally with Ignite CLI:
-`ignite chain serve`
+## Joining a Running Chain:
 
-To create a transaction, in another terminal:
-`layerd tx [command]`
+To find more information please go to the layer_scripts folder.
 
-To see all available commands:
-`layerd`
+Here you will find a detailed breakdown for how to join a chain as a node and how to create a new validator for the chain 
 
 ## Tests
 
