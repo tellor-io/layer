@@ -2,7 +2,7 @@
 
 ## Abstract
 
-This module enables the minting of time based rewards for reporters, validators, and the team. For more information about rewards and how the token will work with the bridge, reference the [ADRs](#adrs) below.
+This module enables the minting of time based rewards for reporters, validators, and the team. For more information about rewards and how the token bridge works, reference the [ADRs](#adrs) below.
 
 ## ADRs
 

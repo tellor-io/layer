@@ -2,16 +2,18 @@
 
 ## Abstract
 
-This module 
+This module enables the registration of fully customizable data specs to inform reporters . Users can vote on data specs to be altered. For more information, reference the [ADRs](#adrs) below.
 
 ## ADRs
 
-adr
+adr002 - queryId time frame structure
+adr1004 - fees on tips
+adr2002 - nonces for bridging
 
 ## Transactions 
 
-`MsgRegisterSpec`
-`MsgUpdateSpec`
+`RegisterSpec`
+`UpdateSpec`
 
 ## Getters
 

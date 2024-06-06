@@ -2,30 +2,29 @@
 
 ## Abstract
 
-This module 
+This module enables token holders to stake tokens to become data reporters and delegate to other reporters. For more information about how reporting works, reference the [ADRs](#adrs) below.
 
 ## ADRs
 
-adr
+adr1001 - distribution of base rewards
+adr1002 - dual delegation
+adr1005 - handling of tips after report
+adr1008 - voting power by group
+adr2001 - trb bridge structure
 
 ## Transactions
 
-`MsgCreateReporter`
-`MsgDelegateReporter`
-`UndelegateReporter`
-`WithdrawReporterCommission`
-`WithdrawDelegatorReward`
+`CreateReporter`
+`ChangeReporter`
+`UnjailReporter`
+`WithdrawTip`
+`UpdateParams`
 
 ## Getters
 
 Params - get module parameters
-Reporter - get a reporter by address
 Reporters - get all staked reporters
 DelegatorReporter - get reporter a delegator is staked with.
-ReporterStake - get a reporter's total tokens.
-DelegationRewards - get rewards of a delegator
-ReporterOutstandingRewards - get all outstanding rewards for a reporter
-ReporterCommission - get a reporter's commission reward
 
 ## Mocks
 
