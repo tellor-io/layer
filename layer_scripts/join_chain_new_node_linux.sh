@@ -39,6 +39,19 @@ echo "Set Chain Id to layer in client config file..."
 sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/$NODE_NAME/config/app.toml
 sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/config/app.toml
 
+# Create a validator account for node
+echo "Creating account keys for node to be able to send and receive loya and stake..."
+./layerd keys add $NODE_NAME --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME
+
+# Import validator account from seed phrase
+# echo "Importing validator account from seed phrase..."
+# ./layerd keys add $NODE_NAME --recover=true --keyring-backend $KEYRING_BACKEND
+
+# Get address/account for node to use in gentx tx
+echo "Getting the address of your node to use for faucet request"
+NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
+echo "NODE address: $NODE_ADDRESS"
+
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."
 sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/$NODE_NAME/config/config.toml
