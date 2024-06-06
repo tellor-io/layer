@@ -8,12 +8,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/require"
 
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/bridge/keeper"
@@ -295,7 +295,6 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 	_, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
 	// require.True(t, res) TODO: hit remainder of fcn
-
 }
 
 func TestSetBridgeValidatorParams(t *testing.T) {
@@ -455,7 +454,6 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, res.Timestamp, validatorTimestamp)
-
 }
 
 func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
@@ -683,7 +681,6 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, badSigB)
 		require.Error(t, err)
 	})
-
 }
 
 func TestTryRecoverAddressWithBothIDs(t *testing.T) {
@@ -789,7 +786,6 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, evmAddresses[i].EVMAddress, []byte(val.Description.Moniker))
 	}
-
 }
 
 // needs finished
@@ -864,7 +860,6 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 
 	err = k.SetBridgeValsetSignature(sdkCtx, "operatorAddr1", timestamp.Timestamp, "sig2")
 	require.NoError(t, err)
-
 }
 
 func TestGetEVMAddressByOperator(t *testing.T) {
@@ -925,5 +920,4 @@ func TestSetBridgeValsetByTimestamp(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, bridgeValSet)
 	require.Equal(t, bridgeValSet.BridgeValidatorSet, valset.BridgeValidatorSet)
-
 }

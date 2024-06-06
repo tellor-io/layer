@@ -262,7 +262,6 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	reportIndex := uint64(0)
 	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
 	require.ErrorContains(t, err, "aggregate flagged")
-
 }
 
 func TestClaimDepositNotEnoughPower(t *testing.T) {

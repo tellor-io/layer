@@ -531,7 +531,7 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte)
 	}
 }
 
-func (k Keeper) TryRecoverAddressWithBothIDs(sig []byte, msgHash []byte) ([]common.Address, error) {
+func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Address, error) {
 	var addrs []common.Address
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)
