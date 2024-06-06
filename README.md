@@ -63,7 +63,3 @@ Check out our issues log here on Github or feel free to reach out anytime [info@
 ## Copyright<a name="copyright"> </a>  
 
 Tellor Inc. 2024
-
-### Tools<a name="tools"> </a>  
-
-1. Install [golangci-lint](https://golangci-lint.run/usage/install/) 1.55.2
