@@ -1,6 +1,8 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-gas-reporter");
 require("dotenv").config();
+require("@nomiclabs/hardhat-ethers");
+require("@nomiclabs/hardhat-web3");
 
 module.exports = {
   solidity: {
@@ -61,9 +63,17 @@ module.exports = {
       // },
       forking: {
         url: process.env.NODE_URL,
-        // blockNumber: 19891853
+        blockNumber: 19891853
       },
       // allowUnlimitedContractSize: true
     } //,
   },
 };
+
+extendEnvironment((hre) => {
+  const Web3 = require("web3");
+  hre.Web3 = Web3;
+
+  // hre.network.provider is an EIP1193-compatible provider.
+  hre.web3 = new Web3(hre.network.provider);
+});

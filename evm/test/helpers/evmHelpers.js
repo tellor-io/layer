@@ -5,7 +5,7 @@ var assert = require('assert');
 const { impersonateAccount, takeSnapshot } = require("@nomicfoundation/hardhat-network-helpers");
 
 var assert = require('assert');
-const abiCoder = new ethers.AbiCoder();
+const abiCoder = new ethers.utils.AbiCoder();
 
 advanceTimeAndBlock = async (time) => {
   await advanceTime(time);
@@ -100,7 +100,9 @@ function sleep(s) {
 
 calculateValCheckpoint = (valHash, threshold, valTimestamp) => {
   domainSeparator = "0x636865636b706f696e7400000000000000000000000000000000000000000000"
-  valCheckpoint = ethers.solidityPackedKeccak256(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, threshold, valTimestamp, valHash])
+  enc = abiCoder.encode(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, threshold, valTimestamp, valHash])
+  valCheckpoint = hash(enc)
+  //valCheckpoint = ethers.solidityPackedKeccak256(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, threshold, valTimestamp, valHash])
   //valCheckpoint = ethers.solidityPackedKeccak256(enc)
   return valCheckpoint
 }
@@ -151,7 +153,7 @@ getValSetStructArray = (valAddrs, powers) => {
 getSigStructArray = (sigs) => {
   structArray = []
   for (i = 0; i < sigs.length; i++) {
-    if(sigs[i] == 0){
+    if(sigs[i].v == 0){
       structArray[i] = {
         v: abiCoder.encode(["uint8"], [0]),
         r: abiCoder.encode(["bytes32"], ['0x0000000000000000000000000000000000000000000000000000000000000000']),
@@ -159,11 +161,11 @@ getSigStructArray = (sigs) => {
       }
     }
     else{
-      let { v, r, s } = ethers.Signature.from(sigs[i])
+      // let { v, r, s } = ethers.Signature.from(sigs[i])
       structArray[i] = {
-        v: abiCoder.encode(["uint8"], [v]),
-        r: abiCoder.encode(["bytes32"], [r]),
-        s: abiCoder.encode(["bytes32"], [s])
+        v: abiCoder.encode(["uint8"], [sigs[i].v]),
+        r: abiCoder.encode(["bytes32"], [sigs[i].r]),
+        s: abiCoder.encode(["bytes32"], [sigs[i].s])
       }
     }
   }
@@ -206,6 +208,14 @@ getCurrentAggregateReport = (_queryId, _value, _timestamp,_reporterPower) => {
     return oracleAttestationData
 }
 
+layerSign = (message, privateKey) => {
+  // assumes message is bytesLike
+  messageHash = ethers.utils.sha256(message)
+  signingKey = new ethers.utils.SigningKey(privateKey)
+  signature = signingKey.signDigest(messageHash)
+  return signature
+}
+
 module.exports = {
   getWithdrawValue,
   getCurrentAggregateReport,
@@ -234,5 +244,6 @@ module.exports = {
   sleep,
   takeSnapshot,
   impersonateAccount,
+  layerSign
 };
 
