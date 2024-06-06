@@ -27,7 +27,7 @@ func TestDivvyingTips(t *testing.T) {
 	addr2 := sample.AccAddressBytes()
 	updatedAt := time.Now().UTC()
 	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, updatedAt)
-	reporter1 := types.NewOracleReporter(addr.String(), math.NewInt(2000*1e6), &commission)
+	reporter1 := types.NewOracleReporter(addr.String(), math.NewInt(2000*1e6), &commission, 1)
 	ctx = ctx.WithBlockHeight(height)
 
 	err := k.Reporters.Set(ctx, addr, reporter1)

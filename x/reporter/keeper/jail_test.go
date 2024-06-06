@@ -17,7 +17,7 @@ func TestJailReporter(t *testing.T) {
 	addr := sample.AccAddressBytes()
 	updatedAt := time.Now().UTC()
 	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, updatedAt)
-	reporter := types.NewOracleReporter(addr.String(), math.NewInt(1000*1e6), &commission)
+	reporter := types.NewOracleReporter(addr.String(), math.NewInt(1000*1e6), &commission, 1)
 
 	err := k.Reporters.Set(ctx, addr, reporter)
 	require.NoError(t, err)
@@ -40,7 +40,7 @@ func TestUnJailReporter(t *testing.T) {
 	addr := sample.AccAddressBytes()
 	jailedAt := time.Now().UTC()
 	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, jailedAt)
-	reporter := types.NewOracleReporter(addr.String(), math.NewInt(1000*1e6), &commission)
+	reporter := types.NewOracleReporter(addr.String(), math.NewInt(1000*1e6), &commission, 1)
 	reporter.Jailed = true
 	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
