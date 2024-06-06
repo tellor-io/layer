@@ -1,5 +1,4 @@
-<p align="center">
-Tellor - A Decentralized Oracle Protocol<br/><br/>
+# Tellor Layer<br/><br/>
 
 <p align="center">
   <a href="https://github.com/tellor-io/layer/actions/workflows/go.yml">
@@ -10,13 +9,13 @@ Tellor - A Decentralized Oracle Protocol<br/><br/>
   </a>
 </p>
 
-## Overview <a name="overview"> </a>  
+## Overview <a name="overview"> </a>
 
 <b>Tellor Layer</b> is a stand alone L1 built using the cosmos sdk for the purpose of coming to
 consensus on any subjective data. It works by using a network of staked parties who are
 crypto-economically incentivized to honestly report requested data.
 
-For more in-depth information, checkout the [Tellor Layer tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf).
+For more in-depth information, checkout the [Tellor Layer tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf) and our [ADRs](https://github.com/tellor-io/layer/tree/main/adr).
 
 ## Starting the Chain (Without Ignite):
 
@@ -53,15 +52,15 @@ To see all available commands:
 To run all tests:
 `go test -v ./...`
 
-
 ## Linting
+
 To lint per folder:
 `make lint-folder-fix FOLDER="x/mint"`
 
 To lint all files:
 `make lint`
 
-## Maintainers <a name="maintainers"> </a>
+## Maintainers<a name="maintainers"> </a>
 
 This repository is maintained by the [Tellor team](https://github.com/orgs/tellor-io/people)
 
