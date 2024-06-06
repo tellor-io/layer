@@ -165,7 +165,6 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddre
 				return err
 			}
 		}
-
 	}
 
 	return h.k.Delegators.Set(ctx, delAddr.Bytes(), types.Delegation{
