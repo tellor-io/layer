@@ -6,21 +6,21 @@ This module handles disputes. Disputes can be handles in 3 levels: as a warning,
 
 ## ADRs
 
-adr002 - queryId time frame structure
-adr1002 - dual delegation
-adr1006 - dispute levels
-adr1007 - usage of staked tokens for disputes
-adr1008 - voting power by group
-adr2001 - trb bridge structure
+- adr002 - queryId time frame structure
+- adr1002 - dual delegation
+- adr1006 - dispute levels
+- adr1007 - usage of staked tokens for disputes
+- adr1008 - voting power by group
+- adr2001 - trb bridge structure
 
 ## Transactions
 
-`ExecuteDispute`
-`AddFeeToDispute`
-`ProposeDispute`
-`Vote`
-`TallyVote`
-`UpdateTeam`
+- `ExecuteDispute`
+- `AddFeeToDispute`
+- `ProposeDispute`
+- `Vote`
+- `TallyVote`
+- `UpdateTeam`
 
 ## Getters
 

@@ -6,23 +6,22 @@ This module enables the registration of fully customizable data specs to inform 
 
 ## ADRs
 
-adr002 - queryId time frame structure
-adr1004 - fees on tips
-adr2002 - nonces for bridging
+- adr002 - queryId time frame structure
+- adr1004 - fees on tips
+- adr2002 - nonces for bridging
 
 ## Transactions 
 
-`RegisterSpec`
-`UpdateSpec`
+-`RegisterSpec`
+-`UpdateSpec`
 
 ## Getters
 
-`Params` - get module parameters
-`DecodeQueryData` - decode query data into query type and data fields
-`DecodeValue` - decode value into a string
-`GenerateQueryData` - generate query data for a given query type and data
-`GetDataSpec` - get data specification for a given query type
-
+- `Params` - get module parameters
+- `DecodeQueryData` - decode query data into query type and data fields
+- `DecodeValue` - decode value into a string
+- `GenerateQueryData` - generate query data for a given query type and data
+- `GetDataSpec` - get data specification for a given query type
 
 ## Mocks
 
