@@ -68,6 +68,34 @@ func TestDivvyingTips(t *testing.T) {
 }
 
 // func TestReturnSlashedTokens(t *testing.T) {
-// 	k, _, _, ctx := keepertest.ReporterKeeper(t)
+// 	k, sk, bk, ctx := keepertest.ReporterKeeper(t)
 
+// 	val1Address := sample.AccAddressBytes()
+// 	vals := simtestutil.ConvertAddrsToValAddrs([]sdk.AccAddress{val1Address})
+// 	val1 := vals[0]
+// 	addr := sample.AccAddressBytes()
+// 	addr2 := sample.AccAddressBytes()
+// 	updatedAt := time.Now().UTC()
+// 	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, updatedAt)
+// 	reporter1 := types.NewOracleReporter(addr.String(), math.NewInt(2000*1e6), &commission)
+// 	//reporter2 := types.NewOracleReporter(addr2.String(), math.NewInt(1000*1e6), &commission)
+
+// 	err := k.Reporters.Set(ctx, addr, reporter1)
+// 	require.NoError(t, err)
+
+// 	tokenOrigin1 := &types.TokenOriginInfo{
+// 		DelegatorAddress: addr.Bytes(),
+// 		ValidatorAddress: val1.Bytes(),
+// 		Amount:           math.NewInt(1000 * 1e6),
+// 	}
+
+// 	tokenOrigin2 := &types.TokenOriginInfo{
+// 		DelegatorAddress: addr2.Bytes(),
+// 		ValidatorAddress: val1.Bytes(),
+// 		Amount:           math.NewInt(1000 * 1e6),
+// 	}
+// 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin1, tokenOrigin2}
+// 	total := tokenOrigin1.Amount.Add(tokenOrigin2.Amount)
+
+// 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: total}
 // }
