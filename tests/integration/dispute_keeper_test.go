@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -806,4 +807,103 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	reporter1, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
 	s.NoError(err)
 	s.Equal(reporterStakeBefore, reporter1.TotalTokens)
+}
+
+func (s *IntegrationTestSuite) TestFlagReport() {
+	// three micro reports
+	// setAggregate
+	// then dispute report to check if its flagged
+	valAccs, _, _ := s.createValidatorAccs([]int64{100, 200, 300})
+	reporter1 := valAccs[0]
+	stake1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter1)
+	s.NoError(err)
+	reporter2 := valAccs[1]
+	stake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter2)
+	s.NoError(err)
+	reporter3 := valAccs[2]
+	stake3, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter3)
+	s.NoError(err)
+
+	queryid, err := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	aggmethod := "weighted-median"
+	s.NoError(err)
+
+	report1 := oracletypes.MicroReport{
+		Reporter:        reporter1.String(),
+		Power:           sdk.TokensToConsensusPower(stake1, sdk.DefaultPowerReduction),
+		QueryId:         queryid,
+		QueryType:       "SpotPrice",
+		AggregateMethod: aggmethod,
+		Value:           testutil.EncodeValue(1.00),
+		Timestamp:       s.Setup.Ctx.BlockTime(),
+		Cyclelist:       true,
+		BlockNumber:     s.Setup.Ctx.BlockHeight(),
+	}
+	report2 := oracletypes.MicroReport{
+		Reporter:        reporter2.String(),
+		Power:           sdk.TokensToConsensusPower(stake2, sdk.DefaultPowerReduction),
+		QueryId:         queryid,
+		QueryType:       "SpotPrice",
+		AggregateMethod: aggmethod,
+		Value:           testutil.EncodeValue(2.00),
+		Timestamp:       s.Setup.Ctx.BlockTime(),
+		Cyclelist:       true,
+		BlockNumber:     s.Setup.Ctx.BlockHeight(),
+	}
+	report3 := oracletypes.MicroReport{
+		Reporter:        reporter3.String(),
+		Power:           sdk.TokensToConsensusPower(stake3, sdk.DefaultPowerReduction),
+		QueryId:         queryid,
+		QueryType:       "SpotPrice",
+		AggregateMethod: aggmethod,
+		Value:           testutil.EncodeValue(3.00),
+		Timestamp:       s.Setup.Ctx.BlockTime(),
+		Cyclelist:       true,
+		BlockNumber:     s.Setup.Ctx.BlockHeight(),
+	}
+
+	// forward time
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+
+	// set report
+	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report1.QueryId, reporter1.Bytes(), uint64(1)), report1)
+	s.NoError(err)
+	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report2.QueryId, reporter2.Bytes(), uint64(1)), report2)
+	s.NoError(err)
+	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report3.QueryId, reporter3.Bytes(), uint64(1)), report3)
+	s.NoError(err)
+
+	// add query
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, queryid, oracletypes.QueryMeta{Id: 1, HasRevealedReports: true}))
+	// set aggregate
+	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
+	s.NoError(err)
+
+	// get aggregate
+	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().Unix()))
+	s.NoError(err)
+	s.Equal(agg.AggregateReporter, reporter2.String())
+	s.False(agg.Flagged)
+
+	// dispute reporter2 report
+	disputer := s.newKeysWithTokens()
+	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
+
+	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report2, types.Warning)
+	s.NoError(err)
+
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	disputeMsg := types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report2,
+		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory: types.Warning,
+	}
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+	s.NoError(err)
+
+	// check if aggregate is flagged
+	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().Unix()))
+	s.NoError(err)
+	s.True(agg.Flagged)
 }
