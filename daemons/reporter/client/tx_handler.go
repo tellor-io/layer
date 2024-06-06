@@ -140,11 +140,11 @@ func (c *Client) sendTx(ctx context.Context, msg sdk.Msg, seq *uint64) error {
 	}
 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
-		return fmt.Errorf("error broadcasting 'MsgCreateReporter' transaction after 'handleBroadcastResult': %w", err)
+		return fmt.Errorf("error broadcasting transaction after 'handleBroadcastResult': %w", err)
 	}
 	txnResult, err := c.WaitForTx(ctx, res.TxHash)
 	if err != nil {
-		return fmt.Errorf("error waiting for 'MsgCreateReporter' transaction: %w", err)
+		return fmt.Errorf("error waiting for transaction: %w", err)
 	}
 	c.logger.Info(sdk.MsgTypeURL(msg), "TxResult", txnResult)
 	return nil

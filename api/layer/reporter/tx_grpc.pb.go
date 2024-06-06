@@ -23,6 +23,7 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
+	// ChangeReporter defines a (delegator) operation for changing a reporter.
 	ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
@@ -92,6 +93,7 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
+	// ChangeReporter defines a (delegator) operation for changing a reporter.
 	ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)

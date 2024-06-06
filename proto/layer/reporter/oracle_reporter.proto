@@ -27,4 +27,5 @@ message OracleReporter {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+  uint64 delegators_count = 5;
 }

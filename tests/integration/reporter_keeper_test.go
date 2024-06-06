@@ -200,3 +200,25 @@ func (s *IntegrationTestSuite) TestAddReporterTokens() {
 		})
 	}
 }
+
+// one delegator stakes with multiple validators, check the delegation count
+func (s *IntegrationTestSuite) TestDelegatorCount() {
+	_, valAddrs, _ := s.Setup.CreateValidators(5)
+	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+
+	delegatorAddr := sample.AccAddressBytes()
+	s.Setup.MintTokens(delegatorAddr, math.NewInt(5000*1e6))
+
+	for _, val := range valAddrs {
+		msgDelegate := stakingtypes.NewMsgDelegate(
+			delegatorAddr.String(),
+			val.String(),
+			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+		)
+		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		s.NoError(err)
+	}
+	del, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, delegatorAddr.Bytes())
+	s.NoError(err)
+	s.Equal(uint64(5), del.DelegationCount)
+}

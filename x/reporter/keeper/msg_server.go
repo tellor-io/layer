@@ -45,8 +45,15 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	oldReporter.TotalTokens = oldReporter.TotalTokens.Sub(delegation.Amount)
-	if err := k.Reporters.Set(goCtx, delegation.Reporter, oldReporter); err != nil {
-		return nil, err
+	oldReporter.DelegatorsCount--
+	if oldReporter.TotalTokens.IsZero() {
+		if err := k.Reporters.Remove(goCtx, delegation.Reporter); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := k.Reporters.Set(goCtx, delegation.Reporter, oldReporter); err != nil {
+			return nil, err
+		}
 	}
 	delegation.Reporter = reporter.Bytes()
 	if err := k.Keeper.Delegators.Set(goCtx, reporter.Bytes(), delegation); err != nil {
@@ -68,7 +75,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	// create a new reporter
-	newReporter := types.NewOracleReporter(msg.ReporterAddress, delegation.Amount, &commission)
+	newReporter := types.NewOracleReporter(msg.ReporterAddress, delegation.Amount, &commission, 1)
 	if err := k.Reporters.Set(goCtx, reporter.Bytes(), newReporter); err != nil {
 		return nil, err
 	}
@@ -89,8 +96,15 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 		return nil, err
 	}
 	rep.TotalTokens = rep.TotalTokens.Sub(delegation.Amount)
-	if err := k.Reporters.Set(goCtx, delegation.Reporter, rep); err != nil {
-		return nil, err
+	rep.DelegatorsCount--
+	if rep.TotalTokens.IsZero() {
+		if err := k.Reporters.Remove(goCtx, delegation.Reporter); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := k.Reporters.Set(goCtx, delegation.Reporter, rep); err != nil {
+			return nil, err
+		}
 	}
 
 	reporterExists, err := k.Keeper.Reporters.Has(goCtx, newReporterAddr)
@@ -102,25 +116,18 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 		return nil, errors.New("reporter does not exist")
 	}
 
-	iter, err := k.Keeper.Delegators.Indexes.Reporter.MatchExact(goCtx, newReporterAddr.Bytes())
+	reporter, err := k.Reporters.Get(goCtx, newReporterAddr.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
-	keys, err := iter.FullKeys()
-	if err != nil {
-		return nil, err
-	}
-
-	if len(keys) >= 100 {
+	if reporter.DelegatorsCount >= 100 {
 		return nil, errors.New("reporter is at max cap")
 	}
-	rep, err = k.Reporters.Get(goCtx, newReporterAddr.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	rep.TotalTokens = rep.TotalTokens.Add(delegation.Amount)
-	if err := k.Reporters.Set(goCtx, newReporterAddr.Bytes(), rep); err != nil {
+
+	reporter.TotalTokens = reporter.TotalTokens.Add(delegation.Amount)
+	reporter.DelegatorsCount++
+	if err := k.Reporters.Set(goCtx, newReporterAddr.Bytes(), reporter); err != nil {
 		return nil, err
 	}
 	delegation.Reporter = newReporterAddr.Bytes()

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -10,7 +11,6 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 var _ types.StakingHooks = Hooks{}
@@ -114,45 +114,58 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddre
 	if err := h.k.TempStore.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), sdkmath.ZeroInt()); err != nil {
 		return err
 	}
-	reporterKey := valAddr.Bytes()
-	iter, err := h.k.Delegators.Indexes.Reporter.MatchExact(ctx, reporterKey)
+	// get delegation if it exists
+	del, err := h.k.Delegators.Has(ctx, delAddr.Bytes())
 	if err != nil {
 		return err
 	}
-	// todo: this is an iteration and should be optimized, perhaps we can use a counter
-	pks, err := iter.FullKeys()
-	if err != nil {
-		return err
-	}
-
-	if len(pks) == 0 {
-		val, err := h.k.stakingKeeper.GetValidator(ctx, valAddr)
+	if del {
+		delegation, err := h.k.Delegators.Get(ctx, delAddr.Bytes())
 		if err != nil {
 			return err
 		}
-		if err := h.k.Reporters.Set(ctx, reporterKey, types.OracleReporter{
-			// inherit the commission rates from the validator
-			Commission:  &val.Commission,
-			TotalTokens: sdkmath.ZeroInt(),
-		}); err != nil {
-			return err
-		}
-
+		delegation.DelegationCount++
+		return h.k.Delegators.Set(ctx, delAddr.Bytes(), delegation)
 	}
-
-	if len(pks) >= 100 {
-		reporterKey = delAddr.Bytes()
-		// add reporter with default commission rates
-		if err := h.k.Reporters.Set(ctx, reporterKey, types.OracleReporter{
-			Commission: &stakingtypes.Commission{CommissionRates: stakingtypes.CommissionRates{
-				Rate:          sdkmath.LegacyMustNewDecFromStr("0.1"),
-				MaxRate:       sdkmath.LegacyMustNewDecFromStr("0.2"),
-				MaxChangeRate: sdkmath.LegacyMustNewDecFromStr("0.01"),
-			}},
-			TotalTokens: sdkmath.ZeroInt(),
-		}); err != nil {
+	reporterKey := valAddr.Bytes()
+	// get reporter if it exists, check delegator count then decide
+	// if delegator count is < 100 then this the reporter for the delegator if they don't already have a reporter
+	reporter, err := h.k.Reporters.Get(ctx, reporterKey)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
 			return err
+		} else {
+			val, err := h.k.stakingKeeper.GetValidator(ctx, valAddr)
+			if err != nil {
+				return err
+			}
+			if err := h.k.Reporters.Set(ctx, reporterKey, types.OracleReporter{
+				// inherit the commission rates from the validator
+				Commission:      &val.Commission,
+				TotalTokens:     sdkmath.ZeroInt(),
+				DelegatorsCount: 1,
+			}); err != nil {
+				return err
+			}
 		}
+	} else {
+		if reporter.DelegatorsCount >= 100 {
+			reporterKey = delAddr.Bytes()
+			// add reporter with default commission rates
+			if err := h.k.Reporters.Set(ctx, reporterKey, types.OracleReporter{
+				Commission:      DefaultCommission(),
+				TotalTokens:     sdkmath.ZeroInt(),
+				DelegatorsCount: 1,
+			}); err != nil {
+				return err
+			}
+		} else {
+			reporter.DelegatorsCount++
+			if err := h.k.Reporters.Set(ctx, reporterKey, reporter); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return h.k.Delegators.Set(ctx, delAddr.Bytes(), types.Delegation{
@@ -178,6 +191,11 @@ func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddre
 	if err != nil {
 		return err
 	}
+	reporter, err := h.k.Reporters.Get(ctx, del.Reporter)
+	if err != nil {
+		return err
+	}
+
 	del.Amount = del.Amount.Sub(temp)
 	del.DelegationCount--
 	if del.DelegationCount == 0 {
@@ -185,30 +203,17 @@ func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddre
 		if err != nil {
 			return err
 		}
-		iter, err := h.k.Delegators.Indexes.Reporter.MatchExact(ctx, del.Reporter)
-		if err != nil {
-			return err
-		}
-		pks, err := iter.FullKeys()
-		if err != nil {
-			return err
-		}
-		if len(pks) == 0 {
+		reporter.DelegatorsCount--
+		if reporter.DelegatorsCount == 0 {
 			return h.k.Reporters.Remove(ctx, del.Reporter)
 		}
-		rep, err := h.k.Reporters.Get(ctx, del.Reporter)
-		if err != nil {
-			return err
-		}
-		rep.TotalTokens = rep.TotalTokens.Sub(temp)
-		return h.k.Reporters.Set(ctx, del.Reporter, rep)
+		reporter.TotalTokens = reporter.TotalTokens.Sub(temp)
+		return h.k.Reporters.Set(ctx, del.Reporter, reporter)
+
 	}
-	rep, err := h.k.Reporters.Get(ctx, del.Reporter)
-	if err != nil {
-		return err
-	}
-	rep.TotalTokens = rep.TotalTokens.Sub(temp)
-	err = h.k.Reporters.Set(ctx, del.Reporter, rep)
+
+	reporter.TotalTokens = reporter.TotalTokens.Sub(temp)
+	err = h.k.Reporters.Set(ctx, del.Reporter, reporter)
 	if err != nil {
 		return err
 	}
