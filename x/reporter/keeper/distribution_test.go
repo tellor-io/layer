@@ -5,14 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestDivvyingTips(t *testing.T) {
@@ -26,7 +28,6 @@ func TestDivvyingTips(t *testing.T) {
 	updatedAt := time.Now().UTC()
 	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, updatedAt)
 	reporter1 := types.NewOracleReporter(addr.String(), math.NewInt(2000*1e6), &commission)
-	//reporter2 := types.NewOracleReporter(addr2.String(), math.NewInt(1000*1e6), &commission)
 	ctx = ctx.WithBlockHeight(height)
 
 	err := k.Reporters.Set(ctx, addr, reporter1)
