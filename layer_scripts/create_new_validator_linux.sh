@@ -10,7 +10,7 @@ set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
 export LAYER_NODE_URL=tellornode.com
-export TELLORNODE_ID=
+export TELLORNODE_ID=7bcbaf31f96892b1db67afd4851749f4ffd32a43
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
@@ -30,6 +30,7 @@ echo "Creating account keys for node to be able to send and receive loya and sta
 echo "Getting the address of your node to use for faucet request"
 NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
 echo "NODE address: $NODE_ADDRESS"
+# address : tellor1k47txcu506u6l6sxrg6u9latl5e9p7zmj75d89
 
 echo "Calling faucet to fund account..."
 curl -X POST localhost:3000/faucetRequest/user/$NODE_ADDRESS/amount/$AMOUNT_IN_TRB
