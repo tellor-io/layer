@@ -16,7 +16,7 @@ func TestReporterDelegatorIndex(t *testing.T) {
 
 	repAddr := sample.AccAddressBytes()
 	// set reporter
-	reporter := types.NewOracleReporter(repAddr.String(), math.ZeroInt(), nil)
+	reporter := types.NewOracleReporter(repAddr.String(), math.ZeroInt(), nil, 0)
 	err := k.Reporters.Set(ctx, repAddr, reporter)
 	require.NoError(t, err)
 
