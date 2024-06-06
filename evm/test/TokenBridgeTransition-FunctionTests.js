@@ -1,6 +1,7 @@
 // const { AbiCoder } = require("@ethersproject/abi");
 const { expect } = require("chai");
 const h = require("./helpers/evmHelpers");
+var assert = require('assert');
 
 describe("Function Tests - NewTransition", function() {
 
@@ -11,7 +12,7 @@ describe("Function Tests - NewTransition", function() {
   const GOVERNANCE_FLEX = "0xB30b1B98d8276b80bC4f5aF9f9170ef3220EC27D"
   const TELLORFLEX = "0x8cFc184c877154a8F9ffE0fe75649dbe5e2DBEbf"
   const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks layer unbonding period
-  const abiCoder = new ethers.AbiCoder();
+  const abiCoder = new ethers.utils.AbiCoder();
   const ETH_QUERY_DATA_ARGS = abiCoder.encode(["string", "string"], ["eth", "usd"]);
   const ETH_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["SpotPrice", ETH_QUERY_DATA_ARGS]);
   const ETH_QUERY_ID = h.hash(ETH_QUERY_DATA);
@@ -65,13 +66,13 @@ describe("Function Tests - NewTransition", function() {
     ]
     )
     // deploy tokenbridge
-    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.getAddress(), TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
     // stake reporter
-    await tellor.connect(bigWallet).transfer(await accounts[0].getAddress(), h.toWei("1000"))
+    await tellor.connect(bigWallet).transfer(await accounts[0].address, h.toWei("1000"))
     await tellor.connect(accounts[0]).approve(TELLORFLEX, h.toWei("1000"))
     await flex.connect(accounts[0]).depositStake(h.toWei("1000"))
     // report new oracle address
-    newOracleAddrReport = abiCoder.encode(["address"], [await tbridge.getAddress()])
+    newOracleAddrReport = abiCoder.encode(["address"], [await tbridge.address])
     await flex.connect(accounts[0]).submitValue(ORACLE_ADDR_UPDATE_QUERY_ID, newOracleAddrReport, 0, ORACLE_ADDR_UPDATE_QUERY_DATA)
     await h.advanceTime(43201)
     // update oracle address
@@ -96,64 +97,64 @@ describe("Function Tests - NewTransition", function() {
 
   it("constructor", async function() {
     // check if new oracle address is set
-    expect(await tbridge.token() == tellor.getAddress(), "tellor should be set")
-    expect(await tbridge.tellorFlex() == flex.getAddress(), "tellor should be set")
+    expect(await tbridge.token() == tellor.address, "tellor should be set")
+    expect(await tbridge.tellorFlex() == flex.address, "tellor should be set")
   })
   it("transition worked", async function() {
     // check if new oracle address is set
-    expect(await tellor.getAddressVars(h.hash("_ORACLE_CONTRACT"))).to.equal(await tbridge.getAddress())
+    assert.equal(await tellor.getAddressVars(h.hash("_ORACLE_CONTRACT")), await tbridge.address)
   })
 
   it("addStakingRewards()", async function () {
-    await tellor.connect(bigWallet).transfer(await accounts[0].getAddress(), h.toWei("1"))
+    await tellor.connect(bigWallet).transfer(await accounts[0].address, h.toWei("1"))
     await h.expectThrow(tbridge.connect(accounts[0]).addStakingRewards(h.toWei("1"))) // not approved
-    await tellor.connect(accounts[0]).approve(await tbridge.getAddress(), h.toWei("1"))
+    await tellor.connect(accounts[0]).approve(await tbridge.address, h.toWei("1"))
     await tbridge.connect(accounts[0]).addStakingRewards(h.toWei("1"))
-    expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(h.toWei("1"))
+    expect(await tellor.balanceOf(await tbridge.address)).to.equal(h.toWei("1"))
   })
 
   it("getDataBefore()", async function () {
     dataBefore = await tbridge.getDataBefore(ETH_QUERY_ID, blocky1.timestamp)
-    expect(dataBefore[0]).to.equal(true)
-    expect(dataBefore[1]).to.equal(h.uintTob32("100"))
-    expect(dataBefore[2]).to.equal(blocky0.timestamp)
+    assert.equal(dataBefore[0], true)
+    assert.equal(dataBefore[1], h.uintTob32("100"))
+    assert.equal(dataBefore[2], blocky0.timestamp)
 
     dataBefore = await tbridge.getDataBefore(ETH_QUERY_ID, blocky2.timestamp)
-    expect(dataBefore[0]).to.equal(true)
-    expect(dataBefore[1]).to.equal(h.uintTob32("101"))
-    expect(dataBefore[2]).to.equal(blocky1.timestamp)
+    assert.equal(dataBefore[0], true)
+    assert.equal(dataBefore[1], h.uintTob32("101"))
+    assert.equal(dataBefore[2], blocky1.timestamp)
 
     // check for updateOracleAddress query id
     dataBefore = await tbridge.getDataBefore(ORACLE_ADDR_UPDATE_QUERY_ID, blocky2.timestamp)
     blocky = await h.getBlock()
-    expect(dataBefore[0]).to.equal(true)
-    expect(dataBefore[1]).to.equal(abiCoder.encode(["address"], [await tbridge.getAddress()]))
-    expect(dataBefore[2]).to.equal(blocky.timestamp)
+    assert.equal(dataBefore[0], true)
+    assert.equal(dataBefore[1], abiCoder.encode(["address"], [await tbridge.address]))
+    assert.equal(dataBefore[2], blocky.timestamp)
 
     // submit different oracle address
     await h.advanceTime(43200)
-    badOracleAddrReport = abiCoder.encode(["address"], [await accounts[1].getAddress()])
+    badOracleAddrReport = abiCoder.encode(["address"], [await accounts[1].address])
     await flex.connect(accounts[0]).submitValue(ORACLE_ADDR_UPDATE_QUERY_ID, badOracleAddrReport, 0, ORACLE_ADDR_UPDATE_QUERY_DATA)
     blocky = await h.getBlock()
     dataBefore = await tbridge.getDataBefore(ORACLE_ADDR_UPDATE_QUERY_ID, blocky.timestamp + 100)
     blocky = await h.getBlock()
-    expect(dataBefore[0]).to.equal(true)
-    expect(dataBefore[1]).to.equal(abiCoder.encode(["address"], [await tbridge.getAddress()]))
-    expect(dataBefore[2]).to.equal(blocky.timestamp)
+    assert.equal(dataBefore[0], true)
+    assert.equal(dataBefore[1], abiCoder.encode(["address"], [await tbridge.address]))
+    assert.equal(dataBefore[2], blocky.timestamp)
   })
 
   it("getIndexForDataBefore()", async function () {
     indexBefore = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky0.timestamp)
-    expect(indexBefore[0]).to.equal(true)
+    assert.equal(indexBefore[0], true)
     expect(indexBefore[1]).to.be.greaterThan(0)
 
     indexBefore1 = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky1.timestamp)
-    expect(indexBefore1[0]).to.equal(true)
-    expect(indexBefore1[1]).to.equal(BigInt(indexBefore[1]) + BigInt(1))
+    assert.equal(indexBefore1[0], true)
+    assert.equal(indexBefore1[1], BigInt(indexBefore[1]) + BigInt(1))
 
     indexBefore2 = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky2.timestamp)
-    expect(indexBefore2[0]).to.equal(true)
-    expect(indexBefore2[1]).to.equal(BigInt(indexBefore1[1]) + BigInt(1))
+    assert.equal(indexBefore2[0], true)
+    assert.equal(indexBefore2[1], BigInt(indexBefore1[1]) + BigInt(1))
   })
 
   it("getNewValueCountbyQueryId()", async function () {
@@ -163,20 +164,20 @@ describe("Function Tests - NewTransition", function() {
     await h.advanceTime(43200)
     await flex.submitValue(ETH_QUERY_ID, h.uintTob32("103"), 0, ETH_QUERY_DATA)
     count1 = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
-    expect(count1).to.equal(count + BigInt(1))
+    expect(count1).to.equal(BigInt(count) + BigInt(1))
   })
 
   it("getReporterByTimestamp()", async function () {
     reporter = await tbridge.getReporterByTimestamp(ETH_QUERY_ID, blocky0.timestamp)
-    expect(reporter).to.equal(await accounts[0].getAddress())
+    assert.equal(reporter, await accounts[0].address)
   })
 
   it("getTimestampbyQueryIdandIndex()", async function () {
     count = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
-    expect(count).to.be.greaterThan(0)
+    expect(BigInt(count)).to.be.greaterThan(BigInt(0))
 
-    timestamp = await tbridge.getTimestampbyQueryIdandIndex(ETH_QUERY_ID, count - BigInt(1))
-    expect(timestamp).to.equal(blocky2.timestamp)
+    timestamp = await tbridge.getTimestampbyQueryIdandIndex(ETH_QUERY_ID, BigInt(count) - BigInt(1))
+    expect(BigInt(timestamp)).to.equal(BigInt(blocky2.timestamp))
   })
 
   it("getTimeOfLastNewValue()", async function () {
@@ -185,10 +186,10 @@ describe("Function Tests - NewTransition", function() {
   })
 
   it("isInDispute()", async function () {
-    expect(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp)).to.equal(false)
+    assert.equal(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp), false)
     await tellor.connect(bigWallet).approve(GOVERNANCE_FLEX, h.toWei("100"))
     await govflex.connect(bigWallet).beginDispute(ETH_QUERY_ID, blocky2.timestamp)
-    expect(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp)).to.equal(true)
+    assert.equal(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp), true)
   })
 
   it("verify()", async function () {
@@ -196,15 +197,15 @@ describe("Function Tests - NewTransition", function() {
   })
 
   it("mintToOracle()", async function () {
-    expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(0)
+    expect(await tellor.balanceOf(await tbridge.address)).to.equal(0)
     await tellor.mintToOracle()
-    expect(await tellor.balanceOf(await tbridge.getAddress())).to.be.greaterThan(0)
+    expect(await tellor.balanceOf(await tbridge.address)).to.be.greaterThan(0)
     
   })
   it("mintToTeam()", async function () {
-    expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(0)
+    expect(await tellor.balanceOf(await tbridge.address)).to.equal(0)
     await tellor.mintToOracle()
-    expect(await tellor.balanceOf(await tbridge.getAddress())).to.be.greaterThan(0)
+    expect(await tellor.balanceOf(await tbridge.address)).to.be.greaterThan(0)
     let teamBal = await tellor.balanceOf(DEV_WALLET)
     await tellor.mintToTeam()
     expect(await tellor.balanceOf(DEV_WALLET) > teamBal, "mint to team should work")
