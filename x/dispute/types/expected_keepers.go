@@ -3,6 +3,7 @@ package types
 import (
 	context "context"
 
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
@@ -36,6 +37,7 @@ type OracleKeeper interface {
 	GetUserTips(ctx context.Context, tipper sdk.AccAddress) (math.Int, error)
 	GetTotalTipsAtBlock(ctx context.Context, blockNumber int64) (math.Int, error)
 	GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, tipper sdk.AccAddress) (math.Int, error)
+	FlagAggregateReport(ctx context.Context, report oracletypes.MicroReport) error
 }
 
 type ReporterKeeper interface {

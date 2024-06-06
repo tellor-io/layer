@@ -18,6 +18,8 @@ message Aggregate {
   uint64 nonce = 8;
   int64 aggregateReportIndex = 9;
   int64 height = 10;
+  // height of the micro report
+  int64 micro_height = 11;
 }
 
 message AvailableTimestamps {

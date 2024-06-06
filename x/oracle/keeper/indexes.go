@@ -30,11 +30,12 @@ func NewTipsIndex(sb *collections.SchemaBuilder) tipsIndex {
 
 type aggregatesIndex struct {
 	BlockHeight *indexes.Multi[int64, collections.Pair[[]byte, int64], types.Aggregate]
+	MicroHeight *indexes.Multi[int64, collections.Pair[[]byte, int64], types.Aggregate]
 }
 
 func (a aggregatesIndex) IndexesList() []collections.Index[collections.Pair[[]byte, int64], types.Aggregate] {
 	return []collections.Index[collections.Pair[[]byte, int64], types.Aggregate]{
-		a.BlockHeight,
+		a.BlockHeight, a.MicroHeight,
 	}
 }
 
@@ -45,6 +46,13 @@ func NewAggregatesIndex(sb *collections.SchemaBuilder) aggregatesIndex {
 			collections.Int64Key, collections.PairKeyCodec[[]byte, int64](collections.BytesKey, collections.Int64Key),
 			func(_ collections.Pair[[]byte, int64], v types.Aggregate) (int64, error) {
 				return v.Height, nil
+			},
+		),
+		MicroHeight: indexes.NewMulti(
+			sb, types.AggregatesMicroHeightIndexPrefix, "aggregates_by_micro_height",
+			collections.Int64Key, collections.PairKeyCodec[[]byte, int64](collections.BytesKey, collections.Int64Key),
+			func(_ collections.Pair[[]byte, int64], v types.Aggregate) (int64, error) {
+				return v.MicroHeight, nil
 			},
 		),
 	}

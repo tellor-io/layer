@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -46,6 +47,7 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	dispute.FeeTotal = math.ZeroInt()
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 	fee := sdk.NewCoin(layer.BondDenom, math.NewInt(10000))
+	k.oracleKeeper.On("FlagAggregateReport", k.ctx, mock.Anything).Return(nil)
 	k.bankKeeper.On("HasBalance", k.ctx, creator, fee).Return(true)
 	k.bankKeeper.On("SendCoinsFromAccountToModule", k.ctx, creator, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
 	k.reporterKeeper.On("EscrowReporterStake", k.ctx, sdk.MustAccAddressFromBech32(dispute.ReportEvidence.Reporter), dispute.ReportEvidence.Power, int64(1), dispute.SlashAmount, dispute.HashId).Return(nil)

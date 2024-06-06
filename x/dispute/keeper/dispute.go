@@ -130,6 +130,11 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 
 // Slash and jail reporter
 func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory, hashId []byte) error {
+	// flag aggregate report if necessary
+	err := k.oracleKeeper.FlagAggregateReport(ctx, report)
+	if err != nil {
+		return err
+	}
 	reporterAddr := sdk.MustAccAddressFromBech32(report.Reporter)
 
 	slashFactor, jailDuration, err := GetSlashPercentageAndJailDuration(category)
