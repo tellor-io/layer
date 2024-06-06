@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -18,7 +19,7 @@ import (
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/mocks"
-	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
+	"github.com/tellor-io/layer/x/bridge/types"
 )
 
 func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, context.Context) {
@@ -60,7 +61,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 		},
 	}
 
-	evmAddresses := make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -116,7 +117,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 		},
 	}
 
-	evmAddresses := make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -163,7 +164,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 		},
 	}
 
-	evmAddresses := make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -208,7 +209,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 		},
 	}
 
-	evmAddresses := make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -270,7 +271,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 	}
 
 	// Update EVM addresses for all validators including the new one
-	evmAddresses = make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses = make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -302,8 +303,8 @@ func TestSetBridgeValidatorParams(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	bridgeValSet := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -318,8 +319,8 @@ func TestSetBridgeValidatorParams(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, params)
 
-	bridgeValSet = bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet = types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -389,8 +390,8 @@ func TestGetValidatorCheckpointFromStorage(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	bridgeValSet := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -415,8 +416,8 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, res.Timestamp, uint64(0))
 
-	bridgeValSet := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -465,8 +466,8 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	bridgeValSet := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -492,8 +493,8 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	bridgeValSet := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -506,8 +507,8 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 	require.NotNil(t, encodedBridgeValSet)
 	require.NotNil(t, bridgeValSetHash)
 
-	bridgeValSet2 := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet2 := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator10"),
 				Power:           10000000,
@@ -532,9 +533,9 @@ func TestPowerDiff(t *testing.T) {
 	require.NotNil(t, ctx)
 
 	// empty to 0
-	bridgeValSetEmpty := bridgetypes.BridgeValidatorSet{}
-	bridgeValSet0 := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSetEmpty := types.BridgeValidatorSet{}
+	bridgeValSet0 := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           0,
@@ -546,8 +547,8 @@ func TestPowerDiff(t *testing.T) {
 	require.Equal(t, relativeDiff, float64(0))
 
 	// 0 to 100, returns 0 if valset b is 0
-	bridgeValSet100 := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet100 := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           100,
@@ -558,8 +559,8 @@ func TestPowerDiff(t *testing.T) {
 	require.Equal(t, relativeDiff, float64(0))
 
 	// 100 to 104 (increase just under 5%)
-	bridgeValSet104 := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet104 := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           100,
@@ -574,8 +575,8 @@ func TestPowerDiff(t *testing.T) {
 	require.Equal(t, relativeDiff, float64(0.04))
 
 	// 104 to 110 (increase just over 5%)
-	bridgeValSet110 := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet110 := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           100,
@@ -601,8 +602,8 @@ func TestPowerDiff(t *testing.T) {
 	require.Greater(t, relativeDiff, float64(0.03))
 
 	// 100 to 100,000 (big increase)
-	bridgeValSet100_000 := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet100_000 := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           100_000,
@@ -777,7 +778,7 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 	}
 
 	// Update EVM addresses for all validators including the new one
-	evmAddresses := make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -826,7 +827,7 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 	}
 
 	// Update EVM addresses for all validators including the new one
-	evmAddresses := make([]bridgetypes.EVMAddress, len(validators))
+	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
@@ -836,8 +837,8 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 		require.Equal(t, evmAddresses[i].EVMAddress, []byte(val.Description.Moniker))
 	}
 
-	bridgeValSet := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	bridgeValSet := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
@@ -905,8 +906,8 @@ func TestSetBridgeValsetByTimestamp(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	valset := bridgetypes.BridgeValidatorSet{
-		BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+	valset := types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
 				Power:           1000,
