@@ -44,32 +44,6 @@ func (_m *StakingKeeper) Delegate(ctx context.Context, delAddr types.AccAddress,
 	return r0, r1
 }
 
-// Delegation provides a mock function with given fields: _a0, _a1, _a2
-func (_m *StakingKeeper) Delegation(_a0 context.Context, _a1 types.AccAddress, _a2 types.ValAddress) (stakingtypes.DelegationI, error) {
-	ret := _m.Called(_a0, _a1, _a2)
-
-	var r0 stakingtypes.DelegationI
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, types.ValAddress) (stakingtypes.DelegationI, error)); ok {
-		return rf(_a0, _a1, _a2)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, types.ValAddress) stakingtypes.DelegationI); ok {
-		r0 = rf(_a0, _a1, _a2)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(stakingtypes.DelegationI)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress, types.ValAddress) error); ok {
-		r1 = rf(_a0, _a1, _a2)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetDelegation provides a mock function with given fields: ctx, delAddr, valAddr
 func (_m *StakingKeeper) GetDelegation(ctx context.Context, delAddr types.AccAddress, valAddr types.ValAddress) (stakingtypes.Delegation, error) {
 	ret := _m.Called(ctx, delAddr, valAddr)
@@ -168,30 +142,48 @@ func (_m *StakingKeeper) GetValidator(ctx context.Context, addr types.ValAddress
 	return r0, r1
 }
 
-// GetValidators provides a mock function with given fields: ctx, maxRetrieve
-func (_m *StakingKeeper) GetValidators(ctx context.Context, maxRetrieve uint32) ([]stakingtypes.Validator, error) {
-	ret := _m.Called(ctx, maxRetrieve)
+// GetValidatorSet provides a mock function with given fields:
+func (_m *StakingKeeper) GetValidatorSet() stakingtypes.ValidatorSet {
+	ret := _m.Called()
 
-	var r0 []stakingtypes.Validator
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint32) ([]stakingtypes.Validator, error)); ok {
-		return rf(ctx, maxRetrieve)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint32) []stakingtypes.Validator); ok {
-		r0 = rf(ctx, maxRetrieve)
+	var r0 stakingtypes.ValidatorSet
+	if rf, ok := ret.Get(0).(func() stakingtypes.ValidatorSet); ok {
+		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]stakingtypes.Validator)
+			r0 = ret.Get(0).(stakingtypes.ValidatorSet)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, uint32) error); ok {
-		r1 = rf(ctx, maxRetrieve)
+	return r0
+}
+
+// IterateDelegatorDelegations provides a mock function with given fields: ctx, delegator, cb
+func (_m *StakingKeeper) IterateDelegatorDelegations(ctx context.Context, delegator types.AccAddress, cb func(stakingtypes.Delegation) bool) error {
+	ret := _m.Called(ctx, delegator, cb)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, func(stakingtypes.Delegation) bool) error); ok {
+		r0 = rf(ctx, delegator, cb)
 	} else {
-		r1 = ret.Error(1)
+		r0 = ret.Error(0)
 	}
 
-	return r0, r1
+	return r0
+}
+
+// IterateDelegatorUnbondingDelegations provides a mock function with given fields: ctx, delegator, cb
+func (_m *StakingKeeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delegator types.AccAddress, cb func(stakingtypes.UnbondingDelegation) bool) error {
+	ret := _m.Called(ctx, delegator, cb)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, func(stakingtypes.UnbondingDelegation) bool) error); ok {
+		r0 = rf(ctx, delegator, cb)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // RemoveUnbondingDelegation provides a mock function with given fields: ctx, ubd

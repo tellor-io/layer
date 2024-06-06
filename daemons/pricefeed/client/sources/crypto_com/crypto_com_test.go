@@ -137,7 +137,7 @@ func TestCryptoComPriceFunction_Mixed(t *testing.T) {
 			medianFunctionFails: true,
 			expectedPriceMap:    make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: testutil.MedianizationError,
+				BTCUSDC_TICKER: testutil.ErrMedianization,
 			},
 		},
 		"Success - integers": {

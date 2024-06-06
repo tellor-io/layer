@@ -26,65 +26,21 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// TokenOrigin is a message to store the origin of a token
-type TokenOrigin struct {
-	// validator_address is the address of the validator that tokens in staking are delegated to
-	ValidatorAddress []byte `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	// amount is the amount of tokens to be delegated to a reporter from a delegation in staking
-	Amount cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
-}
-
-func (m *TokenOrigin) Reset()         { *m = TokenOrigin{} }
-func (m *TokenOrigin) String() string { return proto.CompactTextString(m) }
-func (*TokenOrigin) ProtoMessage()    {}
-func (*TokenOrigin) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf34edebb26f68f4, []int{0}
-}
-func (m *TokenOrigin) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *TokenOrigin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_TokenOrigin.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *TokenOrigin) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_TokenOrigin.Merge(m, src)
-}
-func (m *TokenOrigin) XXX_Size() int {
-	return m.Size()
-}
-func (m *TokenOrigin) XXX_DiscardUnknown() {
-	xxx_messageInfo_TokenOrigin.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_TokenOrigin proto.InternalMessageInfo
-
-func (m *TokenOrigin) GetValidatorAddress() []byte {
-	if m != nil {
-		return m.ValidatorAddress
-	}
-	return nil
-}
-
+// TokenOriginInfo is the struct that holds the data of where tokens are staked
 type TokenOriginInfo struct {
-	DelegatorAddress []byte                `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	ValidatorAddress []byte                `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
-	Amount           cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
+	// delegator_address is the address of the delegator
+	DelegatorAddress []byte `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	// validator_address is the address of the validator
+	ValidatorAddress []byte `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	// amount is the amount of tokens staked
+	Amount cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
 }
 
 func (m *TokenOriginInfo) Reset()         { *m = TokenOriginInfo{} }
 func (m *TokenOriginInfo) String() string { return proto.CompactTextString(m) }
 func (*TokenOriginInfo) ProtoMessage()    {}
 func (*TokenOriginInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf34edebb26f68f4, []int{1}
+	return fileDescriptor_bf34edebb26f68f4, []int{0}
 }
 func (m *TokenOriginInfo) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -127,24 +83,26 @@ func (m *TokenOriginInfo) GetValidatorAddress() []byte {
 	return nil
 }
 
-// reporter's snapshot of delegators' sources pre unbonding
-type DelegationsPreUpdate struct {
-	// token_origin is the origin of the tokens that are about to be updated
+// DelegationsAmounts is the struct that holds the data of delegations and amounts and the total
+type DelegationsAmounts struct {
+	// token_origins is the list of token origins for and where the amounts are staked
 	TokenOrigins []*TokenOriginInfo `protobuf:"bytes,1,rep,name=token_origins,json=tokenOrigins,proto3" json:"token_origins,omitempty"`
+	// total amount of tokens in the list
+	Total cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=total,proto3,customtype=cosmossdk.io/math.Int" json:"total"`
 }
 
-func (m *DelegationsPreUpdate) Reset()         { *m = DelegationsPreUpdate{} }
-func (m *DelegationsPreUpdate) String() string { return proto.CompactTextString(m) }
-func (*DelegationsPreUpdate) ProtoMessage()    {}
-func (*DelegationsPreUpdate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bf34edebb26f68f4, []int{2}
+func (m *DelegationsAmounts) Reset()         { *m = DelegationsAmounts{} }
+func (m *DelegationsAmounts) String() string { return proto.CompactTextString(m) }
+func (*DelegationsAmounts) ProtoMessage()    {}
+func (*DelegationsAmounts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bf34edebb26f68f4, []int{1}
 }
-func (m *DelegationsPreUpdate) XXX_Unmarshal(b []byte) error {
+func (m *DelegationsAmounts) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *DelegationsPreUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *DelegationsAmounts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_DelegationsPreUpdate.Marshal(b, m, deterministic)
+		return xxx_messageInfo_DelegationsAmounts.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -154,19 +112,19 @@ func (m *DelegationsPreUpdate) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *DelegationsPreUpdate) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DelegationsPreUpdate.Merge(m, src)
+func (m *DelegationsAmounts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DelegationsAmounts.Merge(m, src)
 }
-func (m *DelegationsPreUpdate) XXX_Size() int {
+func (m *DelegationsAmounts) XXX_Size() int {
 	return m.Size()
 }
-func (m *DelegationsPreUpdate) XXX_DiscardUnknown() {
-	xxx_messageInfo_DelegationsPreUpdate.DiscardUnknown(m)
+func (m *DelegationsAmounts) XXX_DiscardUnknown() {
+	xxx_messageInfo_DelegationsAmounts.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DelegationsPreUpdate proto.InternalMessageInfo
+var xxx_messageInfo_DelegationsAmounts proto.InternalMessageInfo
 
-func (m *DelegationsPreUpdate) GetTokenOrigins() []*TokenOriginInfo {
+func (m *DelegationsAmounts) GetTokenOrigins() []*TokenOriginInfo {
 	if m != nil {
 		return m.TokenOrigins
 	}
@@ -174,77 +132,36 @@ func (m *DelegationsPreUpdate) GetTokenOrigins() []*TokenOriginInfo {
 }
 
 func init() {
-	proto.RegisterType((*TokenOrigin)(nil), "layer.reporter.TokenOrigin")
 	proto.RegisterType((*TokenOriginInfo)(nil), "layer.reporter.TokenOriginInfo")
-	proto.RegisterType((*DelegationsPreUpdate)(nil), "layer.reporter.DelegationsPreUpdate")
+	proto.RegisterType((*DelegationsAmounts)(nil), "layer.reporter.DelegationsAmounts")
 }
 
 func init() { proto.RegisterFile("layer/reporter/token_origin.proto", fileDescriptor_bf34edebb26f68f4) }
 
 var fileDescriptor_bf34edebb26f68f4 = []byte{
-	// 349 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0x4f, 0x4b, 0x02, 0x41,
-	0x18, 0xc6, 0x77, 0x15, 0x84, 0x46, 0xfb, 0xe3, 0x62, 0x60, 0x1e, 0x56, 0xf3, 0x24, 0x88, 0x33,
-	0x50, 0x9f, 0x20, 0xb3, 0x83, 0xa7, 0x42, 0xea, 0x12, 0x81, 0x8c, 0xee, 0xb4, 0x0e, 0xee, 0xce,
-	0xbb, 0xcc, 0x8c, 0x91, 0xa7, 0xbe, 0x42, 0x1f, 0xa5, 0x43, 0x1f, 0xc2, 0xa3, 0x74, 0x8a, 0x0e,
-	0x12, 0xfa, 0x45, 0x62, 0x77, 0xd4, 0x2c, 0x84, 0xa0, 0xcb, 0x30, 0xef, 0xf3, 0xbe, 0xc3, 0xf3,
-	0x1b, 0x9e, 0x17, 0x1d, 0x07, 0x74, 0xcc, 0x24, 0x91, 0x2c, 0x02, 0xa9, 0x99, 0x24, 0x1a, 0x86,
-	0x4c, 0x74, 0x41, 0x72, 0x9f, 0x0b, 0x1c, 0x49, 0xd0, 0xe0, 0xec, 0x25, 0x23, 0x78, 0x35, 0x52,
-	0xca, 0xd3, 0x90, 0x0b, 0x20, 0xc9, 0x69, 0x46, 0x4a, 0x47, 0x7d, 0x50, 0x21, 0xa8, 0x6e, 0x52,
-	0x11, 0x53, 0x2c, 0x5b, 0x05, 0x1f, 0x7c, 0x30, 0x7a, 0x7c, 0x33, 0x6a, 0xf5, 0x09, 0x65, 0xaf,
-	0x63, 0xa7, 0xcb, 0xc4, 0xc8, 0xa9, 0xa3, 0xfc, 0x03, 0x0d, 0xb8, 0x47, 0x35, 0xc8, 0x2e, 0xf5,
-	0x3c, 0xc9, 0x94, 0x2a, 0xda, 0x15, 0xbb, 0x96, 0xeb, 0x1c, 0xac, 0x1b, 0x67, 0x46, 0x77, 0xce,
-	0x51, 0x86, 0x86, 0x30, 0x12, 0xba, 0x98, 0xaa, 0xd8, 0xb5, 0x9d, 0x66, 0x7d, 0x32, 0x2b, 0x5b,
-	0x1f, 0xb3, 0xf2, 0xa1, 0xf1, 0x55, 0xde, 0x10, 0x73, 0x20, 0x21, 0xd5, 0x03, 0xdc, 0x16, 0xfa,
-	0xed, 0xb5, 0x81, 0x96, 0x40, 0x6d, 0xa1, 0x3b, 0xcb, 0xa7, 0xd5, 0x17, 0x1b, 0xed, 0x6f, 0x10,
-	0xb4, 0xc5, 0x3d, 0xc4, 0x14, 0x1e, 0x0b, 0x98, 0xbf, 0x8d, 0x62, 0xdd, 0x58, 0x51, 0x6c, 0x45,
-	0x4e, 0xfd, 0x89, 0x9c, 0xfe, 0x3f, 0xf2, 0x1d, 0x2a, 0xb4, 0x0c, 0x05, 0x07, 0xa1, 0xae, 0x24,
-	0xbb, 0x89, 0x3c, 0xaa, 0x99, 0xd3, 0x42, 0xbb, 0x9b, 0xa9, 0xc5, 0xc8, 0xe9, 0x5a, 0xf6, 0xa4,
-	0x8c, 0x7f, 0xe6, 0x86, 0x7f, 0x7d, 0xb7, 0x93, 0xd3, 0xdf, 0x82, 0x6a, 0x5e, 0x4c, 0xe6, 0xae,
-	0x3d, 0x9d, 0xbb, 0xf6, 0xe7, 0xdc, 0xb5, 0x9f, 0x17, 0xae, 0x35, 0x5d, 0xb8, 0xd6, 0xfb, 0xc2,
-	0xb5, 0x6e, 0xeb, 0x3e, 0xd7, 0x83, 0x51, 0x0f, 0xf7, 0x21, 0x24, 0x9a, 0x05, 0x01, 0xc8, 0x06,
-	0x07, 0x62, 0xf6, 0xe6, 0x71, 0x63, 0x73, 0xc6, 0x11, 0x53, 0xbd, 0x4c, 0x92, 0xef, 0xe9, 0x57,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x45, 0xf3, 0x83, 0x58, 0x02, 0x00, 0x00,
-}
-
-func (m *TokenOrigin) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *TokenOrigin) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *TokenOrigin) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size := m.Amount.Size()
-		i -= size
-		if _, err := m.Amount.MarshalTo(dAtA[i:]); err != nil {
-			return 0, err
-		}
-		i = encodeVarintTokenOrigin(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x12
-	if len(m.ValidatorAddress) > 0 {
-		i -= len(m.ValidatorAddress)
-		copy(dAtA[i:], m.ValidatorAddress)
-		i = encodeVarintTokenOrigin(dAtA, i, uint64(len(m.ValidatorAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
+	// 342 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x91, 0xcf, 0x4e, 0x02, 0x31,
+	0x10, 0xc6, 0xb7, 0x12, 0x49, 0xac, 0xf8, 0x87, 0x8d, 0x26, 0xc8, 0x61, 0x41, 0x4e, 0x24, 0x84,
+	0x36, 0xd1, 0x27, 0x00, 0xf1, 0xc0, 0xc9, 0x84, 0x78, 0xf2, 0x42, 0x0a, 0x5b, 0x97, 0x86, 0xdd,
+	0x0e, 0x69, 0x8b, 0x91, 0xb7, 0xf0, 0x05, 0x7c, 0x07, 0x0f, 0x3e, 0x04, 0x47, 0xe2, 0xc9, 0x78,
+	0x20, 0x06, 0x5e, 0xc4, 0x6c, 0x0b, 0x08, 0xde, 0xbc, 0x34, 0x9d, 0x6f, 0x7e, 0x93, 0xf9, 0x66,
+	0x06, 0x5f, 0xc6, 0x6c, 0xc2, 0x15, 0x55, 0x7c, 0x04, 0xca, 0x70, 0x45, 0x0d, 0x0c, 0xb9, 0xec,
+	0x82, 0x12, 0x91, 0x90, 0x64, 0xa4, 0xc0, 0x80, 0x7f, 0x6c, 0x11, 0xb2, 0x46, 0x8a, 0x79, 0x96,
+	0x08, 0x09, 0xd4, 0xbe, 0x0e, 0x29, 0x5e, 0xf4, 0x41, 0x27, 0xa0, 0xbb, 0x36, 0xa2, 0x2e, 0x58,
+	0xa5, 0xce, 0x22, 0x88, 0xc0, 0xe9, 0xe9, 0xcf, 0xa9, 0x95, 0x37, 0x84, 0x4f, 0xee, 0xd3, 0x56,
+	0x77, 0xb6, 0x53, 0x5b, 0x3e, 0x82, 0x5f, 0xc3, 0xf9, 0x90, 0xc7, 0x3c, 0x62, 0x06, 0x54, 0x97,
+	0x85, 0xa1, 0xe2, 0x5a, 0x17, 0x50, 0x19, 0x55, 0x73, 0x9d, 0xd3, 0x4d, 0xa2, 0xe1, 0xf4, 0x14,
+	0x7e, 0x62, 0xb1, 0x08, 0x77, 0xe0, 0x3d, 0x07, 0x6f, 0x12, 0x6b, 0xf8, 0x06, 0x67, 0x59, 0x02,
+	0x63, 0x69, 0x0a, 0x99, 0x32, 0xaa, 0x1e, 0x34, 0x6b, 0xd3, 0x79, 0xc9, 0xfb, 0x9a, 0x97, 0xce,
+	0x9d, 0x53, 0x1d, 0x0e, 0x89, 0x00, 0x9a, 0x30, 0x33, 0x20, 0x6d, 0x69, 0x3e, 0xde, 0xeb, 0x78,
+	0x35, 0x42, 0x5b, 0x9a, 0xce, 0xaa, 0xb4, 0xf2, 0x8a, 0xb0, 0xdf, 0x72, 0x36, 0x04, 0x48, 0xdd,
+	0xb0, 0xaa, 0xf6, 0x5b, 0xf8, 0x68, 0x7b, 0x67, 0xa9, 0xe3, 0x4c, 0xf5, 0xf0, 0xaa, 0x44, 0x76,
+	0xb7, 0x46, 0xfe, 0x4c, 0xdb, 0xc9, 0x99, 0x5f, 0x41, 0xfb, 0x0d, 0xbc, 0x6f, 0xc0, 0xb0, 0xd8,
+	0x8e, 0xf0, 0x4f, 0x83, 0xae, 0xb2, 0x79, 0x3b, 0x5d, 0x04, 0x68, 0xb6, 0x08, 0xd0, 0xf7, 0x22,
+	0x40, 0x2f, 0xcb, 0xc0, 0x9b, 0x2d, 0x03, 0xef, 0x73, 0x19, 0x78, 0x0f, 0xb5, 0x48, 0x98, 0xc1,
+	0xb8, 0x47, 0xfa, 0x90, 0x50, 0xc3, 0xe3, 0x18, 0x54, 0x5d, 0x00, 0x75, 0x87, 0x7f, 0xde, 0x3a,
+	0xfd, 0x64, 0xc4, 0x75, 0x2f, 0x6b, 0x0f, 0x74, 0xfd, 0x13, 0x00, 0x00, 0xff, 0xff, 0x41, 0x00,
+	0xe6, 0xb5, 0x19, 0x02, 0x00, 0x00,
 }
 
 func (m *TokenOriginInfo) Marshal() (dAtA []byte, err error) {
@@ -294,7 +211,7 @@ func (m *TokenOriginInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *DelegationsPreUpdate) Marshal() (dAtA []byte, err error) {
+func (m *DelegationsAmounts) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -304,16 +221,26 @@ func (m *DelegationsPreUpdate) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DelegationsPreUpdate) MarshalTo(dAtA []byte) (int, error) {
+func (m *DelegationsAmounts) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *DelegationsPreUpdate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *DelegationsAmounts) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
+	{
+		size := m.Total.Size()
+		i -= size
+		if _, err := m.Total.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTokenOrigin(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
 	if len(m.TokenOrigins) > 0 {
 		for iNdEx := len(m.TokenOrigins) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -342,21 +269,6 @@ func encodeVarintTokenOrigin(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *TokenOrigin) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ValidatorAddress)
-	if l > 0 {
-		n += 1 + l + sovTokenOrigin(uint64(l))
-	}
-	l = m.Amount.Size()
-	n += 1 + l + sovTokenOrigin(uint64(l))
-	return n
-}
-
 func (m *TokenOriginInfo) Size() (n int) {
 	if m == nil {
 		return 0
@@ -376,7 +288,7 @@ func (m *TokenOriginInfo) Size() (n int) {
 	return n
 }
 
-func (m *DelegationsPreUpdate) Size() (n int) {
+func (m *DelegationsAmounts) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -388,6 +300,8 @@ func (m *DelegationsPreUpdate) Size() (n int) {
 			n += 1 + l + sovTokenOrigin(uint64(l))
 		}
 	}
+	l = m.Total.Size()
+	n += 1 + l + sovTokenOrigin(uint64(l))
 	return n
 }
 
@@ -396,124 +310,6 @@ func sovTokenOrigin(x uint64) (n int) {
 }
 func sozTokenOrigin(x uint64) (n int) {
 	return sovTokenOrigin(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *TokenOrigin) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTokenOrigin
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: TokenOrigin: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: TokenOrigin: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTokenOrigin
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthTokenOrigin
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTokenOrigin
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ValidatorAddress = append(m.ValidatorAddress[:0], dAtA[iNdEx:postIndex]...)
-			if m.ValidatorAddress == nil {
-				m.ValidatorAddress = []byte{}
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTokenOrigin
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTokenOrigin
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTokenOrigin
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTokenOrigin(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTokenOrigin
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *TokenOriginInfo) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -667,7 +463,7 @@ func (m *TokenOriginInfo) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DelegationsPreUpdate) Unmarshal(dAtA []byte) error {
+func (m *DelegationsAmounts) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -690,10 +486,10 @@ func (m *DelegationsPreUpdate) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DelegationsPreUpdate: wiretype end group for non-group")
+			return fmt.Errorf("proto: DelegationsAmounts: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DelegationsPreUpdate: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DelegationsAmounts: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -727,6 +523,40 @@ func (m *DelegationsPreUpdate) Unmarshal(dAtA []byte) error {
 			}
 			m.TokenOrigins = append(m.TokenOrigins, &TokenOriginInfo{})
 			if err := m.TokenOrigins[len(m.TokenOrigins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTokenOrigin
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTokenOrigin
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTokenOrigin
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Total.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

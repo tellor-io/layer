@@ -133,23 +133,25 @@ func TestGetDepositQueryId(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	queryId, err := k.GetDepositQueryId(0)
+	queryId0, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	require.NotNil(t, queryId)
+	require.NotNil(t, queryId0)
 
-	queryId, err = k.GetDepositQueryId(1)
+	queryId1, err := k.GetDepositQueryId(1)
 	require.NoError(t, err)
-	require.NotNil(t, queryId)
+	require.NotNil(t, queryId1)
+	require.NotEqual(t, queryId1, queryId0)
 
 	maxUint64 := ^uint64(0)
-	queryId, err = k.GetDepositQueryId(maxUint64)
+	queryId2, err := k.GetDepositQueryId(maxUint64)
 	require.NoError(t, err)
-	require.NotNil(t, queryId)
+	require.NotEqual(t, queryId2, queryId0)
+	require.NotEqual(t, queryId2, queryId1)
 
 	maxPlusOne := maxUint64 + 1
-	queryId, err = k.GetDepositQueryId(maxPlusOne)
+	queryId3, err := k.GetDepositQueryId(maxPlusOne)
 	require.NoError(t, err)
-	require.NotNil(t, queryId)
+	require.NotNil(t, queryId3)
 }
 
 func TestClaimDeposit(t *testing.T) {
@@ -215,7 +217,7 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 	require.ErrorContains(t, err, "no aggregate found")
 }
 
-func TestClaimDepositReportFlaggedAggregate(t *testing.T) {
+func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
@@ -260,55 +262,6 @@ func TestClaimDepositReportFlaggedAggregate(t *testing.T) {
 	reportIndex := uint64(0)
 	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
 	require.ErrorContains(t, err, "aggregate flagged")
-}
-
-func TestClaimDepositTotalReporterPowerErr(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
-	require.NotNil(t, k)
-	require.NotNil(t, ctx)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	aggregateTimestamp := sdkCtx.BlockTime()
-	AddressType, err := abi.NewType("address", "", nil)
-	require.NoError(t, err)
-	Uint256Type, err := abi.NewType("uint256", "", nil)
-	require.NoError(t, err)
-	StringType, err := abi.NewType("string", "", nil)
-	require.NoError(t, err)
-	reportValueArgs := abi.Arguments{
-		{Type: AddressType},
-		{Type: StringType},
-		{Type: Uint256Type},
-	}
-	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
-	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
-	amountUint64 := big.NewInt(100 * 1e12)
-	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
-	require.NoError(t, err)
-	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
-	queryId, err := k.GetDepositQueryId(0)
-	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(90 * 1e6),
-	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
-	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	totalBondedTokens := math.NewInt(100 * 1e6)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
-	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
-	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
-	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
-
-	depositId := uint64(0)
-	reportIndex := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex)
-	require.NoError(t, err)
-	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
-	require.NoError(t, err)
-	require.Equal(t, depositClaimedResult.Claimed, true)
 }
 
 func TestClaimDepositNotEnoughPower(t *testing.T) {

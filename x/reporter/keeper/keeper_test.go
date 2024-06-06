@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 )
 
-func setupKeeper(t testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, context.Context) {
-	k, sk, bk, ctx := keepertest.ReporterKeeper(t)
+func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, context.Context) {
+	tb.Helper()
+	k, sk, bk, ctx := keepertest.ReporterKeeper(tb)
 	return k, sk, bk, ctx
 }
 

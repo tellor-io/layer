@@ -1,11 +1,16 @@
 package testutil
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math"
+	"math/big"
+	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, queryId []byte) []oracletypes.MicroReport {
@@ -57,4 +62,25 @@ func IntToHex(values []int) []string {
 		hexValues = append(hexValues, fmt.Sprintf("%x", value))
 	}
 	return hexValues
+}
+
+func EncodeValue(number float64) string {
+	strNumber := fmt.Sprintf("%.18f", number)
+
+	parts := strings.Split(strNumber, ".")
+	if len(parts[1]) > 18 {
+		parts[1] = parts[1][:18]
+	}
+	truncatedStr := parts[0] + parts[1]
+
+	bigIntNumber := new(big.Int)
+	bigIntNumber.SetString(truncatedStr, 10)
+
+	uint256ABIType, _ := abi.NewType("uint256", "", nil)
+
+	arguments := abi.Arguments{{Type: uint256ABIType}}
+	encodedBytes, _ := arguments.Pack(bigIntNumber)
+
+	encodedString := hex.EncodeToString(encodedBytes)
+	return encodedString
 }

@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 
+	layer "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	layer "github.com/tellor-io/layer/types"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 type VoterInfo struct {
@@ -172,7 +174,7 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInf
 			accInputTotal = accInputTotal.Add(amt.TruncateInt())
 			outputs = append(outputs, banktypes.NewOutput(recipient.PayerAddress, coins))
 		} else {
-			if err := k.ReturnFeetoStake(ctx, recipient.PayerAddress, hashId, amt.TruncateInt()); err != nil {
+			if err := k.ReturnFeetoStake(ctx, hashId, amt.TruncateInt()); err != nil {
 				return err
 			}
 		}
@@ -210,7 +212,8 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayers []t
 
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reporterBond)))
 }
-func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount math.Int, totalVoterPower math.Int) (math.Int, error) {
+
+func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount, totalVoterPower math.Int) (math.Int, error) {
 	if totalAmount.IsZero() {
 		return totalAmount, nil
 	}
@@ -231,7 +234,8 @@ func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmoun
 
 func (k Keeper) CalculateVoterShare(
 	ctx context.Context, voters []VoterInfo, totalTokens math.Int,
-	totalPower math.Int) ([]VoterInfo, math.Int) {
+	totalPower math.Int,
+) ([]VoterInfo, math.Int) {
 	scalingFactor := layer.PowerReduction
 	totalShare := math.ZeroInt()
 	for i, v := range voters {

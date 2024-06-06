@@ -1,9 +1,6 @@
 // const { AbiCoder } = require("@ethersproject/abi");
 const { expect } = require("chai");
-const h = require("./helpers/helpers");
-var assert = require('assert');
-const web3 = require('web3');
-const { hre, ethers } = require("hardhat");
+const h = require("./helpers/evmHelpers");
 
 describe("Function Tests - NewTransition", function() {
 
@@ -54,21 +51,21 @@ describe("Function Tests - NewTransition", function() {
     parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor",PARACHUTE, devWallet);
 
     // get blobstream initial params
-    valTs = await h.getValsetTimestampByIndex(0)
-    valParams = await h.getValsetCheckpointParams(valTs)
-    valSet = await h.getValset(valParams.timestamp)
-    // deploy blobstream
+    // valTs = await h.getValsetTimestampByIndex(0)
+    // valParams = await h.getValsetCheckpointParams(valTs)
+    // valSet = await h.getValset(valParams.timestamp)
+    // deploy blobstream (no need for actual queries)
     blobstream = await ethers.deployContract(
       "BlobstreamO", [
-      valParams.powerThreshold,
-      valParams.timestamp,
+       1,
+       2,
       UNBONDING_PERIOD,
-      valParams.checkpoint,
+      h.hash("testy"),
       DEV_WALLET
     ]
     )
     // deploy tokenbridge
-    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER, await blobstream.getAddress(), TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.getAddress(), TELLORFLEX])
     // stake reporter
     await tellor.connect(bigWallet).transfer(await accounts[0].getAddress(), h.toWei("1000"))
     await tellor.connect(accounts[0]).approve(TELLORFLEX, h.toWei("1000"))
@@ -97,6 +94,11 @@ describe("Function Tests - NewTransition", function() {
     this.timeout(100000)
   });
 
+  it("constructor", async function() {
+    // check if new oracle address is set
+    expect(await tbridge.token() == tellor.getAddress(), "tellor should be set")
+    expect(await tbridge.tellorFlex() == flex.getAddress(), "tellor should be set")
+  })
   it("transition worked", async function() {
     // check if new oracle address is set
     expect(await tellor.getAddressVars(h.hash("_ORACLE_CONTRACT"))).to.equal(await tbridge.getAddress())
@@ -197,6 +199,15 @@ describe("Function Tests - NewTransition", function() {
     expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(0)
     await tellor.mintToOracle()
     expect(await tellor.balanceOf(await tbridge.getAddress())).to.be.greaterThan(0)
+    
+  })
+  it("mintToTeam()", async function () {
+    expect(await tellor.balanceOf(await tbridge.getAddress())).to.equal(0)
+    await tellor.mintToOracle()
+    expect(await tellor.balanceOf(await tbridge.getAddress())).to.be.greaterThan(0)
+    let teamBal = await tellor.balanceOf(DEV_WALLET)
+    await tellor.mintToTeam()
+    expect(await tellor.balanceOf(DEV_WALLET) > teamBal, "mint to team should work")
   })
 
 })

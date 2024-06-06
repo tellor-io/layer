@@ -9,19 +9,21 @@ import (
 
 func TestTupleListEncoding(t *testing.T) {
 	t.Parallel()
-	var dataSpec = DataSpec{
+	dataSpec := DataSpec{
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "metric", FieldType: "string"},
 			{Name: "currency", FieldType: "string"},
-			{Name: "collection", FieldType: "tuple[]",
+			{
+				Name: "collection", FieldType: "tuple[]",
 				NestedComponent: []*ABIComponent{
 					{Name: "chainName", FieldType: "string"},
 					{Name: "collectionAddress", FieldType: "address"},
 				},
 			},
-			{Name: "tokens", FieldType: "tuple[]",
+			{
+				Name: "tokens", FieldType: "tuple[]",
 				NestedComponent: []*ABIComponent{
 					{Name: "chainName", FieldType: "string"},
 					{Name: "tokenName", FieldType: "string"},
@@ -60,11 +62,12 @@ func TestTupleListEncoding(t *testing.T) {
 
 func TestTupleDataSpecEncoding(t *testing.T) {
 	t.Parallel()
-	var dataspec = DataSpec{
+	dataspec := DataSpec{
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
-			{Name: "tupletest", FieldType: "tuple",
+			{
+				Name: "tupletest", FieldType: "tuple",
 				NestedComponent: []*ABIComponent{
 					{Name: "num1", FieldType: "uint256"},
 					{Name: "num2", FieldType: "uint256"},
@@ -198,7 +201,7 @@ func TestMixedEncoding(t *testing.T) {
 			},
 			"ChatGPTResponse",
 			`["What is Tellor?"]`,
-			`["V2hhdCBpcyBUZWxsb3I/"]`, //base64
+			`["V2hhdCBpcyBUZWxsb3I/"]`,
 			"0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000f43686174475054526573706f6e7365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000f576861742069732054656c6c6f723f0000000000000000000000000000000000",
 		},
 		{
@@ -244,7 +247,7 @@ func TestMixedEncoding(t *testing.T) {
 			},
 			"EVMCall",
 			`["1","0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0", "0x18160ddd"]`,
-			`[1,"0x88df592f8eb5d7bd38bfef7deb0fbc02cf3778a0","GBYN3Q=="]`, //base64 of the hex signature
+			`[1,"0x88df592f8eb5d7bd38bfef7deb0fbc02cf3778a0","GBYN3Q=="]`,
 			"0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000745564d43616c6c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000000000000100000000000000000000000088df592f8eb5d7bd38bfef7deb0fbc02cf3778a00000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000418160ddd00000000000000000000000000000000000000000000000000000000",
 		},
 	}
@@ -275,7 +278,7 @@ func TestGenesisDataSpec(t *testing.T) {
 }
 
 func TestValidateValue(t *testing.T) {
-	var dataspec = DataSpec{
+	dataspec := DataSpec{
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "asset", FieldType: "string"},
@@ -288,7 +291,7 @@ func TestValidateValue(t *testing.T) {
 }
 
 func TestDecodeValue(t *testing.T) {
-	var dataspec = DataSpec{
+	dataspec := DataSpec{
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "asset", FieldType: "string"},
@@ -302,7 +305,7 @@ func TestDecodeValue(t *testing.T) {
 }
 
 func TestMakeArgMarshaller(t *testing.T) {
-	var dataspec = DataSpec{
+	dataspec := DataSpec{
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "asset", FieldType: "string"},
@@ -316,7 +319,7 @@ func TestMakeArgMarshaller(t *testing.T) {
 }
 
 func TestMakeAruments(t *testing.T) {
-	var dataspec = DataSpec{
+	dataspec := DataSpec{
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "asset", FieldType: "string"},

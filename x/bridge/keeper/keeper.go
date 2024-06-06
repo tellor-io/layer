@@ -156,15 +156,17 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx context.Context) (*types
 }
 
 // function for loading last saved bridge validator set and comparing it to current set
-func (k Keeper) CompareBridgeValidators(ctx context.Context) (bool, error) {
+func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error) {
 	// load current validator set in EVM compatible format
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
+	fmt.Println("currentValidatorSetEVMCompatible in function: ", currentValidatorSetEVMCompatible)
 	if err != nil {
 		k.Logger(ctx).Info("No current validator set found")
 		return false, err
 	}
 
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	fmt.Println("lastSavedBridgeValidators: ", lastSavedBridgeValidators)
 	if err != nil {
 		k.Logger(ctx).Info("No saved bridge validator set found")
 		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
@@ -179,6 +181,7 @@ func (k Keeper) CompareBridgeValidators(ctx context.Context) (bool, error) {
 		}
 		return false, err
 	}
+	fmt.Println("k.PowerDiff: ", k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible))
 	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) {
 		return false, nil
 	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 {
@@ -243,7 +246,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	valsetIdx, err := k.LatestCheckpointIdx.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
-		// TODO: handle error?
+		return err
 	}
 	if valsetIdx.Index == 0 {
 		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
@@ -506,12 +509,12 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte)
 	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
 	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
 
-	addressesA, err := k.tryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA)
+	addressesA, err := k.TryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA)
 	if err != nil {
 		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
 		return common.Address{}, err
 	}
-	addressesB, err := k.tryRecoverAddressWithBothIDs(sigB, msgDoubleHashBytesB)
+	addressesB, err := k.TryRecoverAddressWithBothIDs(sigB, msgDoubleHashBytesB)
 	if err != nil {
 		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
 		return common.Address{}, err
@@ -528,7 +531,7 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte)
 	}
 }
 
-func (k Keeper) tryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Address, error) {
+func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Address, error) {
 	var addrs []common.Address
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)

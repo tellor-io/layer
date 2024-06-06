@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
-
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	pf_constants "github.com/tellor-io/layer/daemons/constants"
@@ -19,6 +17,7 @@ import (
 	pft "github.com/tellor-io/layer/daemons/pricefeed/types"
 	"github.com/tellor-io/layer/testutil/constants"
 	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
+	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
 )
 
 const (
@@ -37,10 +36,10 @@ const (
 )
 
 var (
-	queryError              = errors.New("Failed to query exchange")
-	priceFuncError          = errors.New("Failed to get Price")
-	tickerNotAvailableError = errors.New("Ticker not available")
-	baseEqd                 = &types.ExchangeQueryDetails{
+	errquery              = errors.New("failed to query exchange")
+	errpriceFunc          = errors.New("failed to get Price")
+	errtickerNotAvailable = errors.New("ticker not available")
+	baseEqd               = &types.ExchangeQueryDetails{
 		Url: "https://api.binance.us/api/v3/ticker/24hr?symbol=$",
 	}
 	baseEmc = &types.MutableExchangeMarketConfig{
@@ -151,7 +150,7 @@ func TestQuery(t *testing.T) {
 				},
 			},
 			expectedUnavailable: map[types.MarketId]error{
-				unavailableId: tickerNotAvailableError,
+				unavailableId: errtickerNotAvailable,
 			},
 		},
 		"Failure - price function returns non-existent unavailable ticker": {
@@ -165,7 +164,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: true,
-			expectedError:    fmt.Errorf("Severe unexpected error: no market id for ticker: %s", noMarketTicker),
+			expectedError:    fmt.Errorf("severe unexpected error: no market id for ticker: %s", noMarketTicker),
 		},
 		"Failure - no marketIds queried": {
 			marketIds: []types.MarketId{},
@@ -175,7 +174,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    errors.New("At least one marketId must be queried"),
+			expectedError:    errors.New("at least one marketId must be queried"),
 		},
 		"Failure - market config not defined for market": {
 			marketIds: []types.MarketId{FAKEUSD_ID},
@@ -185,7 +184,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    fmt.Errorf("No market config for market: %v", FAKEUSD_ID),
+			expectedError:    fmt.Errorf("no market config for market: %v", FAKEUSD_ID),
 		},
 		"Failure - market price exponent not defined for market": {
 			marketIds: []types.MarketId{noPriceExponentMarketId},
@@ -195,17 +194,17 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: false,
-			expectedError:    fmt.Errorf("No market price exponent for id: %v", noPriceExponentMarketId),
+			expectedError:    fmt.Errorf("no market price exponent for id: %v", noPriceExponentMarketId),
 		},
 		"Failure - query fails": {
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
 				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
-				queryError,
+				errquery,
 			),
 			expectApiRequest: true,
-			expectedError:    queryError,
+			expectedError:    errquery,
 		},
 		"Failure - unexpected API response code: 400": {
 			priceFunc: priceFunc,
@@ -238,7 +237,7 @@ func TestQuery(t *testing.T) {
 				nil,
 			),
 			expectApiRequest: true,
-			expectedError:    sources.NewExchangeError("", priceFuncError.Error()),
+			expectedError:    sources.NewExchangeError("", errpriceFunc.Error()),
 		},
 		"Failure - PriceFunction returns invalid response": {
 			priceFunc: priceFuncWithInvalidResponse,
@@ -253,7 +252,7 @@ func TestQuery(t *testing.T) {
 			),
 			expectApiRequest: true,
 			expectedError: fmt.Errorf(
-				"Severe unexpected error: no market id for ticker: %v",
+				"severe unexpected error: no market id for ticker: %v",
 				noMarketTicker,
 			),
 		},
@@ -352,7 +351,7 @@ func priceFuncWithValidAndUnavailableTickers(
 			prices[ticker] = dummyPrice
 		}
 	}
-	return prices, map[string]error{unavailableTicker: tickerNotAvailableError}, nil
+	return prices, map[string]error{unavailableTicker: errtickerNotAvailable}, nil
 }
 
 func priceFuncReturnsInvalidUnavailableTicker(
@@ -360,7 +359,7 @@ func priceFuncReturnsInvalidUnavailableTicker(
 	tickerToPriceExponent map[string]int32,
 	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
-	return nil, map[string]error{noMarketTicker: tickerNotAvailableError}, nil
+	return nil, map[string]error{noMarketTicker: errtickerNotAvailable}, nil
 }
 
 func priceFuncWithErr(
@@ -368,5 +367,5 @@ func priceFuncWithErr(
 	tickerToPriceExponent map[string]int32,
 	resolver pft.Resolver,
 ) (prices map[string]uint64, unavailable map[string]error, err error) {
-	return nil, nil, priceFuncError
+	return nil, nil, errpriceFunc
 }

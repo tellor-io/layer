@@ -2,9 +2,7 @@ package grpc
 
 import "github.com/tellor-io/layer/daemons/mocks"
 
-var (
-	TcpEndpoint = "localhost:9090"
-)
+var TcpEndpoint = "localhost:9090"
 
 // GenerateMockGrpcClientWithOptionalTcpConnectionErrors generates a mock gRPC client that mocks Tcp connections and
 // optionally returns the given connection and close errors. This mock also mocks grpc connections if the tcp

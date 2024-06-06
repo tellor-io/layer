@@ -3,11 +3,12 @@ package simulation
 import (
 	"math/rand"
 
+	"github.com/tellor-io/layer/x/reporter/keeper"
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/tellor-io/layer/x/reporter/keeper"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 func SimulateMsgCreateReporter(
@@ -19,7 +20,7 @@ func SimulateMsgCreateReporter(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgCreateReporter{
-			Reporter: simAccount.Address.String(),
+			ReporterAddress: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the CreateReporter simulation

@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/exchange_common"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	"github.com/tellor-io/layer/lib/metrics"
+	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
 )
 
 const (

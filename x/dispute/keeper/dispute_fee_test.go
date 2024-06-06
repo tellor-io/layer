@@ -1,13 +1,15 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) TestPayFromAccount() {
@@ -42,14 +44,13 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 	dispute := k.dispute()
-	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.ReportEvidence.Reporter, dispute.SlashAmount, dispute.HashId).Return(nil)
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
 }
 
 func (k *KeeperTestSuite) TestReturnFeetoStake() {
-	repAcc := sample.AccAddressBytes()
-	k.reporterKeeper.On("FeeRefund", k.ctx, repAcc, []byte("hash"), math.OneInt()).Return(nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.OneInt()).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, math.OneInt()))).Return(nil)
-	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, repAcc, []byte("hash"), math.OneInt()))
+	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), math.OneInt()))
 }

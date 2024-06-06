@@ -22,6 +22,7 @@ Layer is limited in many ways. This ADR is meant to go over the limits relating 
     How fast does the chain grow in size? 
     What measures / designs are in place for pruning state? 
     Should we consider a data availability layer? Should we assume no-one needs data or verification passed prunning timeframe?
+    
 
 ###  Blocksize limits
     
@@ -30,6 +31,7 @@ Layer is limited in many ways. This ADR is meant to go over the limits relating 
         - How many different queryIds with one reporter?
         - How many reporters can we fit in with one given queryId?
     How many transfers can fit into a block?
+    How many delegators can unstake/ change?  
 
 ## Bridge 
 

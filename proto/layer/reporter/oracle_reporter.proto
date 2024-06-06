@@ -11,22 +11,21 @@ option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
 // OracleReporter is the struct that holds the data for a reporter
 message OracleReporter {
-  // reporter is the address of the reporter
-  bytes reporter = 1;
   // tokens is the amount of tokens the reporter has
-  string total_tokens = 2 [
+  string total_tokens = 1 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   // commission for the reporter
-  cosmos.staking.v1beta1.Commission commission = 3;
+  cosmos.staking.v1beta1.Commission commission = 2;
   // jailed is a bool whether the reporter is jailed or not
-  bool jailed = 4;
+  bool jailed = 3;
   // jailed_until is the time the reporter is jailed until
-  google.protobuf.Timestamp jailed_until = 5 [
+  google.protobuf.Timestamp jailed_until = 4 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+  uint64 delegators_count = 5;
 }

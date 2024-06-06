@@ -5,16 +5,16 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-
-	errorsmod "cosmossdk.io/errors"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 
+	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	layertypes "github.com/tellor-io/layer/types"
 )
 
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
@@ -29,23 +29,20 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 
 	// get reporter
-	reporter, err := k.keeper.reporterKeeper.Reporter(ctx, reporterAddr)
+	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr)
 	if err != nil {
 		return nil, err
-	}
-	if reporter.Jailed {
-		return nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", reporterAddr)
 	}
 	params, err := k.keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if reporter.TotalTokens.LT(params.MinStakeAmount) {
-		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporter.TotalTokens, params.MinStakeAmount)
+	if reporterStake.LT(params.MinStakeAmount) {
+		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
 	}
 
-	votingPower := reporter.TotalTokens.Quo(layertypes.PowerReduction).Int64()
+	votingPower := reporterStake.Quo(layertypes.PowerReduction).Int64()
 	// decode query data hex string to bytes
 
 	queryId := utils.QueryIDFromData(msg.QueryData)
@@ -91,12 +88,11 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
-	// todo: do we need to keep all the commits? also whats best do it here or aggregation?
 	// remove commit from store
-	// err = k.Keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
-	// if err != nil {
-	// 	return nil, err
-	// }
+	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
+	if err != nil {
+		return nil, err
+	}
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
@@ -106,7 +102,8 @@ func (k Keeper) directReveal(ctx context.Context,
 	value string,
 	reporterAddr sdk.AccAddress,
 	votingPower int64,
-	incycle bool) error {
+	incycle bool,
+) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
 

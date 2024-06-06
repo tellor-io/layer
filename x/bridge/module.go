@@ -143,7 +143,7 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	if sdkCtx.BlockHeight() == 1 {
 		return nil
 	}
-	_, err := am.keeper.CompareBridgeValidators(sdkCtx)
+	_, err := am.keeper.CompareAndSetBridgeValidators(sdkCtx)
 	if err != nil {
 		return err
 	}

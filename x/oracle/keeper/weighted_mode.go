@@ -13,15 +13,15 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 
 	var modeReport types.MicroReport
 	var modeReporters []*types.AggregateReporter
-	var maxWeight = int64(0)
-	var maxFrequency = 0
+	maxWeight := int64(0)
+	maxFrequency := 0
 	var mode string
 	frequencyMap := make(map[string]int)
 
 	var totalReporterPower int64
 	// populate frequency map
 	for _, r := range reports {
-		modeReporters = append(modeReporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power})
+		modeReporters = append(modeReporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 		entries := r.Power
 		for i := int64(0); i < entries; i++ {
 			frequencyMap[r.Value]++
@@ -47,7 +47,6 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 				modeReportIndex = int64(i)
 			}
 		}
-
 	}
 
 	aggregateReport := types.Aggregate{

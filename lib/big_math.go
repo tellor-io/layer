@@ -48,7 +48,7 @@ func warmCache() map[uint64]*big.Int {
 		}
 
 		bigExponentValues[uint64(i)] = bigValue
-		exponentString = exponentString + "0"
+		exponentString += "0"
 	}
 
 	return bigExponentValues

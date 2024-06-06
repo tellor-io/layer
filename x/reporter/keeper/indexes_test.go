@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
-
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 )
 
 func TestReporterDelegatorIndex(t *testing.T) {
@@ -16,7 +16,7 @@ func TestReporterDelegatorIndex(t *testing.T) {
 
 	repAddr := sample.AccAddressBytes()
 	// set reporter
-	reporter := types.NewOracleReporter(repAddr.String(), math.NewInt(300), nil)
+	reporter := types.NewOracleReporter(repAddr.String(), math.ZeroInt(), nil, 0)
 	err := k.Reporters.Set(ctx, repAddr, reporter)
 	require.NoError(t, err)
 
@@ -53,5 +53,4 @@ func TestReporterDelegatorIndex(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, repAddr.String(), del.Reporter)
 	}
-
 }

@@ -4,7 +4,7 @@ release/
 .idea/
 .vscode/
 .DS_Store
-layerd
+/layerd
 .hypothesis
 evm/artifacts
 evm/cache

@@ -7,15 +7,14 @@ import (
 	gomath "math"
 	"math/big"
 
-	// "time"
+	layertypes "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	layertypes "github.com/tellor-io/layer/types"
-	"github.com/tellor-io/layer/x/dispute/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 // Get dispute by reporter key
@@ -71,7 +70,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	disputeId := k.NextDisputeId(ctx)
 	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
 	// slash amount
-	disputeFee, err := k.GetDisputeFee(ctx, msg.Report.Reporter, msg.DisputeCategory)
+	disputeFee, err := k.GetDisputeFee(ctx, *msg.Report, msg.DisputeCategory)
 	if err != nil {
 		return err
 	}
@@ -169,14 +168,8 @@ func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.Leg
 }
 
 // Get dispute fee
-func (k Keeper) GetDisputeFee(ctx sdk.Context, repAddr string, category types.DisputeCategory) (math.Int, error) {
-	reporterAddr := sdk.MustAccAddressFromBech32(repAddr)
-	reporter, err := k.reporterKeeper.Reporter(ctx, reporterAddr)
-	if err != nil {
-		return math.Int{}, err
-	}
-
-	stake := reporter.TotalTokens
+func (k Keeper) GetDisputeFee(ctx sdk.Context, rep oracletypes.MicroReport, category types.DisputeCategory) (math.Int, error) {
+	stake := layertypes.PowerReduction.MulRaw(rep.Power)
 	switch category {
 	case types.Warning:
 		// calculate 1 percent of bond
@@ -200,7 +193,6 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 
 	if !dispute.Open {
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute closed", dispute.DisputeId)
-
 	}
 	// if dispute is not unresovled and dispute end time is before current block time then we can't update it
 	if dispute.DisputeEndTime.Before(ctx.BlockTime()) {

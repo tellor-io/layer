@@ -4,16 +4,16 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func NewOracleReporter(reporter string, totalAmount math.Int, commission *stakingtypes.Commission) OracleReporter {
-	repAcc := sdk.MustAccAddressFromBech32(reporter)
+func NewOracleReporter(reporter string, tokens math.Int, commission *stakingtypes.Commission, count uint64) OracleReporter {
 	return OracleReporter{
-		Reporter:    repAcc,
-		TotalTokens: totalAmount,
-		Commission:  commission,
+		Commission:      commission,
+		TotalTokens:     tokens,
+		DelegatorsCount: count,
 	}
 }
 

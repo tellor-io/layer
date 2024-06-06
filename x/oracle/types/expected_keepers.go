@@ -3,12 +3,11 @@ package types
 import (
 	context "context"
 
+	rktypes "github.com/tellor-io/layer/x/registry/types"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	rktypes "github.com/tellor-io/layer/x/registry/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -34,9 +33,8 @@ type RegistryKeeper interface {
 
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
-	AllocateTokensToReporter(ctx context.Context, reporterAddr sdk.ValAddress, tokens sdk.DecCoins) error
-	Reporter(ctx context.Context, repAddress sdk.AccAddress) (*reportertypes.OracleReporter, error)
-	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int) error
+	ReporterStake(ctx context.Context, repAddress sdk.AccAddress) (math.Int, error)
+	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int, height int64) error
 }
 
 type RegistryHooks interface {

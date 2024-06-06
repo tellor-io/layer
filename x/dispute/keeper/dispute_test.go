@@ -5,13 +5,14 @@ import (
 	gomath "math"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -40,6 +41,7 @@ func (s *KeeperTestSuite) dispute() types.Dispute {
 		SlashAmount:     math.NewInt(10000),
 	}
 }
+
 func (s *KeeperTestSuite) TestGetOpenDisputes() {
 	res, err := s.disputeKeeper.GetOpenDisputes(s.ctx)
 	s.Nil(err)
@@ -126,11 +128,11 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 		Creator:         creator.String(),
 		Report:          &report,
 		DisputeCategory: types.Warning,
-		Fee:             sdk.NewCoin("loya", math.NewInt(100)),
+		Fee:             sdk.NewCoin("loya", math.NewInt(1000)),
 		PayFromBond:     false,
 	}
 
-	reporter := &reportertypes.OracleReporter{Reporter: sdk.MustAccAddressFromBech32(report.Reporter).Bytes(), TotalTokens: math.NewInt(10000)}
+	reporter := &reportertypes.OracleReporter{TotalTokens: math.NewInt(10000)}
 	// mock dependency modules
 	s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter)).Return(reporter, nil)
 	s.bankKeeper.On("HasBalance", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), disputeMsg.Fee).Return(true)
@@ -162,7 +164,6 @@ func (s *KeeperTestSuite) TestJailReporter() {
 }
 
 func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
-
 	testCases := []struct {
 		name                    string
 		cat                     types.DisputeCategory
@@ -206,45 +207,39 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 			}
 		})
 	}
-
 }
 
 func (s *KeeperTestSuite) TestGetDisputeFee() {
-	reporterAcc := sample.AccAddressBytes()
-	reporter := &reportertypes.OracleReporter{TotalTokens: math.OneInt()}
-	s.reporterKeeper.On("Reporter", s.ctx, reporterAcc).Return(reporter, nil)
-	disputeFee, err := s.disputeKeeper.GetDisputeFee(s.ctx, reporterAcc.String(), types.Warning)
+	rep := report()
+	rep.Power = 0
+	disputeFee, err := s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Warning)
 	s.NoError(err)
 	s.Equal(math.ZeroInt(), disputeFee)
 
-	reporter.TotalTokens = math.OneInt()
-	s.reporterKeeper.On("Reporter", s.ctx, reporterAcc).Return(reporter, nil)
-	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, reporterAcc.String(), types.Warning)
+	rep.Power = 1
+	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Warning)
 	s.NoError(err)
-	s.Equal(math.ZeroInt(), disputeFee)
+	s.Equal(math.NewInt(10000), disputeFee)
 
-	reporter.TotalTokens = math.NewInt(100)
-	s.reporterKeeper.On("Reporter", s.ctx, reporterAcc).Return(reporter, nil)
-	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, reporterAcc.String(), types.Warning)
+	rep.Power = 2
+	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Warning)
 	s.NoError(err)
-	s.Equal(math.OneInt(), disputeFee)
+	s.Equal(math.NewInt(20000), disputeFee)
 
-	reporter.TotalTokens = math.NewInt(1000)
-	s.reporterKeeper.On("Reporter", s.ctx, reporterAcc).Return(reporter, nil)
-	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, reporterAcc.String(), types.Warning)
+	rep.Power = 3
+	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Warning)
 	s.NoError(err)
-	s.Equal(math.NewInt(10), disputeFee)
+	s.Equal(math.NewInt(30000), disputeFee)
 
-	reporter.TotalTokens = math.NewInt(10000)
-	s.reporterKeeper.On("Reporter", s.ctx, reporterAcc).Return(reporter, nil)
-	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, reporterAcc.String(), types.Minor)
+	rep.Power = 4
+	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Minor)
 	s.NoError(err)
-	s.Equal(math.NewInt(500), disputeFee)
+	s.Equal(math.NewInt(200000), disputeFee)
 
 	// major
-	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, reporterAcc.String(), types.Major)
+	disputeFee, err = s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Major)
 	s.NoError(err)
-	s.Equal(reporter.TotalTokens, disputeFee)
+	s.Equal(math.NewInt(4000000), disputeFee)
 }
 
 func (s *KeeperTestSuite) TestAddDisputeRound() {
@@ -255,9 +250,7 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 
 	dispute.DisputeStatus = types.Unresolved
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
-	// disputeMsg := types.MsgProposeDispute{
-	// 	Creator:         sample.AccAddressBytes().String(),
-	// 	Report:          &oracletypes.MicroReport{},
+
 	fee := sdk.NewCoin("loya", math.NewInt(10))
 	s.bankKeeper.On("HasBalance", s.ctx, sender, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sender, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
@@ -293,6 +286,7 @@ func (s *KeeperTestSuite) TestSetBlockInfo() {
 	s.NoError(err)
 	s.Equal(expectedBlockInfo, blockInfo)
 }
+
 func (s *KeeperTestSuite) TestCloseDispute() {
 	dispute := s.dispute()
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
@@ -308,5 +302,4 @@ func (s *KeeperTestSuite) TestCloseDispute() {
 	dispute, err = s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
 	s.NoError(err)
 	s.False(dispute.Open)
-
 }

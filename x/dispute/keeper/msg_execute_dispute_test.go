@@ -1,13 +1,15 @@
 package keeper_test
 
 import (
+	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/tellor-io/layer/testutil/sample"
-	"github.com/tellor-io/layer/x/dispute/types"
 )
 
 func (k *KeeperTestSuite) TestExecuteDispute() {

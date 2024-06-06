@@ -3,11 +3,12 @@ package simulation
 import (
 	"math/rand"
 
+	"github.com/tellor-io/layer/x/registry/keeper"
+	"github.com/tellor-io/layer/x/registry/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/tellor-io/layer/x/registry/keeper"
-	"github.com/tellor-io/layer/x/registry/types"
 )
 
 func SimulateMsgRegisterSpec(

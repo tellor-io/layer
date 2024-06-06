@@ -5,9 +5,13 @@ import (
 	"testing"
 	"time"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	tmdb "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/app"
+
+	pruningtypes "cosmossdk.io/store/pruning/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -16,9 +20,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
-
-	"github.com/tellor-io/layer/app"
 )
 
 type (
@@ -29,6 +30,7 @@ type (
 // New creates instance with fully configured cosmos network.
 // Accepts optional config, that will be used in place of the DefaultConfig() if provided.
 func New(t *testing.T, configs ...Config) *Network {
+	t.Helper()
 	if len(configs) > 1 {
 		panic("at most one config should be provided")
 	}
@@ -49,10 +51,8 @@ func New(t *testing.T, configs ...Config) *Network {
 // DefaultConfig will initialize config for the network with custom application,
 // genesis and single validator. All other parameters are inherited from cosmos-sdk/testutil/network.DefaultConfig
 func DefaultConfig() network.Config {
-	var (
-		// encoding = app.MakeEncodingConfig()
-		chainID = "chain-" + tmrand.NewRand().Str(6)
-	)
+	// encoding = app.MakeEncodingConfig()
+	chainID := "chain-" + tmrand.NewRand().Str(6)
 	return network.Config{
 		// Codec:             encoding.Marshaler,
 		// TxConfig:          encoding.TxConfig,

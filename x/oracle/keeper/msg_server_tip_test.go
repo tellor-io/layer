@@ -1,10 +1,12 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestTip() {
@@ -19,7 +21,6 @@ func (s *KeeperTestSuite) TestTip() {
 	// }
 	// _, err := s.msgServer.Tip(s.ctx, &msg)
 	// require.NoError(err)
-
 }
 
 func (s *KeeperTestSuite) TestTipWithInvalidDenom() {

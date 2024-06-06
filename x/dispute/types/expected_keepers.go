@@ -3,11 +3,12 @@ package types
 import (
 	context "context"
 
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
@@ -39,14 +40,13 @@ type OracleKeeper interface {
 
 type ReporterKeeper interface {
 	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error
-	Reporter(ctx context.Context, repAddr sdk.AccAddress) (*reportertypes.OracleReporter, error)
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration int64) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
 	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error
-	ReturnSlashedTokens(ctx context.Context, repAddr string, amt math.Int, hashId []byte) error
+	ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error
 	AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) error
 	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Delegation, error)
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error)
-	FeeRefund(ctx context.Context, repAcc sdk.AccAddress, hashId []byte, amt math.Int) error
+	FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error
 }

@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 type ReporterDelegatorsIndex struct {

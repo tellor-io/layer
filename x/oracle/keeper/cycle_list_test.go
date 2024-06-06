@@ -84,5 +84,4 @@ func (s *KeeperTestSuite) TestGenesisCycleList() {
 	// require.Contains(cycleList, ethQueryData[2:])
 	// require.Contains(cycleList, btcQueryData[2:])
 	// require.Contains(cycleList, trbQueryData[2:])
-
 }

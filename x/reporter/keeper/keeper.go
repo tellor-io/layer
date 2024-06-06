@@ -1,40 +1,36 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/tellor-io/layer/x/reporter/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (
 	Keeper struct {
-		cdc                            codec.BinaryCodec
-		storeService                   store.KVStoreService
-		Params                         collections.Item[types.Params]
-		Tracker                        collections.Item[types.StakeTracker]
-		Reporters                      collections.Map[[]byte, types.OracleReporter]
-		DelegatorTips                  collections.Map[[]byte, math.Int]
-		Delegators                     *collections.IndexedMap[[]byte, types.Delegation, ReporterDelegatorsIndex]
-		TokenOrigin                    collections.Map[collections.Pair[[]byte, []byte], math.Int]
-		ReportersAccumulatedCommission collections.Map[[]byte, types.ReporterAccumulatedCommission]
-		ReporterOutstandingRewards     collections.Map[[]byte, types.ReporterOutstandingRewards]
-		ReporterCurrentRewards         collections.Map[[]byte, types.ReporterCurrentRewards]
-		DelegatorStartingInfo          collections.Map[collections.Pair[[]byte, []byte], types.DelegatorStartingInfo]
-		ReporterHistoricalRewards      collections.Map[collections.Pair[[]byte, uint64], types.ReporterHistoricalRewards]
-		ReporterDisputeEvents          collections.Map[collections.Triple[[]byte, uint64, uint64], types.ReporterDisputeEvent]
-		TokenOriginSnapshot            collections.Map[collections.Pair[[]byte, int64], types.DelegationsPreUpdate]
-		DisputedDelegationAmounts      collections.Map[[]byte, types.DelegationsPreUpdate]
-		FeePaidFromStake               collections.Map[[]byte, types.DelegationsPreUpdate]
-		TotalPower                     collections.Map[int64, math.Int]
+		cdc                       codec.BinaryCodec
+		storeService              store.KVStoreService
+		Params                    collections.Item[types.Params]
+		Tracker                   collections.Item[types.StakeTracker]
+		Reporters                 collections.Map[[]byte, types.OracleReporter]
+		DelegatorTips             collections.Map[[]byte, math.Int]
+		Delegators                *collections.IndexedMap[[]byte, types.Delegation, ReporterDelegatorsIndex]
+		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]
+		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]
+		Report                    collections.Map[collections.Pair[[]byte, int64], types.DelegationsAmounts]
+		TempStore                 collections.Map[collections.Pair[[]byte, []byte], math.Int]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -45,9 +41,6 @@ type (
 
 		stakingKeeper types.StakingKeeper
 		bankKeeper    types.BankKeeper
-
-		ReporterCheckpoint  collections.Map[collections.Pair[[]byte, int64], math.Int]
-		DelegatorCheckpoint collections.Map[collections.Pair[[]byte, int64], math.Int]
 	}
 )
 
@@ -68,28 +61,19 @@ func NewKeeper(
 		cdc:          cdc,
 		storeService: storeService,
 
-		Params:                         collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		Tracker:                        collections.NewItem(sb, types.StakeTrackerPrefix, "tracker", codec.CollValue[types.StakeTracker](cdc)),
-		Reporters:                      collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", collections.BytesKey, codec.CollValue[types.OracleReporter](cdc)),
-		Delegators:                     collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", collections.BytesKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
-		TokenOrigin:                    collections.NewMap(sb, types.TokenOriginsKey, "token_origins_by_delegator_validator", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), sdk.IntValue),
-		ReportersAccumulatedCommission: collections.NewMap(sb, types.ReporterAccumulatedCommissionPrefix, "reporters_accumulated_commission", collections.BytesKey, codec.CollValue[types.ReporterAccumulatedCommission](cdc)),
-		ReporterOutstandingRewards:     collections.NewMap(sb, types.ReporterOutstandingRewardsPrefix, "reporter_outstanding_rewards", collections.BytesKey, codec.CollValue[types.ReporterOutstandingRewards](cdc)),
-		ReporterCurrentRewards:         collections.NewMap(sb, types.ReporterCurrentRewardsPrefix, "reporters_current_rewards", collections.BytesKey, codec.CollValue[types.ReporterCurrentRewards](cdc)),
-		DelegatorStartingInfo:          collections.NewMap(sb, types.DelegatorStartingInfoPrefix, "delegators_starting_info", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), codec.CollValue[types.DelegatorStartingInfo](cdc)),
-		ReporterHistoricalRewards:      collections.NewMap(sb, types.ReporterHistoricalRewardsPrefix, "reporter_historical_rewards", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.ReporterHistoricalRewards](cdc)),
-		ReporterDisputeEvents:          collections.NewMap(sb, types.ReporterDisputeEventPrefix, "reporter_dispute_events", collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.Uint64Key), codec.CollValue[types.ReporterDisputeEvent](cdc)),
-		TokenOriginSnapshot:            collections.NewMap(sb, types.TokenOriginSnapshotPrefix, "token_origin_snapshot", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.DelegationsPreUpdate](cdc)),
-		authority:                      authority,
-		logger:                         logger,
-		stakingKeeper:                  stakingKeeper,
-		bankKeeper:                     bankKeeper,
-		DelegatorTips:                  collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", collections.BytesKey, sdk.IntValue),
-		ReporterCheckpoint:             collections.NewMap(sb, types.ReporterCheckpointPrefix, "reporter_checkpoint", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), sdk.IntValue),
-		DelegatorCheckpoint:            collections.NewMap(sb, types.DelegatorCheckpointPrefix, "delegator_checkpoint", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), sdk.IntValue),
-		DisputedDelegationAmounts:      collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsPreUpdate](cdc)),
-		FeePaidFromStake:               collections.NewMap(sb, types.FeePaidFromStakePrefix, "fee_paid_from_stake", collections.BytesKey, codec.CollValue[types.DelegationsPreUpdate](cdc)),
-		TotalPower:                     collections.NewMap(sb, types.TotalPowerPrefix, "total_power", collections.Int64Key, sdk.IntValue),
+		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Tracker:                   collections.NewItem(sb, types.StakeTrackerPrefix, "tracker", codec.CollValue[types.StakeTracker](cdc)),
+		Reporters:                 collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", collections.BytesKey, codec.CollValue[types.OracleReporter](cdc)),
+		Delegators:                collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", collections.BytesKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
+		DelegatorTips:             collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", collections.BytesKey, sdk.IntValue),
+		DisputedDelegationAmounts: collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
+		FeePaidFromStake:          collections.NewMap(sb, types.FeePaidFromStakePrefix, "fee_paid_from_stake", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
+		Report:                    collections.NewMap(sb, types.ReporterPrefix, "report", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.DelegationsAmounts](cdc)),
+		TempStore:                 collections.NewMap(sb, types.TempPrefix, "temp", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), sdk.IntValue),
+		authority:                 authority,
+		logger:                    logger,
+		stakingKeeper:             stakingKeeper,
+		bankKeeper:                bankKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -110,29 +94,38 @@ func (k Keeper) Logger() log.Logger {
 }
 
 func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](delegator).EndInclusive(blockNumber).Descending()
-	tokens := math.ZeroInt()
-	err := k.DelegatorCheckpoint.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value math.Int) (stop bool, err error) {
-		tokens = value
+	del, err := k.Delegators.Get(ctx, delegator)
+	if err != nil {
+		return math.Int{}, err
+	}
+	rng := collections.NewPrefixedPairRange[[]byte, int64](del.Reporter).EndInclusive(blockNumber).Descending()
+	rep := types.DelegationsAmounts{}
+	err = k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsAmounts) (bool, error) {
+		rep = value
 		return true, nil
 	})
 	if err != nil {
 		return math.Int{}, err
 	}
-	return tokens, nil
+	for _, r := range rep.TokenOrigins {
+		if bytes.Equal(r.DelegatorAddress, delegator) {
+			return r.Amount, nil
+		}
+	}
+	return math.ZeroInt(), nil
 }
 
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](reporter).EndInclusive(blockNumber).Descending()
-	tokens := math.ZeroInt()
-	err := k.ReporterCheckpoint.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value math.Int) (stop bool, err error) {
-		tokens = value
+	total := math.ZeroInt()
+	err := k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsAmounts) (bool, error) {
+		total = value.Total
 		return true, nil
 	})
 	if err != nil {
 		return math.Int{}, err
 	}
-	return tokens, nil
+	return total, nil
 }
 
 func (k Keeper) TrackStakeChange(ctx context.Context) error {
@@ -155,4 +148,12 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	maxStake.Expiration = &newExpiration
 	maxStake.Amount = total
 	return k.Tracker.Set(ctx, maxStake)
+}
+
+func DefaultCommission() *stakingtypes.Commission {
+	return &stakingtypes.Commission{CommissionRates: stakingtypes.CommissionRates{
+		Rate:          math.LegacyMustNewDecFromStr("0.1"),
+		MaxRate:       math.LegacyMustNewDecFromStr("0.2"),
+		MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
+	}}
 }

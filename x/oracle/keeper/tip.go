@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (k Keeper) transfer(ctx context.Context, tipper sdk.AccAddress, tip sdk.Coin) (sdk.Coin, error) {

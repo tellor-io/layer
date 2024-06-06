@@ -90,7 +90,7 @@ func TestValueDecoded(t *testing.T) {
 			"Test case uint256 response",
 			"0x0000000000000000000000000000000000000000000000056a6418b505860000",
 			"uint256",
-			[]interface{}{value("99900000000000000000")}, //99_900_000_000_000_000_000
+			[]interface{}{value("99900000000000000000")},
 		},
 		{
 			"Test case address[] response",
@@ -155,7 +155,6 @@ func TestValueDecoded(t *testing.T) {
 					Value0 *big.Int `json:"Value0"`
 					Value1 *big.Int `json:"Value1"`
 				}{
-
 					{
 						Value0: value("2"),
 						Value1: value("1"),
@@ -192,7 +191,6 @@ func TestValueDecoded(t *testing.T) {
 					Value3 bool           `json:"Value3"`
 					Value4 []*big.Int     `json:"Value4"`
 				}{
-
 					{
 						Value0: "helloworld",
 						Value1: common.HexToAddress("0x89B420E2004F34b6ab3e4c824c60EC693c4569c0"),
@@ -221,19 +219,21 @@ func TestIsValueDecodable(t *testing.T) {
 }
 
 func TestDecodeParamatypes(t *testing.T) {
-	var dataSpec = DataSpec{
+	dataSpec := DataSpec{
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
 			{Name: "metric", FieldType: "string"},
 			{Name: "currency", FieldType: "string"},
-			{Name: "collection", FieldType: "tuple[]",
+			{
+				Name: "collection", FieldType: "tuple[]",
 				NestedComponent: []*ABIComponent{
 					{Name: "chainName", FieldType: "string"},
 					{Name: "collectionAddress", FieldType: "address"},
 				},
 			},
-			{Name: "tokens", FieldType: "tuple[]",
+			{
+				Name: "tokens", FieldType: "tuple[]",
 				NestedComponent: []*ABIComponent{
 					{Name: "chainName", FieldType: "string"},
 					{Name: "tokenName", FieldType: "string"},
@@ -257,7 +257,9 @@ func TestDecodeParamatypes(t *testing.T) {
 		["ethereum-mainnet","ape","0x4d224452801ACEd8B2F0aebE155379bb5D594381"]
 	]
 	]`)
+	require.NoError(t, err)
 	_, resultBytes, err := DecodeQueryType(encodedDataSpec)
+	require.NoError(t, err)
 	res, err := DecodeParamtypes(resultBytes, dataSpec.AbiComponents)
 	require.NoError(t, err)
 	expectedDecodedResult := `["market-cap","usd",[{"chainName":"ethereum-mainnet","collectionAddress":"0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a"},{"chainName":"ethereum-mainnet","collectionAddress":"0xf87e31492faf9a91b02ee0deaad50d51d56d5d4d"},{"chainName":"ethereum-mainnet","collectionAddress":"0x34d85c9cdeb23fa97cb08333b511ac86e1c4e258"}],[{"chainName":"ethereum-mainnet","tokenName":"sand","tokenAddress":"0x3845badade8e6dff049820680d1f14bd3903a5d0"},{"chainName":"ethereum-mainnet","tokenName":"mana","tokenAddress":"0x0f5d2fb29fb7d3cfee444a200298f468908cc942"},{"chainName":"ethereum-mainnet","tokenName":"ape","tokenAddress":"0x4d224452801aced8b2f0aebe155379bb5d594381"}]]`

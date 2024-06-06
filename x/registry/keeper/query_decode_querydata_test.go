@@ -10,12 +10,11 @@ import (
 )
 
 func TestDecodeQuerydata(t *testing.T) {
-	// 	// register data spec
-	querytype := "testQueryType"
+	// register data spec
 	ms, ctx, k := setupMsgServer(t)
 	msgres, err := ms.RegisterSpec(ctx, &types.MsgRegisterSpec{
 		Registrar: "creator1",
-		QueryType: querytype,
+		QueryType: testQueryType,
 		Spec: types.DataSpec{
 			AggregationMethod: "weighted-median",
 			ResponseValueType: "uint256",

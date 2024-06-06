@@ -22,5 +22,4 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	// data, err := s.oracleKeeper.GetDataBefore(s.ctx, queryGetDataBeforeRequest)
 	// require.Nil(err)
 	// fmt.Println(data)
-
 }

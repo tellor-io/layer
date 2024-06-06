@@ -3,27 +3,28 @@ package types
 import (
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestMsgCreateReporter_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgCreateReporter
+		msg  MsgChangeReporter
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgCreateReporter{
-				Reporter: "invalid_address",
+			msg: MsgChangeReporter{
+				DelegatorAddress: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgCreateReporter{
-				Reporter: sample.AccAddress(),
+			msg: MsgChangeReporter{
+				DelegatorAddress: sample.AccAddress(),
 			},
 		},
 	}

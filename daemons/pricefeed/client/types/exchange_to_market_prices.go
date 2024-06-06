@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
 	"github.com/tellor-io/layer/lib/metrics"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // ExchangeToMarketPrices maintains price info for multiple exchanges. Each exchange can support
@@ -129,7 +130,6 @@ func (exchangeToMarketPrices *ExchangeToMarketPricesImpl) GetIndexPrice(
 		return 0, 0
 	}
 	median, err := resolver(prices)
-
 	if err != nil {
 		return 0, 0
 	}

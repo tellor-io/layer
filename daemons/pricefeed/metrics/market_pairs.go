@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	// marketToPair maps live marketIds to marketPair strings and is used for labelling metrics.
+	// marketToPair maps live marketIds to marketPair strings and is used for labeling metrics.
 	// This map is populated whenever markets are created or updated and access to this map is
 	// synchronized by the below mutex.
 	// The most correct approach here would be to get the marketPair from current chain state, so that
@@ -25,7 +25,7 @@ var (
 )
 
 // SetMarketPairForTelemetry sets a market pair to an in-memory map of marketId to marketPair strings used
-// for labelling metrics. This method is synchronized.
+// for labeling metrics. This method is synchronized.
 func SetMarketPairForTelemetry(marketId types.MarketId, marketPair string) {
 	lock.Lock()
 	defer lock.Unlock()

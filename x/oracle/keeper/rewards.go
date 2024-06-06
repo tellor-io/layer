@@ -3,23 +3,29 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type ReportersReportCount struct {
 	Power   int64
 	Reports int
+	Height  int64
 }
 
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
-func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.AggregateReporter, reward math.Int, toStake bool) error {
+func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.AggregateReporter, reward math.Int, fromPool string) error {
+	if reward.IsZero() {
+		return nil
+	}
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.
@@ -33,38 +39,26 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 			reporter.Reports++
 		} else {
 			// If not found, add the reporter with their initial power and report count set to 1.
-			reporter = ReportersReportCount{Power: r.Power, Reports: 1}
+			reporter = ReportersReportCount{Power: r.Power, Reports: 1, Height: r.BlockNumber}
 		}
 		reportCounts[r.Reporter] = reporter
 		// Add the reporter's power to the total power.
 		totalPower += r.Power
 	}
 
-	var allocateReward func(ctx context.Context, addr []byte, amount math.Int) error
-	var from, to string
-	if toStake {
-		allocateReward = k.AllocateTip
-		from = types.ModuleName
-		to = reportertypes.TipsEscrowPool
-	} else {
-		allocateReward = k.AllocateTBR
-		from = minttypes.TimeBasedRewards
-		to = reportertypes.ModuleName
-
-	}
 	for r, c := range reportCounts {
 		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward)
 		repoterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
 			return err
 		}
-		err = allocateReward(ctx, repoterAddr.Bytes(), amount)
+		err = k.AllocateTip(ctx, repoterAddr.Bytes(), amount, c.Height)
 		if err != nil {
 			return err
 		}
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, from, to, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
 }
 
 func (k Keeper) getTimeBasedRewards(ctx context.Context) math.Int {
@@ -83,11 +77,6 @@ func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward
 	return amount.RoundInt()
 }
 
-func (k Keeper) AllocateTBR(ctx context.Context, addr []byte, amount math.Int) error {
-	reward := sdk.NewDecCoins(sdk.NewDecCoin(layer.BondDenom, amount))
-	return k.reporterKeeper.AllocateTokensToReporter(ctx, addr, reward)
-}
-
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.Int) error {
-	return k.reporterKeeper.DivvyingTips(ctx, addr, amount)
+func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.Int, height int64) error {
+	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, height)
 }

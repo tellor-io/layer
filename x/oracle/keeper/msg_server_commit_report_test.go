@@ -4,42 +4,34 @@ import (
 	"encoding/hex"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/tellor-io/layer/testutil/sample"
-
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, string, []byte) {
+func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
-	// value 100000000000000000000 in hex
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
 	hash := oracleutils.CalculateCommitment(value, salt)
 
 	addr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
 		QueryData: queryData,
 		Hash:      hash,
@@ -55,13 +47,11 @@ func (s *KeeperTestSuite) TestCommitValue() (reportertypes.OracleReporter, strin
 	s.Nil(err)
 	s.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
 	s.Equal(commitValue.Reporter, addr.String())
-	return stakedReporter, salt, queryData
+	return addr, salt, queryData
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
-
 	queryData, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	// Commit report transaction
 	salt, err := oracleutils.Salt(32)
@@ -70,16 +60,10 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 
 	addr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
-
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
 		QueryData: queryData,
 		Hash:      hash,
@@ -93,7 +77,6 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	// commit query in cycle list
 	queryData1, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	// Commit report transaction
 	salt, err := oracleutils.Salt(32)
@@ -101,16 +84,10 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	hash := oracleutils.CalculateCommitment(value, salt)
 
 	addr := sample.AccAddressBytes()
-
-	stakedReporter := reportertypes.NewOracleReporter(
-		addr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, addr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
 		QueryData: queryData1,
 		Hash:      hash,
@@ -141,14 +118,12 @@ func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	commitreq.Hash = hash
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.NoError(err)
-
 }
 
 func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 	// try to commit from unbonded reporter
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
@@ -156,15 +131,10 @@ func (s *KeeperTestSuite) TestCommitWithReporterWithLowStake() {
 
 	randomAddr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		randomAddr.String(),
-		math.NewInt(1), // below the min stake amount
-		nil,
-	)
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, randomAddr).Return(math.OneInt(), nil)
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator:   randomAddr.String(),
 		QueryData: queryData,
 		Hash:      hash,
@@ -178,7 +148,6 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 	// try to commit from jailed reporter
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
@@ -186,39 +155,29 @@ func (s *KeeperTestSuite) TestCommitWithJailedValidator() {
 
 	randomAddr := sample.AccAddressBytes()
 
-	stakedReporter := reportertypes.NewOracleReporter(
-		randomAddr.String(),
-		math.NewInt(1_000_000),
-		nil,
-	)
-	stakedReporter.Jailed = true
-	_ = s.reporterKeeper.On("Reporter", s.ctx, randomAddr).Return(&stakedReporter, nil)
+	_ = s.reporterKeeper.On("ReporterStake", s.ctx, randomAddr).Return(math.Int{}, reportertypes.ErrReporterJailed)
 
-	s.Equal(true, stakedReporter.Jailed)
-
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator:   randomAddr.String(),
 		QueryData: queryData,
 		Hash:      hash,
 	}
 
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "reporter is jailed")
-
+	s.ErrorContains(err, "reporter jailed")
 }
 
 func (s *KeeperTestSuite) TestCommitWithMissingCreator() {
 	// commit with no creator
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
 	hash := oracleutils.CalculateCommitment(value, salt)
 	s.Nil(err)
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		QueryData: queryData,
 		Hash:      hash,
 	}
@@ -229,7 +188,6 @@ func (s *KeeperTestSuite) TestCommitWithMissingCreator() {
 
 func (s *KeeperTestSuite) TestCommitWithMissingQueryData() {
 	// commit with no query data
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
@@ -238,14 +196,13 @@ func (s *KeeperTestSuite) TestCommitWithMissingQueryData() {
 
 	addr := sample.AccAddressBytes()
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator: addr.String(),
 		Hash:    hash,
 	}
 
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.ErrorContains(err, "query data field cannot be empty")
-
 }
 
 func (s *KeeperTestSuite) TestCommitWithMissingHash() {
@@ -255,7 +212,7 @@ func (s *KeeperTestSuite) TestCommitWithMissingHash() {
 
 	addr := sample.AccAddressBytes()
 
-	var commitreq = types.MsgCommitReport{
+	commitreq := types.MsgCommitReport{
 		Creator:   addr.String(),
 		QueryData: queryData,
 	}

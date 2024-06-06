@@ -7,24 +7,22 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/log"
-	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/flags"
-	daemontypes "github.com/tellor-io/layer/daemons/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	daemontypes "github.com/tellor-io/layer/daemons/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const defaultGas = uint64(300000)
@@ -113,8 +111,7 @@ func (c *Client) Start(
 	c.logger.Info("Account Name", "name", accountName)
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
-		panic(fmt.Errorf("error getting address from keyring: %v : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
-	} else {
+		panic(fmt.Errorf("error getting address from keyring: %w : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
@@ -143,11 +140,6 @@ func StartReporterDaemonTaskLoop(
 	stop <-chan bool,
 	ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
-	if err := client.CreateReporter(ctx, ctxGetter); err != nil {
-		client.logger.Error("Error creating reporter: %w", "err", err)
-		panic(err)
-	}
-
 	for {
 		select {
 		case <-ticker.C:
@@ -166,86 +158,16 @@ func StartReporterDaemonTaskLoop(
 	}
 }
 
-// MsgCreateReporter creates a staked reporter
-func (c *Client) CreateReporter(ctx context.Context, ctxGetter func(int64, bool) (sdk.Context, error)) error {
-	for {
-		latestHeight, err := c.LatestBlockHeight(ctx)
-		if err != nil {
-			c.logger.Error("Error getting latest block height: %v", err)
-			panic(err)
-		}
-
-		if latestHeight < 2 {
-			time.Sleep(time.Second)
-			continue
-		}
-
-		appCtx, err := ctxGetter(0, false)
-		if err != nil {
-			c.logger.Error("Error getting context: %v", err)
-			time.Sleep(time.Second * 5)
-			appCtx, err = ctxGetter(0, false)
-			if err != nil {
-				c.logger.Error("Error getting context: %v", err)
-				panic(err)
-			}
-		}
-
-		validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
-		if err != nil {
-			return err
-		}
-		if len(validators.Validators) == 0 {
-			c.logger.Info("No validators found for this delegator, delegate to a validator first to be able to make a report")
-			time.Sleep(time.Second)
-		} else {
-			break
-		}
-	}
-
-	// get reporter
-	appCtx, err := ctxGetter(0, false)
-	if err != nil {
-		return err
-	}
-
-	validators, err := c.StakingKeeper.GetDelegatorValidators(appCtx, c.accAddr, 1)
-	if err != nil {
-		return err
-	}
-
-	val := validators.Validators[0]
-	valAcc, err := sdk.ValAddressFromBech32(val.OperatorAddress)
-	if err != nil {
-		return err
-	}
-
-	// stake reporter transaction, reporter is determined by LAYERD_NODE_HOME environment variable
-	// should make this configurable by user :time.Sleep(time.Second)todo
-	// staking 1 TRB
-	amtToStake := math.NewInt(1_000_000) // one TRB
-	commission := reportertypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(1, 1), math.LegacyNewDecWithPrec(3, 1),
-		math.LegacyNewDecWithPrec(1, 1), time.Now())
-	source := reportertypes.TokenOrigin{ValidatorAddress: valAcc, Amount: amtToStake}
-	msgCreateReporter := &reportertypes.MsgCreateReporter{
-		Reporter:     c.accAddr.String(),
-		Amount:       amtToStake,
-		TokenOrigins: []*reportertypes.TokenOrigin{&source},
-		Commission:   &commission,
-	}
-	return c.sendTx(ctx, msgCreateReporter, nil)
-}
-
 func (c *Client) SubmitReport(ctx context.Context) error {
 	querydata, value, err := c.deposits()
 	if err != nil {
 		querydata, err = c.CurrentQuery(ctx)
 		if err != nil {
-			return fmt.Errorf("error calling 'CurrentQuery': %v", err)
+			return fmt.Errorf("error calling 'CurrentQuery': %w", err)
 		}
 		value, err = c.median(querydata)
 		if err != nil {
-			return fmt.Errorf("error getting median from median client': %v", err)
+			return fmt.Errorf("error getting median from median client': %w", err)
 		}
 	} else {
 		// delete this
@@ -255,7 +177,7 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	// Salt and hash the value
 	salt, err := oracleutils.Salt(32)
 	if err != nil {
-		return fmt.Errorf("error generating salt: %v", err)
+		return fmt.Errorf("error generating salt: %w", err)
 	}
 	hash := oracleutils.CalculateCommitment(value, salt)
 
@@ -268,11 +190,11 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 
 	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
 	if err != nil {
-		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %v", err)
+		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %w", err)
 	}
 	err = c.sendTx(ctx, msgCommit, &seq)
 	if err != nil {
-		return fmt.Errorf("error generating 'MsgCommitReport': %v", err)
+		return fmt.Errorf("error generating 'MsgCommitReport': %w", err)
 	}
 
 	// ***********************MsgSubmitValue***************************

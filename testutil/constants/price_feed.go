@@ -2,9 +2,7 @@ package constants
 
 import (
 	"github.com/tellor-io/layer/daemons/constants"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	daemonClientTypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	pricefeedclienttypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	"github.com/tellor-io/layer/testutil/client"
 )
@@ -317,7 +315,7 @@ var (
 	}
 
 	// Markets
-	AllMarketParamsMinExchanges2 = []pricefeedclienttypes.MarketParam{
+	AllMarketParamsMinExchanges2 = []daemonClientTypes.MarketParam{
 		{
 			Id:           MarketId9,
 			Exponent:     Exponent9,
@@ -334,7 +332,7 @@ var (
 			MinExchanges: 2,
 		},
 	}
-	AllMarketParamsMinExchanges3 = []pricefeedclienttypes.MarketParam{
+	AllMarketParamsMinExchanges3 = []daemonClientTypes.MarketParam{
 		{
 			Id:           MarketId9,
 			MinExchanges: 3,
@@ -528,7 +526,7 @@ var (
 		BinanceExchangeName:  BinanceMutableMarketConfig,
 	}
 
-	TestMarket7And8Params = []types.MarketParam{
+	TestMarket7And8Params = []daemonClientTypes.MarketParam{
 		{
 			Id:       7,
 			Pair:     BtcUsdPair,

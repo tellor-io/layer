@@ -7,10 +7,9 @@ import (
 	"time"
 
 	gometrics "github.com/hashicorp/go-metrics"
+	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/lib/metrics"
 	big_testutil "github.com/tellor-io/layer/testutil/big"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestIncrCountMetricWithLabels(t *testing.T) {

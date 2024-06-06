@@ -23,16 +23,8 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
-	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
-	DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error)
-	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
-	UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error)
-	// WithdrawReporterCommission defines a method to withdraw the
-	// full commission to the reporter address.
-	WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error)
-	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
-	// from a reporter.
-	WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error)
+	// ChangeReporter defines a (delegator) operation for changing a reporter.
+	ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -65,36 +57,9 @@ func (c *msgClient) CreateReporter(ctx context.Context, in *MsgCreateReporter, o
 	return out, nil
 }
 
-func (c *msgClient) DelegateReporter(ctx context.Context, in *MsgDelegateReporter, opts ...grpc.CallOption) (*MsgDelegateReporterResponse, error) {
-	out := new(MsgDelegateReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/DelegateReporter", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) UndelegateReporter(ctx context.Context, in *MsgUndelegateReporter, opts ...grpc.CallOption) (*MsgUndelegateReporterResponse, error) {
-	out := new(MsgUndelegateReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/UndelegateReporter", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) WithdrawReporterCommission(ctx context.Context, in *MsgWithdrawReporterCommission, opts ...grpc.CallOption) (*MsgWithdrawReporterCommissionResponse, error) {
-	out := new(MsgWithdrawReporterCommissionResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawReporterCommission", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) WithdrawDelegatorReward(ctx context.Context, in *MsgWithdrawDelegatorReward, opts ...grpc.CallOption) (*MsgWithdrawDelegatorRewardResponse, error) {
-	out := new(MsgWithdrawDelegatorRewardResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawDelegatorReward", in, out, opts...)
+func (c *msgClient) ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error) {
+	out := new(MsgChangeReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/ChangeReporter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,16 +93,8 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
-	// DelegateReporter defines a (reporter) operation for delegating to a reporter.
-	DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error)
-	// UndelegateReporter defines a (reporter) operation for undelegating from a reporter.
-	UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error)
-	// WithdrawReporterCommission defines a method to withdraw the
-	// full commission to the reporter address.
-	WithdrawReporterCommission(context.Context, *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error)
-	// WithdrawDelegatorReward defines a method to withdraw rewards of delegator
-	// from a reporter.
-	WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error)
+	// ChangeReporter defines a (delegator) operation for changing a reporter.
+	ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -155,17 +112,8 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 func (UnimplementedMsgServer) CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReporter not implemented")
 }
-func (UnimplementedMsgServer) DelegateReporter(context.Context, *MsgDelegateReporter) (*MsgDelegateReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DelegateReporter not implemented")
-}
-func (UnimplementedMsgServer) UndelegateReporter(context.Context, *MsgUndelegateReporter) (*MsgUndelegateReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UndelegateReporter not implemented")
-}
-func (UnimplementedMsgServer) WithdrawReporterCommission(context.Context, *MsgWithdrawReporterCommission) (*MsgWithdrawReporterCommissionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawReporterCommission not implemented")
-}
-func (UnimplementedMsgServer) WithdrawDelegatorReward(context.Context, *MsgWithdrawDelegatorReward) (*MsgWithdrawDelegatorRewardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawDelegatorReward not implemented")
+func (UnimplementedMsgServer) ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeReporter not implemented")
 }
 func (UnimplementedMsgServer) UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnjailReporter not implemented")
@@ -222,74 +170,20 @@ func _Msg_CreateReporter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_DelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDelegateReporter)
+func _Msg_ChangeReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgChangeReporter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).DelegateReporter(ctx, in)
+		return srv.(MsgServer).ChangeReporter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/DelegateReporter",
+		FullMethod: "/layer.reporter.Msg/ChangeReporter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DelegateReporter(ctx, req.(*MsgDelegateReporter))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_UndelegateReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUndelegateReporter)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UndelegateReporter(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/UndelegateReporter",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UndelegateReporter(ctx, req.(*MsgUndelegateReporter))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_WithdrawReporterCommission_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawReporterCommission)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WithdrawReporterCommission(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/WithdrawReporterCommission",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawReporterCommission(ctx, req.(*MsgWithdrawReporterCommission))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_WithdrawDelegatorReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawDelegatorReward)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WithdrawDelegatorReward(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/WithdrawDelegatorReward",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawDelegatorReward(ctx, req.(*MsgWithdrawDelegatorReward))
+		return srv.(MsgServer).ChangeReporter(ctx, req.(*MsgChangeReporter))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -346,20 +240,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateReporter_Handler,
 		},
 		{
-			MethodName: "DelegateReporter",
-			Handler:    _Msg_DelegateReporter_Handler,
-		},
-		{
-			MethodName: "UndelegateReporter",
-			Handler:    _Msg_UndelegateReporter_Handler,
-		},
-		{
-			MethodName: "WithdrawReporterCommission",
-			Handler:    _Msg_WithdrawReporterCommission_Handler,
-		},
-		{
-			MethodName: "WithdrawDelegatorReward",
-			Handler:    _Msg_WithdrawDelegatorReward_Handler,
+			MethodName: "ChangeReporter",
+			Handler:    _Msg_ChangeReporter_Handler,
 		},
 		{
 			MethodName: "UnjailReporter",

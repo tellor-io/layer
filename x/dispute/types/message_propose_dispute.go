@@ -1,10 +1,12 @@
 package types
 
 import (
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
 	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 const TypeMsgProposeDispute = "propose_dispute"
