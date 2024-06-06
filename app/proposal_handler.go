@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"reflect"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -42,10 +43,11 @@ type OracleAttestations struct {
 }
 
 type VoteExtTx struct {
-	BlockHeight        int64              `json:"block_height"`
-	OpAndEVMAddrs      OperatorAndEVM     `json:"op_and_evm_addrs"`
-	ValsetSigs         ValsetSignatures   `json:"valset_sigs"`
-	OracleAttestations OracleAttestations `json:"oracle_attestations"`
+	BlockHeight        int64                   `json:"block_height"`
+	OpAndEVMAddrs      OperatorAndEVM          `json:"op_and_evm_addrs"`
+	ValsetSigs         ValsetSignatures        `json:"valset_sigs"`
+	OracleAttestations OracleAttestations      `json:"oracle_attestations"`
+	ExtendedCommitInfo abci.ExtendedCommitInfo `json:"extended_commit_info"`
 }
 
 func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper, stakingKeeper StakingKeeper) *ProposalHandler {
@@ -122,6 +124,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 			OpAndEVMAddrs:      operatorAndEvm,
 			ValsetSigs:         valsetSigs,
 			OracleAttestations: oracleAttestations,
+			ExtendedCommitInfo: req.LocalLastCommit,
 		}
 
 		bz, err := json.Marshal(injectedVoteExtTx)
@@ -139,6 +142,66 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 }
 
 func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
+	h.logger.Info("@ProcessProposalHandler", "height", req.Height, "voteExtEnableHeight", ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight)
+	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
+		var injectedVoteExtTx VoteExtTx
+		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
+			h.logger.Error("failed to decode injected vote extension tx", "err", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(operatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(evmAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(valsetOperatorAddresses, injectedVoteExtTx.ValsetSigs.OperatorAddresses) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(valsetTimestamps, injectedVoteExtTx.ValsetSigs.Timestamps) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(valsetSignatures, injectedVoteExtTx.ValsetSigs.Signatures) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		oracleSigs, oracleSnapshots, oracleOperatorAddresses, err := h.CheckOracleAttestationsFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(oracleSigs, injectedVoteExtTx.OracleAttestations.Attestations) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(oracleSnapshots, injectedVoteExtTx.OracleAttestations.Snapshots) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		if !reflect.DeepEqual(oracleOperatorAddresses, injectedVoteExtTx.OracleAttestations.OperatorAddresses) {
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+	}
+
 	return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil
 }
 

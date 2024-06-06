@@ -94,7 +94,7 @@ echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 
 # Stake Bill as a validator
 echo "Staking bill as a validator..."
-./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id layer --home ~/.layer/bill
+./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id layer --home ~/.layer/bill --gas 300000
 
 # Modify keyring-backend in client.toml for bill
 echo "Modifying keyring-backend in client.toml for bill..."
