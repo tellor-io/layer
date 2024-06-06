@@ -37,7 +37,7 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 }
 
 // remove a reporter from jail
-func (k Keeper) unjailReporter(ctx context.Context, reporterAddr sdk.AccAddress, reporter types.OracleReporter) error {
+func (k Keeper) UnjailReporter(ctx context.Context, reporterAddr sdk.AccAddress, reporter types.OracleReporter) error {
 	if !reporter.Jailed {
 		return types.ErrReporterNotJailed.Wrapf("cannot unjail already unjailed reporter, %v", reporter)
 	}

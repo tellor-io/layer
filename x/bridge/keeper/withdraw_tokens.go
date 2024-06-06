@@ -82,6 +82,7 @@ func (k Keeper) createWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 		Nonce:                0,
 		AggregateReportIndex: 0,
 		Height:               ctx.BlockHeight(),
+		MicroHeight:          ctx.BlockHeight(),
 	}
 	return aggregate, nil
 }

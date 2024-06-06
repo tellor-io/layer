@@ -154,6 +154,7 @@ func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)
 	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, int64(1), math.NewInt(10000), dispute.HashId).Return(nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, int64(0)).Return(nil)
+	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report).Return(nil)
 	s.NoError(s.disputeKeeper.SlashAndJailReporter(s.ctx, report, dispute.DisputeCategory, dispute.HashId))
 }
 
@@ -193,6 +194,7 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 			cat:  4,
 		},
 	}
+	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report()).Return(nil)
 
 	for _, tc := range testCases {
 		tc := tc
@@ -254,6 +256,7 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 	fee := sdk.NewCoin("loya", math.NewInt(10))
 	s.bankKeeper.On("HasBalance", s.ctx, sender, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sender, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
+	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report()).Return(nil)
 	s.NoError(s.disputeKeeper.AddDisputeRound(s.ctx, sender, dispute, msg))
 
 	dispute1, err := s.disputeKeeper.Disputes.Get(s.ctx, 1)
