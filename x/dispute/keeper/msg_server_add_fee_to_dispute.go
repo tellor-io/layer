@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"cosmossdk.io/math"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -21,6 +22,10 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if msg.Amount.Denom != layer.BondDenom {
 		return nil, errors.New("fee must be paid in loya")
 	}
+	// assert fee is greater than zero
+	if msg.Amount.Amount.LTE(math.ZeroInt()) {
+		return nil, errors.New("fee must be a positive amount")
+	}
 	dispute, err := k.Disputes.Get(ctx, msg.DisputeId)
 	if err != nil {
 		return nil, err
@@ -33,6 +38,12 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if dispute.FeeTotal.GTE(dispute.SlashAmount) {
 		return nil, types.ErrDisputeFeeAlreadyMet
 	}
+
+	// validate fee amount
+	if dispute.FeeTotal.Add(msg.Amount.Amount).GT(dispute.SlashAmount) {
+		msg.Amount.Amount = dispute.SlashAmount.Sub(dispute.FeeTotal)
+	}
+
 	// Pay fee
 	if err := k.Keeper.PayDisputeFee(ctx, sender, msg.Amount, msg.PayFromBond, dispute.HashId); err != nil {
 		return nil, err
