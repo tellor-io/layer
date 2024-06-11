@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/math"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
