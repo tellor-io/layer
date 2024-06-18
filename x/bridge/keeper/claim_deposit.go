@@ -48,7 +48,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 		return err
 	}
 	powerThreshold := int64(math.Round(float64(totalBondedTokens.Int64()) * 2 / 3))
-	if aggregate.ReporterPower < powerThreshold {
+	if aggregate.ReporterPower*layer.PowerReduction.Int64() < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
