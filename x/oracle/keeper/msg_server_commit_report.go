@@ -45,7 +45,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 		// if no query it means its not a cyclelist query and doesn't have tips (cyclelist queries are initialized in genesis)
 		if errors.Is(err, collections.ErrNotFound) {
 			// check if query is token bridge deposit
-			query, err = k.keeper.tokenBridgeDepositCheck(msg.QueryData)
+			query, err = k.keeper.tokenBridgeDepositCheck(ctx, msg.QueryData)
 			if errors.Is(err, types.ErrNotTokenDeposit) {
 				return nil, types.ErrNoTipsNotInCycle.Wrapf("query not part of cyclelist")
 			}

@@ -143,7 +143,7 @@ func (c *Client) InitializeDeposits() error {
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x4a58c4fCaa1aDE33EF79E1Dfb619f241E2EA33a6")
+	contractAddress := common.HexToAddress("0x7a261EAa9E8033B1337554df59bD462ca4A251FA")
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
