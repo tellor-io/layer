@@ -72,7 +72,6 @@ contract TokenBridge is LayerTransition{
         require(_attest.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
         require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
-        //isAnyConsesnusValue here
         bridge.verifyOracleData(_attest, _valset, _sigs);
         require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawalClaimed[_depositId] = true;    
@@ -87,6 +86,7 @@ contract TokenBridge is LayerTransition{
         else{
             require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
         }
+        depositLimitRecord -= _amountConverted;
         emit Withdrawal(_depositId, _layerSender, _recipient, _amountConverted);
     }
 
@@ -94,6 +94,7 @@ contract TokenBridge is LayerTransition{
         uint256 _amountConverted = tokensToClaim[_recipient];
         require(_amountConverted > 0, "amount must be > 0");
         uint256 _depositLimit = _refreshDepositLimit();
+        require(_depositLimit > 0, "TokenBridge: depositLimit must be > 0");
         if(_depositLimit < _amountConverted){
             tokensToClaim[_recipient] = tokensToClaim[_recipient] - _depositLimit;
             _amountConverted = _depositLimit;
@@ -103,6 +104,7 @@ contract TokenBridge is LayerTransition{
             tokensToClaim[_recipient] = 0;
             require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
         }
+        depositLimitRecord -= _amountConverted;
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
@@ -122,9 +124,7 @@ contract TokenBridge is LayerTransition{
             uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
             depositLimitRecord = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
-        }
+        } 
         return depositLimitRecord;
     }
-
-
 }
