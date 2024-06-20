@@ -110,7 +110,7 @@ describe("Function Tests - NewTransition", function() {
     await h.expectThrow(tbridge.connect(accounts[0]).addStakingRewards(h.toWei("1"))) // not approved
     await tellor.connect(accounts[0]).approve(await tbridge.address, h.toWei("1"))
     await tbridge.connect(accounts[0]).addStakingRewards(h.toWei("1"))
-    expect(await tellor.balanceOf(await tbridge.address)).to.equal(h.toWei("1"))
+    assert(await tellor.balanceOf(await tbridge.address) == h.toWei("1"), "staking rewards should be added")
   })
 
   it("getDataBefore()", async function () {
@@ -146,69 +146,57 @@ describe("Function Tests - NewTransition", function() {
   it("getIndexForDataBefore()", async function () {
     indexBefore = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky0.timestamp)
     assert.equal(indexBefore[0], true)
-    expect(indexBefore[1]).to.be.greaterThan(0)
-
+    assert(indexBefore[1] > 0, "should be positive")
     indexBefore1 = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky1.timestamp)
     assert.equal(indexBefore1[0], true)
     assert.equal(indexBefore1[1], BigInt(indexBefore[1]) + BigInt(1))
-
     indexBefore2 = await tbridge.getIndexForDataBefore(ETH_QUERY_ID, blocky2.timestamp)
     assert.equal(indexBefore2[0], true)
     assert.equal(indexBefore2[1], BigInt(indexBefore1[1]) + BigInt(1))
   })
-
   it("getNewValueCountbyQueryId()", async function () {
     count = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
-    expect(count).to.be.greaterThan(0)
-
+    assert(count > 0, "count should be positive")
     await h.advanceTime(43200)
     await flex.submitValue(ETH_QUERY_ID, h.uintTob32("103"), 0, ETH_QUERY_DATA)
     count1 = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
-    expect(count1).to.equal(BigInt(count) + BigInt(1))
+    assert(count1 == BigInt(count) + BigInt(1), "new value count should increase")
   })
-
   it("getReporterByTimestamp()", async function () {
     reporter = await tbridge.getReporterByTimestamp(ETH_QUERY_ID, blocky0.timestamp)
     assert.equal(reporter, await accounts[0].address)
   })
-
   it("getTimestampbyQueryIdandIndex()", async function () {
     count = await tbridge.getNewValueCountbyQueryId(ETH_QUERY_ID)
-    expect(BigInt(count)).to.be.greaterThan(BigInt(0))
-
+    assert(BigInt(count) > 0, "cound should be positive")
     timestamp = await tbridge.getTimestampbyQueryIdandIndex(ETH_QUERY_ID, BigInt(count) - BigInt(1))
-    expect(BigInt(timestamp)).to.equal(BigInt(blocky2.timestamp))
+    assert(BigInt(timestamp) == BigInt(blocky2.timestamp), "getTimestampbyQueryIdAndIndex should work")
   })
-
   it("getTimeOfLastNewValue()", async function () {
     time = await tbridge.getTimeOfLastNewValue()
-    expect(time).to.equal(blocky2.timestamp)
+    assert(time == blocky2.timestamp, "timestamp should be correct")
   })
-
   it("isInDispute()", async function () {
     assert.equal(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp), false)
     await tellor.connect(bigWallet).approve(GOVERNANCE_FLEX, h.toWei("100"))
     await govflex.connect(bigWallet).beginDispute(ETH_QUERY_ID, blocky2.timestamp)
     assert.equal(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp), true)
   })
-
   it("verify()", async function () {
-    expect(await tbridge.verify()).to.equal(9999)
+    assert(await tbridge.verify() == 9999, "verify should be correct")
   })
-
   it("mintToOracle()", async function () {
-    expect(await tellor.balanceOf(await tbridge.address)).to.equal(0)
+    assert(await tellor.balanceOf(await tbridge.address) == 0)
     await tellor.mintToOracle()
-    expect(await tellor.balanceOf(await tbridge.address)).to.be.greaterThan(0)
-    
+    assert(await tellor.balanceOf(await tbridge.address) > 0, "tokens should be minted")
   })
   it("mintToTeam()", async function () {
-    expect(await tellor.balanceOf(await tbridge.address)).to.equal(0)
+    assert(await tellor.balanceOf(await tbridge.address) == 0, "tellor balance should be right")
     await tellor.mintToOracle()
-    expect(await tellor.balanceOf(await tbridge.address)).to.be.greaterThan(0)
+    assert(await tellor.balanceOf(await tbridge.address) > 0, "should mint some");
     let teamBal = await tellor.balanceOf(DEV_WALLET)
     await tellor.mintToTeam()
-    expect(await tellor.balanceOf(DEV_WALLET) > teamBal, "mint to team should work")
+    assert(await tellor.balanceOf(DEV_WALLET) > teamBal, "mint to team should work")
   })
 
 })
