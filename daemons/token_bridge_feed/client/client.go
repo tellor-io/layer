@@ -109,6 +109,7 @@ type DepositReport struct {
 }
 
 func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
+	c.logger.Info("querying token_bridge_client api")
 	parsedUrl, err := url.ParseRequestURI(urlStr)
 	if err != nil {
 		return nil, err
