@@ -50,9 +50,9 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	require.Nil(t, response)
 
 	amount := sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)}
-	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil).Once()
+	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	// bk.On("SendCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil).Once()
+	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	aggregate := oracletypes.Aggregate{
 		QueryId:              []byte("withdrawTokens"),
 		AggregateValue:       "10 * 1e6",
@@ -66,7 +66,7 @@ func TestMsgWithdrawTokens(t *testing.T) {
 		Height:               int64(0),
 		MicroHeight:          int64(0),
 	}
-	ok.On("SetAggregate", ctx, aggregate).Return(nil).Once()
+	ok.On("SetAggregate", ctx, aggregate).Return(nil)
 
 	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
 		Creator:   creatorAddr.String(),
