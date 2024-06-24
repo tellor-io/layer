@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
@@ -90,10 +91,16 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 	if err != nil {
 		return nil, err
 	}
+
 	// move tokens
 	rep, err := k.Reporters.Get(goCtx, delegation.Reporter)
 	if err != nil {
 		return nil, err
+	}
+	if bytes.Equal(delegation.Reporter, delAddr.Bytes()) {
+		if rep.DelegatorsCount > 1 {
+			return nil, errors.New("cannot change reporter until all delegators are removed")
+		}
 	}
 	rep.TotalTokens = rep.TotalTokens.Sub(delegation.Amount)
 	rep.DelegatorsCount--
