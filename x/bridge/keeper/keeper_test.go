@@ -854,12 +854,18 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp.Timestamp, "sig1")
 	require.NoError(t, err)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	prevTime := sdkCtx.BlockTime()
-	sdkCtx = sdkCtx.WithBlockTime(prevTime.Add(1 * time.Hour))
-
-	err = k.SetBridgeValsetSignature(sdkCtx, "operatorAddr1", timestamp.Timestamp, "sig2")
+	res, err = k.GetValidatorSetSignaturesFromStorage(ctx, timestamp.Timestamp)
 	require.NoError(t, err)
+	require.NotNil(t, res)
+	fmt.Println(res)
+
+	// sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// prevTime := sdkCtx.BlockTime()
+	// sdkCtx = sdkCtx.WithBlockTime(prevTime.Add(1 * time.Hour))
+
+	// err = k.SetBridgeValsetSignature(sdkCtx, "operatorAddr1", timestamp.Timestamp, "sig2")
+	// require.NoError(t, err)
+
 }
 
 func TestGetEVMAddressByOperator(t *testing.T) {

@@ -16,12 +16,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	math "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,7 +124,7 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 		}
 		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddress.EVMAddress,
-			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
+			Power:           uint64(validator.GetConsensusPower(layer.PowerReduction)),
 		})
 	}
 
