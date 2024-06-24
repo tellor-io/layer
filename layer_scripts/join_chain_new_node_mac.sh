@@ -7,8 +7,8 @@ clear
 set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=tellornode.com
-export TELLORNODE_ID=f5f6ce5d15ea80683b9133b19e245f9b27daab67
+export LAYER_NODE_URL=54.166.101.67
+export TELLORNODE_ID=5be41d465ca05f19a249fae5778bce5f9a246cea
 export KEYRING_BACKEND=test
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
