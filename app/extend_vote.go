@@ -98,6 +98,7 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	h.logger.Info("@ExtendVoteHandler", "req", req)
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
@@ -158,15 +159,17 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		Timestamp: timestamp,
 	}
 	voteExt.ValsetSignature = valsetSignature
-
+	h.logger.Info("@ExtendVoteHandler", "voteExt", voteExt)
 	bz, err := json.Marshal(voteExt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
 	}
+	h.logger.Info("@ExtendVoteHandler", "bz", bz)
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	h.logger.Info("@VerifyVoteExtensionHandler", "req", req)
 	var voteExt BridgeVoteExtension
 	err := json.Unmarshal(req.VoteExtension, &voteExt)
 	if err != nil {

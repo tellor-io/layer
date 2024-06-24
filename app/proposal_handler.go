@@ -250,11 +250,13 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 }
 
 func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []string, error) {
+	h.logger.Info("@CheckInitialSignaturesFromLastCommit", "commit", commit)
 	var operatorAddresses []string
 	var evmAddresses []string
 
 	for _, vote := range commit.Votes {
 		extension := vote.GetVoteExtension()
+		h.logger.Info("@CheckInitialSignaturesFromLastCommit", "extension", extension)
 		// unmarshal vote extension
 		voteExt := BridgeVoteExtension{}
 		err := json.Unmarshal(extension, &voteExt)
