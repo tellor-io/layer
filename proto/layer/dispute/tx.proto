@@ -20,7 +20,17 @@ service Msg {
   rpc UpdateTeam(MsgUpdateTeam) returns (MsgUpdateTeamResponse);
   rpc TallyVote(MsgTallyVote) returns (MsgTallyVoteResponse);
   rpc ExecuteDispute(MsgExecuteDispute) returns (MsgExecuteDisputeResponse);
+  rpc WithdrawFeeRefund(MsgWithdrawFeeRefund) returns (MsgWithdrawFeeRefundResponse);
 }
+
+message MsgWithdrawFeeRefund {
+  option (cosmos.msg.v1.signer) = "caller_address";
+  string caller_address = 1;
+  string payer_address = 2;
+  uint64 id = 3;
+}
+
+message MsgWithdrawFeeRefundResponse {}
 
 message MsgExecuteDispute {
   option (cosmos.msg.v1.signer) = "caller_address";

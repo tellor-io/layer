@@ -271,6 +271,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// execute vote
 	err = s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1)
 	s.NoError(err)
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
+	s.NoError(err)
 	reporter, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
 	s.NoError(err)
 	s.True(reporter.TotalTokens.GT(repTknBeforeExecuteVote))
@@ -451,6 +453,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	s.NoError(err)
 	// execute vote
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
+
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
+	s.NoError(err)
+
 	reporterAfter, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
 	s.NoError(err)
 	// should still be jailed

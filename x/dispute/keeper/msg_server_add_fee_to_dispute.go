@@ -7,6 +7,7 @@ import (
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,12 +55,14 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if msg.Amount.Amount.GT(fee) {
 		msg.Amount.Amount = fee
 	}
-	dispute.FeePayers = append(dispute.FeePayers, types.PayerInfo{
-		PayerAddress: sender.Bytes(),
-		Amount:       msg.Amount.Amount,
-		FromBond:     msg.PayFromBond,
-		BlockNumber:  ctx.BlockHeight(),
-	})
+	// dispute fee payer
+	if err := k.Keeper.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
+		Amount:   msg.Amount.Amount,
+		FromBond: msg.PayFromBond,
+	}); err != nil {
+		return nil, err
+	}
+
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
 		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
