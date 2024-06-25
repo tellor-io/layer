@@ -11,7 +11,7 @@ export LAYER_NODE_URL=tellornode.com
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=3dc666385748194eea72e4e62296569f092ad382
+export TELLORNODE_ID=0c4276ceaa4548946ee3a7bc35f8c9c3664062a0
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -51,6 +51,7 @@ echo "Creating account keys for node to be able to send and receive loya and sta
 echo "Getting the address of your node to use for faucet request"
 NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
 echo "NODE address: $NODE_ADDRESS"
+sleep 10
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."
