@@ -21,6 +21,7 @@ contract TokenBridge is LayerTransition{
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
 
     mapping(uint256 => bool) public withdrawalClaimed;
+    mapping(address => uint256) public tokensToClaim;
     mapping(uint256 => DepositDetails) public deposits;
 
     struct DepositDetails {
@@ -50,7 +51,7 @@ contract TokenBridge is LayerTransition{
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
         require(_amount > 0, "TokenBridge: amount must be greater than 0");
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
-        require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit");
+        require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit for time period");
         depositId++;
         depositLimitRecord -= _amount;
         deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, block.number);
@@ -71,14 +72,39 @@ contract TokenBridge is LayerTransition{
         require(_attest.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
         require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
-        //isAnyConsesnusValue here
         bridge.verifyOracleData(_attest, _valset, _sigs);
         require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawalClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attest.report.value, (address, string, uint256));
         uint256 _amountConverted = _amountLoya * 1e12; 
-        require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        uint256 _depositLimit = _refreshDepositLimit();
+        if(_depositLimit < _amountConverted){
+            tokensToClaim[_recipient] = tokensToClaim[_recipient] + (_amountConverted - _depositLimit);
+            _amountConverted = _depositLimit;
+            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        }
+        else{
+            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        }
+        depositLimitRecord -= _amountConverted;
         emit Withdrawal(_depositId, _layerSender, _recipient, _amountConverted);
+    }
+
+    function claimExtraWithdraw(address _recipient) external {
+        uint256 _amountConverted = tokensToClaim[_recipient];
+        require(_amountConverted > 0, "amount must be > 0");
+        uint256 _depositLimit = _refreshDepositLimit();
+        require(_depositLimit > 0, "TokenBridge: depositLimit must be > 0");
+        if(_depositLimit < _amountConverted){
+            tokensToClaim[_recipient] = tokensToClaim[_recipient] - _depositLimit;
+            _amountConverted = _depositLimit;
+            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        }
+        else{
+            tokensToClaim[_recipient] = 0;
+            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        }
+        depositLimitRecord -= _amountConverted;
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
@@ -98,9 +124,7 @@ contract TokenBridge is LayerTransition{
             uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
             depositLimitRecord = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
-        }
+        } 
         return depositLimitRecord;
     }
-
-
 }
