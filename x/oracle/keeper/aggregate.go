@@ -109,7 +109,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 	report.Nonce = nonce
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentTimestamp := sdkCtx.BlockTime().Unix()
+	currentTimestamp := sdkCtx.BlockTime().UnixMilli()
 	report.Height = sdkCtx.BlockHeight()
 
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
@@ -117,7 +117,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 
 // getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
 func (k Keeper) GetDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.Unix()).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.UnixMilli()).Descending()
 	var mostRecent *types.Aggregate
 	// This should get us the most recent aggregate, as they are walked in descending order
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
@@ -154,7 +154,7 @@ func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (
 }
 
 func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestamp.Unix()).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestamp.UnixMilli()).Descending()
 	var mostRecent int64
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		mostRecent = key.K2()
@@ -172,7 +172,7 @@ func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestam
 }
 
 func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartExclusive(timestamp.Unix())
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartExclusive(timestamp.UnixMilli())
 	var mostRecent int64
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		mostRecent = key.K2()
@@ -223,7 +223,7 @@ func (k Keeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (
 
 func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestampBefore time.Time) (aggregate *types.Aggregate, timestamp time.Time, err error) {
 	// Convert the timestampBefore to Unix time and create a range that ends just before this timestamp
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestampBefore.Unix()).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestampBefore.UnixMilli()).Descending()
 
 	var mostRecent *types.Aggregate
 	var mostRecentTimestamp int64
@@ -248,7 +248,7 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 }
 
 func (k Keeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error) {
-	timestampUnix := timestamp.Unix()
+	timestampUnix := timestamp.UnixMilli()
 
 	// Create a range that specifically targets the exact timestamp
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartInclusive(timestampUnix).EndInclusive(timestampUnix)
