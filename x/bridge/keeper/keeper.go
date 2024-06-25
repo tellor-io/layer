@@ -578,7 +578,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 		return err
 	}
 	if valsetIdx.Index == 0 {
-		k.Logger(ctx).Warn("Valset index is 0")
+		// first valset, no sigs needed
 		return nil
 	}
 	previousIndex := valsetIdx.Index - 1
@@ -689,7 +689,7 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		return false, -1, err
 	}
 	if valsetIdx.Index == 0 {
-		k.Logger(ctx).Warn("Valset index is 0")
+		// first valset, no sigs needed
 		return false, -1, nil
 	}
 	// get previous valset

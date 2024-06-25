@@ -262,34 +262,32 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		err := json.Unmarshal(extension, &voteExt)
 		if err != nil {
 			h.logger.Error("failed to unmarshal vote extension", "error", err)
-			return nil, nil, errors.New("failed to unmarshal vote extension")
-		}
-
-		// check for initial sig
-		if len(voteExt.InitialSignature.SignatureA) > 0 {
+			// check for initial sig
+		} else if len(voteExt.InitialSignature.SignatureA) > 0 {
 			// verify initial sig
 			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB)
 			if err != nil {
 				h.logger.Error("failed to get evm address from initial sig", "error", err)
-				return nil, nil, err
+			} else {
+				operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
+				if err != nil {
+					h.logger.Error("failed to get operator address from vote", "error", err)
+				} else {
+					// check for existing EVM address for operator
+					_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
+					if err != nil {
+						// no existing EVM address for operator
+						operatorAddresses = append(operatorAddresses, operatorAddress)
+						evmAddresses = append(evmAddresses, evmAddress.Hex())
+					}
+				}
 			}
-
-			operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
-			if err != nil {
-				h.logger.Error("failed to get operator address from vote", "error", err)
-				return nil, nil, err
-			}
-
-			operatorAddresses = append(operatorAddresses, operatorAddress)
-			evmAddresses = append(evmAddresses, evmAddress.Hex())
 		}
 	}
-
 	if len(operatorAddresses) == 0 {
 		emptyStringArray := make([]string, 0)
 		return emptyStringArray, emptyStringArray, nil
 	}
-
 	return operatorAddresses, evmAddresses, nil
 }
 
@@ -305,23 +303,19 @@ func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, c
 		err := json.Unmarshal(extension, &voteExt)
 		if err != nil {
 			h.logger.Error("failed to unmarshal vote extension", "error", err)
-			return nil, nil, nil, errors.New("failed to unmarshal vote extension")
-		}
-
-		// check for valset sig
-		if len(voteExt.ValsetSignature.Signature) > 0 {
+			// check for valset sig
+		} else if len(voteExt.ValsetSignature.Signature) > 0 {
 			// verify valset sig
 			sigHexString := hex.EncodeToString(voteExt.ValsetSignature.Signature)
 			operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
 			if err != nil {
 				h.logger.Error("failed to get operator address from vote", "error", err)
-				return nil, nil, nil, err
+			} else {
+				timestamp := voteExt.ValsetSignature.Timestamp
+				operatorAddresses = append(operatorAddresses, operatorAddress)
+				timestamps = append(timestamps, int64(timestamp))
+				signatures = append(signatures, sigHexString)
 			}
-
-			timestamp := voteExt.ValsetSignature.Timestamp
-			operatorAddresses = append(operatorAddresses, operatorAddress)
-			timestamps = append(timestamps, int64(timestamp))
-			signatures = append(signatures, sigHexString)
 		}
 	}
 	return operatorAddresses, timestamps, signatures, nil
@@ -362,25 +356,19 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 		err := json.Unmarshal(extension, &voteExt)
 		if err != nil {
 			h.logger.Error("failed to unmarshal vote extension", "error", err)
-			return nil, nil, nil, errors.New("failed to unmarshal vote extension")
-		}
-
-		// check for oracle attestation
-		if len(voteExt.OracleAttestations) > 0 {
+			// check for oracle attestation
+		} else if len(voteExt.OracleAttestations) > 0 {
 			// verify oracle attestation
 			for _, attestation := range voteExt.OracleAttestations {
 				operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
 				if err != nil {
 					h.logger.Error("failed to get operator address from vote", "error", err)
-					return nil, nil, nil, err
+				} else {
+					operatorAddresses = append(operatorAddresses, operatorAddress)
+					snapshot := attestation.Snapshot
+					snapshots = append(snapshots, snapshot)
+					attestations = append(attestations, attestation.Attestation)
 				}
-
-				operatorAddresses = append(operatorAddresses, operatorAddress)
-
-				snapshot := attestation.Snapshot
-				snapshots = append(snapshots, snapshot)
-
-				attestations = append(attestations, attestation.Attestation)
 			}
 		}
 	}
