@@ -98,19 +98,20 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	h.logger.Info("@ExtendVoteHandler", "req", req)
+	h.logger.Info("@ExtendVoteHandler: START", "req", req)
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
+		h.logger.Error("@ExtendVoteHandler: failed to get operator address", "error", err)
 		return &abci.ResponseExtendVote{}, nil
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
-		h.logger.Info("EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
+		h.logger.Info("@ExtendVoteHandler: EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
-			h.logger.Info("Failed to sign initial message", "error", err)
+			h.logger.Info("@ExtendVoteHandler: failed to sign initial message", "error", err)
 			return &abci.ResponseExtendVote{}, nil
 		}
 		// include the initial sig in the vote extension
@@ -125,16 +126,30 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
+			h.logger.Error("@ExtendVoteHandler: failed to get attestation requests", "error", err)
+			bz, err := json.Marshal(voteExt)
+			if err != nil {
+				h.logger.Error("@ExtendVoteHandler: failed to marshal vote extension", "error", err)
+				return &abci.ResponseExtendVote{}, err
+			}
+			return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 		}
 	} else {
+		h.logger.Info("@ExtendVoteHandler: getting snapshots")
 		snapshots := attestationRequests.Requests
 		// iterate through snapshots and generate sigs
 		if len(snapshots) > 0 {
+			h.logger.Info("@ExtendVoteHandler: got snapshots")
 			for _, snapshot := range snapshots {
 				sig, err := h.SignMessage(snapshot.Snapshot)
 				if err != nil {
-					return nil, err
+					h.logger.Error("@ExtendVoteHandler: failed to sign message", "error", err)
+					bz, err := json.Marshal(voteExt)
+					if err != nil {
+						h.logger.Error("@ExtendVoteHandler: failed to marshal vote extension", "error", err)
+						return &abci.ResponseExtendVote{}, err
+					}
+					return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 				}
 				oracleAttestation := OracleAttestation{
 					Snapshot:    snapshot.Snapshot,
@@ -147,10 +162,11 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	// include the valset sig in the vote extension
 	sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
 	if err != nil {
-		h.logger.Error("Failed to sign validator checkpoint", "error", err)
+		h.logger.Error("@ExtendVoteHandler: failed to sign validator checkpoint", "error", err)
 		bz, err := json.Marshal(voteExt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
+			h.logger.Error("@ExtendVoteHandler: failed to marshal vote extension", "error", err)
+			return &abci.ResponseExtendVote{}, fmt.Errorf("failed to marshal vote extension: %w", err)
 		}
 		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
@@ -159,39 +175,46 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		Timestamp: timestamp,
 	}
 	voteExt.ValsetSignature = valsetSignature
-	h.logger.Info("@ExtendVoteHandler", "voteExt", voteExt)
+	h.logger.Info("@ExtendVoteHandler: marshalling vote extension", "voteExt", voteExt)
 	bz, err := json.Marshal(voteExt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to marshal vote extension: %w", err)
+		h.logger.Error("@ExtendVoteHandler: failed to marshal vote extension", "error", err)
+		return &abci.ResponseExtendVote{}, fmt.Errorf("failed to marshal vote extension: %w", err)
 	}
 	h.logger.Info("@ExtendVoteHandler", "bz", bz)
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	h.logger.Info("@VerifyVoteExtensionHandler", "req", req)
+	h.logger.Info("@VerifyVoteExtensionHandler: START", "req", req)
 	var voteExt BridgeVoteExtension
 	err := json.Unmarshal(req.VoteExtension, &voteExt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal vote extension: %w", err)
+		h.logger.Error("@VerifyVoteExtensionHandler: failed to unmarshal vote extension", "error", err)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 	// ensure oracle attestations length is less than or equal to the number of attestation requests
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(ctx.BlockHeight()-1))
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
+			h.logger.Error("@VerifyVoteExtensionHandler: failed to get attestation requests", "error", err)
 			return nil, err
 		} else if len(voteExt.OracleAttestations) > 0 {
+			h.logger.Error("@VerifyVoteExtensionHandler: oracle attestations length is greater than 0, should be 0", "voteExt", voteExt)
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		}
 	} else if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
+		h.logger.Error("@VerifyVoteExtensionHandler: oracle attestations length is greater than attestation requests length", "voteExt", voteExt)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 	// verify the initial signature size
 	if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
+		h.logger.Error("@VerifyVoteExtensionHandler: initial signature size is greater than 65", "voteExt", voteExt)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 	// verify the valset signature size
 	if len(voteExt.ValsetSignature.Signature) > 65 {
+		h.logger.Error("@VerifyVoteExtensionHandler: valset signature size is greater than 65", "voteExt", voteExt)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 

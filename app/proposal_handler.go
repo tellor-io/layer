@@ -62,10 +62,10 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 }
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
+	h.logger.Info("@PrepareProposalHandler: START", "height", req.Height, "req", req)
 	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
-		h.logger.Info("failed to validate vote extensions", "error", err, "votes", len(req.LocalLastCommit.Votes))
-		// return nil, err
+		h.logger.Info("@PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", len(req.LocalLastCommit.Votes))
 	}
 	proposalTxs := req.Txs
 	injectedVoteExtTx := VoteExtTx{}
@@ -73,10 +73,10 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
 		if err != nil {
-			h.logger.Info("failed to check initial signatures from last commit", "error", err)
+			h.logger.Info("@PrepareProposalHandler: failed to check initial signatures from last commit", "error", err)
 			bz, err := json.Marshal(injectedVoteExtTx)
 			if err != nil {
-				h.logger.Error("failed to encode injected vote extension tx", "err", err)
+				h.logger.Error("@PrepareProposalHandler: failed to encode injected vote extension tx", "err", err)
 				return nil, errors.New("failed to encode injected vote extension tx")
 			}
 			proposalTxs = append([][]byte{bz}, proposalTxs...)
@@ -91,7 +91,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 
 		valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, req.LocalLastCommit)
 		if err != nil {
-			h.logger.Info("failed to check valset signatures from last commit", "error", err)
+			h.logger.Info("@CheckValsetSignaturesFromLastCommit: failed to check valset signatures from last commit", "error", err)
 			bz, err := json.Marshal(injectedVoteExtTx)
 			if err != nil {
 				h.logger.Error("failed to encode injected vote extension tx", "err", err)
@@ -250,7 +250,7 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 }
 
 func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []string, error) {
-	h.logger.Info("@CheckInitialSignaturesFromLastCommit", "commit", commit)
+	h.logger.Info("@CheckInitialSignaturesFromLastCommit: START", "commit", commit)
 	var operatorAddresses []string
 	var evmAddresses []string
 
@@ -261,30 +261,34 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		voteExt := BridgeVoteExtension{}
 		err := json.Unmarshal(extension, &voteExt)
 		if err != nil {
-			h.logger.Error("failed to unmarshal vote extension", "error", err)
+			h.logger.Error("@CheckInitialSignaturesFromLastCommit: failed to unmarshal vote extension", "error", err)
 			// check for initial sig
 		} else if len(voteExt.InitialSignature.SignatureA) > 0 {
 			// verify initial sig
 			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB)
 			if err != nil {
-				h.logger.Error("failed to get evm address from initial sig", "error", err)
+				h.logger.Error("@CheckInitialSignaturesFromLastCommit: failed to get evm address from initial sig", "error", err)
 			} else {
 				operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
 				if err != nil {
-					h.logger.Error("failed to get operator address from vote", "error", err)
+					h.logger.Error("@CheckInitialSignaturesFromLastCommit: failed to get operator address from vote", "error", err)
 				} else {
 					// check for existing EVM address for operator
 					_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 					if err != nil {
+						h.logger.Info("@CheckInitialSignaturesFromLastCommit: EVM address not found for operator", "operatorAddress", operatorAddress)
 						// no existing EVM address for operator
 						operatorAddresses = append(operatorAddresses, operatorAddress)
 						evmAddresses = append(evmAddresses, evmAddress.Hex())
+					} else {
+						h.logger.Error("@CheckInitialSignaturesFromLastCommit: EVM address already exists for operator", "operatorAddress", operatorAddress, "evmAddress", evmAddress.Hex())
 					}
 				}
 			}
 		}
 	}
 	if len(operatorAddresses) == 0 {
+		h.logger.Info("@CheckInitialSignaturesFromLastCommit: no initial signatures found")
 		emptyStringArray := make([]string, 0)
 		return emptyStringArray, emptyStringArray, nil
 	}
