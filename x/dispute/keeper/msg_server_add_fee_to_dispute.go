@@ -32,6 +32,10 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if err != nil {
 		return nil, err
 	}
+	// if disputed reporter wants to add to fee, they have to use free floating tokens
+	if sender.Equals(sdk.MustAccAddressFromBech32(dispute.ReportEvidence.Reporter)) && msg.PayFromBond {
+		return nil, errors.New("disputed reporter can't add fee from bond")
+	}
 	// check if time to add fee has expired
 	if ctx.BlockTime().After(dispute.DisputeEndTime) {
 		return nil, types.ErrDisputeTimeExpired
