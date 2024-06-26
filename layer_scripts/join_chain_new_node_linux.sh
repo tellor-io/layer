@@ -11,7 +11,7 @@ export LAYER_NODE_URL=tellornode.com
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=837a0c79947fcb150c8305f992729fe90353ca1a
+export TELLORNODE_ID=82f119342aececc737cbd479924aaff74004f096
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -98,3 +98,4 @@ echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
 ./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+#./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "837a0c79947fcb150c8305f992729fe90353ca1a@tellornode.com:26656"
