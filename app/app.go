@@ -44,6 +44,7 @@ import (
 	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+
 	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
@@ -560,6 +561,7 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		app.StakingKeeper,
 		app.BankKeeper,
+		app.RegistryKeeper,
 	)
 	reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
 
@@ -594,14 +596,14 @@ func New(
 		app.ReporterKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
-	app.ReporterKeeper = reportermodulekeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
-		logger,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		app.StakingKeeper,
-		app.BankKeeper,
-	)
+	// app.ReporterKeeper = reportermodulekeeper.NewKeeper(
+	// 	appCodec,
+	// 	runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
+	// 	logger,
+	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	// 	app.StakingKeeper,
+	// 	app.BankKeeper,
+	// )
 	// reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
