@@ -186,7 +186,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 }
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
-	h.logger.Info("@VerifyVoteExtensionHandler: START", "req", req)
+	h.logger.Info("@VerifyVoteExtensionHandler: START", "height", req.Height, "req", req)
 	var voteExt BridgeVoteExtension
 	err := json.Unmarshal(req.VoteExtension, &voteExt)
 	if err != nil {
@@ -218,6 +218,7 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
+	h.logger.Info("@VerifyVoteExtensionHandler: vote extension verified", "voteExt", voteExt)
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
