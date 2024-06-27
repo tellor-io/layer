@@ -101,3 +101,15 @@ echo "Starting chain for node..."
 #./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "22ccb9b0d25b4b816eddf544715f508686bc044f@tellornode.com:26656" | tee ./second_node_logs.txt
 # ec2-54-166-101-67.compute-1.amazonaws.com
 # sudo scp -i /Users/caleb/layer-doc-test-key.pem ubuntu@ec2-100-26-53-93.compute-1.amazonaws.com:/home/ubuntu/layer/second_node_logs.txt .
+
+# // "slashing": {
+#       "params": {
+#         "signed_blocks_window": "100",
+#         "min_signed_per_window": "0.500000000000000000",
+#         "downtime_jail_duration": "600s",
+#         "slash_fraction_double_sign": "0.050000000000000000",
+#         "slash_fraction_downtime": "0.010000000000000000"
+#       },
+#       "signing_infos": [],
+#       "missed_blocks": []
+#     },
