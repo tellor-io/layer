@@ -122,4 +122,4 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger | tee ./first_node_logs.txt
