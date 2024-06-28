@@ -97,7 +97,7 @@ echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656" | tee ./second_node_logs.txt
+./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
 #./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "9eb337547c01106a92ee4727e40ec103d1741a3a@tellornode.com:26656" | tee ./second_node_logs.txt
 
 
