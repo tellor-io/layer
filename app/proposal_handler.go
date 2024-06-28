@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"reflect"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
@@ -143,75 +144,75 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 
 func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 	h.logger.Info("@ProcessProposalHandler", "height", req.Height, "voteExtEnableHeight", ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight)
-	// if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
-	// 	var injectedVoteExtTx VoteExtTx
-	// 	if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
-	// 		h.logger.Error("failed to decode injected vote extension tx", "err", err)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
-	// 	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
+	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
+		var injectedVoteExtTx VoteExtTx
+		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
+			h.logger.Error("failed to decode injected vote extension tx", "err", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			return nil, err
+		}
 
-	// 	operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
-	// 	if err != nil {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, failed to check initial signatures from last commit", "error", err)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, failed to check initial signatures from last commit", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(operatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, operator addresses do not match", "operatorAddresses", operatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(operatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, operator addresses do not match", "operatorAddresses", operatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(evmAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, evm addresses do not match", "evmAddresses", evmAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(evmAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, evm addresses do not match", "evmAddresses", evmAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
-	// 	if err != nil {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, failed to check valset signatures from last commit", "error", err)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, failed to check valset signatures from last commit", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(valsetOperatorAddresses, injectedVoteExtTx.ValsetSigs.OperatorAddresses) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, valset operator addresses do not match", "valsetOperatorAddresses", valsetOperatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.OperatorAddresses)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(valsetOperatorAddresses, injectedVoteExtTx.ValsetSigs.OperatorAddresses) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, valset operator addresses do not match", "valsetOperatorAddresses", valsetOperatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.OperatorAddresses)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(valsetTimestamps, injectedVoteExtTx.ValsetSigs.Timestamps) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, valset timestamps do not match", "valsetTimestamps", valsetTimestamps, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.Timestamps)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(valsetTimestamps, injectedVoteExtTx.ValsetSigs.Timestamps) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, valset timestamps do not match", "valsetTimestamps", valsetTimestamps, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.Timestamps)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(valsetSignatures, injectedVoteExtTx.ValsetSigs.Signatures) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, valset signatures do not match", "valsetSignatures", valsetSignatures, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.Signatures)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(valsetSignatures, injectedVoteExtTx.ValsetSigs.Signatures) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, valset signatures do not match", "valsetSignatures", valsetSignatures, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.Signatures)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	oracleSigs, oracleSnapshots, oracleOperatorAddresses, err := h.CheckOracleAttestationsFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
-	// 	if err != nil {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, failed to check oracle attestations from last commit", "error", err)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		oracleSigs, oracleSnapshots, oracleOperatorAddresses, err := h.CheckOracleAttestationsFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
+		if err != nil {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, failed to check oracle attestations from last commit", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(oracleSigs, injectedVoteExtTx.OracleAttestations.Attestations) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, oracle signatures do not match", "oracleSigs", oracleSigs, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.Attestations)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(oracleSigs, injectedVoteExtTx.OracleAttestations.Attestations) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, oracle signatures do not match", "oracleSigs", oracleSigs, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.Attestations)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(oracleSnapshots, injectedVoteExtTx.OracleAttestations.Snapshots) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, oracle snapshots do not match", "oracleSnapshots", oracleSnapshots, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.Snapshots)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
+		if !reflect.DeepEqual(oracleSnapshots, injectedVoteExtTx.OracleAttestations.Snapshots) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, oracle snapshots do not match", "oracleSnapshots", oracleSnapshots, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.Snapshots)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 
-	// 	if !reflect.DeepEqual(oracleOperatorAddresses, injectedVoteExtTx.OracleAttestations.OperatorAddresses) {
-	// 		h.logger.Error("@ProcessProposalHandler: rejecting proposal, oracle operator addresses do not match", "oracleOperatorAddresses", oracleOperatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.OperatorAddresses)
-	// 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-	// 	}
-	// }
+		if !reflect.DeepEqual(oracleOperatorAddresses, injectedVoteExtTx.OracleAttestations.OperatorAddresses) {
+			h.logger.Error("@ProcessProposalHandler: rejecting proposal, oracle operator addresses do not match", "oracleOperatorAddresses", oracleOperatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.OperatorAddresses)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+	}
 
 	h.logger.Info("@ProcessProposalHandler: proposal accepted")
 	return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}, nil

@@ -191,39 +191,38 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	validatorAddressBytes := req.ValidatorAddress
 	validatorAddress := sdk.AccAddress(validatorAddressBytes)
 	h.logger.Info("@VerifyVoteExtensionHandler: VALIDATOR", "validatorAddress", validatorAddress)
-	// var voteExt BridgeVoteExtension
-	// err := json.Unmarshal(req.VoteExtension, &voteExt)
-	// if err != nil {
-	// 	h.logger.Error("@VerifyVoteExtensionHandler: failed to unmarshal vote extension", "error", err)
-	// 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
-	// }
-	// // ensure oracle attestations length is less than or equal to the number of attestation requests
-	// attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(ctx.BlockHeight()-1))
-	// if err != nil {
-	// 	if !errors.Is(err, collections.ErrNotFound) {
-	// 		h.logger.Error("@VerifyVoteExtensionHandler: failed to get attestation requests", "error", err)
-	// 		return nil, err
-	// 	} else if len(voteExt.OracleAttestations) > 0 {
-	// 		h.logger.Error("@VerifyVoteExtensionHandler: oracle attestations length is greater than 0, should be 0", "voteExt", voteExt)
-	// 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
-	// 	}
-	// } else if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
-	// 	h.logger.Error("@VerifyVoteExtensionHandler: oracle attestations length is greater than attestation requests length", "voteExt", voteExt)
-	// 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
-	// }
-	// // verify the initial signature size
-	// if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
-	// 	h.logger.Error("@VerifyVoteExtensionHandler: initial signature size is greater than 65", "voteExt", voteExt)
-	// 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
-	// }
-	// // verify the valset signature size
-	// if len(voteExt.ValsetSignature.Signature) > 65 {
-	// 	h.logger.Error("@VerifyVoteExtensionHandler: valset signature size is greater than 65", "voteExt", voteExt)
-	// 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
-	// }
+	var voteExt BridgeVoteExtension
+	err := json.Unmarshal(req.VoteExtension, &voteExt)
+	if err != nil {
+		h.logger.Error("@VerifyVoteExtensionHandler: failed to unmarshal vote extension", "error", err)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+	// ensure oracle attestations length is less than or equal to the number of attestation requests
+	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(ctx.BlockHeight()-1))
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			h.logger.Error("@VerifyVoteExtensionHandler: failed to get attestation requests", "error", err)
+			return nil, err
+		} else if len(voteExt.OracleAttestations) > 0 {
+			h.logger.Error("@VerifyVoteExtensionHandler: oracle attestations length is greater than 0, should be 0", "voteExt", voteExt)
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+	} else if len(voteExt.OracleAttestations) > len(attestationRequests.Requests) {
+		h.logger.Error("@VerifyVoteExtensionHandler: oracle attestations length is greater than attestation requests length", "voteExt", voteExt)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+	// verify the initial signature size
+	if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
+		h.logger.Error("@VerifyVoteExtensionHandler: initial signature size is greater than 65", "voteExt", voteExt)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+	// verify the valset signature size
+	if len(voteExt.ValsetSignature.Signature) > 65 {
+		h.logger.Error("@VerifyVoteExtensionHandler: valset signature size is greater than 65", "voteExt", voteExt)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
 
-	// h.logger.Info("@VerifyVoteExtensionHandler: vote extension verified", "voteExt", voteExt)
-	h.logger.Info("@VerifyVoteExtensionHandler: vote extension verified")
+	h.logger.Info("@VerifyVoteExtensionHandler: vote extension verified", "voteExt", voteExt)
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
