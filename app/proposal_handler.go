@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -274,6 +275,10 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 	var evmAddresses []string
 
 	for _, vote := range commit.Votes {
+		// Only check if the vote is a commit vote
+		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+			continue
+		}
 		extension := vote.GetVoteExtension()
 		h.logger.Info("@CheckInitialSignaturesFromLastCommit", "extension", extension)
 		// unmarshal vote extension
@@ -320,6 +325,10 @@ func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, c
 	var signatures []string
 
 	for _, vote := range commit.Votes {
+		// Only check if the vote is a commit vote
+		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+			continue
+		}
 		extension := vote.GetVoteExtension()
 		// unmarshal vote extension
 		voteExt := BridgeVoteExtension{}
@@ -374,6 +383,10 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 	var snapshots [][]byte
 
 	for _, vote := range commit.Votes {
+		// Only check if the vote is a commit vote
+		if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+			continue
+		}
 		extension := vote.GetVoteExtension()
 		// unmarshal vote extension
 		voteExt := BridgeVoteExtension{}
