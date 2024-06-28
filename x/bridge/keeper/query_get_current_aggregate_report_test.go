@@ -66,7 +66,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Equal(t, getCurrentAggResponse.Aggregate.ReporterPower, agg.ReporterPower)
 	require.Equal(t, getCurrentAggResponse.Aggregate.StandardDeviation, agg.StandardDeviation)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Flagged, agg.Flagged)
-	require.Equal(t, getCurrentAggResponse.Aggregate.Nonce, agg.Nonce)
+	require.Equal(t, getCurrentAggResponse.Aggregate.Nonce, int64(agg.Nonce))
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReportIndex, agg.AggregateReportIndex)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Height, agg.Height)
 }

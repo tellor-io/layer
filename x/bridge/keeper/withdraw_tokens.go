@@ -14,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) withdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte) error {
+func (k Keeper) WithdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte) error {
 	// send coins from the sender to the bridge module
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(amount)); err != nil {
 		return err
@@ -24,12 +24,12 @@ func (k Keeper) withdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 		return err
 	}
 
-	withdrawalId, err := k.incrementWithdrawalId(ctx)
+	withdrawalId, err := k.IncrementWithdrawalId(ctx)
 	if err != nil {
 		return err
 	}
 
-	aggregate, err := k.createWithdrawalAggregate(ctx, amount, sender, recipient, withdrawalId)
+	aggregate, err := k.CreateWithdrawalAggregate(ctx, amount, sender, recipient, withdrawalId)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (k Keeper) withdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 	return k.oracleKeeper.SetAggregate(ctx, aggregate)
 }
 
-func (k Keeper) incrementWithdrawalId(goCtx context.Context) (uint64, error) {
+func (k Keeper) IncrementWithdrawalId(goCtx context.Context) (uint64, error) {
 	id, err := k.WithdrawalId.Get(goCtx)
 	if err != nil {
 		id.Id = 1
@@ -55,13 +55,13 @@ func (k Keeper) incrementWithdrawalId(goCtx context.Context) (uint64, error) {
 	return id.Id, nil
 }
 
-func (k Keeper) createWithdrawalAggregate(goCtx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, error) {
+func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	queryId, err := k.getWithdrawalQueryId(withdrawalId)
+	queryId, err := k.GetWithdrawalQueryId(withdrawalId)
 	if err != nil {
 		return nil, err
 	}
-	reportValue, err := k.getWithdrawalReportValue(amount, sender, recipient)
+	reportValue, err := k.GetWithdrawalReportValue(amount, sender, recipient)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (k Keeper) createWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 	return aggregate, nil
 }
 
-func (k Keeper) getWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
+func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool false, uint256 withdrawalId)))
 
 	queryTypeString := "TRBBridge"
@@ -137,7 +137,7 @@ func (k Keeper) getWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 	return queryId, nil
 }
 
-func (k Keeper) getWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress, recipient []byte) ([]byte, error) {
+func (k Keeper) GetWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress, recipient []byte) ([]byte, error) {
 	// replicate solidity encoding, abi.encode(address ethRecipient, string layerSender, uint256 amount)
 
 	// convert recipient to common.Address

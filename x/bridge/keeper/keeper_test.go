@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
-	"fmt"
 	"testing"
 	"time"
 
@@ -19,6 +18,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	layer "github.com/tellor-io/layer/types"
 )
 
 func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, context.Context) {
@@ -77,7 +77,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 
 	for i := 0; i < len(bridgeValSet)-1; i++ {
 		require.GreaterOrEqual(t, bridgeValSet[i].Power, bridgeValSet[i+1].Power)
-		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(math.NewInt(10))))
+		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(layer.PowerReduction)))
 		require.Equal(t, bridgeValSet[i].EthereumAddress, evmAddresses[i].EVMAddress)
 	}
 }
@@ -133,7 +133,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 
 	for i := 0; i < len(bridgeValSet)-1; i++ {
 		require.GreaterOrEqual(t, bridgeValSet[i].Power, bridgeValSet[i+1].Power)
-		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(math.NewInt(10))))
+		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(layer.PowerReduction)))
 		require.Equal(t, bridgeValSet[i].EthereumAddress, evmAddresses[i].EVMAddress)
 		require.LessOrEqual(t, string(bridgeValSet[i].EthereumAddress), string(bridgeValSet[i+1].EthereumAddress))
 	}
@@ -180,121 +180,120 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 
 	for i := 0; i < len(bridgeValidatorSet.BridgeValidatorSet)-1; i++ {
 		require.GreaterOrEqual(t, bridgeValidatorSet.BridgeValidatorSet[i].Power, bridgeValidatorSet.BridgeValidatorSet[i+1].Power)
-		require.Equal(t, bridgeValidatorSet.BridgeValidatorSet[i].Power, uint64(validators[i].GetConsensusPower(math.NewInt(10))))
+		require.Equal(t, bridgeValidatorSet.BridgeValidatorSet[i].Power, uint64(validators[i].GetConsensusPower(layer.PowerReduction)))
 	}
 }
 
 func TestCompareAndSetBridgeValidators(t *testing.T) {
 	k, _, _, _, _, sk, ctx := setupKeeper(t)
-	require.NotNil(t, k)
-	require.NotNil(t, ctx)
+	logger := k.Logger(ctx)
 
+	// call without setting validator set
+	sk.On("GetAllValidators", ctx).Return(nil, nil).Once()
+	res, err := k.CompareAndSetBridgeValidators(ctx)
+	require.ErrorContains(t, err, "no validators found")
+	require.False(t, res)
+	logger.Error("err: ", err)
+
+	// call with empty valset
+	sk.On("GetAllValidators", ctx).Return([]stakingtypes.Validator{}, nil).Once()
+	res, err = k.CompareAndSetBridgeValidators(ctx)
+	require.ErrorContains(t, err, "no validators found")
+	require.False(t, res)
+	logger.Error("err: ", err)
+
+	// call for initial val set, should hit false since no valset exists yet
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(2000),
-			DelegatorShares: math.LegacyNewDec(2000),
+			Tokens:          math.NewInt(100 * 1e6),
+			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
 			OperatorAddress: "operatorAddr1",
 		},
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
-			DelegatorShares: math.LegacyNewDec(1000),
+			Tokens:          math.NewInt(100 * 1e6),
+			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
 			OperatorAddress: "operatorAddr2",
 		},
 	}
-
-	evmAddresses := make([]types.EVMAddress, len(validators))
-	for i, val := range validators {
+	for _, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
-
-		evmAddresses[i], err = k.OperatorToEVMAddressMap.Get(ctx, val.GetOperator())
-		require.NoError(t, err)
-		require.Equal(t, evmAddresses[i].EVMAddress, []byte(val.Description.Moniker))
 	}
 
-	sk.On("GetAllValidators", ctx).Return(validators, nil).Times(2)
-
-	// since BridgeValSet has not been set, should error
-	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-	require.Error(t, err)
-	require.Nil(t, lastSavedBridgeValidators.BridgeValidatorSet)
-
-	// set BridgeValSet, should hit false because no BridgeValSet exists yet
-	res, err := k.CompareAndSetBridgeValidators(ctx)
-	require.NoError(t, err)
-	require.False(t, res)
-
-	// should return 2 validators
-	lastSavedBridgeValidators, err = k.BridgeValset.Get(ctx)
-	require.NoError(t, err)
-	require.NotNil(t, lastSavedBridgeValidators)
-	require.Equal(t, len(lastSavedBridgeValidators.BridgeValidatorSet), 2)
-
-	// should return false since valset has not changed
+	sk.On("GetAllValidators", ctx).Return(validators, nil).Once()
 	res, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
 	require.False(t, res)
 
-	// Append the third validator
+	// change validator1 power by more than 5% of total power, should return true since bridgevalset needs updated
 	validators = []stakingtypes.Validator{
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(2000),
-			DelegatorShares: math.LegacyNewDec(2000),
+			Tokens:          math.NewInt(111 * 1e6),
+			DelegatorShares: math.LegacyNewDec(111 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
 			OperatorAddress: "operatorAddr1",
 		},
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
-			DelegatorShares: math.LegacyNewDec(1000),
+			Tokens:          math.NewInt(100 * 1e6),
+			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
 			OperatorAddress: "operatorAddr2",
+		},
+	}
+	for _, val := range validators {
+		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
+		require.NoError(t, err)
+	}
+
+	sk.On("GetAllValidators", ctx).Return(validators, nil).Twice()
+	res, err = k.CompareAndSetBridgeValidators(ctx)
+	require.NoError(t, err)
+	require.True(t, res)
+
+	// call without changing anything, should hit false since valset bytes are equal
+	res, err = k.CompareAndSetBridgeValidators(ctx)
+	require.NoError(t, err)
+	require.False(t, res)
+
+	// change by less than 5%, should hit false
+	validators = []stakingtypes.Validator{
+		{
+			Jailed:          false,
+			Status:          stakingtypes.Bonded,
+			Tokens:          math.NewInt(112 * 1e6),
+			DelegatorShares: math.LegacyNewDec(112 * 1e6),
+			Description:     stakingtypes.Description{Moniker: "validator1"},
+			OperatorAddress: "operatorAddr1",
 		},
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(5000),
-			DelegatorShares: math.LegacyNewDec(5000),
-			Description:     stakingtypes.Description{Moniker: "validator3"},
-			OperatorAddress: "operatorAddr3",
+			Tokens:          math.NewInt(100 * 1e6),
+			DelegatorShares: math.LegacyNewDec(100 * 1e6),
+			Description:     stakingtypes.Description{Moniker: "validator2"},
+			OperatorAddress: "operatorAddr2",
 		},
 	}
-
-	// Update EVM addresses for all validators including the new one
-	evmAddresses = make([]types.EVMAddress, len(validators))
-	for i, val := range validators {
+	for _, val := range validators {
 		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
-
-		evmAddresses[i], err = k.OperatorToEVMAddressMap.Get(ctx, val.GetOperator())
-		require.NoError(t, err)
-		require.Equal(t, evmAddresses[i].EVMAddress, []byte(val.Description.Moniker))
 	}
 
-	sk.On("GetAllValidators", ctx).Return(validators, nil).Times(2)
-
-	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
+	sk.On("GetAllValidators", ctx).Return(validators, nil).Once()
+	res, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
-	require.NotNil(t, currentValidatorSetEVMCompatible)
+	require.False(t, res)
 
-	// Check for third val
-	require.Equal(t, len(currentValidatorSetEVMCompatible.BridgeValidatorSet), 3)
-
-	err = k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
-	require.NoError(t, err)
-
-	_, err = k.CompareAndSetBridgeValidators(ctx)
-	require.NoError(t, err)
-	// require.True(t, res) TODO: hit remainder of fcn
 }
 
 func TestSetBridgeValidatorParams(t *testing.T) {
@@ -337,7 +336,6 @@ func TestSetBridgeValidatorParams(t *testing.T) {
 	params2, err := k.Params.Get(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, params2)
-	fmt.Println("params2: ", params2)
 }
 
 // todo: check all stores
@@ -484,7 +482,6 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 	res, err = k.GetValidatorSetSignaturesFromStorage(ctx, timestamp.Timestamp)
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	fmt.Println("res: ", res)
 }
 
 func TestEncodeAndHashValidatorSet(t *testing.T) {
@@ -788,83 +785,69 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 	}
 }
 
-// needs finished
 func TestSetBridgeValsetSignature(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	res, err := k.GetValidatorSetSignaturesFromStorage(ctx, 0)
+	res, err := k.GetValidatorSetSignaturesFromStorage(ctx, 1)
 	require.Error(t, err)
 	require.Nil(t, res)
 
-	validators := []stakingtypes.Validator{
-		{
-			Jailed:          false,
-			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(2000),
-			DelegatorShares: math.LegacyNewDec(2000),
-			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
-		},
-		{
-			Jailed:          false,
-			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
-			DelegatorShares: math.LegacyNewDec(1000),
-			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
-		},
-		{
-			Jailed:          false,
-			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(5000),
-			DelegatorShares: math.LegacyNewDec(5000),
-			Description:     stakingtypes.Description{Moniker: "validator3"},
-			OperatorAddress: "operatorAddr3",
-		},
-	}
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", 1, "abcd1234")
+	require.Error(t, err)
+	require.Nil(t, res)
 
-	// Update EVM addresses for all validators including the new one
-	evmAddresses := make([]types.EVMAddress, len(validators))
-	for i, val := range validators {
-		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
-		require.NoError(t, err)
+	timestamp := uint64(100)
+	err = k.BridgeValsetSignaturesMap.Set(ctx, timestamp, types.BridgeValsetSignatures{
+		Signatures: [][]byte{
+			[]byte("abcd1234"),
+		},
+	})
+	require.NoError(t, err)
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp, "abcd1234")
+	require.Error(t, err)
 
-		evmAddresses[i], err = k.OperatorToEVMAddressMap.Get(ctx, val.GetOperator())
-		require.NoError(t, err)
-		require.Equal(t, evmAddresses[i].EVMAddress, []byte(val.Description.Moniker))
-	}
+	err = k.OperatorToEVMAddressMap.Set(ctx, "operatorAddr1", types.EVMAddress{
+		EVMAddress: []byte("evmAddress1"),
+	})
+	require.NoError(t, err)
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp, "abcd1234")
+	require.Error(t, err)
 
-	bridgeValSet := types.BridgeValidatorSet{
+	err = k.ValsetTimestampToIdxMap.Set(ctx, timestamp, types.CheckpointIdx{
+		Index: 1,
+	})
+	require.NoError(t, err)
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp, "abcd1234")
+	require.Error(t, err)
+
+	err = k.ValidatorCheckpointIdxMap.Set(ctx, 0, types.CheckpointTimestamp{
+		Timestamp: timestamp,
+	})
+	require.NoError(t, err)
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp, "abcd1234")
+	require.Error(t, err)
+
+	err = k.BridgeValsetByTimestampMap.Set(ctx, timestamp, types.BridgeValidatorSet{
 		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
-				Power:           1000,
+				Power:           100,
 			},
 		},
-	}
-
-	err = k.SetBridgeValidatorParams(ctx, &bridgeValSet)
+	})
 	require.NoError(t, err)
 
-	timestamp, err := k.GetValidatorTimestampByIdxFromStorage(ctx, 0)
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp, "abcd1234")
 	require.NoError(t, err)
 
-	err = k.SetBridgeValsetSignature(ctx, "operatorAddr1", timestamp.Timestamp, "sig1")
+	sigMap, err := k.BridgeValsetSignaturesMap.Get(ctx, timestamp)
 	require.NoError(t, err)
-
-	res, err = k.GetValidatorSetSignaturesFromStorage(ctx, timestamp.Timestamp)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	fmt.Println(res)
-
-	// sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// prevTime := sdkCtx.BlockTime()
-	// sdkCtx = sdkCtx.WithBlockTime(prevTime.Add(1 * time.Hour))
-
-	// err = k.SetBridgeValsetSignature(sdkCtx, "operatorAddr1", timestamp.Timestamp, "sig2")
-	// require.NoError(t, err)
+	require.NotNil(t, sigMap)
+	require.Equal(t, sigMap.Signatures, [][]byte{
+		[]byte("abcd1234"),
+	})
 
 }
 
@@ -906,7 +889,7 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 	require.Nil(t, addr)
 }
 
-func TestSetBridgeValsetByTimestamp(t *testing.T) {
+func TestSetAndGetBridgeValsetByTimestamp(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
@@ -926,4 +909,175 @@ func TestSetBridgeValsetByTimestamp(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, bridgeValSet)
 	require.Equal(t, bridgeValSet.BridgeValidatorSet, valset.BridgeValidatorSet)
+}
+
+func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	_, err := k.GetValidatorCheckpointParamsFromStorage(ctx, 0)
+	require.Error(t, err)
+
+	timestamp := uint64(100)
+	k.ValidatorCheckpointParamsMap.Set(ctx, timestamp, types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint"),
+		ValsetHash:     []byte("valsetHash"),
+		Timestamp:      int64(timestamp),
+		PowerThreshold: int64(100),
+	})
+
+	res, err := k.GetValidatorCheckpointParamsFromStorage(ctx, timestamp)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, res.Checkpoint, []byte("checkpoint"))
+	require.Equal(t, res.ValsetHash, []byte("valsetHash"))
+	require.Equal(t, res.Timestamp, int64(timestamp))
+	require.Equal(t, res.PowerThreshold, int64(100))
+}
+
+func TestSetOracleAttestation(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	err := k.SetOracleAttestation(ctx, "operatorAddr1", []byte("1"), []byte("abcd1234"))
+	require.Error(t, err)
+
+	err = k.OperatorToEVMAddressMap.Set(ctx, "operatorAddr1", types.EVMAddress{
+		EVMAddress: []byte("evmAddress1"),
+	})
+	require.NoError(t, err)
+	err = k.SetOracleAttestation(ctx, "operatorAddr1", []byte("1"), []byte("abcd1234"))
+	require.Error(t, err)
+
+	err = k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
+			{
+				EthereumAddress: []byte("evmAddress1"),
+				Power:           100,
+			},
+		},
+	})
+	require.NoError(t, err)
+	err = k.SnapshotToAttestationsMap.Set(ctx, []byte("1"), types.OracleAttestations{
+		Attestations: [][]byte{
+			[]byte("abcd1234"),
+		},
+	})
+	require.NoError(t, err)
+	err = k.SetOracleAttestation(ctx, "operatorAddr1", []byte("1"), []byte("abcd1234"))
+	require.NoError(t, err)
+
+}
+
+func TestGetAttestationRequestsByHeight(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	res, err := k.GetAttestationRequestsByHeight(ctx, 1)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	err = k.AttestRequestsByHeightMap.Set(ctx, 1, types.AttestationRequests{
+		Requests: []*types.AttestationRequest{
+			{
+				Snapshot: []byte("snapshot"),
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	res, err = k.GetAttestationRequestsByHeight(ctx, 1)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, res.Requests, []*types.AttestationRequest{
+		{
+			Snapshot: []byte("snapshot"),
+		},
+	})
+}
+
+func TestGetLatestCheckpointIndex(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	// if error getting latest index, return 0
+	index, err := k.GetLatestCheckpointIndex(ctx)
+	require.Error(t, err)
+	require.Equal(t, index, uint64(0))
+
+	err = k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{
+		Index: 1,
+	})
+	require.NoError(t, err)
+	index, err = k.GetLatestCheckpointIndex(ctx)
+	require.NoError(t, err)
+	require.Equal(t, index, uint64(1))
+}
+
+func TestGetValidatorDidSignCheckpoint(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	// if err getting valset index, return false, -1, err
+	didSign, prevIndex, err := k.GetValidatorDidSignCheckpoint(ctx, "operatorAddr1", 1)
+	require.Error(t, err)
+	require.False(t, didSign)
+	require.Equal(t, prevIndex, int64(-1))
+
+	// if valset index is 0, return no err, false, -1
+	timestamp := uint64(100)
+	err = k.ValsetTimestampToIdxMap.Set(ctx, timestamp, types.CheckpointIdx{
+		Index: 0,
+	})
+	require.NoError(t, err)
+	didSign, prevIndex, err = k.GetValidatorDidSignCheckpoint(ctx, "operatorAddr1", timestamp)
+	require.NoError(t, err)
+	require.False(t, didSign)
+	require.Equal(t, prevIndex, int64(-1))
+
+	// set prev checkpoint maps
+	err = k.ValidatorCheckpointIdxMap.Set(ctx, 0, types.CheckpointTimestamp{
+		Timestamp: timestamp,
+	})
+	require.NoError(t, err)
+	err = k.BridgeValsetByTimestampMap.Set(ctx, timestamp, types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
+			{
+				EthereumAddress: []byte("evmAddress1"),
+				Power:           100,
+			},
+		},
+	})
+	require.NoError(t, err)
+	err = k.ValsetTimestampToIdxMap.Set(ctx, timestamp, types.CheckpointIdx{
+		Index: 1,
+	})
+	require.NoError(t, err)
+
+	// set index 1 maps
+	timestamp2 := timestamp + 1
+	err = k.ValsetTimestampToIdxMap.Set(ctx, timestamp2, types.CheckpointIdx{
+		Index: 1,
+	})
+	require.NoError(t, err)
+	err = k.OperatorToEVMAddressMap.Set(ctx, "operatorAddr1", types.EVMAddress{
+		EVMAddress: []byte("evmAddress1"),
+	})
+	require.NoError(t, err)
+	err = k.BridgeValsetSignaturesMap.Set(ctx, timestamp2, types.BridgeValsetSignatures{
+		Signatures: [][]byte{
+			[]byte("abcd1234"),
+		},
+	})
+	require.NoError(t, err)
+	didSign, prevValsetIndex, err := k.GetValidatorDidSignCheckpoint(ctx, "operatorAddr1", timestamp2)
+	require.NoError(t, err)
+	require.True(t, didSign)
+	require.Equal(t, prevValsetIndex, int64(0))
+
 }

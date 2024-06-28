@@ -7,17 +7,16 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 func TestMsgWithdrawTokens(t *testing.T) {
-	msgServer, ctx := setupMsgServer(t)
-	require.NotNil(t, msgServer)
-	require.NotNil(t, ctx)
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, sk, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	msgServer := keeper.NewMsgServerImpl(k)
 
 	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	recipientAddr := "1234567890abcdef1234567890abcdef12345678"
@@ -51,26 +50,30 @@ func TestMsgWithdrawTokens(t *testing.T) {
 
 	amount := sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)}
 	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
-	// bk.On("SendCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
-	aggregate := oracletypes.Aggregate{
+	_ = oracletypes.Aggregate{
 		QueryId:              []byte("withdrawTokens"),
 		AggregateValue:       "10 * 1e6",
 		AggregateReporter:    "reporter1",
 		ReporterPower:        int64(100),
 		StandardDeviation:    float64(0),
-		Reporters:            []*oracletypes.AggregateReporter{{}},
+		Reporters:            []*oracletypes.AggregateReporter{},
 		Flagged:              false,
 		Nonce:                uint64(0),
 		AggregateReportIndex: int64(0),
-		Height:               int64(0),
+		Height:               int64(10_000),
 		MicroHeight:          int64(0),
 	}
-	ok.On("SetAggregate", ctx, aggregate).Return(nil)
+	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
+	// ok.On("SetAggregate", ctx, &aggregate).Return(nil)
+	agg, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
+	require.NoError(t, err)
+	require.NotNil(t, agg)
+	ok.On("SetAggregate", ctx, agg).Return(nil)
 
 	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
 		Creator:   creatorAddr.String(),
-		Recipient: recipientAddr,
+		Recipient: "3536373839306162636465663132333435363738",
 		Amount:    amount,
 	})
 	require.NoError(t, err)

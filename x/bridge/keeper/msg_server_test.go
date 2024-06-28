@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -10,14 +9,13 @@ import (
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
-func setupMsgServer(tb testing.TB) (types.MsgServer, context.Context) {
+func setupMsgServer(tb testing.TB) types.MsgServer {
 	tb.Helper()
-	k, _, _, _, _, _, ctx := keepertest.BridgeKeeper(tb)
-	return keeper.NewMsgServerImpl(k), ctx
+	k, _, _, _, _, _, _ := keepertest.BridgeKeeper(tb)
+	return keeper.NewMsgServerImpl(k)
 }
 
 func TestMsgServer(t *testing.T) {
-	ms, ctx := setupMsgServer(t)
+	ms := setupMsgServer(t)
 	require.NotNil(t, ms)
-	require.NotNil(t, ctx)
 }
