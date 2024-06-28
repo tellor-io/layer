@@ -187,6 +187,10 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 	h.logger.Info("@VerifyVoteExtensionHandler: START", "height", req.Height, "req", req)
+	// get validator address whose vote extension we're verifying
+	validatorAddressBytes := req.ValidatorAddress
+	validatorAddress := sdk.AccAddress(validatorAddressBytes)
+	h.logger.Info("@VerifyVoteExtensionHandler: VALIDATOR", "validatorAddress", validatorAddress)
 	// var voteExt BridgeVoteExtension
 	// err := json.Unmarshal(req.VoteExtension, &voteExt)
 	// if err != nil {
