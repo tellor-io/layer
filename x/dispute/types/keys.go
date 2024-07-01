@@ -32,6 +32,8 @@ var (
 	UsersGroupPrefix                         = collections.NewPrefix(12)
 	BlockInfoPrefix                          = collections.NewPrefix(13)
 	OpenDisputesIndexPrefix                  = collections.NewPrefix(14)
+	DisputeFeePayerPrefix                    = collections.NewPrefix(15)
+	DustKeyPrefix                            = collections.NewPrefix(16)
 )
 
 func KeyPrefix(p string) []byte {

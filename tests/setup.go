@@ -264,7 +264,7 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Stakingkeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	s.Reporterkeeper = reporterkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(reportertypes.StoreKey).(*storetypes.KVStoreKey)), log.NewNopLogger(), authtypes.NewModuleAddress(govtypes.ModuleName).String(), s.Stakingkeeper, s.Bankkeeper,
+		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(reportertypes.StoreKey).(*storetypes.KVStoreKey)), log.NewNopLogger(), authtypes.NewModuleAddress(govtypes.ModuleName).String(), s.Stakingkeeper, s.Bankkeeper, s.Registrykeeper,
 	)
 	s.Oraclekeeper = oraclekeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Registrykeeper, s.Reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),

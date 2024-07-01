@@ -8,6 +8,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -287,4 +288,184 @@ func (s *IntegrationTestSuite) TestMaxDelegatorCount() {
 	rep3, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, delegatorAddr)
 	s.NoError(err)
 	s.Equal(uint64(1), rep3.DelegatorsCount)
+}
+
+func (s *IntegrationTestSuite) TestIncorrectReportsUpdated() {
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	valAccs, valAddrs, _ := s.createValidatorAccs([]int64{1000, 1000})
+
+	newDelegator1 := sample.AccAddressBytes()
+	newDelegator2 := sample.AccAddressBytes()
+	s.Setup.MintTokens(newDelegator1, math.NewInt(10000*1e6))
+	s.Setup.MintTokens(newDelegator2, math.NewInt(10000*1e6))
+	msgDelegateFromDel1toVal1 := stakingtypes.NewMsgDelegate(
+		newDelegator1.String(),
+		valAddrs[0].String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+
+	msgDelegateFromDel1toVal2 := stakingtypes.NewMsgDelegate(
+		newDelegator1.String(),
+		valAddrs[1].String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+
+	_, err := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegateFromDel1toVal1)
+	s.NoError(err)
+	_, err1 := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegateFromDel1toVal2)
+	s.NoError(err1)
+
+	// Test
+	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	println(rep.DelegatorsCount)
+	s.NoError(err)
+
+	rep, err3 := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
+	println(rep.DelegatorsCount)
+	s.NoError(err3)
+}
+
+func (s *IntegrationTestSuite) TestTwoValidators() {
+	valAccs, valAddrs, _ := s.Setup.CreateValidators(2)
+	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+
+	valAddr1 := valAddrs[0]
+	valAddr2 := valAddrs[1]
+
+	for i := 0; i < 2; i++ {
+		delegatorAddr := sample.AccAddressBytes()
+		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
+		msgDelegate := stakingtypes.NewMsgDelegate(
+			delegatorAddr.String(),
+			valAddr1.String(),
+			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+		)
+
+		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		s.NoError(err)
+	}
+
+	for i := 0; i < 100; i++ {
+		delegatorAddr := sample.AccAddressBytes()
+		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
+		msgDelegate := stakingtypes.NewMsgDelegate(
+			delegatorAddr.String(),
+			valAddr2.String(),
+			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+		)
+		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		s.NoError(err)
+	}
+	// check delegator count
+	rep1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	s.NoError(err)
+	s.Equal(uint64(3), rep1.DelegatorsCount) // should be 3 delegators plus the self delegation
+	del1, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
+	s.Equal(uint64(1), del1.DelegationCount)
+	s.NoError(err)
+
+	rep2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
+	s.NoError(err)
+	s.Equal(uint64(100), rep2.DelegatorsCount) // should be 101 delegators plus the self delegation
+	s.Setup.MintTokens(valAccs[0], math.NewInt(1000*1e6))
+	msg := stakingtypes.MsgDelegate{
+		DelegatorAddress: valAccs[0].String(),
+		ValidatorAddress: valAddr2.String(),
+		Amount:           sdk.NewCoin(s.Setup.Denom, math.NewInt(1000*1e6)),
+	}
+	_, err = stakingmsgServer.Delegate(s.Setup.Ctx, &msg)
+	s.NoError(err)
+
+	// check delegator count, should be the same as before
+	rep1, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	s.NoError(err)
+
+	del1, err = s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
+	s.NoError(err)
+
+	rep2, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
+	s.NoError(err)
+	println(rep2.DelegatorsCount)
+}
+
+func (s *IntegrationTestSuite) TestMaxDelegatorCountBug() {
+	valAccs, valAddrs, _ := s.Setup.CreateValidator(2)
+	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	valAcc1 := valAccs[1]
+	valAdd1 := valAddrs[1]
+
+	for i := 0; i < 2; i++ {
+		delegatorAddr := sample.AccAddressBytes()
+		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
+		msgDelegate := stakingtypes.NewMsgDelegate(
+			delegatorAddr.String(),
+			valAddrs[0].String(),
+			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+		)
+		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		s.NoError(err)
+	}
+
+	// delegate 99 delegators to val1
+	for i := 0; i < 99; i++ {
+		delegatorAddr := sample.AccAddressBytes()
+		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
+		msgDelegate := stakingtypes.NewMsgDelegate(
+			delegatorAddr.String(),
+			valAdd1.String(),
+			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+		)
+		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		s.NoError(err)
+	}
+
+	// check delegator count
+	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc1)
+	s.NoError(err)
+	s.Equal(uint64(100), rep.DelegatorsCount)
+
+	rep1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	s.Equal(rep1.DelegatorsCount, uint64(3))
+	s.NoError(err)
+
+	// undelegate val 1 to val 1
+	_, bz, err := bech32.DecodeAndConvert(valAddrs[0].String())
+	s.NoError(err)
+	valAddress_to_accAddress := sdk.AccAddress(bz)
+
+	undel := stakingtypes.NewMsgUndelegate(
+		valAddress_to_accAddress.String(),
+		valAddrs[0].String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 100),
+	)
+	// get the delegator
+	delegator, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
+	s.NoError(err)
+	s.Equal(uint64(1), delegator.DelegationCount)
+	_, err2 := stakingmsgServer.Undelegate(s.Setup.Ctx, undel)
+	s.NoError(err2)
+	// get the delegator
+	delegator, err = s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
+	s.NoError(err)
+	s.Equal(uint64(0), delegator.DelegationCount)
+	rep4, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	s.Equal(rep4.DelegatorsCount, uint64(3))
+	s.NoError(err)
+
+	// delegate from val 1 to val 2
+
+	msgDelegate1 := stakingtypes.NewMsgDelegate(
+		valAddress_to_accAddress.String(),
+		valAdd1.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	_, err1 := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate1)
+	s.NoError(err1)
+	delegator, err = s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
+	s.NoError(err)
+	s.Equal(uint64(1), delegator.DelegationCount)
+
+	rep2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	s.Equal(rep2.DelegatorsCount, uint64(3))
+	s.NoError(err)
 }

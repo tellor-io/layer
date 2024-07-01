@@ -11,6 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
@@ -53,6 +54,10 @@ func DisputeKeeper(tb testing.TB) (
 
 	// Initialize params
 	err := k.Params.Set(ctx, types.DefaultParams())
+	if err != nil {
+		panic(err)
+	}
+	err = k.Dust.Set(ctx, math.LegacyZeroDec())
 	if err != nil {
 		panic(err)
 	}

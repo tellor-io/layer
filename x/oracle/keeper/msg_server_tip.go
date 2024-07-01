@@ -27,7 +27,13 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if err != nil {
 		return nil, err
 	}
-
+	// update totals
+	if err := k.keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
+		return nil, err
+	}
+	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
+		return nil, err
+	}
 	// get query id bytes hash from query data
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
@@ -72,14 +78,6 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	}
 	err = k.keeper.Query.Set(ctx, queryId, query)
 	if err != nil {
-		return nil, err
-	}
-
-	// update totals
-	if err := k.keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
-		return nil, err
-	}
-	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
 		return nil, err
 	}
 
