@@ -62,21 +62,20 @@ func (s *IntegrationTestSuite) TestTipping() {
 	s.NoError(err)
 	s.Equal(userTips, tips)
 
-	// // tip different query
-	// btcQueryId := utils.QueryIDFromData(btcQueryData)
+	// tip different query
+	btcQueryId := utils.QueryIDFromData(btcQueryData)
 
-	// _, err = msgServer.Tip(s.Setup.Ctx, &types.MsgTip{QueryData: btcQueryData, Tipper: addr.String(), Amount: tip})
-	// s.NoError(err)
-	// tips, err = s.Setup.Oraclekeeper.GetQueryTip(s.Setup.Ctx, btcQueryId)
-	// s.NoError(err)
-	// s.Equal(tip.Sub(twoPercent).Amount, tips)
+	_, err = msgServer.Tip(s.Setup.Ctx, &types.MsgTip{QueryData: btcQueryData, Tipper: addr.String(), Amount: tip})
+	s.NoError(err)
+	tips, err = s.Setup.Oraclekeeper.GetQueryTip(s.Setup.Ctx, btcQueryId)
+	s.NoError(err)
+	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
-	// userQueryTips, _ := s.Setup.Oraclekeeper.Tips.Get(s.Setup.Ctx, collections.Join(btcQueryId, addr.Bytes()))
-	// s.Equal(userQueryTips, tips)
-	// userTips, err = s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, addr)
-	// s.NoError(err)
-	// s.Equal(userTips.Address, addr.String())
-	// s.Equal(userTips.Total, tips.Add(tips).Add(tips))
+	userQueryTips, _ := s.Setup.Oraclekeeper.Tips.Get(s.Setup.Ctx, collections.Join(btcQueryId, addr.Bytes()))
+	s.Equal(userQueryTips, tips)
+	userTips, err = s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, addr)
+	s.NoError(err)
+	s.Equal(userTips, tips.Add(tips).Add(tips))
 }
 
 func (s *IntegrationTestSuite) TestGetCurrentTip() {
@@ -553,6 +552,10 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	_, err = msgServer.Tip(s.Setup.Ctx, &msg)
 	s.Nil(err)
 
+	userTips, err := s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, tipper)
+	s.Nil(err)
+	// tip should be 1000 minus 2% burned
+	s.Equal(userTips, math.NewInt(980))
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)

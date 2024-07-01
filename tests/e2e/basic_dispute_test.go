@@ -14,6 +14,7 @@ import (
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	collections "cosmossdk.io/collections"
 	math "cosmossdk.io/math"
 
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -204,7 +205,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: reporterAccount.Bytes(), Amount: disputeFee.Amount, FromBond: false, BlockNumber: 2}})
+	feepayer, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(1), reporterAccount.Bytes()))
+	require.NoError(err)
+	require.Equal(feepayer.Amount, disputeFee.Amount)
+	require.Equal(feepayer.FromBond, false)
 	slashAmount := dispute.SlashAmount
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -355,7 +359,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeCategory, disputetypes.Minor)
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: reporterAccount.Bytes(), Amount: disputeFee.Amount, FromBond: false, BlockNumber: 5}})
+	feepayer, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(dispute.DisputeId, reporterAccount.Bytes()))
+	require.NoError(err)
+	require.Equal(feepayer.Amount, disputeFee.Amount)
+	require.Equal(feepayer.FromBond, false)
 
 	// create vote tx msg
 	msgVote := disputetypes.MsgVote{

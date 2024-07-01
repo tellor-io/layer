@@ -416,7 +416,10 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[0].Bytes(), Amount: disputeFee.Amount, FromBond: true, BlockNumber: 3}})
+	feepayer, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(1), repsAccs[0].Bytes()))
+	require.NoError(err)
+	require.Equal(feepayer.Amount, disputeFee.Amount)
+	require.Equal(feepayer.FromBond, true)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -526,7 +529,10 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
-	require.Equal(dispute.FeePayers, []disputetypes.PayerInfo{{PayerAddress: repsAccs[1].Bytes(), Amount: disputeFee.Amount, FromBond: false, BlockNumber: 5}})
+	feepayer, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(2), repsAccs[1].Bytes()))
+	require.NoError(err)
+	require.Equal(feepayer.Amount, disputeFee.Amount)
+	require.Equal(feepayer.FromBond, false)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)

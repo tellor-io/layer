@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -41,25 +42,28 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 			return math.Int{}, err
 		}
 		// get delegator count
-		delCount, err := k.Delegators.Get(ctx, key)
+		del, err := k.Delegators.Get(ctx, key)
 		if err != nil {
 			return math.Int{}, err
 		}
+		if del.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+			continue
+		}
 		// if the delegator has more than the max validators, iterate over all bonded validators
 		// else iterate over the delegations, so that can we iterate over the shorter list
-		if delCount.DelegationCount > uint64(maxVal) {
+		if del.DelegationCount > uint64(maxVal) {
 			// iterate over bonded validators
 			err = valSet.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 				valAddrr, err := sdk.ValAddressFromBech32(validator.GetOperator())
 				if err != nil {
 					return true
 				}
-				del, err := k.stakingKeeper.GetDelegation(ctx, key, valAddrr)
+				stakingdel, err := k.stakingKeeper.GetDelegation(ctx, key, valAddrr)
 				if err != nil {
-					return true
+					return !errors.Is(err, stakingtypes.ErrNoDelegation)
 				}
 				// get the token amount
-				tokens := validator.TokensFromSharesTruncated(del.Shares).TruncateInt()
+				tokens := validator.TokensFromSharesTruncated(stakingdel.Shares).TruncateInt()
 				totalPower = totalPower.Add(tokens)
 				delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: key, ValidatorAddress: valAddrr.Bytes(), Amount: tokens})
 				return false

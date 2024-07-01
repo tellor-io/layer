@@ -24,7 +24,6 @@ func (k *KeeperTestSuite) TestExecuteDispute() {
 	dispute := k.dispute()
 	dispute.BurnAmount = math.NewInt(500)
 	dispute.PrevDisputeIds = []uint64{1}
-	dispute.FeePayers = []types.PayerInfo{{PayerAddress: feePayer, Amount: math.NewInt(250)}}
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, 1, dispute))
 
 	vote := types.Vote{

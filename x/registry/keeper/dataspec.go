@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"strings"
+	"time"
 
 	"github.com/tellor-io/layer/x/registry/types"
 
@@ -13,6 +15,13 @@ import (
 // It converts the query type to lowercase and then calls the Set method of the SpecRegistry to store the data specification.
 func (k Keeper) SetDataSpec(ctx sdk.Context, querytype string, dataspec types.DataSpec) error {
 	querytype = strings.ToLower(querytype)
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return err
+	}
+	if dataspec.ReportBufferWindow > params.MaxReportBufferWindow {
+		return errors.New("report buffer window exceeds max allowed value")
+	}
 	return k.SpecRegistry.Set(ctx, querytype, dataspec)
 }
 
@@ -32,4 +41,13 @@ func (k Keeper) GetSpec(ctx context.Context, querytype string) (types.DataSpec, 
 func (k Keeper) HasSpec(ctx context.Context, querytype string) (bool, error) {
 	querytype = strings.ToLower(querytype)
 	return k.SpecRegistry.Has(ctx, querytype)
+}
+
+// get max report buffer window
+func (k Keeper) MaxReportBufferWindow(ctx context.Context) (time.Duration, error) {
+	params, err := k.GetParams(sdk.UnwrapSDKContext(ctx))
+	if err != nil {
+		return time.Duration(0), err
+	}
+	return params.MaxReportBufferWindow, nil
 }
