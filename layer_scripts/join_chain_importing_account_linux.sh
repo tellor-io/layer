@@ -11,7 +11,7 @@ export LAYER_NODE_URL=tellornode.com
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=9007e2991e7f07a016559aed4685f4ba0619c631
+export TELLORNODE_ID=377660d6b4ea06f662a495a2eb0cde0f44a2d055
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
