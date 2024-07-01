@@ -30,7 +30,6 @@ export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 echo "Getting the address of your node to use for faucet request"
 NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
 echo "NODE address: $NODE_ADDRESS"
-# address : tellor1k47txcu506u6l6sxrg6u9latl5e9p7zmj75d89
 
 # echo "Calling faucet to fund account..."
 # curl -X POST localhost:3000/faucetRequest/user/$NODE_ADDRESS/amount/$AMOUNT_IN_TRB
@@ -63,7 +62,7 @@ echo "$VALIDATOR_JSON" > ./validator.json
 echo "Creating and broadcasting transaction to create validator on chain...."
 ./layerd tx staking create-validator ./validator.json --from $NODE_ADDRESS --home $LAYERD_NODE_HOME --chain-id layer --node="http://$LAYER_NODE_URL:26657" --gas "400000"
 
-echo "Wait for 10 seconds to allow for validator to be bonded before we query the validator info"
+echo "Wait for 2 seconds to allow for validator to be bonded before we query the validator info"
 sleep 2
 
 echo "Querying new validator info... Looking for the status field to have a value of 3 which shows that the new validator is bonded"
@@ -71,8 +70,7 @@ echo "Querying new validator info... Looking for the status field to have a valu
 
 
 echo "If status is 3 now is the time to go back to the screen session or terminal your node is running on and use CTL-C to stop the node"
-echo "We will wait in this script for 30 seconds before we call the command to restart the chain using the same set up that was done before"
+echo "We will wait in this script for 10 seconds before the chain is restarted."
 sleep 10
 
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-#./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "7998a2f453f3354d3dae41fcdb753cd19638f987@54.166.101.67:26656"

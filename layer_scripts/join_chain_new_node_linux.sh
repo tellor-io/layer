@@ -98,21 +98,8 @@ echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
 ./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-#./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "9eb337547c01106a92ee4727e40ec103d1741a3a@tellornode.com:26656" | tee ./second_node_logs.txt
 
 
-# ec2-54-166-101-67.compute-1.amazonaws.com
+# use the commands to below to download log files from aws instance if applicable
 # sudo scp -i /Users/caleb/layer-doc-test-key.pem ubuntu@ec2-100-26-53-93.compute-1.amazonaws.com:/home/ubuntu/layer/second_node_logs.txt .
 # sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-54-166-101-67.compute-1.amazonaws.com:/home/ubuntu/layer/first_node_logs.txt .
-
-# // "slashing": {
-#       "params": {
-#         "signed_blocks_window": "100",
-#         "min_signed_per_window": "0.500000000000000000",
-#         "downtime_jail_duration": "600s",
-#         "slash_fraction_double_sign": "0.050000000000000000",
-#         "slash_fraction_downtime": "0.010000000000000000"
-#       },
-#       "signing_infos": [],
-#       "missed_blocks": []
-#     },
