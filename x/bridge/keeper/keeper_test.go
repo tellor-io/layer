@@ -13,6 +13,7 @@ import (
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/mocks"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
 
@@ -1080,4 +1081,106 @@ func TestGetValidatorDidSignCheckpoint(t *testing.T) {
 	require.True(t, didSign)
 	require.Equal(t, prevValsetIndex, int64(0))
 
+}
+
+func TestCreateSnapshot(t *testing.T) {
+	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	ok.On("GetAggregateByTimestamp", ctx, []byte("queryId"), time.Unix(100, 0)).Return(&oracletypes.Aggregate{
+		QueryId:        []byte("queryId"),
+		AggregateValue: "5000",
+		ReporterPower:  int64(100),
+	}, nil)
+
+	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
+		Checkpoint: []byte("checkpoint"),
+	})
+	require.NoError(t, err)
+
+	queryId := []byte("queryId")
+	timestamp := time.Unix(100, 0)
+	ok.On("GetTimestampBefore", ctx, queryId, timestamp).Return(timestamp.Add(-1*time.Hour), nil)
+	ok.On("GetTimestampAfter", ctx, queryId, timestamp).Return(timestamp.Add(1*time.Hour), nil)
+
+	err = k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator1"),
+				Power:           100,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	err = k.CreateSnapshot(ctx, queryId, timestamp)
+	require.NoError(t, err)
+
+	// check if snapshot is created
+	snapshot, err := k.AttestRequestsByHeightMap.Get(ctx, 0)
+	require.NoError(t, err)
+	require.NotNil(t, snapshot)
+
+	// to do: verify snapshot bytes
+}
+
+func TestCreateNewReportSnapshots(t *testing.T) {
+	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	timestamp := sdkCtx.BlockTime()
+	queryId := []byte("queryId")
+	ok.On("GetAggregatedReportsByHeight", ctx, int64(0)).Return([]oracletypes.Aggregate{
+		{
+			Height:         0,
+			QueryId:        queryId,
+			AggregateValue: "5000",
+			ReporterPower:  int64(100),
+		},
+	}, nil)
+	ok.On("GetTimestampBefore", ctx, queryId, timestamp).Return(timestamp, nil)
+	ok.On("GetAggregateByTimestamp", ctx, queryId, timestamp).Return(&oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: "5000",
+		ReporterPower:  int64(100),
+	}, nil)
+
+	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
+		Checkpoint: []byte("checkpoint"),
+	})
+	require.NoError(t, err)
+	ok.On("GetTimestampAfter", ctx, queryId, timestamp).Return(timestamp.Add(1*time.Hour), nil)
+	err = k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
+		BridgeValidatorSet: []*types.BridgeValidator{
+			{
+				EthereumAddress: []byte("validator1"),
+				Power:           100,
+			},
+		},
+	})
+	require.NoError(t, err)
+
+	err = k.CreateNewReportSnapshots(ctx)
+	require.NoError(t, err)
+}
+
+func TestEncodeOracleAttestationData(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	queryId := []byte("queryId")
+	value := "1000"
+	timestamp := int64(100)
+	power := int64(1000)
+	tsBefore := int64(90)
+	tsAfter := int64(110)
+	checkpoint := []byte("checkpoint")
+	attestationTimestamp := int64(100)
+	res, err := k.EncodeOracleAttestationData(queryId, value, timestamp, power, tsBefore, tsAfter, checkpoint, attestationTimestamp)
+	require.NoError(t, err)
+	require.NotNil(t, res)
 }
