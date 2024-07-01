@@ -122,9 +122,13 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			continue // Skip this validator if the EVM address is not found
 		}
+		adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
+		if adjustedPower == 0 {
+			continue // Skip this validator if the adjusted power is 0
+		}
 		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddress.EVMAddress,
-			Power:           uint64(validator.GetConsensusPower(layertypes.PowerReduction)),
+			Power:           uint64(adjustedPower),
 		})
 	}
 
