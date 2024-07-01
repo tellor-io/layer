@@ -118,7 +118,7 @@ func TestInitGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
+	h := json.RawMessage(`{"params":{"max_report_buffer_window": "1814400s"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
 	am.InitGenesis(ctx, appCodec, h)
 }
 
@@ -126,7 +126,7 @@ func TestExportGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
+	h := json.RawMessage(`{"params":{"max_report_buffer_window":"1814400s"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_buffer_window":"0s"}}`)
 	am.InitGenesis(ctx, appCodec, h)
 	gen := am.ExportGenesis(ctx, appCodec)
 	require.Equal(t, gen, h)

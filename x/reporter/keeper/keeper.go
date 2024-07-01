@@ -39,8 +39,9 @@ type (
 		// should be the x/gov module account.
 		authority string
 
-		stakingKeeper types.StakingKeeper
-		bankKeeper    types.BankKeeper
+		stakingKeeper  types.StakingKeeper
+		bankKeeper     types.BankKeeper
+		registryKeeper types.RegistryKeeper
 	}
 )
 
@@ -52,6 +53,7 @@ func NewKeeper(
 
 	stakingKeeper types.StakingKeeper,
 	bankKeeper types.BankKeeper,
+	registryKeeper types.RegistryKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -74,6 +76,7 @@ func NewKeeper(
 		logger:                    logger,
 		stakingKeeper:             stakingKeeper,
 		bankKeeper:                bankKeeper,
+		registryKeeper:            registryKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {

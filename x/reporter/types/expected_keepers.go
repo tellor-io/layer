@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	time "time"
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
@@ -61,4 +62,8 @@ type StakingHooks interface {
 	BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error        // Must be called when a delegation is removed
 	AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error
 	BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction math.LegacyDec) error
+}
+
+type RegistryKeeper interface {
+	MaxReportBufferWindow(ctx context.Context) (time.Duration, error)
 }

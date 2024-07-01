@@ -271,6 +271,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// execute vote
 	err = s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1)
 	s.NoError(err)
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
+	s.NoError(err)
 	reporter, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
 	s.NoError(err)
 	s.True(reporter.TotalTokens.GT(repTknBeforeExecuteVote))
@@ -451,6 +453,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	s.NoError(err)
 	// execute vote
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
+
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
+	s.NoError(err)
+
 	reporterAfter, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
 	s.NoError(err)
 	// should still be jailed
@@ -906,4 +912,120 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().Unix()))
 	s.NoError(err)
 	s.True(agg.Flagged)
+}
+
+func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	reporter1Acc := repAccs[0]
+
+	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter1Acc)
+	s.NoError(err)
+
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:    reporter1Acc.String(),
+		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.Setup.Ctx.BlockHeight(),
+	}
+
+	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
+	s.NoError(err)
+
+	disputer := s.newKeysWithTokens()
+	// mint disputer tokens
+	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
+	// propose dispute with half the fee
+	disputeMsg := types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee.QuoRaw(2)),
+		DisputeCategory: types.Warning,
+	}
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+	s.NoError(err)
+
+	// check if dispute is started
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Prevote, dispute.DisputeStatus)
+
+	// disputer balance before adding fee
+	disputerBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+	// add fee to dispute with more than left over
+	msgAddFee := types.MsgAddFeeToDispute{
+		Creator:     disputer.String(),
+		DisputeId:   1,
+		Amount:      sdk.NewCoin(s.Setup.Denom, disputeFee),
+		PayFromBond: false,
+	}
+	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &msgAddFee)
+	s.NoError(err)
+
+	// balance should only decrease by half the fee (remaining fee)
+	disputerBalanceAfter := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+	s.Equal(disputerBalanceBefore.Amount.Sub(disputeFee.QuoRaw(2)), disputerBalanceAfter.Amount)
+}
+
+func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
+	x := math.LegacyNewDec(1).Quo(math.LegacyNewDec(20))
+	fmt.Println(x, x.TruncateDec())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	reporter1Acc := repAccs[0]
+
+	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter1Acc)
+	s.NoError(err)
+
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:    reporter1Acc.String(),
+		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Int64(),
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: s.Setup.Ctx.BlockHeight(),
+	}
+
+	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
+	s.NoError(err)
+
+	disputer := repAccs[1]
+	// mint disputer tokens
+	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
+	// propose dispute with half the fee
+	disputeMsg := types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee.QuoRaw(2)),
+		DisputeCategory: types.Warning,
+	}
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+	s.NoError(err)
+
+	// check if dispute is started
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Prevote, dispute.DisputeStatus)
+
+	// disputer balance before adding fee
+	feePayerStakeBefore, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, disputer)
+	s.NoError(err)
+	// add fee to dispute with more than left over
+	msgAddFee := types.MsgAddFeeToDispute{
+		Creator:     disputer.String(),
+		DisputeId:   1,
+		Amount:      sdk.NewCoin(s.Setup.Denom, disputeFee),
+		PayFromBond: true,
+	}
+	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &msgAddFee)
+	s.NoError(err)
+
+	// balance should only decrease by half the fee (remaining fee)
+	feePayerStakeAfter, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, disputer)
+	s.NoError(err)
+	s.Equal(feePayerStakeBefore.Sub(disputeFee.QuoRaw(2)), feePayerStakeAfter)
 }

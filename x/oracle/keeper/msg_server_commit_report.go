@@ -16,6 +16,8 @@ import (
 )
 
 func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime()
 	reporterAddr, err := msg.GetSignerAndValidateMsg()
 	if err != nil {
 		return nil, err
@@ -45,7 +47,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 		// if no query it means its not a cyclelist query and doesn't have tips (cyclelist queries are initialized in genesis)
 		if errors.Is(err, collections.ErrNotFound) {
 			// check if query is token bridge deposit
-			query, err = k.keeper.tokenBridgeDepositCheck(ctx, msg.QueryData)
+			query, err = k.keeper.tokenBridgeDepositCheck(blockTime, msg.QueryData)
 			if errors.Is(err, types.ErrNotTokenDeposit) {
 				return nil, types.ErrNoTipsNotInCycle.Wrapf("query not part of cyclelist")
 			}
@@ -66,8 +68,6 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 
 	isBridgeDeposit := query.QueryType == TRBBridgeQueryType
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
 	if query.Amount.IsZero() && query.Expiration.Before(blockTime) && !incycle && !isBridgeDeposit {
 		return nil, types.ErrNoTipsNotInCycle.Wrapf("query does not have tips and is not in cycle")
 	}

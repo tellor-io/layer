@@ -40,6 +40,8 @@ type (
 		ReportersGroup                     collections.Map[collections.Pair[uint64, []byte], math.Int]
 		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]
 		BlockInfo                          collections.Map[[]byte, types.BlockInfo]
+		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]
+		Dust                               collections.Item[math.LegacyDec]
 	}
 )
 
@@ -68,6 +70,8 @@ func NewKeeper(
 		TeamVoter:                          collections.NewMap(sb, types.TeamVoterPrefix, "team_voter", collections.Uint64Key, collections.BoolValue),
 		UsersGroup:                         collections.NewMap(sb, types.UsersGroupPrefix, "users_group", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), sdk.IntValue),
 		BlockInfo:                          collections.NewMap(sb, types.BlockInfoPrefix, "block_info", collections.BytesKey, codec.CollValue[types.BlockInfo](cdc)),
+		DisputeFeePayer:                    collections.NewMap(sb, types.DisputeFeePayerPrefix, "dispute_fee_payer", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.PayerInfo](cdc)),
+		Dust:                               collections.NewItem(sb, types.DustKeyPrefix, "dust", types.LegacyDecValue),
 	}
 }
 

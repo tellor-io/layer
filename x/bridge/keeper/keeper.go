@@ -739,10 +739,9 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 	blockHeight := sdkCtx.BlockHeight()
 
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
-	blocktime := sdkCtx.BlockTime()
 	for _, report := range reports {
 		queryId := report.QueryId
-		timeNow := blocktime.Add(time.Second)
+		timeNow := sdkCtx.BlockTime().Add(time.Second)
 		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
 		if err != nil {
 			return nil

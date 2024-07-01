@@ -54,6 +54,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
 				{
+					RpcMethod:      "WithdrawFeeRefund",
+					Use:            "withdraw-fee-refund [payer-address] [id]",
+					Short:          "Execute the WithdrawFeeRefund RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "payer_address"}, {ProtoField: "id"}},
+				},
+				{
 					RpcMethod: "UpdateTeam",
 					Skip:      true, // skipped because team gated
 				},

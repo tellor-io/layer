@@ -95,10 +95,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
 			return err
 		}
-		// refund the remaining dispute fee to the fee payers according to their payment method
-		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn, dispute.HashId); err != nil {
-			return err
-		}
 		// stake the slashed tokens back into the bonded pool for the reporter
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
@@ -113,16 +109,11 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
-			return err
-		}
-		// refund the remaining dispute fee to the fee payers according to their payment method
-		if err := k.RefundDisputeFee(ctx, dispute.FeePayers, disputeFeeMinusBurn, dispute.HashId); err != nil {
-			return err
-		}
-		// divide the reporters bond equally amongst the dispute fee payers and add it to the bonded pool
-		if err := k.RewardReporterBondToFeePayers(ctx, dispute.FeePayers, dispute.SlashAmount); err != nil {
-			return err
+		toBurn := halfBurnAmount.Add(burnRemainder)
+		if !toBurn.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, toBurn))); err != nil {
+				return err
+			}
 		}
 
 		vote.Executed = true
@@ -153,64 +144,34 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayers []types.PayerInfo, remainingAmt math.Int, hashId []byte) error {
-	var outputs []banktypes.Output
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, feeMinusBurn math.Int, hashId []byte) (math.LegacyDec, error) {
+	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
+	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
+	feeMinusBurnDec := math.LegacyNewDecFromInt(feeMinusBurn)
+	amt := fee.Quo(totalFees).Mul(feeMinusBurnDec)
 
-	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	initialTotalAmount := math.ZeroInt()
+	remainder := amt.Sub(amt.TruncateDec())
 
-	for _, recipient := range feePayers {
-		initialTotalAmount = initialTotalAmount.Add(recipient.Amount)
+	coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
+	if !payerInfo.FromBond {
+		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
 
-	accInputTotal := math.ZeroInt()
-	// Calculate total amount and prepare outputs
-	for _, recipient := range feePayers {
-		amt := math.LegacyNewDecFromInt(recipient.Amount).Quo(math.LegacyNewDecFromInt(initialTotalAmount))
-		amt = amt.MulInt(remainingAmt)
-
-		coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
-		if !recipient.FromBond {
-			accInputTotal = accInputTotal.Add(amt.TruncateInt())
-			outputs = append(outputs, banktypes.NewOutput(recipient.PayerAddress, coins))
-		} else {
-			if err := k.ReturnFeetoStake(ctx, hashId, amt.TruncateInt()); err != nil {
-				return err
-			}
-		}
-
-	}
-	// Prepare input
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, accInputTotal)))
-
-	// Perform the InputOutputCoins operation
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	return remainder, k.ReturnFeetoStake(ctx, hashId, amt.TruncateInt())
 }
 
-func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayers []types.PayerInfo, reporterBond math.Int) error {
-	totalFeesPaid := math.LegacyZeroDec()
-	for _, feeInfo := range feePayers {
-		totalFeesPaid = totalFeesPaid.Add(math.LegacyNewDecFromInt(feeInfo.Amount))
-	}
-	// convert reporterbond to decimal
+func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.LegacyDec, error) {
 	bond := math.LegacyNewDecFromInt(reporterBond)
-	// divvy up the reporter bond among the fee payers based how much they paid
-	// paid it in as a stake in staking module
-	remainder := math.LegacyZeroDec()
-	for i, feeInfo := range feePayers {
-		fee := math.LegacyNewDecFromBigInt(feeInfo.Amount.BigInt())
-		amt := fee.Quo(totalFeesPaid).Mul(bond)
-		remainder = remainder.Add(amt.Sub(amt.TruncateDec()))
-		if i == len(feePayers)-1 {
-			amt = amt.Add(remainder)
-		}
+	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
 
-		if err := k.reporterKeeper.AddAmountToStake(ctx, feeInfo.PayerAddress, amt.TruncateInt()); err != nil {
-			return err
-		}
+	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
+	amt := fee.Quo(totalFees).Mul(bond)
+
+	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amt.TruncateInt()); err != nil {
+		return math.LegacyDec{}, err
 	}
-
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reporterBond)))
+	remainder := amt.Sub(amt.TruncateDec())
+	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt())))
 }
 
 func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount, totalVoterPower math.Int) (math.Int, error) {

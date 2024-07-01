@@ -4,6 +4,8 @@ import (
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,6 +13,10 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// this line is used by starport scaffolding # genesis/module/init
 	err := k.Params.Set(ctx, genState.Params)
+	if err != nil {
+		panic(err)
+	}
+	err = k.Dust.Set(ctx, math.LegacyZeroDec())
 	if err != nil {
 		panic(err)
 	}
