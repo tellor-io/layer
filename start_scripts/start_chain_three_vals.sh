@@ -52,15 +52,15 @@ echo "creating account for faucet..."
 
 # Create account for second validator
 echo "Adding account for Bill..."
-./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 echo "Make sure to save this seed phrase and address as you will need them in the future when creating their node..."
-sleep 10
+./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
+sleep 15
 
 # Create account for third validator
 echo "Adding account for Caleb..."
-./layerd keys add caleb --keyring-backend $KEYRING_BACKEND --home ~/.layer/caleb
 echo "Make sure to save this seed phrase and address as you will need them in the future when creating their node..."
-sleep 10
+./layerd keys add caleb --keyring-backend $KEYRING_BACKEND --home ~/.layer/caleb
+sleep 15
 
 echo "set chain id in genesis file to layer..."
 sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
@@ -98,10 +98,10 @@ echo "Adding genesis account for alice..."
 ./layerd genesis add-genesis-account $ALICE 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "Initializing Bill account with loya to stake.."
-./layerd genesis add-genesis-account $BILL 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
+./layerd genesis add-genesis-account $BILL 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "Initializing Caleb account with loya to stake.."
-./layerd genesis add-genesis-account $CALEB 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/caleb
+./layerd genesis add-genesis-account $CALEB 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 # Create a tx to give faucet loyas to have on hold to give to users
 echo "Adding genesis account for alice..."
