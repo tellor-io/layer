@@ -11,7 +11,7 @@ export LAYER_NODE_URL=tellornode.com
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=d9c69efbd68716994e8c61a908ff61380889fd82
+export TELLORNODE_ID=9eb337547c01106a92ee4727e40ec103d1741a3a
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -97,8 +97,10 @@ echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656" | tee ./second_node_logs.txt
-#./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "d9c69efbd68716994e8c61a908ff61380889fd82@tellornode.com:26656" | tee ./second_node_logs.txt
+./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+#./layerd start --home ~/.layer/bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "9eb337547c01106a92ee4727e40ec103d1741a3a@tellornode.com:26656" | tee ./second_node_logs.txt
+
+
 # ec2-54-166-101-67.compute-1.amazonaws.com
 # sudo scp -i /Users/caleb/layer-doc-test-key.pem ubuntu@ec2-100-26-53-93.compute-1.amazonaws.com:/home/ubuntu/layer/second_node_logs.txt .
 # sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-54-166-101-67.compute-1.amazonaws.com:/home/ubuntu/layer/first_node_logs.txt .

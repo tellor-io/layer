@@ -8,7 +8,7 @@ set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
 export LAYER_NODE_URL=54.166.101.67
-export TELLORNODE_ID=5be41d465ca05f19a249fae5778bce5f9a246cea
+export TELLORNODE_ID=7c4b2b4206cc72b20044528e4a4f61d28b8e4c92
 export KEYRING_BACKEND=test
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
@@ -74,7 +74,7 @@ curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/
 echo "Running Tellor node id: $TELLORNODE_ID"
 sed -i '' 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i '' 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
-
+sleep 10
 
 echo "Starting chain for node..."
 # ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
