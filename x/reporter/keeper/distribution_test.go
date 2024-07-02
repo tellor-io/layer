@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
@@ -25,9 +24,7 @@ func TestDivvyingTips(t *testing.T) {
 	val1 := vals[0]
 	addr := sample.AccAddressBytes()
 	addr2 := sample.AccAddressBytes()
-	updatedAt := time.Now().UTC()
-	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, updatedAt)
-	reporter1 := types.NewOracleReporter(addr.String(), math.NewInt(2000*1e6), &commission, 1)
+	reporter1 := types.NewReporter(math.LegacyZeroDec(), math.OneInt())
 	ctx = ctx.WithBlockHeight(height)
 
 	err := k.Reporters.Set(ctx, addr, reporter1)
@@ -57,9 +54,9 @@ func TestDivvyingTips(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(13)
-	del1, err := k.DelegatorTips.Get(ctx, addr.Bytes())
+	del1, err := k.SelectorTips.Get(ctx, addr.Bytes())
 	require.NoError(t, err)
-	del2, err := k.DelegatorTips.Get(ctx, addr2.Bytes())
+	del2, err := k.SelectorTips.Get(ctx, addr2.Bytes())
 
 	fmt.Printf("delegator1: %v, delegator2: %v\r", del1, del2)
 	require.Equal(t, math.NewInt(5*1e6), del1)

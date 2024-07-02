@@ -7,7 +7,6 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "layer/reporter/distribution.proto";
 import "layer/reporter/oracle_reporter.proto";
 import "layer/reporter/params.proto";
 
@@ -27,7 +26,6 @@ service Query {
   rpc DelegatorReporter(QueryDelegatorReporterRequest) returns (QueryDelegatorReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/delegator-reporter/{delegator_address}";
   }
-
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.

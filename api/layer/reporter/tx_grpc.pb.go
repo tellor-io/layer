@@ -23,8 +23,13 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
-	// ChangeReporter defines a (delegator) operation for changing a reporter.
-	ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error)
+	// SelectReporter defines a (selector) operation for choosing a reporter.
+	SelectReporter(ctx context.Context, in *MsgSelectReporter, opts ...grpc.CallOption) (*MsgSelectReporterResponse, error)
+	// SwitchReporter defines a (selector) operation for switching a reporter.
+	SwitchReporter(ctx context.Context, in *MsgSwitchReporter, opts ...grpc.CallOption) (*MsgSwitchReporterResponse, error)
+	// RemoveSelector defines an operation for removing a selector that no longer meets
+	// the reporter's minimum requirements and the reporter is capped.
+	RemoveSelector(ctx context.Context, in *MsgRemoveSelector, opts ...grpc.CallOption) (*MsgRemoveSelectorResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -57,9 +62,27 @@ func (c *msgClient) CreateReporter(ctx context.Context, in *MsgCreateReporter, o
 	return out, nil
 }
 
-func (c *msgClient) ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error) {
-	out := new(MsgChangeReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/ChangeReporter", in, out, opts...)
+func (c *msgClient) SelectReporter(ctx context.Context, in *MsgSelectReporter, opts ...grpc.CallOption) (*MsgSelectReporterResponse, error) {
+	out := new(MsgSelectReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/SelectReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SwitchReporter(ctx context.Context, in *MsgSwitchReporter, opts ...grpc.CallOption) (*MsgSwitchReporterResponse, error) {
+	out := new(MsgSwitchReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/SwitchReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RemoveSelector(ctx context.Context, in *MsgRemoveSelector, opts ...grpc.CallOption) (*MsgRemoveSelectorResponse, error) {
+	out := new(MsgRemoveSelectorResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/RemoveSelector", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,8 +116,13 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
-	// ChangeReporter defines a (delegator) operation for changing a reporter.
-	ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error)
+	// SelectReporter defines a (selector) operation for choosing a reporter.
+	SelectReporter(context.Context, *MsgSelectReporter) (*MsgSelectReporterResponse, error)
+	// SwitchReporter defines a (selector) operation for switching a reporter.
+	SwitchReporter(context.Context, *MsgSwitchReporter) (*MsgSwitchReporterResponse, error)
+	// RemoveSelector defines an operation for removing a selector that no longer meets
+	// the reporter's minimum requirements and the reporter is capped.
+	RemoveSelector(context.Context, *MsgRemoveSelector) (*MsgRemoveSelectorResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -112,8 +140,14 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 func (UnimplementedMsgServer) CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReporter not implemented")
 }
-func (UnimplementedMsgServer) ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangeReporter not implemented")
+func (UnimplementedMsgServer) SelectReporter(context.Context, *MsgSelectReporter) (*MsgSelectReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectReporter not implemented")
+}
+func (UnimplementedMsgServer) SwitchReporter(context.Context, *MsgSwitchReporter) (*MsgSwitchReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwitchReporter not implemented")
+}
+func (UnimplementedMsgServer) RemoveSelector(context.Context, *MsgRemoveSelector) (*MsgRemoveSelectorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSelector not implemented")
 }
 func (UnimplementedMsgServer) UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnjailReporter not implemented")
@@ -170,20 +204,56 @@ func _Msg_CreateReporter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ChangeReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgChangeReporter)
+func _Msg_SelectReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSelectReporter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ChangeReporter(ctx, in)
+		return srv.(MsgServer).SelectReporter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/ChangeReporter",
+		FullMethod: "/layer.reporter.Msg/SelectReporter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ChangeReporter(ctx, req.(*MsgChangeReporter))
+		return srv.(MsgServer).SelectReporter(ctx, req.(*MsgSelectReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SwitchReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwitchReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SwitchReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/SwitchReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SwitchReporter(ctx, req.(*MsgSwitchReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RemoveSelector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveSelector)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveSelector(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/RemoveSelector",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveSelector(ctx, req.(*MsgRemoveSelector))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -240,8 +310,16 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateReporter_Handler,
 		},
 		{
-			MethodName: "ChangeReporter",
-			Handler:    _Msg_ChangeReporter_Handler,
+			MethodName: "SelectReporter",
+			Handler:    _Msg_SelectReporter_Handler,
+		},
+		{
+			MethodName: "SwitchReporter",
+			Handler:    _Msg_SwitchReporter_Handler,
+		},
+		{
+			MethodName: "RemoveSelector",
+			Handler:    _Msg_RemoveSelector_Handler,
 		},
 		{
 			MethodName: "UnjailReporter",

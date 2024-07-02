@@ -8,21 +8,15 @@ import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
-// Delegation is a type that represents a delegator's delegation to a reporter
-message Delegation {
+// Selection is a type that represents a  delegator's selection
+message Selection {
   // reporter is the address of the reporter being delegated to
   bytes reporter = 1;
-  // amount is the amount of tokens delegated
-  string amount = 2 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable) = false
-  ];
-  uint64 delegation_count = 3;
   // locked_until_time is the time until which the tokens are locked before they
   // can be used for reporting again
-  google.protobuf.Timestamp locked_until_time = 4 [
+  google.protobuf.Timestamp locked_until_time = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
+  int64 delegations_count = 3;
 }

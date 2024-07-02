@@ -84,23 +84,24 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(msgServerReporter)
 	// define createReporterMsg params
 	reporterAddress := reporterDelToVal.delegatorAddress.String()
-	// 0% commission for reporter staking to validator
-	commission := stakingtypes.NewCommissionWithTime(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1),
-		math.LegacyNewDecWithPrec(1, 1), s.Setup.Ctx.BlockTime())
-	createReporterMsg := reportertypes.MsgCreateReporter{ReporterAddress: reporterAddress, Commission: &commission}
+
+	createReporterMsg := reportertypes.MsgCreateReporter{ReporterAddress: reporterAddress, CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinTrb}
 	// send createreporter msg
 	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &createReporterMsg)
 	require.NoError(err)
 	// check that reporter was created in Reporters collections
 	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
 	require.NoError(err)
-	require.Equal(reporter.TotalTokens, math.NewInt(4000*1e6))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporterAccount, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporterAccount, reportertypes.NewSelection(reporterAccount, 1)))
+	reporterTokens, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
+	require.Equal(reporterTokens, math.NewInt(4000*1e6))
 	require.Equal(reporter.Jailed, false)
 	// check on reporter in Delegators collections
-	rkDelegation, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, reporterAccount)
+	rkDelegation, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterAccount)
 	require.NoError(err)
 	require.Equal(rkDelegation.Reporter, reporterAccount.Bytes())
-	require.Equal(rkDelegation.Amount, math.NewInt(4000*1e6))
 	// check on reporter/validator delegation
 	valBz, err := s.Setup.Stakingkeeper.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 	require.NoError(err)
@@ -209,11 +210,11 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	reporterModuleAccountBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, reporterModuleAccount, s.Setup.Denom)
 	require.Equal(expectedTbr, reporterModuleAccountBalance)
 	// check reporters outstaning rewards
-	outstandingRewards, err := s.Setup.Reporterkeeper.DelegatorTips.Get(s.Setup.Ctx, reporterAccount.Bytes())
+	outstandingRewards, err := s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, reporterAccount.Bytes())
 	require.NoError(err)
 	require.Equal(outstandingRewards, expectedTbr.Amount)
 	// withdraw tbr
-	rewards, err := msgServerReporter.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: reporterAddress, ValidatorAddress: validator.OperatorAddress})
+	rewards, err := msgServerReporter.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: reporterAddress, ValidatorAddress: validator.OperatorAddress})
 	require.NoError(err)
 	tbrEarned := outstandingRewards
 	// check that there is only one reward to claim
@@ -285,12 +286,12 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(expectedTbr, reporterModuleAccountBalance)
 
 	// check reporters outstaning rewards
-	outstandingRewards, err = s.Setup.Reporterkeeper.DelegatorTips.Get(s.Setup.Ctx, reporterAccount.Bytes())
+	outstandingRewards, err = s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, reporterAccount.Bytes())
 	require.NoError(err)
 	require.Equal(outstandingRewards, expectedTbr.Amount)
 	// withdraw tbr
 	tbrEarned = tbrEarned.Add(outstandingRewards)
-	rewards, err = msgServerReporter.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{DelegatorAddress: reporterAddress, ValidatorAddress: validator.OperatorAddress})
+	rewards, err = msgServerReporter.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: reporterAddress, ValidatorAddress: validator.OperatorAddress})
 	require.NoError(err)
 	require.NotNil(rewards)
 	// check that reporter module account balance is now empty
@@ -395,7 +396,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.Equal(tipAmount.Amount.Sub(twoPercent.Amount), tipEscrowBalance.Amount.Sub(balanceBeforetip.Amount))
 	// withdraw tip
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
-		DelegatorAddress: reporterAddress,
+		SelectorAddress:  reporterAddress,
 		ValidatorAddress: validator.OperatorAddress,
 	}
 	_, err = msgServerReporter.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
