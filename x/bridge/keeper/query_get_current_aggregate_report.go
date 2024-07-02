@@ -22,7 +22,7 @@ func (q Querier) GetCurrentAggregateReport(ctx context.Context, req *types.Query
 	if aggregate == nil {
 		return nil, status.Error(codes.NotFound, "aggregate not found")
 	}
-	timeUnix := timestamp.Unix()
+	timeUnix := timestamp.UnixMilli()
 
 	// convert oracletypes.Reporters to bridgetypes.Reporters
 	convertedReporters := make([]*types.AggregateReporter, len(aggregate.Reporters))

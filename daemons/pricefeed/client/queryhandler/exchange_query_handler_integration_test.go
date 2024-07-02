@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/kraken"
-	"github.com/tellor-io/layer/daemons/types"
-
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/binance"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitfinex"
+	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/kraken"
+	"github.com/tellor-io/layer/daemons/types"
 )
 
 func TestQueryingActualExchanges(t *testing.T) {
