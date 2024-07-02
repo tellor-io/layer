@@ -6,15 +6,17 @@ import (
 	"testing"
 	"time"
 
-	math "cosmossdk.io/math"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	math "cosmossdk.io/math"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgClaimDeposit(t *testing.T) {
@@ -75,5 +77,4 @@ func TestMsgClaimDeposit(t *testing.T) {
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
 	require.Equal(t, depositClaimedResult.Claimed, true)
-
 }

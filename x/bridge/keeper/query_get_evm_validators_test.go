@@ -4,12 +4,14 @@ import (
 	"encoding/hex"
 	"testing"
 
-	math "cosmossdk.io/math"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
+
+	math "cosmossdk.io/math"
+
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestGetEvmValidators(t *testing.T) {
@@ -64,5 +66,4 @@ func TestGetEvmValidators(t *testing.T) {
 	require.Equal(t, getEvmValsResponse.BridgeValidatorSet[0].Power, uint64(200))
 	require.Equal(t, getEvmValsResponse.BridgeValidatorSet[1].EthereumAddress, hex.EncodeToString([]byte("validator2")))
 	require.Equal(t, getEvmValsResponse.BridgeValidatorSet[1].Power, uint64(100))
-
 }

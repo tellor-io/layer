@@ -62,5 +62,4 @@ func TestGetDataBefore(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, getDataBeforeResponse.Timestamp, uint64(timestamp.Unix()))
 	require.Equal(t, getDataBeforeResponse.Aggregate, agg)
-
 }

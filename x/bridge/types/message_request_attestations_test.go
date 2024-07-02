@@ -32,7 +32,8 @@ func TestMsgRequestAttestations_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
+		},
+		{
 			name: "valid address",
 			msg: MsgRequestAttestations{
 				Creator: sample.AccAddress(),

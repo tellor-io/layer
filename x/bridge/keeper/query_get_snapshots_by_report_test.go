@@ -42,5 +42,4 @@ func TestGetSnapshotsByReport(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, getSnapshotResponse.Snapshots, []string{hex.EncodeToString([]byte("snapshot"))})
-
 }

@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
+	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 
-	"github.com/stretchr/testify/require"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/colltest"
 )
 
 func (k *KeeperTestSuite) TestIndexesList() {

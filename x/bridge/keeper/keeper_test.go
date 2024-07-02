@@ -294,7 +294,6 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 	res, err = k.CompareAndSetBridgeValidators(ctx)
 	require.NoError(t, err)
 	require.False(t, res)
-
 }
 
 func TestSetBridgeValidatorParams(t *testing.T) {
@@ -849,7 +848,6 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 	require.Equal(t, sigMap.Signatures, [][]byte{
 		[]byte("abcd1234"),
 	})
-
 }
 
 func TestGetEVMAddressByOperator(t *testing.T) {
@@ -970,7 +968,6 @@ func TestSetOracleAttestation(t *testing.T) {
 	require.NoError(t, err)
 	err = k.SetOracleAttestation(ctx, "operatorAddr1", []byte("1"), []byte("abcd1234"))
 	require.NoError(t, err)
-
 }
 
 func TestGetAttestationRequestsByHeight(t *testing.T) {
@@ -1081,7 +1078,6 @@ func TestGetValidatorDidSignCheckpoint(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, didSign)
 	require.Equal(t, prevValsetIndex, int64(0))
-
 }
 
 func TestCreateSnapshot(t *testing.T) {

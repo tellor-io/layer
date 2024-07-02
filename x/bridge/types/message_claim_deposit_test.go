@@ -30,7 +30,8 @@ func TestMsgClaimDeposit_ValidateBasic(t *testing.T) {
 				Creator: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
+		},
+		{
 			name: "valid address",
 			msg: MsgClaimDepositRequest{
 				Creator: sample.AccAddress(),

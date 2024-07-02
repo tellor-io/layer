@@ -21,7 +21,6 @@ func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawT
 	sender := sdk.MustAccAddressFromBech32(msg.Creator)
 
 	recipient, err := hex.DecodeString(msg.Recipient)
-
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidRequest
 	}

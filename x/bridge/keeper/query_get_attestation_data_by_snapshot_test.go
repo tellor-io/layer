@@ -66,5 +66,4 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.Equal(t, getAttDataBySnapResponse.Checkpoint, hex.EncodeToString([]byte("checkpoint")))
 	require.Equal(t, getAttDataBySnapResponse.PreviousReportTimestamp, strconv.FormatInt(timestampTime.Unix()-2, 10))
 	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatInt(timestampTime.Unix()+1, 10))
-
 }

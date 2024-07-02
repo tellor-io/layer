@@ -4,11 +4,13 @@ import (
 	"encoding/hex"
 	"testing"
 
-	math "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/types"
+
+	math "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGetWithdrawalReportValue(t *testing.T) {
