@@ -165,6 +165,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	freeFloatingBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, reporterAccount, s.Setup.Denom)
 
 	balBeforeDispute, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
 	onePercent := balBeforeDispute.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	disputeFee := sdk.NewCoin(s.Setup.Denom, onePercent) // warning should be 1% of bonded tokens
 
@@ -305,6 +306,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	balBeforeDispute, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
 	disputeFee = sdk.NewCoin(s.Setup.Denom, fivePercent)
 
@@ -478,6 +480,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, false)
 
 	oneHundredPercent, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
 	disputeFee = sdk.NewCoin(s.Setup.Denom, oneHundredPercent)
 
 	report = oracletypes.MicroReport{

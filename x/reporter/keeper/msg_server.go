@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -191,7 +192,6 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 
 	hasMin, err := k.Keeper.HasMin(goCtx, selectorAddr, reporter.MinTokensRequired)
 	if err != nil {
-		//todo: could error be no delegations which would mean same as not having min tokens?
 		return nil, err
 	}
 	if !hasMin {

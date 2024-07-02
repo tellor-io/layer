@@ -359,7 +359,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	disputedRep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
+	_, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
 	require.NoError(err)
 
 	// get new cycle list query data
@@ -452,7 +452,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	disputedRep, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
+	disputedRep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
 	require.NoError(err)
 	require.Equal(disputedRep.Jailed, true)
 
