@@ -11,7 +11,7 @@ export LAYER_NODE_URL=tellornode.com
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=9eb337547c01106a92ee4727e40ec103d1741a3a
+export TELLORNODE_ID=377660d6b4ea06f662a495a2eb0cde0f44a2d055
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -41,7 +41,7 @@ sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/config/app.toml
 
 # Create a validator account for node
 echo "Creating account keys for node to be able to send and receive loya and stake..."
-./layerd keys add $NODE_NAME --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME
+./layerd keys add $NODE_NAME --recover=true --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME 
 
 # Import validator account from seed phrase
 # echo "Importing validator account from seed phrase..."
@@ -96,10 +96,4 @@ echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 
 echo "Starting chain for node..."
 
-#./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
 ./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-
-
-# use the commands to below to download log files from aws instance if applicable
-# sudo scp -i /Users/caleb/layer-doc-test-key.pem ubuntu@ec2-100-26-53-93.compute-1.amazonaws.com:/home/ubuntu/layer/second_node_logs.txt .
-# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-54-166-101-67.compute-1.amazonaws.com:/home/ubuntu/layer/first_node_logs.txt .
