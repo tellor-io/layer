@@ -433,7 +433,7 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.NotNil(t, res)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validatorTimestamp := uint64(sdkCtx.BlockTime().Unix())
+	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 	require.Equal(t, res.Timestamp, validatorTimestamp)
 
 	prevBlockTime := sdkCtx.BlockTime()

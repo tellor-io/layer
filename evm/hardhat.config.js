@@ -1,8 +1,8 @@
-require("@nomicfoundation/hardhat-toolbox");
-require("hardhat-gas-reporter");
+//require("@nomicfoundation/hardhat-toolbox");
+//require("hardhat-gas-reporter");
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
-require("@nomiclabs/hardhat-web3");
+// require("@nomiclabs/hardhat-web3");
 
 module.exports = {
   solidity: {

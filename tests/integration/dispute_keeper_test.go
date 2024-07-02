@@ -886,7 +886,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// get aggregate
-	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().Unix()))
+	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().UnixMilli()))
 	s.NoError(err)
 	s.Equal(agg.AggregateReporter, reporter2.String())
 	s.False(agg.Flagged)
@@ -909,7 +909,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// check if aggregate is flagged
-	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().Unix()))
+	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().UnixMilli()))
 	s.NoError(err)
 	s.True(agg.Flagged)
 }
