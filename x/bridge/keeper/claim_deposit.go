@@ -48,7 +48,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 		return err
 	}
 	powerThreshold := int64(math.Round(float64(totalBondedTokens.Int64()) * 2 / 3))
-	if aggregate.ReporterPower < powerThreshold {
+	if aggregate.ReporterPower*layer.PowerReduction.Int64() < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
@@ -58,7 +58,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
 	if err != nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
+		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%s: %w", types.ErrInvalidDepositReportValue.Error(), err)
 	}
 
@@ -70,12 +70,12 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 	}
 
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, amount); err != nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to mint coins, err: %w", err))
+		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to mint coins, err: %w", err))
 		return err
 	}
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, amount); err != nil {
-		k.Logger(ctx).Error("@claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
+		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
 		return err
 	}
 
