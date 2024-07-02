@@ -163,14 +163,12 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx context.Context) (*types
 func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error) {
 	// load current validator set in EVM compatible format
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
-	fmt.Println("currentValidatorSetEVMCompatible in function: ", currentValidatorSetEVMCompatible)
 	if err != nil {
 		k.Logger(ctx).Info("No current validator set found")
 		return false, err
 	}
 
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-	fmt.Println("lastSavedBridgeValidators: ", lastSavedBridgeValidators)
 	if err != nil {
 		k.Logger(ctx).Info("No saved bridge validator set found")
 		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
@@ -185,7 +183,6 @@ func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error)
 		}
 		return false, err
 	}
-	fmt.Println("k.PowerDiff: ", k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible))
 	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) {
 		return false, nil
 	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 {
@@ -210,7 +207,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
 	}
-	powerThreshold := totalPower * 2 / 3
+	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validatorTimestamp := uint64(sdkCtx.BlockTime().Unix())
