@@ -168,7 +168,7 @@ func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestam
 		return time.Time{}, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
 	}
 
-	return time.Unix(mostRecent, 0), nil
+	return time.UnixMilli(mostRecent), nil
 }
 
 func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
@@ -186,7 +186,7 @@ func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp
 		return time.Time{}, fmt.Errorf("no data before timestamp %v available for query id %s", timestamp, hex.EncodeToString(queryId))
 	}
 
-	return time.Unix(mostRecent, 0), nil
+	return time.UnixMilli(mostRecent), nil
 }
 
 func (k Keeper) GetAggregatedReportsByHeight(ctx context.Context, height int64) []types.Aggregate {
@@ -212,7 +212,7 @@ func (k Keeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
 	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		aggregate = &value
-		timestamp = time.Unix(key.K2(), 0)
+		timestamp = time.UnixMilli(key.K2())
 		return true, nil
 	})
 	if err != nil {
@@ -243,7 +243,7 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 	}
 
 	// Convert the Unix timestamp back to time.Time
-	timestamp = time.Unix(mostRecentTimestamp, 0)
+	timestamp = time.UnixMilli(mostRecentTimestamp)
 	return mostRecent, timestamp, nil
 }
 
@@ -281,7 +281,7 @@ func (k Keeper) GetAggregateByIndex(ctx context.Context, queryId []byte, index u
 	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		if currentIndex == index {
 			aggregate = &value
-			timestamp = time.Unix(key.K2(), 0)
+			timestamp = time.UnixMilli(key.K2())
 			return true, nil // Stop when the desired index is reached
 		}
 		currentIndex++
