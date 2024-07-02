@@ -6,7 +6,7 @@ clear
 # Stop execution if any command fails
 set -e
 
-KEYRING_BACKEND="test"
+KEYRING_BACKEND="os"
 PASSWORD="password"
 
 export LAYERD_NODE_HOME="$HOME/.layer/alice"
@@ -146,11 +146,11 @@ sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/alic
 sed -i 's/^enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.layer/config/app.toml
 sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/config/app.toml
 
-# Modify keyring-backend in client.toml for alice
-echo "Modifying keyring-backend in client.toml for alice..."
-sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
+# Modify keyring-backend in client.toml for node
+echo "Modifying keyring-backend in client.toml for node..."
+sed -i 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/$NODE_NAME/config/client.toml
 # update for main dir as well. why is this needed?
-sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
+sed -i 's/keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
 ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger | tee ./first_node_logs.txt
