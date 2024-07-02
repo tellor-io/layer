@@ -1,7 +1,6 @@
 package bridge
 
 import (
-	"fmt"
 	"testing"
 	"time"
 

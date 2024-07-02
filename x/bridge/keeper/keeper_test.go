@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/mocks"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -19,7 +20,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	layer "github.com/tellor-io/layer/types"
 )
 
 func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, context.Context) {
@@ -46,7 +46,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(3000),
+			Tokens:          math.NewInt(3000000000),
 			DelegatorShares: math.LegacyNewDec(3000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
 			OperatorAddress: "operatorAddr1",
@@ -54,7 +54,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
+			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
 			OperatorAddress: "operatorAddr2",
@@ -78,7 +78,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 
 	for i := 0; i < len(bridgeValSet)-1; i++ {
 		require.GreaterOrEqual(t, bridgeValSet[i].Power, bridgeValSet[i+1].Power)
-		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(layer.PowerReduction)))
+		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(layertypes.PowerReduction)))
 		require.Equal(t, bridgeValSet[i].EthereumAddress, evmAddresses[i].EVMAddress)
 	}
 }
@@ -102,7 +102,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
+			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
 			OperatorAddress: "operatorAddr1",
@@ -110,7 +110,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
+			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
 			OperatorAddress: "operatorAddr2",
@@ -134,7 +134,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 
 	for i := 0; i < len(bridgeValSet)-1; i++ {
 		require.GreaterOrEqual(t, bridgeValSet[i].Power, bridgeValSet[i+1].Power)
-		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(layer.PowerReduction)))
+		require.Equal(t, bridgeValSet[i].Power, uint64(validators[i].GetConsensusPower(layertypes.PowerReduction)))
 		require.Equal(t, bridgeValSet[i].EthereumAddress, evmAddresses[i].EVMAddress)
 		require.LessOrEqual(t, string(bridgeValSet[i].EthereumAddress), string(bridgeValSet[i+1].EthereumAddress))
 	}
@@ -149,7 +149,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(2000),
+			Tokens:          math.NewInt(2000000000),
 			DelegatorShares: math.LegacyNewDec(2000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
 			OperatorAddress: "operatorAddr1",
@@ -157,7 +157,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
-			Tokens:          math.NewInt(1000),
+			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
 			OperatorAddress: "operatorAddr2",
@@ -181,7 +181,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 
 	for i := 0; i < len(bridgeValidatorSet.BridgeValidatorSet)-1; i++ {
 		require.GreaterOrEqual(t, bridgeValidatorSet.BridgeValidatorSet[i].Power, bridgeValidatorSet.BridgeValidatorSet[i+1].Power)
-		require.Equal(t, bridgeValidatorSet.BridgeValidatorSet[i].Power, uint64(validators[i].GetConsensusPower(layer.PowerReduction)))
+		require.Equal(t, bridgeValidatorSet.BridgeValidatorSet[i].Power, uint64(validators[i].GetConsensusPower(layertypes.PowerReduction)))
 	}
 }
 

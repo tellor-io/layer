@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	layer "github.com/tellor-io/layer/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
@@ -122,9 +122,13 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			continue // Skip this validator if the EVM address is not found
 		}
+		adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
+		if adjustedPower == 0 {
+			continue // Skip this validator if the adjusted power is 0
+		}
 		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddress.EVMAddress,
-			Power:           uint64(validator.GetConsensusPower(layer.PowerReduction)),
+			Power:           uint64(adjustedPower),
 		})
 	}
 
@@ -179,7 +183,6 @@ func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error)
 		}
 		return false, err
 	}
-
 	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) {
 		return false, nil
 	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 {
@@ -204,7 +207,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
 	}
-	powerThreshold := totalPower * 2 / 3
+	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validatorTimestamp := uint64(sdkCtx.BlockTime().Unix())
@@ -576,7 +579,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 		return err
 	}
 	if valsetIdx.Index == 0 {
-		k.Logger(ctx).Warn("Valset index is 0")
+		// first valset, no sigs needed
 		return nil
 	}
 	previousIndex := valsetIdx.Index - 1
@@ -687,7 +690,7 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		return false, -1, err
 	}
 	if valsetIdx.Index == 0 {
-		k.Logger(ctx).Warn("Valset index is 0")
+		// first valset, no sigs needed
 		return false, -1, nil
 	}
 	// get previous valset
