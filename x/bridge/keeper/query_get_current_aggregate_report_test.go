@@ -59,7 +59,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 		QueryId: queryId,
 	})
 	require.NoError(t, err)
-	require.Equal(t, getCurrentAggResponse.Timestamp, uint64(timestamp.Unix()))
+	require.Equal(t, getCurrentAggResponse.Timestamp, uint64(timestamp.UnixMilli()))
 	require.Equal(t, getCurrentAggResponse.Aggregate.QueryId, agg.QueryId)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateValue, agg.AggregateValue)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
