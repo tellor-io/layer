@@ -18,7 +18,7 @@ const (
 	TRBBridgeQueryType = "TRBBridge"
 )
 
-func (k Keeper) tokenBridgeDepositCheck(queryData []byte) (types.QueryMeta, error) {
+func (k Keeper) tokenBridgeDepositCheck(currentTime time.Time, queryData []byte) (types.QueryMeta, error) {
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
@@ -80,9 +80,10 @@ func (k Keeper) tokenBridgeDepositCheck(queryData []byte) (types.QueryMeta, erro
 	}
 
 	queryId := utils.QueryIDFromData(queryData)
+	// get block timestamp
 	query := types.QueryMeta{
 		RegistrySpecTimeframe: time.Second,
-		Expiration:            time.Now().Add(-48 * time.Hour),
+		Expiration:            currentTime.Add(time.Hour),
 		QueryType:             TRBBridgeQueryType,
 		QueryId:               queryId,
 		Amount:                math.NewInt(0),
@@ -90,20 +91,3 @@ func (k Keeper) tokenBridgeDepositCheck(queryData []byte) (types.QueryMeta, erro
 
 	return query, nil
 }
-
-// type QueryMeta struct {
-//     // unique id of the query that changes after query's lifecycle ends
-//     Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-//     // amount of tokens that was tipped
-//     Amount cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
-//     // expiration time of the query
-//     Expiration time.Time `protobuf:"bytes,3,opt,name=expiration,proto3,stdtime" json:"expiration"`
-//     // timeframe of the query according to the data spec
-//     RegistrySpecTimeframe time.Duration `protobuf:"bytes,4,opt,name=registry_spec_timeframe,json=registrySpecTimeframe,proto3,stdduration" json:"registry_spec_timeframe"`
-//     // indicates whether query has revealed reports
-//     HasRevealedReports bool `protobuf:"varint,5,opt,name=has_revealed_reports,json=hasRevealedReports,proto3" json:"has_revealed_reports,omitempty"`
-//     // unique id of the query according to the data spec
-//     QueryId []byte `protobuf:"bytes,6,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-//     // string identifier of the data spec
-//     QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
-// }

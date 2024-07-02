@@ -16,12 +16,12 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	math "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -122,9 +122,13 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			continue // Skip this validator if the EVM address is not found
 		}
+		adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
+		if adjustedPower == 0 {
+			continue // Skip this validator if the adjusted power is 0
+		}
 		bridgeValset = append(bridgeValset, &types.BridgeValidator{
 			EthereumAddress: evmAddress.EVMAddress,
-			Power:           uint64(validator.GetConsensusPower(math.NewInt(10))),
+			Power:           uint64(adjustedPower),
 		})
 	}
 
@@ -159,14 +163,12 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx context.Context) (*types
 func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error) {
 	// load current validator set in EVM compatible format
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
-	fmt.Println("currentValidatorSetEVMCompatible in function: ", currentValidatorSetEVMCompatible)
 	if err != nil {
 		k.Logger(ctx).Info("No current validator set found")
 		return false, err
 	}
 
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
-	fmt.Println("lastSavedBridgeValidators: ", lastSavedBridgeValidators)
 	if err != nil {
 		k.Logger(ctx).Info("No saved bridge validator set found")
 		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
@@ -181,7 +183,6 @@ func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error)
 		}
 		return false, err
 	}
-	fmt.Println("k.PowerDiff: ", k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible))
 	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) {
 		return false, nil
 	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 {
@@ -206,7 +207,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
 	}
-	powerThreshold := totalPower * 2 / 3
+	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
@@ -578,7 +579,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 		return err
 	}
 	if valsetIdx.Index == 0 {
-		k.Logger(ctx).Warn("Valset index is 0")
+		// first valset, no sigs needed
 		return nil
 	}
 	previousIndex := valsetIdx.Index - 1
@@ -689,7 +690,7 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 		return false, -1, err
 	}
 	if valsetIdx.Index == 0 {
-		k.Logger(ctx).Warn("Valset index is 0")
+		// first valset, no sigs needed
 		return false, -1, nil
 	}
 	// get previous valset
@@ -737,7 +738,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
 	for _, report := range reports {
 		queryId := report.QueryId
-		timeNow := time.Now().Add(time.Second)
+		timeNow := sdkCtx.BlockTime().Add(time.Second)
 		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
 		if err != nil {
 			return nil

@@ -54,18 +54,17 @@ message Dispute {
   // single report evidence
   layer.oracle.MicroReport report_evidence = 12 [(gogoproto.nullable) = false];
   // fee payers that were involved in paying the dispute fee in order to start the dispute
-  repeated PayerInfo fee_payers = 13 [(gogoproto.nullable) = false];
   // total fee paid tracked to know if dispute fee is fully paid to start dispute
-  string fee_total = 14 [
+  string fee_total = 13 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   // list of dispute ids that preceded before this current round began
-  repeated uint64 prev_dispute_ids = 15;
+  repeated uint64 prev_dispute_ids = 14;
   // block number when this specific dispute was created
-  int64 block_number = 16;
-  bool open = 17;
+  int64 block_number = 15;
+  bool open = 16;
 }
 
 // DisputeCategory defines the severity of a dispute.
@@ -101,20 +100,14 @@ enum DisputeStatus {
 // PayerInfo defines the payer info of a dispute
 // fee payer's info that was involved in paying the dispute fee in order to start the dispute
 message PayerInfo {
-  // fee payer's Account address
-  bytes payer_address = 1;
   // amount paid
-  string amount = 2 [
+  string amount = 1 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
   // source of funds either from bond or free floating funds
-  bool from_bond = 3;
-  // block number when this specific fee was paid
-  // keeping track of this in case the bond was used
-  // in order to reward the reporters' delegators in the future
-  int64 block_number = 4;
+  bool from_bond = 2;
 }
 
 message BlockInfo {

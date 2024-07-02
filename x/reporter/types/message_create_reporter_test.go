@@ -12,19 +12,19 @@ import (
 func TestMsgCreateReporter_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgChangeReporter
+		msg  MsgCreateReporter
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgChangeReporter{
-				DelegatorAddress: "invalid_address",
+			msg: MsgCreateReporter{
+				ReporterAddress: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgChangeReporter{
-				DelegatorAddress: sample.AccAddress(),
+			msg: MsgCreateReporter{
+				ReporterAddress: sample.AccAddress(),
 			},
 		},
 	}

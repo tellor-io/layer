@@ -79,7 +79,7 @@ func (c *Client) start(ctx context.Context) {
 		c.logger.Error("Failed to initialize deposits", "error", err)
 		return
 	}
-	ticker := time.NewTicker(180 * time.Second)
+	ticker := time.NewTicker(3 * time.Minute)
 	defer ticker.Stop()
 
 	for {
@@ -109,6 +109,7 @@ type DepositReport struct {
 }
 
 func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
+	c.logger.Info("querying token_bridge_client api")
 	parsedUrl, err := url.ParseRequestURI(urlStr)
 	if err != nil {
 		return nil, err
@@ -143,7 +144,7 @@ func (c *Client) InitializeDeposits() error {
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x4a58c4fCaa1aDE33EF79E1Dfb619f241E2EA33a6")
+	contractAddress := common.HexToAddress("0x7a261EAa9E8033B1337554df59bD462ca4A251FA")
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {

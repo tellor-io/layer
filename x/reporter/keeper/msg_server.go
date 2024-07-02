@@ -1,13 +1,16 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -90,10 +93,36 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 	if err != nil {
 		return nil, err
 	}
+
+	// check if reporter has reported before
+	var prevReportedPower math.Int
+	rng := collections.NewPrefixedPairRange[[]byte, int64](delegation.Reporter).EndInclusive(sdk.UnwrapSDKContext(goCtx).BlockHeight()).Descending()
+	err = k.Keeper.Report.Walk(goCtx, rng, func(_ collections.Pair[[]byte, int64], value types.DelegationsAmounts) (stop bool, err error) {
+		prevReportedPower = value.Total
+		return true, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if !prevReportedPower.IsNil() {
+		// max report buffer
+		maxReportBuffer, err := k.Keeper.registryKeeper.MaxReportBufferWindow(goCtx)
+		if err != nil {
+			return nil, err
+		}
+		delegation.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(maxReportBuffer)
+	}
+
 	// move tokens
 	rep, err := k.Reporters.Get(goCtx, delegation.Reporter)
 	if err != nil {
 		return nil, err
+	}
+	if bytes.Equal(delegation.Reporter, delAddr.Bytes()) {
+		if rep.DelegatorsCount > 1 {
+			return nil, errors.New("cannot change reporter until all delegators are removed")
+		}
 	}
 	rep.TotalTokens = rep.TotalTokens.Sub(delegation.Amount)
 	rep.DelegatorsCount--

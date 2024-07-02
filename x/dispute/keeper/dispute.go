@@ -75,8 +75,6 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		return err
 	}
 
-	feeList := make([]types.PayerInfo, 0)
-
 	if msg.Fee.Amount.GT(disputeFee) {
 		msg.Fee.Amount = disputeFee
 	}
@@ -95,15 +93,15 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		BurnAmount:     fivePercent,
 		DisputeFee:     disputeFee.Sub(fivePercent),
 		ReportEvidence: *msg.Report,
-		FeePayers: append(feeList, types.PayerInfo{
-			PayerAddress: sender,
-			Amount:       msg.Fee.Amount,
-			FromBond:     msg.PayFromBond,
-			BlockNumber:  ctx.BlockHeight(),
-		}),
 		FeeTotal:       msg.Fee.Amount,
 		PrevDisputeIds: []uint64{disputeId},
 		Open:           true,
+	}
+	if err := k.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
+		Amount:   msg.Fee.Amount,
+		FromBond: msg.PayFromBond,
+	}); err != nil {
+		return err
 	}
 	// Pay the dispute fee
 	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {

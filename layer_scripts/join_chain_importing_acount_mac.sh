@@ -8,10 +8,10 @@ set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
 export LAYER_NODE_URL=54.166.101.67
-export TELLORNODE_ID=7998a2f453f3354d3dae41fcdb753cd19638f987
+export TELLORNODE_ID=377660d6b4ea06f662a495a2eb0cde0f44a2d055
 export KEYRING_BACKEND=test
-export NODE_MONIKER="billmoniker"
-export NODE_NAME="bill"
+export NODE_MONIKER="calebmoniker"
+export NODE_NAME="caleb"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -33,7 +33,7 @@ echo "Initializing chain node for alice..."
 ./layerd init $NODE_MONIKER --chain-id layer --home ~/.layer/$NODE_NAME
 
 echo "creating keys for node"
-./layerd keys add $NODE_NAME --home ~/.layer/$NODE_NAME --keyring-backend $KEYRING_BACKEND
+./layerd keys add $NODE_NAME --recover=true --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME 
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for $NODE_NAME..."

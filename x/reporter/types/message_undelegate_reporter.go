@@ -21,5 +21,9 @@ func (msg *MsgChangeReporter) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid delegator address (%s)", err)
 	}
+	_, err = sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
 	return nil
 }

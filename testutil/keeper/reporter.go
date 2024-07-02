@@ -37,6 +37,7 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
 	bk := new(mocks.BankKeeper)
 	sk := new(mocks.StakingKeeper)
+	rk := new(mocks.RegistryKeeper)
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
@@ -44,6 +45,7 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 		authority.String(),
 		sk,
 		bk,
+		rk,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

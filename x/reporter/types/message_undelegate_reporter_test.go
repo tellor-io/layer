@@ -25,6 +25,7 @@ func TestMsgChangeReporter_ValidateBasic(t *testing.T) {
 			name: "valid address",
 			msg: MsgChangeReporter{
 				DelegatorAddress: sample.AccAddress(),
+				ReporterAddress:  sample.AccAddress(),
 			},
 		},
 	}
