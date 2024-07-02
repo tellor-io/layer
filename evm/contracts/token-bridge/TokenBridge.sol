@@ -20,9 +20,9 @@ contract TokenBridge is LayerTransition{
     uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
 
-    mapping(uint256 => bool) public withdrawalClaimed;
-    mapping(address => uint256) public tokensToClaim;
-    mapping(uint256 => DepositDetails) public deposits;
+    mapping(uint256 => bool) public withdrawalClaimed; // withdrawal id => claimed status
+    mapping(address => uint256) public tokensToClaim; // recipient => extra amount to claim
+    mapping(uint256 => DepositDetails) public deposits; // deposit id => deposit details
 
     struct DepositDetails {
         address sender;
@@ -38,11 +38,30 @@ contract TokenBridge is LayerTransition{
     /*Functions*/
     /// @notice constructor
     /// @param _token address of tellor token for bridging
-    /// @param _blobstream address of BlobstreamO for data bridge
+    /// @param _blobstream address of BlobstreamO data bridge
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
     constructor(address _token, address _blobstream, address _tellorFlex) LayerTransition(_tellorFlex, _token){
         bridge = BlobstreamO(_blobstream);
         _refreshDepositLimit();
+    }
+
+    /// @notice claim extra withdrawals that were not fully withdrawn
+    /// @param _recipient address of the recipient
+    function claimExtraWithdraw(address _recipient) external {
+        uint256 _amountConverted = tokensToClaim[_recipient];
+        require(_amountConverted > 0, "amount must be > 0");
+        uint256 _depositLimit = _refreshDepositLimit();
+        require(_depositLimit > 0, "TokenBridge: depositLimit must be > 0");
+        if(_depositLimit < _amountConverted){
+            tokensToClaim[_recipient] = tokensToClaim[_recipient] - _depositLimit;
+            _amountConverted = _depositLimit;
+            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        }
+        else{
+            tokensToClaim[_recipient] = 0;
+            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        }
+        depositLimitRecord -= _amountConverted;
     }
 
     /// @notice deposits tokens from Ethereum to layer
@@ -90,23 +109,7 @@ contract TokenBridge is LayerTransition{
         emit Withdrawal(_depositId, _layerSender, _recipient, _amountConverted);
     }
 
-    function claimExtraWithdraw(address _recipient) external {
-        uint256 _amountConverted = tokensToClaim[_recipient];
-        require(_amountConverted > 0, "amount must be > 0");
-        uint256 _depositLimit = _refreshDepositLimit();
-        require(_depositLimit > 0, "TokenBridge: depositLimit must be > 0");
-        if(_depositLimit < _amountConverted){
-            tokensToClaim[_recipient] = tokensToClaim[_recipient] - _depositLimit;
-            _amountConverted = _depositLimit;
-            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
-        }
-        else{
-            tokensToClaim[_recipient] = 0;
-            require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
-        }
-        depositLimitRecord -= _amountConverted;
-    }
-
+    /* View Functions */
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function depositLimit() external view returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
@@ -118,6 +121,7 @@ contract TokenBridge is LayerTransition{
         }
     }
 
+    /* Internal Functions */
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {

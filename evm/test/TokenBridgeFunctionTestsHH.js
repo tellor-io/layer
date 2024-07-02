@@ -15,6 +15,8 @@ describe("TokenBridge - Function Tests", async function () {
     const WITHDRAW1_QUERY_ID = h.hash(WITHDRAW1_QUERY_DATA)
     const EVM_RECIPIENT = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
     const LAYER_RECIPIENT = "tellor1zy50vdk8fdae0var2ryjhj2ysxtcm8dp2qtckd"
+    const INITIAL_LAYER_TOKEN_SUPPLY = h.toWei("100")
+
 
     beforeEach(async function () {
         // init accounts
@@ -148,7 +150,7 @@ describe("TokenBridge - Function Tests", async function () {
     })
     it("claim extraWithdraw", async function () {
         await tbridge.refreshDepositLimit()
-        expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
+        expectedDepositLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) * BigInt(2) / BigInt(10)
         depositAmount = expectedDepositLimit
         await h.expectThrow(tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)) // not approved
         await token.approve(await tbridge.address, h.toWei("100"))
@@ -216,6 +218,70 @@ describe("TokenBridge - Function Tests", async function () {
         assert(_limit == expectedDepositLimit, "deposit Limit should be correct")
         tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
         assert(tokensToClaim == BigInt(0), "tokensToClaim should be correct")
+    })
+    // more complex tests
+    it.only("100 deposits and withdrawals", async function () {
+        // fund accts
+        await token.faucet(accounts[0].address)
+        await token.faucet(accounts[1].address)
+        await token.faucet(accounts[1].address)
+        await token.connect(accounts[0]).approve(tbridge.address, h.toWei("10000"))
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+
+        initUserBal0 = await token.balanceOf(accounts[0].address)
+        initUserBal1 = await token.balanceOf(accounts[1].address)
+        niters = 100
+        depositAmount0 = h.toWei("5")
+        depositAmount1 = h.toWei("10")
+        
+        // deposits
+        for (let i = 0; i < niters; i++) {
+            console.log(i)
+            await tbridge.connect(accounts[0]).depositToLayer(depositAmount0, LAYER_RECIPIENT)
+            await tbridge.connect(accounts[1]).depositToLayer(depositAmount1, LAYER_RECIPIENT)
+            await h.advanceTime(43200)
+        }
+        // checks
+        userBal0 = await token.balanceOf(accounts[0].address)
+        userBal1 = await token.balanceOf(accounts[1].address)
+        bridgeBal = await token.balanceOf(await tbridge.address)
+        expectedBal0 = BigInt(initUserBal0) - BigInt(depositAmount0) * BigInt(niters)
+        expectedBal1 = BigInt(initUserBal1) - BigInt(depositAmount1) * BigInt(niters)
+        expectedBalBridge = BigInt(depositAmount0) * BigInt(niters) + BigInt(depositAmount1) * BigInt(niters)
+        assert(BigInt(userBal0) == expectedBal0, "user 0 balance should be correct")
+        assert(BigInt(userBal1) == expectedBal1, "user 1 balance should be correct")
+        assert(BigInt(bridgeBal) == expectedBalBridge, "bridge balance should be correct")
+        assert(await tbridge.depositId() == BigInt(niters * 2), "deposit id should be correct")
+
+        // withdrawals
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        withdrawValue0 = h.getWithdrawValue(accounts[0].address, LAYER_RECIPIENT, BigInt(depositAmount0) / BigInt(1e12))
+        withdrawValue1 = h.getWithdrawValue(accounts[1].address, LAYER_RECIPIENT, BigInt(depositAmount1) / BigInt(1e12))
+        for (let i = 0; i<niters; i++) {
+            withdrawId0 = niters * 2 + 1
+            withdrawId1 = niters * 2 + 2
+            withdrawQueryDataArgs0 = abiCoder.encode(['bool', 'uint256'], ['false', withdrawId0])
+            withdrawQueryDataArgs1 = abiCoder.encode(['bool', 'uint256'], ['false', withdrawId1])
+            withdrawQueryData0 = abiCoder.encode(['string', 'bytes'], ['TRBBridge', withdrawQueryDataArgs0])
+            withdrawQueryData1 = abiCoder.encode(['string', 'bytes'], ['TRBBridge', withdrawQueryDataArgs1])
+            withdrawQueryId0 = h.hash(withdrawQueryData0)
+            withdrawQueryId1 = h.hash(withdrawQueryData1)
+            blocky = await h.getBlock()
+            reportTimestamp = blocky.timestamp - 84600
+            attestationTimestamp = blocky.timestamp
+            dataDigest0 = await h.getDataDigest(
+                withdrawQueryId0,
+                withdrawValue0,
+                reportTimestamp,
+                aggregatePower,
+                previousTimestamp,
+                nextTimestamp,
+                valCheckpoint,
+                attestTimestamp
+            )
+        }
+
     })
     
 })
