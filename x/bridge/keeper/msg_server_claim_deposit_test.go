@@ -22,7 +22,8 @@ func TestMsgClaimDeposit(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	require.Panics(t, func() {
-		msgServer.ClaimDeposit(ctx, nil)
+		_, err := msgServer.ClaimDeposit(ctx, nil)
+		require.Error(t, err)
 	})
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

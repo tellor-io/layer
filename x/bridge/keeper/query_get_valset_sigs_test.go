@@ -28,7 +28,8 @@ func TestGetValsetSigs(t *testing.T) {
 	valset.SetSignature(1, []byte("signature2"))
 	valset.SetSignature(2, []byte("signature3"))
 
-	k.BridgeValsetSignaturesMap.Set(ctx, 1, *valset)
+	err = k.BridgeValsetSignaturesMap.Set(ctx, 1, *valset)
+	require.NoError(t, err)
 
 	sigsHexExpected := make([]string, len(valset.Signatures))
 	for i, sig := range valset.Signatures {

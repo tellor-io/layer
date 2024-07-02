@@ -921,12 +921,13 @@ func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	require.Error(t, err)
 
 	timestamp := uint64(100)
-	k.ValidatorCheckpointParamsMap.Set(ctx, timestamp, types.ValidatorCheckpointParams{
+	err = k.ValidatorCheckpointParamsMap.Set(ctx, timestamp, types.ValidatorCheckpointParams{
 		Checkpoint:     []byte("checkpoint"),
 		ValsetHash:     []byte("valsetHash"),
 		Timestamp:      int64(timestamp),
 		PowerThreshold: int64(100),
 	})
+	require.NoError(t, err)
 
 	res, err := k.GetValidatorCheckpointParamsFromStorage(ctx, timestamp)
 	require.NoError(t, err)
@@ -1132,6 +1133,8 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	timestamp := sdkCtx.BlockTime()
+	timestampPlus1 := timestamp.Add(time.Second)
+
 	queryId := []byte("queryId")
 	ok.On("GetAggregatedReportsByHeight", ctx, int64(0)).Return([]oracletypes.Aggregate{
 		{
@@ -1141,7 +1144,8 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 			ReporterPower:  int64(100),
 		},
 	}, nil)
-	ok.On("GetTimestampBefore", ctx, queryId, timestamp).Return(timestamp, nil)
+	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
+	ok.On("GetTimestampBefore", sdkCtx, queryId, timestamp).Return(timestamp, nil)
 	ok.On("GetAggregateByTimestamp", ctx, queryId, timestamp).Return(&oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",

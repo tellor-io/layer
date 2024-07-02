@@ -31,9 +31,10 @@ func TestGetSnapshotsByReport(t *testing.T) {
 	timestamp := time.Unix(0, 0)
 	key := crypto.Keccak256([]byte(hex.EncodeToString(queryIdBytes) + fmt.Sprint(timestamp.Unix())))
 
-	k.AttestSnapshotsByReportMap.Set(ctx, key, types.AttestationSnapshots{
+	err = k.AttestSnapshotsByReportMap.Set(ctx, key, types.AttestationSnapshots{
 		Snapshots: [][]byte{[]byte("snapshot")},
 	})
+	require.NoError(t, err)
 
 	getSnapshotResponse, err = keeper.NewQuerier(k).GetSnapshotsByReport(ctx, &types.QueryGetSnapshotsByReportRequest{
 		QueryId:   "abcd1234",

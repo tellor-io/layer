@@ -37,7 +37,7 @@ func TestGetDataBefore(t *testing.T) {
 
 	getDataBeforeResponse, err = keeper.NewQuerier(k).GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   "1234abcd",
-		Timestamp: int64(timestampBefore),
+		Timestamp: timestampBefore,
 	})
 	require.ErrorContains(t, err, "failed to get aggregate before")
 	require.Nil(t, getDataBeforeResponse)
@@ -47,7 +47,7 @@ func TestGetDataBefore(t *testing.T) {
 
 	getDataBeforeResponse, err = keeper.NewQuerier(k).GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   "1234abcd",
-		Timestamp: int64(timestampBefore),
+		Timestamp: timestampBefore,
 	})
 	require.ErrorContains(t, err, "aggregate before not found")
 	require.Nil(t, getDataBeforeResponse)
@@ -57,7 +57,7 @@ func TestGetDataBefore(t *testing.T) {
 
 	getDataBeforeResponse, err = keeper.NewQuerier(k).GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   "1234abcd",
-		Timestamp: int64(timestampBefore),
+		Timestamp: timestampBefore,
 	})
 	require.NoError(t, err)
 	require.Equal(t, getDataBeforeResponse.Timestamp, uint64(timestamp.Unix()))

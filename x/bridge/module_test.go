@@ -1,7 +1,9 @@
 package bridge
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -71,6 +73,7 @@ func TestEndBlock(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	require.NotNil(t, sk)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	// create validator set
 	validators := []stakingtypes.Validator{
@@ -91,29 +94,30 @@ func TestEndBlock(t *testing.T) {
 	}
 	evmAddresses := make([]types.EVMAddress, len(validators))
 	for i, val := range validators {
-		err := k.SetEVMAddressByOperator(ctx, val.OperatorAddress, []byte(val.Description.Moniker))
+		err := k.SetEVMAddressByOperator(sdkCtx, val.OperatorAddress, []byte(val.Description.Moniker))
 		require.NoError(t, err)
 
-		evmAddresses[i], err = k.OperatorToEVMAddressMap.Get(ctx, val.GetOperator())
+		evmAddresses[i], err = k.OperatorToEVMAddressMap.Get(sdkCtx, val.GetOperator())
 		require.NoError(t, err)
 		require.Equal(t, evmAddresses[i].EVMAddress, []byte(val.Description.Moniker))
 	}
-	sk.On("GetAllValidators", ctx).Return(validators, nil)
+	sk.On("GetAllValidators", sdkCtx).Return(validators, nil)
 
-	ok.On("GetAggregatedReportsByHeight", ctx, int64(0)).Return([]oracletypes.Aggregate{
+	ok.On("GetAggregatedReportsByHeight", sdkCtx, int64(0)).Return([]oracletypes.Aggregate{
 		{
-			Height:         0,
+			Height:         1,
 			QueryId:        []byte("queryId"),
 			AggregateValue: "5000",
 			ReporterPower:  int64(100),
 		},
 	}, nil)
 	queryId := []byte("queryId")
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	timestamp := sdkCtx.BlockTime()
-	ok.On("GetTimestampBefore", ctx, queryId, timestamp).Return(timestamp, nil)
+	timestampPlus1 := timestamp.Add(time.Second)
 
-	ok.On("GetAggregateByTimestamp", ctx, queryId, timestamp).Return(&oracletypes.Aggregate{
+	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
+	ok.On("GetTimestampBefore", sdkCtx, queryId, timestamp).Return(timestamp, nil)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, timestamp).Return(&oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",
 		ReporterPower:  int64(100),
@@ -123,7 +127,7 @@ func TestEndBlock(t *testing.T) {
 		Checkpoint: []byte("checkpoint"),
 	})
 	require.NoError(t, err)
-	ok.On("GetTimestampAfter", ctx, queryId, timestamp).Return(timestamp, nil)
+	ok.On("GetTimestampAfter", sdkCtx, queryId, timestamp).Return(timestampPlus1, nil)
 	err = k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
 		BridgeValidatorSet: []*types.BridgeValidator{
 			{
