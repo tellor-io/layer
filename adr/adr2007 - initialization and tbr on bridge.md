@@ -36,7 +36,7 @@ The original plan was to use a method of minting to the bridge contract, then ha
 
 ### extra tokens minted on creation that can't be withdrawn
 
-We had another idea to handle the launch portion that would mint a certain number of tokens on layer to the team initially and those would be in a locked state and not be eligible for withdrawing.  However, the security of the system relies on disputes and not being able to 'lose' tokens can lead to bad incentives. If the tokens were to be used to incentivize other validators (outside the team), it would create a scenario where they are incetivized to provide bad data so that they can 'unlock' the tokens via the dispute mechanism.  Additionaly, the idea of "new" tokens even if slightly different and locked has a bad image.WE didn't go with this option because all of these scenarios sound like threat to our security.
+We had another idea to handle the launch portion that would mint a certain number of tokens on layer to the team initially and those would be in a locked state and not be eligible for withdrawing.  However, the security of the system relies on disputes and not being able to 'lose' tokens can lead to bad incentives. If the tokens were to be used to incentivize other validators (outside the team), it would create a scenario where they are incetivized to provide bad data so that they can 'unlock' the tokens via the dispute mechanism.  Additionaly, the idea of "new" tokens even if slightly different and locked has a bad image. We didn't go with this option because all of these scenarios seemed like threat to our security.
 
 
 ### launch layer and mint from start
