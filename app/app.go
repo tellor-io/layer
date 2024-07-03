@@ -44,7 +44,6 @@ import (
 	medianserver "github.com/tellor-io/layer/daemons/server/median"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-	// tokenbridgeserver "github.com/tellor-io/layer/daemons/server/token_bridge"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
@@ -166,7 +165,6 @@ var (
 		distrtypes.ModuleName:              nil,
 		icatypes.ModuleName:                nil,
 		minttypes.TimeBasedRewards:         nil,
-		minttypes.MintToTeam:               nil,
 		minttypes.ModuleName:               {authtypes.Minter},
 		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},

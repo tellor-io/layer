@@ -7,8 +7,6 @@ import (
 	"github.com/tellor-io/layer/x/mint/keeper"
 	"github.com/tellor-io/layer/x/mint/types"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -42,13 +40,8 @@ func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time)
 		return err
 	}
 	toMintCoins := sdk.NewCoins(toMintCoin)
-	// mint coins double half going to team and half to oracle
-	err = k.MintCoins(ctx, toMintCoins.MulInt(math.NewInt(2)))
-	if err != nil {
-		return err
-	}
-
-	err = k.SendCoinsToTeam(ctx, toMintCoins)
+	// mint tbr coins
+	err = k.MintCoins(ctx, toMintCoins)
 	if err != nil {
 		return err
 	}

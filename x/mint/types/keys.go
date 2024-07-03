@@ -10,8 +10,6 @@ const (
 	// RouterKey defines the module's message routing key
 	RouterKey = StoreKey
 
-	MintToTeam = "mint_to_team"
-
 	TimeBasedRewards = "time_based_rewards"
 )
 
