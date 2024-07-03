@@ -6,7 +6,7 @@ clear
 # Stop execution if any command fails
 set -e
 
-KEYRING_BACKEND="test"
+KEYRING_BACKEND="pass"
 PASSWORD="password"
 
 export LAYERD_NODE_HOME="$HOME/.layer/alice"
@@ -29,9 +29,9 @@ echo "Initializing chain node for alice..."
 
 # Add a validator account for alice
 echo "Adding validator account for alice..."
-./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
-echo "charlie user..."
-./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+#./layerd keys add alice --keyring-backend $KEYRING_BACKEND
+# echo "charlie user..."
+# ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 # echo "creating account for faucet..."
 # ./layerd keys add faucet --recover=true
@@ -44,13 +44,13 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/alice/c
 echo "Updating block grace period from 100 to 500"
 jq '.slashing.params.signed_blocks_window = "500"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
 jq '.slashing.params.signed_blocks_window = "500"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
-sleep 10
+
 
 # Create a tx to give alice loyas to stake
 echo "Adding genesis account for alice..."
-./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "charlie..."
-./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+# ./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 
 # echo "Faucet..."
@@ -58,7 +58,7 @@ echo "charlie..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 1000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
+./layerd genesis gentx alice 1000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
@@ -70,16 +70,9 @@ sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/alice/config
 
 # Modify keyring-backend in client.toml for alice
 echo "Modifying keyring-backend in client.toml for alice..."
-sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/alice/config/client.toml
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "pass"/' ~/.layer/alice/config/client.toml
 # update for main dir as well. why is this needed?
-sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/client.toml
-
-
-# Modify keyring-backend in client.toml for alice
-echo "Modifying keyring-backend in client.toml for alice..."
-sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/alice/config/client.toml
-# update for main dir as well. why is this needed?
-sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/client.toml
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "pass"/' ~/.layer/config/client.toml
 
 
 echo "Starting chain for alice..."
