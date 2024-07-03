@@ -21,6 +21,15 @@ message Params {
     (amino.dont_omitempty) = true,
     (cosmos_proto.scalar) = "cosmos.Dec"
   ];
+  // min_trb to be a reporter
+  string min_trb = 2 [
+    (gogoproto.moretags) = "yaml:\"min_trb\"",
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // max number of selectors for a reporter
+  uint64 max_selectors = 3;
 }
 
 message StakeTracker {

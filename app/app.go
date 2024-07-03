@@ -595,15 +595,6 @@ func New(
 		app.ReporterKeeper,
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper)
-	// app.ReporterKeeper = reportermodulekeeper.NewKeeper(
-	// 	appCodec,
-	// 	runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
-	// 	logger,
-	// 	authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	// 	app.StakingKeeper,
-	// 	app.BankKeeper,
-	// )
-	// reporterModule := reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)

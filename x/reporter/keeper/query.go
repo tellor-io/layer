@@ -50,7 +50,7 @@ func (k Querier) DelegatorReporter(ctx context.Context, req *types.QueryDelegato
 
 	delAddr := sdk.MustAccAddressFromBech32(req.DelegatorAddress)
 
-	delegator, err := k.Keeper.Delegators.Get(ctx, delAddr)
+	delegator, err := k.Keeper.Selectors.Get(ctx, delAddr)
 	if err != nil {
 		return nil, err
 	}

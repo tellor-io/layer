@@ -3,7 +3,6 @@ package reporter
 
 import (
 	_ "cosmossdk.io/api/amino"
-	v1beta1 "cosmossdk.io/api/cosmos/staking/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -18,22 +17,20 @@ import (
 )
 
 var (
-	md_OracleReporter                  protoreflect.MessageDescriptor
-	fd_OracleReporter_total_tokens     protoreflect.FieldDescriptor
-	fd_OracleReporter_commission       protoreflect.FieldDescriptor
-	fd_OracleReporter_jailed           protoreflect.FieldDescriptor
-	fd_OracleReporter_jailed_until     protoreflect.FieldDescriptor
-	fd_OracleReporter_delegators_count protoreflect.FieldDescriptor
+	md_OracleReporter                     protoreflect.MessageDescriptor
+	fd_OracleReporter_min_tokens_required protoreflect.FieldDescriptor
+	fd_OracleReporter_commission_rate     protoreflect.FieldDescriptor
+	fd_OracleReporter_jailed              protoreflect.FieldDescriptor
+	fd_OracleReporter_jailed_until        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_reporter_oracle_reporter_proto_init()
 	md_OracleReporter = File_layer_reporter_oracle_reporter_proto.Messages().ByName("OracleReporter")
-	fd_OracleReporter_total_tokens = md_OracleReporter.Fields().ByName("total_tokens")
-	fd_OracleReporter_commission = md_OracleReporter.Fields().ByName("commission")
+	fd_OracleReporter_min_tokens_required = md_OracleReporter.Fields().ByName("min_tokens_required")
+	fd_OracleReporter_commission_rate = md_OracleReporter.Fields().ByName("commission_rate")
 	fd_OracleReporter_jailed = md_OracleReporter.Fields().ByName("jailed")
 	fd_OracleReporter_jailed_until = md_OracleReporter.Fields().ByName("jailed_until")
-	fd_OracleReporter_delegators_count = md_OracleReporter.Fields().ByName("delegators_count")
 }
 
 var _ protoreflect.Message = (*fastReflection_OracleReporter)(nil)
@@ -101,15 +98,15 @@ func (x *fastReflection_OracleReporter) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_OracleReporter) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.TotalTokens != "" {
-		value := protoreflect.ValueOfString(x.TotalTokens)
-		if !f(fd_OracleReporter_total_tokens, value) {
+	if x.MinTokensRequired != "" {
+		value := protoreflect.ValueOfString(x.MinTokensRequired)
+		if !f(fd_OracleReporter_min_tokens_required, value) {
 			return
 		}
 	}
-	if x.Commission != nil {
-		value := protoreflect.ValueOfMessage(x.Commission.ProtoReflect())
-		if !f(fd_OracleReporter_commission, value) {
+	if x.CommissionRate != "" {
+		value := protoreflect.ValueOfString(x.CommissionRate)
+		if !f(fd_OracleReporter_commission_rate, value) {
 			return
 		}
 	}
@@ -122,12 +119,6 @@ func (x *fastReflection_OracleReporter) Range(f func(protoreflect.FieldDescripto
 	if x.JailedUntil != nil {
 		value := protoreflect.ValueOfMessage(x.JailedUntil.ProtoReflect())
 		if !f(fd_OracleReporter_jailed_until, value) {
-			return
-		}
-	}
-	if x.DelegatorsCount != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.DelegatorsCount)
-		if !f(fd_OracleReporter_delegators_count, value) {
 			return
 		}
 	}
@@ -146,16 +137,14 @@ func (x *fastReflection_OracleReporter) Range(f func(protoreflect.FieldDescripto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_OracleReporter) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.reporter.OracleReporter.total_tokens":
-		return x.TotalTokens != ""
-	case "layer.reporter.OracleReporter.commission":
-		return x.Commission != nil
+	case "layer.reporter.OracleReporter.min_tokens_required":
+		return x.MinTokensRequired != ""
+	case "layer.reporter.OracleReporter.commission_rate":
+		return x.CommissionRate != ""
 	case "layer.reporter.OracleReporter.jailed":
 		return x.Jailed != false
 	case "layer.reporter.OracleReporter.jailed_until":
 		return x.JailedUntil != nil
-	case "layer.reporter.OracleReporter.delegators_count":
-		return x.DelegatorsCount != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.OracleReporter"))
@@ -172,16 +161,14 @@ func (x *fastReflection_OracleReporter) Has(fd protoreflect.FieldDescriptor) boo
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_OracleReporter) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.reporter.OracleReporter.total_tokens":
-		x.TotalTokens = ""
-	case "layer.reporter.OracleReporter.commission":
-		x.Commission = nil
+	case "layer.reporter.OracleReporter.min_tokens_required":
+		x.MinTokensRequired = ""
+	case "layer.reporter.OracleReporter.commission_rate":
+		x.CommissionRate = ""
 	case "layer.reporter.OracleReporter.jailed":
 		x.Jailed = false
 	case "layer.reporter.OracleReporter.jailed_until":
 		x.JailedUntil = nil
-	case "layer.reporter.OracleReporter.delegators_count":
-		x.DelegatorsCount = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.OracleReporter"))
@@ -198,21 +185,18 @@ func (x *fastReflection_OracleReporter) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_OracleReporter) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.reporter.OracleReporter.total_tokens":
-		value := x.TotalTokens
+	case "layer.reporter.OracleReporter.min_tokens_required":
+		value := x.MinTokensRequired
 		return protoreflect.ValueOfString(value)
-	case "layer.reporter.OracleReporter.commission":
-		value := x.Commission
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "layer.reporter.OracleReporter.commission_rate":
+		value := x.CommissionRate
+		return protoreflect.ValueOfString(value)
 	case "layer.reporter.OracleReporter.jailed":
 		value := x.Jailed
 		return protoreflect.ValueOfBool(value)
 	case "layer.reporter.OracleReporter.jailed_until":
 		value := x.JailedUntil
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "layer.reporter.OracleReporter.delegators_count":
-		value := x.DelegatorsCount
-		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.OracleReporter"))
@@ -233,16 +217,14 @@ func (x *fastReflection_OracleReporter) Get(descriptor protoreflect.FieldDescrip
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_OracleReporter) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.reporter.OracleReporter.total_tokens":
-		x.TotalTokens = value.Interface().(string)
-	case "layer.reporter.OracleReporter.commission":
-		x.Commission = value.Message().Interface().(*v1beta1.Commission)
+	case "layer.reporter.OracleReporter.min_tokens_required":
+		x.MinTokensRequired = value.Interface().(string)
+	case "layer.reporter.OracleReporter.commission_rate":
+		x.CommissionRate = value.Interface().(string)
 	case "layer.reporter.OracleReporter.jailed":
 		x.Jailed = value.Bool()
 	case "layer.reporter.OracleReporter.jailed_until":
 		x.JailedUntil = value.Message().Interface().(*timestamppb.Timestamp)
-	case "layer.reporter.OracleReporter.delegators_count":
-		x.DelegatorsCount = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.OracleReporter"))
@@ -263,22 +245,17 @@ func (x *fastReflection_OracleReporter) Set(fd protoreflect.FieldDescriptor, val
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_OracleReporter) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.reporter.OracleReporter.commission":
-		if x.Commission == nil {
-			x.Commission = new(v1beta1.Commission)
-		}
-		return protoreflect.ValueOfMessage(x.Commission.ProtoReflect())
 	case "layer.reporter.OracleReporter.jailed_until":
 		if x.JailedUntil == nil {
 			x.JailedUntil = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.JailedUntil.ProtoReflect())
-	case "layer.reporter.OracleReporter.total_tokens":
-		panic(fmt.Errorf("field total_tokens of message layer.reporter.OracleReporter is not mutable"))
+	case "layer.reporter.OracleReporter.min_tokens_required":
+		panic(fmt.Errorf("field min_tokens_required of message layer.reporter.OracleReporter is not mutable"))
+	case "layer.reporter.OracleReporter.commission_rate":
+		panic(fmt.Errorf("field commission_rate of message layer.reporter.OracleReporter is not mutable"))
 	case "layer.reporter.OracleReporter.jailed":
 		panic(fmt.Errorf("field jailed of message layer.reporter.OracleReporter is not mutable"))
-	case "layer.reporter.OracleReporter.delegators_count":
-		panic(fmt.Errorf("field delegators_count of message layer.reporter.OracleReporter is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.OracleReporter"))
@@ -292,18 +269,15 @@ func (x *fastReflection_OracleReporter) Mutable(fd protoreflect.FieldDescriptor)
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_OracleReporter) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.reporter.OracleReporter.total_tokens":
+	case "layer.reporter.OracleReporter.min_tokens_required":
 		return protoreflect.ValueOfString("")
-	case "layer.reporter.OracleReporter.commission":
-		m := new(v1beta1.Commission)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "layer.reporter.OracleReporter.commission_rate":
+		return protoreflect.ValueOfString("")
 	case "layer.reporter.OracleReporter.jailed":
 		return protoreflect.ValueOfBool(false)
 	case "layer.reporter.OracleReporter.jailed_until":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "layer.reporter.OracleReporter.delegators_count":
-		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.OracleReporter"))
@@ -373,12 +347,12 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.TotalTokens)
+		l = len(x.MinTokensRequired)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Commission != nil {
-			l = options.Size(x.Commission)
+		l = len(x.CommissionRate)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.Jailed {
@@ -387,9 +361,6 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 		if x.JailedUntil != nil {
 			l = options.Size(x.JailedUntil)
 			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.DelegatorsCount != 0 {
-			n += 1 + runtime.Sov(uint64(x.DelegatorsCount))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -420,11 +391,6 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.DelegatorsCount != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.DelegatorsCount))
-			i--
-			dAtA[i] = 0x28
-		}
 		if x.JailedUntil != nil {
 			encoded, err := options.Marshal(x.JailedUntil)
 			if err != nil {
@@ -449,24 +415,17 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x18
 		}
-		if x.Commission != nil {
-			encoded, err := options.Marshal(x.Commission)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.CommissionRate) > 0 {
+			i -= len(x.CommissionRate)
+			copy(dAtA[i:], x.CommissionRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CommissionRate)))
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.TotalTokens) > 0 {
-			i -= len(x.TotalTokens)
-			copy(dAtA[i:], x.TotalTokens)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TotalTokens)))
+		if len(x.MinTokensRequired) > 0 {
+			i -= len(x.MinTokensRequired)
+			copy(dAtA[i:], x.MinTokensRequired)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MinTokensRequired)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -521,7 +480,7 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalTokens", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinTokensRequired", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -549,13 +508,13 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.TotalTokens = string(dAtA[iNdEx:postIndex])
+				x.MinTokensRequired = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Commission", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CommissionRate", wireType)
 				}
-				var msglen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -565,27 +524,23 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Commission == nil {
-					x.Commission = &v1beta1.Commission{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Commission); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.CommissionRate = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 0 {
@@ -643,25 +598,6 @@ func (x *fastReflection_OracleReporter) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 5:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DelegatorsCount", wireType)
-				}
-				x.DelegatorsCount = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.DelegatorsCount |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -716,15 +652,14 @@ type OracleReporter struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// tokens is the amount of tokens the reporter has
-	TotalTokens string `protobuf:"bytes,1,opt,name=total_tokens,json=totalTokens,proto3" json:"total_tokens,omitempty"`
+	// min_tokens_required to select this reporter
+	MinTokensRequired string `protobuf:"bytes,1,opt,name=min_tokens_required,json=minTokensRequired,proto3" json:"min_tokens_required,omitempty"`
 	// commission for the reporter
-	Commission *v1beta1.Commission `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission,omitempty"`
+	CommissionRate string `protobuf:"bytes,2,opt,name=commission_rate,json=commissionRate,proto3" json:"commission_rate,omitempty"`
 	// jailed is a bool whether the reporter is jailed or not
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// jailed_until is the time the reporter is jailed until
-	JailedUntil     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3" json:"jailed_until,omitempty"`
-	DelegatorsCount uint64                 `protobuf:"varint,5,opt,name=delegators_count,json=delegatorsCount,proto3" json:"delegators_count,omitempty"`
+	JailedUntil *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3" json:"jailed_until,omitempty"`
 }
 
 func (x *OracleReporter) Reset() {
@@ -747,18 +682,18 @@ func (*OracleReporter) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_oracle_reporter_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *OracleReporter) GetTotalTokens() string {
+func (x *OracleReporter) GetMinTokensRequired() string {
 	if x != nil {
-		return x.TotalTokens
+		return x.MinTokensRequired
 	}
 	return ""
 }
 
-func (x *OracleReporter) GetCommission() *v1beta1.Commission {
+func (x *OracleReporter) GetCommissionRate() string {
 	if x != nil {
-		return x.Commission
+		return x.CommissionRate
 	}
-	return nil
+	return ""
 }
 
 func (x *OracleReporter) GetJailed() bool {
@@ -775,13 +710,6 @@ func (x *OracleReporter) GetJailedUntil() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *OracleReporter) GetDelegatorsCount() uint64 {
-	if x != nil {
-		return x.DelegatorsCount
-	}
-	return 0
-}
-
 var File_layer_reporter_oracle_reporter_proto protoreflect.FileDescriptor
 
 var file_layer_reporter_oracle_reporter_proto_rawDesc = []byte{
@@ -789,46 +717,43 @@ var file_layer_reporter_oracle_reporter_proto_rawDesc = []byte{
 	0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d,
-	0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x24, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
-	0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
-	0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x22, 0xb5, 0x02, 0x0a, 0x0e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x52, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0x12, 0x4e, 0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x74, 0x6f,
-	0x6b, 0x65, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00,
-	0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
-	0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x6f,
-	0x6b, 0x65, 0x6e, 0x73, 0x12, 0x42, 0x0a, 0x0a, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69,
-	0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x0a, 0x63, 0x6f,
-	0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x6a, 0x61, 0x69, 0x6c,
-	0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x6a, 0x61, 0x69, 0x6c, 0x65, 0x64,
-	0x12, 0x4c, 0x0a, 0x0c, 0x6a, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x5f, 0x75, 0x6e, 0x74, 0x69, 0x6c,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x42, 0x0d, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0xa8, 0xe7, 0xb0, 0x2a,
-	0x01, 0x52, 0x0b, 0x6a, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x12, 0x29,
-	0x0a, 0x10, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x5f, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61,
-	0x74, 0x6f, 0x72, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0xb1, 0x01, 0x0a, 0x12, 0x63, 0x6f,
-	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
-	0x42, 0x13, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e,
-	0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02,
-	0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
+	0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb4, 0x02, 0x0a, 0x0e,
+	0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x5b,
+	0x0a, 0x13, 0x6d, 0x69, 0x6e, 0x5f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x5f, 0x72, 0x65, 0x71,
+	0x75, 0x69, 0x72, 0x65, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f,
+	0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x11, 0x6d, 0x69, 0x6e, 0x54, 0x6f, 0x6b,
+	0x65, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x69, 0x72, 0x65, 0x64, 0x12, 0x5f, 0x0a, 0x0f, 0x63,
+	0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x36, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e,
+	0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0e, 0x63, 0x6f,
+	0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x61, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06,
+	0x6a, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x06, 0x6a, 0x61,
+	0x69, 0x6c, 0x65, 0x64, 0x12, 0x4c, 0x0a, 0x0c, 0x6a, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x5f, 0x75,
+	0x6e, 0x74, 0x69, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f,
+	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x0d, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01,
+	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0b, 0x6a, 0x61, 0x69, 0x6c, 0x65, 0x64, 0x55, 0x6e, 0x74,
+	0x69, 0x6c, 0x42, 0xb1, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x13, 0x4f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c,
+	0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xa2,
+	0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -846,17 +771,15 @@ func file_layer_reporter_oracle_reporter_proto_rawDescGZIP() []byte {
 var file_layer_reporter_oracle_reporter_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_layer_reporter_oracle_reporter_proto_goTypes = []interface{}{
 	(*OracleReporter)(nil),        // 0: layer.reporter.OracleReporter
-	(*v1beta1.Commission)(nil),    // 1: cosmos.staking.v1beta1.Commission
-	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
+	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
 }
 var file_layer_reporter_oracle_reporter_proto_depIdxs = []int32{
-	1, // 0: layer.reporter.OracleReporter.commission:type_name -> cosmos.staking.v1beta1.Commission
-	2, // 1: layer.reporter.OracleReporter.jailed_until:type_name -> google.protobuf.Timestamp
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 0: layer.reporter.OracleReporter.jailed_until:type_name -> google.protobuf.Timestamp
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_layer_reporter_oracle_reporter_proto_init() }

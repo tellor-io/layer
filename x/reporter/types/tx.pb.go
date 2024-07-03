@@ -5,12 +5,13 @@ package types
 
 import (
 	context "context"
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
-	types "github.com/cosmos/cosmos-sdk/x/staking/types"
+	_ "github.com/cosmos/cosmos-sdk/x/staking/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -126,9 +127,12 @@ func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
 
+// MsgCreateReporter defines the Msg/CreateReporter request type.
 type MsgCreateReporter struct {
-	ReporterAddress string            `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
-	Commission      *types.Commission `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission,omitempty"`
+	// reporter_address is the address of the reporter.
+	ReporterAddress   string                      `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+	CommissionRate    cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=commission_rate,json=commissionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"commission_rate"`
+	MinTokensRequired cosmossdk_io_math.Int       `protobuf:"bytes,3,opt,name=min_tokens_required,json=minTokensRequired,proto3,customtype=cosmossdk.io/math.Int" json:"min_tokens_required"`
 }
 
 func (m *MsgCreateReporter) Reset()         { *m = MsgCreateReporter{} }
@@ -171,13 +175,7 @@ func (m *MsgCreateReporter) GetReporterAddress() string {
 	return ""
 }
 
-func (m *MsgCreateReporter) GetCommission() *types.Commission {
-	if m != nil {
-		return m.Commission
-	}
-	return nil
-}
-
+// MsgCreateReporterResponse defines the Msg/CreateReporter response type.
 type MsgCreateReporterResponse struct {
 }
 
@@ -214,23 +212,26 @@ func (m *MsgCreateReporterResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreateReporterResponse proto.InternalMessageInfo
 
-type MsgChangeReporter struct {
-	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
-	ReporterAddress  string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+// MsgSelectReporter defines the Msg/SelectReporter request type.
+type MsgSelectReporter struct {
+	// selector_address is the address of the selector.
+	SelectorAddress string `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
+	// reporter_address is the address of the reporter to select.
+	ReporterAddress string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
 }
 
-func (m *MsgChangeReporter) Reset()         { *m = MsgChangeReporter{} }
-func (m *MsgChangeReporter) String() string { return proto.CompactTextString(m) }
-func (*MsgChangeReporter) ProtoMessage()    {}
-func (*MsgChangeReporter) Descriptor() ([]byte, []int) {
+func (m *MsgSelectReporter) Reset()         { *m = MsgSelectReporter{} }
+func (m *MsgSelectReporter) String() string { return proto.CompactTextString(m) }
+func (*MsgSelectReporter) ProtoMessage()    {}
+func (*MsgSelectReporter) Descriptor() ([]byte, []int) {
 	return fileDescriptor_67b904a7aa978eb1, []int{4}
 }
-func (m *MsgChangeReporter) XXX_Unmarshal(b []byte) error {
+func (m *MsgSelectReporter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgChangeReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSelectReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgChangeReporter.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSelectReporter.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -240,47 +241,47 @@ func (m *MsgChangeReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *MsgChangeReporter) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgChangeReporter.Merge(m, src)
+func (m *MsgSelectReporter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSelectReporter.Merge(m, src)
 }
-func (m *MsgChangeReporter) XXX_Size() int {
+func (m *MsgSelectReporter) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgChangeReporter) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgChangeReporter.DiscardUnknown(m)
+func (m *MsgSelectReporter) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSelectReporter.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgChangeReporter proto.InternalMessageInfo
+var xxx_messageInfo_MsgSelectReporter proto.InternalMessageInfo
 
-func (m *MsgChangeReporter) GetDelegatorAddress() string {
+func (m *MsgSelectReporter) GetSelectorAddress() string {
 	if m != nil {
-		return m.DelegatorAddress
+		return m.SelectorAddress
 	}
 	return ""
 }
 
-func (m *MsgChangeReporter) GetReporterAddress() string {
+func (m *MsgSelectReporter) GetReporterAddress() string {
 	if m != nil {
 		return m.ReporterAddress
 	}
 	return ""
 }
 
-type MsgChangeReporterResponse struct {
+type MsgSelectReporterResponse struct {
 }
 
-func (m *MsgChangeReporterResponse) Reset()         { *m = MsgChangeReporterResponse{} }
-func (m *MsgChangeReporterResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgChangeReporterResponse) ProtoMessage()    {}
-func (*MsgChangeReporterResponse) Descriptor() ([]byte, []int) {
+func (m *MsgSelectReporterResponse) Reset()         { *m = MsgSelectReporterResponse{} }
+func (m *MsgSelectReporterResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSelectReporterResponse) ProtoMessage()    {}
+func (*MsgSelectReporterResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_67b904a7aa978eb1, []int{5}
 }
-func (m *MsgChangeReporterResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgSelectReporterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgChangeReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSelectReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgChangeReporterResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSelectReporterResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -290,17 +291,201 @@ func (m *MsgChangeReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([
 		return b[:n], nil
 	}
 }
-func (m *MsgChangeReporterResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgChangeReporterResponse.Merge(m, src)
+func (m *MsgSelectReporterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSelectReporterResponse.Merge(m, src)
 }
-func (m *MsgChangeReporterResponse) XXX_Size() int {
+func (m *MsgSelectReporterResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgChangeReporterResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgChangeReporterResponse.DiscardUnknown(m)
+func (m *MsgSelectReporterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSelectReporterResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgChangeReporterResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgSelectReporterResponse proto.InternalMessageInfo
+
+// MsgSwitchReporter defines the Msg/SwitchReporter request type.
+type MsgSwitchReporter struct {
+	// selector_address is the address of the selector.
+	SelectorAddress string `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
+	// reporter_address is the address of the reporter to switch.
+	ReporterAddress string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (m *MsgSwitchReporter) Reset()         { *m = MsgSwitchReporter{} }
+func (m *MsgSwitchReporter) String() string { return proto.CompactTextString(m) }
+func (*MsgSwitchReporter) ProtoMessage()    {}
+func (*MsgSwitchReporter) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{6}
+}
+func (m *MsgSwitchReporter) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSwitchReporter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSwitchReporter.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSwitchReporter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwitchReporter.Merge(m, src)
+}
+func (m *MsgSwitchReporter) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSwitchReporter) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwitchReporter.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSwitchReporter proto.InternalMessageInfo
+
+func (m *MsgSwitchReporter) GetSelectorAddress() string {
+	if m != nil {
+		return m.SelectorAddress
+	}
+	return ""
+}
+
+func (m *MsgSwitchReporter) GetReporterAddress() string {
+	if m != nil {
+		return m.ReporterAddress
+	}
+	return ""
+}
+
+// MsgSwitchReporterResponse defines the Msg/SwitchReporter response type.
+type MsgSwitchReporterResponse struct {
+}
+
+func (m *MsgSwitchReporterResponse) Reset()         { *m = MsgSwitchReporterResponse{} }
+func (m *MsgSwitchReporterResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSwitchReporterResponse) ProtoMessage()    {}
+func (*MsgSwitchReporterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{7}
+}
+func (m *MsgSwitchReporterResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSwitchReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSwitchReporterResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSwitchReporterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwitchReporterResponse.Merge(m, src)
+}
+func (m *MsgSwitchReporterResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSwitchReporterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwitchReporterResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSwitchReporterResponse proto.InternalMessageInfo
+
+// MsgRemoveSelector defines the Msg/RemoveSelector request type.
+type MsgRemoveSelector struct {
+	// any_address is the caller which can be any address.
+	AnyAddress string `protobuf:"bytes,1,opt,name=any_address,json=anyAddress,proto3" json:"any_address,omitempty"`
+	// selector_address is the address of the selector.
+	SelectorAddress string `protobuf:"bytes,2,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
+}
+
+func (m *MsgRemoveSelector) Reset()         { *m = MsgRemoveSelector{} }
+func (m *MsgRemoveSelector) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveSelector) ProtoMessage()    {}
+func (*MsgRemoveSelector) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{8}
+}
+func (m *MsgRemoveSelector) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveSelector) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveSelector.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveSelector) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveSelector.Merge(m, src)
+}
+func (m *MsgRemoveSelector) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveSelector) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveSelector.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveSelector proto.InternalMessageInfo
+
+func (m *MsgRemoveSelector) GetAnyAddress() string {
+	if m != nil {
+		return m.AnyAddress
+	}
+	return ""
+}
+
+func (m *MsgRemoveSelector) GetSelectorAddress() string {
+	if m != nil {
+		return m.SelectorAddress
+	}
+	return ""
+}
+
+// MsgRemoveSelectorResponse defines the Msg/RemoveSelector response type.
+type MsgRemoveSelectorResponse struct {
+}
+
+func (m *MsgRemoveSelectorResponse) Reset()         { *m = MsgRemoveSelectorResponse{} }
+func (m *MsgRemoveSelectorResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveSelectorResponse) ProtoMessage()    {}
+func (*MsgRemoveSelectorResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_67b904a7aa978eb1, []int{9}
+}
+func (m *MsgRemoveSelectorResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveSelectorResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveSelectorResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveSelectorResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveSelectorResponse.Merge(m, src)
+}
+func (m *MsgRemoveSelectorResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveSelectorResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveSelectorResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveSelectorResponse proto.InternalMessageInfo
 
 // MsgUnjailReporter defines the Msg/UnjailReporter request type.
 type MsgUnjailReporter struct {
@@ -311,7 +496,7 @@ func (m *MsgUnjailReporter) Reset()         { *m = MsgUnjailReporter{} }
 func (m *MsgUnjailReporter) String() string { return proto.CompactTextString(m) }
 func (*MsgUnjailReporter) ProtoMessage()    {}
 func (*MsgUnjailReporter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{6}
+	return fileDescriptor_67b904a7aa978eb1, []int{10}
 }
 func (m *MsgUnjailReporter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -348,7 +533,7 @@ func (m *MsgUnjailReporterResponse) Reset()         { *m = MsgUnjailReporterResp
 func (m *MsgUnjailReporterResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUnjailReporterResponse) ProtoMessage()    {}
 func (*MsgUnjailReporterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{7}
+	return fileDescriptor_67b904a7aa978eb1, []int{11}
 }
 func (m *MsgUnjailReporterResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -379,7 +564,7 @@ var xxx_messageInfo_MsgUnjailReporterResponse proto.InternalMessageInfo
 
 // MsgWithdrawTip defines the Msg/WithdrawTip request type.
 type MsgWithdrawTip struct {
-	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	SelectorAddress  string `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
 	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
 }
 
@@ -387,7 +572,7 @@ func (m *MsgWithdrawTip) Reset()         { *m = MsgWithdrawTip{} }
 func (m *MsgWithdrawTip) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawTip) ProtoMessage()    {}
 func (*MsgWithdrawTip) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{8}
+	return fileDescriptor_67b904a7aa978eb1, []int{12}
 }
 func (m *MsgWithdrawTip) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -416,9 +601,9 @@ func (m *MsgWithdrawTip) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawTip proto.InternalMessageInfo
 
-func (m *MsgWithdrawTip) GetDelegatorAddress() string {
+func (m *MsgWithdrawTip) GetSelectorAddress() string {
 	if m != nil {
-		return m.DelegatorAddress
+		return m.SelectorAddress
 	}
 	return ""
 }
@@ -438,7 +623,7 @@ func (m *MsgWithdrawTipResponse) Reset()         { *m = MsgWithdrawTipResponse{}
 func (m *MsgWithdrawTipResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawTipResponse) ProtoMessage()    {}
 func (*MsgWithdrawTipResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_67b904a7aa978eb1, []int{9}
+	return fileDescriptor_67b904a7aa978eb1, []int{13}
 }
 func (m *MsgWithdrawTipResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -472,8 +657,12 @@ func init() {
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "layer.reporter.MsgUpdateParamsResponse")
 	proto.RegisterType((*MsgCreateReporter)(nil), "layer.reporter.MsgCreateReporter")
 	proto.RegisterType((*MsgCreateReporterResponse)(nil), "layer.reporter.MsgCreateReporterResponse")
-	proto.RegisterType((*MsgChangeReporter)(nil), "layer.reporter.MsgChangeReporter")
-	proto.RegisterType((*MsgChangeReporterResponse)(nil), "layer.reporter.MsgChangeReporterResponse")
+	proto.RegisterType((*MsgSelectReporter)(nil), "layer.reporter.MsgSelectReporter")
+	proto.RegisterType((*MsgSelectReporterResponse)(nil), "layer.reporter.MsgSelectReporterResponse")
+	proto.RegisterType((*MsgSwitchReporter)(nil), "layer.reporter.MsgSwitchReporter")
+	proto.RegisterType((*MsgSwitchReporterResponse)(nil), "layer.reporter.MsgSwitchReporterResponse")
+	proto.RegisterType((*MsgRemoveSelector)(nil), "layer.reporter.MsgRemoveSelector")
+	proto.RegisterType((*MsgRemoveSelectorResponse)(nil), "layer.reporter.MsgRemoveSelectorResponse")
 	proto.RegisterType((*MsgUnjailReporter)(nil), "layer.reporter.MsgUnjailReporter")
 	proto.RegisterType((*MsgUnjailReporterResponse)(nil), "layer.reporter.MsgUnjailReporterResponse")
 	proto.RegisterType((*MsgWithdrawTip)(nil), "layer.reporter.MsgWithdrawTip")
@@ -483,49 +672,60 @@ func init() {
 func init() { proto.RegisterFile("layer/reporter/tx.proto", fileDescriptor_67b904a7aa978eb1) }
 
 var fileDescriptor_67b904a7aa978eb1 = []byte{
-	// 668 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0x41, 0x4f, 0x13, 0x41,
-	0x14, 0xee, 0x42, 0x24, 0x61, 0x30, 0x40, 0x37, 0x08, 0xa5, 0x84, 0x2d, 0x34, 0x46, 0x01, 0xc3,
-	0x6e, 0x80, 0xc4, 0x44, 0x6e, 0xb6, 0xe1, 0x58, 0x63, 0xaa, 0xa8, 0xf1, 0x20, 0x99, 0x76, 0x27,
-	0xd3, 0x91, 0xdd, 0x9d, 0xcd, 0xcc, 0x50, 0xe0, 0x66, 0x3c, 0x19, 0x4f, 0x5e, 0xbd, 0x71, 0xf4,
-	0xc8, 0x81, 0xc4, 0x78, 0xf2, 0xca, 0x91, 0x70, 0xf2, 0xa2, 0x31, 0x70, 0xc0, 0x9f, 0x61, 0x76,
-	0x77, 0x66, 0xcb, 0x4e, 0x17, 0x88, 0x89, 0x97, 0xb6, 0xf3, 0xde, 0xf7, 0xbe, 0xf9, 0xbe, 0x37,
-	0xf3, 0xa6, 0x60, 0xca, 0x83, 0xfb, 0x88, 0x39, 0x0c, 0x85, 0x94, 0x09, 0xc4, 0x1c, 0xb1, 0x67,
-	0x87, 0x8c, 0x0a, 0x6a, 0x8e, 0xc6, 0x09, 0x5b, 0x25, 0xca, 0x45, 0xe8, 0x93, 0x80, 0x3a, 0xf1,
-	0x67, 0x02, 0x29, 0x5b, 0x6d, 0xca, 0x7d, 0xca, 0x9d, 0x16, 0xe4, 0xc8, 0xe9, 0xae, 0xb4, 0x90,
-	0x80, 0x2b, 0x4e, 0x9b, 0x92, 0x40, 0xe6, 0xa7, 0x64, 0xde, 0xe7, 0xd8, 0xe9, 0xae, 0x44, 0x5f,
-	0x32, 0x71, 0x57, 0x26, 0xb8, 0x80, 0xdb, 0x24, 0xc0, 0x69, 0xad, 0x5c, 0x4b, 0xd4, 0x74, 0x82,
-	0xda, 0x8a, 0x57, 0x4e, 0xb2, 0x90, 0xa9, 0x09, 0x4c, 0x31, 0x4d, 0xe2, 0xd1, 0x2f, 0x19, 0x9d,
-	0xd1, 0xbc, 0x84, 0x90, 0x41, 0x5f, 0x95, 0xcc, 0xeb, 0x46, 0xe9, 0x36, 0x0a, 0xb6, 0x28, 0x23,
-	0x58, 0xe9, 0xad, 0x7e, 0x33, 0xc0, 0x58, 0x83, 0xe3, 0xcd, 0xd0, 0x85, 0x02, 0x3d, 0x8d, 0x8b,
-	0xcd, 0x87, 0x60, 0x18, 0xee, 0x88, 0x0e, 0x65, 0x44, 0xec, 0x97, 0x8c, 0x39, 0x63, 0x61, 0xb8,
-	0x56, 0x3a, 0x3d, 0x5a, 0x9e, 0x90, 0x72, 0x1e, 0xbb, 0x2e, 0x43, 0x9c, 0x3f, 0x13, 0x8c, 0x04,
-	0xb8, 0xd9, 0x83, 0x9a, 0x8f, 0xc0, 0x50, 0xb2, 0x7d, 0x69, 0x60, 0xce, 0x58, 0x18, 0x59, 0x9d,
-	0xb4, 0xb3, 0xfd, 0xb4, 0x13, 0xfe, 0xda, 0xf0, 0xf1, 0xaf, 0x4a, 0xe1, 0xcb, 0xc5, 0xe1, 0x92,
-	0xd1, 0x94, 0x05, 0xeb, 0x6b, 0xef, 0x2f, 0x0e, 0x97, 0x7a, 0x54, 0x1f, 0x2f, 0x0e, 0x97, 0xe6,
-	0x12, 0xf1, 0x7b, 0x3d, 0xf9, 0x9a, 0xce, 0xea, 0x34, 0x98, 0xd2, 0x42, 0x4d, 0xc4, 0x43, 0x1a,
-	0x70, 0x54, 0xfd, 0x6c, 0x80, 0x62, 0x83, 0xe3, 0x3a, 0x43, 0x50, 0xa0, 0xa6, 0x24, 0x30, 0x17,
-	0xc1, 0xb8, 0x22, 0xdb, 0x82, 0x89, 0x8b, 0xc4, 0x5f, 0x73, 0x4c, 0xc5, 0xa5, 0x39, 0xb3, 0x06,
-	0x40, 0x9b, 0xfa, 0x3e, 0xe1, 0x9c, 0xd0, 0x40, 0xfa, 0xa9, 0xda, 0xb2, 0x03, 0xea, 0xcc, 0xe4,
-	0x19, 0xda, 0xf5, 0x14, 0xd9, 0xbc, 0x54, 0xb5, 0x7e, 0x27, 0x32, 0xd5, 0xb7, 0x63, 0x75, 0x06,
-	0x4c, 0xf7, 0x49, 0x4b, 0x85, 0x7f, 0x95, 0xc2, 0x3b, 0x30, 0xc0, 0x3d, 0xe1, 0x1b, 0xa0, 0xe8,
-	0x22, 0x0f, 0x61, 0x28, 0xa8, 0xa6, 0xfc, 0x9a, 0x93, 0x19, 0x4f, 0x4b, 0x94, 0xa9, 0x7a, 0x8e,
-	0xff, 0x81, 0x1b, 0x58, 0xf4, 0xce, 0xac, 0x4f, 0x46, 0xae, 0xfa, 0xe5, 0x28, 0x5b, 0x19, 0xe1,
-	0xa9, 0xad, 0xdd, 0xd8, 0xd5, 0x66, 0xf0, 0x16, 0x12, 0x2f, 0x75, 0x55, 0xbf, 0xea, 0x38, 0xfe,
-	0x45, 0xce, 0xec, 0x87, 0x83, 0x4a, 0xe1, 0xcf, 0x41, 0xa5, 0x70, 0x5d, 0xb3, 0xb3, 0x1b, 0xa7,
-	0xaa, 0xbe, 0x1b, 0x60, 0xb4, 0xc1, 0xf1, 0x4b, 0x22, 0x3a, 0x2e, 0x83, 0xbb, 0xcf, 0x49, 0xf8,
-	0xbf, 0x3a, 0xfd, 0x04, 0x14, 0xbb, 0xd0, 0x23, 0x6e, 0x86, 0x26, 0x69, 0xf5, 0xfc, 0xe9, 0xd1,
-	0xf2, 0xac, 0xa4, 0x79, 0xa1, 0x30, 0x1a, 0x5f, 0x57, 0x8b, 0x5f, 0xd9, 0xf4, 0x12, 0x98, 0xcc,
-	0x1a, 0x50, 0xde, 0x56, 0x7f, 0x0e, 0x82, 0xc1, 0x06, 0xc7, 0xe6, 0x2b, 0x70, 0x3b, 0x33, 0xdc,
-	0x15, 0x7d, 0x28, 0xb5, 0x11, 0x2a, 0xdf, 0xbf, 0x01, 0xa0, 0x76, 0x30, 0xdf, 0x80, 0x51, 0x6d,
-	0xbe, 0xe6, 0x73, 0x4a, 0xb3, 0x90, 0xf2, 0xe2, 0x8d, 0x90, 0x0c, 0x7f, 0x76, 0x0c, 0x72, 0xf9,
-	0x33, 0x90, 0x7c, 0xfe, 0xdc, 0x3b, 0x19, 0xf1, 0x6b, 0x17, 0x32, 0x8f, 0x3f, 0x0b, 0xc9, 0xe5,
-	0xcf, 0xbf, 0x5d, 0xe6, 0x26, 0x18, 0xb9, 0x7c, 0xb3, 0xac, 0x9c, 0xca, 0x4b, 0xf9, 0xf2, 0xbd,
-	0xeb, 0xf3, 0x8a, 0xb6, 0x7c, 0xeb, 0x5d, 0xf4, 0x72, 0xd6, 0x36, 0x8e, 0xcf, 0x2c, 0xe3, 0xe4,
-	0xcc, 0x32, 0x7e, 0x9f, 0x59, 0xc6, 0xa7, 0x73, 0xab, 0x70, 0x72, 0x6e, 0x15, 0x7e, 0x9c, 0x5b,
-	0x85, 0xd7, 0x0f, 0x30, 0x11, 0x9d, 0x9d, 0x96, 0xdd, 0xa6, 0xbe, 0x23, 0x90, 0xe7, 0x51, 0xb6,
-	0x4c, 0xa8, 0xd3, 0xf7, 0x9a, 0x8a, 0xfd, 0x10, 0xf1, 0xd6, 0x50, 0xfc, 0x37, 0xb0, 0xf6, 0x37,
-	0x00, 0x00, 0xff, 0xff, 0x37, 0x8c, 0x21, 0x67, 0x14, 0x07, 0x00, 0x00,
+	// 834 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xcf, 0x4f, 0xdb, 0x48,
+	0x14, 0x8e, 0x83, 0x40, 0xca, 0xb0, 0xca, 0x0f, 0x2f, 0x3f, 0x42, 0x10, 0x0e, 0x44, 0xab, 0x5d,
+	0x7e, 0x28, 0xb1, 0x00, 0x09, 0x09, 0x6e, 0x1b, 0xd8, 0x03, 0xd2, 0x66, 0xb5, 0x32, 0xb0, 0xbb,
+	0xda, 0x95, 0x36, 0x9a, 0x38, 0x23, 0x67, 0x4a, 0xec, 0x49, 0x67, 0x86, 0x40, 0x6e, 0x55, 0x4f,
+	0x55, 0x4f, 0x95, 0x7a, 0xae, 0xc4, 0xa5, 0x52, 0x8f, 0x1c, 0x72, 0xa9, 0xd4, 0x3f, 0x80, 0x23,
+	0xe2, 0x54, 0xf5, 0x80, 0x2a, 0x38, 0xd0, 0x3f, 0xa3, 0xb2, 0x3d, 0x4e, 0x62, 0x67, 0x0a, 0x45,
+	0xea, 0xa5, 0x97, 0x24, 0x9e, 0xf7, 0xde, 0xf7, 0xbe, 0xef, 0xb3, 0xdf, 0x8b, 0xc1, 0x74, 0x13,
+	0x76, 0x10, 0xd5, 0x29, 0x6a, 0x11, 0xca, 0x11, 0xd5, 0xf9, 0x49, 0xa9, 0x45, 0x09, 0x27, 0x6a,
+	0xd2, 0x0b, 0x94, 0x82, 0x40, 0x2e, 0x03, 0x6d, 0xec, 0x10, 0xdd, 0xfb, 0xf4, 0x53, 0x72, 0x9a,
+	0x49, 0x98, 0x4d, 0x98, 0x5e, 0x83, 0x0c, 0xe9, 0xed, 0xd5, 0x1a, 0xe2, 0x70, 0x55, 0x37, 0x09,
+	0x76, 0x44, 0x7c, 0x5a, 0xc4, 0x6d, 0x66, 0xe9, 0xed, 0x55, 0xf7, 0x4b, 0x04, 0x7e, 0x12, 0x01,
+	0xc6, 0xe1, 0x21, 0x76, 0xac, 0x5e, 0xad, 0xb8, 0x16, 0x59, 0x33, 0x7e, 0x56, 0xd5, 0xbb, 0xd2,
+	0xfd, 0x0b, 0x11, 0x9a, 0xb0, 0x88, 0x45, 0xfc, 0x73, 0xf7, 0x97, 0x38, 0x9d, 0x8d, 0x68, 0x69,
+	0x41, 0x0a, 0xed, 0xa0, 0x64, 0x21, 0x2a, 0x94, 0x1c, 0x22, 0xa7, 0x4a, 0x28, 0xb6, 0x02, 0xbe,
+	0x85, 0xb7, 0x0a, 0x48, 0x55, 0x98, 0x75, 0xd0, 0xaa, 0x43, 0x8e, 0xfe, 0xf4, 0x8a, 0xd5, 0x0d,
+	0x90, 0x80, 0x47, 0xbc, 0x41, 0x28, 0xe6, 0x9d, 0xac, 0x32, 0xaf, 0x2c, 0x26, 0xca, 0xd9, 0xcb,
+	0x6e, 0x71, 0x42, 0xd0, 0xf9, 0xb5, 0x5e, 0xa7, 0x88, 0xb1, 0x3d, 0x4e, 0xb1, 0x63, 0x19, 0xfd,
+	0x54, 0x75, 0x13, 0x8c, 0xf9, 0xed, 0xb3, 0xf1, 0x79, 0x65, 0x71, 0x7c, 0x6d, 0xaa, 0x14, 0xf6,
+	0xb3, 0xe4, 0xe3, 0x97, 0x13, 0xe7, 0x57, 0xf9, 0xd8, 0x9b, 0xdb, 0xb3, 0x65, 0xc5, 0x10, 0x05,
+	0x5b, 0xeb, 0x4f, 0x6f, 0xcf, 0x96, 0xfb, 0x50, 0xcf, 0x6f, 0xcf, 0x96, 0xe7, 0x7d, 0xf2, 0x27,
+	0x7d, 0xfa, 0x11, 0x9e, 0x85, 0x19, 0x30, 0x1d, 0x39, 0x32, 0x10, 0x6b, 0x11, 0x87, 0xa1, 0xc2,
+	0xcb, 0x38, 0xc8, 0x54, 0x98, 0xb5, 0x4d, 0x11, 0xe4, 0xc8, 0x10, 0x00, 0xea, 0x12, 0x48, 0x07,
+	0x60, 0x55, 0xe8, 0xab, 0xf0, 0xf5, 0x19, 0xa9, 0xe0, 0x5c, 0x88, 0x53, 0xab, 0x20, 0x65, 0x12,
+	0xdb, 0xc6, 0x8c, 0x61, 0xe2, 0x54, 0x29, 0xe4, 0xc8, 0x13, 0x95, 0x28, 0x6f, 0xb8, 0xe4, 0x3f,
+	0x5c, 0xe5, 0x67, 0x7d, 0x37, 0x58, 0xfd, 0xb0, 0x84, 0x89, 0x6e, 0x43, 0xde, 0x28, 0xfd, 0x8e,
+	0x2c, 0x68, 0x76, 0x76, 0x90, 0x79, 0xd9, 0x2d, 0x02, 0x61, 0xd6, 0x0e, 0x32, 0x7d, 0xa5, 0xc9,
+	0x3e, 0x9c, 0x01, 0x39, 0x52, 0xff, 0x03, 0x3f, 0xda, 0xd8, 0xa9, 0x7a, 0xb7, 0x84, 0x55, 0x29,
+	0x7a, 0x7c, 0x84, 0x29, 0xaa, 0x67, 0x47, 0xbc, 0x26, 0x2b, 0xa2, 0xc9, 0xe4, 0x70, 0x93, 0x5d,
+	0x87, 0x0f, 0xc0, 0xef, 0x3a, 0xdc, 0xc8, 0xd8, 0xd8, 0xd9, 0xf7, 0x60, 0x0c, 0x81, 0xb2, 0x35,
+	0xe9, 0xda, 0x39, 0xa4, 0xb5, 0x30, 0x0b, 0x66, 0x86, 0x4c, 0xe9, 0x59, 0xd6, 0x55, 0x3c, 0xcb,
+	0xf6, 0x50, 0x13, 0x99, 0xbc, 0x67, 0xd9, 0x36, 0x48, 0x33, 0xef, 0x84, 0x44, 0x2c, 0xbb, 0xe3,
+	0x91, 0x48, 0x05, 0x15, 0x81, 0x99, 0xdb, 0x12, 0xdf, 0xe3, 0xf7, 0x81, 0x44, 0xee, 0x88, 0xd0,
+	0x14, 0x25, 0x23, 0x34, 0x85, 0x59, 0x0f, 0x69, 0x3a, 0xc6, 0xdc, 0x6c, 0x7c, 0x77, 0x9a, 0x42,
+	0xac, 0x7b, 0x9a, 0x5e, 0xfb, 0x9a, 0x0c, 0x64, 0x93, 0x36, 0xda, 0x13, 0xa5, 0xea, 0x26, 0x18,
+	0x87, 0x4e, 0xe7, 0xab, 0xe5, 0x00, 0xe8, 0x74, 0x06, 0x94, 0x0c, 0xd9, 0x11, 0x7f, 0xa0, 0x1d,
+	0x5b, 0x69, 0x57, 0xc9, 0x20, 0x05, 0x21, 0x22, 0x4c, 0xb3, 0x27, 0xe2, 0xd8, 0xd3, 0x70, 0xe0,
+	0x3c, 0x82, 0xb8, 0x39, 0x78, 0x5f, 0xe4, 0xe3, 0xf9, 0x10, 0x4b, 0xe7, 0x9e, 0x9d, 0xe6, 0x63,
+	0x9f, 0x4e, 0xf3, 0xb1, 0xbb, 0x46, 0x20, 0xdc, 0xb8, 0xc7, 0xea, 0x9d, 0x02, 0x92, 0x15, 0x66,
+	0xfd, 0x8d, 0x79, 0xa3, 0x4e, 0xe1, 0xf1, 0x3e, 0x6e, 0x7d, 0x9b, 0x67, 0xe5, 0x0f, 0x90, 0x69,
+	0xc3, 0x26, 0xae, 0xc3, 0x61, 0x8b, 0x17, 0x2e, 0xbb, 0xc5, 0x39, 0x81, 0xf2, 0x57, 0x90, 0x13,
+	0x86, 0x4b, 0xb7, 0x23, 0xe7, 0x5f, 0x7a, 0x6c, 0xb2, 0x60, 0x2a, 0xcc, 0x3e, 0x10, 0xb6, 0xf6,
+	0x6a, 0x14, 0x8c, 0x54, 0x98, 0xa5, 0xfe, 0x03, 0x7e, 0x08, 0x6d, 0xfa, 0x7c, 0x74, 0x43, 0x47,
+	0xf6, 0x69, 0xee, 0x97, 0x7b, 0x12, 0x82, 0x0e, 0xea, 0xff, 0x20, 0x19, 0x59, 0xb6, 0x0b, 0x92,
+	0xd2, 0x70, 0x4a, 0x6e, 0xe9, 0xde, 0x94, 0x41, 0xfc, 0xc8, 0x66, 0x92, 0xe1, 0x87, 0x53, 0xa4,
+	0xf8, 0xf2, 0x4d, 0xe1, 0xe1, 0x87, 0xb7, 0x84, 0x14, 0x3f, 0x94, 0x22, 0xc7, 0x97, 0x4e, 0xad,
+	0x8b, 0x1f, 0x99, 0x58, 0x19, 0x7e, 0x38, 0x45, 0x8a, 0x2f, 0x1f, 0x28, 0x17, 0x3f, 0x32, 0x4d,
+	0x32, 0xfc, 0x70, 0x8a, 0x14, 0x5f, 0x3e, 0x1a, 0xea, 0x01, 0x18, 0x1f, 0x1c, 0x0b, 0x4d, 0x52,
+	0x39, 0x10, 0xcf, 0xfd, 0x7c, 0x77, 0x3c, 0x80, 0xcd, 0x8d, 0x3e, 0x71, 0xff, 0x1c, 0xcb, 0xbf,
+	0x9d, 0x5f, 0x6b, 0xca, 0xc5, 0xb5, 0xa6, 0x7c, 0xbc, 0xd6, 0x94, 0x17, 0x37, 0x5a, 0xec, 0xe2,
+	0x46, 0x8b, 0xbd, 0xbf, 0xd1, 0x62, 0xff, 0xae, 0x58, 0x98, 0x37, 0x8e, 0x6a, 0x25, 0x93, 0xd8,
+	0x3a, 0x47, 0xcd, 0x26, 0xa1, 0x45, 0x4c, 0xf4, 0xa1, 0x57, 0x03, 0xde, 0x69, 0x21, 0x56, 0x1b,
+	0xf3, 0xde, 0x69, 0xd6, 0x3f, 0x07, 0x00, 0x00, 0xff, 0xff, 0x20, 0x9a, 0x3e, 0x13, 0xe1, 0x09,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -545,8 +745,13 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(ctx context.Context, in *MsgCreateReporter, opts ...grpc.CallOption) (*MsgCreateReporterResponse, error)
-	// ChangeReporter defines a (delegator) operation for changing a reporter.
-	ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error)
+	// SelectReporter defines a (selector) operation for choosing a reporter.
+	SelectReporter(ctx context.Context, in *MsgSelectReporter, opts ...grpc.CallOption) (*MsgSelectReporterResponse, error)
+	// SwitchReporter defines a (selector) operation for switching a reporter.
+	SwitchReporter(ctx context.Context, in *MsgSwitchReporter, opts ...grpc.CallOption) (*MsgSwitchReporterResponse, error)
+	// RemoveSelector defines an operation for removing a selector that no longer meets
+	// the reporter's minimum requirements and the reporter is capped.
+	RemoveSelector(ctx context.Context, in *MsgRemoveSelector, opts ...grpc.CallOption) (*MsgRemoveSelectorResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -579,9 +784,27 @@ func (c *msgClient) CreateReporter(ctx context.Context, in *MsgCreateReporter, o
 	return out, nil
 }
 
-func (c *msgClient) ChangeReporter(ctx context.Context, in *MsgChangeReporter, opts ...grpc.CallOption) (*MsgChangeReporterResponse, error) {
-	out := new(MsgChangeReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/ChangeReporter", in, out, opts...)
+func (c *msgClient) SelectReporter(ctx context.Context, in *MsgSelectReporter, opts ...grpc.CallOption) (*MsgSelectReporterResponse, error) {
+	out := new(MsgSelectReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/SelectReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SwitchReporter(ctx context.Context, in *MsgSwitchReporter, opts ...grpc.CallOption) (*MsgSwitchReporterResponse, error) {
+	out := new(MsgSwitchReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/SwitchReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RemoveSelector(ctx context.Context, in *MsgRemoveSelector, opts ...grpc.CallOption) (*MsgRemoveSelectorResponse, error) {
+	out := new(MsgRemoveSelectorResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/RemoveSelector", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -613,8 +836,13 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// CreateReporter defines a (reporter) operation for creating a new reporter.
 	CreateReporter(context.Context, *MsgCreateReporter) (*MsgCreateReporterResponse, error)
-	// ChangeReporter defines a (delegator) operation for changing a reporter.
-	ChangeReporter(context.Context, *MsgChangeReporter) (*MsgChangeReporterResponse, error)
+	// SelectReporter defines a (selector) operation for choosing a reporter.
+	SelectReporter(context.Context, *MsgSelectReporter) (*MsgSelectReporterResponse, error)
+	// SwitchReporter defines a (selector) operation for switching a reporter.
+	SwitchReporter(context.Context, *MsgSwitchReporter) (*MsgSwitchReporterResponse, error)
+	// RemoveSelector defines an operation for removing a selector that no longer meets
+	// the reporter's minimum requirements and the reporter is capped.
+	RemoveSelector(context.Context, *MsgRemoveSelector) (*MsgRemoveSelectorResponse, error)
 	// UnjailReporter defines a method to unjail a jailed reporter.
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
@@ -631,8 +859,14 @@ func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateP
 func (*UnimplementedMsgServer) CreateReporter(ctx context.Context, req *MsgCreateReporter) (*MsgCreateReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateReporter not implemented")
 }
-func (*UnimplementedMsgServer) ChangeReporter(ctx context.Context, req *MsgChangeReporter) (*MsgChangeReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ChangeReporter not implemented")
+func (*UnimplementedMsgServer) SelectReporter(ctx context.Context, req *MsgSelectReporter) (*MsgSelectReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectReporter not implemented")
+}
+func (*UnimplementedMsgServer) SwitchReporter(ctx context.Context, req *MsgSwitchReporter) (*MsgSwitchReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwitchReporter not implemented")
+}
+func (*UnimplementedMsgServer) RemoveSelector(ctx context.Context, req *MsgRemoveSelector) (*MsgRemoveSelectorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveSelector not implemented")
 }
 func (*UnimplementedMsgServer) UnjailReporter(ctx context.Context, req *MsgUnjailReporter) (*MsgUnjailReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnjailReporter not implemented")
@@ -681,20 +915,56 @@ func _Msg_CreateReporter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ChangeReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgChangeReporter)
+func _Msg_SelectReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSelectReporter)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ChangeReporter(ctx, in)
+		return srv.(MsgServer).SelectReporter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.reporter.Msg/ChangeReporter",
+		FullMethod: "/layer.reporter.Msg/SelectReporter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ChangeReporter(ctx, req.(*MsgChangeReporter))
+		return srv.(MsgServer).SelectReporter(ctx, req.(*MsgSelectReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SwitchReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwitchReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SwitchReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/SwitchReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SwitchReporter(ctx, req.(*MsgSwitchReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RemoveSelector_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveSelector)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveSelector(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/RemoveSelector",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveSelector(ctx, req.(*MsgRemoveSelector))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -748,8 +1018,16 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateReporter_Handler,
 		},
 		{
-			MethodName: "ChangeReporter",
-			Handler:    _Msg_ChangeReporter_Handler,
+			MethodName: "SelectReporter",
+			Handler:    _Msg_SelectReporter_Handler,
+		},
+		{
+			MethodName: "SwitchReporter",
+			Handler:    _Msg_SwitchReporter_Handler,
+		},
+		{
+			MethodName: "RemoveSelector",
+			Handler:    _Msg_RemoveSelector_Handler,
 		},
 		{
 			MethodName: "UnjailReporter",
@@ -847,18 +1125,26 @@ func (m *MsgCreateReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Commission != nil {
-		{
-			size, err := m.Commission.MarshalToSizedBuffer(dAtA[:i])
-			if err != nil {
-				return 0, err
-			}
-			i -= size
-			i = encodeVarintTx(dAtA, i, uint64(size))
+	{
+		size := m.MinTokensRequired.Size()
+		i -= size
+		if _, err := m.MinTokensRequired.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
 		}
-		i--
-		dAtA[i] = 0x12
+		i = encodeVarintTx(dAtA, i, uint64(size))
 	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.CommissionRate.Size()
+		i -= size
+		if _, err := m.CommissionRate.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
 	if len(m.ReporterAddress) > 0 {
 		i -= len(m.ReporterAddress)
 		copy(dAtA[i:], m.ReporterAddress)
@@ -892,7 +1178,7 @@ func (m *MsgCreateReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgChangeReporter) Marshal() (dAtA []byte, err error) {
+func (m *MsgSelectReporter) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -902,12 +1188,12 @@ func (m *MsgChangeReporter) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgChangeReporter) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSelectReporter) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgChangeReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSelectReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -919,17 +1205,17 @@ func (m *MsgChangeReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.DelegatorAddress) > 0 {
-		i -= len(m.DelegatorAddress)
-		copy(dAtA[i:], m.DelegatorAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.DelegatorAddress)))
+	if len(m.SelectorAddress) > 0 {
+		i -= len(m.SelectorAddress)
+		copy(dAtA[i:], m.SelectorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SelectorAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgChangeReporterResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgSelectReporterResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -939,12 +1225,132 @@ func (m *MsgChangeReporterResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgChangeReporterResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSelectReporterResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgChangeReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSelectReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSwitchReporter) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSwitchReporter) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSwitchReporter) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ReporterAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.SelectorAddress) > 0 {
+		i -= len(m.SelectorAddress)
+		copy(dAtA[i:], m.SelectorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SelectorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSwitchReporterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSwitchReporterResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSwitchReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveSelector) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveSelector) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveSelector) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.SelectorAddress) > 0 {
+		i -= len(m.SelectorAddress)
+		copy(dAtA[i:], m.SelectorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SelectorAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.AnyAddress) > 0 {
+		i -= len(m.AnyAddress)
+		copy(dAtA[i:], m.AnyAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.AnyAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveSelectorResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveSelectorResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveSelectorResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1032,10 +1438,10 @@ func (m *MsgWithdrawTip) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.DelegatorAddress) > 0 {
-		i -= len(m.DelegatorAddress)
-		copy(dAtA[i:], m.DelegatorAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.DelegatorAddress)))
+	if len(m.SelectorAddress) > 0 {
+		i -= len(m.SelectorAddress)
+		copy(dAtA[i:], m.SelectorAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.SelectorAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -1110,10 +1516,10 @@ func (m *MsgCreateReporter) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	if m.Commission != nil {
-		l = m.Commission.Size()
-		n += 1 + l + sovTx(uint64(l))
-	}
+	l = m.CommissionRate.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = m.MinTokensRequired.Size()
+	n += 1 + l + sovTx(uint64(l))
 	return n
 }
 
@@ -1126,13 +1532,13 @@ func (m *MsgCreateReporterResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgChangeReporter) Size() (n int) {
+func (m *MsgSelectReporter) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.DelegatorAddress)
+	l = len(m.SelectorAddress)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1143,7 +1549,59 @@ func (m *MsgChangeReporter) Size() (n int) {
 	return n
 }
 
-func (m *MsgChangeReporterResponse) Size() (n int) {
+func (m *MsgSelectReporterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSwitchReporter) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.SelectorAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ReporterAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSwitchReporterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveSelector) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AnyAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.SelectorAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRemoveSelectorResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1180,7 +1638,7 @@ func (m *MsgWithdrawTip) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.DelegatorAddress)
+	l = len(m.SelectorAddress)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -1434,9 +1892,9 @@ func (m *MsgCreateReporter) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Commission", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CommissionRate", wireType)
 			}
-			var msglen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTx
@@ -1446,25 +1904,57 @@ func (m *MsgCreateReporter) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				msglen |= int(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if msglen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthTx
 			}
-			postIndex := iNdEx + msglen
+			postIndex := iNdEx + intStringLen
 			if postIndex < 0 {
 				return ErrInvalidLengthTx
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.Commission == nil {
-				m.Commission = &types.Commission{}
+			if err := m.CommissionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
-			if err := m.Commission.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinTokensRequired", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.MinTokensRequired.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1539,7 +2029,7 @@ func (m *MsgCreateReporterResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgChangeReporter) Unmarshal(dAtA []byte) error {
+func (m *MsgSelectReporter) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1562,15 +2052,15 @@ func (m *MsgChangeReporter) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgChangeReporter: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSelectReporter: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgChangeReporter: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSelectReporter: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1598,7 +2088,7 @@ func (m *MsgChangeReporter) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
+			m.SelectorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -1653,7 +2143,7 @@ func (m *MsgChangeReporter) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgChangeReporterResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgSelectReporterResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1676,10 +2166,338 @@ func (m *MsgChangeReporterResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgChangeReporterResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSelectReporterResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgChangeReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSelectReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSwitchReporter) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSwitchReporter: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSwitchReporter: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SelectorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSwitchReporterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSwitchReporterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSwitchReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveSelector) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveSelector: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveSelector: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AnyAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AnyAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SelectorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveSelectorResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveSelectorResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveSelectorResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -1866,7 +2684,7 @@ func (m *MsgWithdrawTip) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1894,7 +2712,7 @@ func (m *MsgWithdrawTip) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DelegatorAddress = string(dAtA[iNdEx:postIndex])
+			m.SelectorAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {

@@ -20,7 +20,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 		return err
 	}
 	// Calculate commission
-	commission := math.LegacyNewDecFromInt(reward).Mul(reporter.Commission.Rate)
+	commission := math.LegacyNewDecFromInt(reward).Mul(reporter.CommissionRate)
 
 	// Calculate net reward
 	netReward := math.LegacyNewDecFromInt(reward).Sub(commission)
@@ -31,12 +31,12 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	}
 
 	for _, del := range delAddrs.TokenOrigins {
-		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(reporter.TotalTokens))
+		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(delAddrs.Total))
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}
 		// get delegator's tips and add the new tip
-		oldTips, err := k.DelegatorTips.Get(ctx, del.DelegatorAddress)
+		oldTips, err := k.SelectorTips.Get(ctx, del.DelegatorAddress)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
 				oldTips = math.ZeroInt()
@@ -44,7 +44,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 				return err
 			}
 		}
-		err = k.DelegatorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare.TruncateInt()))
+		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare.TruncateInt()))
 		if err != nil {
 			return err
 		}

@@ -7,20 +7,20 @@ import (
 	"cosmossdk.io/collections/indexes"
 )
 
-type ReporterDelegatorsIndex struct {
-	Reporter *indexes.Multi[[]byte, []byte, types.Delegation]
+type ReporterSelectorsIndex struct {
+	Reporter *indexes.Multi[[]byte, []byte, types.Selection]
 }
 
-func (a ReporterDelegatorsIndex) IndexesList() []collections.Index[[]byte, types.Delegation] {
-	return []collections.Index[[]byte, types.Delegation]{a.Reporter}
+func (a ReporterSelectorsIndex) IndexesList() []collections.Index[[]byte, types.Selection] {
+	return []collections.Index[[]byte, types.Selection]{a.Reporter}
 }
 
-func NewDelegatorsIndex(sb *collections.SchemaBuilder) ReporterDelegatorsIndex {
-	return ReporterDelegatorsIndex{
+func NewSelectorsIndex(sb *collections.SchemaBuilder) ReporterSelectorsIndex {
+	return ReporterSelectorsIndex{
 		Reporter: indexes.NewMulti(
-			sb, types.ReporterDelegatorsIndexPrefix, "reporter_delegators_index",
+			sb, types.ReporterSelectorsIndexPrefix, "reporter_selectors_index",
 			collections.BytesKey, collections.BytesKey,
-			func(k []byte, del types.Delegation) ([]byte, error) {
+			func(k []byte, del types.Selection) ([]byte, error) {
 				return del.Reporter, nil
 			},
 		),

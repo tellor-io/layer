@@ -5,12 +5,10 @@ import (
 	gomath "math"
 	"time"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
@@ -132,13 +130,9 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 		PayFromBond:     false,
 	}
 
-	reporter := &reportertypes.OracleReporter{TotalTokens: math.NewInt(10000)}
 	// mock dependency modules
-	s.reporterKeeper.On("Reporter", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter)).Return(reporter, nil)
 	s.bankKeeper.On("HasBalance", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), disputeMsg.Fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), types.ModuleName, sdk.NewCoins(disputeMsg.Fee)).Return(nil)
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter), int64(1), int64(1), math.NewInt(10000), mock.Anything).Return(nil)
-	s.reporterKeeper.On("JailReporter", s.ctx, sdk.MustAccAddressFromBech32(report.Reporter), int64(0)).Return(nil)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
 

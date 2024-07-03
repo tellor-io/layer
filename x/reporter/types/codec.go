@@ -9,7 +9,9 @@ import (
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCreateReporter{},
-		&MsgChangeReporter{},
+		&MsgSelectReporter{},
+		&MsgSwitchReporter{},
+		&MsgRemoveSelector{},
 		&MsgUpdateParams{},
 		&MsgWithdrawTip{},
 	)

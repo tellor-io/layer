@@ -9,21 +9,22 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func TestMsgWithdrawTip_ValidateBasic(t *testing.T) {
+func TestMsgRemoveSelector_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgWithdrawTip
+		msg  MsgRemoveSelector
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgWithdrawTip{
+			msg: MsgRemoveSelector{
 				SelectorAddress: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgWithdrawTip{
+			msg: MsgRemoveSelector{
+				AnyAddress:      sample.AccAddress(),
 				SelectorAddress: sample.AccAddress(),
 			},
 		},
