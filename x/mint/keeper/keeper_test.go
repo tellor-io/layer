@@ -43,7 +43,6 @@ func (s *KeeperTestSuite) TestNewKeeper(t *testing.T) {
 	s.SetupTest()
 
 	s.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(authtypes.NewModuleAddress(types.ModuleName))
-	s.accountKeeper.On("GetModuleAddress", types.MintToTeam).Return(authtypes.NewModuleAddress(types.MintToTeam))
 	s.accountKeeper.On("GetModuleAddress", types.TimeBasedRewards).Return(authtypes.NewModuleAddress(types.TimeBasedRewards))
 
 	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
@@ -85,14 +84,6 @@ func (s *KeeperTestSuite) TestMintCoins(t *testing.T) {
 	coins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(100*1e6)))
 
 	err := s.mintKeeper.MintCoins(s.ctx, coins)
-	s.NoError(err)
-}
-
-func (s *KeeperTestSuite) TestSendCoinsToTeam(t *testing.T) {
-	s.SetupTest()
-	coins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(100*1e6)))
-
-	err := s.mintKeeper.SendCoinsToTeam(s.ctx, coins)
 	s.NoError(err)
 }
 

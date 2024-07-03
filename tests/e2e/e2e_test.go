@@ -31,15 +31,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (s *E2ETestSuite) TestNoInitialMint() {
-	require := s.Require()
-
-	mintToTeamAcc := s.Setup.Accountkeeper.GetModuleAddress(minttypes.MintToTeam)
-	require.NotNil(mintToTeamAcc)
-	balance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, mintToTeamAcc, s.Setup.Denom)
-	require.Equal(balance.Amount, sdk.NewCoin(s.Setup.Denom, math.NewInt(0)).Amount)
-}
-
 // func (s *E2ETestSuite) TestTransferAfterMint() {
 // 	require := s.Setup.Require()
 
@@ -732,9 +723,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// print tbr module account address
 	tbrModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(minttypes.TimeBasedRewards) // yes
 	fmt.Println("tbr module account: ", tbrModuleAccount.String())
-
-	teamAccount := s.Setup.Accountkeeper.GetModuleAddress(minttypes.MintToTeam) // yes
-	fmt.Println("team account: ", teamAccount.String())
 
 	disputeModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName) // yes
 	fmt.Println("dispute module account: ", disputeModuleAccount.String())

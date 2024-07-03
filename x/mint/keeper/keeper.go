@@ -31,10 +31,6 @@ func NewKeeper(
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the mint module account has not been set")
 	}
-	// Ensure the mintToTeam account has been set
-	if addr := accountKeeper.GetModuleAddress(types.MintToTeam); addr == nil {
-		panic("the mintToTeam account has not been set")
-	}
 	// Ensure the mintToOracle account has been set
 	if addr := accountKeeper.GetModuleAddress(types.TimeBasedRewards); addr == nil {
 		panic("the mintToOracle account has not been set")
@@ -77,11 +73,6 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 		return nil
 	}
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
-}
-
-func (k Keeper) SendCoinsToTeam(ctx sdk.Context, coins sdk.Coins) error {
-	k.Logger(ctx).Info("SendCoinsToTeam", "coins", coins.AmountOf("loya"))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, types.MintToTeam, coins)
 }
 
 func (k Keeper) SendInflationaryRewards(ctx sdk.Context, coins sdk.Coins) error {
