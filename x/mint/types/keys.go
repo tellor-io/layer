@@ -1,5 +1,7 @@
 package types
 
+import "cosmossdk.io/collections"
+
 const (
 	// ModuleName is the name of the mint module.
 	ModuleName = "mint"
@@ -13,10 +15,4 @@ const (
 	TimeBasedRewards = "time_based_rewards"
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
-
-func MinterKey() []byte {
-	return KeyPrefix("Minter")
-}
+var MinterKey = collections.NewPrefix(0)

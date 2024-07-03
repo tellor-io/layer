@@ -13,8 +13,8 @@ import (
 
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -151,13 +151,13 @@ func init() {
 type MintInputs struct {
 	depinject.In
 
-	KvStoreKey  *storetypes.KVStoreKey
-	MemStoreKey *storetypes.MemoryStoreKey
-	Cdc         codec.Codec
-	Config      *mintmodulev1.Module
+	Cdc    codec.Codec
+	Config *mintmodulev1.Module
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+
+	StoreService store.KVStoreService
 }
 
 type MintOutputs struct {
@@ -170,7 +170,7 @@ type MintOutputs struct {
 func ProvideModule(in MintInputs) MintOutputs {
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.KvStoreKey,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
 	)

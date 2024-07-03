@@ -273,7 +273,7 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(disputetypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Oraclekeeper, s.Reporterkeeper,
 	)
 	s.Mintkeeper = mintkeeper.NewKeeper(
-		appCodec, s.fetchStoreKey(minttypes.StoreKey), s.Accountkeeper, s.Bankkeeper,
+		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(minttypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper,
 	)
 	s.Stakingkeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(

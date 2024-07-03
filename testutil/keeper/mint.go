@@ -19,6 +19,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -40,7 +41,7 @@ func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Bank
 	accountKeeper.On("GetModuleAddress", mock.Anything).Return(add)
 	k := keeper.NewKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		accountKeeper,
 		bankKeeper,
 	)
