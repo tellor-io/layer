@@ -15,16 +15,17 @@ When starting layer, there will need to be an initial token supply in order for 
 
 The solution to this is to properly order and time the launch of the bridge contract/ layer as well as the switch of inflationary rewards.  
 The order expected
-    a) Launch bridge contract on Ethereum with initial validator set (public key of expected validator)
+    a) Launch bridge contract on Ethereum
     b) Transfer tokens of initial supply on layer to the bridge contract
     * note, not a deposit, but just tokens transferred to the contract.  All tokens just transferred to the bridge contract will be considered inflationary rewards on layer, while tokens deposited through the "deposit" function will be eligible for claiming on layer. 
-    c) Next, layer will launch with the initial validator set specified in (a) and token balance transferred in (b)
-    d) Layer mainnet will commence with no inflationary rewards.  Parties can still bridge to layer, but the rewars will still be on Ethereum. 
-    e) Once layer is deemed ready for users, "updateOracleAddress" will be run on Ethereum and inflationary rewards will be switched from the mainnet Ethereum oracle contract to the token bridge.  Now all newly minted tokens will be transferred to the bridge. 
-    f)  Once this happens, layer governance will pass a vote to start inflationary rewards on layer. 
+    c) Next, layer will launch with an initial validator and token balance transferred in (b)
+    d) The bridge smart contract is initialized with the initial layer validator set and block height
+    e) Layer mainnet will commence with no inflationary rewards.  Parties can still bridge to layer, but the rewars will still be on Ethereum. 
+    f) Once layer is deemed ready for users, "updateOracleAddress" will be run on Ethereum and inflationary rewards will be switched from the mainnet Ethereum oracle contract to the token bridge.  Now all newly minted tokens will be transferred to the bridge. 
+    g)  Once this happens, layer governance will pass a vote to start inflationary rewards on layer. 
         - Minted rewards can be claimed on mainnet via a withdrawal process due to the TBR on mainnet going to the bridge contract
         - there will likely be a slight time mismatch (just different systems not synced up) between inflation stopping on mainnet and initiating on layer.  This delay will ensure that the tokens minted on layer will always be less than are available in the bridge contract.  
-    g) parties looking to exit layer can call the "mintToOracle" function in the token contract to send inflationary tokens to the bridge contract for withdrawal.  
+    h) parties looking to exit layer will use the token supply in the bridge, and it will automatically call "mintToOracle" if the contract needs to refresh its inflationary rewards.   
 
 
 
