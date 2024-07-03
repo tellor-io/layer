@@ -22,14 +22,15 @@ func (k msgServer) Init(goCtx context.Context, msg *types.MsgInit) (*types.MsgMs
 	if k.Keeper.GetAuthority() != msg.Authority {
 		return nil, errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.Keeper.GetAuthority(), msg.Authority)
 	}
-	initialized, err := k.InitTbr.Get(goCtx)
+	minter, err := k.Minter.Get(goCtx)
 	if err != nil {
 		return nil, err
 	}
-	if initialized {
+	if minter.Initialized {
 		return nil, types.ErrAlreadyInitialized
 	}
-	if err := k.InitTbr.Set(goCtx, true); err != nil {
+	minter.Initialized = true
+	if err := k.Minter.Set(goCtx, minter); err != nil {
 		return nil, err
 	}
 	return &types.MsgMsgInitResponse{}, nil

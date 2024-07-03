@@ -52,9 +52,9 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	require.NoError(err)
 
 	// before proposal inflationary rewards are not initialized to minted
-	initialized, err := s.Setup.Mintkeeper.InitTbr.Get(s.Setup.Ctx)
+	minter, err := s.Setup.Mintkeeper.Minter.Get(s.Setup.Ctx)
 	require.NoError(err)
-	require.False(initialized)
+	require.False(minter.Initialized)
 
 	// check tbr should be zero
 	tbrAccount := s.Setup.Accountkeeper.GetModuleAccount(s.Setup.Ctx, minttypes.TimeBasedRewards)
@@ -141,9 +141,9 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	initialized, err = s.Setup.Mintkeeper.InitTbr.Get(s.Setup.Ctx)
+	minter, err = s.Setup.Mintkeeper.Minter.Get(s.Setup.Ctx)
 	require.NoError(err)
-	require.True(initialized)
+	require.True(minter.Initialized)
 	balAfterInit := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrAccount.GetAddress(), s.Setup.Denom)
 	require.True(balAfterInit.Amount.GT(balBeforeInit.Amount))
 }

@@ -25,13 +25,16 @@ import (
 
 func (s *E2ETestSuite) TestBasicReporting() {
 	require := s.Require()
-	require.NoError(s.Setup.Mintkeeper.InitTbr.Set(s.Setup.Ctx, true))
+	minter, err := s.Setup.Mintkeeper.Minter.Get(s.Setup.Ctx)
+	require.NoError(err)
+	minter.Initialized = true
+	require.NoError(s.Setup.Mintkeeper.Minter.Set(s.Setup.Ctx, minter))
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 
 	//---------------------------------------------------------------------------
 	// Height 0
 	//---------------------------------------------------------------------------
-	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	// create a validator

@@ -24,8 +24,7 @@ type Keeper struct {
 	Schema       collections.Schema
 	bankKeeper   types.BankKeeper
 
-	Minter  collections.Item[types.Minter]
-	InitTbr collections.Item[bool]
+	Minter collections.Item[types.Minter]
 
 	authority string
 }
@@ -57,7 +56,6 @@ func NewKeeper(
 		bankKeeper:   bankKeeper,
 
 		Minter:    collections.NewItem(sb, collections.NewPrefix(0), "minter", codec.CollValue[types.Minter](cdc)),
-		InitTbr:   collections.NewItem(sb, collections.NewPrefix(1), "init_tbr", collections.BoolValue),
 		authority: authority,
 	}
 	schema, err := sb.Build()

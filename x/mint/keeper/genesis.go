@@ -10,11 +10,8 @@ import (
 func (k Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, gen *types.GenesisState) {
 	minter := types.DefaultMinter()
 	minter.BondDenom = gen.BondDenom
+	minter.Initialized = false
 	err := k.Minter.Set(ctx, minter)
-	if err != nil {
-		panic(err)
-	}
-	err = k.InitTbr.Set(ctx, false)
 	if err != nil {
 		panic(err)
 	}

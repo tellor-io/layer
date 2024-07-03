@@ -15,26 +15,29 @@ import (
 // the block provision for the current block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentTime := sdkCtx.BlockTime()
-	if currentTime.IsZero() {
-		// return on invalid block time
-		return nil
-	}
-	if err := mintBlockProvision(sdkCtx, k, currentTime); err != nil {
-		return err
-	}
-
-	return setPreviousBlockTime(sdkCtx, k, currentTime)
-}
-
-// mintBlockProvision mints the block provision for the current block.
-func mintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.Time) error {
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err
 	}
+	if !minter.Initialized {
+		return nil
+	}
+
+	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+	if currentTime.IsZero() {
+		// return on invalid block time
+		return nil
+	}
+
+	if err := mintBlockProvision(ctx, k, currentTime, minter); err != nil {
+		return err
+	}
+
+	return setPreviousBlockTime(ctx, k, currentTime)
+}
+
+// mintBlockProvision mints the block provision for the current block.
+func mintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.Time, minter types.Minter) error {
 	if minter.PreviousBlockTime == nil {
 		return nil
 	}
