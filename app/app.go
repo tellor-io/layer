@@ -412,7 +412,7 @@ func New(
 
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,
-		runtime.NewKVStoreService(keys[bridgemoduletypes.StoreKey]),
+		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
