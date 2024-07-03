@@ -415,6 +415,7 @@ func New(
 		runtime.NewKVStoreService(keys[bridgemoduletypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(

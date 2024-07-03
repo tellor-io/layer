@@ -19,6 +19,7 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -49,7 +50,7 @@ func (s *KeeperTestSuite) TestNewKeeper(t *testing.T) {
 	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
 	keys := storetypes.NewKVStoreKey(types.StoreKey)
 
-	keeper := keeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys), s.accountKeeper, s.bankKeeper)
+	keeper := keeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys), s.accountKeeper, s.bankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.NotNil(keeper)
 }
 

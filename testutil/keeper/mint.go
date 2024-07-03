@@ -21,6 +21,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
@@ -44,6 +46,7 @@ func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Bank
 		runtime.NewKVStoreService(storeKey),
 		accountKeeper,
 		bankKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	return k, accountKeeper, bankKeeper, ctx

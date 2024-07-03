@@ -25,6 +25,7 @@ import (
 
 func (s *E2ETestSuite) TestBasicReporting() {
 	require := s.Require()
+	require.NoError(s.Setup.Mintkeeper.InitTbr.Set(s.Setup.Ctx, true))
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 
 	//---------------------------------------------------------------------------

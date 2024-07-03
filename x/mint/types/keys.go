@@ -1,7 +1,5 @@
 package types
 
-import "cosmossdk.io/collections"
-
 const (
 	// ModuleName is the name of the mint module.
 	ModuleName = "mint"
@@ -14,5 +12,3 @@ const (
 
 	TimeBasedRewards = "time_based_rewards"
 )
-
-var MinterKey = collections.NewPrefix(0)

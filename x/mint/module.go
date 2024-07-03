@@ -21,6 +21,8 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
@@ -134,6 +136,13 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
+	initialized, err := am.keeper.InitTbr.Get(ctx)
+	if err != nil {
+		return err
+	}
+	if !initialized {
+		return nil
+	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return BeginBlocker(sdkCtx, am.keeper)
@@ -168,11 +177,16 @@ type MintOutputs struct {
 }
 
 func ProvideModule(in MintInputs) MintOutputs {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
+		authority.String(),
 	)
 	m := NewAppModule(
 		in.Cdc,

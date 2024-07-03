@@ -14,6 +14,10 @@ func (k Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, gen *ty
 	if err != nil {
 		panic(err)
 	}
+	err = k.InitTbr.Set(ctx, false)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns a x/mint GenesisState for the given context.

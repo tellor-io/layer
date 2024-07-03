@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/mint/types"
@@ -23,7 +24,10 @@ type Keeper struct {
 	Schema       collections.Schema
 	bankKeeper   types.BankKeeper
 
-	Minter collections.Item[types.Minter]
+	Minter  collections.Item[types.Minter]
+	InitTbr collections.Item[bool]
+
+	authority string
 }
 
 // NewKeeper creates a new mint Keeper instance.
@@ -32,7 +36,11 @@ func NewKeeper(
 	storeService storetypes.KVStoreService,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
+	authority string,
 ) Keeper {
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(fmt.Sprintf("invalid authority address: %s", authority))
+	}
 	// Ensure the mint module account has been set
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic("the mint module account has not been set")
@@ -48,7 +56,9 @@ func NewKeeper(
 		storeService: storeService,
 		bankKeeper:   bankKeeper,
 
-		Minter: collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
+		Minter:    collections.NewItem(sb, collections.NewPrefix(0), "minter", codec.CollValue[types.Minter](cdc)),
+		InitTbr:   collections.NewItem(sb, collections.NewPrefix(1), "init_tbr", collections.BoolValue),
+		authority: authority,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -92,4 +102,9 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ModuleName)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
 	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+}
+
+// GetAuthority returns the module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
