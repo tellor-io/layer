@@ -12,10 +12,10 @@ set -e
 export LAYER_NODE_URL=54.166.101.67
 export TELLORNODE_ID=9007e2991e7f07a016559aed4685f4ba0619c631
 export KEYRING_BACKEND="test"
-export NODE_MONIKER="calebmoniker"
-export NODE_NAME="caleb"
-#export AMOUNT_IN_TRB=10000
-export AMOUNT_IN_LOYA="100000000000loya"
+export NODE_MONIKER="bobmoniker"
+export NODE_NAME="bob"
+export AMOUNT_IN_TRB=10000
+export AMOUNT_IN_LOYA="1000000000loya"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 # # Create a validator account for node

@@ -54,13 +54,19 @@ echo "creating account for faucet..."
 echo "Adding account for Bill..."
 echo "Make sure to save this seed phrase and address as you will need them in the future when creating their node..."
 ./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
-sleep 15
+sleep 10
 
 # Create account for third validator
-echo "Adding account for Caleb..."
+echo "Adding account for Bob..."
 echo "Make sure to save this seed phrase and address as you will need them in the future when creating their node..."
-./layerd keys add caleb --keyring-backend $KEYRING_BACKEND --home ~/.layer/caleb
-sleep 15
+./layerd keys add bob --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob
+sleep 10
+
+# Create account for Fourth validator
+echo "Adding account for Tom..."
+echo "Make sure to save this seed phrase and address as you will need them in the future when creating their node..."
+./layerd keys add tom --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom
+sleep 10
 
 echo "set chain id in genesis file to layer..."
 sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
@@ -85,9 +91,13 @@ echo "Get address/account for bill to use in gentx tx"
 BILL=$(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill)
 echo "BILL: $BILL"
 
-echo "Get address/account for caleb to use in gentx tx"
-CALEB=$(./layerd keys show caleb -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/caleb)
-echo "ALICE: $CALEB"
+echo "Get address/account for bob to use in gentx tx"
+BOB=$(./layerd keys show bob -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob)
+echo "Bob: $BOB"
+
+echo "Get address/account for Tom to use in gentx tx"
+TOM=$(./layerd keys show tom -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom)
+echo "Bob: $TOM"
 
 # echo "Get address for faucet account..."
 # FAUCET=$(./layerd keys show faucet -a )
@@ -95,13 +105,16 @@ echo "ALICE: $CALEB"
 
 # Create a tx to give alice loyas to stake
 echo "Adding genesis account for alice..."
-./layerd genesis add-genesis-account $ALICE 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $ALICE 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "Initializing Bill account with loya to stake.."
-./layerd genesis add-genesis-account $BILL 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $BILL 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
-echo "Initializing Caleb account with loya to stake.."
-./layerd genesis add-genesis-account $CALEB 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+echo "Initializing Bob account with loya to stake.."
+./layerd genesis add-genesis-account $BOB 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+
+echo "Initializing Tom account with loya to stake.."
+./layerd genesis add-genesis-account $TOM 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 # Create a tx to give faucet loyas to have on hold to give to users
 echo "Adding genesis account for alice..."
@@ -109,7 +122,7 @@ echo "Adding genesis account for alice..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 100500000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
+./layerd genesis gentx alice 1000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
@@ -153,4 +166,4 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger | tee ./first_node_logs.txt
+./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
