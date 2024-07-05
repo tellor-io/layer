@@ -1,14 +1,15 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
+	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 
-	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestGetVoters() {
@@ -144,8 +145,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 
 	// set user vote
 	userAddr := sample.AccAddressBytes()
-	require.NoError(k.UsersGroup.Set(ctx, collections.Join(id, userAddr.Bytes()), math.NewInt(250 * 1e6)))
+	require.NoError(k.UsersGroup.Set(ctx, collections.Join(id, userAddr.Bytes()), math.NewInt(250*1e6)))
 	require.NoError(k.Voter.Set(ctx, collections.Join(id, userAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(250 * 1e6)}))
 	require.NoError(k.TallyVote(ctx, id))
-
 }

@@ -4,11 +4,12 @@ import (
 	"errors"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 )
 
 func (s *KeeperTestSuite) TestInitVoterClasses() {
@@ -84,7 +85,6 @@ func (s *KeeperTestSuite) TestGetUserTotalTips() {
 	userTips, err = k.GetUserTotalTips(ctx, voter, 1)
 	require.Error(err)
 	require.Equal(userTips, math.Int{})
-
 }
 
 func (s *KeeperTestSuite) TestSetVoterTips() {
@@ -107,7 +107,6 @@ func (s *KeeperTestSuite) TestSetVoterTips() {
 	tips, err = k.SetVoterTips(ctx, uint64(1), voter, 1)
 	require.Error(err)
 	require.Equal(tips, math.Int{})
-
 }
 
 func (s *KeeperTestSuite) TestSetVoterReportStake() {
@@ -229,7 +228,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 	require.NoError(err)
 	require.Equal(reporterTokens, math.NewInt(100*1e6).Sub(math.NewInt(50*1e6)))
 
-	// delegation found, ReportersWithDelegatorsBefore set (selector has voted), voter is selector, no error with GetDelegatorTokensAtBlock, selctor has voted with all of thier tokens already
+	// delegation found, ReportersWithDelegatorsBefore set (selector has voted), voter is selector, no error with GetDelegatorTokensAtBlock, selctor has voted with all of their tokens already
 	rk.On("Delegation", ctx, selector).Return(reportertypes.Delegation{
 		Reporter: reporter,
 	}, nil).Once()
@@ -262,5 +261,4 @@ func (s *KeeperTestSuite) TestUpdateDispute() {
 	require := s.Require()
 	require.NotNil(k)
 	require.NotNil(ctx)
-
 }
