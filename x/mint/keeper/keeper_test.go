@@ -13,11 +13,13 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -46,9 +48,9 @@ func (s *KeeperTestSuite) TestNewKeeper(t *testing.T) {
 	s.accountKeeper.On("GetModuleAddress", types.TimeBasedRewards).Return(authtypes.NewModuleAddress(types.TimeBasedRewards))
 
 	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
-	keys := storetypes.NewKVStoreKeys(types.StoreKey)
+	keys := storetypes.NewKVStoreKey(types.StoreKey)
 
-	keeper := keeper.NewKeeper(appCodec, keys[types.StoreKey], s.accountKeeper, s.bankKeeper)
+	keeper := keeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys), s.accountKeeper, s.bankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	s.NotNil(keeper)
 }
 
@@ -62,7 +64,7 @@ func (s *KeeperTestSuite) TestLogger(t *testing.T) {
 func (s *KeeperTestSuite) TestGetMinter(t *testing.T) {
 	s.SetupTest()
 
-	minter := s.mintKeeper.GetMinter(s.ctx)
+	minter, _ := s.mintKeeper.Minter.Get(s.ctx)
 	s.ctx.Logger().Info("Minter: %v", minter)
 
 	s.NotNil(minter)
@@ -73,9 +75,9 @@ func (s *KeeperTestSuite) TestSetMinter(t *testing.T) {
 	s.SetupTest()
 
 	minter := types.NewMinter("loya")
-	s.mintKeeper.SetMinter(s.ctx, minter)
+	s.NoError(s.mintKeeper.Minter.Set(s.ctx, minter))
 
-	returnedMinter := s.mintKeeper.GetMinter(s.ctx)
+	returnedMinter, _ := s.mintKeeper.Minter.Get(s.ctx)
 	s.Equal(minter, returnedMinter)
 }
 
