@@ -7,7 +7,7 @@ import (
 )
 
 func (k msgServer) TallyVote(ctx context.Context, msg *types.MsgTallyVote) (*types.MsgTallyVoteResponse, error) {
-	err := k.Keeper.Tallyvote(ctx, msg.DisputeId)
+	err := k.Keeper.TallyVote(ctx, msg.DisputeId)
 	if err != nil {
 		return nil, err
 	}

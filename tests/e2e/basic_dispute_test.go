@@ -218,7 +218,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, dispute.DisputeId)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, dispute.DisputeId)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -254,7 +254,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -341,9 +341,9 @@ func (s *E2ETestSuite) TestDisputes() {
 	// ---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -407,8 +407,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	require.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
-	require.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2))
+	require.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
+	require.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2))
 	require.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
 	require.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
 
@@ -515,7 +515,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 3)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -571,7 +571,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	// require.NoError(err)
 
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 3)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3)
 	require.NoError(err)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
