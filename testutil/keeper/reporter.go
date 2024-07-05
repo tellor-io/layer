@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
@@ -23,7 +24,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, sdk.Context) {
+func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, corestore.KVStoreService) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
@@ -38,9 +39,10 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	bk := new(mocks.BankKeeper)
 	sk := new(mocks.StakingKeeper)
 	rk := new(mocks.RegistryKeeper)
+	storeservice := runtime.NewKVStoreService(storeKey)
 	k := keeper.NewKeeper(
 		cdc,
-		runtime.NewKVStoreService(storeKey),
+		storeservice,
 		log.NewNopLogger(),
 		authority.String(),
 		sk,
@@ -54,5 +56,5 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	err := k.Params.Set(ctx, types.DefaultParams())
 	require.NoError(tb, err)
 
-	return k, sk, bk, ctx
+	return k, sk, bk, rk, ctx, storeservice
 }

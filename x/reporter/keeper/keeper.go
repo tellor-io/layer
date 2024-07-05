@@ -107,12 +107,13 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 	if err != nil {
 		return math.Int{}, err
 	}
+	delegatorTokens := math.ZeroInt()
 	for _, r := range rep.TokenOrigins {
 		if bytes.Equal(r.DelegatorAddress, delegator) {
-			return r.Amount, nil
+			delegatorTokens = delegatorTokens.Add(r.Amount)
 		}
 	}
-	return math.ZeroInt(), nil
+	return delegatorTokens, nil
 }
 
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {

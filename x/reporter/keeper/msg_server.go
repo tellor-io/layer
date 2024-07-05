@@ -194,6 +194,10 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 	if err != nil {
 		return nil, err
 	}
+	if hasMin {
+		return nil, errors.New("selector can't be removed if reporter's min requirement is met")
+	}
+
 	if !hasMin {
 		params, err := k.Keeper.Params.Get(goCtx)
 		if err != nil {
@@ -209,7 +213,7 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 			return nil, err
 		}
 		if len(selectors) <= int(params.MaxSelectors) {
-			return nil, errors.New("reporter has not reached max selectors")
+			return nil, errors.New("selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
 		}
 	}
 	// remove selector

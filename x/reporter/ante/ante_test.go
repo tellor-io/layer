@@ -18,7 +18,7 @@ import (
 )
 
 func TestNewTrackStakeChangesDecorator(t *testing.T) {
-	k, sk, _, ctx := keepertest.ReporterKeeper(t)
+	k, sk, _, _, ctx, _ := keepertest.ReporterKeeper(t)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
 	err := k.Tracker.Set(ctx, types.StakeTracker{
