@@ -24,10 +24,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{
-					RpcMethod:      "DelegatorReporter",
-					Use:            "delegator-reporter [delegator-addr]",
+					RpcMethod:      "SelectorReporter",
+					Use:            "selector-reporter [selector-address]",
 					Short:          "Query reporter of a delegator",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "delegator_address"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
