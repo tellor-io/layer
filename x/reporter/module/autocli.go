@@ -24,10 +24,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{
-					RpcMethod:      "DelegatorReporter",
-					Use:            "delegator-reporter [delegator-addr]",
+					RpcMethod:      "SelectorReporter",
+					Use:            "selector-reporter [selector-address]",
 					Short:          "Query reporter of a delegator",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "delegator_address"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -42,15 +42,27 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "CreateReporter",
-					Use:            "create-reporter",
+					Use:            "create-reporter [commission-rate] [min-tokens-required]",
 					Short:          "Execute the CreateReporter RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "commission_rate"}, {ProtoField: "min_tokens_required"}},
 				},
 				{
-					RpcMethod:      "ChangeReporter",
-					Use:            "change-reporter [reporter-addr]",
-					Short:          "Execute the UndelegateReporter RPC method",
+					RpcMethod:      "SelectReporter",
+					Use:            "select-reporter [reporter-address]",
+					Short:          "Execute the SelectReporter RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "SwitchReporter",
+					Use:            "switch-reporter [reporter-address]",
+					Short:          "Execute the SwitchReporter RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "RemoveSelector",
+					Use:            "remove-selector [selector-address]",
+					Short:          "Execute the RemoveSelector RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
 				{
 					RpcMethod:      "UnjailReporter",
@@ -60,9 +72,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "WithdrawTip",
-					Use:            "withdraw-tip [delegator-address] [validator-address]",
+					Use:            "withdraw-tip [selector-address] [validator-address]",
 					Short:          "Send a WithdrawTip tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "delegator_address"}, {ProtoField: "validator_address"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}, {ProtoField: "validator_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

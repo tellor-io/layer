@@ -13,9 +13,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
-    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "axios": "^1.6.8",
     "chai": "^4.3.10",

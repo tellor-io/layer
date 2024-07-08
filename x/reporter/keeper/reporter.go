@@ -14,6 +14,34 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired math.Int) (bool, error) {
+	tokens := math.ZeroInt()
+	var iterError error
+	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, addr, func(delegation stakingtypes.Delegation) (stop bool) {
+		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			iterError = err
+			return true
+		}
+		val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			iterError = err
+			return true
+		}
+		if !val.IsBonded() {
+			return false
+		}
+		delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
+		tokens = tokens.Add(delTokens)
+
+		return tokens.GTE(minRequired)
+	})
+	if err != nil {
+		return false, err
+	}
+	return tokens.GTE(minRequired), iterError
+}
+
 // Reporter returns the total power of a reporter that is bonded at time of the call
 // Store the set of delegations for the reporter at the current block height for dispute purposes to be referenced by block height
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
@@ -24,65 +52,73 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 	if reporter.Jailed {
 		return math.Int{}, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
 	}
-	totalPower := math.ZeroInt()
-	delegators, err := k.Delegators.Indexes.Reporter.MatchExact(ctx, repAddr)
+	totalTokens := math.ZeroInt()
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
 	}
-	defer delegators.Close()
+	defer iter.Close()
 	delegates := make([]*types.TokenOriginInfo, 0)
-	for ; delegators.Valid(); delegators.Next() {
-		key, err := delegators.PrimaryKey()
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
 		if err != nil {
 			return math.Int{}, err
 		}
 		valSet := k.stakingKeeper.GetValidatorSet()
-		maxVal, err := valSet.MaxValidators(ctx)
+		maxValSet, err := valSet.MaxValidators(ctx)
 		if err != nil {
 			return math.Int{}, err
 		}
 		// get delegator count
-		del, err := k.Delegators.Get(ctx, key)
+		selector, err := k.Selectors.Get(ctx, selectorAddr)
 		if err != nil {
 			return math.Int{}, err
 		}
-		if del.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 			continue
 		}
-		// if the delegator has more than the max validators, iterate over all bonded validators
-		// else iterate over the delegations, so that can we iterate over the shorter list
-		if del.DelegationCount > uint64(maxVal) {
+		var iterError error
+		if selector.DelegationsCount > int64(maxValSet) {
 			// iterate over bonded validators
 			err = valSet.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 				valAddrr, err := sdk.ValAddressFromBech32(validator.GetOperator())
 				if err != nil {
+					iterError = err
 					return true
 				}
-				stakingdel, err := k.stakingKeeper.GetDelegation(ctx, key, valAddrr)
+				stakingdel, err := k.stakingKeeper.GetDelegation(ctx, selectorAddr, valAddrr)
 				if err != nil {
-					return !errors.Is(err, stakingtypes.ErrNoDelegation)
+					if errors.Is(err, stakingtypes.ErrNoDelegation) {
+						return false
+					}
+					iterError = err
+					return true
 				}
 				// get the token amount
 				tokens := validator.TokensFromSharesTruncated(stakingdel.Shares).TruncateInt()
-				totalPower = totalPower.Add(tokens)
-				delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: key, ValidatorAddress: valAddrr.Bytes(), Amount: tokens})
+				totalTokens = totalTokens.Add(tokens)
+				delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddrr.Bytes(), Amount: tokens})
 				return false
 			})
 			if err != nil {
 				return math.Int{}, err
 			}
 		} else {
-			err := k.stakingKeeper.IterateDelegatorDelegations(ctx, key, func(delegation stakingtypes.Delegation) bool {
-				validatorAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+			err = k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
+				valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 				if err != nil {
-					panic(err)
+					iterError = err
+					return true
 				}
-				validator, err := k.stakingKeeper.GetValidator(ctx, validatorAddr)
-				if err == nil && validator.IsBonded() {
-					shares := delegation.Shares
-					tokens := validator.TokensFromSharesTruncated(shares).TruncateInt()
-					totalPower = totalPower.Add(tokens)
-					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: key, ValidatorAddress: validatorAddr.Bytes(), Amount: tokens})
+				val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+				if err != nil {
+					iterError = err
+					return true
+				}
+				if val.IsBonded() {
+					delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
+					totalTokens = totalTokens.Add(delTokens)
+					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
 				}
 				return false
 			})
@@ -90,13 +126,48 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 				return math.Int{}, err
 			}
 		}
-
+		if iterError != nil {
+			return math.Int{}, iterError
+		}
 	}
-	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalPower})
+	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
 		return math.Int{}, err
 	}
-	return totalPower, nil
+	return totalTokens, nil
+}
+
+// function that iterates through a selector's delegations and checks if they meet the min requirement
+// plus counts how many delegations they have
+func (k Keeper) CheckSelectorsDelegations(ctx context.Context, addr sdk.AccAddress) (math.Int, int64, error) {
+	tokens := math.ZeroInt()
+	var count int64
+	var iterError error
+	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, addr, func(delegation stakingtypes.Delegation) (stop bool) {
+		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			iterError = err
+			return true
+		}
+		val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			iterError = err
+			return true
+		}
+		count++
+		if val.IsBonded() {
+			delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
+			tokens = tokens.Add(delTokens)
+		}
+		return false
+	})
+	if err != nil {
+		return math.ZeroInt(), 0, err
+	}
+	if iterError != nil {
+		return math.ZeroInt(), 0, iterError
+	}
+	return tokens, count, nil
 }
 
 func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
@@ -105,8 +176,8 @@ func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
 }
 
 // alias
-func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types.Delegation, error) {
-	return k.Delegators.Get(ctx, delegator)
+func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types.Selection, error) {
+	return k.Selectors.Get(ctx, delegator)
 }
 
 func (k Keeper) Reporter(ctx context.Context, reporter sdk.AccAddress) (types.OracleReporter, error) {

@@ -31,15 +31,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (s *E2ETestSuite) TestNoInitialMint() {
-	require := s.Require()
-
-	mintToTeamAcc := s.Setup.Accountkeeper.GetModuleAddress(minttypes.MintToTeam)
-	require.NotNil(mintToTeamAcc)
-	balance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, mintToTeamAcc, s.Setup.Denom)
-	require.Equal(balance.Amount, sdk.NewCoin(s.Setup.Denom, math.NewInt(0)).Amount)
-}
-
 // func (s *E2ETestSuite) TestTransferAfterMint() {
 // 	require := s.Setup.Require()
 
@@ -194,9 +185,23 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 		delegatorII:  {delegatorAddress: delegatorAccounts[2], validator: validatorSet[1], tokenAmount: math.NewInt(100 * 1e6)},
 		delegatorIII: {delegatorAddress: delegatorAccounts[3], validator: validatorSet[2], tokenAmount: math.NewInt(100 * 1e6)},
 	}
+	valAddr1, err := sdk.ValAddressFromBech32(validatorSet[1].GetOperator())
+	require.NoError(err)
+	valAddr2, err := sdk.ValAddressFromBech32(validatorSet[2].GetOperator())
+	require.NoError(err)
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, valAddr1, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, valAddr2, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, valAddr1, reportertypes.NewSelection(valAddr1, 1)))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, valAddr2, reportertypes.NewSelection(valAddr2, 1)))
+
+	reporterserver := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	// delegate to validators
 	for _, del := range delegators {
 		_, err := stakingserver.Delegate(s.Setup.Ctx, &stakingtypes.MsgDelegate{DelegatorAddress: del.delegatorAddress.String(), ValidatorAddress: del.validator.GetOperator(), Amount: sdk.NewCoin(s.Setup.Denom, del.tokenAmount)})
+		require.NoError(err)
+		valAddrs, err := sdk.ValAddressFromBech32(del.validator.GetOperator())
+		require.NoError(err)
+		_, err = reporterserver.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{ReporterAddress: sdk.AccAddress(valAddrs).String(), SelectorAddress: del.delegatorAddress.String()})
 		require.NoError(err)
 	}
 	_, err = s.Setup.Stakingkeeper.EndBlocker(s.Setup.Ctx)
@@ -212,10 +217,11 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require.NoError(err)
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	require.NoError(err)
-
-	require.Equal(oracleReporter.TotalTokens, val.Tokens)
+	oracleReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAddr.Bytes())
+	require.NoError(err)
+	require.Equal(oracleReporterStake, val.Tokens)
 	require.Equal(oracleReporter.Jailed, false)
-	delegationReporter, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, delegators[delegatorI].delegatorAddress)
+	delegationReporter, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, delegators[delegatorI].delegatorAddress)
 	require.NoError(err)
 	require.Equal(delegationReporter.Reporter, valAddr.Bytes())
 }
@@ -293,14 +299,19 @@ func (s *E2ETestSuite) TestDisputes2() {
 	badReporter := repsAccs[0]
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
-
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, badReporter, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, badReporter, reportertypes.NewSelection(badReporter, 1)))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repsAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repsAccs[1], reportertypes.NewSelection(repsAccs[1], 1)))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repsAccs[2], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repsAccs[2], reportertypes.NewSelection(repsAccs[2], 1)))
 	// mapping to track reporter delegation balance
-	reporterToBalanceMap := make(map[string]math.Int)
-	for _, acc := range repsAccs {
-		rkDelegation, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, acc)
-		require.NoError(err)
-		reporterToBalanceMap[acc.String()] = rkDelegation.Amount
-	}
+	// reporterToBalanceMap := make(map[string]math.Int)
+	// for _, acc := range repsAccs {
+	// 	rkDelegation, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, acc)
+	// 	require.NoError(err)
+	// 	reporterToBalanceMap[acc.String()] = rkDelegation.Amount
+	// }
 
 	//---------------------------------------------------------------------------
 	// Height 1 - delegate 500 trb to validator 0 and bad reporter
@@ -321,15 +332,16 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.MintTokens(delAccAddr, math.NewInt(500*1e6))
 	_, err = msgServerStaking.Delegate(s.Setup.Ctx, &stakingtypes.MsgDelegate{DelegatorAddress: delAccAddr.String(), ValidatorAddress: valsValAddrs[0].String(), Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(500*1e6))})
 	require.NoError(err)
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, delAccAddr, reportertypes.NewSelection(badReporter, 1)))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valsValAddrs[0])
 	require.NoError(err)
-	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, badReporter)
+	repTokens, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, badReporter)
 	require.NoError(err)
-	require.Equal(rep.TotalTokens, val.Tokens)
+	require.Equal(repTokens, val.Tokens)
 
 	//---------------------------------------------------------------------------
 	// Height 2 - direct reveal for cycle list
@@ -338,7 +350,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	disputedRep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
+	_, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
 	require.NoError(err)
 
 	// get new cycle list query data
@@ -379,7 +391,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
-		Power:       disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   revealTime,
@@ -431,7 +443,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	disputedRep, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
+	disputedRep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
 	require.NoError(err)
 	require.Equal(disputedRep.Jailed, true)
 
@@ -490,7 +502,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	report.Power = disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64()
+	report.Power = repTokens.Quo(sdk.DefaultPowerReduction).Int64()
 	fee, err = s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, disputetypes.Warning)
 	require.NoError(err)
 	disputeFee = sdk.NewCoin(s.Setup.Denom, fee) // warning should be 1% of bonded tokens
@@ -498,7 +510,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// get microreport for dispute
 	report = oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
-		Power:       disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   revealTime,
@@ -590,13 +602,13 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	balBeforeDispute := disputedRep.TotalTokens
+	balBeforeDispute := repTokens
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
 	disputeFee = sdk.NewCoin(s.Setup.Denom, fivePercent)
 
 	report = oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
-		Power:       disputedRep.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   revealTime,
@@ -711,9 +723,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// print tbr module account address
 	tbrModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(minttypes.TimeBasedRewards) // yes
 	fmt.Println("tbr module account: ", tbrModuleAccount.String())
-
-	teamAccount := s.Setup.Accountkeeper.GetModuleAddress(minttypes.MintToTeam) // yes
-	fmt.Println("team account: ", teamAccount.String())
 
 	disputeModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName) // yes
 	fmt.Println("dispute module account: ", disputeModuleAccount.String())

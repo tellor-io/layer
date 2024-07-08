@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -13,11 +12,10 @@ import (
 )
 
 func TestJailReporter(t *testing.T) {
-	k, _, _, ctx := keepertest.ReporterKeeper(t)
+	k, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	updatedAt := time.Now().UTC()
-	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, updatedAt)
-	reporter := types.NewOracleReporter(addr.String(), math.NewInt(1000*1e6), &commission, 1)
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
 
 	err := k.Reporters.Set(ctx, addr, reporter)
 	require.NoError(t, err)
@@ -36,11 +34,10 @@ func TestJailReporter(t *testing.T) {
 }
 
 func TestUnJailReporter(t *testing.T) {
-	k, _, _, ctx := keepertest.ReporterKeeper(t)
+	k, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	jailedAt := time.Now().UTC()
-	commission := types.NewCommissionWithTime(types.DefaultMinCommissionRate, types.DefaultMinCommissionRate.MulInt(math.NewInt(2)), types.DefaultMinCommissionRate, jailedAt)
-	reporter := types.NewOracleReporter(addr.String(), math.NewInt(1000*1e6), &commission, 1)
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
 	reporter.Jailed = true
 	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))

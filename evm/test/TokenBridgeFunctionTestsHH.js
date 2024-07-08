@@ -146,4 +146,75 @@ describe("TokenBridge - Function Tests", async function () {
         await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
+    it("claim extraWithdraw", async function () {
+        await tbridge.refreshDepositLimit()
+        expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
+        depositAmount = expectedDepositLimit
+        await h.expectThrow(tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)) // not approved
+        await token.approve(await tbridge.address, h.toWei("100"))
+        await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
+        await h.advanceTime(43200) 
+        await token.approve(await tbridge.address, h.toWei("100"))
+        await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
+        let _addy = await accounts[2].address
+        value = h.getWithdrawValue(_addy,LAYER_RECIPIENT,40000000)
+        blocky = await h.getBlock()
+        timestamp = blocky.timestamp - 2
+        aggregatePower = 3
+        attestTimestamp = timestamp + 1
+        previousTimestamp = 0
+        nextTimestamp = 0
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp
+        )
+        await h.advanceTime(43200)
+        await tbridge.refreshDepositLimit()
+        let _limit = await tbridge.depositLimit.call()
+        assert(await token.balanceOf(_addy) == 0)
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            1,
+        )
+        recipientBal = await token.balanceOf(_addy)
+        assert(recipientBal - _limit == 0, "token balance should be correct")
+        tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
+        assert(tokensToClaim == BigInt(40e18) - BigInt(recipientBal), "tokensToClaim should be correct")
+        await h.expectThrow(tbridge.claimExtraWithdraw(await accounts[2].address))
+        await h.advanceTime(43200)
+        await tbridge.claimExtraWithdraw(await accounts[2].address);
+        await h.expectThrow(tbridge.claimExtraWithdraw(await accounts[2].address))
+        recipientBal = await token.balanceOf(await accounts[2].address)
+        assert(recipientBal == BigInt(40e18), "token balance should be correct")
+        await h.advanceTime(43200)
+        await tbridge.refreshDepositLimit()
+        _limit = await tbridge.depositLimit()
+        assert(BigInt(await tbridge.depositLimitRecord()) - expectedDepositLimit == BigInt(0));
+        assert(_limit == expectedDepositLimit, "deposit Limit should be correct")
+        tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
+        assert(tokensToClaim == BigInt(0), "tokensToClaim should be correct")
+    })
 })

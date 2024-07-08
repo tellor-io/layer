@@ -27,9 +27,9 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateReporter int = 100
 
-	opWeightMsgChangeReporter = "op_weight_msg_change_reporter"
+	opWeightMsgSelectReporter = "op_weight_msg_select_reporter"
 
-	defaultWeightMsgChangeReporter int = 100
+	defaultWeightMsgSelectReporter int = 100
 
 	opWeightMsgWithdrawTip = "op_weight_msg_withdraw_tip"
 	// TODO: Determine the simulation weight value
@@ -74,15 +74,15 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		reportersimulation.SimulateMsgCreateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
-	var weightMsgChangeReporter int
-	simState.AppParams.GetOrGenerate(opWeightMsgChangeReporter, &weightMsgChangeReporter, nil,
+	var weightMsgSelectReporter int
+	simState.AppParams.GetOrGenerate(opWeightMsgSelectReporter, &weightMsgSelectReporter, nil,
 		func(_ *rand.Rand) {
-			weightMsgChangeReporter = defaultWeightMsgChangeReporter
+			weightMsgSelectReporter = defaultWeightMsgSelectReporter
 		},
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgChangeReporter,
-		reportersimulation.SimulateMsgChangeReporter(am.accountKeeper, am.bankKeeper, am.keeper),
+		weightMsgSelectReporter,
+		reportersimulation.SimulateMsgSelectReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgWithdrawTip int
@@ -113,10 +113,10 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			},
 		),
 		simulation.NewWeightedProposalMsg(
-			opWeightMsgChangeReporter,
-			defaultWeightMsgChangeReporter,
+			opWeightMsgSelectReporter,
+			defaultWeightMsgSelectReporter,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				reportersimulation.SimulateMsgChangeReporter(am.accountKeeper, am.bankKeeper, am.keeper)
+				reportersimulation.SimulateMsgSelectReporter(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

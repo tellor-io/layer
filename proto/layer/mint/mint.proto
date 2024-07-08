@@ -1,18 +1,20 @@
 syntax = "proto3";
 package layer.mint;
 
-option go_package = "github.com/tellor-io/layer/x/mint/types";
-
-import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tellor-io/layer/x/mint/types";
 
 // Minter represents the mint state.
 message Minter {
   // PreviousBlockTime is the timestamp of the previous block.
-  google.protobuf.Timestamp previous_block_time = 1
-      [ (gogoproto.stdtime) = true ];
+  google.protobuf.Timestamp previous_block_time = 1 [(gogoproto.stdtime) = true];
 
   // BondDenom is the denomination of the token that should be minted.
   string bond_denom = 2;
+
+  // init
+  bool initialized = 3;
 }

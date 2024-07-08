@@ -20,7 +20,7 @@ func SimulateMsgWithdrawTip(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		msg := &types.MsgWithdrawTip{
-			DelegatorAddress: simAccount.Address.String(),
+			SelectorAddress: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the WithdrawTip simulation

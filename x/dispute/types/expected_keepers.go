@@ -48,7 +48,7 @@ type ReporterKeeper interface {
 	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error
 	ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error
 	AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) error
-	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Delegation, error)
+	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Selection, error)
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error)
 	FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error
