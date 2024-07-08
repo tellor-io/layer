@@ -68,8 +68,18 @@ func (s *TestSuite) TestCheckPrevoteDisputesForExpiration() {
 		DisputeStatus:    types.Prevote,
 		DisputeStartTime: ctx.BlockTime().Add(-time.Hour),
 		DisputeEndTime:   ctx.BlockTime().Add(time.Hour),
+		Open:             true,
 	}))
 
 	err = dispute.CheckPrevoteDisputesForExpiration(ctx, k)
 	require.NoError(err)
+
+	// check again after endtime passes
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(2 * time.Hour))
+	err = dispute.CheckPrevoteDisputesForExpiration(ctx, k)
+	require.NoError(err)
+	dispute, err := k.Disputes.Get(ctx, 1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeStatus, types.Failed)
+	require.Equal(dispute.Open, false)
 }
