@@ -22,8 +22,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Reporters queries all the staked reporters.
 	Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error)
-	// DelegatorReporter queries the reporter of a delegator.
-	DelegatorReporter(ctx context.Context, in *QueryDelegatorReporterRequest, opts ...grpc.CallOption) (*QueryDelegatorReporterResponse, error)
+	// SelectorReporter queries the reporter of a selector.
+	SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error)
 }
 
 type queryClient struct {
@@ -52,9 +52,9 @@ func (c *queryClient) Reporters(ctx context.Context, in *QueryReportersRequest, 
 	return out, nil
 }
 
-func (c *queryClient) DelegatorReporter(ctx context.Context, in *QueryDelegatorReporterRequest, opts ...grpc.CallOption) (*QueryDelegatorReporterResponse, error) {
-	out := new(QueryDelegatorReporterResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Query/DelegatorReporter", in, out, opts...)
+func (c *queryClient) SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error) {
+	out := new(QuerySelectorReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/SelectorReporter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -69,8 +69,8 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Reporters queries all the staked reporters.
 	Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error)
-	// DelegatorReporter queries the reporter of a delegator.
-	DelegatorReporter(context.Context, *QueryDelegatorReporterRequest) (*QueryDelegatorReporterResponse, error)
+	// SelectorReporter queries the reporter of a selector.
+	SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -84,8 +84,8 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 func (UnimplementedQueryServer) Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reporters not implemented")
 }
-func (UnimplementedQueryServer) DelegatorReporter(context.Context, *QueryDelegatorReporterRequest) (*QueryDelegatorReporterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DelegatorReporter not implemented")
+func (UnimplementedQueryServer) SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SelectorReporter not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -136,20 +136,20 @@ func _Query_Reporters_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_DelegatorReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryDelegatorReporterRequest)
+func _Query_SelectorReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySelectorReporterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).DelegatorReporter(ctx, in)
+		return srv.(QueryServer).SelectorReporter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.reporter.Query/DelegatorReporter",
+		FullMethod: "/layer.reporter.Query/SelectorReporter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).DelegatorReporter(ctx, req.(*QueryDelegatorReporterRequest))
+		return srv.(QueryServer).SelectorReporter(ctx, req.(*QuerySelectorReporterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -170,8 +170,8 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_Reporters_Handler,
 		},
 		{
-			MethodName: "DelegatorReporter",
-			Handler:    _Query_DelegatorReporter_Handler,
+			MethodName: "SelectorReporter",
+			Handler:    _Query_SelectorReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
