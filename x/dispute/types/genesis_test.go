@@ -1,8 +1,11 @@
 package types_test
 
 import (
+	"encoding/json"
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/dispute/types"
 )
@@ -38,4 +41,15 @@ func TestGenesisState_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGenesisState_GetGenesisStateFromAppState(t *testing.T) {
+	require := require.New(t)
+
+	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	genState := types.GetGenesisStateFromAppState(cdc, map[string]json.RawMessage{types.ModuleName: []byte("{}")})
+	require.NotNil(genState)
+
+	genState = types.GetGenesisStateFromAppState(cdc, nil)
+	require.NotNil(genState)
 }

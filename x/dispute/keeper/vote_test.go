@@ -261,4 +261,130 @@ func (s *KeeperTestSuite) TestUpdateDispute() {
 	require := s.Require()
 	require.NotNil(k)
 	require.NotNil(ctx)
+	id := uint64(1)
+	dispute := types.Dispute{
+		HashId:          []byte("hashId"),
+		DisputeId:       id,
+		DisputeCategory: types.Minor,
+	}
+
+	// quorum support
+	vote := types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_SUPPORT,
+	}
+	scaledSupport := math.LegacyNewDec(100)
+	scaledAgainst := math.LegacyNewDec(0)
+	scaledInvalid := math.LegacyNewDec(0)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
+	disputeRes, err := k.Disputes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
+	require.Equal(disputeRes.HashId, dispute.HashId)
+	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
+	voteRes, err := k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(voteRes.Id, vote.Id)
+	require.Equal(voteRes.VoteResult, vote.VoteResult)
+
+	// no quorum majority support
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT,
+	}
+	scaledSupport = math.LegacyNewDec(50)
+	scaledAgainst = math.LegacyNewDec(0)
+	scaledInvalid = math.LegacyNewDec(0)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
+	disputeRes, err = k.Disputes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
+	require.Equal(disputeRes.HashId, dispute.HashId)
+	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(voteRes.Id, vote.Id)
+	require.Equal(voteRes.VoteResult, vote.VoteResult)
+
+	// quorum against
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_AGAINST,
+	}
+	scaledSupport = math.LegacyNewDec(0)
+	scaledAgainst = math.LegacyNewDec(100)
+	scaledInvalid = math.LegacyNewDec(0)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
+	disputeRes, err = k.Disputes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
+	require.Equal(disputeRes.HashId, dispute.HashId)
+	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(voteRes.Id, vote.Id)
+	require.Equal(voteRes.VoteResult, vote.VoteResult)
+
+	// no quorum majority against
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_AGAINST,
+	}
+	scaledSupport = math.LegacyNewDec(0)
+	scaledAgainst = math.LegacyNewDec(40)
+	scaledInvalid = math.LegacyNewDec(0)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
+	disputeRes, err = k.Disputes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
+	require.Equal(disputeRes.HashId, dispute.HashId)
+	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(voteRes.Id, vote.Id)
+	require.Equal(voteRes.VoteResult, vote.VoteResult)
+
+	// quorum invalid
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_INVALID,
+	}
+	scaledSupport = math.LegacyNewDec(0)
+	scaledAgainst = math.LegacyNewDec(0)
+	scaledInvalid = math.LegacyNewDec(51)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
+	disputeRes, err = k.Disputes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
+	require.Equal(disputeRes.HashId, dispute.HashId)
+	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(voteRes.Id, vote.Id)
+	require.Equal(voteRes.VoteResult, vote.VoteResult)
+
+	// no quorum majority invalid
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_INVALID,
+	}
+	scaledSupport = math.LegacyNewDec(0)
+	scaledAgainst = math.LegacyNewDec(0)
+	scaledInvalid = math.LegacyNewDec(49)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
+	disputeRes, err = k.Disputes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
+	require.Equal(disputeRes.HashId, dispute.HashId)
+	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(voteRes.Id, vote.Id)
+	require.Equal(voteRes.VoteResult, vote.VoteResult)
 }

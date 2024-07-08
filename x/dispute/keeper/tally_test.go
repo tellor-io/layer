@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -104,48 +106,184 @@ func (s *KeeperTestSuite) TestCalculateVotingPower() {
 	require.Equal(votingPower, math.NewInt(0))
 }
 
-func (s *KeeperTestSuite) TestTallyVote() {
+func (s *KeeperTestSuite) TestTallyVoteQuorumReachedWithoutTokenHolders() {
 	require := s.Require()
 	ctx := s.ctx
 	k := s.disputeKeeper
 	bk := s.bankKeeper
-	require.NotNil(k)
-	require.NotNil(ctx)
-	id := uint64(1)
 
-	require.Error(k.TallyVote(ctx, id))
+	id1 := uint64(1)
+	userAddr := sample.AccAddressBytes()
+	tokenHolderAddr := sample.AccAddressBytes()
+	reporterAddr := sample.AccAddressBytes()
+	teamAddr, err := k.GetTeamAddress(ctx)
+	require.NoError(err)
 
-	require.NoError(k.Votes.Set(ctx, id, types.Vote{
-		Id:         id,
+	require.Error(k.TallyVote(ctx, id1))
+
+	require.NoError(k.Votes.Set(ctx, id1, types.Vote{
+		Id:         id1,
 		VoteResult: types.VoteResult_NO_TALLY,
 		Executed:   false,
 	}))
-	require.Error(k.TallyVote(ctx, id))
+	require.Error(k.TallyVote(ctx, id1))
 
-	require.NoError(k.Disputes.Set(ctx, id, types.Dispute{
-		DisputeId: id,
+	require.NoError(k.Disputes.Set(ctx, id1, types.Dispute{
+		DisputeId: id1,
 		HashId:    []byte("hashId"),
 	}))
-	require.Error(k.TallyVote(ctx, id))
+	require.Error(k.TallyVote(ctx, id1))
 
 	require.NoError(k.BlockInfo.Set(ctx, []byte("hashId"), types.BlockInfo{
 		TotalReporterPower: math.NewInt(250 * 1e6),
 		TotalUserTips:      math.NewInt(250 * 1e6),
 	}))
-	bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(1_000 * 1e6)}, nil)
-	require.ErrorContains(k.TallyVote(ctx, id), "vote period not ended and quorum not reached")
+	bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(250 * 1e6)}, nil)
+	require.ErrorContains(k.TallyVote(ctx, id1), "vote period not ended and quorum not reached")
 
-	// set team vote
+	// set team vote (25% support)
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(250 * 1e6)}))
+	_, err = k.SetTeamVote(ctx, id1, teamAddr)
+	require.NoError(err)
+	bk.On("GetBalance", ctx, teamAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, userAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, reporterAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, tokenHolderAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	require.Error(k.TallyVote(ctx, id1))
+
+	// set user vote (25% support)
+	require.NoError(k.UsersGroup.Set(ctx, collections.Join(id1, userAddr.Bytes()), math.NewInt(250*1e6)))
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, userAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(250 * 1e6)}))
+
+	// set reporter vote (25% support)
+	require.NoError(k.ReportersGroup.Set(ctx, collections.Join(id1, reporterAddr.Bytes()), math.NewInt(250*1e6)))
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, reporterAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(250 * 1e6)}))
+
+	// Vote ends with 75% Support
+	require.NoError(k.TallyVote(ctx, id1))
+	dispute, err := k.Disputes.Get(ctx, id1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeStatus, types.Resolved)
+	require.Equal(dispute.DisputeId, id1)
+	require.Equal(dispute.HashId, []byte("hashId"))
+	require.Equal(dispute.Open, false)
+}
+
+func (s *KeeperTestSuite) TestTallyVoteQuorumReachedWithTokenHolders() {
+	require := s.Require()
+	ctx := s.ctx
+	k := s.disputeKeeper
+	bk := s.bankKeeper
+
+	id1 := uint64(1)
+	userAddr := sample.AccAddressBytes()
+	tokenHolderAddr := sample.AccAddressBytes()
+	reporterAddr := sample.AccAddressBytes()
 	teamAddr, err := k.GetTeamAddress(ctx)
 	require.NoError(err)
-	require.NoError(k.Voter.Set(ctx, collections.Join(id, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(250 * 1e6)}))
-	_, err = k.SetTeamVote(ctx, id, teamAddr)
-	require.NoError(err)
-	require.Error(k.TallyVote(ctx, id))
 
-	// set user vote
+	require.NoError(k.Votes.Set(ctx, id1, types.Vote{
+		Id:         id1,
+		VoteResult: types.VoteResult_NO_TALLY,
+		Executed:   false,
+	}))
+
+	require.NoError(k.Disputes.Set(ctx, id1, types.Dispute{
+		DisputeId: id1,
+		HashId:    []byte("hashId"),
+	}))
+
+	require.NoError(k.BlockInfo.Set(ctx, []byte("hashId"), types.BlockInfo{
+		TotalReporterPower: math.NewInt(250 * 1e6),
+		TotalUserTips:      math.NewInt(250 * 1e6),
+	}))
+	bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(250 * 1e6)}, nil)
+
+	// set team vote (25% support)
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_AGAINST, VoterPower: math.NewInt(250 * 1e6)}))
+	_, err = k.SetTeamVote(ctx, id1, teamAddr)
+	require.NoError(err)
+	bk.On("GetBalance", ctx, teamAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, userAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, reporterAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, tokenHolderAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(250*1e6)), nil).Once()
+
+	// set user vote (25% support)
+	require.NoError(k.UsersGroup.Set(ctx, collections.Join(id1, userAddr.Bytes()), math.NewInt(250*1e6)))
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, userAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_AGAINST, VoterPower: math.NewInt(250 * 1e6)}))
+
+	// set reporter vote (25% support)
+	require.NoError(k.ReportersGroup.Set(ctx, collections.Join(id1, reporterAddr.Bytes()), math.NewInt(1*1e6)))
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, reporterAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_AGAINST, VoterPower: math.NewInt(1 * 1e6)}))
+
+	// set token holder vote
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, tokenHolderAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_AGAINST, VoterPower: math.NewInt(250 * 1e6)}))
+
+	require.NoError(k.TallyVote(ctx, id1))
+	dispute, err := k.Disputes.Get(ctx, id1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeStatus, types.Resolved)
+	require.Equal(dispute.DisputeId, id1)
+	require.Equal(dispute.HashId, []byte("hashId"))
+	require.Equal(dispute.Open, false)
+}
+
+func (s *KeeperTestSuite) TestTallyVoteQuorumNotReachedVotePeriodEnds() {
+	require := s.Require()
+	ctx := s.ctx
+	k := s.disputeKeeper
+	bk := s.bankKeeper
+
+	id1 := uint64(1)
 	userAddr := sample.AccAddressBytes()
-	require.NoError(k.UsersGroup.Set(ctx, collections.Join(id, userAddr.Bytes()), math.NewInt(250*1e6)))
-	require.NoError(k.Voter.Set(ctx, collections.Join(id, userAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(250 * 1e6)}))
-	require.NoError(k.TallyVote(ctx, id))
+	tokenHolderAddr := sample.AccAddressBytes()
+	reporterAddr := sample.AccAddressBytes()
+	teamAddr, err := k.GetTeamAddress(ctx)
+	require.NoError(err)
+
+	require.NoError(k.Votes.Set(ctx, id1, types.Vote{
+		Id:         id1,
+		VoteResult: types.VoteResult_NO_TALLY,
+		Executed:   false,
+		VoteEnd:    ctx.BlockTime(),
+	}))
+
+	require.NoError(k.Disputes.Set(ctx, id1, types.Dispute{
+		DisputeId: id1,
+		HashId:    []byte("hashId"),
+	}))
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(120 * time.Hour))
+	require.NoError(k.BlockInfo.Set(ctx, []byte("hashId"), types.BlockInfo{
+		TotalReporterPower: math.NewInt(250 * 1e6),
+		TotalUserTips:      math.NewInt(250 * 1e6),
+	}))
+	bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(250 * 1e6)}, nil).Once()
+
+	// set team vote (25% invalid)
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_INVALID, VoterPower: math.NewInt(250 * 1e6)}))
+	_, err = k.SetTeamVote(ctx, id1, teamAddr)
+	require.NoError(err)
+	bk.On("GetBalance", ctx, teamAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(1*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, userAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(1*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, reporterAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(1*1e6)), nil).Once()
+	bk.On("GetBalance", ctx, tokenHolderAddr, layertypes.BondDenom).Return(sdk.NewCoin(layertypes.BondDenom, math.NewInt(1*1e6)), nil).Once()
+
+	// set user vote (<1 % invalid)
+	require.NoError(k.UsersGroup.Set(ctx, collections.Join(id1, userAddr.Bytes()), math.NewInt(1*1e6)))
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, userAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_INVALID, VoterPower: math.NewInt(1 * 1e6)}))
+
+	// set reporter vote (<1% invalid)
+	require.NoError(k.ReportersGroup.Set(ctx, collections.Join(id1, reporterAddr.Bytes()), math.NewInt(1*1e6)))
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, reporterAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_INVALID, VoterPower: math.NewInt(1 * 1e6)}))
+
+	// set token holder vote (<1% invalid)
+	require.NoError(k.Voter.Set(ctx, collections.Join(id1, tokenHolderAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_INVALID, VoterPower: math.NewInt(1 * 1e6)}))
+
+	require.NoError(k.TallyVote(ctx, id1))
+
+	dispute, err := k.Disputes.Get(ctx, id1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeStatus, types.Resolved)
+	require.Equal(dispute.Open, false)
 }
