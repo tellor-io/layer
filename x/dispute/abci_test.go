@@ -26,8 +26,6 @@ type TestSuite struct {
 	bankKeeper     *mocks.BankKeeper
 	oracleKeeper   *mocks.OracleKeeper
 	reporterKeeper *mocks.ReporterKeeper
-
-	msgServer types.MsgServer
 }
 
 func (s *TestSuite) SetupTest() {
