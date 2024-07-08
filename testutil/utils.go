@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -83,4 +84,11 @@ func EncodeValue(number float64) string {
 
 	encodedString := hex.EncodeToString(encodedBytes)
 	return encodedString
+}
+
+func WithBlockTime(c sdk.Context, newTime time.Time) sdk.Context {
+	newHeader := c.HeaderInfo()
+
+	newHeader.Time = newTime.Round(0).UTC()
+	return c.WithHeaderInfo(newHeader)
 }

@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 		QueryId:         queryIdStr,
 		AggregateMethod: "weighted-median",
 		Value:           value,
-		Timestamp:       s.ctx.BlockTime(),
+		Timestamp:       s.ctx.HeaderInfo().Time,
 		Cyclelist:       true,
 		BlockNumber:     s.ctx.BlockHeight(),
 	}

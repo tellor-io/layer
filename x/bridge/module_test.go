@@ -113,7 +113,7 @@ func TestEndBlock(t *testing.T) {
 		},
 	}, nil)
 	queryId := []byte("queryId")
-	timestamp := sdkCtx.BlockTime()
+	timestamp := sdkCtx.HeaderInfo().Time
 	timestampPlus1 := timestamp.Add(time.Second)
 
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()

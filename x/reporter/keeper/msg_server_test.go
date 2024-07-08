@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
@@ -202,7 +203,7 @@ func TestSwitchReporter(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(reporter2.Bytes(), selection.Reporter))
 	require.False(t, selection.LockedUntilTime.IsZero())
-	require.Equal(t, selection.LockedUntilTime, ctx.BlockTime().Add(time.Hour))
+	require.Equal(t, selection.LockedUntilTime, ctx.HeaderInfo().Time.Add(time.Hour))
 }
 
 func TestRemoveSelector(t *testing.T) {
@@ -267,13 +268,13 @@ func TestUnjailReporter(t *testing.T) {
 	require.ErrorContains(t, err, "cannot unjail already unjailed reporter, false: reporter not jailed")
 
 	reporter.Jailed = true
-	reporter.JailedUntil = ctx.BlockTime().Add(time.Hour)
+	reporter.JailedUntil = ctx.HeaderInfo().Time.Add(time.Hour)
 	require.NoError(t, k.Reporters.Set(ctx, addr, reporter))
 
 	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
 	require.ErrorContains(t, err, "cannot unjail reporter before jail time is up")
 
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
+	ctx = testutil.WithBlockTime(ctx, ctx.HeaderInfo().Time.Add(time.Hour))
 	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
 	require.NoError(t, err)
 

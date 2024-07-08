@@ -266,7 +266,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 
 	}
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 	// // tally vote
 	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
 	s.NoError(err)
@@ -362,7 +362,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	_, err = msgServer.Vote(s.Setup.Ctx, &vote[0])
 	s.NoError(err)
 
-	ctx := s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	ctx := testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 	err = s.Setup.Disputekeeper.Tallyvote(ctx, 1)
 	s.NoError(err)
 
@@ -698,7 +698,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.Error(err, "can't start a new round for this dispute 1; dispute status DISPUTE_STATUS_VOTING")
 	// forward time to end voting period pre execute vote
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.TWO_DAYS+1))
 	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
 	s.ErrorContains(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1), "vote already tallied")
 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1), "dispute is not resolved yet")
@@ -723,7 +723,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.NoError(err)
 
 	// expire vote period
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2))
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
 	// attempt to start another round
@@ -782,7 +782,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
 	s.NoError(err)
 	// forward time to expire dispute
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
 }
@@ -824,7 +824,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	s.NoError(err)
 
 	// forward time to expire dispute
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 
 	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
@@ -863,7 +863,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 		QueryType:       "SpotPrice",
 		AggregateMethod: aggmethod,
 		Value:           testutil.EncodeValue(1.00),
-		Timestamp:       s.Setup.Ctx.BlockTime(),
+		Timestamp:       s.Setup.Ctx.HeaderInfo().Time,
 		Cyclelist:       true,
 		BlockNumber:     s.Setup.Ctx.BlockHeight(),
 	}
@@ -874,7 +874,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 		QueryType:       "SpotPrice",
 		AggregateMethod: aggmethod,
 		Value:           testutil.EncodeValue(2.00),
-		Timestamp:       s.Setup.Ctx.BlockTime(),
+		Timestamp:       s.Setup.Ctx.HeaderInfo().Time,
 		Cyclelist:       true,
 		BlockNumber:     s.Setup.Ctx.BlockHeight(),
 	}
@@ -885,13 +885,13 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 		QueryType:       "SpotPrice",
 		AggregateMethod: aggmethod,
 		Value:           testutil.EncodeValue(3.00),
-		Timestamp:       s.Setup.Ctx.BlockTime(),
+		Timestamp:       s.Setup.Ctx.HeaderInfo().Time,
 		Cyclelist:       true,
 		BlockNumber:     s.Setup.Ctx.BlockHeight(),
 	}
 
 	// forward time
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	// set report
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report1.QueryId, reporter1.Bytes(), uint64(1)), report1)
@@ -908,7 +908,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// get aggregate
-	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().UnixMilli()))
+	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.HeaderInfo().Time.UnixMilli()))
 	s.NoError(err)
 	s.Equal(agg.AggregateReporter, reporter2.String())
 	s.False(agg.Flagged)
@@ -931,7 +931,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// check if aggregate is flagged
-	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().UnixMilli()))
+	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.HeaderInfo().Time.UnixMilli()))
 	s.NoError(err)
 	s.True(agg.Flagged)
 }

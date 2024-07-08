@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
@@ -45,7 +46,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 		QueryId:         queryId,
 		AggregateMethod: "weighted-median",
 		Value:           value,
-		Timestamp:       s.ctx.BlockTime(),
+		Timestamp:       s.ctx.HeaderInfo().Time,
 		Cyclelist:       true,
 		BlockNumber:     s.ctx.BlockHeight(),
 	}
@@ -137,7 +138,7 @@ func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
 	// s.ErrorContains(err, "commit reveal window is too early")
 
 	// try to submit value 2 blocks after commit
-	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour))
+	s.ctx = testutil.WithBlockTime(s.ctx, s.ctx.HeaderInfo().Time.Add(time.Hour))
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil) // submitreq.Salt = salt
 

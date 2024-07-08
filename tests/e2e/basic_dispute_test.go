@@ -110,7 +110,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 1 - direct reveal for cycle list
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get new cycle list query data
@@ -130,7 +130,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
@@ -155,7 +155,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 2 - create a dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -176,7 +176,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
-		Timestamp:   s.Setup.Ctx.BlockTime(),
+		Timestamp:   s.Setup.Ctx.HeaderInfo().Time,
 		BlockNumber: revealBlock,
 	}
 
@@ -216,7 +216,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 3 - unjail reporter
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, dispute.DisputeId)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
@@ -252,7 +252,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 4 - direct reveal for cycle list again
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
@@ -274,7 +274,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
@@ -301,7 +301,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 5 - open minor dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -315,7 +315,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
-		Timestamp:   s.Setup.Ctx.BlockTime(),
+		Timestamp:   s.Setup.Ctx.HeaderInfo().Time,
 		BlockNumber: revealBlock,
 	}
 
@@ -331,7 +331,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// send propose dispute tx
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
-	disputeStartTime := s.Setup.Ctx.BlockTime()
+	disputeStartTime := s.Setup.Ctx.HeaderInfo().Time
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -340,7 +340,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 6 - vote on minor dispute
 	// ---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
 	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2)
@@ -385,7 +385,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(vote.VoteEnd, disputeStartTime.Add(disputekeeper.TWO_DAYS))
 
 	// advance 2 days to expire vote
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(disputekeeper.THREE_DAYS))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(disputekeeper.THREE_DAYS))
 	// call unjail function
 	msgUnjailReporter = reportertypes.MsgUnjailReporter{
 		ReporterAddress: reporterAccount.String(),
@@ -405,7 +405,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 7 - minor dispute ends and another direct reveal for cycle list
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	require.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
 	require.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2))
@@ -445,7 +445,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
@@ -471,7 +471,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 8 - open major dispute for report
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -488,7 +488,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Power:       oneHundredPercent.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
-		Timestamp:   s.Setup.Ctx.BlockTime(),
+		Timestamp:   s.Setup.Ctx.HeaderInfo().Time,
 		BlockNumber: revealBlock,
 	}
 	// create msg for propose dispute tx
@@ -504,7 +504,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// send propose dispute tx
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
-	disputeStartTime = s.Setup.Ctx.BlockTime()
+	disputeStartTime = s.Setup.Ctx.HeaderInfo().Time
 	disputeStartHeight := s.Setup.Ctx.BlockHeight()
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -514,7 +514,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 9 - vote on major dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 3)
 	require.Error(err, "vote period not ended and quorum not reached")
@@ -560,7 +560,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(vote.VoteEnd, disputeStartTime.Add(disputekeeper.TWO_DAYS))
 
 	// advance 3 days to expire vote
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(disputekeeper.THREE_DAYS))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(disputekeeper.THREE_DAYS))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -569,7 +569,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// Height 10 - dispute is resolved, reporter no longer a reporter
 	// ---------------------------------------------------------------------------
 	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	// s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx,s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	// require.NoError(err)
 

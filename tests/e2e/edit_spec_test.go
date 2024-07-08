@@ -40,6 +40,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	valAccAddrs, valValAddrs, _ := s.Setup.CreateValidators(1)
 	// valAccAddrs := s.CreateReporters(1, valValAddrs, vals)
@@ -55,6 +56,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	abiComponents := []*registrytypes.ABIComponent{
 		{Name: "asset", FieldType: "string"},
@@ -89,6 +91,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	encodedDataSpec, err := dataspec.EncodeData("TWAP", `["eth","usd"]`)
 	require.NoError(err)
@@ -117,6 +120,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	msgSubmit := oracletypes.MsgSubmitValue{
 		Creator:   valAccAddrs[0].String(),
@@ -126,6 +130,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -137,6 +142,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
 		SelectorAddress:  valAccAddrs[0].String(),
@@ -195,8 +201,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.Equal(vote.ProposalId, proposal.ProposalId)
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
-
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(48 * time.Hour))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(48*time.Hour))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -207,6 +213,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	// proposal passed
 	proposal1, err := s.Setup.Govkeeper.Proposals.Get(s.Setup.Ctx, proposal.ProposalId)
@@ -233,6 +240,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -244,6 +252,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
@@ -285,6 +294,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -296,6 +306,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
@@ -314,8 +325,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.Equal(vote.ProposalId, proposal.ProposalId)
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
-
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(48 * time.Hour))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(48*time.Hour))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -326,6 +337,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	// proposal passed
 	proposal1, err = s.Setup.Govkeeper.Proposals.Get(s.Setup.Ctx, proposal.ProposalId)
@@ -352,6 +364,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
