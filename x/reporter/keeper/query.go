@@ -42,18 +42,18 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 	return &types.QueryReportersResponse{Reporters: reportersPtrs}, nil
 }
 
-// DelegatorReporter queries the reporter of a delegator
-func (k Querier) DelegatorReporter(ctx context.Context, req *types.QueryDelegatorReporterRequest) (*types.QueryDelegatorReporterResponse, error) {
+// SelectorReporter queries the reporter of a selector
+func (k Querier) SelectorReporter(ctx context.Context, req *types.QuerySelectorReporterRequest) (*types.QuerySelectorReporterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	delAddr := sdk.MustAccAddressFromBech32(req.DelegatorAddress)
+	delAddr := sdk.MustAccAddressFromBech32(req.SelectorAddress)
 
-	delegator, err := k.Keeper.Selectors.Get(ctx, delAddr)
+	selector, err := k.Keeper.Selectors.Get(ctx, delAddr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.QueryDelegatorReporterResponse{Reporter: sdk.AccAddress(delegator.GetReporter()).String()}, nil
+	return &types.QuerySelectorReporterResponse{Reporter: sdk.AccAddress(selector.GetReporter()).String()}, nil
 }

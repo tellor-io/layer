@@ -10,15 +10,5 @@ const (
 	// RouterKey defines the module's message routing key
 	RouterKey = StoreKey
 
-	MintToTeam = "mint_to_team"
-
 	TimeBasedRewards = "time_based_rewards"
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
-
-func MinterKey() []byte {
-	return KeyPrefix("Minter")
-}

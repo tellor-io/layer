@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -12,7 +11,7 @@ import (
 )
 
 func TestReporterDelegatorIndex(t *testing.T) {
-	k, _, _, ctx := keepertest.ReporterKeeper(t)
+	k, _, _, _, ctx, _ := setupKeeper(t)
 
 	repAddr := sample.AccAddressBytes()
 	// set reporter
