@@ -2,7 +2,6 @@ package dispute
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -19,7 +18,6 @@ func CheckPrevoteDisputesForExpiration(ctx context.Context, k keeper.Keeper) err
 	if err != nil {
 		return err
 	}
-	fmt.Println("iter: ", iter)
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.PrimaryKey()
