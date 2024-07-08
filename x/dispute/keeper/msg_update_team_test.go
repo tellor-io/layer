@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"encoding/hex"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestMsgUpdateTeam() {

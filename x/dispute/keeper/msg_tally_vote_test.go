@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestMsgTallyVote() {

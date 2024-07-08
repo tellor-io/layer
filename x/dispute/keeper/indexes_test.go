@@ -15,7 +15,6 @@ func (s *KeeperTestSuite) TestIndexesList_Disputes() {
 	im := keeper.NewDisputesIndex(schema)
 	index := im.IndexesList()
 	require.NotNil(s.T(), index)
-
 }
 
 func (s *KeeperTestSuite) TestNewDisputesIndex() {
@@ -25,7 +24,6 @@ func (s *KeeperTestSuite) TestNewDisputesIndex() {
 	require.NotNil(s.T(), disputesIndex)
 	require.NotNil(s.T(), disputesIndex.OpenDisputes)
 	require.NotNil(s.T(), disputesIndex.DisputeByReporter)
-
 }
 
 func (s *KeeperTestSuite) TestIndexesList_Voters() {
