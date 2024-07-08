@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -13,7 +12,7 @@ import (
 )
 
 func TestJailReporter(t *testing.T) {
-	k, _, _, ctx := keepertest.ReporterKeeper(t)
+	k, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	updatedAt := time.Now().UTC()
 	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
@@ -35,7 +34,7 @@ func TestJailReporter(t *testing.T) {
 }
 
 func TestUnJailReporter(t *testing.T) {
-	k, _, _, ctx := keepertest.ReporterKeeper(t)
+	k, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	jailedAt := time.Now().UTC()
 	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
