@@ -23,7 +23,8 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 		return nil
 	}
 
-	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentTime := sdkCtx.HeaderInfo().Time
 	if currentTime.IsZero() {
 		// return on invalid block time
 		return nil

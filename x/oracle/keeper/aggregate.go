@@ -36,7 +36,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockTime := sdkCtx.HeaderInfo().Time
 
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
@@ -109,7 +109,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 	report.Nonce = nonce
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentTimestamp := sdkCtx.BlockTime().UnixMilli()
+	currentTimestamp := sdkCtx.HeaderInfo().Time.UnixMilli()
 	report.Height = sdkCtx.BlockHeight()
 
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)

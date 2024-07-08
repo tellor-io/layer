@@ -28,7 +28,7 @@ func CheckPrevoteDisputesForExpiration(ctx context.Context, k keeper.Keeper) err
 		if err != nil {
 			return err
 		}
-		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
+		if sdk.UnwrapSDKContext(ctx).HeaderInfo().Time.After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
 			dispute.Open = false
 			dispute.DisputeStatus = types.Failed
 			if err := k.Disputes.Set(ctx, key, dispute); err != nil {

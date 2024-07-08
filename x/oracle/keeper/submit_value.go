@@ -41,7 +41,7 @@ func (k Keeper) setValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		QueryId:         queryId,
 		Value:           val,
 		AggregateMethod: dataSpec.AggregationMethod,
-		Timestamp:       sdkCtx.BlockTime(),
+		Timestamp:       sdkCtx.HeaderInfo().Time,
 		Cyclelist:       incycle,
 		BlockNumber:     sdkCtx.BlockHeight(),
 	}

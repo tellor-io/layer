@@ -75,7 +75,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 
 	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
+	if query.Expiration.Add(offset).Before(sdkCtx.HeaderInfo().Time) {
 		return nil, errors.New("missed commit reveal window")
 	}
 	genHash := oracleutils.CalculateCommitment(msg.Value, msg.Salt)
@@ -105,7 +105,7 @@ func (k Keeper) directReveal(ctx context.Context,
 	incycle bool,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockTime := sdkCtx.HeaderInfo().Time
 
 	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(blockTime) && !incycle {
 		return types.ErrNoTipsNotInCycle

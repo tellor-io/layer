@@ -45,15 +45,15 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		}
 
 		query.Amount = math.ZeroInt()
-		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
+		query.Expiration = ctx.HeaderInfo().Time.Add(query.RegistrySpecTimeframe)
 	}
 	prevAmt := query.Amount
 	query.Amount = query.Amount.Add(tip.Amount)
 
 	// expired submission window
-	if query.Expiration.Before(ctx.BlockTime()) {
+	if query.Expiration.Before(ctx.HeaderInfo().Time) {
 		// query expired, create new expiration time and new id
-		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
+		query.Expiration = ctx.HeaderInfo().Time.Add(query.RegistrySpecTimeframe)
 		// in aggregate you set revealed reports to false after pay out
 		// so if query either has reports or is paid out then new id should be generated
 		if query.HasRevealedReports || prevAmt.IsZero() {

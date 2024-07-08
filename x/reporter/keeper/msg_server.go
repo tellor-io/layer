@@ -170,7 +170,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		if err != nil {
 			return nil, err
 		}
-		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(maxReportBuffer)
+		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).HeaderInfo().Time.Add(maxReportBuffer)
 	}
 	selector.Reporter = reporterAddr.Bytes()
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selector); err != nil {

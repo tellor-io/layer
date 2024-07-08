@@ -135,11 +135,11 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if sdkctx.BlockTime().Before(*maxStake.Expiration) {
+	if sdkctx.HeaderInfo().Time.Before(*maxStake.Expiration) {
 		return nil
 	}
 	// reset expiration
-	newExpiration := sdkctx.BlockTime().Add(12 * time.Hour)
+	newExpiration := sdkctx.HeaderInfo().Time.Add(12 * time.Hour)
 	// get current total stake
 	total, err := k.stakingKeeper.TotalBondedTokens(ctx)
 	if err != nil {
