@@ -3,6 +3,7 @@ pragma solidity ^0.8.22;
 
 import "../bridge/BlobstreamO.sol";
 import { LayerTransition } from "./LayerTransition.sol";
+import "hardhat/console.sol";
 
 /// @title TokenBridge
 /// @dev This is the tellor token bridge to move tokens from
@@ -42,7 +43,7 @@ contract TokenBridge is LayerTransition{
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
     constructor(address _token, address _blobstream, address _tellorFlex) LayerTransition(_tellorFlex, _token){
         bridge = BlobstreamO(_blobstream);
-        _refreshDepositLimit();
+        // _refreshDepositLimit();
     }
 
     /// @notice claim extra withdrawals that were not fully withdrawn
@@ -78,23 +79,23 @@ contract TokenBridge is LayerTransition{
     }
 
     /// @notice This withdraws tokens from layer to mainnet Ethereum
-    /// @param _attest The data being verified
+    /// @param _attestData The data being verified
     /// @param _valset array of current validator set
     /// @param _sigs Signatures
     /// @param _depositId depositId from the layer side
     function withdrawFromLayer(
-        OracleAttestationData calldata _attest,
+        OracleAttestationData calldata _attestData,
         Validator[] calldata _valset,
         Signature[] calldata _sigs,
         uint256 _depositId
     ) external {
-        require(_attest.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
+        require(_attestData.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
-        require(block.timestamp - _attest.report.timestamp > 12 hours, "TokenBridge: premature attestation");
-        bridge.verifyOracleData(_attest, _valset, _sigs);
-        require(_attest.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
+        require(block.timestamp - _attestData.report.timestamp > 12 hours, "TokenBridge: premature attestation");
+        bridge.verifyOracleData(_attestData, _valset, _sigs);
+        require(_attestData.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawalClaimed[_depositId] = true;    
-        (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attest.report.value, (address, string, uint256));
+        (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attestData.report.value, (address, string, uint256));
         uint256 _amountConverted = _amountLoya * 1e12; 
         uint256 _depositLimit = _refreshDepositLimit();
         if(_depositLimit < _amountConverted){
@@ -113,8 +114,7 @@ contract TokenBridge is LayerTransition{
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function depositLimit() external view returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
-            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
-            return _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
+            return token.balanceOf(address(this)) / DEPOSIT_LIMIT_DENOMINATOR;
         }
         else{
             return depositLimitRecord;
@@ -125,8 +125,7 @@ contract TokenBridge is LayerTransition{
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
-            uint256 _layerTokenSupply = token.balanceOf(address(this)) + INITIAL_LAYER_TOKEN_SUPPLY;
-            depositLimitRecord = _layerTokenSupply / DEPOSIT_LIMIT_DENOMINATOR;
+            depositLimitRecord = token.balanceOf(address(this)) / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
         } 
         return depositLimitRecord;
