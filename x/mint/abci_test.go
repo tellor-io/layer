@@ -38,6 +38,10 @@ func TestBeginBlocker(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
 	err = mint.BeginBlocker(ctx, k)
 	require.Nil(err)
+
+	minter, err = k.Minter.Get(ctx)
+	require.Nil(err)
+	require.Equal(minter.PreviousBlockTime.Unix(), time.Unix(1000, 0).Unix())
 }
 
 func TestMintBlockProvision(t *testing.T) {
