@@ -4,10 +4,12 @@ import (
 	"testing"
 	time "time"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/mint/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestNewMinter(t *testing.T) {
