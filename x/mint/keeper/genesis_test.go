@@ -9,10 +9,13 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
-	genesisState := types.NewGenesisState("loya")
+	require := require.New(t)
 	k, ak, _, ctx := keepertest.MintKeeper(t)
+
+	genesisState := types.NewGenesisState("loya")
+	require.NotNil(genesisState)
 	k.InitGenesis(ctx, ak, genesisState)
 	got := k.ExportGenesis(ctx)
-	require.NotNil(t, got)
-	require.Equal(t, got.BondDenom, "loya")
+	require.NotNil(got)
+	require.Equal(got.BondDenom, "loya")
 }
