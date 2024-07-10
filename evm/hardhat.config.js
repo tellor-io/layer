@@ -2,6 +2,8 @@
 //require("hardhat-gas-reporter");
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
+require("hardhat-gas-reporter");
+
 // require("@nomiclabs/hardhat-web3");
 
 module.exports = {
