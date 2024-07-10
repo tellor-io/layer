@@ -3,14 +3,13 @@ pragma solidity ^0.8.22;
 
 import "../bridge/BlobstreamO.sol";
 import { LayerTransition } from "./LayerTransition.sol";
-import "hardhat/console.sol";
 
 /// @title TokenBridge
 /// @dev This is the tellor token bridge to move tokens from
 /// Ethereum to layer.  No one needs to do this.  The only reason you 
 /// move your tokens over is to become a reporter/validator/tipper.  It works by
 /// using layer itself as the bridge and then reads the lightclient contract for 
-/// bridging back.  There is a long delay in bridging back (enforced by layer) of 21 days
+/// bridging back.  There is a long delay in bridging back (enforced by layer) of 12 hours
 contract TokenBridge is LayerTransition{
     /*Storage*/
     BlobstreamO public bridge;
@@ -18,7 +17,6 @@ contract TokenBridge is LayerTransition{
     uint256 public depositLimitUpdateTime;//last time the limit was updated
     uint256 public depositLimitRecord;//amount you can bridge per limit period
     uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
-    uint256 public constant INITIAL_LAYER_TOKEN_SUPPLY = 100 ether; // update this as needed
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
 
     mapping(uint256 => bool) public withdrawalClaimed; // withdrawal id => claimed status
@@ -70,8 +68,8 @@ contract TokenBridge is LayerTransition{
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
         require(_amount > 0, "TokenBridge: amount must be greater than 0");
-        require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit for time period");
+        require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
         depositLimitRecord -= _amount;
         deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, block.number);
@@ -125,7 +123,12 @@ contract TokenBridge is LayerTransition{
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
-            depositLimitRecord = token.balanceOf(address(this)) / DEPOSIT_LIMIT_DENOMINATOR;
+            uint256 _tokenBalance = token.balanceOf(address(this));
+            if (_tokenBalance < 100 ether) {
+                token.mintToOracle();
+                _tokenBalance = token.balanceOf(address(this));
+            }
+            depositLimitRecord = _tokenBalance / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
         } 
         return depositLimitRecord;
