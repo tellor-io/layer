@@ -427,3 +427,14 @@ func (s *KeeperTestSuite) TestGetAggregateByTimestamp() {
 	s.NoError(err)
 	s.Equal(aggregate, retAgg)
 }
+
+func (s *KeeperTestSuite) TestGetAggregateByIndex() {
+	reportedAt := time.Now()
+	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
+	s.NoError(err)
+
+	retAgg, retTimestamp, err := s.oracleKeeper.GetAggregateByIndex(s.ctx, qId, 0)
+	s.NoError(err)
+	s.Equal(aggregate, retAgg)
+	s.Equal(reportedAt.Unix(), retTimestamp.Unix())
+}
