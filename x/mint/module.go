@@ -13,14 +13,16 @@ import (
 
 	// this line is used by starport scaffolding # 1
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
@@ -56,7 +58,9 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
-func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
+func (b AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+	types.RegisterInterfaces(reg)
+}
 
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.
@@ -107,7 +111,9 @@ func (AppModule) Name() string {
 }
 
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
-func (am AppModule) RegisterServices(cfg module.Configurator) {}
+func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
+}
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
@@ -151,13 +157,13 @@ func init() {
 type MintInputs struct {
 	depinject.In
 
-	KvStoreKey  *storetypes.KVStoreKey
-	MemStoreKey *storetypes.MemoryStoreKey
-	Cdc         codec.Codec
-	Config      *mintmodulev1.Module
+	Cdc    codec.Codec
+	Config *mintmodulev1.Module
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
+
+	StoreService store.KVStoreService
 }
 
 type MintOutputs struct {
@@ -168,11 +174,16 @@ type MintOutputs struct {
 }
 
 func ProvideModule(in MintInputs) MintOutputs {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 	k := keeper.NewKeeper(
 		in.Cdc,
-		in.KvStoreKey,
+		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
+		authority.String(),
 	)
 	m := NewAppModule(
 		in.Cdc,

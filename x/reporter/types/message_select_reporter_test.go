@@ -9,23 +9,23 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func TestMsgChangeReporter_ValidateBasic(t *testing.T) {
+func TestMsgSelectReporter_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name string
-		msg  MsgChangeReporter
+		msg  MsgSelectReporter
 		err  error
 	}{
 		{
 			name: "invalid address",
-			msg: MsgChangeReporter{
-				DelegatorAddress: "invalid_address",
+			msg: MsgSelectReporter{
+				SelectorAddress: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
-			msg: MsgChangeReporter{
-				DelegatorAddress: sample.AccAddress(),
-				ReporterAddress:  sample.AccAddress(),
+			msg: MsgSelectReporter{
+				SelectorAddress: sample.AccAddress(),
+				ReporterAddress: sample.AccAddress(),
 			},
 		},
 	}

@@ -7,8 +7,6 @@ import (
 	"github.com/tellor-io/layer/x/mint/keeper"
 	"github.com/tellor-io/layer/x/mint/types"
 
-	"cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -17,23 +15,29 @@ import (
 // the block provision for the current block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	minter, err := k.Minter.Get(ctx)
+	if err != nil {
+		return err
+	}
+	if !minter.Initialized {
+		return nil
+	}
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentTime := sdkCtx.BlockTime()
+	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
 	if currentTime.IsZero() {
 		// return on invalid block time
 		return nil
 	}
-	if err := mintBlockProvision(sdkCtx, k, currentTime); err != nil {
+
+	if err := mintBlockProvision(ctx, k, currentTime, minter); err != nil {
 		return err
 	}
-	setPreviousBlockTime(sdkCtx, k, currentTime)
-	return nil
+
+	return setPreviousBlockTime(ctx, k, currentTime)
 }
 
 // mintBlockProvision mints the block provision for the current block.
-func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time) error {
-	minter := k.GetMinter(ctx)
+func mintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.Time, minter types.Minter) error {
 	if minter.PreviousBlockTime == nil {
 		return nil
 	}
@@ -42,26 +46,20 @@ func mintBlockProvision(ctx sdk.Context, k keeper.Keeper, currentTime time.Time)
 		return err
 	}
 	toMintCoins := sdk.NewCoins(toMintCoin)
-	// mint coins double half going to team and half to oracle
-	err = k.MintCoins(ctx, toMintCoins.MulInt(math.NewInt(2)))
+	// mint tbr coins
+	err = k.MintCoins(ctx, toMintCoins)
 	if err != nil {
 		return err
 	}
 
-	err = k.SendCoinsToTeam(ctx, toMintCoins)
-	if err != nil {
-		return err
-	}
-
-	err = k.SendInflationaryRewards(ctx, toMintCoins)
-	if err != nil {
-		return err
-	}
-	return nil
+	return k.SendInflationaryRewards(ctx, toMintCoins)
 }
 
-func setPreviousBlockTime(ctx sdk.Context, k keeper.Keeper, blockTime time.Time) {
-	minter := k.GetMinter(ctx)
+func setPreviousBlockTime(ctx context.Context, k keeper.Keeper, blockTime time.Time) error {
+	minter, err := k.Minter.Get(ctx)
+	if err != nil {
+		return err
+	}
 	minter.PreviousBlockTime = &blockTime
-	k.SetMinter(ctx, minter)
+	return k.Minter.Set(ctx, minter)
 }

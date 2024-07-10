@@ -11,7 +11,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-func SimulateMsgChangeReporter(
+func SimulateMsgSelectReporter(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	k keeper.Keeper,
@@ -19,8 +19,8 @@ func SimulateMsgChangeReporter(
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		msg := &types.MsgChangeReporter{
-			DelegatorAddress: simAccount.Address.String(),
+		msg := &types.MsgSelectReporter{
+			SelectorAddress: simAccount.Address.String(),
 		}
 
 		// TODO: Handling the ChangeReporter simulation

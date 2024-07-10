@@ -210,7 +210,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validatorTimestamp := uint64(sdkCtx.BlockTime().Unix())
+	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 
 	// calculate validator set hash
 	_, validatorSetHash, err := k.EncodeAndHashValidatorSet(ctx, bridgeValidatorSet)
@@ -782,12 +782,12 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	snapshotBytes, err := k.EncodeOracleAttestationData(
 		queryId,
 		aggReport.AggregateValue,
-		timestamp.Unix(),
+		timestamp.UnixMilli(),
 		aggReport.ReporterPower,
-		tsBefore.Unix(),
-		tsAfter.Unix(),
+		tsBefore.UnixMilli(),
+		tsAfter.UnixMilli(),
 		validatorCheckpoint.Checkpoint,
-		attestationTimestamp.Unix(),
+		attestationTimestamp.UnixMilli(),
 	)
 	if err != nil {
 		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
@@ -795,7 +795,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	}
 
 	// set snapshot by report
-	key := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.Unix())))
+	key := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestamp.UnixMilli())))
 	// check if map for this key exists, otherwise create a new map
 	exists, err := k.AttestSnapshotsByReportMap.Has(ctx, key)
 	if err != nil {
@@ -826,11 +826,11 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	// set snapshot to snapshot data map
 	snapshotData := types.AttestationSnapshotData{
 		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
-		AttestationTimestamp: attestationTimestamp.Unix(),
-		PrevReportTimestamp:  tsBefore.Unix(),
-		NextReportTimestamp:  tsAfter.Unix(),
+		AttestationTimestamp: attestationTimestamp.UnixMilli(),
+		PrevReportTimestamp:  tsBefore.UnixMilli(),
+		NextReportTimestamp:  tsAfter.UnixMilli(),
 		QueryId:              queryId,
-		Timestamp:            timestamp.Unix(),
+		Timestamp:            timestamp.UnixMilli(),
 	}
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshotBytes, snapshotData)
 	if err != nil {

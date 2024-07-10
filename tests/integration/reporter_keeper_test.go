@@ -1,6 +1,8 @@
 package integration_test
 
 import (
+	"fmt"
+
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -8,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -29,36 +30,31 @@ func (s *IntegrationTestSuite) TestCreatingReporter() {
 	s.NoError(err)
 	val1, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
 	s.NoError(err)
-	// check validator reporting status
-	validatorReporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
 	s.NoError(err)
-	// validator reporter should have self tokens and delegator tokens as their total
-	s.Equal(validatorReporter.TotalTokens, val1.Tokens)
+
 	// delegator is not self reporting but delegated to another reporter
 	_, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, newDelegator)
 	s.Error(err)
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: newDelegator.String(), Commission: keeper.DefaultCommission()})
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: newDelegator.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
 	s.NoError(err)
 
-	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, newDelegator)
-	s.NoError(err)
 	delBonded, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, newDelegator)
 	s.NoError(err)
-	s.Equal(rep.TotalTokens, delBonded)
 
 	// check validator reporting tokens after delegator has moved
 	val2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
 	s.NoError(err)
 	// staked tokens should be same as before
 	s.Equal(val1.Tokens, val2.Tokens)
-	validatorReporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	validatorReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0])
 	s.NoError(err)
 	// reporting tokens should be less than before
-	s.True(validatorReporter.TotalTokens.LT(val1.Tokens))
-	s.True(validatorReporter.TotalTokens.Equal(val1.Tokens.Sub(delBonded)))
+	s.True(validatorReporterStake.LT(val1.Tokens))
+	s.True(validatorReporterStake.Equal(val1.Tokens.Sub(delBonded)))
 }
 
-func (s *IntegrationTestSuite) TestChangeReporterMsg() {
+func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	valAccs, valAddrs, _ := s.createValidatorAccs([]int64{100, 200})
@@ -75,36 +71,48 @@ func (s *IntegrationTestSuite) TestChangeReporterMsg() {
 	s.NoError(err)
 	val1, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
 	s.NoError(err)
+	// register reporter
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	s.NoError(err)
+	// add selector to the reporter
+	_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
+	s.NoError(err)
 	// check validator reporting status
-	validatorReporter1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	validatorReporter1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0])
 	s.NoError(err)
 	// validator reporter should have self tokens and delegator tokens as their total
-	s.Equal(validatorReporter1.TotalTokens, val1.Tokens)
+	s.Equal(validatorReporter1, val1.Tokens)
 
 	// check second reporter tokens
 	val2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[1])
 	s.NoError(err)
-	validatorReporter2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
+	// register second reporter
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[1].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	s.NoError(err)
+	validatorReporter2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[1])
 	s.NoError(err)
 	// validator reporter should have self tokens and delegator tokens as their total
-	s.Equal(validatorReporter2.TotalTokens, val2.Tokens)
+	s.Equal(validatorReporter2, val2.Tokens)
 	// valrep1 should have more tokens than valrep2
-	s.True(validatorReporter1.TotalTokens.GT(validatorReporter2.TotalTokens))
+	s.True(validatorReporter1.GT(validatorReporter2))
 
 	// change reporter
-	_, err = msgServer.ChangeReporter(s.Setup.Ctx, &reportertypes.MsgChangeReporter{DelegatorAddress: newDelegator.String(), ReporterAddress: valAccs[1].String()})
+	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[1].String()})
 	s.NoError(err)
-
+	// forward time to bypass the lock time that the delegator has
+	maxbuffer, err := s.Setup.Registrykeeper.MaxReportBufferWindow(s.Setup.Ctx)
+	s.NoError(err)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(maxbuffer))
 	// check validator reporting tokens after delegator has moved
-	validatorReporter1, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	validatorReporter1, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0])
 	s.NoError(err)
-	validatorReporter2, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
+	validatorReporter2, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[1])
 	s.NoError(err)
 	// reporting tokens should be less than before
-	s.True(validatorReporter1.TotalTokens.LT(val1.Tokens))
-	s.True(validatorReporter2.TotalTokens.GT(val2.Tokens))
+	s.True(validatorReporter1.LT(val1.Tokens))
+	s.True(validatorReporter2.GT(val2.Tokens))
 	// valrep2 should have more tokens than valrep1
-	s.True(validatorReporter2.TotalTokens.GT(validatorReporter1.TotalTokens))
+	s.True(validatorReporter2.GT(validatorReporter1))
 }
 
 func (s *IntegrationTestSuite) TestAddAmountToStake() {
@@ -158,50 +166,6 @@ func (s *IntegrationTestSuite) TestGetBondedValidators() {
 	}
 }
 
-// see if delegators when they stake the reporter tokens increase
-func (s *IntegrationTestSuite) TestAddReporterTokens() {
-	valAccs, valAddrs, _ := s.Setup.CreateValidators(1)
-	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	valAcc := valAccs[0]
-	valAdd := valAddrs[0]
-	testCases := []struct {
-		name      string
-		delegator sdk.AccAddress
-	}{
-		{
-			name:      "one",
-			delegator: sample.AccAddressBytes(),
-		},
-		{
-			name:      "two",
-			delegator: sample.AccAddressBytes(),
-		},
-		{
-			name:      "three",
-			delegator: sample.AccAddressBytes(),
-		},
-	}
-	amt := math.NewInt(1000 * 1e6)
-	repBefore, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc)
-	s.NoError(err)
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			s.Setup.MintTokens(tc.delegator, amt)
-			msgDelegate := stakingtypes.NewMsgDelegate(
-				tc.delegator.String(),
-				valAdd.String(),
-				sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-			)
-			_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
-			s.NoError(err)
-			repBefore.TotalTokens = repBefore.TotalTokens.Add(amt)
-			rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc)
-			s.NoError(err)
-			s.Equal(rep.TotalTokens, repBefore.TotalTokens)
-		})
-	}
-}
-
 // one delegator stakes with multiple validators, check the delegation count
 func (s *IntegrationTestSuite) TestDelegatorCount() {
 	_, valAddrs, _ := s.Setup.CreateValidators(5)
@@ -219,22 +183,30 @@ func (s *IntegrationTestSuite) TestDelegatorCount() {
 		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
 		s.NoError(err)
 	}
-	del, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, delegatorAddr.Bytes())
+	// register reporter
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: delegatorAddr.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
 	s.NoError(err)
-	s.Equal(uint64(5), del.DelegationCount)
+	del, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, delegatorAddr.Bytes())
+	s.NoError(err)
+	s.Equal(int64(5), del.DelegationsCount)
 }
 
 // add 100 delegators to a reporter and check if the delegator count is 100
 // and what happens when the 101st delegator tries to delegate
-func (s *IntegrationTestSuite) TestMaxDelegatorCount() {
-	valAccs, valAddrs, _ := s.Setup.CreateValidator(1)
+func (s *IntegrationTestSuite) TestMaxSelectorsCount() {
+	valAccs, valAddrs, _ := s.Setup.CreateValidators(1)
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
+	s.NoError(err)
+	fmt.Println(val.Tokens)
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	s.NoError(err)
 	valAcc := valAccs[0]
 	valAdd := valAddrs[0]
-	k1 := valAcc
-	var k2 sdk.AccAddress
 	// delegate a 100 delegators
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 99; i++ {
 		delegatorAddr := sample.AccAddressBytes()
 		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
 		msgDelegate := stakingtypes.NewMsgDelegate(
@@ -242,230 +214,19 @@ func (s *IntegrationTestSuite) TestMaxDelegatorCount() {
 			valAdd.String(),
 			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
 		)
-		if i == 99 {
-			k2 = delegatorAddr
-		}
 		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
 		s.NoError(err)
-	}
 
-	// check delegator count
-	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc)
-	s.NoError(err)
-	s.Equal(uint64(100), rep.DelegatorsCount)
-	// check how many reporters are there
-	iter, err := s.Setup.Reporterkeeper.Reporters.Iterate(s.Setup.Ctx, nil)
-	s.NoError(err)
-	list, err := iter.Keys()
-	s.NoError(err)
-	s.Equal(2, len(list))
-
-	rep1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, k1)
-	s.NoError(err)
-	s.Equal(uint64(100), rep1.DelegatorsCount)
-	rep2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, k2)
-	s.NoError(err)
-	s.Equal(uint64(1), rep2.DelegatorsCount)
-
-	// delegate 102nd delegator
-	delegatorAddr := sample.AccAddressBytes()
-	s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
-	msgDelegate := stakingtypes.NewMsgDelegate(
-		delegatorAddr.String(),
-		valAdd.String(),
-		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-	)
-	_, err = stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
-	s.NoError(err)
-
-	// check delegator count
-	iter, err = s.Setup.Reporterkeeper.Reporters.Iterate(s.Setup.Ctx, nil)
-	s.NoError(err)
-	list, err = iter.Keys()
-	s.NoError(err)
-	s.Equal(3, len(list))
-	// delegator should be come a third reporter
-	rep3, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, delegatorAddr)
-	s.NoError(err)
-	s.Equal(uint64(1), rep3.DelegatorsCount)
-}
-
-func (s *IntegrationTestSuite) TestIncorrectReportsUpdated() {
-	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	valAccs, valAddrs, _ := s.createValidatorAccs([]int64{1000, 1000})
-
-	newDelegator1 := sample.AccAddressBytes()
-	newDelegator2 := sample.AccAddressBytes()
-	s.Setup.MintTokens(newDelegator1, math.NewInt(10000*1e6))
-	s.Setup.MintTokens(newDelegator2, math.NewInt(10000*1e6))
-	msgDelegateFromDel1toVal1 := stakingtypes.NewMsgDelegate(
-		newDelegator1.String(),
-		valAddrs[0].String(),
-		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-	)
-
-	msgDelegateFromDel1toVal2 := stakingtypes.NewMsgDelegate(
-		newDelegator1.String(),
-		valAddrs[1].String(),
-		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-	)
-
-	_, err := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegateFromDel1toVal1)
-	s.NoError(err)
-	_, err1 := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegateFromDel1toVal2)
-	s.NoError(err1)
-
-	// Test
-	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
-	println(rep.DelegatorsCount)
-	s.NoError(err)
-
-	rep, err3 := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
-	println(rep.DelegatorsCount)
-	s.NoError(err3)
-}
-
-func (s *IntegrationTestSuite) TestTwoValidators() {
-	valAccs, valAddrs, _ := s.Setup.CreateValidators(2)
-	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-
-	valAddr1 := valAddrs[0]
-	valAddr2 := valAddrs[1]
-
-	for i := 0; i < 2; i++ {
-		delegatorAddr := sample.AccAddressBytes()
-		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
-		msgDelegate := stakingtypes.NewMsgDelegate(
-			delegatorAddr.String(),
-			valAddr1.String(),
-			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-		)
-
-		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+		_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: delegatorAddr.String(), ReporterAddress: valAcc.String()})
 		s.NoError(err)
+
 	}
-
-	for i := 0; i < 100; i++ {
-		delegatorAddr := sample.AccAddressBytes()
-		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
-		msgDelegate := stakingtypes.NewMsgDelegate(
-			delegatorAddr.String(),
-			valAddr2.String(),
-			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-		)
-		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
-		s.NoError(err)
-	}
-	// check delegator count
-	rep1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
+	iterSelectors, err := s.Setup.Reporterkeeper.Selectors.Indexes.Reporter.MatchExact(s.Setup.Ctx, valAcc.Bytes())
 	s.NoError(err)
-	s.Equal(uint64(3), rep1.DelegatorsCount) // should be 3 delegators plus the self delegation
-	del1, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
-	s.Equal(uint64(1), del1.DelegationCount)
+	selectors, err := iterSelectors.FullKeys()
 	s.NoError(err)
-
-	rep2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
-	s.NoError(err)
-	s.Equal(uint64(100), rep2.DelegatorsCount) // should be 101 delegators plus the self delegation
-	s.Setup.MintTokens(valAccs[0], math.NewInt(1000*1e6))
-	msg := stakingtypes.MsgDelegate{
-		DelegatorAddress: valAccs[0].String(),
-		ValidatorAddress: valAddr2.String(),
-		Amount:           sdk.NewCoin(s.Setup.Denom, math.NewInt(1000*1e6)),
-	}
-	_, err = stakingmsgServer.Delegate(s.Setup.Ctx, &msg)
-	s.NoError(err)
-
-	// check delegator count, should be the same as before
-	rep1, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
-	s.NoError(err)
-
-	del1, err = s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
-	s.NoError(err)
-
-	rep2, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[1])
-	s.NoError(err)
-	println(rep2.DelegatorsCount)
-}
-
-func (s *IntegrationTestSuite) TestMaxDelegatorCountBug() {
-	valAccs, valAddrs, _ := s.Setup.CreateValidator(2)
-	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	valAcc1 := valAccs[1]
-	valAdd1 := valAddrs[1]
-
-	for i := 0; i < 2; i++ {
-		delegatorAddr := sample.AccAddressBytes()
-		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
-		msgDelegate := stakingtypes.NewMsgDelegate(
-			delegatorAddr.String(),
-			valAddrs[0].String(),
-			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-		)
-		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
-		s.NoError(err)
-	}
-
-	// delegate 99 delegators to val1
-	for i := 0; i < 99; i++ {
-		delegatorAddr := sample.AccAddressBytes()
-		s.Setup.MintTokens(delegatorAddr, math.NewInt(1000*1e6))
-		msgDelegate := stakingtypes.NewMsgDelegate(
-			delegatorAddr.String(),
-			valAdd1.String(),
-			sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-		)
-		_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate)
-		s.NoError(err)
-	}
-
-	// check delegator count
-	rep, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAcc1)
-	s.NoError(err)
-	s.Equal(uint64(100), rep.DelegatorsCount)
-
-	rep1, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
-	s.Equal(rep1.DelegatorsCount, uint64(3))
-	s.NoError(err)
-
-	// undelegate val 1 to val 1
-	_, bz, err := bech32.DecodeAndConvert(valAddrs[0].String())
-	s.NoError(err)
-	valAddress_to_accAddress := sdk.AccAddress(bz)
-
-	undel := stakingtypes.NewMsgUndelegate(
-		valAddress_to_accAddress.String(),
-		valAddrs[0].String(),
-		sdk.NewInt64Coin(s.Setup.Denom, 100),
-	)
-	// get the delegator
-	delegator, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
-	s.NoError(err)
-	s.Equal(uint64(1), delegator.DelegationCount)
-	_, err2 := stakingmsgServer.Undelegate(s.Setup.Ctx, undel)
-	s.NoError(err2)
-	// get the delegator
-	delegator, err = s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
-	s.NoError(err)
-	s.Equal(uint64(0), delegator.DelegationCount)
-	rep4, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
-	s.Equal(rep4.DelegatorsCount, uint64(3))
-	s.NoError(err)
-
-	// delegate from val 1 to val 2
-
-	msgDelegate1 := stakingtypes.NewMsgDelegate(
-		valAddress_to_accAddress.String(),
-		valAdd1.String(),
-		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
-	)
-	_, err1 := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate1)
-	s.NoError(err1)
-	delegator, err = s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, valAccs[0])
-	s.NoError(err)
-	s.Equal(uint64(1), delegator.DelegationCount)
-
-	rep2, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0])
-	s.Equal(rep2.DelegatorsCount, uint64(3))
-	s.NoError(err)
+	s.Equal(100, len(selectors))
+	// try to add 1 more selector, should fail since max reached
+	_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: sample.AccAddress(), ReporterAddress: valAcc.String()})
+	s.ErrorContains(err, "reporter has reached max selectors")
 }

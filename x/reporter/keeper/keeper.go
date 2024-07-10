@@ -15,7 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (
@@ -25,12 +24,11 @@ type (
 		Params                    collections.Item[types.Params]
 		Tracker                   collections.Item[types.StakeTracker]
 		Reporters                 collections.Map[[]byte, types.OracleReporter]
-		DelegatorTips             collections.Map[[]byte, math.Int]
-		Delegators                *collections.IndexedMap[[]byte, types.Delegation, ReporterDelegatorsIndex]
+		SelectorTips              collections.Map[[]byte, math.Int]
+		Selectors                 *collections.IndexedMap[[]byte, types.Selection, ReporterSelectorsIndex]
 		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]
 		Report                    collections.Map[collections.Pair[[]byte, int64], types.DelegationsAmounts]
-		TempStore                 collections.Map[collections.Pair[[]byte, []byte], math.Int]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -65,13 +63,12 @@ func NewKeeper(
 
 		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Tracker:                   collections.NewItem(sb, types.StakeTrackerPrefix, "tracker", codec.CollValue[types.StakeTracker](cdc)),
-		Reporters:                 collections.NewMap(sb, types.ReportersKey, "reporters_by_reporter", collections.BytesKey, codec.CollValue[types.OracleReporter](cdc)),
-		Delegators:                collections.NewIndexedMap(sb, types.DelegatorsKey, "delegations_by_delegator", collections.BytesKey, codec.CollValue[types.Delegation](cdc), NewDelegatorsIndex(sb)),
-		DelegatorTips:             collections.NewMap(sb, types.DelegatorTipsPrefix, "delegator_tips", collections.BytesKey, sdk.IntValue),
+		Reporters:                 collections.NewMap(sb, types.ReportersKey, "reporters", collections.BytesKey, codec.CollValue[types.OracleReporter](cdc)),
+		Selectors:                 collections.NewIndexedMap(sb, types.SelectorsKey, "selectors", collections.BytesKey, codec.CollValue[types.Selection](cdc), NewSelectorsIndex(sb)),
+		SelectorTips:              collections.NewMap(sb, types.SelectorTipsPrefix, "delegator_tips", collections.BytesKey, sdk.IntValue),
 		DisputedDelegationAmounts: collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
 		FeePaidFromStake:          collections.NewMap(sb, types.FeePaidFromStakePrefix, "fee_paid_from_stake", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
 		Report:                    collections.NewMap(sb, types.ReporterPrefix, "report", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.DelegationsAmounts](cdc)),
-		TempStore:                 collections.NewMap(sb, types.TempPrefix, "temp", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), sdk.IntValue),
 		authority:                 authority,
 		logger:                    logger,
 		stakingKeeper:             stakingKeeper,
@@ -97,7 +94,7 @@ func (k Keeper) Logger() log.Logger {
 }
 
 func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error) {
-	del, err := k.Delegators.Get(ctx, delegator)
+	del, err := k.Selectors.Get(ctx, delegator)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -110,12 +107,13 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 	if err != nil {
 		return math.Int{}, err
 	}
+	delegatorTokens := math.ZeroInt()
 	for _, r := range rep.TokenOrigins {
 		if bytes.Equal(r.DelegatorAddress, delegator) {
-			return r.Amount, nil
+			delegatorTokens = delegatorTokens.Add(r.Amount)
 		}
 	}
-	return math.ZeroInt(), nil
+	return delegatorTokens, nil
 }
 
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {
@@ -151,12 +149,4 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	maxStake.Expiration = &newExpiration
 	maxStake.Amount = total
 	return k.Tracker.Set(ctx, maxStake)
-}
-
-func DefaultCommission() *stakingtypes.Commission {
-	return &stakingtypes.Commission{CommissionRates: stakingtypes.CommissionRates{
-		Rate:          math.LegacyMustNewDecFromStr("0.1"),
-		MaxRate:       math.LegacyMustNewDecFromStr("0.2"),
-		MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
-	}}
 }

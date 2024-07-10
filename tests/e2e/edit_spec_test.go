@@ -46,7 +46,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
-
+	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinTrb})
+	require.NoError(err)
 	//---------------------------------------------------------------------------
 	// Height 1 - register a spec for a TWAP query, registrar is reporter
 	//---------------------------------------------------------------------------
@@ -138,7 +139,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
-		DelegatorAddress: valAccAddrs[0].String(),
+		SelectorAddress:  valAccAddrs[0].String(),
 		ValidatorAddress: valValAddrs[0].String(),
 	}
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)

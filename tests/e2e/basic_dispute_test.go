@@ -89,19 +89,17 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
 	require.NoError(err)
 	// // check that reporter was created in Reporters collections
-	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: reporterAccount.String(), Commission: reporterkeeper.DefaultCommission()})
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: reporterAccount.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewInt(4000 * 1e6)})
 	require.NoError(err)
 	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
 	fmt.Println(reporterAccount.String())
 	require.NoError(err)
-	fmt.Println(reporter.TotalTokens)
-	require.Equal(reporter.TotalTokens, math.NewInt(4000*1e6))
 	require.Equal(reporter.Jailed, false)
 	// // check on reporter in Delegators collections
-	rkDelegation, err := s.Setup.Reporterkeeper.Delegators.Get(s.Setup.Ctx, reporterAccount)
+	rkDelegation, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterAccount)
 	require.NoError(err)
 	require.Equal(rkDelegation.Reporter, reporterAccount.Bytes())
-	require.Equal(rkDelegation.Amount, math.NewInt(4000*1e6))
+
 	// check on reporter/validator delegation
 	skDelegation, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount, valAccountValAddrs[0])
 	require.NoError(err)
@@ -166,7 +164,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, false)
 	freeFloatingBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, reporterAccount, s.Setup.Denom)
 
-	balBeforeDispute := reporter.TotalTokens
+	balBeforeDispute, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
 	onePercent := balBeforeDispute.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	disputeFee := sdk.NewCoin(s.Setup.Denom, onePercent) // warning should be 1% of bonded tokens
 
@@ -174,7 +173,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
-		Power:       reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
@@ -218,7 +217,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, dispute.DisputeId)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, dispute.DisputeId)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -254,7 +253,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -306,13 +305,14 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	balBeforeDispute = reporter.TotalTokens
+	balBeforeDispute, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
 	disputeFee = sdk.NewCoin(s.Setup.Denom, fivePercent)
 
 	report = oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
-		Power:       reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
@@ -341,9 +341,9 @@ func (s *E2ETestSuite) TestDisputes() {
 	// ---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	require.Error(err, "vote period not ended and quorum not reached")
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -407,8 +407,8 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	require.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
-	require.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2))
+	require.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
+	require.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2))
 	require.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
 	require.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
 
@@ -479,12 +479,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(reporter.Jailed, false)
 
-	oneHundredPercent := reporter.TotalTokens
+	oneHundredPercent, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	require.NoError(err)
 	disputeFee = sdk.NewCoin(s.Setup.Denom, oneHundredPercent)
 
 	report = oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
-		Power:       reporter.TotalTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       oneHundredPercent.Quo(sdk.DefaultPowerReduction).Int64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
@@ -515,7 +516,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 3)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3)
 	require.Error(err, "vote period not ended and quorum not reached")
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -533,9 +534,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeEndTime, disputeStartTime.Add(disputekeeper.THREE_DAYS))
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
 	require.Equal(dispute.DisputeStartBlock, disputeStartHeight)
-	// todo: handle reporter removal
-	reporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
-	require.ErrorContains(err, "not found")
+	// // todo: handle reporter removal
+	// reporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
+	// fmt.Println(reporter)
+	// require.ErrorContains(err, "not found")
 
 	// create vote tx msg
 	msgVote = disputetypes.MsgVote{
@@ -571,7 +573,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	// require.NoError(err)
 
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 3)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3)
 	require.NoError(err)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)

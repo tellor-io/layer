@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -27,13 +28,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if err != nil {
 		return nil, err
 	}
-	// update totals
-	if err := k.keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
-		return nil, err
-	}
-	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
-		return nil, err
-	}
+
 	// get query id bytes hash from query data
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
@@ -44,18 +39,13 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			return nil, err
 		}
 		// initialize query tip first time
-		query, err := k.keeper.initializeQuery(ctx, msg.QueryData)
+		query, err = k.keeper.initializeQuery(ctx, msg.QueryData)
 		if err != nil {
 			return nil, err
 		}
 
-		query.Amount = tip.Amount
+		query.Amount = math.ZeroInt()
 		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
-		err = k.keeper.Query.Set(ctx, queryId, query)
-		if err != nil {
-			return nil, err
-		}
-		return &types.MsgTipResponse{}, nil
 	}
 	prevAmt := query.Amount
 	query.Amount = query.Amount.Add(tip.Amount)
@@ -81,6 +71,13 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		return nil, err
 	}
 
+	// update totals
+	if err := k.keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
+		return nil, err
+	}
+	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
+		return nil, err
+	}
 	prevTip, err := k.keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, fmt.Errorf("failed to get previous tip: %w", err)

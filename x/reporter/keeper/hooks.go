@@ -1,10 +1,8 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -45,7 +43,7 @@ func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) erro
 
 func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
 	return nil
-} // todo: handle for dispute event
+}
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error { return nil }
 
@@ -53,202 +51,36 @@ func (h Hooks) AfterConsensusPubKeyUpdate(_ context.Context, _, _ cryptotypes.Pu
 	return nil
 }
 
-func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	// current shares
-	del, err := h.k.stakingKeeper.GetDelegation(ctx, delAddr, valAddr)
-	if err != nil {
-		return err
-	}
-
-	val, err := h.k.stakingKeeper.GetValidator(ctx, valAddr)
-	if err != nil {
-		return err
-	}
-	tokens := val.TokensFromShares(del.Shares).TruncateInt()
-	// set temp
-	if err := h.k.TempStore.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), tokens); err != nil {
-		return err
-	}
+func (h Hooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
 	return nil
 }
 
-func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	// current shares
-	sDel, err := h.k.stakingKeeper.GetDelegation(ctx, delAddr, valAddr)
-	if err != nil {
-		return err
-	}
-
-	val, err := h.k.stakingKeeper.GetValidator(ctx, valAddr)
-	if err != nil {
-		return err
-	}
-	tokens := val.TokensFromShares(sDel.Shares).TruncateInt()
-	// get temp
-	temp, err := h.k.TempStore.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
-	if err != nil {
-		return err
-	}
-	diff := tokens.Sub(temp)
-
-	// update the delegator's total tokens
-	del, err := h.k.Delegators.Get(ctx, delAddr.Bytes())
-	if err != nil {
-		return err
-	}
-	del.Amount = del.Amount.Add(diff)
-	if err := h.k.Delegators.Set(ctx, delAddr.Bytes(), del); err != nil {
-		return err
-	}
-	// update reporter's total tokens
-	reporter, err := h.k.Reporters.Get(ctx, del.Reporter)
-	if err != nil {
-		return err
-	}
-	reporter.TotalTokens = reporter.TotalTokens.Add(diff)
-	return h.k.Reporters.Set(ctx, del.Reporter, reporter)
+func (h Hooks) AfterDelegationModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
+	return nil
 }
 
-/*
-when BeforeDelegationCreated is called, we need to check if the delegator already exists, if it does that means the reporter exists as well,
-so we just increment the delegation count. Otherwise create a new delegator and assign a reporter to it. The reporter is either the validator that the
-delegator is delegating stake to if the cap of 100 hasn't been reached or the delegator itself. If the reporter is the delegator itself, then
-the delegator/reporter doesn't exist already.
-*/
-func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	if err := h.k.TempStore.Set(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()), sdkmath.ZeroInt()); err != nil {
-		return err
-	}
-	// get delegation if it exists
-	del, err := h.k.Delegators.Has(ctx, delAddr.Bytes())
+func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, _ sdk.ValAddress) error {
+	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
 	if err != nil {
-		return err
-	}
-	if del {
-		delegation, err := h.k.Delegators.Get(ctx, delAddr.Bytes())
-		if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		} else {
 			return err
 		}
-		delegation.DelegationCount++
-		return h.k.Delegators.Set(ctx, delAddr.Bytes(), delegation)
 	}
-	reporterKey := valAddr.Bytes()
-	/*
-		check if validator being delegated to is a reporter; if not, create a new reporter with the validator's address and commission rates
-		and assign the delegator to this reporter.
-		else if validator is already a reporter, check if delegator count is < 100 then assign the delegator to the reporter
-		else make the delegator a reporter and assign the delegator to itself with default commission rates
-	*/
-	reporter, err := h.k.Reporters.Get(ctx, reporterKey)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return err
-		} else {
-			val, err := h.k.stakingKeeper.GetValidator(ctx, valAddr)
-			if err != nil {
-				return err
-			}
-			if err := h.k.Reporters.Set(ctx, reporterKey, types.OracleReporter{
-				// inherit the commission rates from the validator
-				Commission:      &val.Commission,
-				TotalTokens:     sdkmath.ZeroInt(),
-				DelegatorsCount: 1,
-			}); err != nil {
-				return err
-			}
-		}
-	} else {
-		if reporter.DelegatorsCount >= 100 {
-			reporterKey = delAddr.Bytes()
-			reporter, err := h.k.Reporters.Get(ctx, reporterKey)
-			if err == nil {
-				if reporter.DelegatorsCount >= 2 {
-					fmt.Println("!!!!!!!!!!!!!!!!count ", reporter.DelegatorsCount)
-				}
-			}
-			// add reporter with default commission rates
-			if err := h.k.Reporters.Set(ctx, reporterKey, types.OracleReporter{
-				Commission:      DefaultCommission(),
-				TotalTokens:     sdkmath.ZeroInt(),
-				DelegatorsCount: 1,
-			}); err != nil {
-				return err
-			}
-		} else {
-			reporter.DelegatorsCount++
-			if err := h.k.Reporters.Set(ctx, reporterKey, reporter); err != nil {
-				return err
-			}
-		}
-	}
-
-	return h.k.Delegators.Set(ctx, delAddr.Bytes(), types.Delegation{
-		Reporter:        reporterKey,
-		Amount:          sdkmath.ZeroInt(),
-		DelegationCount: 1,
-	})
+	selector.DelegationsCount++
+	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
 }
 
-/*
-when BeforeDelegationRemoved is called, reduce the delegation count of the delegator, also
-we need to check if the delegator has any more delegations, if not remove the delegator plus check if the reporter
-has any more delegators, if not remove the reporter as well
-else just reduce the delegation count of the delegator
-Also, update the total tokens of the delegator
-*/
 func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
-	// get temp
-	temp, err := h.k.TempStore.Get(ctx, collections.Join(delAddr.Bytes(), valAddr.Bytes()))
+	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
 	if err != nil {
-		return err
-	}
-
-	del, err := h.k.Delegators.Get(ctx, delAddr)
-	if err != nil {
-		return err
-	}
-	reporter, err := h.k.Reporters.Get(ctx, del.Reporter)
-	if err != nil {
-		return err
-	}
-
-	del.Amount = del.Amount.Sub(temp)
-	del.DelegationCount--
-	reporter.TotalTokens = reporter.TotalTokens.Sub(temp)
-	if reporter.TotalTokens.IsZero() {
-		err = h.k.Delegators.Remove(ctx, delAddr.Bytes())
-		if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		} else {
 			return err
 		}
-		if !bytes.Equal(delAddr.Bytes(), del.Reporter) {
-			err = h.k.Delegators.Remove(ctx, del.Reporter)
-			if err != nil {
-				return err
-			}
-		}
-		return h.k.Reporters.Remove(ctx, del.Reporter)
 	}
-
-	if bytes.Equal(delAddr.Bytes(), del.Reporter) {
-		err = h.k.Delegators.Set(ctx, delAddr.Bytes(), del)
-		if err != nil {
-			return err
-		}
-		return h.k.Reporters.Set(ctx, del.Reporter, reporter)
-	}
-
-	if del.DelegationCount == 0 {
-		err = h.k.Delegators.Remove(ctx, delAddr.Bytes())
-		if err != nil {
-			return err
-		}
-		reporter.DelegatorsCount--
-		return h.k.Reporters.Set(ctx, del.Reporter, reporter)
-	}
-
-	err = h.k.Delegators.Set(ctx, delAddr.Bytes(), del)
-	if err != nil {
-		return err
-	}
-	return h.k.Reporters.Set(ctx, del.Reporter, reporter)
+	selector.DelegationsCount--
+	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
 }

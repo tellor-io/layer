@@ -34,18 +34,18 @@ func (_m *ReporterKeeper) AddAmountToStake(ctx context.Context, acc types.AccAdd
 }
 
 // Delegation provides a mock function with given fields: ctx, delegator
-func (_m *ReporterKeeper) Delegation(ctx context.Context, delegator types.AccAddress) (reportertypes.Delegation, error) {
+func (_m *ReporterKeeper) Delegation(ctx context.Context, delegator types.AccAddress) (reportertypes.Selection, error) {
 	ret := _m.Called(ctx, delegator)
 
-	var r0 reportertypes.Delegation
+	var r0 reportertypes.Selection
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (reportertypes.Delegation, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (reportertypes.Selection, error)); ok {
 		return rf(ctx, delegator)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) reportertypes.Delegation); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) reportertypes.Selection); ok {
 		r0 = rf(ctx, delegator)
 	} else {
-		r0 = ret.Get(0).(reportertypes.Delegation)
+		r0 = ret.Get(0).(reportertypes.Selection)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {

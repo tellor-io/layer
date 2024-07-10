@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,74 +29,133 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 var _ types.MsgServer = msgServer{}
 
 func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateReporter) (*types.MsgCreateReporterResponse, error) {
-	reporter := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
-	reporterExists, err := k.Reporters.Has(goCtx, reporter.Bytes())
+	// check if reporter has min bonded tokens
+	addr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
+	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {
 		return nil, err
 	}
-	if reporterExists {
-		return nil, errorsmod.Wrapf(types.ErrReporterExists, "cannot create reporter with address %s, it already exists", msg.ReporterAddress)
-	}
-	delegation, err := k.Keeper.Delegators.Get(goCtx, reporter.Bytes())
+	bondedTokens, count, err := k.Keeper.CheckSelectorsDelegations(goCtx, addr)
 	if err != nil {
 		return nil, err
 	}
-	// remove tokens from reporter
-	// get old reporter
-	oldReporter, err := k.Reporters.Get(goCtx, delegation.Reporter)
+	if params.MinTrb.GT(bondedTokens) {
+		return nil, errors.New("address does not have min tokens required to be a reporter with a BONDED validator")
+	}
+	// the min requirement chosen by reporter has gte the min requirement
+	if msg.MinTokensRequired.LT(params.MinTrb) {
+		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
+	}
+	// reporter can't be previously a selector or a reporter
+	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
 	if err != nil {
 		return nil, err
 	}
-	oldReporter.TotalTokens = oldReporter.TotalTokens.Sub(delegation.Amount)
-	oldReporter.DelegatorsCount--
-	if oldReporter.TotalTokens.IsZero() {
-		if err := k.Reporters.Remove(goCtx, delegation.Reporter); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := k.Reporters.Set(goCtx, delegation.Reporter, oldReporter); err != nil {
-			return nil, err
-		}
+	if alreadyExists {
+		return nil, errors.New("address already exists")
 	}
-	delegation.Reporter = reporter.Bytes()
-	if err := k.Keeper.Delegators.Set(goCtx, reporter.Bytes(), delegation); err != nil {
+	// set the reporter and set the self selector
+	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err
 	}
-
-	minCommRate, err := k.MinCommissionRate(goCtx)
-	if err != nil {
-		return nil, err
-	}
-	if msg.Commission.Rate.LT(minCommRate) {
-		return nil, errorsmod.Wrapf(types.ErrCommissionLTMinRate, "cannot set commission to less than minimum rate of %s", minCommRate)
-	}
-
-	commission := types.NewCommissionWithTime(msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, sdk.UnwrapSDKContext(goCtx).HeaderInfo().Time)
-
-	if err := commission.Validate(); err != nil {
-		return nil, err
-	}
-	// create a new reporter
-	newReporter := types.NewOracleReporter(msg.ReporterAddress, delegation.Amount, &commission, 1)
-	if err := k.Reporters.Set(goCtx, reporter.Bytes(), newReporter); err != nil {
+	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(addr.Bytes(), count)); err != nil {
 		return nil, err
 	}
 	return &types.MsgCreateReporterResponse{}, nil
 }
 
-func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeReporter) (*types.MsgChangeReporterResponse, error) {
-	newReporterAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
-	// get delegation
-	delAddr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
-	delegation, err := k.Keeper.Delegators.Get(goCtx, delAddr.Bytes())
+func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectReporter) (*types.MsgSelectReporterResponse, error) {
+	// check if selector exists
+	addr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
+	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
 	if err != nil {
 		return nil, err
 	}
+	if alreadyExists {
+		return nil, errors.New("selector already exists")
+	}
+	// check if reporter exists
+	reporterAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
+	reporter, err := k.Keeper.Reporters.Get(goCtx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+	// check if reporter is capped at max selectors
+	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	selectors, err := iter.FullKeys()
+	if err != nil {
+		return nil, err
+	}
+	params, err := k.Keeper.Params.Get(goCtx)
+	if err != nil {
+		return nil, err
+	}
+	if len(selectors) >= int(params.MaxSelectors) {
+		return nil, errors.New("reporter has reached max selectors")
+	}
+	// check if selector meets reporters min requirement
+	bondedTokens, count, err := k.Keeper.CheckSelectorsDelegations(goCtx, addr)
+	if err != nil {
+		return nil, err
+	}
+	if reporter.MinTokensRequired.GT(bondedTokens) {
+		return nil, fmt.Errorf("reporter's min requirement %s not met by selector", reporter.MinTokensRequired.String())
+	}
+	// set the selector
+	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(reporterAddr.Bytes(), count)); err != nil {
+		return nil, err
+	}
+	return &types.MsgSelectReporterResponse{}, nil
+}
 
-	// check if reporter has reported before
+func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchReporter) (*types.MsgSwitchReporterResponse, error) {
+	addr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
+	// check if selector exists
+	selector, err := k.Keeper.Selectors.Get(goCtx, addr)
+	if err != nil {
+		return nil, err
+	}
+	if bytes.Equal(selector.Reporter, addr.Bytes()) {
+		return nil, errors.New("cannot switch reporter if selector is a reporter")
+	}
+	// check if reporter exists
+	reporterAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
+	reporter, err := k.Keeper.Reporters.Get(goCtx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+	// check if reporter is capped at max selectors
+	// todo: add field to reporter and to selectors to keep track of how many selectors have and for selectors an id
+	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	selectors, err := iter.FullKeys()
+	if err != nil {
+		return nil, err
+	}
+	params, err := k.Keeper.Params.Get(goCtx)
+	if err != nil {
+		return nil, err
+	}
+	if len(selectors) >= int(params.MaxSelectors) {
+		return nil, errors.New("reporter has reached max selectors")
+	}
+	// check if selector meets reporters min requirement
+	hasMin, err := k.Keeper.HasMin(goCtx, addr, reporter.MinTokensRequired)
+	if err != nil {
+		return nil, err
+	}
+	if !hasMin {
+		return nil, fmt.Errorf("reporter's min requirement %s not met by selector", reporter.MinTokensRequired.String())
+	}
+
+	// check if selector was part of a report before switching
 	var prevReportedPower math.Int
-	rng := collections.NewPrefixedPairRange[[]byte, int64](delegation.Reporter).EndInclusive(sdk.UnwrapSDKContext(goCtx).BlockHeight()).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, int64](selector.Reporter).EndInclusive(sdk.UnwrapSDKContext(goCtx).BlockHeight()).Descending()
 	err = k.Keeper.Report.Walk(goCtx, rng, func(_ collections.Pair[[]byte, int64], value types.DelegationsAmounts) (stop bool, err error) {
 		prevReportedPower = value.Total
 		return true, nil
@@ -111,60 +170,57 @@ func (k msgServer) ChangeReporter(goCtx context.Context, msg *types.MsgChangeRep
 		if err != nil {
 			return nil, err
 		}
-		delegation.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(maxReportBuffer)
+		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(maxReportBuffer)
 	}
+	selector.Reporter = reporterAddr.Bytes()
+	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selector); err != nil {
+		return nil, err
+	}
+	return &types.MsgSwitchReporterResponse{}, nil
+}
 
-	// move tokens
-	rep, err := k.Reporters.Get(goCtx, delegation.Reporter)
+func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSelector) (*types.MsgRemoveSelectorResponse, error) {
+	selectorAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
+	selector, err := k.Keeper.Selectors.Get(goCtx, selectorAddr)
 	if err != nil {
 		return nil, err
 	}
-	if bytes.Equal(delegation.Reporter, delAddr.Bytes()) {
-		if rep.DelegatorsCount > 1 {
-			return nil, errors.New("cannot change reporter until all delegators are removed")
-		}
+	reporter, err := k.Keeper.Reporters.Get(goCtx, selector.Reporter)
+	if err != nil {
+		return nil, err
 	}
-	rep.TotalTokens = rep.TotalTokens.Sub(delegation.Amount)
-	rep.DelegatorsCount--
-	if rep.TotalTokens.IsZero() {
-		if err := k.Reporters.Remove(goCtx, delegation.Reporter); err != nil {
+
+	hasMin, err := k.Keeper.HasMin(goCtx, selectorAddr, reporter.MinTokensRequired)
+	if err != nil {
+		return nil, err
+	}
+	if hasMin {
+		return nil, errors.New("selector can't be removed if reporter's min requirement is met")
+	}
+
+	if !hasMin {
+		params, err := k.Keeper.Params.Get(goCtx)
+		if err != nil {
 			return nil, err
 		}
-	} else {
-		if err := k.Reporters.Set(goCtx, delegation.Reporter, rep); err != nil {
+		// check if reporter is capped if not need to remove selector.
+		iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, selector.Reporter)
+		if err != nil {
 			return nil, err
 		}
+		selectors, err := iter.FullKeys()
+		if err != nil {
+			return nil, err
+		}
+		if len(selectors) <= int(params.MaxSelectors) {
+			return nil, errors.New("selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
+		}
 	}
-
-	reporterExists, err := k.Keeper.Reporters.Has(goCtx, newReporterAddr)
-	if err != nil {
+	// remove selector
+	if err := k.Keeper.Selectors.Remove(goCtx, selectorAddr); err != nil {
 		return nil, err
 	}
-
-	if !reporterExists {
-		return nil, errors.New("reporter does not exist")
-	}
-
-	reporter, err := k.Reporters.Get(goCtx, newReporterAddr.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	if reporter.DelegatorsCount >= 100 {
-		return nil, errors.New("reporter is at max cap")
-	}
-
-	reporter.TotalTokens = reporter.TotalTokens.Add(delegation.Amount)
-	reporter.DelegatorsCount++
-	if err := k.Reporters.Set(goCtx, newReporterAddr.Bytes(), reporter); err != nil {
-		return nil, err
-	}
-	delegation.Reporter = newReporterAddr.Bytes()
-	if err := k.Keeper.Delegators.Set(goCtx, delAddr.Bytes(), delegation); err != nil {
-		return nil, err
-	}
-
-	return &types.MsgChangeReporterResponse{}, nil
+	return &types.MsgRemoveSelectorResponse{}, nil
 }
 
 func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailReporter) (*types.MsgUnjailReporterResponse, error) {
@@ -186,8 +242,8 @@ func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailRep
 
 func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip) (*types.MsgWithdrawTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	delAddr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
-	shares, err := k.Keeper.DelegatorTips.Get(ctx, delAddr)
+	delAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
+	shares, err := k.Keeper.SelectorTips.Get(ctx, delAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -209,7 +265,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 		return nil, err
 	}
 
-	err = k.Keeper.DelegatorTips.Remove(ctx, delAddr)
+	err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
 	if err != nil {
 		return nil, err
 	}

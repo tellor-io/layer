@@ -27,7 +27,7 @@ func (q Querier) GetDataBefore(ctx context.Context, req *types.QueryGetDataBefor
 	if aggregate == nil {
 		return nil, status.Error(codes.NotFound, "aggregate before not found")
 	}
-	timeUnix := timestamp.Unix()
+	timeUnix := timestamp.UnixMilli()
 
 	return &types.QueryGetDataBeforeResponse{
 		Aggregate: aggregate,

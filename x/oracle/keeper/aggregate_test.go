@@ -183,7 +183,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 	err = s.oracleKeeper.SetAggregate(s.ctx, report)
 	s.NoError(err)
 
-	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, timestamp.Unix()))
+	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, timestamp.UnixMilli()))
 	s.NoError(err)
 	s.Equal(encodeValue(96.50), res.AggregateValue)
 	s.Equal(int64(100000000), res.ReporterPower)
@@ -280,7 +280,7 @@ func (s *KeeperTestSuite) TestGetTimestampBefore() {
 			for _, v := range tc.timestamps {
 				err := s.oracleKeeper.Aggregates.Set(
 					s.ctx,
-					collections.Join(queryId, v.Unix()),
+					collections.Join(queryId, v.UnixMilli()),
 					types.Aggregate{},
 				)
 				s.Require().NoError(err)
@@ -358,7 +358,7 @@ func (s *KeeperTestSuite) TestGetTimestampAfter() {
 			for _, v := range tc.timestamps {
 				err := s.oracleKeeper.Aggregates.Set(
 					s.ctx,
-					collections.Join(queryId, v.Unix()),
+					collections.Join(queryId, v.UnixMilli()),
 					types.Aggregate{},
 				)
 				s.Require().NoError(err)

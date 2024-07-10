@@ -24,8 +24,15 @@ service Msg {
   // CreateReporter defines a (reporter) operation for creating a new reporter.
   rpc CreateReporter(MsgCreateReporter) returns (MsgCreateReporterResponse);
 
-  // ChangeReporter defines a (delegator) operation for changing a reporter.
-  rpc ChangeReporter(MsgChangeReporter) returns (MsgChangeReporterResponse);
+  // SelectReporter defines a (selector) operation for choosing a reporter.
+  rpc SelectReporter(MsgSelectReporter) returns (MsgSelectReporterResponse);
+
+  // SwitchReporter defines a (selector) operation for switching a reporter.
+  rpc SwitchReporter(MsgSwitchReporter) returns (MsgSwitchReporterResponse);
+
+  // RemoveSelector defines an operation for removing a selector that no longer meets
+  // the reporter's minimum requirements and the reporter is capped.
+  rpc RemoveSelector(MsgRemoveSelector) returns (MsgRemoveSelectorResponse);
 
   // UnjailReporter defines a method to unjail a jailed reporter.
   rpc UnjailReporter(MsgUnjailReporter) returns (MsgUnjailReporterResponse);
@@ -55,21 +62,61 @@ message MsgUpdateParams {
 // MsgUpdateParams message.
 message MsgUpdateParamsResponse {}
 
+// MsgCreateReporter defines the Msg/CreateReporter request type.
 message MsgCreateReporter {
   option (cosmos.msg.v1.signer) = "reporter_address";
+  // reporter_address is the address of the reporter.
   string reporter_address = 1;
-  cosmos.staking.v1beta1.Commission commission = 2;
+  string commission_rate = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  string min_tokens_required = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
+// MsgCreateReporterResponse defines the Msg/CreateReporter response type.
 message MsgCreateReporterResponse {}
 
-message MsgChangeReporter {
-  option (cosmos.msg.v1.signer) = "delegator_address";
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+// MsgSelectReporter defines the Msg/SelectReporter request type.
+message MsgSelectReporter {
+  option (cosmos.msg.v1.signer) = "selector_address";
+  // selector_address is the address of the selector.
+  string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // reporter_address is the address of the reporter to select.
   string reporter_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-message MsgChangeReporterResponse {}
+message MsgSelectReporterResponse {}
+
+// MsgSwitchReporter defines the Msg/SwitchReporter request type.
+message MsgSwitchReporter {
+  option (cosmos.msg.v1.signer) = "selector_address";
+  // selector_address is the address of the selector.
+  string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // reporter_address is the address of the reporter to switch.
+  string reporter_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgSwitchReporterResponse defines the Msg/SwitchReporter response type.
+message MsgSwitchReporterResponse {}
+
+// MsgRemoveSelector defines the Msg/RemoveSelector request type.
+message MsgRemoveSelector {
+  option (cosmos.msg.v1.signer) = "any_address";
+  // any_address is the caller which can be any address.
+  string any_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // selector_address is the address of the selector.
+  string selector_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRemoveSelectorResponse defines the Msg/RemoveSelector response type.
+message MsgRemoveSelectorResponse {}
 
 // MsgUnjailReporter defines the Msg/UnjailReporter request type.
 message MsgUnjailReporter {
@@ -84,8 +131,8 @@ message MsgUnjailReporterResponse {}
 
 // MsgWithdrawTip defines the Msg/WithdrawTip request type.
 message MsgWithdrawTip {
-  option (cosmos.msg.v1.signer) = "delegator_address";
-  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  option (cosmos.msg.v1.signer) = "selector_address";
+  string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 

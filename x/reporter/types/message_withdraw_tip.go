@@ -9,15 +9,15 @@ import (
 
 var _ sdk.Msg = &MsgWithdrawTip{}
 
-func NewMsgWithdrawTip(validatorAddress, delegatorAddress string) *MsgWithdrawTip {
+func NewMsgWithdrawTip(validatorAddress, selectorAddress string) *MsgWithdrawTip {
 	return &MsgWithdrawTip{
 		ValidatorAddress: validatorAddress,
-		DelegatorAddress: delegatorAddress,
+		SelectorAddress:  selectorAddress,
 	}
 }
 
 func (msg *MsgWithdrawTip) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	_, err := sdk.AccAddressFromBech32(msg.SelectorAddress)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}

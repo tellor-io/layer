@@ -18,13 +18,13 @@ func TestMsgWithdrawTip_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: MsgWithdrawTip{
-				DelegatorAddress: "invalid_address",
+				SelectorAddress: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgWithdrawTip{
-				DelegatorAddress: sample.AccAddress(),
+				SelectorAddress: sample.AccAddress(),
 			},
 		},
 	}
