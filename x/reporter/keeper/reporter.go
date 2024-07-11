@@ -162,10 +162,10 @@ func (k Keeper) CheckSelectorsDelegations(ctx context.Context, addr sdk.AccAddre
 		return false
 	})
 	if err != nil {
-		return math.ZeroInt(), 0, err
+		return math.Int{}, 0, err
 	}
 	if iterError != nil {
-		return math.ZeroInt(), 0, iterError
+		return math.Int{}, 0, iterError
 	}
 	return tokens, count, nil
 }

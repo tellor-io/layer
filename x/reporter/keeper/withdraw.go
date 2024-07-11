@@ -30,28 +30,32 @@ type selectorsInfo struct {
 func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error {
 	reporterTotalTokens := math.LegacyZeroDec()
 	fee := math.LegacyNewDecFromInt(amt)
-	var err error
+	var iterError error
 	// Calculate each delegator's share (including the reporter as a self-delegator)
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, reporterAddr)
 	if err != nil {
 		return err
 	}
-	selectorShareslist := make([]selectorShares, 0)
+
 	selectorsMap := make([]selectorsInfo, 0)
+	var selectorShareslist []selectorShares
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		selectorKey, err := iter.PrimaryKey()
 		if err != nil {
 			return err
 		}
+		selectorShareslist = make([]selectorShares, 0)
 		selectorTotalTokens := math.LegacyZeroDec()
 		err = k.stakingKeeper.IterateDelegatorDelegations(ctx, sdk.AccAddress(selectorKey), func(delegation stakingtypes.Delegation) bool {
 			valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 			if err != nil {
+				iterError = err
 				return true
 			}
 			validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
 			if err != nil {
+				iterError = err
 				return true
 			}
 			if validator.IsBonded() {
@@ -63,6 +67,9 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 		})
 		if err != nil {
 			return err
+		}
+		if iterError != nil {
+			return iterError
 		}
 		reporterTotalTokens = reporterTotalTokens.Add(selectorTotalTokens)
 		selectorsMap = append(selectorsMap, selectorsInfo{delAddr: sdk.AccAddress(selectorKey), selectorTotalTokens: selectorTotalTokens, selectorInfo: selectorShareslist})
@@ -85,29 +92,21 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 					return err
 				}
 				// Unbond and move tokens from validator
-				ecsrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, sharesToUnbond)
+				escrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, sharesToUnbond)
 				if err != nil {
 					return err
 				}
-				err = k.MoveTokensFromValidator(ctx, info.validator, ecsrowedAmt)
-				if err != nil {
-					return err
-				}
-				unbondAmt = math.LegacyZeroDec()
+
 				feeTracker = append(feeTracker, &types.TokenOriginInfo{
 					DelegatorAddress: selectors.delAddr.Bytes(),
 					ValidatorAddress: info.valAddr.Bytes(),
 					Amount:           unbondAmt.TruncateInt(),
 				})
-				totalTrackedAmount = totalTrackedAmount.Add(unbondAmt.TruncateInt())
+				totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
 				break
 			} else {
 				unbondAmt = unbondAmt.Sub(stakeWithValidator)
-				escrowAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, info.shares)
-				if err != nil {
-					return err
-				}
-				err = k.MoveTokensFromValidator(ctx, info.validator, escrowAmt)
+				escrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, info.shares)
 				if err != nil {
 					return err
 				}
@@ -116,19 +115,21 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 					ValidatorAddress: info.valAddr.Bytes(),
 					Amount:           unbondAmt.TruncateInt(),
 				})
-				totalTrackedAmount = totalTrackedAmount.Add(unbondAmt.TruncateInt())
-				unbondAmt = unbondAmt.Sub(stakeWithValidator)
+				totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
+
+				if unbondAmt.IsZero() {
+					break
+				}
 
 			}
 		}
-		if unbondAmt.IsZero() {
-			break
-		}
+
 	}
 	has, err := k.FeePaidFromStake.Has(ctx, hashId)
 	if err != nil {
 		return err
 	}
+	prevTotal := math.ZeroInt()
 	if has {
 		preFeeTracker, err := k.FeePaidFromStake.Get(ctx, hashId)
 		if err != nil {
@@ -136,8 +137,14 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 		}
 
 		feeTracker = append(feeTracker, preFeeTracker.TokenOrigins...)
+		prevTotal = preFeeTracker.Total
 	}
-	if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: feeTracker, Total: totalTrackedAmount}); err != nil {
+
+	err = k.tokensToDispute(ctx, stakingtypes.BondedPoolName, totalTrackedAmount)
+	if err != nil {
+		return err
+	}
+	if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: feeTracker, Total: totalTrackedAmount.Add(prevTotal)}); err != nil {
 		return err
 	}
 	return nil
@@ -164,7 +171,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 
 		delAddr := sdk.AccAddress(del.DelegatorAddress)
 		valAddr := sdk.ValAddress(del.ValidatorAddress)
-
+		fmt.Println("delegatorShare", delegatorShare, "delegator", delAddr, "validator", valAddr, "amt", amt, "leftover", leftover)
 		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare)
 		if err != nil {
 			return err
@@ -174,6 +181,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			ValidatorAddress: del.ValidatorAddress,
 			Amount:           delegatorShare.TruncateInt().Sub(remaining),
 		})
+		fmt.Println("remaining", remaining)
 		if !remaining.IsZero() {
 			dstVAl, err := k.getDstValidator(ctx, delAddr, valAddr)
 			if err != nil {
@@ -259,7 +267,7 @@ func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress
 
 	// convert current delegation shares to tokens
 	currentTokens := validator.TokensFromShares(del.Shares)
-
+	fmt.Println("currentTokens", currentTokens, "delTokens", delTokens)
 	if currentTokens.GTE(delTokens) {
 		shares, err := validator.SharesFromTokens(delTokens.TruncateInt())
 		if err != nil {
@@ -271,11 +279,13 @@ func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress
 		}
 		return math.LegacyZeroDec(), nil
 	} else {
+		fmt.Println("currentTokens", currentTokens, "delTokens", delTokens, "not gte")
 		delTokens = delTokens.Sub(currentTokens)
 		_, err := k.stakingKeeper.Unbond(ctx, delAddr, valAddr, del.Shares)
 		if err != nil {
 			return math.LegacyDec{}, err
 		}
+		fmt.Println("delTokens", delTokens)
 		return delTokens, nil
 	}
 }
@@ -316,6 +326,7 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 
 	} else {
 		remainingUnbonding, err := k.deductUnbondingDelegation(ctx, delAddr, valAddr, remainingFromdel.TruncateInt())
+		// todo: handle no unbonding delegations found
 		if err != nil {
 			return math.Int{}, err
 		}
