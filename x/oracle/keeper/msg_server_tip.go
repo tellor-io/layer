@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -90,6 +91,13 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if err != nil {
 		return nil, err
 	}
-
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"tip_added",
+			sdk.NewAttribute("query_id", hex.EncodeToString(queryId)),
+			sdk.NewAttribute("tipper", tipper.String()),
+			sdk.NewAttribute("amount", tip.Amount.String()),
+		),
+	})
 	return &types.MsgTipResponse{}, nil
 }

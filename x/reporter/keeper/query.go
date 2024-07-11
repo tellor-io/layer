@@ -3,11 +3,14 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/store/prefix"
 	"github.com/tellor-io/layer/x/reporter/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 type Querier struct {
@@ -25,21 +28,27 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
+	repStore := prefix.NewStore(store, types.ReportersKey)
+	reporters := make([]*types.Reporter, 0)
+	pageRes, err := query.Paginate(repStore, req.Pagination, func(repAddr, value []byte) error {
+		var reporterMeta types.OracleReporter
+		err := k.cdc.Unmarshal(value, &reporterMeta)
+		if err != nil {
+			return err
+		}
 
-	iter, err := k.Keeper.Reporters.Iterate(ctx, nil)
+		reporters = append(reporters, &types.Reporter{
+			Address:  sdk.AccAddress(repAddr).String(),
+			Metadata: &reporterMeta,
+		})
+		return nil
+	})
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	reporters, err := iter.Values()
-	if err != nil {
-		return nil, err
-	}
-	reportersPtrs := make([]*types.OracleReporter, len(reporters))
-	for i := range reporters {
-		reportersPtrs[i] = &reporters[i]
-	}
-	return &types.QueryReportersResponse{Reporters: reportersPtrs}, nil
+	return &types.QueryReportersResponse{Reporters: reporters, Pagination: pageRes}, nil
 }
 
 // SelectorReporter queries the reporter of a selector

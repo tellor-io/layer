@@ -34,6 +34,15 @@ func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDat
 	if err := k.Keeper.Hooks().AfterDataSpecUpdated(ctx, req.QueryType, req.Spec); err != nil {
 		return nil, err
 	}
-
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"data_spec_updated",
+			sdk.NewAttribute("query_type", req.QueryType),
+			sdk.NewAttribute("document_hash_id", req.Spec.DocumentHash),
+			sdk.NewAttribute("aggregate_method", req.Spec.AggregationMethod),
+			sdk.NewAttribute("response_value_type", req.Spec.ResponseValueType),
+			sdk.NewAttribute("report_buffer_window", req.Spec.ReportBufferWindow.String()),
+		),
+	})
 	return &types.MsgUpdateDataSpecResponse{}, nil
 }
