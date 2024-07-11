@@ -39,7 +39,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			return nil, err
 		}
 		// initialize query tip first time
-		query, err = k.keeper.initializeQuery(ctx, msg.QueryData)
+		query, err = k.keeper.InitializeQuery(ctx, msg.QueryData)
 		if err != nil {
 			return nil, err
 		}

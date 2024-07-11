@@ -135,7 +135,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 }
 
 // initialize query for a given query data
-func (k Keeper) initializeQuery(ctx context.Context, querydata []byte) (types.QueryMeta, error) {
+func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.QueryMeta, error) {
 	// initialize query tip first time
 
 	queryType, _, err := regTypes.DecodeQueryType(querydata)
