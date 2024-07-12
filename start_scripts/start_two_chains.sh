@@ -53,6 +53,14 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/alice/c
 echo "bill..."
 jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 
+
+# Update signed_blocks_window in genesis.json for alice
+echo "Updating signed_blocks_window in genesis.json for alice..."
+jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
+jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+echo "Updating signed_blocks_window in genesis.json for bill..."
+jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+
 # Create a tx to give alice loyas to stake
 echo "Adding genesis accounts..."
 echo "alice..."

@@ -119,7 +119,6 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 	for _, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
 		if err != nil {
-			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			continue // Skip this validator if the EVM address is not found
 		}
 		adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)

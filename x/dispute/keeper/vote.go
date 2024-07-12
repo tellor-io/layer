@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -13,7 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) initVoterClasses() *types.VoterClasses {
+func (k Keeper) InitVoterClasses() *types.VoterClasses {
 	return &types.VoterClasses{
 		Reporters:    math.ZeroInt(),
 		TokenHolders: math.ZeroInt(),
@@ -96,9 +97,11 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		return math.Int{}, err
 	}
 	reporter := sdk.AccAddress(delegation.Reporter)
-	// check if reporter has voted if not store voter tokens either full if reporter or delegation amount
+	// Check if reporter has voted. If not, store voter tokens either full if reporter or delegation amount
 	// this amount the amount to reduce from reporter so total amount of delegators that voted
 	reporterTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
+	fmt.Println("reporterTokensVoted: ", reporterTokensVoted)
+	fmt.Println("err: ", err)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return math.Int{}, err
@@ -118,6 +121,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		if err != nil {
 			return math.Int{}, err
 		}
+		fmt.Println("exists: ", exists)
 		if exists {
 			// get reporter tokens and reduce the amount
 			reporterTokens, err := k.ReportersGroup.Get(ctx, collections.Join(id, reporter.Bytes()))
