@@ -41,6 +41,8 @@ contract TellorPlayground {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
+    address public oracleMintRecipient;
+    uint256 public lastReleaseTimeDao;
 
     // Structs
     struct StakeInfo {
@@ -60,6 +62,7 @@ contract TellorPlayground {
         _symbol = "TRBP";
         _decimals = 18;
         token = address(this);
+        lastReleaseTimeDao = block.timestamp;
     }
 
     /**
@@ -132,6 +135,20 @@ contract TellorPlayground {
     }
 
     /**
+     * @dev Simulates time based rewards minting
+     */
+    function mintToOracle() external {
+        if (oracleMintRecipient == address(0)) {
+            return;
+        }
+        uint256 _releasedAmount = (146.94 ether *
+            (block.timestamp - lastReleaseTimeDao)) /
+            86400;
+        _mint(oracleMintRecipient, _releasedAmount);
+        lastReleaseTimeDao = block.timestamp;
+    }
+
+    /**
      * @dev Allows a reporter to request to withdraw their stake
      * @param _amount amount of staked tokens requesting to withdraw
      */
@@ -145,6 +162,14 @@ contract TellorPlayground {
         _staker.lockedBalance += _amount;
         _staker.stakedBalance -= _amount;
         emit StakeWithdrawRequested(msg.sender, _amount);
+    }
+
+    /**
+     * @dev Allows the oracle mint recipient to be set for bridge testing
+     * @param _oracle The new oracle mint recipient
+     */
+    function setOracleMintRecipient(address _oracle) external {
+        oracleMintRecipient = _oracle;
     }
 
     /**

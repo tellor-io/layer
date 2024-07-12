@@ -43,3 +43,9 @@ func (s *KeeperTestSuite) SetupTest() {
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
+
+func (s *KeeperTestSuite) TestLogger() {
+	require := s.Require()
+	logger := s.disputeKeeper.Logger(s.ctx)
+	require.NotNil(logger)
+}

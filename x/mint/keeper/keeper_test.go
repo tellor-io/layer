@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app/config"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
@@ -19,6 +20,7 @@ import (
 	auth "github.com/cosmos/cosmos-sdk/x/auth"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking"
 )
@@ -41,58 +43,78 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.ctx = keepertest.MintKeeper(s.T())
 }
 
-func (s *KeeperTestSuite) TestNewKeeper(t *testing.T) {
-	s.SetupTest()
+func TestTestSuite(t *testing.T) {
+	suite.Run(t, new(KeeperTestSuite))
+}
 
-	s.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(authtypes.NewModuleAddress(types.ModuleName))
-	s.accountKeeper.On("GetModuleAddress", types.TimeBasedRewards).Return(authtypes.NewModuleAddress(types.TimeBasedRewards))
+func (s *KeeperTestSuite) TestNewKeeper() {
+	ak := s.accountKeeper
+	ak.On("GetModuleAddress", types.ModuleName).Return(authtypes.NewModuleAddress(types.ModuleName)).Once()
+	ak.On("GetModuleAddress", types.TimeBasedRewards).Return(authtypes.NewModuleAddress(types.TimeBasedRewards)).Once()
 
 	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
 	keys := storetypes.NewKVStoreKey(types.StoreKey)
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	k := keeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys), s.accountKeeper, s.bankKeeper, authority)
+	s.NotNil(k)
 
-	keeper := keeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys), s.accountKeeper, s.bankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	s.NotNil(keeper)
+	// invalid authority
+	require.Panics(s.T(), func() {
+		keeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys), s.accountKeeper, s.bankKeeper, "badAuthority")
+	})
 }
 
-func (s *KeeperTestSuite) TestLogger(t *testing.T) {
-	s.SetupTest()
-
+func (s *KeeperTestSuite) TestLogger() {
 	logger := s.mintKeeper.Logger(s.ctx)
 	s.NotNil(logger)
 }
 
-func (s *KeeperTestSuite) TestGetMinter(t *testing.T) {
-	s.SetupTest()
-
-	minter, _ := s.mintKeeper.Minter.Get(s.ctx)
-	s.ctx.Logger().Info("Minter: %v", minter)
-
-	s.NotNil(minter)
-	s.Equal("loya", minter.BondDenom)
-}
-
-func (s *KeeperTestSuite) TestSetMinter(t *testing.T) {
-	s.SetupTest()
-
-	minter := types.NewMinter("loya")
-	s.NoError(s.mintKeeper.Minter.Set(s.ctx, minter))
-
-	returnedMinter, _ := s.mintKeeper.Minter.Get(s.ctx)
-	s.Equal(minter, returnedMinter)
-}
-
-func (s *KeeperTestSuite) TestMintCoins(t *testing.T) {
-	s.SetupTest()
+func (s *KeeperTestSuite) TestMintCoins() {
+	require := s.Require()
+	bk := s.bankKeeper
 	coins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(100*1e6)))
 
+	bk.On("MintCoins", s.ctx, types.ModuleName, coins).Return(nil)
 	err := s.mintKeeper.MintCoins(s.ctx, coins)
-	s.NoError(err)
+	require.NoError(err)
+
+	emptyCoins := sdk.NewCoins()
+	bk.On("MintCoins", s.ctx, types.ModuleName, emptyCoins).Return(nil)
+	err = s.mintKeeper.MintCoins(s.ctx, emptyCoins)
+	require.Nil(err)
 }
 
-func (s *KeeperTestSuite) TestInflationaryRewards(t *testing.T) {
-	s.SetupTest()
-	coins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(100*1e6)))
+func (s *KeeperTestSuite) TestSendInflationaryRewards() {
+	require := s.Require()
+	bk := s.bankKeeper
+	threeQuartersCoins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(75*1e6)))
+	oneQuarterCoins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(25*1e6)))
+	totalCoins := sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(100*1e6)))
 
-	err := s.mintKeeper.SendInflationaryRewards(s.ctx, coins)
-	s.NoError(err)
+	input := banktypes.NewInput(authtypes.NewModuleAddress(types.ModuleName), totalCoins)
+	outputs := []banktypes.Output{
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
+			Coins:   threeQuartersCoins,
+		},
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
+			Coins:   oneQuarterCoins,
+		},
+	}
+	bk.On("InputOutputCoins", s.ctx, input, outputs).Return(nil)
+	err := s.mintKeeper.SendInflationaryRewards(s.ctx, totalCoins)
+	require.NoError(err)
+
+	emptyCoins := sdk.NewCoins()
+	err = s.mintKeeper.SendInflationaryRewards(s.ctx, emptyCoins)
+	require.Nil(err)
+}
+
+func (s *KeeperTestSuite) TestGetAuthority() {
+	require := s.Require()
+	k := s.mintKeeper
+
+	authority := k.GetAuthority()
+	require.Equal(authority, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 }
