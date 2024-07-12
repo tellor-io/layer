@@ -74,13 +74,13 @@ sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/config/genesis.js
 
 # Update vote_extensions_enable_height in genesis.json for alice
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
-jq '.consensus.params.abci.vote_extensions_enable_height = "1" | .slashing.params.signed_blocks_window = "500"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
-jq '.consensus.params.abci.vote_extensions_enable_height = "1" | .slashing.params.signed_blocks_window = "500"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"  ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"  ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 
-# # update the block grace period you have to join as a validator
-# echo "Updating block grace period from 100 to 500"
-# jq '.slashing.params.signed_blocks_window = "500"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
-# jq '.slashing.params.signed_blocks_window = "500"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+# Update signed_blocks_window in genesis.json for alice
+echo "Updating signed_blocks_window in genesis.json for alice..."
+jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
+jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 
 # Get address/account for alice to use in gentx tx
 echo "Get address/account for alice to use in gentx tx"
