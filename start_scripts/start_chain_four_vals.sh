@@ -74,8 +74,8 @@ sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/config/genesis.js
 
 # Update vote_extensions_enable_height in genesis.json for alice
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
-jq '.consensus.params.abci.vote_extensions_enable_height = "1"  ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
-jq '.consensus.params.abci.vote_extensions_enable_height = "1"  ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"'  ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
+jq '.consensus.params.abci.vote_extensions_enable_height = "1"'  ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 
 # Update signed_blocks_window in genesis.json for alice
 echo "Updating signed_blocks_window in genesis.json for alice..."
