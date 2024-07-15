@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -76,7 +77,6 @@ func TestFeefromReporterStake(t *testing.T) {
 	require.NoError(t, err)
 	expected := tokenShare1.TruncateInt().Add(tokenShare2.TruncateInt()).Add(tokenShare3.TruncateInt())
 	require.Equal(t, expected, feefromstake.Total)
-
 }
 
 func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
@@ -120,7 +120,6 @@ func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
 	require.NoError(t, err)
 	expected = fee.MulRaw(2)
 	require.Equal(t, expected, feefromstake.Total)
-
 }
 
 func TestEscrowReporterStake(t *testing.T) {
@@ -131,7 +130,8 @@ func TestEscrowReporterStake(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{
 			{DelegatorAddress: reporterAddr, ValidatorAddress: sdk.ValAddress(reporterAddr), Amount: stake},
 		},
-		Total: stake}))
+		Total: stake,
+	}))
 	delegation := stakingtypes.Delegation{DelegatorAddress: reporterAddr.String(), ValidatorAddress: sdk.ValAddress(reporterAddr).String(), Shares: math.LegacyNewDecWithPrec(100, 6)}
 	validator := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(1000, 6), DelegatorShares: math.LegacyNewDecWithPrec(100, 6), Status: stakingtypes.Bonded}
 	sk.On("GetDelegation", ctx, reporterAddr, sdk.ValAddress(reporterAddr)).Return(delegation, nil)
@@ -153,7 +153,8 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 			{DelegatorAddress: selector2, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
 			{DelegatorAddress: selector3, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
 		},
-		Total: stake}))
+		Total: stake,
+	}))
 	validator1 := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(1_000, 6), DelegatorShares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec(), Status: stakingtypes.Bonded}
 	validator2 := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(1_000, 6), DelegatorShares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec(), Status: stakingtypes.Bonded}
 	delegation1 := stakingtypes.Delegation{DelegatorAddress: reporterAddr.String(), ValidatorAddress: sdk.ValAddress(valAddr1).String(), Shares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec()}
@@ -177,7 +178,8 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 		ValidatorAddress: sdk.ValAddress(valAddr1).String(),
 		Entries: []stakingtypes.UnbondingDelegationEntry{
 			{CreationHeight: ctx.BlockHeight(), InitialBalance: math.NewInt(500000001), Balance: math.NewInt(500000001)},
-		}}).Return(nil)
+		},
+	}).Return(nil)
 
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr1)).Return(validator1, nil)
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
@@ -201,5 +203,4 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 	}, nil)
 
 	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, ctx.BlockHeight(), math.NewIntWithDecimal(1500, 6), []byte("hashId")))
-
 }

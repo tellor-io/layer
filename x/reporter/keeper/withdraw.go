@@ -331,7 +331,6 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 	// the delegator is unbonding or the delegator has redelegated to another validator
 	if remainingFromdel.IsZero() {
 		return math.ZeroInt(), nil
-
 	}
 
 	remainingUnbonding, err := k.deductUnbondingDelegation(ctx, delAddr, valAddr, remainingFromdel.TruncateInt())
