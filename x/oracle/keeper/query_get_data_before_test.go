@@ -1,25 +1,77 @@
 package keeper_test
 
-func (s *KeeperTestSuite) TestQueryGetDataBefore() {
-	// require := s.Require()
+import (
+	"encoding/hex"
+	"time"
 
-	// s.TestSubmitValue()
-	// queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	// queryDataBytes, err := hex.DecodeString(queryData)
-	// fmt.Println("queryDataBytes: ", queryDataBytes)
-	// require.Nil(err)
-	// queryIdBytes := crypto.Keccak256(queryDataBytes)
-	// fmt.Println("queryIdBytes: ", queryIdBytes)
-	// queryId := hex.EncodeToString(queryIdBytes)
-	// fmt.Println("queryId: ", queryId)
-	// test := crypto.Keccak256([]byte(queryData))
-	// fmt.Println("test: ", test)
-	// queryGetDataBeforeRequest := &types.QueryGetDataBeforeRequest{
-	// 	QueryId:   queryId,
-	// 	Timestamp: s.ctx.BlockTime().Unix() + 100,
-	// }
-	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(101))
-	// data, err := s.oracleKeeper.GetDataBefore(s.ctx, queryGetDataBeforeRequest)
-	// require.Nil(err)
-	// fmt.Println(data)
+	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+)
+
+func (s *KeeperTestSuite) TestQueryGetDataBefore() {
+	require := s.Require()
+	k := s.oracleKeeper
+	q := s.queryClient
+	ctx := s.ctx
+
+	// request is nil
+	res, err := q.GetDataBefore(ctx, nil)
+	require.ErrorContains(err, "invalid request")
+	require.Nil(res)
+
+	// bad querybytes
+	res, err = q.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   "bad",
+		Timestamp: ctx.BlockTime().Unix(),
+	})
+	require.Error(err)
+	require.Nil(res)
+
+	// getDataBefore 1 sec after aggregate
+	qId, err := utils.QueryIDFromDataString(queryData)
+	require.NoError(err)
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(qId, ctx.BlockTime().UnixMilli()), types.Aggregate{
+		QueryId:           qId,
+		AggregateValue:    "100",
+		AggregateReporter: "reporter",
+		ReporterPower:     100,
+		Height:            0,
+		Flagged:           false,
+	}))
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Second))
+	ctx = ctx.WithBlockHeight(1)
+	res, err = q.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   hex.EncodeToString(qId),
+		Timestamp: ctx.BlockTime().Unix(),
+	})
+	require.NoError(err)
+	require.Equal(res.Report.AggregateValue, "100")
+	require.Equal(res.Report.AggregateReporter, "reporter")
+	require.Equal(res.Report.ReporterPower, int64(100))
+	require.Equal(res.Report.Height, int64(0))
+	require.Equal(res.Report.Flagged, false)
+	require.Equal(res.Report.QueryId, qId)
+
+	// getDataBefore at same timestamp as aggregate
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(qId, ctx.BlockTime().UnixMilli()), types.Aggregate{
+		QueryId:           qId,
+		AggregateValue:    "200",
+		AggregateReporter: "reporter2",
+		ReporterPower:     500,
+		Height:            1,
+		Flagged:           false,
+	}))
+	res, err = q.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   hex.EncodeToString(qId),
+		Timestamp: ctx.BlockTime().Unix(),
+	})
+	require.NoError(err)
+	require.Equal(res.Report.AggregateValue, "200")
+	require.Equal(res.Report.AggregateReporter, "reporter2")
+	require.Equal(res.Report.ReporterPower, int64(500))
+	require.Equal(res.Report.Height, int64(1))
+	require.Equal(res.Report.Flagged, false)
+	require.Equal(res.Report.QueryId, qId)
 }

@@ -302,6 +302,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	incycle = false
 	query.Amount = math.NewInt(1)
 	query.Expiration = ctx.BlockTime()
+	query.Id = 4
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	regK.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, incycle)
@@ -314,7 +315,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	regK.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, incycle)
 	require.NoError(err)
-	microReport, err = k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(1))) //
+	microReport, err = k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(4))) //
 	require.NoError(err)
 	require.NotNil(microReport)
 	require.Equal(microReport.AggregateMethod, "weighted-median")
