@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-
 	"strconv"
 
 	"github.com/tellor-io/layer/x/bridge/types"

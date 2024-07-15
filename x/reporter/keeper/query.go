@@ -3,10 +3,11 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/store/prefix"
 	"github.com/tellor-io/layer/x/reporter/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
