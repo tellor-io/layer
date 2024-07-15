@@ -2,6 +2,8 @@
 //require("hardhat-gas-reporter");
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
+require("hardhat-gas-reporter");
+
 // require("@nomiclabs/hardhat-web3");
 
 module.exports = {
@@ -56,16 +58,16 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      // accounts: {
-      //   mnemonic:
-      //     "nick lucian brenda kevin sam fiscal patch fly damp ocean produce wish",
-      //   count: 40,
-      // },
+      accounts: {
+        mnemonic:
+          "nick lucian brenda kevin sam fiscal patch fly damp ocean produce wish",
+        count: 40,
+      },
       forking: {
         url: process.env.NODE_URL,
         blockNumber: 19891853
       },
-      // allowUnlimitedContractSize: true
+      allowUnlimitedContractSize: true
     } //,
   },
 };

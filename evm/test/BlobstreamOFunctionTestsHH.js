@@ -384,5 +384,20 @@ describe("Blobstream - Function Tests", async function () {
             currentValSetArray1,
             sigStructArray1
         )
+
+        // update again 
+        newValAddrs2 = [val4.address, val5.address, val6.address, val7.address]
+        newPowers2 = [4, 5, 6, 7]
+        newThreshold2 = 15
+        newValHash2 = await h.calculateValHash(newValAddrs2, newPowers2)
+        blocky = await h.getBlock()
+        newValTimestamp2 = blocky.timestamp - 1
+        newValCheckpoint2 = h.calculateValCheckpoint(newValHash2, newThreshold2, newValTimestamp2)
+        sigs2 = []
+        for (i = 0; i < nVals; i++) {
+            sigs2.push(h.layerSign(newValCheckpoint2, wallets[i].privateKey))
+        }
+        sigStructArray2 = await h.getSigStructArray(sigs2)
+        await blobstream.updateValidatorSet(newValHash2, newThreshold2, newValTimestamp2, currentValSetArray1, sigStructArray2);
     })
     })

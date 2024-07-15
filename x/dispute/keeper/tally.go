@@ -39,7 +39,8 @@ func (k Keeper) GetTotalSupply(ctx context.Context) math.Int {
 	return k.bankKeeper.GetSupply(ctx, layertypes.BondDenom).Amount
 }
 
-func ratio(total, part math.Int) math.LegacyDec {
+// The `Ratio` function calculates the percentage ratio of `part` to `total`, scaled by a factor of 4 for the total before calculation. The result is expressed as a percentage.
+func Ratio(total, part math.Int) math.LegacyDec {
 	if total.IsZero() {
 		return math.LegacyZeroDec()
 	}
@@ -48,7 +49,8 @@ func ratio(total, part math.Int) math.LegacyDec {
 	return ratio.MulInt64(100)
 }
 
-func calculateVotingPower(n, d math.Int) math.Int {
+// CalculateVotingPower calculates the voting power of a given number (n) divided by another number (d).
+func CalculateVotingPower(n, d math.Int) math.Int {
 	if n.IsZero() || d.IsZero() {
 		return math.ZeroInt()
 	}
@@ -56,7 +58,8 @@ func calculateVotingPower(n, d math.Int) math.Int {
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
-func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
+// CalculateVotingPower calculates the voting power of a given number (n) divided by another number (d).
+func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	numGroups := math.LegacyNewDec(4)
 	scaledSupport := math.LegacyZeroDec()
 	scaledAgainst := math.LegacyZeroDec()
@@ -81,9 +84,9 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	totalRatio := math.LegacyZeroDec()
 	// init tallies
 	tallies := types.Tally{
-		ForVotes:     k.initVoterClasses(),
-		AgainstVotes: k.initVoterClasses(),
-		Invalid:      k.initVoterClasses(),
+		ForVotes:     k.InitVoterClasses(),
+		AgainstVotes: k.InitVoterClasses(),
+		Invalid:      k.InitVoterClasses(),
 	}
 
 	teamVote, err := k.TeamVote(ctx, id)
@@ -138,7 +141,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 	}
 
 	if userVoteSum.GT(math.ZeroInt()) {
-		totalRatio = totalRatio.Add(ratio(info.TotalUserTips, userVoteSum))
+		totalRatio = totalRatio.Add(Ratio(info.TotalUserTips, userVoteSum))
 
 		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
 
@@ -164,7 +167,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 			tallies.Invalid.Reporters = tallies.Invalid.Reporters.Add(value)
 		}
 		reporterVoteSum = reporterVoteSum.Add(value)
-		reporterRatio = reporterRatio.Add(ratio(info.TotalReporterPower, reporterVoteSum))
+		reporterRatio = reporterRatio.Add(Ratio(info.TotalReporterPower, reporterVoteSum))
 		totalRatio = totalRatio.Add(reporterRatio)
 		if totalRatio.GTE(math.LegacyNewDec(51)) {
 			return true, nil
@@ -217,7 +220,7 @@ func (k Keeper) Tallyvote(ctx context.Context, id uint64) error {
 		}
 
 		tokenHolderVoteSum = tokenHolderVoteSum.Add(tkHol)
-		totalRatio = totalRatio.Add(ratio(tokenSupply, tokenHolderVoteSum))
+		totalRatio = totalRatio.Add(Ratio(tokenSupply, tokenHolderVoteSum))
 
 		if totalRatio.GTE(math.LegacyNewDec(51)) {
 			break

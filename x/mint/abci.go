@@ -30,15 +30,15 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 		return nil
 	}
 
-	if err := mintBlockProvision(ctx, k, currentTime, minter); err != nil {
+	if err := MintBlockProvision(ctx, k, currentTime, minter); err != nil {
 		return err
 	}
 
-	return setPreviousBlockTime(ctx, k, currentTime)
+	return SetPreviousBlockTime(ctx, k, currentTime)
 }
 
 // mintBlockProvision mints the block provision for the current block.
-func mintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.Time, minter types.Minter) error {
+func MintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.Time, minter types.Minter) error {
 	if minter.PreviousBlockTime == nil {
 		return nil
 	}
@@ -56,7 +56,7 @@ func mintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.T
 	return k.SendInflationaryRewards(ctx, toMintCoins)
 }
 
-func setPreviousBlockTime(ctx context.Context, k keeper.Keeper, blockTime time.Time) error {
+func SetPreviousBlockTime(ctx context.Context, k keeper.Keeper, blockTime time.Time) error {
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err

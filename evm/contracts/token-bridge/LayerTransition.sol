@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 import { ITellorFlex } from "../interfaces/ITellorFlex.sol";
-import { IERC20 } from "../interfaces/IERC20.sol";
+import { ITellorMaster } from "../interfaces/ITellorMaster.sol";
 
 /// @title LayerTransition.
 /// @dev The contract that enables users of really old tellor to keep using it (e.g. Liquity)
@@ -11,7 +11,7 @@ import { IERC20 } from "../interfaces/IERC20.sol";
 contract LayerTransition {
     /*Storage*/
     bytes32 updateOracleQueryId = keccak256(abi.encode("TellorOracleAddress", abi.encode(bytes(""))));
-    IERC20 public token;
+    ITellorMaster public token;
     ITellorFlex public tellorFlex;
 
     /*Functions*/
@@ -20,7 +20,7 @@ contract LayerTransition {
     /// @param _token address of the tellor token (tellorMaster)
     constructor(address _tellorFlex, address _token) {
         tellorFlex = ITellorFlex(_tellorFlex);
-        token = IERC20(_token);
+        token = ITellorMaster(_token);
     }
 
     /// @notice this is needed because it's called when mintingToTeam.  We hijack it to keep it in the bridge

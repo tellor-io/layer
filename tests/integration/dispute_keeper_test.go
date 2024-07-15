@@ -268,7 +268,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 	// // tally vote
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	s.NoError(err)
 
 	repTknBeforeExecuteVote := repTokens
@@ -363,7 +363,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.NoError(err)
 
 	ctx := testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
-	err = s.Setup.Disputekeeper.Tallyvote(ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(ctx, 1)
 	s.NoError(err)
 
 	bond := sdk.DefaultPowerReduction.MulRaw(report.Power)
@@ -466,7 +466,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		}
 	}
 	fmt.Println("rep", repAddr.String())
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	s.NoError(err)
 	// execute vote
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
@@ -602,7 +602,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	s.NoError(err)
 	fmt.Println(val.Tokens)
 	// tally vote
-	err = s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1)
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	s.NoError(err)
 	// execute vote
 	err = s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1)
@@ -699,8 +699,8 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.Error(err, "can't start a new round for this dispute 1; dispute status DISPUTE_STATUS_VOTING")
 	// forward time to end voting period pre execute vote
 	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.TWO_DAYS+1))
-	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
-	s.ErrorContains(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1), "vote already tallied")
+	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
+	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1), "vote already tallied")
 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1), "dispute is not resolved yet")
 	// start another dispute round
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
@@ -710,7 +710,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	reporter1, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
 	s.NoError(err)
 
-	s.Error(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2), "vote period not ended and quorum not reached")
+	s.Error(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2), "vote period not ended and quorum not reached")
 
 	// voting that doesn't reach quorum
 	voteMsg = types.MsgVote{
@@ -724,7 +724,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 
 	// expire vote period
 	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
-	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 2))
+	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2))
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
 	// attempt to start another round
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
@@ -783,7 +783,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	s.NoError(err)
 	// forward time to expire dispute
 	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
-	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
+	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
 }
 
@@ -826,7 +826,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	// forward time to expire dispute
 	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(keeper.THREE_DAYS+1))
 
-	s.NoError(s.Setup.Disputekeeper.Tallyvote(s.Setup.Ctx, 1))
+	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
 }
 

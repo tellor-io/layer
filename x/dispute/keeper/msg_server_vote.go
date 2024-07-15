@@ -58,18 +58,18 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	upower = calculateVotingPower(upower, bI.TotalUserTips)
+	upower = CalculateVotingPower(upower, bI.TotalUserTips)
 	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
-	repP = calculateVotingPower(repP, bI.TotalReporterPower)
+	repP = CalculateVotingPower(repP, bI.TotalReporterPower)
 	acctBal, err := k.GetAccountBalance(ctx, voterAcc)
 	if err != nil {
 		return nil, err
 	}
 	totalSupply := k.GetTotalSupply(ctx)
-	voterPower := teampower.Add(upower).Add(repP).Add(calculateVotingPower(acctBal, totalSupply))
+	voterPower := teampower.Add(upower).Add(repP).Add(CalculateVotingPower(acctBal, totalSupply))
 	if voterPower.IsZero() {
 		return nil, errors.New("voter power is zero")
 	}

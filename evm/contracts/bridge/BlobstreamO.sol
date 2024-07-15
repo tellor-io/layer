@@ -3,7 +3,6 @@ pragma solidity 0.8.22;
 
 import "./ECDSA.sol";
 import "./Constants.sol";
-// import "hardhat/console.sol";
 
 struct OracleAttestationData {
     bytes32 queryId;

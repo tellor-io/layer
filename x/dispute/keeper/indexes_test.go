@@ -8,13 +8,31 @@ import (
 	"cosmossdk.io/collections/colltest"
 )
 
-func (k *KeeperTestSuite) TestIndexesList() {
-	sk, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(sk)
+func (s *KeeperTestSuite) TestIndexesList_Disputes() {
+	storeService, _ := colltest.MockStore()
+	schema := collections.NewSchemaBuilder(storeService)
 
 	im := keeper.NewDisputesIndex(schema)
 	index := im.IndexesList()
-	require.NotNil(k.T(), index)
+	require.NotNil(s.T(), index)
+}
+
+func (s *KeeperTestSuite) TestNewDisputesIndex() {
+	storeService, _ := colltest.MockStore()
+	schema := collections.NewSchemaBuilder(storeService)
+	disputesIndex := keeper.NewDisputesIndex(schema)
+	require.NotNil(s.T(), disputesIndex)
+	require.NotNil(s.T(), disputesIndex.OpenDisputes)
+	require.NotNil(s.T(), disputesIndex.DisputeByReporter)
+}
+
+func (s *KeeperTestSuite) TestIndexesList_Voters() {
+	storeService, _ := colltest.MockStore()
+	schema := collections.NewSchemaBuilder(storeService)
+
+	votersIndex := keeper.NewVotersIndex(schema)
+	index := votersIndex.IndexesList()
+	require.NotNil(s.T(), index)
 }
 
 // func (k *KeeperTestSuite) TestNewDisputesIndex() {
@@ -68,3 +86,11 @@ func (k *KeeperTestSuite) TestIndexesList() {
 // 	)
 // 	k.Equal(expectedOpenDisputesIndex, im.OpenDisputes)
 // }
+
+func (s *KeeperTestSuite) TestNewVotersIndex() {
+	storeService, _ := colltest.MockStore()
+	schema := collections.NewSchemaBuilder(storeService)
+
+	votersIndex := keeper.NewVotersIndex(schema)
+	require.NotNil(s.T(), votersIndex)
+}
