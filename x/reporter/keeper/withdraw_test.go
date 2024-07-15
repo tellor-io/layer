@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"cosmossdk.io/collections"
@@ -146,22 +145,61 @@ func TestEscrowReporterStake(t *testing.T) {
 
 func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 	k, sk, bk, _, ctx, _ := setupKeeper(t)
-	reporterAddr := sample.AccAddressBytes()
-	stake := math.NewIntWithDecimal(100, 6)
+	reporterAddr, selector2, selector3, valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	stake := math.NewIntWithDecimal(1000, 6)
 	require.NoError(t, k.Report.Set(ctx, collections.Join(reporterAddr.Bytes(), ctx.BlockHeight()), types.DelegationsAmounts{
 		TokenOrigins: []*types.TokenOriginInfo{
-			{DelegatorAddress: reporterAddr, ValidatorAddress: sdk.ValAddress(reporterAddr), Amount: stake},
+			{DelegatorAddress: reporterAddr, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
+			{DelegatorAddress: selector2, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
+			{DelegatorAddress: selector3, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
 		},
 		Total: stake}))
-	delegation := stakingtypes.Delegation{DelegatorAddress: reporterAddr.String(), ValidatorAddress: sdk.ValAddress(reporterAddr).String(), Shares: math.LegacyNewDecWithPrec(100, 6)}
-	validator := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(50, 6), DelegatorShares: math.LegacyNewDecWithPrec(100, 6), Status: stakingtypes.Bonded}
-	sk.On("GetDelegation", ctx, reporterAddr, sdk.ValAddress(reporterAddr)).Return(delegation, nil)
-	sk.On("GetValidator", ctx, sdk.ValAddress(reporterAddr)).Return(validator, nil)
-	delTokens, err := validator.SharesFromTokens(stake)
-	require.NoError(t, err)
-	fmt.Println(delTokens)
-	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(reporterAddr), delegation.Shares).Return(stake.QuoRaw(2), nil)
-	// sk.On("GetUnbondingDelegation", ctx, reporterAddr, )
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake))).Return(nil)
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 100, ctx.BlockHeight(), stake, []byte("hashId")))
+	validator1 := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(1_000, 6), DelegatorShares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec(), Status: stakingtypes.Bonded}
+	validator2 := stakingtypes.Validator{Tokens: math.NewIntWithDecimal(1_000, 6), DelegatorShares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec(), Status: stakingtypes.Bonded}
+	delegation1 := stakingtypes.Delegation{DelegatorAddress: reporterAddr.String(), ValidatorAddress: sdk.ValAddress(valAddr1).String(), Shares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec()}
+	sk.On("GetDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr1)).Return(delegation1, nil)
+	delegation2 := stakingtypes.Delegation{DelegatorAddress: selector2.String(), ValidatorAddress: sdk.ValAddress(valAddr1).String(), Shares: math.LegacyZeroDec()}
+	sk.On("GetDelegation", ctx, selector2, sdk.ValAddress(valAddr1)).Return(delegation2, nil)
+	delegation3 := stakingtypes.Delegation{DelegatorAddress: selector3.String(), ValidatorAddress: sdk.ValAddress(valAddr2).String(), Shares: math.NewIntWithDecimal(1_000, 6).ToLegacyDec()}
+	sk.On("GetDelegation", ctx, selector3, sdk.ValAddress(valAddr1)).Return(stakingtypes.Delegation{}, stakingtypes.ErrNoDelegation)
+	sk.On("GetDelegation", ctx, selector3, sdk.ValAddress(valAddr2)).Return(delegation3, nil)
+
+	sk.On("GetUnbondingDelegation", ctx, selector2, sdk.ValAddress(valAddr1)).Return(stakingtypes.UnbondingDelegation{
+		DelegatorAddress: selector2.String(),
+		ValidatorAddress: sdk.ValAddress(valAddr1).String(),
+		Entries: []stakingtypes.UnbondingDelegationEntry{
+			{CreationHeight: ctx.BlockHeight(), InitialBalance: stake, Balance: stake},
+		},
+	}, nil)
+	sk.On("GetUnbondingDelegation", ctx, selector3, sdk.ValAddress(valAddr1)).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
+	sk.On("SetUnbondingDelegation", ctx, stakingtypes.UnbondingDelegation{
+		DelegatorAddress: selector2.String(),
+		ValidatorAddress: sdk.ValAddress(valAddr1).String(),
+		Entries: []stakingtypes.UnbondingDelegationEntry{
+			{CreationHeight: ctx.BlockHeight(), InitialBalance: math.NewInt(500000001), Balance: math.NewInt(500000001)},
+		}}).Return(nil)
+
+	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr1)).Return(validator1, nil)
+	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
+
+	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(valAddr1), delegation1.Shares.Quo(math.LegacyNewDec(2)).Sub(math.LegacyOneDec())).Return(stake.QuoRaw(2).SubRaw(1), nil)
+	sk.On("Unbond", ctx, selector3, sdk.ValAddress(valAddr2), math.LegacyNewDec(500000002)).Return(math.NewInt(500000002), nil)
+
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake.QuoRaw(2).SubRaw(1)))).Return(nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.NotBondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake.QuoRaw(2).SubRaw(1)))).Return(nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(500000002)))).Return(nil)
+
+	sk.On("GetRedelegationsFromSrcValidator", ctx, sdk.ValAddress(valAddr1)).Return([]stakingtypes.Redelegation{
+		{
+			DelegatorAddress:    selector3.String(),
+			ValidatorSrcAddress: sdk.ValAddress(valAddr1).String(),
+			ValidatorDstAddress: sdk.ValAddress(valAddr2).String(),
+			Entries: []stakingtypes.RedelegationEntry{
+				{CreationHeight: ctx.BlockHeight(), InitialBalance: stake, SharesDst: math.LegacyDec(stake)},
+			},
+		},
+	}, nil)
+
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, ctx.BlockHeight(), math.NewIntWithDecimal(1500, 6), []byte("hashId")))
+
 }
