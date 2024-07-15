@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/mint"
 	"github.com/tellor-io/layer/x/mint/types"
@@ -35,7 +36,7 @@ func TestBeginBlocker(t *testing.T) {
 	require.Nil(err)
 
 	// advance time past 0
-	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
+	ctx = testutil.WithBlockTime(ctx, time.Unix(1000, 0))
 	err = mint.BeginBlocker(ctx, k)
 	require.Nil(err)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app/config"
+	"github.com/tellor-io/layer/testutil"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
@@ -56,7 +57,7 @@ func (s *TestSuite) TestCheckPrevoteDisputesForExpiration() {
 	require := require.New(s.T())
 	k := s.disputeKeeper
 	ctx := s.ctx
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
+	ctx = testutil.WithBlockTime(s.ctx, ctx.HeaderInfo().Time.Add(24*time.Hour))
 
 	// check with no open disputes
 	err := dispute.CheckPrevoteDisputesForExpiration(ctx, k)
@@ -66,8 +67,8 @@ func (s *TestSuite) TestCheckPrevoteDisputesForExpiration() {
 	require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
 		DisputeId:        1,
 		DisputeStatus:    types.Prevote,
-		DisputeStartTime: ctx.BlockTime().Add(-time.Hour),
-		DisputeEndTime:   ctx.BlockTime().Add(time.Hour),
+		DisputeStartTime: ctx.HeaderInfo().Time.Add(-time.Hour),
+		DisputeEndTime:   ctx.HeaderInfo().Time.Add(time.Hour),
 		Open:             true,
 	}))
 
@@ -75,7 +76,7 @@ func (s *TestSuite) TestCheckPrevoteDisputesForExpiration() {
 	require.NoError(err)
 
 	// check again after endtime passes
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(2 * time.Hour))
+	ctx = testutil.WithBlockTime(s.ctx, ctx.HeaderInfo().Time.Add(2*time.Hour))
 	err = dispute.CheckPrevoteDisputesForExpiration(ctx, k)
 	require.NoError(err)
 	dispute, err := k.Disputes.Get(ctx, 1)
