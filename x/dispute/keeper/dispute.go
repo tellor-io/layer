@@ -3,9 +3,11 @@ package keeper
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	gomath "math"
 	"math/big"
+	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -123,6 +125,22 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	if err != nil {
 		return err
 	}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"new_dispute",
+			sdk.NewAttribute("disputer", msg.Creator),
+			sdk.NewAttribute("reporter", msg.Report.Reporter),
+			sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
+			sdk.NewAttribute("total_fee", disputeFee.String()),
+			sdk.NewAttribute("fee_paid", msg.Fee.Amount.String()),
+			sdk.NewAttribute("pay_from_bond", strconv.FormatBool(msg.PayFromBond)),
+			sdk.NewAttribute("dispute_id", strconv.FormatUint(disputeId, 10)),
+			sdk.NewAttribute("value", msg.Report.Value),
+			sdk.NewAttribute("query_type", msg.Report.QueryType),
+			sdk.NewAttribute("query_id", hex.EncodeToString(msg.Report.QueryId)),
+			sdk.NewAttribute("report_block_number", strconv.FormatInt(msg.Report.BlockNumber, 10)),
+		),
+	})
 	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
 }
 
@@ -226,6 +244,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	if err := k.CloseDispute(ctx, dispute.DisputeId); err != nil {
 		return err
 	}
+	prevDisputeId := dispute.DisputeId
 	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
@@ -242,7 +261,13 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	if err != nil {
 		return err
 	}
-
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"added_dispute_round",
+			sdk.NewAttribute("prev_dispute_id", strconv.FormatUint(prevDisputeId, 10)),
+			sdk.NewAttribute("dispute_id", strconv.FormatUint(disputeId, 10)),
+		),
+	})
 	return k.SetStartVote(ctx, dispute.DisputeId) // starting voting immediately
 }
 

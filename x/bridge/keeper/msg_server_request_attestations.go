@@ -34,5 +34,12 @@ func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgReques
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"attestations_request",
+			sdk.NewAttribute("query_id", msg.QueryId),
+			sdk.NewAttribute("timestamp", msg.Timestamp),
+		),
+	})
 	return &types.MsgRequestAttestationsResponse{}, nil
 }

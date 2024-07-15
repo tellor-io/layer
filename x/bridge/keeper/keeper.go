@@ -11,6 +11,7 @@ import (
 	gomath "math"
 	"math/big"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -249,34 +250,34 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
 		return err
 	}
+	var valsetSigs *types.BridgeValsetSignatures
 	if valsetIdx.Index == 0 {
-		valsetSigs := types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
-		err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
+		valsetSigs = types.NewBridgeValsetSignatures(len(bridgeValidatorSet.BridgeValidatorSet))
+	} else {
+		previousValsetTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, valsetIdx.Index-1)
 		if err != nil {
-			k.Logger(ctx).Info("Error setting bridge valset signatures: ", "error", err)
+			k.Logger(ctx).Info("Error getting previous valset timestamp: ", "error", err)
+			return err
+		}
+		previousValset, err := k.BridgeValsetByTimestampMap.Get(ctx, previousValsetTimestamp.Timestamp)
+		if err != nil {
+			k.Logger(ctx).Info("Error getting previous valset: ", "error", err)
 			return err
 		}
 
-		return nil
+		valsetSigs = types.NewBridgeValsetSignatures(len(previousValset.BridgeValidatorSet))
 	}
-	previousValsetTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, valsetIdx.Index-1)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting previous valset timestamp: ", "error", err)
-		return err
-	}
-	previousValset, err := k.BridgeValsetByTimestampMap.Get(ctx, previousValsetTimestamp.Timestamp)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting previous valset: ", "error", err)
-		return err
-	}
-
-	valsetSigs := types.NewBridgeValsetSignatures(len(previousValset.BridgeValidatorSet))
 	err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting bridge valset signatures: ", "error", err)
 		return err
 	}
-
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"new_bridge_validator_set",
+			sdk.NewAttribute("timestamp", strconv.FormatUint(validatorTimestamp, 10)),
+		),
+	})
 	return nil
 }
 
