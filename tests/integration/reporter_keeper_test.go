@@ -3,12 +3,14 @@ package integration_test
 import (
 	"fmt"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -229,4 +231,158 @@ func (s *IntegrationTestSuite) TestMaxSelectorsCount() {
 	// try to add 1 more selector, should fail since max reached
 	_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: sample.AccAddress(), ReporterAddress: valAcc.String()})
 	s.ErrorContains(err, "reporter has reached max selectors")
+}
+
+func (s *IntegrationTestSuite) TestEscrowReporterStake() {
+	ctx := s.Setup.Ctx
+	app := s.Setup.App
+	rk := s.Setup.Reporterkeeper
+	sk := s.Setup.Stakingkeeper
+	reportermsgServer := keeper.NewMsgServerImpl(rk)
+	// create two validators
+	_, valAddrs, _ := s.Setup.CreateValidators(2)
+	// the amount doesn't mean anything specific, just how much is in the pool after calling CreateValidators()
+	startedBondedPoolAmount := math.NewInt(10_001_000_200)
+	bondedpool := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.BondedPoolName), s.Setup.Denom)
+	s.Equal(startedBondedPoolAmount, bondedpool.Amount)
+	unbondedpool := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.NotBondedPoolName), s.Setup.Denom)
+	s.Equal(math.ZeroInt(), unbondedpool.Amount)
+
+	valAddr1 := valAddrs[0]
+	valAddr2 := valAddrs[1]
+	// create three new addresses and delegate them to the first validator
+	delegator1, delegator2, delegator3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	reporterAddr := delegator1
+	s.Setup.MintTokens(delegator1, math.NewInt(1000*1e6))
+	s.Setup.MintTokens(delegator2, math.NewInt(1000*1e6))
+	s.Setup.MintTokens(delegator3, math.NewInt(1000*1e6))
+
+	stakingmsgServer := stakingkeeper.NewMsgServerImpl(sk)
+	msgDelegate1 := stakingtypes.NewMsgDelegate(
+		delegator1.String(),
+		valAddr1.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	msgDelegate2 := stakingtypes.NewMsgDelegate(
+		delegator2.String(),
+		valAddr1.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	msgDelegate3 := stakingtypes.NewMsgDelegate(
+		delegator3.String(),
+		valAddr1.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+
+	_, err := stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate1)
+	s.NoError(err)
+	_, err = stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate2)
+	s.NoError(err)
+	_, err = stakingmsgServer.Delegate(s.Setup.Ctx, msgDelegate3)
+	s.NoError(err)
+	bondedpoolAmountafterDelegating := startedBondedPoolAmount.Add(math.NewIntWithDecimal(3_000, 6))
+	bondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.BondedPoolName), s.Setup.Denom)
+	s.Equal(bondedpoolAmountafterDelegating, bondedpool.Amount)
+	unbondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.NotBondedPoolName), s.Setup.Denom)
+	s.Equal(math.ZeroInt(), unbondedpool.Amount)
+	// create reporter, automatically self selects
+	msgCreateReporter := reportertypes.MsgCreateReporter{
+		ReporterAddress:   reporterAddr.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewIntWithDecimal(1, 6),
+	}
+	_, err = reportermsgServer.CreateReporter(ctx, &msgCreateReporter)
+	s.NoError(err)
+	// select reporter other two delegators
+	msgSelectReporter := reportertypes.MsgSelectReporter{
+		SelectorAddress: delegator2.String(),
+		ReporterAddress: reporterAddr.String(),
+	}
+	_, err = reportermsgServer.SelectReporter(ctx, &msgSelectReporter)
+	s.NoError(err)
+
+	msgSelectReporter = reportertypes.MsgSelectReporter{
+		SelectorAddress: delegator3.String(),
+		ReporterAddress: reporterAddr.String(),
+	}
+	_, err = reportermsgServer.SelectReporter(ctx, &msgSelectReporter)
+	s.NoError(err)
+
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	_, err = app.EndBlocker(ctx)
+	s.NoError(err)
+
+	// sanity check of reporter stake, this also sets k.Report.Set
+	blockHeightAtFullPower := ctx.BlockHeight()
+	reporterStake, err := rk.ReporterStake(ctx, reporterAddr)
+	s.NoError(err)
+	s.Equal(math.NewIntWithDecimal(3_000, 6), reporterStake)
+	// undelegate delegator2 sends tokens to unbonded pool and creates unbonding delegation object
+	msgUndelegatedelegator2 := stakingtypes.NewMsgUndelegate(
+		delegator2.String(),
+		valAddr1.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	_, err = stakingmsgServer.Undelegate(ctx, msgUndelegatedelegator2)
+	s.NoError(err)
+
+	// check staking module accounts
+	bondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.BondedPoolName), s.Setup.Denom)
+	s.Equal(bondedpoolAmountafterDelegating.Sub(math.NewIntWithDecimal(1_000, 6)), bondedpool.Amount)
+	unbondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.NotBondedPoolName), s.Setup.Denom)
+	s.Equal(math.NewIntWithDecimal(1_000, 6), unbondedpool.Amount)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(1)})
+	reporterStake, err = rk.ReporterStake(ctx, reporterAddr)
+	s.NoError(err)
+	s.Equal(math.NewIntWithDecimal(2000, 6), reporterStake)
+
+	// redelegate delegator3, creates redelegation object
+	msgReDelegate3 := stakingtypes.NewMsgBeginRedelegate(
+		delegator3.String(),
+		valAddr1.String(),
+		valAddr2.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	_, err = stakingmsgServer.BeginRedelegate(ctx, msgReDelegate3)
+	s.NoError(err)
+
+	// what happens when the delegator tries to unbond from the new validator
+	msgUndelegatedelegator3 := stakingtypes.NewMsgUndelegate(
+		delegator3.String(),
+		valAddr2.String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+	_, err = stakingmsgServer.Undelegate(ctx, msgUndelegatedelegator3)
+	s.NoError(err)
+
+	bondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.BondedPoolName), s.Setup.Denom)
+	s.Equal(bondedpoolAmountafterDelegating.Sub(math.NewIntWithDecimal(2_000, 6)), bondedpool.Amount)
+	unbondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.NotBondedPoolName), s.Setup.Denom)
+	s.Equal(math.NewIntWithDecimal(2_000, 6), unbondedpool.Amount)
+
+	disputeBal := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
+	s.Equal(math.ZeroInt(), disputeBal.Amount)
+
+	// get validator power before escrowing reporter stake
+	val, err := sk.GetValidator(ctx, valAddr1)
+	s.NoError(err)
+	valPower := val.ConsensusPower(val.Tokens)
+	pk, err := val.ConsPubKey()
+	s.NoError(err)
+	cmtPk, err := cryptocodec.ToCmtPubKeyInterface(pk)
+	s.NoError(err)
+
+	err = rk.EscrowReporterStake(
+		ctx, reporterAddr, sdk.TokensToConsensusPower(math.NewIntWithDecimal(3000, 6), sdk.DefaultPowerReduction),
+		blockHeightAtFullPower, math.NewIntWithDecimal(1500, 6), []byte("hashId"))
+	s.NoError(err)
+	// tokens are moved to dispute module
+	disputeBal = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
+	s.Equal(math.NewIntWithDecimal(1500, 6), disputeBal.Amount)
+
+	// slash delegator3, infraction height before escrowReporterStake was called
+	_, err = sk.Slash(ctx, sdk.ConsAddress(cmtPk.Address()).Bytes(), blockHeightAtFullPower, valPower, math.LegacyNewDecWithPrec(5, 1))
+	s.NoError(err)
 }
