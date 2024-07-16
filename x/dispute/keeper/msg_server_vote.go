@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -80,5 +81,14 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
 	}
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"voted_on_dispute",
+			sdk.NewAttribute("voter", msg.Voter),
+			sdk.NewAttribute("voter_power", voterPower.String()),
+			sdk.NewAttribute("dispute_id", strconv.FormatUint(msg.Id, 10)),
+			sdk.NewAttribute("choice", msg.Vote.String()),
+		),
+	})
 	return &types.MsgVoteResponse{}, nil
 }

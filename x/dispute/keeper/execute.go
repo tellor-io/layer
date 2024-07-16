@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -141,6 +142,13 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	case types.VoteResult_NO_TALLY:
 		return errors.New("vote hasn't been tallied yet")
 	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"dispute_executed",
+			sdk.NewAttribute("dispute_id", strconv.FormatUint(id, 10)),
+			sdk.NewAttribute("vote_result", vote.VoteResult.String()),
+		),
+	})
 	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
 

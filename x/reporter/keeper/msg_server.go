@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -61,6 +62,14 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(addr.Bytes(), count)); err != nil {
 		return nil, err
 	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"created_reporter",
+			sdk.NewAttribute("reporter", msg.ReporterAddress),
+			sdk.NewAttribute("commission", msg.CommissionRate.String()),
+			sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
+		),
+	})
 	return &types.MsgCreateReporterResponse{}, nil
 }
 
@@ -108,6 +117,14 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(reporterAddr.Bytes(), count)); err != nil {
 		return nil, err
 	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"reporter_selected",
+			sdk.NewAttribute("selector", msg.SelectorAddress),
+			sdk.NewAttribute("reporter", msg.ReporterAddress),
+			sdk.NewAttribute("reporter_selector_count_increased", strconv.Itoa(len(selectors)+1)),
+		),
+	})
 	return &types.MsgSelectReporterResponse{}, nil
 }
 
@@ -118,6 +135,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if err != nil {
 		return nil, err
 	}
+	prevReporter := sdk.AccAddress(selector.Reporter)
 	if bytes.Equal(selector.Reporter, addr.Bytes()) {
 		return nil, errors.New("cannot switch reporter if selector is a reporter")
 	}
@@ -176,6 +194,15 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selector); err != nil {
 		return nil, err
 	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"switched_reporter",
+			sdk.NewAttribute("selector", msg.SelectorAddress),
+			sdk.NewAttribute("previous_reporter", prevReporter.String()),
+			sdk.NewAttribute("new_reporter", msg.ReporterAddress),
+			sdk.NewAttribute("selector_locked_until", selector.LockedUntilTime.String()),
+		),
+	})
 	return &types.MsgSwitchReporterResponse{}, nil
 }
 
@@ -220,6 +247,13 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 	if err := k.Keeper.Selectors.Remove(goCtx, selectorAddr); err != nil {
 		return nil, err
 	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"selector_removed",
+			sdk.NewAttribute("selector", msg.SelectorAddress),
+			sdk.NewAttribute("removed_from_reporter", sdk.AccAddress(selector.Reporter).String()),
+		),
+	})
 	return &types.MsgRemoveSelectorResponse{}, nil
 }
 
@@ -236,7 +270,12 @@ func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailRep
 	if err := k.Keeper.UnjailReporter(ctx, reporterAddr, reporter); err != nil {
 		return nil, err
 	}
-
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"unjailed_reporter",
+			sdk.NewAttribute("reporter", reporterAddr.String()),
+		),
+	})
 	return &types.MsgUnjailReporterResponse{}, nil
 }
 
@@ -275,6 +314,13 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if err != nil {
 		return nil, err
 	}
-
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"tip_withdrawn",
+			sdk.NewAttribute("selector", msg.SelectorAddress),
+			sdk.NewAttribute("validator", msg.ValidatorAddress),
+			sdk.NewAttribute("amount", shares.String()),
+		),
+	})
 	return &types.MsgWithdrawTipResponse{}, nil
 }

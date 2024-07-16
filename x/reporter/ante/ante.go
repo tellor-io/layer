@@ -6,6 +6,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +31,8 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	var msgAmount math.Int
 	for _, msg := range tx.GetMsgs() {
 		switch msg := msg.(type) {
+		case *stakingtypes.MsgCreateValidator:
+			msgAmount = msg.Value.Amount
 		case *stakingtypes.MsgDelegate:
 			msgAmount = msg.Amount.Amount
 		case *stakingtypes.MsgBeginRedelegate:
@@ -43,6 +46,10 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 		state, err := t.reporterKeeper.Tracker.Get(ctx)
 		if err != nil {
+			// for when chain is first started
+			if errors.Is(err, collections.ErrNotFound) {
+				return ctx, nil
+			}
 			return ctx, err
 		}
 		currentAmount, err := t.stakingKeeper.TotalBondedTokens(ctx)

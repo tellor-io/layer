@@ -28,5 +28,13 @@ func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawT
 	if err := k.Keeper.WithdrawTokens(sdkCtx, msg.Amount, sender, recipient); err != nil {
 		return nil, err
 	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"tokens_withdrawn",
+			sdk.NewAttribute("sender", msg.Creator),
+			sdk.NewAttribute("recipient_evm_address", msg.Recipient),
+			sdk.NewAttribute("amount", msg.Amount.String()),
+		),
+	})
 	return &types.MsgWithdrawTokensResponse{}, nil
 }
