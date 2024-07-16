@@ -102,7 +102,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 	response, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
 		Creator:   creatorAddr.String(),
 		QueryId:   hex.EncodeToString(queryId),
-		Timestamp: strconv.FormatInt(timestampTime.Unix(), 10),
+		Timestamp: strconv.FormatInt(timestampTime.UnixMilli(), 10),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, response)
