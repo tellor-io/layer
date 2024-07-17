@@ -3,11 +3,12 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
 )
 
 var _ types.QueryServer = Querier{}

@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -22,12 +23,14 @@ func WithCollectionPaginationTriplePrefix[K1, K2, K3 any](prefix K1) func(o *que
 		o.Prefix = &prefix
 	}
 }
+
 func WithCollectionPaginationTripleSuperPrefix[K1, K2, K3 any](prefix1 K1, prefix2 K2) func(o *query.CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
 	return func(o *query.CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
 		prefix := collections.TripleSuperPrefix[K1, K2, K3](prefix1, prefix2)
 		o.Prefix = &prefix
 	}
 }
+
 func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReportsbyQidRequest) (*types.QueryMicroReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
