@@ -14,7 +14,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	report, err := s.queryClient.GetReportsbyQid(s.ctx, req)
 	s.Nil(err)
 
-	MicroReport := &types.MicroReport{
+	MicroReport := types.MicroReport{
 		Reporter:        addr.String(),
 		Power:           1,
 		QueryType:       "SpotPrice",
@@ -25,21 +25,19 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 		Cyclelist:       true,
 		BlockNumber:     s.ctx.BlockHeight(),
 	}
-	expectedReports := types.Reports{
-		MicroReports: []*types.MicroReport{MicroReport},
-	}
+	expectedReports := []types.MicroReport{MicroReport}
 
-	s.Equal(expectedReports, report.Reports)
+	s.Equal(expectedReports, report.MicroReports)
 
 	report2, err := s.queryClient.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: addr.String()})
 	s.NoError(err)
-	s.Equal(*expectedReports.MicroReports[0], report2.MicroReports[0])
+	s.Equal(expectedReports[0], report2.MicroReports[0])
 
 	report3, err := s.queryClient.GetReportsbyReporterQid(s.ctx, &types.QueryGetReportsbyReporterQidRequest{Reporter: addr.String(), QueryId: hex.EncodeToString(queryIdStr)})
 	s.NoError(err)
-	s.EqualValues(expectedReports.MicroReports, report3.Reports.MicroReports)
+	s.EqualValues(expectedReports, report3.MicroReports)
 
 	report, err = s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)})
 	s.NoError(err)
-	s.Equal(expectedReports, report.Reports)
+	s.Equal(expectedReports, report.MicroReports)
 }
