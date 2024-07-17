@@ -66,12 +66,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
 				},
 				{
-					RpcMethod:      "GetDataBefore",
-					Use:            "get-data-before [query-id] [timestamp]",
-					Short:          "Query data before a timestamp",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}},
-				},
-				{
 					RpcMethod:      "GetSnapshotsByReport",
 					Use:            "get-snapshots-by-report [query-id] [timestamp]",
 					Short:          "Query snapshots by report",
