@@ -1,25 +1,48 @@
 package keeper_test
 
-func (s *KeeperTestSuite) TestQueryGetDataBefore() {
-	// require := s.Require()
+import (
+	"time"
 
-	// s.TestSubmitValue()
-	// queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	// queryDataBytes, err := hex.DecodeString(queryData)
-	// fmt.Println("queryDataBytes: ", queryDataBytes)
-	// require.Nil(err)
-	// queryIdBytes := crypto.Keccak256(queryDataBytes)
-	// fmt.Println("queryIdBytes: ", queryIdBytes)
-	// queryId := hex.EncodeToString(queryIdBytes)
-	// fmt.Println("queryId: ", queryId)
-	// test := crypto.Keccak256([]byte(queryData))
-	// fmt.Println("test: ", test)
-	// queryGetDataBeforeRequest := &types.QueryGetDataBeforeRequest{
-	// 	QueryId:   queryId,
-	// 	Timestamp: s.ctx.BlockTime().Unix() + 100,
-	// }
-	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(101))
-	// data, err := s.oracleKeeper.GetDataBefore(s.ctx, queryGetDataBeforeRequest)
-	// require.Nil(err)
-	// fmt.Println(data)
+	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+)
+
+func (s *KeeperTestSuite) TestQueryGetDataBefore() {
+	ctx := s.ctx
+	querier := keeper.NewQuerier(s.oracleKeeper)
+	getDataBeforeResponse, err := querier.GetDataBefore(ctx, nil)
+	s.ErrorContains(err, "invalid request")
+	s.Nil(getDataBeforeResponse)
+
+	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId: "z",
+	})
+	s.ErrorContains(err, "invalid queryId")
+	s.Nil(getDataBeforeResponse)
+
+	timestampBefore := int64(1)
+	timestamp := time.UnixMilli(timestampBefore)
+
+	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   "1234abcd",
+		Timestamp: timestampBefore,
+	})
+	s.ErrorContains(err, "no aggregate report found before timestamp")
+	s.Nil(getDataBeforeResponse)
+
+	queryId := "1234abcd"
+	qIdBz, err := utils.QueryBytesFromString(queryId)
+	s.NoError(err)
+	agg := types.Aggregate{QueryId: qIdBz}
+	s.NoError(s.oracleKeeper.Aggregates.Set(s.ctx, collections.Join(qIdBz, timestamp.UnixMilli()), agg))
+	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   queryId,
+		Timestamp: timestampBefore,
+	})
+	s.NoError(err)
+	s.Equal(getDataBeforeResponse.Timestamp, uint64(timestamp.UnixMilli()))
+	s.Equal(getDataBeforeResponse.Aggregate, &agg)
 }
