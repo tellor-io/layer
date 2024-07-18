@@ -62,26 +62,20 @@ contract BlobstreamO is ECDSA {
     error ValidatorSetNotStale();
 
     /*Functions*/
-    // / @param _powerThreshold Initial voting power that is needed to approve operations
-    // / @param _validatorTimestamp Timestamp of the block where validator set is updated.
-    // / @param _unbondingPeriod Time period after which a validator can withdraw their stake.
-    // / @param _validatorSetCheckpoint Initial checkpoint of the validator set.
+    /// @notice Constructor for the BlobstreamO contract.
     /// @param _guardian Guardian address.
     constructor(
-        // uint256 _powerThreshold,
-        // uint256 _validatorTimestamp,
-        // uint256 _unbondingPeriod,
-        // bytes32 _validatorSetCheckpoint,
         address _guardian
     ) {
-        // powerThreshold = _powerThreshold;
-        // validatorTimestamp = _validatorTimestamp;
-        // unbondingPeriod = _unbondingPeriod;
-        // lastValidatorSetCheckpoint = _validatorSetCheckpoint;
         guardian = _guardian;
         deployer = msg.sender;
     }
 
+    /// @notice This function is called only once by the deployer to initialize the contract
+    /// @param _powerThreshold Initial voting power that is needed to approve operations
+    /// @param _validatorTimestamp Timestamp of the block where validator set is updated.
+    /// @param _unbondingPeriod Time period after which a validator can withdraw their stake.
+    /// @param _validatorSetCheckpoint Initial checkpoint of the validator set.
     function init(
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
