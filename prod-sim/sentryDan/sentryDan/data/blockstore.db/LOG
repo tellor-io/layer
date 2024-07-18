@@ -136,3 +136,5 @@
 13:59:52.333815 version@stat F·[1 15] S·31MiB[2MiB 28MiB] Sc·[0.25 0.29]
 13:59:52.338428 memdb@flush committed F·1 T·1.182489209s
 13:59:52.341225 journal@remove removed @39
+14:09:12.092335 db@close closing
+14:09:12.105695 db@close done T·13.304208ms

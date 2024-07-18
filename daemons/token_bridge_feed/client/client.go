@@ -133,7 +133,7 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	ethApiKey := "CKTeV8NFI4Iq10zhvMxBEeV53VbboZGl"
+	ethApiKey := 
 	// ethApiKey, err := c.getEthApiKey()
 	// if err != nil {
 	// 	return fmt.Errorf("failed to get ETH API key: %w", err)
