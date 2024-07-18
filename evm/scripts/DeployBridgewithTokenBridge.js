@@ -12,6 +12,11 @@ const web3 = require('web3');
 //npx hardhat run scripts/deploy.js --network taraxa_testnet
 
 var _thegardianaddress = 
+_token,
+_tellorFlex
+/// @param _token address of tellor token for bridging
+    /// @param _blobstream address of BlobstreamO data bridge
+    /// @param _tellorFlex address of oracle(tellorFlex) on chain
 
 async function deployForMainnet(_pk, _nodeURL) {
 
@@ -26,13 +31,6 @@ async function deployForMainnet(_pk, _nodeURL) {
     var provider = new ethers.providers.JsonRpcProvider(_nodeURL)
     let wallet = new ethers.Wallet(privateKey, provider);
     
-    ////////  Deploy token bridge contract  ////////////////////////
-    console.log("deploy token bridge")
-    const TokenBridge = await ethers.getContractFactory("contracts/TokenBridge.sol:TokenBridge", wallet);
-    var tbWithSigner = await TokenBridge.connect(wallet);
-    const tokenBridge= await tbWithSigner.deploy();
-    await tokenBridge.deployed();
-
     ////////  Deploy Blobstream contract  ////////////////////////
     console.log("deploy BlobstreamO bridge")
     const BlobstreamO = await ethers.getContractFactory("contracts/BlobstreamO.sol:BlobstreamO", wallet);
@@ -40,7 +38,18 @@ async function deployForMainnet(_pk, _nodeURL) {
     const blobstreamO= await BlobWithSigner.deploy(_thegardianaddress);
     await blobstreamO.deployed();
 
-    /////////  Deploy Bridge   ///////////////////////////
+
+        ////////  Deploy token bridge contract  ////////////////////////
+        console.log("deploy token bridge")
+        const TokenBridge = await ethers.getContractFactory("contracts/TokenBridge.sol:TokenBridge", wallet);
+        var tbWithSigner = await TokenBridge.connect(wallet);
+        /// @param _token address of tellor token for bridging
+        /// @param _blobstream address of BlobstreamO data bridge
+        /// @param _tellorFlex address of oracle(tellorFlex) on chain
+        const tokenBridge= await tbWithSigner.deploy(_token,blobstreamO.address,_tellorFlex);
+        await tokenBridge.deployed();
+
+    /////////  Print addresses   ///////////////////////////
 
     if (net == "mainnet"){
             console.log("Tellor token bridge deployed to:", tokenBridge.address);
