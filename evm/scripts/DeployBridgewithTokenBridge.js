@@ -1,15 +1,15 @@
-//require("@nomiclabs/hardhat-truffle5");
+
 require("hardhat-gas-reporter");
 require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-ethers");
 //require("@nomiclabs/hardhat-etherscan");
-//require("@nomicfoundation/hardhat-verify");
+require("@nomicfoundation/hardhat-verify");
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 const hre = require("hardhat"); 
 const web3 = require('web3');
 
-//npx hardhat run scripts/deploy.js --network taraxa_testnet
+//npx hardhat run scripts/deploy.js --network sepolia
 
 var _thegardianaddress = " "
 var _token = " "
