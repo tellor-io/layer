@@ -133,10 +133,11 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	ethApiKey, err := c.getEthApiKey()
-	if err != nil {
-		return fmt.Errorf("failed to get ETH API key: %w", err)
-	}
+	ethApiKey := "CKTeV8NFI4Iq10zhvMxBEeV53VbboZGl"
+	// ethApiKey, err := c.getEthApiKey()
+	// if err != nil {
+	// 	return fmt.Errorf("failed to get ETH API key: %w", err)
+	// }
 	eclient, err := ethclient.Dial("wss://eth-sepolia.g.alchemy.com/v2/" + ethApiKey)
 	if err != nil {
 		return fmt.Errorf("failed to connect to the Ethereum client: %w", err)

@@ -1,0 +1,55 @@
+pagination:
+  total: "3"
+validators:
+- commission:
+    commission_rates:
+      max_change_rate: "10000000000000000"
+      max_rate: "200000000000000000"
+      rate: "100000000000000000"
+    update_time: "2024-07-17T18:29:54.510766924Z"
+  consensus_pubkey:
+    type: tendermint/PubKeyEd25519
+    value: grQTWFIB7Jgh3wb7Cn+JievgTJQuWKPmAmiQseF6tHA=
+  delegator_shares: "1000000000000000000000000000000"
+  description:
+    moniker: valBobmoniker
+  min_self_delegation: "1"
+  operator_address: tellorvaloper18mxfzujmd2zf5ejc5v8fcxp2tf46c8dh24th4c
+  status: 3
+  tokens: "1000000000000"
+  unbonding_time: "1970-01-01T00:00:00Z"
+- commission:
+    commission_rates:
+      max_change_rate: "10000000000000000"
+      max_rate: "200000000000000000"
+      rate: "100000000000000000"
+    update_time: "2024-07-17T18:29:54.510766924Z"
+  consensus_pubkey:
+    type: tendermint/PubKeyEd25519
+    value: 9rZwK98lk2BON925zgiajxBwrItiUDOtwaxvwDTBjO8=
+  delegator_shares: "1000000000000000000000000000000"
+  description:
+    moniker: valDanmoniker
+  min_self_delegation: "1"
+  operator_address: tellorvaloper1jfsmwskqlnz9gc07hnz8fvw60awht9le56gw3l
+  status: 3
+  tokens: "1000000000000"
+  unbonding_time: "1970-01-01T00:00:00Z"
+- commission:
+    commission_rates:
+      max_change_rate: "10000000000000000"
+      max_rate: "200000000000000000"
+      rate: "100000000000000000"
+    update_time: "2024-07-17T18:29:54.510766924Z"
+  consensus_pubkey:
+    type: tendermint/PubKeyEd25519
+    value: 5/4J8nuev/TxZzdTgEXmA4dJO5pz/Y+SxCGboLrVq3M=
+  delegator_shares: "1000000000000000000000000000000"
+  description:
+    moniker: valAlicemoniker
+  min_self_delegation: "1"
+  operator_address: tellorvaloper1kuxzag46hxjcx9y8ga0fcrxy6frj5xj7uxfslz
+  status: 3
+  tokens: "1000000000000"
+  unbonding_time: "1970-01-01T00:00:00Z"
+

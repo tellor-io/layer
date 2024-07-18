@@ -61,7 +61,31 @@ services:
     volumes:
       - ./nodeCarol:/root/.layer
 
+  sentryDan:
+    command: start --api.enable --api.swagger --home /root/.layer/sentryDan --price-daemon-enabled=false
+    container_name: sentryDan
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME=/root/.layer/sentryDan
+    networks:
+      - net-dan
+      - net-public
+    volumes:
+      - ./sentryDan:/root/.layer
+
+  valDan:
+    command: start --api.enable --api.swagger --home /root/.layer/valDan
+    container_name: valDan
+    image: layerd_i
+    environment:
+      - LAYERD_NODE_HOME=/root/.layer/valDan
+    networks:
+      - net-dan
+    volumes:
+      - ./valDan:/root/.layer
+
 networks:
   net-alice:
   net-bob:
   net-public:
+  net-dan:
