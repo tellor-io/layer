@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 )
 
 func (s *KeeperTestSuite) TestQueryGetUserTipTotal() {

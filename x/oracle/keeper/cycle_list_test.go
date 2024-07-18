@@ -92,7 +92,6 @@ func (s *KeeperTestSuite) TestInitCycleListQuery() {
 	require.NoError(err)
 	require.Equal(len(cycleList), 4)
 	require.Contains(cycleList, ampleforthQDataBytes)
-
 }
 
 func (s *KeeperTestSuite) TestGenesisCycleList() {
