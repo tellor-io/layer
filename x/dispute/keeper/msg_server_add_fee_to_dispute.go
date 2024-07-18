@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -82,6 +83,14 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if err := k.Keeper.Disputes.Set(ctx, dispute.DisputeId, dispute); err != nil {
 		return nil, err
 	}
-
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"fee_added_to_dispute",
+			sdk.NewAttribute("payer", msg.Creator),
+			sdk.NewAttribute("dispute_id", strconv.FormatUint(dispute.DisputeId, 10)),
+			sdk.NewAttribute("amount", msg.Amount.Amount.String()),
+			sdk.NewAttribute("paid_from_bond", strconv.FormatBool(msg.PayFromBond)),
+		),
+	})
 	return &types.MsgAddFeeToDisputeResponse{}, nil
 }

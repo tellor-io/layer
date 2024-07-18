@@ -34,5 +34,16 @@ func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpe
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"register_data_spec",
+			sdk.NewAttribute("registrar", msg.Registrar),
+			sdk.NewAttribute("document_hash_id", msg.Spec.DocumentHash),
+			sdk.NewAttribute("query_type", msg.QueryType),
+			sdk.NewAttribute("aggregate_method", msg.Spec.AggregationMethod),
+			sdk.NewAttribute("response_value_type", msg.Spec.ResponseValueType),
+			sdk.NewAttribute("report_buffer_window", msg.Spec.ReportBufferWindow.String()),
+		),
+	})
 	return &types.MsgRegisterSpecResponse{}, nil
 }

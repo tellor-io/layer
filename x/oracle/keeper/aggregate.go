@@ -112,6 +112,16 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 	currentTimestamp := sdkCtx.BlockTime().UnixMilli()
 	report.Height = sdkCtx.BlockHeight()
 
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"aggregate_report",
+			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
+			sdk.NewAttribute("value", report.AggregateValue),
+			sdk.NewAttribute("standard_deviation", fmt.Sprintf("%f", report.StandardDeviation)),
+			sdk.NewAttribute("number_of_reporters", fmt.Sprintf("%d", len(report.Reporters))),
+			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
+		),
+	})
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 
