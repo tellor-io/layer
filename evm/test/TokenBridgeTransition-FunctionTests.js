@@ -51,20 +51,12 @@ describe("Function Tests - NewTransition", function() {
     flex = await ethers.getContractAt("tellorflex/contracts/TellorFlex.sol:TellorFlex", TELLORFLEX)
     parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor",PARACHUTE, devWallet);
 
-    // get blobstream initial params
-    // valTs = await h.getValsetTimestampByIndex(0)
-    // valParams = await h.getValsetCheckpointParams(valTs)
-    // valSet = await h.getValset(valParams.timestamp)
-    // deploy blobstream (no need for actual queries)
     blobstream = await ethers.deployContract(
       "BlobstreamO", [
-       1,
-       2,
-      UNBONDING_PERIOD,
-      h.hash("testy"),
       DEV_WALLET
     ]
     )
+    await blobstream.init(1, 2, UNBONDING_PERIOD, h.hash("testy"))
     // deploy tokenbridge
     tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
     // stake reporter
