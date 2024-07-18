@@ -68,3 +68,26 @@ Assumes that you have a running and synced up node already
 
 4. Whenever the script tells you to go to the terminal or screen session that your current node is running and stop the chain using CTRL-C. This will allow for the create validator script to restart the chain/node but this time it will run as a validator
 
+
+
+Reporting Data:
+
+Assuming you have already configured layer and have an account/address
+
+1. Go to your layer directory or whereever you have access to the "./layerd" command
+
+2. Run "./layerd query staking validators --node=http://tellornode.com:26657" to get the output of the current validators and pick which one you would like to delegate to from the operator address field (look for one with a status of 3, which means it is currently in a BONDED state)
+
+3. Run "./layerd query bank balances {your "tellor" prefixed address} --node=http://tellornode.com:26657" to know the amount of loya you have.
+
+4. Run "./layerd tx staking delegate {operator address of validator} {amount to delegate in loya} --gas auto --keyring-backend test --home ~/.layer/{NODE_NAME} --from {your address} --node=http://tellornode.com:26657 --chain-id layer" this will delegate to a reporter and allow you to create a validator. Please note that how much you delegate will also be how much your reporter power is
+
+5. Run "./layerd tx reporter create-reporter {commission rate (ex: 200)} {minimum tokens required for someone to delegate to you (ex: 1000000)} --gas auto --keyring-backend test --keyring-dir ~/.layer/{NODE_NAME} --from {your address} --node=http://tellornode.com:26657 --chain-id layer". This will create your reporter and allow you to submit reports.
+
+6. In order to submit a report you can either call the submit-value tx (./layerd tx oracle submit-value [creator] [qdata] [value] [salt] [flags]) or the commit-report tx (./layerd tx oracle commit-report [creator] [query_data] [hash] [flags])if you want to hide your value until the reveal window
+
+Example of submit-value tx for trb-usd spot price:
+./layerd tx oracle submit-value tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000 0000000000000000000000000000000000000000000000000000000004a5ba50 0x00 --gas auto --keyring-backend test --keyring-dir ~/.layer/reporter --from tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l --node=http://tellornode.com:26657 --chain-id layer
+
+
+
