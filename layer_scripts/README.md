@@ -89,5 +89,54 @@ Assuming you have already configured layer and have an account/address
 Example of submit-value tx for trb-usd spot price:
 ./layerd tx oracle submit-value tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000 0000000000000000000000000000000000000000000000000000000004a5ba50 0x00 --gas auto --keyring-backend test --keyring-dir ~/.layer/reporter --from tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l --node=http://tellornode.com:26657 --chain-id layer
 
+Creating New Data Spec:
 
+1. To create a new data spec you should first go look at our dataspec repo (https://github.com/tellor-io/dataSpecs) for an example of what they look like and make one for your new spec.
+
+2. After you have filled out the template, you will need to run the following command using the info for your spec:
+
+DATA_SPEC_JSON=$(cat <<EOF
+{
+    "document_hash": "IPFS hash of your dataspec file",
+    "response_value_type": "bytes",
+    "abi_components": [{
+        "name": "chainId",
+        "field_type": "uint256",
+    }, {
+        "name": "contractAddress",
+        "field_type": "address",
+    }, {
+        "name": "calldata",
+        "field_type": "bytes",
+    }],
+    "aggregation_mothod": "WeightedMode",
+    "registrar": "tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l",
+    "report_buffer_window": "300s",
+}
+EOF
+)
+
+echo $DATA_SPEC_JSON >> data_spec_json.json
+
+This command will create the json object needed to pass into the ./layerd command. Please ensure that all of the information is correct and changed to your data spec.
+
+3. Once the json file is created and you have checked the info in the resulting file looks correct. Run the following command...
+
+./layerd tx registry register-spec {spec name} {Location of json file (ex: ./data_spec_json.json)} --keyring-backend test --keyring-dir ~/.layer/reporter --from {your tellor address} --yes --chain-id layer --node=http://tellornode.com:26657 --gas auto
+
+
+Creating a Dispute:
+
+./layerd tx dispute propose-dispute [report] [dispute-category] [fee] [pay-from-bond] [flags]
+
+1. If you want to make a dispute made by a reporter you will need to know already or query the report object that you would like to propose a dispute for
+
+    ./layerd query oracle get-reportsby-reporter  {address of reporter who made the report} --node=http://tellornode.com:26657
+
+        *** this will return the reports made by the reporter but you will need to make sure that it is the report you are wanting to dispute if there is more than 1
+
+    ./layerd query oracle get-reportsby-reporter-qid tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA= --node=http://tellornode.com:26657
+
+
+tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l
 
