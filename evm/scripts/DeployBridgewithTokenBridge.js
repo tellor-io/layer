@@ -11,17 +11,13 @@ const web3 = require('web3');
 
 //npx hardhat run scripts/deploy.js --network taraxa_testnet
 
-var _thegardianaddress = 
-_token,
-_tellorFlex
-/// @param _token address of tellor token for bridging
-    /// @param _blobstream address of BlobstreamO data bridge
-    /// @param _tellorFlex address of oracle(tellorFlex) on chain
+var _thegardianaddress = " "
+var _token = " "
+var _tellorFlex = " "
+
 
 async function deployForMainnet(_pk, _nodeURL) {
-
-    
-    
+  
     var net = hre.network.name
 
     await run("compile")
@@ -71,22 +67,30 @@ async function deployForMainnet(_pk, _nodeURL) {
     // Wait for few confirmed transactions.
     // Otherwise the etherscan api doesn't find the deployed contract.
     console.log('waiting for tx confirmation...');
-    await tellor.deployTransaction.wait(3)
+    await tokenBridge.deployTransaction.wait(3)
 
     console.log('submitting contract for verification...');
     try {
     await run("verify:verify", {
-      address: tellor.address
+      address: tokenBridge,
+      constructor: [_token,blobstreamO.address,_tellorFlex]
     },
     )
+    await run("verify:verify",
+    {
+        address: blobstreamO.address,
+        constructorArguments: [flex.address, teamMultisigAddress]
+    },
+)
 
     console.log("Contract verified")
      } catch (e) {
     console.log(e)
     }
+
   };
 
-  deployForMainnet(process.env.TESTNET_PK, process.env.NODE_URL_TARAXA_TESTNET)
+  deployForMainnet(process.env.TESTNET_PK, process.env.NODE_URL_SEPOLIA_TESTNET)
     .then(() => process.exit(0))
     .catch(error => {
 	  console.error(error);
