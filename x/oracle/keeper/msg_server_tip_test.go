@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
 
@@ -66,15 +67,18 @@ func (s *KeeperTestSuite) TestTip() {
 	twoPercent := amount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	burnCoin := sdk.NewCoin(amount.Denom, twoPercent)
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(burnCoin)).Return(nil).Once()
+	queryBytes, err := utils.QueryBytesFromString(queryData)
+	require.NoError(err)
 	tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
 		Amount:    amount,
 		Tipper:    tipper.String(),
-		QueryData: []byte(queryData),
+		QueryData: queryBytes,
 	})
 	require.NoError(err)
 	require.NotNil(tipRes)
 
-	tips, err := k.Tips.Get(ctx, collections.Join([]byte(queryData), []byte(tipper)))
+	queryId := utils.QueryIDFromData(queryBytes)
+	tips, err := k.Tips.Get(ctx, collections.Join(queryId, []byte(tipper)))
 	require.NoError(err)
-	require.Equal(tips, amount.Amount)
+	require.Equal(tips, amount.Amount.Sub(twoPercent))
 }

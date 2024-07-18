@@ -16,7 +16,7 @@ func (q Querier) GetTimeBasedRewards(ctx context.Context, req *types.QueryGetTim
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	rewards := q.keeper.getTimeBasedRewards(ctx)
+	rewards := q.keeper.GetTimeBasedRewards(ctx)
 
 	return &types.QueryGetTimeBasedRewardsResponse{Reward: sdk.NewCoin(layer.BondDenom, rewards)}, nil
 }

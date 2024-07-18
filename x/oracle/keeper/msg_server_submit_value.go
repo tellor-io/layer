@@ -85,7 +85,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 	incycle = commit.Incycle
 
-	err = k.keeper.setValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
+	err = k.keeper.SetValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
 	if err != nil {
 		return nil, err
 	}
@@ -132,5 +132,5 @@ func (k Keeper) DirectReveal(ctx context.Context,
 		incycle = true
 	}
 	fmt.Println("query.Id: ", query.Id)
-	return k.setValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, incycle)
+	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, incycle)
 }

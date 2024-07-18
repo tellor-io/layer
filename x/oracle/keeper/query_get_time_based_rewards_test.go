@@ -11,7 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func (s *KeeperTestSuite) TestGetTimeBasedRewards() {
+func (s *KeeperTestSuite) TestQueryGetTimeBasedRewards() {
 	require := s.Require()
 	q := s.queryClient
 	ak := s.accountKeeper
