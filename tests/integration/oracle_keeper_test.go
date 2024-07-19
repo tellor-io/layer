@@ -5,12 +5,15 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/utils"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -280,7 +283,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	}
 	// advance time to expire query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.Nil(err)
 	// check median
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -548,6 +551,259 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	}
 }
 
+func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
+	repAccs, _, _ := s.Setup.CreateValidators(5)
+	ok := s.Setup.Oraclekeeper
+	ctx := s.Setup.Ctx
+	app := s.Setup.App
+	msgServer := keeper.NewMsgServerImpl(ok)
+	for _, rep := range repAccs {
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
+	}
+	spec := registrytypes.DataSpec{
+		AbiComponents: []*registrytypes.ABIComponent{
+			{Name: "tolayer", FieldType: "bool"},
+			{Name: "depositId", FieldType: "uint256"},
+		},
+	}
+	querydata, err := spec.EncodeData("TRBBridge", `["true","1"]`)
+	s.NoError(err)
+
+	reporter1, reporter2, reporter3, reporter4, reporter5 := repAccs[0], repAccs[1], repAccs[2], repAccs[3], repAccs[4]
+	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	salt, err := oracleutils.Salt(32)
+	s.NoError(err)
+	hash := oracleutils.CalculateCommitment(value, salt)
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	msgCommitReport := types.MsgCommitReport{
+		Creator:   reporter1.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	s.NoError(err)
+	msgSubmitValue := types.MsgSubmitValue{
+		Creator:   reporter1.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	msgCommitReport = types.MsgCommitReport{
+		Creator:   reporter2.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	s.NoError(err)
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter2.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	msgCommitReport = types.MsgCommitReport{
+		Creator:   reporter3.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	s.NoError(err)
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter3.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+
+	_, _ = app.EndBlocker(ctx)
+
+	// should be exactly 1h mark
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	agg, err := ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	s.NoError(err)
+	s.Nil(agg)
+
+	msgCommitReport = types.MsgCommitReport{
+		Creator:   reporter4.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	s.NoError(err)
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter4.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	// time plus offset
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	s.NoError(err)
+	s.Equal(len(agg.Reporters), 4)
+
+	// new report that starts a new cycle
+	msgCommitReport = types.MsgCommitReport{
+		Creator:   reporter5.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	s.NoError(err)
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter5.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*4)})
+
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	s.NoError(err)
+	s.Equal(len(agg.Reporters), 1)
+}
+
+func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
+	repAccs, _, _ := s.Setup.CreateValidators(5)
+	ok := s.Setup.Oraclekeeper
+	ctx := s.Setup.Ctx
+	app := s.Setup.App
+	msgServer := keeper.NewMsgServerImpl(ok)
+	for _, rep := range repAccs {
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
+	}
+	spec := registrytypes.DataSpec{
+		AbiComponents: []*registrytypes.ABIComponent{
+			{Name: "tolayer", FieldType: "bool"},
+			{Name: "depositId", FieldType: "uint256"},
+		},
+	}
+	querydata, err := spec.EncodeData("TRBBridge", `["true","1"]`)
+	s.NoError(err)
+
+	reporter1, reporter2, reporter3, reporter4, reporter5 := repAccs[0], repAccs[1], repAccs[2], repAccs[3], repAccs[4]
+	value := "000000000000000000000000000000000000000000000058528649cf90ee0000"
+
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+
+	msgSubmitValue := types.MsgSubmitValue{
+		Creator:   reporter1.String(),
+		QueryData: querydata,
+		Value:     value,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter2.String(),
+		QueryData: querydata,
+		Value:     value,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter3.String(),
+		QueryData: querydata,
+		Value:     value,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+
+	_, _ = app.EndBlocker(ctx)
+
+	// should be exactly 1h mark
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	agg, err := ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	s.NoError(err)
+	s.Nil(agg)
+
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter4.String(),
+		QueryData: querydata,
+		Value:     value,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	// time plus offset
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	s.NoError(err)
+	s.Equal(len(agg.Reporters), 4)
+
+	// new report that starts a new cycle
+	msgSubmitValue = types.MsgSubmitValue{
+		Creator:   reporter5.String(),
+		QueryData: querydata,
+		Value:     value,
+	}
+	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*4)})
+
+	_, err = app.BeginBlocker(ctx)
+	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
+
+	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	s.NoError(err)
+	s.Equal(len(agg.Reporters), 1)
+}
+
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]int64{100})
@@ -574,7 +830,7 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	s.Nil(err)
 	// tip should be 1000 minus 2% burned
 	s.Equal(userTips, math.NewInt(980))
-	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	value := "000000000000000000000000000000000000000000000058528649cf0ee0000"
 	salt, err := oracleutils.Salt(32)
 	s.Nil(err)
 	hash := oracleutils.CalculateCommitment(value, salt)
