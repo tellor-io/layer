@@ -34,13 +34,10 @@ describe("TokenBridge - Function Tests", async function () {
         // deploy contracts
         blobstream = await ethers.deployContract(
             "BlobstreamO", [
-            threshold,
-            valTimestamp,
-            UNBONDING_PERIOD,
-            valCheckpoint,
             guardian.address
         ]
         )
+        await blobstream.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
         token = await ethers.deployContract("TellorPlayground")
         oldOracle = await ethers.deployContract("TellorPlayground")
         tbridge = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
@@ -57,9 +54,6 @@ describe("TokenBridge - Function Tests", async function () {
     it("constructor", async function () {
         assert.equal(await tbridge.token(), await token.address)
         assert.equal(await tbridge.bridge(), await blobstream.address)
-        // expect(Number(await tbridge.depositLimitUpdateTime())).to.be.closeTo(Number(blocky0.timestamp), 1)
-        // expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
-        // assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
     })
     it("withdrawFromLayer", async function () {
         depositAmount = h.toWei("20")
@@ -228,7 +222,7 @@ describe("TokenBridge - Function Tests", async function () {
         assert(tokensToClaim == BigInt(0), "tokensToClaim should be correct")
     })
     // more complex tests
-    it.only("100 deposits and withdrawals", async function () {
+    it("100 deposits and withdrawals", async function () {
         this.timeout(300000)
         // fund accts
         await token.faucet(accounts[0].address)

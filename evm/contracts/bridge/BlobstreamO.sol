@@ -43,38 +43,56 @@ contract BlobstreamO is ECDSA {
     uint256 public powerThreshold; /// Voting power required to submit a new update.
     uint256 public unbondingPeriod; /// Time period after which a validator can withdraw their stake.
     uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
+    address public deployer; /// Address that deployed the contract.
+    bool public initialized; /// True if the contract is initialized.
 
     /*Events*/
     event ValidatorSetUpdated(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
 
     /*Errors*/
+    error AlreadyInitialized();
     error InsufficientVotingPower();
     error InvalidSignature();
     error MalformedCurrentValidatorSet();
     error NotConsensusValue();
+    error NotDeployer();
     error NotGuardian();
     error StaleValidatorSet();
     error SuppliedValidatorSetInvalid();
     error ValidatorSetNotStale();
 
     /*Functions*/
+    /// @notice Constructor for the BlobstreamO contract.
+    /// @param _guardian Guardian address.
+    constructor(
+        address _guardian
+    ) {
+        guardian = _guardian;
+        deployer = msg.sender;
+    }
+
+    /// @notice This function is called only once by the deployer to initialize the contract
     /// @param _powerThreshold Initial voting power that is needed to approve operations
     /// @param _validatorTimestamp Timestamp of the block where validator set is updated.
     /// @param _unbondingPeriod Time period after which a validator can withdraw their stake.
     /// @param _validatorSetCheckpoint Initial checkpoint of the validator set.
-    /// @param _guardian Guardian address.
-    constructor(
+    function init(
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         uint256 _unbondingPeriod,
-        bytes32 _validatorSetCheckpoint,
-        address _guardian
-    ) {
+        bytes32 _validatorSetCheckpoint
+    ) external {
+        if (msg.sender != deployer) {
+            revert NotDeployer();
+        }
+        if (initialized) {
+            revert AlreadyInitialized();
+        }
+        initialized = true;
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         unbondingPeriod = _unbondingPeriod;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
-        guardian = _guardian;
     }
 
     /// @notice This function is called by the guardian to reset the validator set
