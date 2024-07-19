@@ -68,9 +68,38 @@ module.exports = {
         blockNumber: 19891853
       },
       allowUnlimitedContractSize: true
-    } //,
+    } ,
+    sepolia: {
+      url: `${process.env.NODE_URL_SEPOLIA}`,
+      seeds: [process.env.TESTNET_PK],
+      gas: 9000000 ,
+      gasPrice: 5000000000
+    } ,
+    mainnet_testnet: {
+      url: `${process.env.NODE_URL_MAINNET_TESTNET}`,
+      seeds: [process.env.TESTNET_PK],
+      gas: 8000000 ,
+      gasPrice: 1000000000
+    },
   },
+
+  etherscan: {
+    apiKey: process.env.ETHERSCAN
+  },
+
+  //etherscan: {
+  //  apiKey: {
+    // Your API key for Etherscan
+    // Obtain one at https://etherscan.io/
+    //sepolia: process.env.ETHERSCAN
+    //mainnet: process.env.ETHERSCAN
+ //}
+//},
+
+
+
 };
+
 
 extendEnvironment((hre) => {
   const Web3 = require("web3");
@@ -79,3 +108,7 @@ extendEnvironment((hre) => {
   // hre.network.provider is an EIP1193-compatible provider.
   hre.web3 = new Web3(hre.network.provider);
 });
+
+
+
+

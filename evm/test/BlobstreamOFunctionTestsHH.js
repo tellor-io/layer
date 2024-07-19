@@ -40,21 +40,27 @@ describe("Blobstream - Function Tests", async function () {
         // deploy contracts
         blobstream = await ethers.deployContract(
             "BlobstreamO", [
-            threshold,
-            valTimestamp,
-            UNBONDING_PERIOD,
-            valCheckpoint,
             guardian.address
         ]
         )
+        await blobstream.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
     });
 
     it("constructor", async function () {
-        assert.equal(await blobstream.powerThreshold(), threshold)
-        assert.equal(await blobstream.validatorTimestamp(), valTimestamp)
-        assert.equal(await blobstream.unbondingPeriod(), UNBONDING_PERIOD)
-        assert.equal(await blobstream.lastValidatorSetCheckpoint(), valCheckpoint)
         assert.equal(await blobstream.guardian(), await guardian.address)
+    })
+    it("init", async function() {
+        // deploy a new blobstream contract, same inputs as above
+        blobstream2 = await ethers.deployContract("BlobstreamO", [
+            guardian.address
+        ])
+        await h.expectThrow(blobstream2.connect(accounts[1]).init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint))
+        await blobstream2.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
+        assert.equal(await blobstream2.powerThreshold(), threshold)
+        assert.equal(await blobstream2.validatorTimestamp(), valTimestamp)
+        assert.equal(await blobstream2.unbondingPeriod(), UNBONDING_PERIOD)
+        assert.equal(await blobstream2.lastValidatorSetCheckpoint(), valCheckpoint)
+        await h.expectThrow(blobstream2.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint))
     })
     it("guardianResetValidatorSet", async function () {
         newValAddrs = [accounts[1].address, accounts[2].address, accounts[3].address]
