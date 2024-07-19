@@ -136,7 +136,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
 	queryId := utils.QueryIDFromData(cycleListQuery)
@@ -280,7 +280,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
 	queryId = utils.QueryIDFromData(cycleListQuery)
@@ -451,7 +451,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
 	queryId = utils.QueryIDFromData(cycleListQuery)
