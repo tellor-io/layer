@@ -8,10 +8,10 @@ set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
 export LAYER_NODE_URL=54.166.101.67
-export TELLORNODE_ID=7998a2f453f3354d3dae41fcdb753cd19638f987
+export TELLORNODE_ID=72a0284c589e1e11823c27580bfbcbaa32a769e7
 export KEYRING_BACKEND=test
-export NODE_MONIKER="billmoniker"
-export NODE_NAME="bill"
+export NODE_MONIKER="reportermoniker"
+export NODE_NAME="reporter"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -79,3 +79,5 @@ sleep 10
 echo "Starting chain for node..."
 # ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
 ./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+
+
