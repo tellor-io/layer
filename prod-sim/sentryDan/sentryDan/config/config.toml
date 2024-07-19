@@ -206,10 +206,10 @@ laddr = "tcp://0.0.0.0:26656"
 external_address = ""
 
 # Comma separated list of seed nodes to connect to
-seeds = "e663c559ee3323d9fbe035d222efbe6dc4e0a31d@sentryAlice:26656,7027247ae43bf8e4fb05fb1d83aa61d344490bd8@sentryBob:26656"
+seeds = "0dc64abe338bfe4cac2d2c53f2224f0f61ac3bc1@sentryAlice:26656,aaaaef1c8efb0f39d9078d055908647249e06335@sentryBob:26656"
 
 # Comma separated list of nodes to keep persistent connections to
-persistent_peers = "fffd4cd4bc20fdf6fef09b768f4b9880d57d2b8e@valDan:26656"
+persistent_peers = "e3218c89e056f44762ccf19579da31d2f645333b@valDan:26656"
 
 # Path to address book
 addr_book_file = "config/addrbook.json"
@@ -252,7 +252,7 @@ pex = true
 seed_mode = false
 
 # Comma separated list of peer IDs to keep private (will not be gossiped to other peers)
-private_peer_ids = "fffd4cd4bc20fdf6fef09b768f4b9880d57d2b8e"
+private_peer_ids = "e3218c89e056f44762ccf19579da31d2f645333b"
 
 # Toggle to disable guard against peers connecting from the same ip.
 allow_duplicate_ip = false

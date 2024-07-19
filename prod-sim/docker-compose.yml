@@ -9,6 +9,7 @@ services:
       - LAYERD_NODE_HOME=/root/.layer/valAlice
     networks:
       - net-alice
+      - net-public
     volumes:
       - ./valAlice:/root/.layer
 
@@ -32,6 +33,7 @@ services:
       - LAYERD_NODE_HOME=/root/.layer/valBob
     networks:
       - net-bob
+      - net-public
     volumes:
       - ./valBob:/root/.layer
 
@@ -81,6 +83,7 @@ services:
       - LAYERD_NODE_HOME=/root/.layer/valDan
     networks:
       - net-dan
+      - net-public
     volumes:
       - ./valDan:/root/.layer
 

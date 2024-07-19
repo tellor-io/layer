@@ -19,6 +19,8 @@ prod-sim/valAlice
 prod-sim/valBob
 prod-sim/kmsAlice
 prod-sim/kmsBob
+prod-sim/valDan
+prod-sim/sentryDan
 build/*
 secrets.yaml
 .env

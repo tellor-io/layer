@@ -6,15 +6,15 @@ validators:
       max_change_rate: "10000000000000000"
       max_rate: "200000000000000000"
       rate: "100000000000000000"
-    update_time: "2024-07-17T18:29:54.510766924Z"
+    update_time: "2024-07-19T14:54:44.283861339Z"
   consensus_pubkey:
     type: tendermint/PubKeyEd25519
-    value: grQTWFIB7Jgh3wb7Cn+JievgTJQuWKPmAmiQseF6tHA=
+    value: mz76yCDe8C3WFebWPT+OVndMMLUG28sU8TusFiBOE2I=
   delegator_shares: "1000000000000000000000000000000"
   description:
     moniker: valBobmoniker
   min_self_delegation: "1"
-  operator_address: tellorvaloper18mxfzujmd2zf5ejc5v8fcxp2tf46c8dh24th4c
+  operator_address: tellorvaloper1p3r3m6pux67ga090y0ljc79zp8zc7qe0q76qtt
   status: 3
   tokens: "1000000000000"
   unbonding_time: "1970-01-01T00:00:00Z"
@@ -23,15 +23,15 @@ validators:
       max_change_rate: "10000000000000000"
       max_rate: "200000000000000000"
       rate: "100000000000000000"
-    update_time: "2024-07-17T18:29:54.510766924Z"
+    update_time: "2024-07-19T14:54:44.283861339Z"
   consensus_pubkey:
     type: tendermint/PubKeyEd25519
-    value: 9rZwK98lk2BON925zgiajxBwrItiUDOtwaxvwDTBjO8=
+    value: wJtdpttqtySfipyajpsTioRGWGhqq7p4t8b49Pgv2Sc=
   delegator_shares: "1000000000000000000000000000000"
   description:
     moniker: valDanmoniker
   min_self_delegation: "1"
-  operator_address: tellorvaloper1jfsmwskqlnz9gc07hnz8fvw60awht9le56gw3l
+  operator_address: tellorvaloper1827pwhr4tunhvszayjfc0uvrn9qpa78lkyyllx
   status: 3
   tokens: "1000000000000"
   unbonding_time: "1970-01-01T00:00:00Z"
@@ -40,15 +40,15 @@ validators:
       max_change_rate: "10000000000000000"
       max_rate: "200000000000000000"
       rate: "100000000000000000"
-    update_time: "2024-07-17T18:29:54.510766924Z"
+    update_time: "2024-07-19T14:54:44.283861339Z"
   consensus_pubkey:
     type: tendermint/PubKeyEd25519
-    value: 5/4J8nuev/TxZzdTgEXmA4dJO5pz/Y+SxCGboLrVq3M=
+    value: a8kIwhWYJWHz9NQVSXGPSo39xgc9Fb6xwjLft6NUD90=
   delegator_shares: "1000000000000000000000000000000"
   description:
     moniker: valAlicemoniker
   min_self_delegation: "1"
-  operator_address: tellorvaloper1kuxzag46hxjcx9y8ga0fcrxy6frj5xj7uxfslz
+  operator_address: tellorvaloper17yqpzhaylmpv2sn5jt6cuwaux7z5rxjmgmrmga
   status: 3
   tokens: "1000000000000"
   unbonding_time: "1970-01-01T00:00:00Z"

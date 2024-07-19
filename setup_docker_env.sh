@@ -201,11 +201,11 @@ mv prod-sim/nodeCarol/nodeCarol/config/genesis.json \
 
 #Get the address returned from the keyring on alice desktop
 echo "Set address for alice to give them loya..."
-ALICE=$(echo $PASSWORD | docker run --rm -i \
+ALICE=$(echo password | docker run --rm -i \
     -v $(pwd)/prod-sim/valAlice:/root/.layer \
     layerd_i \
     keys \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
+    --keyring-backend test --home /root/.layer/valAlice \
     show valAlice --address)
 echo $ALICE
 
@@ -646,22 +646,38 @@ CAROL=$(echo $PASSWORD | docker run --rm -i \
     show nodeCarol --address)
 echo $CAROL
 
+ALICE_ADDR=$(echo $PASSWORD | docker run --rm -i \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
+    layerd_i \
+    keys \
+    --keyring-backend $KEYRING_BACKEND --home /root/.layer/valAlice \
+    show valAlice --address)
+echo "ALICE ADDR: $ALICE_ADDR"
+
+docker stop valAlice
+sleep 10
+
+echo "Alice address: $ALICE"
+
 echo "Delegate from node carol to validator..."
 docker run --rm -it \
-    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+    -v $(pwd)/prod-sim/valAlice:/root/.layer \
     --network layer-test_net-public \
-    layerd_i tx staking delegate tellorvaloper1f8tupdprzqu38074xd4vasy0dqw98yeuykqayg 1000000loya \
-    --keyring-backend test --home /root/.layer/nodeCarol \
-    --chain-id layer --node "tcp://nodeCarol:26657" --from tellor10juyqjsv08vpsszm3uelp7ckfj3yfe34a4d2zw
+    layerd_i tx reporter create-reporter 10000 10000000 \
+    --keyring-backend test --home /root/.layer/valAlice --keyring-dir /root/.layer/valAlice \
+    --chain-id layer --node "tcp://nodeCarol:26657" --from $ALICE --yes
+
+docker start valAlice
+
 
 echo "Now that you are delegated nodeCarol should start reporting now or soon..."
 
 
 
-./layerd tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"$ALICE_VAL_OP_ADD\", \"amount\": \"1000000loya\" }" \
-    --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
-    --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
+# ./layerd tx reporter create-reporter 1000000loya "{\"validatorAddress\": \"$ALICE_VAL_OP_ADD\", \"amount\": \"1000000loya\" }" \
+#     --keyring-backend $KEYRING_BACKEND --home /root/.layer/nodeCarol \
+#     --chain-id layer --node "tcp://nodeCarol:26657" --from $CAROL
 
-docker run --rm -it \
-    -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
-    layerd_i keys list --home /root/.layer/nodeCarol --keyring-backend test
+# docker run --rm -it \
+#     -v $(pwd)/prod-sim/nodeCarol:/root/.layer \
+#     layerd_i keys list --home /root/.layer/nodeCarol --keyring-backend test
