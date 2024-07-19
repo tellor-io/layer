@@ -1,6 +1,6 @@
 
-require("hardhat-gas-reporter");
-require('hardhat-contract-sizer');
+// require("hardhat-gas-reporter");
+// require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-ethers");
 //require("@nomiclabs/hardhat-etherscan");
 require("@nomicfoundation/hardhat-verify");
@@ -11,9 +11,9 @@ const web3 = require('web3');
 
 //npx hardhat run scripts/deploy.js --network sepolia
 
-var _thegardianaddress = " "
-var _token = " "
-var _tellorFlex = " "
+var _thegardianaddress = "0x0822ef799699F227DD75A0Cd18efEf801b03341B"
+var _token = "0x99CAAb1d5a46098FAD0dF0505a0C42965e020F7E"
+var _tellorFlex = "0x99CAAb1d5a46098FAD0dF0505a0C42965e020F7E"
 
 
 async function deployForMainnet(_pk, _nodeURL) {
@@ -29,7 +29,7 @@ async function deployForMainnet(_pk, _nodeURL) {
     
     ////////  Deploy Blobstream contract  ////////////////////////
     console.log("deploy BlobstreamO bridge")
-    const BlobstreamO = await ethers.getContractFactory("contracts/BlobstreamO.sol:BlobstreamO", wallet);
+    const BlobstreamO = await ethers.getContractFactory("contracts/bridge/BlobstreamO.sol:BlobstreamO", wallet);
     var BlobWithSigner = await BlobstreamO.connect(wallet);
     const blobstreamO= await BlobWithSigner.deploy(_thegardianaddress);
     await blobstreamO.deployed();
@@ -37,7 +37,7 @@ async function deployForMainnet(_pk, _nodeURL) {
 
         ////////  Deploy token bridge contract  ////////////////////////
         console.log("deploy token bridge")
-        const TokenBridge = await ethers.getContractFactory("contracts/TokenBridge.sol:TokenBridge", wallet);
+        const TokenBridge = await ethers.getContractFactory("contracts/token-bridge/TokenBridge.sol:TokenBridge", wallet);
         var tbWithSigner = await TokenBridge.connect(wallet);
         /// @param _token address of tellor token for bridging
         /// @param _blobstream address of BlobstreamO data bridge
@@ -71,21 +71,18 @@ async function deployForMainnet(_pk, _nodeURL) {
 
     console.log('submitting contract for verification...');
     try {
-    await run("verify:verify", {
-      address: tokenBridge,
-      constructor: [_token,blobstreamO.address,_tellorFlex]
-    },
-    )
-    await run("verify:verify",
-    {
-        address: blobstreamO.address,
-        constructorArguments: [flex.address, teamMultisigAddress]
-    },
-)
+        await run("verify:verify", {
+            address: tokenBridge.address,
+            constructor: [_token,blobstreamO.address,_tellorFlex]
+        })
+        await run("verify:verify", {
+            address: blobstreamO.address,
+            constructorArguments: [_thegardianaddress]
+        })
 
     console.log("Contract verified")
-     } catch (e) {
-    console.log(e)
+    } catch (e) {
+        console.log(e)
     }
 
   };

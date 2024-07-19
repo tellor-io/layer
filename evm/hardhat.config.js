@@ -3,6 +3,8 @@
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
 require("hardhat-gas-reporter");
+require("@nomicfoundation/hardhat-verify");
+
 
 // require("@nomiclabs/hardhat-web3");
 
@@ -84,19 +86,16 @@ module.exports = {
   },
 
   etherscan: {
-    apiKey: process.env.ETHERSCAN
+    apiKey: {
+      sepolia: process.env.ETHERSCAN
+    }
   },
 
-  //etherscan: {
-  //  apiKey: {
-    // Your API key for Etherscan
-    // Obtain one at https://etherscan.io/
-    //sepolia: process.env.ETHERSCAN
-    //mainnet: process.env.ETHERSCAN
- //}
-//},
-
-
+  sourcify: {
+    // Disabled by default
+    // Doesn't need an API key
+    enabled: true
+  }
 
 };
 

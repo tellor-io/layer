@@ -13,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-web3": "^2.0.0",
@@ -29,6 +28,8 @@
   "dependencies": {
     "@cosmjs/proto-signing": "^0.32.3",
     "@cosmjs/stargate": "^0.32.3",
+    "@nomicfoundation/hardhat-verify": "^2.0.8",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
     "google-protobuf": "^3.21.2",
     "polygongovernance": "github:tellor-io/polygongovernance",
     "protoc-gen-grpc-web": "^1.4.2",
