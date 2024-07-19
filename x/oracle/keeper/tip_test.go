@@ -101,3 +101,89 @@ func (s *KeeperTestSuite) TestAddtoTotalTips() {
 
 	s.Equal(math.NewInt(5*1e6).Add(beforeTotalTips), totalTips)
 }
+
+func (s *KeeperTestSuite) TestGetTipsAtBlockForTipper() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	// try to get for unrecognized address
+	tipperAddr := sample.AccAddressBytes()
+	tipperTotal, err := k.TipperTotal.Get(ctx, collections.Join(tipperAddr.Bytes(), ctx.BlockHeight()))
+	require.Error(err)
+	require.Equal(math.Int{}, tipperTotal)
+
+	// set tipper total and get
+	require.NoError(k.TipperTotal.Set(ctx, collections.Join(tipperAddr.Bytes(), ctx.BlockHeight()), math.NewInt(100*1e6)))
+	tipperTotal, err = k.GetTipsAtBlockForTipper(ctx, int64(0), tipperAddr)
+	require.NoError(err)
+	require.Equal(math.NewInt(100*1e6), tipperTotal)
+
+	// set more in the future and get again
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 100)
+	require.NoError(k.TipperTotal.Set(ctx, collections.Join(tipperAddr.Bytes(), ctx.BlockHeight()), math.NewInt(200*1e6)))
+	tipperTotal, err = k.GetTipsAtBlockForTipper(ctx, int64(101), tipperAddr)
+	require.NoError(err)
+	require.Equal(math.NewInt(200*1e6), tipperTotal)
+
+	// set less in the future and get again
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 100)
+	require.NoError(k.TipperTotal.Set(ctx, collections.Join(tipperAddr.Bytes(), ctx.BlockHeight()), math.NewInt(50*1e6)))
+	tipperTotal, err = k.GetTipsAtBlockForTipper(ctx, int64(201), tipperAddr)
+	require.NoError(err)
+	require.Equal(math.NewInt(50*1e6), tipperTotal)
+}
+
+func (s *KeeperTestSuite) TestGetTotalTipsAtBlock() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	tips, err := k.GetTotalTipsAtBlock(ctx, int64(0))
+	require.NoError(err)
+	require.Equal(math.ZeroInt(), tips)
+
+	// set tips for next block and check again
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	require.NoError(k.TotalTips.Set(ctx, ctx.BlockHeight(), math.NewInt(1*1e6)))
+	tips, err = k.GetTotalTipsAtBlock(ctx, int64(1))
+	require.NoError(err)
+	require.Equal(math.NewInt(1*1e6), tips)
+
+	// check older block
+	tips, err = k.GetTotalTipsAtBlock(ctx, int64(0))
+	require.NoError(err)
+	require.Equal(math.ZeroInt(), tips)
+}
+
+func (s *KeeperTestSuite) TestAddToTipperTotal() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	tipper := sample.AccAddressBytes()
+	amt := math.NewInt(1 * 1e6)
+
+	require.NoError(k.AddToTipperTotal(ctx, tipper, amt))
+	tipperTotal, err := k.TipperTotal.Get(ctx, collections.Join(tipper.Bytes(), ctx.BlockHeight()))
+	require.NoError(err)
+	require.Equal(amt, tipperTotal)
+
+	// add more
+	require.NoError(k.AddToTipperTotal(ctx, tipper, amt))
+	tipperTotal, err = k.TipperTotal.Get(ctx, collections.Join(tipper.Bytes(), ctx.BlockHeight()))
+	require.NoError(err)
+	require.Equal(amt.Add(amt), tipperTotal)
+
+	// add 0
+	require.NoError(k.AddToTipperTotal(ctx, tipper, math.ZeroInt()))
+	tipperTotal, err = k.TipperTotal.Get(ctx, collections.Join(tipper.Bytes(), ctx.BlockHeight()))
+	require.NoError(err)
+	require.Equal(amt.Add(amt), tipperTotal)
+
+	// try with bad addr
+	require.Error(k.AddToTipperTotal(ctx, []byte("bad"), amt))
+	tipperTotal, err = k.TipperTotal.Get(ctx, collections.Join(tipper.Bytes(), ctx.BlockHeight()))
+	require.NoError(err)
+	require.Equal(amt.Add(amt), tipperTotal)
+}

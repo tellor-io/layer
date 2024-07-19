@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
@@ -24,7 +23,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	err = k.keeper.preventBridgeWithdrawalReport(msg.QueryData)
+	err = k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +130,5 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	if query.Amount.IsZero() && blockTime.Before(query.Expiration.Add(offset)) {
 		incycle = true
 	}
-	fmt.Println("query.Id: ", query.Id)
 	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, incycle)
 }

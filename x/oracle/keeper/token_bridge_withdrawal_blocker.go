@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (k Keeper) preventBridgeWithdrawalReport(queryData []byte) error {
+func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) error {
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
