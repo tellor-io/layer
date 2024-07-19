@@ -44,7 +44,7 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	govParams, err := s.Setup.Govkeeper.Params.Get(s.Setup.Ctx)
 	require.NoError(err)
 
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
