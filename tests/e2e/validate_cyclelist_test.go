@@ -6,7 +6,11 @@ import (
 
 func (s *E2ETestSuite) TestValidateCycleList() {
 	require := s.Require()
-
+	_, vals, _ := s.Setup.CreateValidators(1)
+	for _, val := range vals {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	//---------------------------------------------------------------------------
 	// Height 0 - get initial cycle list query
 	//---------------------------------------------------------------------------

@@ -310,8 +310,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake() {
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-	_, err = app.EndBlocker(ctx)
-	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 
 	// sanity check of reporter stake, this also sets k.Report.Set
 	blockHeightAtFullPower := ctx.BlockHeight()

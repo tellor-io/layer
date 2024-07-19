@@ -45,7 +45,6 @@ func BridgeKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Ba
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		stakingKeeper,
-		accountKeeper,
 		oracleKeeper,
 		bankKeeper,
 		reporterKeeper,

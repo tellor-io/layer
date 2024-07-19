@@ -28,8 +28,11 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	valAccAddrs, _, _ := s.Setup.CreateValidators(5)
-
+	valAccAddrs, valAccountValAddrs, _ := s.Setup.CreateValidators(5)
+	for _, val := range valAccountValAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	proposer := valAccAddrs[0]
 	initCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(500*1e6))
 	for _, rep := range valAccAddrs {
