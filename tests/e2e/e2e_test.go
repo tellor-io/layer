@@ -230,6 +230,10 @@ func (s *E2ETestSuite) TestUnstaking() {
 	require := s.Require()
 	// create 5 validators with 5_000 TRB
 	accaddr, valaddr, _ := s.Setup.CreateValidators(5)
+	for _, val := range valaddr {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	_, err := s.Setup.Stakingkeeper.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// all validators are bonded
@@ -295,7 +299,10 @@ func (s *E2ETestSuite) TestDisputes2() {
 	valsAcctAddrs, valsValAddrs, _ := s.Setup.CreateValidators(3)
 	require.NotNil(valsAcctAddrs)
 	repsAccs := valsAcctAddrs
-
+	for _, val := range valsValAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	badReporter := repsAccs[0]
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)

@@ -584,7 +584,6 @@ func New(
 		appCodec,
 		runtime.NewKVStoreService(keys[bridgemoduletypes.StoreKey]),
 		app.StakingKeeper,
-		app.SlashingKeeper,
 		app.OracleKeeper,
 		app.BankKeeper,
 		app.ReporterKeeper,

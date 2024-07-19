@@ -12,11 +12,14 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 )
 
 var (
@@ -138,6 +141,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
+	fmt.Println("EndBlock", sdk.UnwrapSDKContext(ctx).BlockHeight())
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// todo: handle genesis state better?
 	if sdkCtx.BlockHeight() == 1 {
@@ -149,4 +153,53 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	}
 
 	return am.keeper.CreateNewReportSnapshots(sdkCtx)
+}
+
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func init() {
+	appmodule.Register(&bridgemodulev1.Module{},
+		appmodule.Provide(ProvideModule))
+}
+
+type BridgeInputs struct {
+	depinject.In
+
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	Config       *bridgemodulev1.Module
+
+	Accountkeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	Stakingkeeper types.StakingKeeper
+	Oraclekeeper  types.OracleKeeper
+
+	ReporterKeeper types.ReporterKeeper
+}
+
+type BridgeOutputs struct {
+	depinject.Out
+
+	BridgeKeeper keeper.Keeper
+	Module       appmodule.AppModule
+}
+
+func ProvideModule(in BridgeInputs) BridgeOutputs {
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.StoreService,
+		in.Stakingkeeper,
+		in.Oraclekeeper,
+		in.BankKeeper,
+		in.ReporterKeeper,
+	)
+	m := NewAppModule(
+		in.Cdc,
+		k,
+		in.Accountkeeper,
+		in.BankKeeper,
+	)
+	return BridgeOutputs{BridgeKeeper: k, Module: m}
 }

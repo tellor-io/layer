@@ -29,8 +29,11 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	valAccAddrs, _, _ := s.Setup.CreateValidators(5)
-
+	valAccAddrs, valAddrs, _ := s.Setup.CreateValidators(5)
+	for _, val := range valAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	proposer := valAccAddrs[0]
 	initCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(500*1e6))
 	for _, rep := range valAccAddrs {

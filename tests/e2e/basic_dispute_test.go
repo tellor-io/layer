@@ -65,8 +65,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidaotr)
 	require.NoError(err)
+	for _, val := range valAccountValAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
+
 	validator, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAccountValAddrs[0])
 	require.NoError(err)
 
