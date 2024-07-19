@@ -137,7 +137,11 @@ func (k Keeper) GetDataBefore(ctx context.Context, queryId []byte, timestamp tim
 		}
 		return false, nil
 	})
-	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
+
+	if err != nil {
+		return nil, err
+	}
+	return mostRecent, nil
 }
 
 func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
