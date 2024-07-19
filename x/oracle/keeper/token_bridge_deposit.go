@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"reflect"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -18,7 +20,7 @@ const (
 	TRBBridgeQueryType = "TRBBridge"
 )
 
-func (k Keeper) tokenBridgeDepositCheck(currentTime time.Time, queryData []byte) (types.QueryMeta, error) {
+func (k Keeper) tokenBridgeDepositCheck(ctx context.Context, queryData []byte) (types.QueryMeta, error) {
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
@@ -80,10 +82,15 @@ func (k Keeper) tokenBridgeDepositCheck(currentTime time.Time, queryData []byte)
 	}
 
 	queryId := utils.QueryIDFromData(queryData)
+	nextId, err := k.QuerySequencer.Next(ctx)
+	if err != nil {
+		return types.QueryMeta{}, err
+	}
 	// get block timestamp
 	query := types.QueryMeta{
-		RegistrySpecTimeframe: time.Second,
-		Expiration:            currentTime.Add(time.Hour),
+		Id:                    nextId,
+		RegistrySpecTimeframe: time.Hour,
+		Expiration:            sdk.UnwrapSDKContext(ctx).BlockTime().Add(time.Hour),
 		QueryType:             TRBBridgeQueryType,
 		QueryId:               queryId,
 		Amount:                math.NewInt(0),

@@ -47,10 +47,14 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 		// if no query it means its not a cyclelist query and doesn't have tips (cyclelist queries are initialized in genesis)
 		if errors.Is(err, collections.ErrNotFound) {
 			// check if query is token bridge deposit
-			query, err = k.keeper.tokenBridgeDepositCheck(blockTime, msg.QueryData)
+			query, err = k.keeper.tokenBridgeDepositCheck(ctx, msg.QueryData)
 			if errors.Is(err, types.ErrNotTokenDeposit) {
-				return nil, types.ErrNoTipsNotInCycle.Wrapf("query not part of cyclelist")
+				return nil, types.ErrNotTokenDeposit.Wrapf("query not part of cyclelist")
 			}
+			if err != nil {
+				return nil, err
+			}
+			err = k.keeper.Query.Set(ctx, queryId, query)
 			if err != nil {
 				return nil, err
 			}
@@ -101,7 +105,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	// if tip amount is greater than zero and query timeframe is expired, it means that the query didn't have any revealed reports
 	// and the tip is still there and so the time can be extended only if the query is in cycle or via a tip transaction
 	// maintains the same id until the query is paid out
-	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Before(blockTime) && incycle || isBridgeDeposit {
+	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Before(blockTime) && (incycle || isBridgeDeposit) {
 		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
 		err = k.keeper.Query.Set(ctx, queryId, query)
 		if err != nil {

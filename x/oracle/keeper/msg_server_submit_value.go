@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
@@ -50,7 +51,25 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	query, err := k.keeper.Query.Get(ctx, queryId)
 	if err != nil {
 		// if entered here it means that there is no tip because in cycle query are initialized in genesis
-		return nil, err
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		// check if query is token bridge deposit since all bridge deposit
+		// also considered in cycle
+		query, err = k.keeper.tokenBridgeDepositCheck(ctx, msg.QueryData)
+		if err != nil {
+			return nil, err
+		}
+
+		err = k.keeper.Query.Set(ctx, queryId, query)
+		if err != nil {
+			return nil, err
+		}
+		err = k.keeper.directReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, true)
+		if err != nil {
+			return nil, err
+		}
+		return &types.MsgSubmitValueResponse{}, nil
 	}
 	var incycle bool
 	// get commit by identifier
@@ -64,7 +83,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 			if err != nil {
 				return nil, err
 			}
-			incycle = bytes.Equal(msg.QueryData, cycleQuery)
+			incycle = bytes.Equal(msg.QueryData, cycleQuery) || strings.EqualFold(query.QueryType, TRBBridgeQueryType)
 			err = k.keeper.directReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, incycle)
 			if err != nil {
 				return nil, err
