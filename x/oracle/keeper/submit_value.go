@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/tellor-io/layer/utils"
@@ -51,7 +52,18 @@ func (k Keeper) setValue(ctx context.Context, reporter sdk.AccAddress, query typ
 	if err != nil {
 		return err
 	}
-
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"new_report",
+			sdk.NewAttribute("reporter", reporter.String()),
+			sdk.NewAttribute("reporter_power", fmt.Sprintf("%d", power)),
+			sdk.NewAttribute("query_type", queryType),
+			sdk.NewAttribute("query_id", hex.EncodeToString(queryId)),
+			sdk.NewAttribute("value", val),
+			sdk.NewAttribute("cyclelist", fmt.Sprintf("%t", incycle)),
+			sdk.NewAttribute("aggregate_method", dataSpec.AggregationMethod),
+		),
+	})
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
 }
 

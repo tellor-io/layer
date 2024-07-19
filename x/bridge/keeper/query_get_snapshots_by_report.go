@@ -29,7 +29,7 @@ func (q Querier) GetSnapshotsByReport(ctx context.Context, req *types.QueryGetSn
 	}
 	timestampTime := time.Unix(timestampInt, 0)
 
-	key := crypto.Keccak256([]byte(hex.EncodeToString(queryIdBytes) + fmt.Sprint(timestampTime.UnixMilli()/1000)))
+	key := crypto.Keccak256([]byte(hex.EncodeToString(queryIdBytes) + fmt.Sprint(timestampTime.UnixMilli())))
 	snapshots, err := q.k.AttestSnapshotsByReportMap.Get(ctx, key)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("snapshots not found for queryId %s and timestamp %s", queryIdStr, timestampStr))

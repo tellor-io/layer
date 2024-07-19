@@ -6,6 +6,8 @@ import (
 	"github.com/tellor-io/layer/x/mint/types"
 
 	"cosmossdk.io/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type msgServer struct {
@@ -33,5 +35,10 @@ func (k msgServer) Init(goCtx context.Context, msg *types.MsgInit) (*types.MsgMs
 	if err := k.Minter.Set(goCtx, minter); err != nil {
 		return nil, err
 	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"minter_initialized",
+		),
+	})
 	return &types.MsgMsgInitResponse{}, nil
 }

@@ -125,6 +125,21 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 
+// getDataBefore returns the last aggregate before or at the given timestamp for the given query id.
+func (k Keeper) GetDataBefore(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndInclusive(timestamp.UnixMilli()).Descending()
+	var mostRecent *types.Aggregate
+	// This should get us the most recent aggregate, as they are walked in descending order
+	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		if !value.Flagged {
+			mostRecent = &value
+			return true, nil
+		}
+		return false, nil
+	})
+	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
+}
+
 func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
 	var mostRecent *types.Aggregate
