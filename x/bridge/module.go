@@ -7,19 +7,19 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/core/appmodule"
-
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 )
 
 var (
