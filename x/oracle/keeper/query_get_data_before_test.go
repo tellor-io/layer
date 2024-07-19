@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	s.NoError(s.oracleKeeper.Aggregates.Set(s.ctx, collections.Join(qIdBz, timestamp.UnixMilli()), agg))
 	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   queryId,
-		Timestamp: timestampBefore,
+		Timestamp: timestampBefore + 1,
 	})
 	s.NoError(err)
 	s.Equal(getDataBeforeResponse.Timestamp, uint64(timestamp.UnixMilli()))

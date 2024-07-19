@@ -3,10 +3,9 @@ package client
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"time"
 
+	"github.com/spf13/viper"
 	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/flags"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
@@ -98,17 +97,18 @@ func (c *Client) Start(
 	stop := make(chan bool)
 
 	// get account
+	c.AccountName = viper.GetString("key-name")
+	if c.AccountName == "" {
+		panic("account name is empty, please use --key-name flag")
+	}
 	accountName := c.AccountName
 	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
-	homeDir := c.GetNodeHomeDir()
+	homeDir := viper.GetString("home")
 	if homeDir != "" {
 		c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)
 	} else {
-		panic("homeDir is empty")
+		panic("homeDir is empty, please use --home flag")
 	}
-	c.logger.Info("Keyring backend", "backend", c.cosmosCtx.Keyring.Backend())
-	c.logger.Info("Keyring dir", "dir", c.cosmosCtx.KeyringDir)
-	c.logger.Info("Account Name", "name", accountName)
 	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
 	if err != nil {
 		panic(fmt.Errorf("error getting address from keyring: %w : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
@@ -207,15 +207,4 @@ func (c *Client) SubmitReport(ctx context.Context) error {
 	// no need to call GetAccountNumberSequence here, just increment sequence by 1 for next transaction
 	seq++
 	return c.sendTx(ctx, msgSubmit, &seq)
-}
-
-func (c *Client) GetNodeHomeDir() string {
-	globalHome := os.ExpandEnv("$HOME/.layer")
-	c.logger.Info("GlobalHome", "GlobalHome", globalHome)
-	nodeHome := os.Getenv("LAYERD_NODE_HOME")
-	c.logger.Info("NodeHome", "NodeHome", nodeHome)
-	if strings.HasPrefix(nodeHome, globalHome+"/") {
-		return nodeHome
-	}
-	return ""
 }
