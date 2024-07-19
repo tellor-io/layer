@@ -138,5 +138,4 @@ Creating a Dispute:
     ./layerd query oracle get-reportsby-reporter-qid tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA= --node=http://tellornode.com:26657
 
 
-tellor19qg37zec70mzm9grhfp37rquk7hu89sldz2v4l
 
