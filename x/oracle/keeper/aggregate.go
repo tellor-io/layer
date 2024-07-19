@@ -137,7 +137,6 @@ func (k Keeper) GetDataBefore(ctx context.Context, queryId []byte, timestamp tim
 		}
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
