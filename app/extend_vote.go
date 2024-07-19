@@ -8,15 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 	"os"
-	"strings"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -62,6 +58,7 @@ type VoteExtHandler struct {
 	oracleKeeper OracleKeeper
 	bridgeKeeper BridgeKeeper
 	codec        codec.Codec
+	kr           keyring.Keyring
 }
 
 type OracleAttestation struct {
@@ -213,128 +210,18 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
-func (h *VoteExtHandler) EncodeOracleAttestationData(
-	queryId []byte,
-	value string,
-	timestamp int64,
-	aggregatePower int64,
-	previousTimestamp int64,
-	nextTimestamp int64,
-	valsetCheckpoint string,
-	attestationTimestamp int64,
-) ([]byte, error) {
-	// domainSeparator is bytes "tellorNewReport"
-	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, err := hex.DecodeString(domainSep)
-	if err != nil {
-		return nil, err
-	}
-	// Convert domain separator to bytes32
-	var domainSepBytes32 [32]byte
-	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
-
-	var queryIdBytes32 [32]byte
-	copy(queryIdBytes32[:], queryId)
-
-	// Convert value to bytes
-	valueBytes, err := hex.DecodeString(value)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert timestamp to uint64
-	timestampUint64 := new(big.Int)
-	timestampUint64.SetInt64(timestamp)
-
-	// Convert aggregatePower to uint64
-	aggregatePowerUint64 := new(big.Int)
-	aggregatePowerUint64.SetInt64(aggregatePower)
-
-	// Convert previousTimestamp to uint64
-	previousTimestampUint64 := new(big.Int)
-	previousTimestampUint64.SetInt64(previousTimestamp)
-
-	// Convert nextTimestamp to uint64
-	nextTimestampUint64 := new(big.Int)
-	nextTimestampUint64.SetInt64(nextTimestamp)
-
-	// Convert valsetCheckpoint to bytes32
-	valsetCheckpointBytes, err := hex.DecodeString(valsetCheckpoint)
-	if err != nil {
-		return nil, err
-	}
-	var valsetCheckpointBytes32 [32]byte
-	copy(valsetCheckpointBytes32[:], valsetCheckpointBytes)
-
-	// Convert attestationTimestamp to uint64
-	attestationTimestampUint64 := new(big.Int)
-	attestationTimestampUint64.SetInt64(attestationTimestamp)
-
-	// Prepare Encoding
-	Bytes32Type, err := abi.NewType("bytes32", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	Uint256Type, err := abi.NewType("uint256", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	BytesType, err := abi.NewType("bytes", "", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	arguments := abi.Arguments{
-		{Type: Bytes32Type},
-		{Type: Bytes32Type},
-		{Type: BytesType},
-		{Type: Uint256Type},
-		{Type: Uint256Type},
-		{Type: Uint256Type},
-		{Type: Uint256Type},
-		{Type: Bytes32Type},
-		{Type: Uint256Type},
-	}
-
-	// Encode the data
-	encodedData, err := arguments.Pack(
-		domainSepBytes32,
-		queryIdBytes32,
-		valueBytes,
-		timestampUint64,
-		aggregatePowerUint64,
-		previousTimestampUint64,
-		nextTimestampUint64,
-		valsetCheckpointBytes32,
-		attestationTimestampUint64,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	oracleAttestationHash := crypto.Keccak256(encodedData)
-	return oracleAttestationHash, nil
-}
-
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
-	// define keyring backend and the path to the keystore dir
-	krBackend := keyring.BackendTest
-	keyName := h.GetKeyName()
-	if keyName == "" {
-		return nil, fmt.Errorf("key name not found")
-	}
-	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
-
-	kr, err := keyring.New("layer", krBackend, krDir, os.Stdin, h.codec)
+	kr, err := h.GetKeyring()
 	if err != nil {
-		fmt.Printf("Failed to create keyring: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to get keyring: %w", err)
 	}
-	// sign message
+	keyName := viper.GetString("key-name")
+	if keyName == "" {
+		return nil, fmt.Errorf("key name not found, please set --key-name flag")
+	}
 	sig, _, err := kr.Sign(keyName, msg, 1)
 	if err != nil {
-		fmt.Printf("Failed to sign message: %v\n", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to sign message: %w", err)
 	}
 	return sig, nil
 }
@@ -369,37 +256,27 @@ func (h *VoteExtHandler) SignInitialMessage() ([]byte, []byte, error) {
 }
 
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
-	// define keyring backend and the path to the keystore dir
-	keyName := h.GetKeyName()
-	if keyName == "" {
-		return "", fmt.Errorf("key name not found")
-	}
-	krBackend := keyring.BackendTest
-	krDir := os.ExpandEnv("$HOME/.layer/" + keyName)
-
-	userInput := os.Stdin
-
-	kr, err := keyring.New("layer", krBackend, krDir, userInput, h.codec)
+	kr, err := h.GetKeyring()
 	if err != nil {
-		fmt.Printf("Failed to create keyring: %v\n", err)
-		return "", err
+		return "", fmt.Errorf("failed to get keyring: %w", err)
 	}
-
+	keyName := viper.GetString("key-name")
+	if keyName == "" {
+		return "", fmt.Errorf("key name not found, please set --key-name flag")
+	}
 	// list all keys
 	krlist, err := kr.List()
 	if err != nil {
-		fmt.Printf("Failed to list keys: %v\n", err)
-		return "", err
+		return "", fmt.Errorf("failed to list keys: %w", err)
 	}
 	if len(krlist) == 0 {
-		h.logger.Info("No keys found in keyring")
+		return "", fmt.Errorf("no keys found in keyring")
 	}
 
 	// Fetch the operator key from the keyring.
 	info, err := kr.Key(keyName)
 	if err != nil {
-		fmt.Printf("Failed to get operator key: %v\n", err)
-		return "", err
+		return "", fmt.Errorf("failed to get operator key: %w", err)
 	}
 	// Output the public key associated with the operator key.
 	key, _ := info.GetPubKey()
@@ -412,19 +289,6 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 		return "", fmt.Errorf("failed to convert operator public key to Bech32 validator address: %w", err)
 	}
 	return bech32ValAddr, nil
-}
-
-func (h *VoteExtHandler) GetKeyName() string {
-	globalHome := os.ExpandEnv("$HOME/.layer")
-	homeDir := viper.GetString("home")
-
-	// check if homeDir starts with globalHome and has a trailing name
-	if strings.HasPrefix(homeDir, globalHome+"/") {
-		// Extract the name after "/.layer/"
-		name := strings.TrimPrefix(homeDir, globalHome+"/")
-		return name
-	}
-	return ""
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (signature []byte, timestamp uint64, err error) {
@@ -495,4 +359,34 @@ func (h *VoteExtHandler) EncodeAndSignMessage(checkpointString string) ([]byte, 
 		return nil, err
 	}
 	return signature, nil
+}
+
+func (h *VoteExtHandler) InitKeyring() (keyring.Keyring, error) {
+	krBackend := viper.GetString("keyring-backend")
+	if krBackend == "" {
+		return nil, fmt.Errorf("keyring-backend not set, please use --keyring-backend flag")
+	}
+	krDir := viper.GetString("keyring-dir")
+	if krDir == "" {
+		krDir = viper.GetString("home")
+	}
+	if krDir == "" {
+		return nil, fmt.Errorf("keyring directory not set, please use --home or --keyring-dir flag")
+	}
+	kr, err := keyring.New(sdk.KeyringServiceName(), krBackend, krDir, os.Stdin, h.codec)
+	if err != nil {
+		return nil, err
+	}
+	return kr, nil
+}
+
+func (h *VoteExtHandler) GetKeyring() (keyring.Keyring, error) {
+	if h.kr == nil {
+		kr, err := h.InitKeyring()
+		if err != nil {
+			return nil, err
+		}
+		h.kr = kr
+	}
+	return h.kr, nil
 }
