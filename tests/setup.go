@@ -8,12 +8,16 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
 	"github.com/tellor-io/layer/app/config"
+	_ "github.com/tellor-io/layer/x/bridge"
+	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
@@ -71,10 +75,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
-	_ "github.com/tellor-io/layer/x/bridge"
-	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
-	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 )
 
 func AuthModule() configurator.ModuleOption {
