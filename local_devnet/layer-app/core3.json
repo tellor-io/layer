@@ -1,10 +1,10 @@
 {
     "pubkey": {
         "@type": "/cosmos.crypto.ed25519.PubKey",
-        "key": "jfQONCejLy/4NvvVaFPXQLnuqGgeAwmCM/ytQPFINok="
+        "key": "Xti2d5hHC77e44WYQA8xKIXBdmQuf0CSlJDOFCgYf9U="
     },
     "amount": "10000000loya",
-    "moniker": "core2",
+    "moniker": "core3",
     "commission-rate": "0.10",
     "commission-max-rate": "0.20",
     "commission-max-change-rate": "0.01",
