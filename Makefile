@@ -6,6 +6,17 @@ COSMOS_VERSION=$(shell go list -m all | grep "github.com/cosmos/cosmos-sdk" | aw
 HTTPS_GIT := https://github.com/tellor-io/layer.git
 DOCKER := $(shell which docker)
 
+build: mod
+	@cd ./cmd/layerd
+	@mkdir -p build/
+	@go build $(BUILD_FLAGS) -o build/ ./cmd/layerd
+.PHONY: build
+
+mod:
+	@echo "--> Updating go.mod"
+	@go mod tidy
+.PHONY: mod
+
 build-linux:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./build/layerd-linux-amd64 ./cmd/layerd
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./build/layerd-linux-arm64 ./cmd/layerd
