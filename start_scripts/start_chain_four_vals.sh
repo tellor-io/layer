@@ -194,7 +194,7 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 # update for main dir as well. why is this needed?
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
-./layerd comet show-node-id --home ~/.layer/alice --keyring-backend $KEYRING_BACKEND
+./layerd comet show-node-id --home ~/.layer/alice
 
 sleep 100
 
