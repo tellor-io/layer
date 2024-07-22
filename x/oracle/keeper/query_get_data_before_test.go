@@ -1,77 +1,48 @@
 package keeper_test
 
 import (
-	"encoding/hex"
 	"time"
 
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 )
 
 func (s *KeeperTestSuite) TestQueryGetDataBefore() {
-	require := s.Require()
-	k := s.oracleKeeper
-	q := s.queryClient
 	ctx := s.ctx
+	querier := keeper.NewQuerier(s.oracleKeeper)
+	getDataBeforeResponse, err := querier.GetDataBefore(ctx, nil)
+	s.ErrorContains(err, "invalid request")
+	s.Nil(getDataBeforeResponse)
 
-	// request is nil
-	res, err := q.GetDataBefore(ctx, nil)
-	require.ErrorContains(err, "invalid request")
-	require.Nil(res)
-
-	// bad querybytes
-	res, err = q.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
-		QueryId:   "bad",
-		Timestamp: ctx.BlockTime().Unix(),
+	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId: "z",
 	})
-	require.Error(err)
-	require.Nil(res)
+	s.ErrorContains(err, "invalid queryId")
+	s.Nil(getDataBeforeResponse)
 
-	// getDataBefore 1 sec after aggregate
-	qId, err := utils.QueryIDFromDataString(queryData)
-	require.NoError(err)
-	require.NoError(k.Aggregates.Set(ctx, collections.Join(qId, ctx.BlockTime().UnixMilli()), types.Aggregate{
-		QueryId:           qId,
-		AggregateValue:    "100",
-		AggregateReporter: "reporter",
-		ReporterPower:     100,
-		Height:            0,
-		Flagged:           false,
-	}))
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(1 * time.Second))
-	ctx = ctx.WithBlockHeight(1)
-	res, err = q.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
-		QueryId:   hex.EncodeToString(qId),
-		Timestamp: ctx.BlockTime().Unix(),
-	})
-	require.NoError(err)
-	require.Equal(res.Report.AggregateValue, "100")
-	require.Equal(res.Report.AggregateReporter, "reporter")
-	require.Equal(res.Report.ReporterPower, int64(100))
-	require.Equal(res.Report.Height, int64(0))
-	require.Equal(res.Report.Flagged, false)
-	require.Equal(res.Report.QueryId, qId)
+	timestampBefore := int64(1)
+	timestamp := time.UnixMilli(timestampBefore)
 
-	// getDataBefore at same timestamp as aggregate
-	require.NoError(k.Aggregates.Set(ctx, collections.Join(qId, ctx.BlockTime().UnixMilli()), types.Aggregate{
-		QueryId:           qId,
-		AggregateValue:    "200",
-		AggregateReporter: "reporter2",
-		ReporterPower:     500,
-		Height:            1,
-		Flagged:           false,
-	}))
-	res, err = q.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
-		QueryId:   hex.EncodeToString(qId),
-		Timestamp: ctx.BlockTime().Unix(),
+	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   "1234abcd",
+		Timestamp: timestampBefore,
 	})
-	require.NoError(err)
-	require.Equal(res.Report.AggregateValue, "200")
-	require.Equal(res.Report.AggregateReporter, "reporter2")
-	require.Equal(res.Report.ReporterPower, int64(500))
-	require.Equal(res.Report.Height, int64(1))
-	require.Equal(res.Report.Flagged, false)
-	require.Equal(res.Report.QueryId, qId)
+	s.ErrorContains(err, "no aggregate report found before timestamp")
+	s.Nil(getDataBeforeResponse)
+
+	queryId := "1234abcd"
+	qIdBz, err := utils.QueryBytesFromString(queryId)
+	s.NoError(err)
+	agg := types.Aggregate{QueryId: qIdBz}
+	s.NoError(s.oracleKeeper.Aggregates.Set(s.ctx, collections.Join(qIdBz, timestamp.UnixMilli()), agg))
+	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
+		QueryId:   queryId,
+		Timestamp: timestampBefore + 1,
+	})
+	s.NoError(err)
+	s.Equal(getDataBeforeResponse.Timestamp, uint64(timestamp.UnixMilli()))
+	s.Equal(getDataBeforeResponse.Aggregate, &agg)
 }

@@ -60,6 +60,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}},
 				},
 				{
+					RpcMethod:      "RetrieveData",
+					Use:            "retrieve-data [query_id] [timestamp]",
+					Short:          "get data for a query at a specific timestamp",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}},
+				},
+				{
 					RpcMethod:      "GetTimeBasedRewards",
 					Use:            "get-time-based-rewards",
 					Short:          "Query time based rewards in system",

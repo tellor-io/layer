@@ -70,12 +70,10 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 		Cyclelist:       true,
 		BlockNumber:     s.ctx.BlockHeight(),
 	}
-	expectedReport := types.QueryGetReportsbyQidResponse{
-		Reports: types.Reports{
-			MicroReports: []*types.MicroReport{&microReport},
-		},
+	expectedReport := types.QueryMicroReportsResponse{
+		MicroReports: []types.MicroReport{microReport},
 	}
-	require.Equal(&expectedReport, report)
+	require.Equal(expectedReport.MicroReports, report.MicroReports)
 
 	return addr, queryId
 }

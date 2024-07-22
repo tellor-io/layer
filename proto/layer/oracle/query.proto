@@ -25,13 +25,13 @@ service Query {
   }
 
   // Queries a list of GetReportsbyQid items.
-  rpc GetReportsbyQid(QueryGetReportsbyQidRequest) returns (QueryGetReportsbyQidResponse) {
+  rpc GetReportsbyQid(QueryGetReportsbyQidRequest) returns (QueryMicroReportsResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{query_id}";
   }
-  rpc GetReportsbyReporter(QueryGetReportsbyReporterRequest) returns (QueryGetReportsbyReporterResponse) {
+  rpc GetReportsbyReporter(QueryGetReportsbyReporterRequest) returns (QueryMicroReportsResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter/{reporter}";
   }
-  rpc GetReportsbyReporterQid(QueryGetReportsbyReporterQidRequest) returns (QueryGetReportsbyQidResponse) {
+  rpc GetReportsbyReporterQid(QueryGetReportsbyReporterQidRequest) returns (QueryMicroReportsResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{query_id}";
   }
 
@@ -51,8 +51,8 @@ service Query {
   }
 
   // Queries a list of GetAggregatedReport items.
-  rpc GetDataBefore(QueryGetDataBeforeRequest) returns (QueryGetAggregatedReportResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/GetDataBefore/{query_id}/{timestamp}";
+  rpc GetDataBefore(QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_data_before/{query_id}/{timestamp}";
   }
 
   // Queries a list of GetTimeBasedRewards items.
@@ -64,6 +64,10 @@ service Query {
   rpc CurrentCyclelistQuery(QueryCurrentCyclelistQueryRequest) returns (QueryCurrentCyclelistQueryResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/current_cyclelist_query";
   }
+
+  rpc RetrieveData(QueryRetrieveDataRequest) returns (QueryRetrieveDataResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/retrieve_data/{query_id}/{timestamp}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -74,26 +78,29 @@ message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
-
-message QueryGetReportsbyQidRequest {
-  string query_id = 1;
+message QueryMicroReportsResponse {
+  repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-
-message QueryGetReportsbyQidResponse {
-  Reports reports = 1 [(gogoproto.nullable) = false];
+message QueryGetReportsbyQidRequest {
+  // query id of requested data
+  string query_id = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryGetReportsbyReporterRequest {
   string reporter = 1;
-}
-
-message QueryGetReportsbyReporterResponse {
-  repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryGetReportsbyReporterQidRequest {
   string reporter = 1;
-  string query_id  = 2;
+  string query_id = 2;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 message QueryGetCurrentTipRequest {
@@ -129,8 +136,13 @@ message QueryGetAggregatedReportResponse {
 }
 
 message QueryGetDataBeforeRequest {
-  string query_id   = 1;
-  int64  timestamp = 2;
+  string query_id = 1;
+  int64 timestamp = 2;
+}
+
+message QueryGetDataBeforeResponse {
+  Aggregate aggregate = 1;
+  uint64 timestamp = 2;
 }
 
 message QueryGetTimeBasedRewardsRequest {}
@@ -147,4 +159,13 @@ message QueryCurrentCyclelistQueryRequest {}
 
 message QueryCurrentCyclelistQueryResponse {
   string query_data = 1;
+}
+
+message QueryRetrieveDataRequest {
+  string query_id = 1;
+  int64 timestamp = 2;
+}
+
+message QueryRetrieveDataResponse {
+  Aggregate aggregate = 1;
 }
