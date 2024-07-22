@@ -113,12 +113,15 @@ echo "Adding genesis account for alice..."
 
 echo "Initializing Bill account with loya to stake.."
 ./layerd genesis add-genesis-account $BILL 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $BILL 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 
 echo "Initializing Bob account with loya to stake.."
 ./layerd genesis add-genesis-account $BOB 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $BOB 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob
 
 echo "Initializing Tom account with loya to stake.."
 ./layerd genesis add-genesis-account $TOM 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $TOM 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom
 
 # Create a tx to give faucet loyas to have on hold to give to users
 echo "Adding genesis account for alice..."
