@@ -126,23 +126,23 @@ echo "Creating gentx for alice..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for bill..."
-./layerd genesis gentx bill 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill --chain-id layer
+./layerd genesis gentx bill 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx bob 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob --chain-id layer
+./layerd genesis gentx bob 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx tom 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom --chain-id layer
+./layerd genesis gentx tom 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
 
-echo "copy over gentx transaction so that alice has all the gentx transactions then verify"
-cp ~/.layer/bill/config/gentx/gentx-* \
-    ~/.layer/alice/config/gentx
-cp ~/.layer/bob/config/gentx/gentx-* \
-    ~/.layer/alice/config/gentx
-cp ~/.layer/tom/config/gentx/gentx-* \
-    ~/.layer/alice/config/gentx
+# echo "copy over gentx transaction so that alice has all the gentx transactions then verify"
+# cp ~/.layer/bill/config/gentx/gentx-* \
+#     ~/.layer/alice/config/gentx
+# cp ~/.layer/bob/config/gentx/gentx-* \
+#     ~/.layer/alice/config/gentx
+# cp ~/.layer/tom/config/gentx/gentx-* \
+#     ~/.layer/alice/config/gentx
 
 
 # Add the transactions to the genesis block
