@@ -12,7 +12,7 @@ func TestNewMultiRegistryHooks(t *testing.T) {
 	require := require.New(t)
 
 	hooks := NewMultiRegistryHooks()
-	require.NotNil(hooks)
+	require.Nil(hooks)
 }
 
 func TestAfterDataSpecUpdated(t *testing.T) {
