@@ -18,7 +18,7 @@ func Has0xPrefix(str string) bool {
 }
 
 // convertToJSON converts a slice of interfaces into a JSON string.
-func convertToJSON(slice []interface{}) (string, error) {
+func ConvertToJSON(slice []interface{}) (string, error) {
 	jsonResult, err := json.Marshal(slice)
 	if err != nil {
 		return "", err

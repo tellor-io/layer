@@ -22,3 +22,4 @@ prod-sim/kmsBob
 build/*
 secrets.yaml
 .env
+prod-sim

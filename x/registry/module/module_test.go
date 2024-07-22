@@ -139,6 +139,3 @@ func TestConsensusVersion(t *testing.T) {
 	val := am.ConsensusVersion()
 	require.Equal(t, int(val), 1)
 }
-
-func TestProvideModule(t *testing.T) {
-}

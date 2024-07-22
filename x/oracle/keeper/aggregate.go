@@ -88,7 +88,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	}
 
 	// Process time-based rewards for reporters.
-	tbr := k.getTimeBasedRewards(ctx)
+	tbr := k.GetTimeBasedRewards(ctx)
 	if len(reportersToPay) == 0 {
 		return nil
 	}

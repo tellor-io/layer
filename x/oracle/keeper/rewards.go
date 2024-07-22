@@ -48,11 +48,11 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 
 	for r, c := range reportCounts {
 		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward)
-		repoterAddr, err := sdk.AccAddressFromBech32(r)
+		reporterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
 			return err
 		}
-		err = k.AllocateTip(ctx, repoterAddr.Bytes(), amount, c.Height)
+		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, c.Height)
 		if err != nil {
 			return err
 		}
@@ -61,13 +61,13 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
 }
 
-func (k Keeper) getTimeBasedRewards(ctx context.Context) math.Int {
-	tbrAccount := k.getTimeBasedRewardsAccount(ctx)
+func (k Keeper) GetTimeBasedRewards(ctx context.Context) math.Int {
+	tbrAccount := k.GetTimeBasedRewardsAccount(ctx)
 	balance := k.bankKeeper.GetBalance(ctx, tbrAccount.GetAddress(), layer.BondDenom)
 	return balance.Amount
 }
 
-func (k Keeper) getTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccountI {
+func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccountI {
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
