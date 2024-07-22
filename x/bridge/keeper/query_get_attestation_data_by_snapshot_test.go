@@ -49,13 +49,12 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.NoError(t, err)
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, types.AttestationSnapshotData{
 		ValidatorCheckpoint:  []byte("checkpoint"),
-
 		AttestationTimestamp: timestampTime.UnixMilli() + 1,
 		PrevReportTimestamp:  timestampTime.UnixMilli() - 2,
 		NextReportTimestamp:  timestampTime.UnixMilli() + 2,
 
-		QueryId:              queryId,
-		Timestamp:            timestampTime.UnixMilli(),
+		QueryId:   queryId,
+		Timestamp: timestampTime.UnixMilli(),
 	})
 	require.NoError(t, err)
 
@@ -71,5 +70,4 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.Equal(t, getAttDataBySnapResponse.PreviousReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()-2, 10))
 
 	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()+2, 10))
-
 }
