@@ -9,7 +9,7 @@ set -e
 KEYRING_BACKEND="test"
 PASSWORD="password"
 
-export LAYERD_NODE_HOME="$HOME/.layer/alice"
+export LAYERD_NODE_HOME_ALICE="$HOME/.layer/alice"
 
 # Remove old test chains (if present)
 echo "Removing old test chain data..."
@@ -91,4 +91,4 @@ sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~
 
 
 echo "Start chain..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger
+./layerd start --home $LAYERD_NODE_HOME_ALICE --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name alice

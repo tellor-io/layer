@@ -36,7 +36,9 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.Nil(t, getAttDataBySnapResponse)
 
 	queryId := []byte("queryId")
-	timestampTime := time.UnixMilli(100)
+
+	timestampTime := time.Date(1969, time.December, 31, 18, 1, 40, 0, time.Local)
+
 	aggReport := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "1",
@@ -47,11 +49,12 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.NoError(t, err)
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, types.AttestationSnapshotData{
 		ValidatorCheckpoint:  []byte("checkpoint"),
-		AttestationTimestamp: timestampTime.UnixMilli() - 1,
+		AttestationTimestamp: timestampTime.UnixMilli() + 1,
 		PrevReportTimestamp:  timestampTime.UnixMilli() - 2,
-		NextReportTimestamp:  timestampTime.UnixMilli() + 1,
-		QueryId:              queryId,
-		Timestamp:            timestampTime.UnixMilli(),
+		NextReportTimestamp:  timestampTime.UnixMilli() + 2,
+
+		QueryId:   queryId,
+		Timestamp: timestampTime.UnixMilli(),
 	})
 	require.NoError(t, err)
 
@@ -65,5 +68,6 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.Equal(t, getAttDataBySnapResponse.AggregatePower, strconv.FormatInt(aggReport.ReporterPower, 10))
 	require.Equal(t, getAttDataBySnapResponse.Checkpoint, hex.EncodeToString([]byte("checkpoint")))
 	require.Equal(t, getAttDataBySnapResponse.PreviousReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()-2, 10))
-	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()+1, 10))
+
+	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()+2, 10))
 }

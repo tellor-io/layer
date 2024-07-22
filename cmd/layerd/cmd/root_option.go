@@ -26,6 +26,8 @@ func GetOptionWithCustomStartCmd() *RootCmdOption {
 	f := func(cmd *cobra.Command) {
 		// Add daemon flags.
 		daemonflags.AddDaemonFlagsToCmd(cmd)
+		cmd.Flags().String("keyring-backend", "test", "Select keyring's backend (os|file|kwallet|pass|test)")
+		cmd.Flags().String("key-name", "alice", "Select key name")
 	}
 	option.setCustomizeStartCmd(f)
 	return option

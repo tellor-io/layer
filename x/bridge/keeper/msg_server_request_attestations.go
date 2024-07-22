@@ -27,7 +27,7 @@ func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgReques
 		k.Keeper.Logger(sdkCtx).Error("failed to parse timestamp", "error", err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
-	timestamp := time.Unix(int64(timestampInt), 0)
+	timestamp := time.UnixMilli(int64(timestampInt))
 	err = k.Keeper.CreateSnapshot(sdkCtx, queryId, timestamp)
 	if err != nil {
 		k.Keeper.Logger(sdkCtx).Error("failed to create snapshot", "error", err)

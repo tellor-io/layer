@@ -38,7 +38,7 @@ func (q Querier) GetAttestationDataBySnapshot(goCtx context.Context, req *types.
 
 	aggReport, err := q.k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestampTime)
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate not found for queryId %s and timestamp %s", queryId, timestampTime))
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate not found for queryId %s and timestamp %d", hex.EncodeToString(queryId), snapshotData.Timestamp))
 	}
 
 	queryIdStr := hex.EncodeToString(queryId)

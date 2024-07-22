@@ -12,15 +12,17 @@ import (
 // A struct containing the values of all flags.
 type Flags struct {
 	// Existing flags
-	GrpcAddress string
-	GrpcEnable  bool
+	GrpcAddress    string
+	GrpcEnable     bool
+	KeyringBackend string
 }
 
 // List of CLI flags.
 const (
 	// Cosmos flags below. These config values can be set as flags or in config.toml.
-	GrpcAddress = "grpc.address"
-	GrpcEnable  = "grpc.enable"
+	GrpcAddress    = "grpc.address"
+	GrpcEnable     = "grpc.enable"
+	KeyringBackend = "keyring-backend"
 )
 
 // Validate checks that the flags are valid.
@@ -40,8 +42,9 @@ func GetFlagValuesFromOptions(
 	// Create default result.
 	result := Flags{
 		// These are the default values from the Cosmos flags.
-		GrpcAddress: config.DefaultGRPCAddress,
-		GrpcEnable:  true,
+		GrpcAddress:    config.DefaultGRPCAddress,
+		GrpcEnable:     true,
+		KeyringBackend: "test",
 	}
 
 	if option := appOpts.Get(GrpcAddress); option != nil {
@@ -53,6 +56,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcEnable); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcEnable = v
+		}
+	}
+
+	if option := appOpts.Get(KeyringBackend); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.KeyringBackend = v
 		}
 	}
 
