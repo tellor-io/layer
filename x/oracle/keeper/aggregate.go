@@ -217,9 +217,12 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 
 	// Walk through the aggregates in descending order to find the most recent one before timestampBefore
 	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
-		mostRecent = &value
-		mostRecentTimestamp = key.K2()
-		return true, nil // Stop after the first (most recent) match
+		if !value.Flagged {
+			mostRecent = &value
+			mostRecentTimestamp = key.K2()
+			return true, nil // Stop after the first (most recent) match
+		}
+		return false, nil
 	})
 	if err != nil {
 		return nil, time.Time{}, err
