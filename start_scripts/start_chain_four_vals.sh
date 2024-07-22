@@ -26,6 +26,10 @@ echo "Initializing the chain..."
 # Initialize chain node with the folder for alice
 echo "Initializing chain node for alice..."
 ./layerd init alicemoniker --chain-id layer --home ~/.layer/alice
+./layerd init bill --chain-id layer --home ~/.layer/bill
+./layerd init bob --chain-id layer --home ~/.layer/bob
+./layerd init tom --chain-id layer --home ~/.layer/tom
+
 
 echo "Change denom to loya in genesis file..."
 sed -i 's/"stake"/"loya"/g' ~/.layer/alice/config/genesis.json
@@ -126,23 +130,23 @@ echo "Creating gentx for alice..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for bill..."
-./layerd genesis gentx $BILL 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
+./layerd genesis gentx bill 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill --chain-id layer
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx $BOB 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
+./layerd genesis gentx bob 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob --chain-id layer
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx $TOM 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
+./layerd genesis gentx tom 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom --chain-id layer
 
-# echo "copy over gentx transaction so that alice has all the gentx transactions then verify"
-# cp ~/.layer/bill/config/gentx/gentx-* \
-#     ~/.layer/alice/config/gentx
-# cp ~/.layer/bob/config/gentx/gentx-* \
-#     ~/.layer/alice/config/gentx
-# cp ~/.layer/tom/config/gentx/gentx-* \
-#     ~/.layer/alice/config/gentx
+echo "copy over gentx transaction so that alice has all the gentx transactions then verify"
+cp ~/.layer/bill/config/gentx/gentx-* \
+    ~/.layer/alice/config/gentx
+cp ~/.layer/bob/config/gentx/gentx-* \
+    ~/.layer/alice/config/gentx
+cp ~/.layer/tom/config/gentx/gentx-* \
+    ~/.layer/alice/config/gentx
 
 
 # Add the transactions to the genesis block
