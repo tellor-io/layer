@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 
 	collections "cosmossdk.io/collections"
@@ -47,7 +48,8 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	// Height 1 - submit proposal
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -90,7 +92,8 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	// Height 2 - vote on proposal
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -113,14 +116,16 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
 
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(48 * time.Hour))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(48*time.Hour))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
 	// Height 3 - proposal passes
 	//---------------------------------------------------------------------------
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -137,7 +142,8 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	// Height 4 - check cycle list
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 

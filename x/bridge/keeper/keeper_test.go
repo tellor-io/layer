@@ -9,6 +9,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/keeper"
@@ -430,12 +431,12 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.NotNil(t, res)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
+	validatorTimestamp := uint64(sdkCtx.HeaderInfo().Time.UnixMilli())
 	require.Equal(t, res.Timestamp, validatorTimestamp)
 
-	prevBlockTime := sdkCtx.BlockTime()
-	sdkCtx = sdkCtx.WithBlockTime(prevBlockTime.Add(20 * time.Second))
-	validatorTimestamp = uint64(sdkCtx.BlockTime().Unix())
+	prevBlockTime := sdkCtx.HeaderInfo().Time
+	sdkCtx = testutil.WithBlockTime(sdkCtx, prevBlockTime.Add(20*time.Second))
+	validatorTimestamp = uint64(sdkCtx.HeaderInfo().Time.UnixMilli())
 
 	// create new checkpoint
 	powerThreshold := uint64(5000)
@@ -1128,7 +1129,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	timestamp := sdkCtx.BlockTime()
+	timestamp := sdkCtx.HeaderInfo().Time
 	timestampPlus1 := timestamp.Add(time.Second)
 
 	queryId := []byte("queryId")

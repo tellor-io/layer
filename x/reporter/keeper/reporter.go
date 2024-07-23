@@ -74,7 +74,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 		if err != nil {
 			return math.Int{}, err
 		}
-		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).HeaderInfo().Time) {
 			continue
 		}
 		var iterError error

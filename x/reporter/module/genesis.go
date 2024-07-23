@@ -16,7 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err != nil {
 		panic(err)
 	}
-	c := ctx.BlockTime()
+	c := ctx.HeaderInfo().Time
 	err = k.Tracker.Set(ctx, types.StakeTracker{
 		Expiration: &c,
 		Amount:     math.ZeroInt(),

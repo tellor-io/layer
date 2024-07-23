@@ -89,12 +89,12 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 
 func TestTrackStakeChange(t *testing.T) {
 	k, sk, _, _, ctx, _ := setupKeeper(t)
-	expiration := ctx.BlockTime().Add(1)
+	expiration := ctx.HeaderInfo().Time.Add(1)
 	err := k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)})
 	require.NoError(t, err)
 	require.NoError(t, k.TrackStakeChange(ctx))
 
-	expiration = ctx.BlockTime()
+	expiration = ctx.HeaderInfo().Time
 	err = k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)})
 	require.NoError(t, err)
 	sk.On("TotalBondedTokens", ctx).Return(math.OneInt(), nil)

@@ -14,6 +14,7 @@ import (
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
 	"github.com/tellor-io/layer/app/config"
+	"github.com/tellor-io/layer/testutil"
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
@@ -320,6 +321,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 
 	s.require.NoError(err)
 	s.Ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
+	s.Ctx = testutil.WithBlockTime(s.Ctx, time.Now())
 	s.fetchStoreKey = app.UnsafeFindStoreKey
 
 	s.queryHelper = baseapp.NewQueryServerTestHelper(s.Ctx, s.interfaceRegistry)

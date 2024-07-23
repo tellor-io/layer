@@ -17,7 +17,7 @@ import (
 
 func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport) (*types.MsgCommitReportResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockTime := sdkCtx.HeaderInfo().Time
 	reporterAddr, err := msg.GetSignerAndValidateMsg()
 	if err != nil {
 		return nil, err

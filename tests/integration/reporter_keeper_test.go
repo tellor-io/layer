@@ -3,6 +3,7 @@ package integration_test
 import (
 	"fmt"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -102,7 +103,7 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	// forward time to bypass the lock time that the delegator has
 	maxbuffer, err := s.Setup.Registrykeeper.MaxReportBufferWindow(s.Setup.Ctx)
 	s.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(maxbuffer))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(maxbuffer))
 	// check validator reporting tokens after delegator has moved
 	validatorReporter1, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0])
 	s.NoError(err)

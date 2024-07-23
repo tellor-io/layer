@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -245,7 +246,7 @@ func (s *KeeperTestSuite) TestTallyVoteQuorumNotReachedVotePeriodEnds() {
 		Id:         id1,
 		VoteResult: types.VoteResult_NO_TALLY,
 		Executed:   false,
-		VoteEnd:    ctx.BlockTime(),
+		VoteEnd:    ctx.HeaderInfo().Time,
 	}))
 
 	require.NoError(k.Disputes.Set(ctx, id1, types.Dispute{
@@ -253,7 +254,7 @@ func (s *KeeperTestSuite) TestTallyVoteQuorumNotReachedVotePeriodEnds() {
 		HashId:    []byte("hashId"),
 	}))
 
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(120 * time.Hour))
+	ctx = testutil.WithBlockTime(ctx, ctx.HeaderInfo().Time.Add(120*time.Hour))
 	require.NoError(k.BlockInfo.Set(ctx, []byte("hashId"), types.BlockInfo{
 		TotalReporterPower: math.NewInt(250 * 1e6),
 		TotalUserTips:      math.NewInt(250 * 1e6),

@@ -16,9 +16,9 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	// fmt.Println("test: ", test)
 	// queryGetDataBeforeRequest := &types.QueryGetDataBeforeRequest{
 	// 	QueryId:   queryId,
-	// 	Timestamp: s.ctx.BlockTime().Unix() + 100,
+	// 	Timestamp: s.ctx.HeaderInfo().Time.Unix() + 100,
 	// }
-	// s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(101))
+	// s.ctx = testutil.WithBlockTime(s.ctx,s.ctx.HeaderInfo().Time.Add(101))
 	// data, err := s.oracleKeeper.GetDataBefore(s.ctx, queryGetDataBeforeRequest)
 	// require.Nil(err)
 	// fmt.Println(data)

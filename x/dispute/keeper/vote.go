@@ -27,8 +27,8 @@ func (k Keeper) InitVoterClasses() *types.VoterClasses {
 func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) error {
 	vote := types.Vote{
 		Id:        id,
-		VoteStart: ctx.BlockTime(),
-		VoteEnd:   ctx.BlockTime().Add(TWO_DAYS),
+		VoteStart: ctx.HeaderInfo().Time,
+		VoteEnd:   ctx.HeaderInfo().Time.Add(TWO_DAYS),
 	}
 	return k.Votes.Set(ctx, id, vote)
 }

@@ -5,6 +5,7 @@ import (
 	gomath "math"
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -142,7 +143,7 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 }
 
 func (s *KeeperTestSuite) TestSlashAndJailReporter() {
-	s.ctx = s.ctx.WithBlockTime(time.Unix(1696516597, 0))
+	s.ctx = testutil.WithBlockTime(s.ctx, time.Unix(1696516597, 0))
 	report := report()
 	dispute := s.dispute()
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)

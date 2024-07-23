@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -29,7 +30,7 @@ func TestMsgClaimDeposit(t *testing.T) {
 	})
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	aggregateTimestamp := sdkCtx.BlockTime()
+	aggregateTimestamp := sdkCtx.HeaderInfo().Time
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -55,7 +56,7 @@ func TestMsgClaimDeposit(t *testing.T) {
 		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(67),
 	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	sdkCtx = testutil.WithBlockTime(sdkCtx, sdkCtx.HeaderInfo().Time.Add(13*time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)

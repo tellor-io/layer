@@ -84,8 +84,8 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		DisputeId:         disputeId,
 		DisputeCategory:   msg.DisputeCategory,
 		DisputeStatus:     types.Prevote,
-		DisputeStartTime:  ctx.BlockTime(),
-		DisputeEndTime:    ctx.BlockTime().Add(ONE_DAY), // one day to fully pay fee
+		DisputeStartTime:  ctx.HeaderInfo().Time,
+		DisputeEndTime:    ctx.HeaderInfo().Time.Add(ONE_DAY), // one day to fully pay fee
 		DisputeStartBlock: ctx.BlockHeight(),
 		DisputeRound:      1,
 		SlashAmount:       disputeFee,
@@ -113,7 +113,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 			return err
 		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
-		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
+		dispute.DisputeEndTime = ctx.HeaderInfo().Time.Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
 		if err := k.SetStartVote(ctx, dispute.DisputeId); err != nil { // starting voting immediately
 			return err
@@ -198,7 +198,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute closed", dispute.DisputeId)
 	}
 	// if dispute is not unresovled and dispute end time is before current block time then we can't update it
-	if dispute.DisputeEndTime.Before(ctx.BlockTime()) {
+	if dispute.DisputeEndTime.Before(ctx.HeaderInfo().Time) {
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
 
@@ -231,9 +231,9 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId
 	dispute.DisputeStatus = types.Voting // starting voting immediately
-	dispute.DisputeStartTime = ctx.BlockTime()
+	dispute.DisputeStartTime = ctx.HeaderInfo().Time
 	// add 3 days to block time
-	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
+	dispute.DisputeEndTime = ctx.HeaderInfo().Time.Add(THREE_DAYS)
 	dispute.DisputeStartBlock = ctx.BlockHeight()
 	dispute.DisputeRound++
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)

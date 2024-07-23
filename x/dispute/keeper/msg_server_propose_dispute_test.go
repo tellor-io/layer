@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -17,7 +18,7 @@ import (
 
 func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 	addr := sample.AccAddressBytes()
-	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = testutil.WithBlockTime(s.ctx, time.Now())
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:  addr.String(),

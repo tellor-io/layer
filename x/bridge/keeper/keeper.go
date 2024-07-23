@@ -210,7 +210,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
+	validatorTimestamp := uint64(sdkCtx.HeaderInfo().Time.UnixMilli())
 
 	// calculate validator set hash
 	_, validatorSetHash, err := k.EncodeAndHashValidatorSet(ctx, bridgeValidatorSet)
@@ -738,7 +738,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
 	for _, report := range reports {
 		queryId := report.QueryId
-		timeNow := sdkCtx.BlockTime().Add(time.Second)
+		timeNow := sdkCtx.HeaderInfo().Time.Add(time.Second)
 		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
 		if err != nil {
 			return nil
@@ -777,7 +777,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 
 	// use current block time for attestationTimestamp
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	attestationTimestamp := sdkCtx.BlockTime()
+	attestationTimestamp := sdkCtx.HeaderInfo().Time
 
 	snapshotBytes, err := k.EncodeOracleAttestationData(
 		queryId,

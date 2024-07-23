@@ -43,7 +43,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	}
 
 	// Assert again voting hasn't ended
-	if vote.VoteEnd.Before(ctx.BlockTime()) {
+	if vote.VoteEnd.Before(ctx.HeaderInfo().Time) {
 		return nil, types.ErrVotingPeriodEnded
 	}
 	bI, err := k.BlockInfo.Get(ctx, dispute.HashId)

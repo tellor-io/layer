@@ -37,7 +37,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		return nil, errors.New("disputed reporter can't add fee from bond")
 	}
 	// check if time to add fee has expired
-	if ctx.BlockTime().After(dispute.DisputeEndTime) {
+	if ctx.HeaderInfo().Time.After(dispute.DisputeEndTime) {
 		return nil, types.ErrDisputeTimeExpired
 	}
 	// check if fee has been already met
@@ -73,7 +73,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 			return nil, err
 		}
 		// begin voting immediately
-		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
+		dispute.DisputeEndTime = ctx.HeaderInfo().Time.Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
 		if err := k.Keeper.SetStartVote(ctx, dispute.DisputeId); err != nil {
 			return nil, err

@@ -242,11 +242,11 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
-	if vote.VoteEnd.Before(sdkctx.BlockTime()) {
+	if vote.VoteEnd.Before(sdkctx.HeaderInfo().Time) {
 		fmt.Println("quorum not reached")
 		dispute.DisputeStatus = types.Unresolved
 		// check if rounds have been exhausted or dispute has expired in order to disperse funds
-		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
+		if dispute.DisputeEndTime.Before(sdkctx.HeaderInfo().Time) {
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
 		}
@@ -256,7 +256,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 				return err
 			}
 			vote.VoteResult = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
-			vote.VoteEnd = sdkctx.BlockTime()
+			vote.VoteEnd = sdkctx.HeaderInfo().Time
 			return k.Votes.Set(ctx, id, vote)
 		}
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false)
@@ -299,6 +299,6 @@ func (k Keeper) UpdateDispute(
 		return errors.New("no majority")
 	}
 	vote.VoteResult = result
-	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).BlockTime()
+	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).HeaderInfo().Time
 	return k.Votes.Set(ctx, id, vote)
 }

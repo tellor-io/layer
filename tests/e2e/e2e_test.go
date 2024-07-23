@@ -228,6 +228,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 
 func (s *E2ETestSuite) TestUnstaking() {
 	require := s.Require()
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	// create 5 validators with 5_000 TRB
 	accaddr, valaddr, _ := s.Setup.CreateValidators(5)
 	_, err := s.Setup.Stakingkeeper.EndBlocker(s.Setup.Ctx)
@@ -248,7 +249,7 @@ func (s *E2ETestSuite) TestUnstaking() {
 	require.NoError(err)
 
 	// unbonding time is 21 days after calling BeginUnbondingValidator
-	unbondingStartTime := s.Setup.Ctx.BlockTime()
+	unbondingStartTime := s.Setup.Ctx.HeaderInfo().Time
 	twentyOneDays := time.Hour * 24 * 21
 	require.Equal(unbondingStartTime.Add(twentyOneDays), timeToUnbond)
 
@@ -263,7 +264,8 @@ func (s *E2ETestSuite) TestUnstaking() {
 	require.Equal(val1.IsUnbonded(), false)
 	// new block
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(val1.UnbondingHeight + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(twentyOneDays))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(twentyOneDays))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -291,7 +293,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	//---------------------------------------------------------------------------
 	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	valsAcctAddrs, valsValAddrs, _ := s.Setup.CreateValidators(3)
 	require.NotNil(valsAcctAddrs)
 	repsAccs := valsAcctAddrs
@@ -319,7 +322,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	pk := ed25519.GenPrivKey()
 	delAcc := s.Setup.ConvertToAccAddress([]ed25519.PrivKey{*pk})
@@ -370,9 +374,10 @@ func (s *E2ETestSuite) TestDisputes2() {
 	revealResponse, err := msgServerOracle.SubmitValue(s.Setup.Ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
-	revealTime := s.Setup.Ctx.BlockTime()
+	revealTime := s.Setup.Ctx.HeaderInfo().Time
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -385,7 +390,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(3)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	// todo: is there a getter for this ?
 	// get microreport for dispute
@@ -473,7 +479,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	revealResponse, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
-	revealTime = s.Setup.Ctx.BlockTime()
+	revealTime = s.Setup.Ctx.HeaderInfo().Time
 	revealBlock := s.Setup.Ctx.BlockHeight()
 
 	// give disputer tokens to pay for next disputes not from bond
@@ -485,7 +491,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(beforemint.Add(initCoins), s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, repsAccs[1], s.Setup.Denom))
 
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -500,7 +507,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(5)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	report.Power = repTokens.Quo(sdk.DefaultPowerReduction).Int64()
 	fee, err = s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, disputetypes.Warning)
@@ -555,7 +563,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	disputedRep, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, repsAccs[0])
 	require.NoError(err)
@@ -588,7 +597,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	revealResponse, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
-	revealTime = s.Setup.Ctx.BlockTime()
+	revealTime = s.Setup.Ctx.HeaderInfo().Time
 	revealBlock = s.Setup.Ctx.BlockHeight()
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -600,7 +609,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(7)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 
 	balBeforeDispute := repTokens
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
@@ -627,7 +636,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// send propose dispute tx
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
-	_ = s.Setup.Ctx.BlockTime()
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -638,7 +646,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(8)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	// vote from disputer
 	msgVote := disputetypes.MsgVote{
@@ -751,7 +760,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(9)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	//---------------------------------------------------------------------------
 	// Height 10 - open minor dispute, pay from not bond from reporter 1
@@ -759,7 +769,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(10)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	//---------------------------------------------------------------------------
 	// Height 11 - vote on minor dispute
@@ -767,7 +778,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(11)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 
 	//---------------------------------------------------------------------------
 	// Height 12 - resolve dispute, direct reveal again
@@ -775,53 +787,53 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(12)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	//---------------------------------------------------------------------------
 	// Height 13 - open major dispute, pay from bond from reporter 1
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(13)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	//---------------------------------------------------------------------------
 	// Height 14 - vote on major dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(14)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	//---------------------------------------------------------------------------
 	// Height 15 - resolve dispute, direct reveal again
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(15)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	//---------------------------------------------------------------------------
 	// Height 16 - open major dispute, pay from not bond from reporter 1
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(16)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	//---------------------------------------------------------------------------
 	// Height 17 - vote on major dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(17)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	//---------------------------------------------------------------------------
 	// Height 18 - resolve dispute, direct reveal again
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(18)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 }

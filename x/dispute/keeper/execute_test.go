@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -26,7 +27,7 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 	}
 	vote := types.Vote{
 		Id:         dispute.DisputeId,
-		VoteEnd:    k.ctx.BlockTime(),
+		VoteEnd:    k.ctx.HeaderInfo().Time,
 		VoteResult: types.VoteResult_NO_TALLY,
 		Executed:   true,
 	}
@@ -36,7 +37,7 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 
 	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "can't execute, dispute not resolved")
 
-	dispute.DisputeEndTime = k.ctx.BlockTime()
+	dispute.DisputeEndTime = k.ctx.HeaderInfo().Time
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "can't execute, dispute not resolved")
 
@@ -46,8 +47,7 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 
 	vote.Executed = false
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
-
-	k.ctx = k.ctx.WithBlockTime(k.ctx.BlockTime().Add(1))
+	k.ctx = testutil.WithBlockTime(k.ctx, k.ctx.HeaderInfo().Time.Add(1))
 	k.NoError(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId))
 
 	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feepayer1.Bytes()), feePayers[0]))

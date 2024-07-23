@@ -102,7 +102,7 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 
 // test tipping, reporting and allocation of rewards
 func (s *IntegrationTestSuite) TestTippingReporting() {
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, time.Now())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
@@ -140,7 +140,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second*7)) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 
@@ -207,7 +207,7 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 }
 
 func (s *IntegrationTestSuite) TestMedianReports() {
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
 	tipper := s.newKeysWithTokens()
@@ -279,7 +279,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 		})
 	}
 	// advance time to expire query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second*7)) // bypass time to expire query so it can be aggregated
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.Nil(err)
 	// check median
@@ -339,7 +339,8 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 	s.NoError(err)
 	proposal1, err = s.Setup.Govkeeper.Proposals.Get(s.Setup.Ctx, proposal1.Id)
 	s.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Hour * 24 * 2))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Hour*24*2))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.HeaderInfo().Time)
 	s.NoError(gov.EndBlocker(s.Setup.Ctx, s.Setup.Govkeeper))
 	proposal1, err = s.Setup.Govkeeper.Proposals.Get(s.Setup.Ctx, proposal1.Id)
 	s.NoError(err)
@@ -596,7 +597,7 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	require := s.Require()
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{1000})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
@@ -635,7 +636,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.Nil(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, queryId, query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second*7)) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 
@@ -715,7 +716,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.Nil(err)
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[1].Bytes(), query.Id), reports[1])
 	s.Nil(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second*7)) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 

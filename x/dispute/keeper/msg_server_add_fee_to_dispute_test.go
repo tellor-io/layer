@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -36,7 +37,7 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	dispute.FeeTotal = dispute.SlashAmount
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 
-	res, err = k.msgServer.AddFeeToDispute(k.ctx.WithBlockTime(time.Now()), &msg)
+	res, err = k.msgServer.AddFeeToDispute(testutil.WithBlockTime(k.ctx, time.Now()), &msg)
 	k.ErrorContains(err, "dispute time expired")
 	k.Nil(res)
 

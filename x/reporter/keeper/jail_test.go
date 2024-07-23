@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -20,13 +21,13 @@ func TestJailReporter(t *testing.T) {
 	err := k.Reporters.Set(ctx, addr, reporter)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 10))
+	ctx = testutil.WithBlockTime(ctx, updatedAt.Add(time.Second*10))
 	jailedDuration := int64(100)
 
 	err = k.JailReporter(ctx, addr, jailedDuration)
 	require.NoError(t, err)
 
-	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 15))
+	ctx = testutil.WithBlockTime(ctx, updatedAt.Add(time.Second*15))
 	updatedReporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.Equal(t, true, updatedReporter.Jailed)
@@ -40,14 +41,14 @@ func TestUnJailReporter(t *testing.T) {
 	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
 	reporter.Jailed = true
 	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
-	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
+	ctx = testutil.WithBlockTime(ctx, jailedAt.Add(time.Second*50))
 
 	// test unjailing reporter before the JailedUntil time
 	err := k.UnjailReporter(ctx, addr, reporter)
 	require.Error(t, err)
 
 	// test unjailing after enough time has passed
-	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 505))
+	ctx = testutil.WithBlockTime(ctx, jailedAt.Add(time.Second*505))
 	err = k.UnjailReporter(ctx, addr, reporter)
 	require.NoError(t, err)
 

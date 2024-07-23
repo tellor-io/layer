@@ -159,7 +159,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// Height 2
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(commitHeight + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -187,7 +187,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(revealResponse1)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
@@ -233,7 +233,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// Height 3
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -262,7 +262,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(revealResponse2)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
@@ -377,7 +377,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(revealResponse1)
 
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -456,7 +456,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(revealTrb)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = testutil.WithBlockTime(s.Setup.Ctx, s.Setup.Ctx.HeaderInfo().Time.Add(7*time.Second))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// create get aggregated report query

@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
@@ -160,7 +161,7 @@ func TestClaimDeposit(t *testing.T) {
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	aggregateTimestamp := sdkCtx.BlockTime()
+	aggregateTimestamp := sdkCtx.HeaderInfo().Time
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -186,7 +187,8 @@ func TestClaimDeposit(t *testing.T) {
 		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(67),
 	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+
+	sdkCtx = testutil.WithBlockTime(sdkCtx, sdkCtx.HeaderInfo().Time.Add(13*time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
@@ -223,7 +225,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	aggregateTimestamp := sdkCtx.BlockTime()
+	aggregateTimestamp := sdkCtx.HeaderInfo().Time
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -250,7 +252,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 		ReporterPower:        int64(90 * 1e6),
 		Flagged:              true,
 	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	sdkCtx = testutil.WithBlockTime(sdkCtx, sdkCtx.HeaderInfo().Time.Add(13*time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
@@ -270,7 +272,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	aggregateTimestamp := sdkCtx.BlockTime()
+	aggregateTimestamp := sdkCtx.HeaderInfo().Time
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -297,7 +299,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(66),
 	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	sdkCtx = testutil.WithBlockTime(sdkCtx, sdkCtx.HeaderInfo().Time.Add(13*time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
@@ -317,7 +319,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	aggregateTimestamp := sdkCtx.BlockTime()
+	aggregateTimestamp := sdkCtx.HeaderInfo().Time
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -343,7 +345,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(90 * 1e6),
 	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
+	sdkCtx = testutil.WithBlockTime(sdkCtx, sdkCtx.HeaderInfo().Time.Add(11*time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
@@ -363,7 +365,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	aggregateTimestamp := sdkCtx.BlockTime()
+	aggregateTimestamp := sdkCtx.HeaderInfo().Time
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
 	Uint256Type, err := abi.NewType("uint256", "", nil)
@@ -389,7 +391,7 @@ func TestClaimDepositSpam(t *testing.T) {
 		AggregateReportIndex: int64(0),
 		ReporterPower:        int64(67),
 	}
-	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	sdkCtx = testutil.WithBlockTime(sdkCtx, sdkCtx.HeaderInfo().Time.Add(13*time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)

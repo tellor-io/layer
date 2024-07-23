@@ -20,7 +20,7 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 		return types.ErrReporterJailed.Wrapf("cannot jail already jailed reporter, %v", reporter)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
-	reporter.JailedUntil = sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration))
+	reporter.JailedUntil = sdkctx.HeaderInfo().Time.Add(time.Second * time.Duration(jailDuration))
 	reporter.Jailed = true
 	err = k.Reporters.Set(ctx, reporterAddr, reporter)
 	if err != nil {
@@ -43,7 +43,7 @@ func (k Keeper) UnjailReporter(ctx context.Context, reporterAddr sdk.AccAddress,
 	}
 
 	sdkctx := sdk.UnwrapSDKContext(ctx)
-	if sdkctx.BlockTime().Before(reporter.JailedUntil) {
+	if sdkctx.HeaderInfo().Time.Before(reporter.JailedUntil) {
 		return types.ErrReporterJailed.Wrapf("cannot unjail reporter before jail time is up, %v", reporter.JailedUntil)
 	}
 

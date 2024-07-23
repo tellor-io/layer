@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -19,7 +20,7 @@ import (
 
 func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
 	// get the current query in cycle list
-	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = testutil.WithBlockTime(s.ctx, time.Now())
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 	salt, err := oracleutils.Salt(32)
@@ -73,7 +74,7 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 }
 
 func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
-	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = testutil.WithBlockTime(s.ctx, time.Now())
 	// commit query in cycle list
 	queryData1, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
@@ -73,7 +74,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		Height:            10,
 	}
 
-	s.ctx = s.ctx.WithBlockTime(timestamp)
+	s.ctx = testutil.WithBlockTime(s.ctx, timestamp)
 	s.ctx = s.ctx.WithBlockHeight(10)
 	err = s.oracleKeeper.SetAggregate(s.ctx, report)
 	if err != nil {
@@ -85,7 +86,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 
 func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	timestamp := time.Now()
-	ctx := s.ctx.WithBlockTime(timestamp)
+	ctx := testutil.WithBlockTime(s.ctx, timestamp)
 
 	// setup
 	rep1 := sample.AccAddressBytes()
@@ -169,7 +170,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 	reporter := sample.AccAddressBytes()
 
 	timestamp := time.Now()
-	s.ctx = s.ctx.WithBlockTime(timestamp)
+	s.ctx = testutil.WithBlockTime(s.ctx, timestamp)
 	report := &types.Aggregate{
 		QueryId:           queryId,
 		AggregateValue:    encodeValue(96.50),
@@ -200,12 +201,12 @@ func (s *KeeperTestSuite) TestGetDataBefore() {
 	goback := reportedAt.Unix() - (60 * 5)
 	earlyQuery := time.Unix(goback, 0)
 
-	s.ctx = s.ctx.WithBlockTime(queryAt)
+	s.ctx = testutil.WithBlockTime(s.ctx, queryAt)
 	retAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, queryAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
 
-	s.ctx = s.ctx.WithBlockTime(reportedAt)
+	s.ctx = testutil.WithBlockTime(s.ctx, reportedAt)
 	nilAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, earlyQuery)
 	s.Nil(nilAggregate)
 	s.NotNil(err)
@@ -216,7 +217,7 @@ func (s *KeeperTestSuite) TestGetCurrentValueForQueryId() {
 	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
 	s.NoError(err)
 
-	s.ctx = s.ctx.WithBlockTime(reportedAt)
+	s.ctx = testutil.WithBlockTime(s.ctx, reportedAt)
 	retAggregate, err := s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, qId)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
@@ -407,7 +408,7 @@ func (s *KeeperTestSuite) TestGetAggregateBefore() {
 
 	fastForward := reportedAt.Unix() + 240
 	queryAt := time.Unix(fastForward, 0)
-	s.ctx = s.ctx.WithBlockTime(queryAt)
+	s.ctx = testutil.WithBlockTime(s.ctx, queryAt)
 
 	retAgg, _, err := s.oracleKeeper.GetAggregateBefore(s.ctx, qId, queryAt)
 	s.NoError(err)
@@ -421,7 +422,7 @@ func (s *KeeperTestSuite) TestGetAggregateByTimestamp() {
 
 	// fastForward := reportedAt.Unix() + 240
 	// queryAt := time.Unix(fastForward, 0)
-	s.ctx = s.ctx.WithBlockTime(reportedAt)
+	s.ctx = testutil.WithBlockTime(s.ctx, reportedAt)
 
 	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, reportedAt)
 	s.NoError(err)
