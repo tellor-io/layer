@@ -13,18 +13,19 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
     beforeEach(async function () {
         accounts = await ethers.getSigners();
         guardian = accounts[10]
-        initialValAddrs = [await accounts[1].getAddress(), await accounts[2].getAddress()]
+        initialValAddrs = [await accounts[1].address, await accounts[2].address]
         initialPowers = [1, 2]
         threshold = 2
         blocky = await h.getBlock()
         valTimestamp = blocky.timestamp - 2
         valCheckpoint = h.calculateValCheckpoint(initialValAddrs, initialPowers, threshold, valTimestamp)
-        bridge = await ethers.deployContract("BlobstreamO", [threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint,await guardian.getAddress()]);
-        bridgeCaller = await ethers.deployContract("BridgeCaller", [await bridge.getAddress()]);
+        bridge = await ethers.deployContract("BlobstreamO", [guardian.address]);
+        await bridge.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
+        bridgeCaller = await ethers.deployContract("BridgeCaller", [bridge.address]);
     });
     it("constructor", async function () {
         assert.equal(await bridge.powerThreshold(), threshold)
-        assert.equal(await bridge.guardian(), await accounts[10].getAddress())
+        assert.equal(await bridge.guardian(), await accounts[10].address)
         assert.equal(await bridge.validatorTimestamp(), valTimestamp)
         assert.equal(await bridge.unbondingPeriod(), UNBONDING_PERIOD)
         assert.equal(await bridge.lastValidatorSetCheckpoint(), valCheckpoint)
@@ -33,10 +34,9 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
     it("query layer api, deploy and verify with real params", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
-        console.log("valsetTimestamp0: ", vts0)
-        console.log("valsetCheckpointParams0: ", vp0)
         console.log("deploying bridge...")
-        bridge = await ethers.deployContract("BlobstreamO", [vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, await guardian.getAddress()]);
+        bridge = await ethers.deployContract("BlobstreamO", [guardian.address]);
+        await bridge.init(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint)
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
         valSet0 = await h.getValset(vp0.timestamp)
@@ -72,10 +72,11 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
     it("optimistic value", async function () {
         // request new attestations on layer and update PAST_REPORT_TS
-        const PAST_REPORT_TS = 1717589054
+        const PAST_REPORT_TS = 1721762307161
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
-        bridge = await ethers.deployContract("BlobstreamO", [vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint, guardian.address]);
+        bridge = await ethers.deployContract("BlobstreamO", [guardian.address]);
+        await bridge.init(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint)
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
         valSet0 = await h.getValset(vp0.timestamp)
@@ -85,7 +86,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
         // request new attestations
         currentBlock = await h.getBlock()
         currentTime = currentBlock.timestamp
-        currentTime = currentTime - 60
+        currentTime = (currentTime - 60) * 1000
         pastReport = await h.getDataBefore(ETH_USD_QUERY_ID, currentTime)
         try {
             snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, PAST_REPORT_TS)

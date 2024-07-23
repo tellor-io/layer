@@ -28,7 +28,7 @@ describe("TokenBridge - Function Tests", async function () {
         initialPowers = [1, 2]
         threshold = 2
         blocky = await h.getBlock()
-        valTimestamp = blocky.timestamp - 2
+        valTimestamp = (blocky.timestamp - 2) * 1000
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         // deploy contracts
@@ -60,11 +60,12 @@ describe("TokenBridge - Function Tests", async function () {
         await h.expectThrow(tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)) // not approved
         await token.approve(await tbridge.address, h.toWei("100"))
         await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
+        await h.advanceTime(43200)
         value = h.getWithdrawValue(EVM_RECIPIENT,LAYER_RECIPIENT,20)
         blocky = await h.getBlock()
-        timestamp = blocky.timestamp - 2
+        timestamp = (blocky.timestamp - 43200) * 1000
         aggregatePower = 3
-        attestTimestamp = timestamp + 1
+        attestTimestamp = blocky.timestamp * 1000
         previousTimestamp = 0
         nextTimestamp = 0
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
@@ -92,7 +93,6 @@ describe("TokenBridge - Function Tests", async function () {
             nextTimestamp,
             attestTimestamp
         )
-        await h.advanceTime(43200)
         await tbridge.withdrawFromLayer(
             oracleDataStruct,
             currentValSetArray,
@@ -163,9 +163,9 @@ describe("TokenBridge - Function Tests", async function () {
         let _addy = await accounts[2].address
         value = h.getWithdrawValue(_addy,LAYER_RECIPIENT,40000000)
         blocky = await h.getBlock()
-        timestamp = blocky.timestamp - 2
+        timestamp = (blocky.timestamp - 2) * 1000
         aggregatePower = 3
-        attestTimestamp = timestamp + 1
+        attestTimestamp = (blocky.timestamp + 43200) * 1000
         previousTimestamp = 0
         nextTimestamp = 0
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
@@ -268,8 +268,8 @@ describe("TokenBridge - Function Tests", async function () {
             // guardian reset valset, past unbonding period
             blocky = await h.getBlock()
             validatorTimestamp = await blobstream.validatorTimestamp()
-            if (blocky.timestamp - validatorTimestamp > UNBONDING_PERIOD) {
-                valTimestamp = blocky.timestamp - 2
+            if (blocky.timestamp - (validatorTimestamp / 1000) > UNBONDING_PERIOD) {
+                valTimestamp = (blocky.timestamp - 2) * 1000
                 newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
                 valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
                 await blobstream.connect(guardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
@@ -283,8 +283,8 @@ describe("TokenBridge - Function Tests", async function () {
             withdrawQueryId0 = h.hash(withdrawQueryData0)
             withdrawQueryId1 = h.hash(withdrawQueryData1)
             blocky = await h.getBlock()
-            reportTimestamp = blocky.timestamp - 84600
-            attestationTimestamp = blocky.timestamp
+            reportTimestamp = (blocky.timestamp - 84600) * 1000
+            attestationTimestamp = blocky.timestamp * 1000
             dataDigest0 = await h.getDataDigest(
                 withdrawQueryId0,
                 withdrawValue0,

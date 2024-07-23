@@ -34,7 +34,7 @@ describe("Blobstream - Function Tests", async function () {
         initialPowers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         threshold = 2
         blocky = await h.getBlock()
-        valTimestamp = blocky.timestamp - 2
+        valTimestamp = (blocky.timestamp - 2) * 1000
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         // deploy contracts
@@ -81,7 +81,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
         blocky = await h.getBlock()
-        newValTimestamp = blocky.timestamp - 1
+        newValTimestamp = (blocky.timestamp - 1) * 1000
         newValCheckpoint = await h.calculateValCheckpoint(newValHash,newThreshold, newValTimestamp)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await h.layerSign(newValCheckpoint, val1.privateKey)
@@ -100,7 +100,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold = 5
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
         blocky = await h.getBlock()
-        newValTimestamp = blocky.timestamp - 1
+        newValTimestamp = (blocky.timestamp - 1) * 1000
         newValCheckpoint = h.calculateValCheckpoint(newValHash, newThreshold, newValTimestamp)
         sig1 = await h.layerSign(newValCheckpoint, val1.privateKey)
         sig2 = await h.layerSign(newValCheckpoint, val2.privateKey)
@@ -113,9 +113,9 @@ describe("Blobstream - Function Tests", async function () {
         queryId = h.hash("myquery")
         value = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
-        timestamp = blocky.timestamp - 2
+        timestamp = (blocky.timestamp - 2) * 1000
         aggregatePower = 3
-        attestTimestamp = timestamp + 1
+        attestTimestamp = timestamp + 1000
         previousTimestamp = 0
         nextTimestamp = 0
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
@@ -157,7 +157,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
         blocky = await h.getBlock()
-        newValTimestamp = blocky.timestamp - 1
+        newValTimestamp = (blocky.timestamp - 1) * 1000
         newValCheckpoint = h.calculateValCheckpoint(newValHash, newThreshold, newValTimestamp)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await h.layerSign(newValCheckpoint, val1.privateKey)
@@ -171,7 +171,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold2 = 15
         newValHash2 = await h.calculateValHash(newValAddrs2, newPowers2)
         blocky = await h.getBlock()
-        newValTimestamp2 = blocky.timestamp - 1
+        newValTimestamp2 = (blocky.timestamp - 1) * 1000
         newValCheckpoint2 = h.calculateValCheckpoint(newValHash2, newThreshold2, newValTimestamp2)
         currentValSetArray2 = await h.getValSetStructArray(newValAddrs, newPowers)
         sig1 = await h.layerSign(newValCheckpoint2, val1.privateKey)
@@ -185,9 +185,9 @@ describe("Blobstream - Function Tests", async function () {
         queryId1 = h.hash("eth-usd")
         value1 = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
-        timestamp1 = blocky.timestamp - 2 // report timestamp
+        timestamp1 = (blocky.timestamp - 2) * 1000 // report timestamp
         aggregatePower1 = 3
-        attestTimestamp1 = timestamp1 + 1
+        attestTimestamp1 = timestamp1 + 1000
         previousTimestamp1 = 0
         nextTimestamp1 = 0
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
@@ -226,7 +226,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold = 4
         newValHash = await h.calculateValHash(newValAddrs, newPowers)
         blocky = await h.getBlock()
-        newValTimestamp = blocky.timestamp - 1
+        newValTimestamp = (blocky.timestamp - 1) * 1000
         newValCheckpoint = h.calculateValCheckpoint(newValHash,newThreshold, newValTimestamp)
         sig1 = h.layerSign(newValCheckpoint, val1.privateKey)
         sig2 = h.layerSign(newValCheckpoint, val2.privateKey)
@@ -236,9 +236,9 @@ describe("Blobstream - Function Tests", async function () {
         // verify oracle data
         value2 = abiCoder.encode(["uint256"], [3000])
         blocky = await h.getBlock()
-        timestamp2 = blocky.timestamp - 2
+        timestamp2 = (blocky.timestamp - 2) * 1000
         aggregatePower2 = 6
-        attestTimestamp2 = timestamp2 + 1
+        attestTimestamp2 = timestamp2 + 1000
         previousTimestamp2 = timestamp1
         nextTimestamp2 = 0
         valCheckpoint2 = newValCheckpoint
@@ -277,7 +277,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold2 = 15
         newValHash2 = await h.calculateValHash(newValAddrs2, newPowers2)
         blocky = await h.getBlock()
-        newValTimestamp2 = blocky.timestamp - 1
+        newValTimestamp2 = (blocky.timestamp - 1) * 1000
         newValCheckpoint2 = h.calculateValCheckpoint(newValHash2, newThreshold2, newValTimestamp2)
         sig1 = await h.layerSign(newValCheckpoint2, val1.privateKey)
         sig2 = await h.layerSign(newValCheckpoint2, val2.privateKey)
@@ -288,9 +288,9 @@ describe("Blobstream - Function Tests", async function () {
         // verify oracle data
         value3 = abiCoder.encode(["uint256"], [4000])
         blocky = await h.getBlock()
-        timestamp3 = blocky.timestamp - 2
+        timestamp3 = (blocky.timestamp - 2) * 1000
         aggregatePower3 = 22
-        attestTimestamp3 = timestamp3 + 1
+        attestTimestamp3 = timestamp3 + 1000
         previousTimestamp3 = timestamp2
         nextTimestamp3 = 0
         valCheckpoint3 = newValCheckpoint2
@@ -343,7 +343,7 @@ describe("Blobstream - Function Tests", async function () {
         newValHash = await h.calculateValHash(newValAddrs, newValPowers)
         newThreshold = Math.ceil(nVals * 2 / 3)
         blocky = await h.getBlock()
-        newValTimestamp = blocky.timestamp - 1
+        newValTimestamp = (blocky.timestamp - 1) * 1000
         newValCheckpoint = h.calculateValCheckpoint(newValHash, newThreshold, newValTimestamp)
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = h.layerSign(newValCheckpoint, val1.privateKey)
@@ -355,9 +355,9 @@ describe("Blobstream - Function Tests", async function () {
         queryId1 = h.hash("eth-usd")
         value1 = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
-        timestamp1 = blocky.timestamp - 2 // report timestamp
+        timestamp1 = (blocky.timestamp - 2) * 1000 // report timestamp
         aggregatePower1 = 3
-        attestTimestamp1 = timestamp1 + 1
+        attestTimestamp1 = timestamp1 + 1000
         previousTimestamp1 = 0
         nextTimestamp1 = 0
         dataDigest1 = await h.getDataDigest(
@@ -397,7 +397,7 @@ describe("Blobstream - Function Tests", async function () {
         newThreshold2 = 15
         newValHash2 = await h.calculateValHash(newValAddrs2, newPowers2)
         blocky = await h.getBlock()
-        newValTimestamp2 = blocky.timestamp - 1
+        newValTimestamp2 = (blocky.timestamp - 1) * 1000
         newValCheckpoint2 = h.calculateValCheckpoint(newValHash2, newThreshold2, newValTimestamp2)
         sigs2 = []
         for (i = 0; i < nVals; i++) {

@@ -41,7 +41,6 @@ contract TokenBridge is LayerTransition{
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
     constructor(address _token, address _blobstream, address _tellorFlex) LayerTransition(_tellorFlex, _token){
         bridge = BlobstreamO(_blobstream);
-        // _refreshDepositLimit();
     }
 
     /// @notice claim extra withdrawals that were not fully withdrawn
@@ -89,7 +88,8 @@ contract TokenBridge is LayerTransition{
     ) external {
         require(_attestData.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawalClaimed[_depositId], "TokenBridge: withdrawal already claimed");
-        require(block.timestamp - _attestData.report.timestamp > 12 hours, "TokenBridge: premature attestation");
+        require(block.timestamp - (_attestData.report.timestamp / 1000) > 12 hours, "TokenBridge: premature attestation");
+        require(block.timestamp - (_attestData.attestationTimestamp / 1000) < 12 hours, "TokenBridge: attestation too old");
         bridge.verifyOracleData(_attestData, _valset, _sigs);
         require(_attestData.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawalClaimed[_depositId] = true;    
