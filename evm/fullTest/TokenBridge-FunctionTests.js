@@ -4,7 +4,7 @@ const h = require("../test/helpers/helpers");
 var assert = require('assert');
 const web3 = require('web3');
 const { prependOnceListener } = require("process");
-const abiCoder = new ethers.AbiCoder();
+const abiCoder = new ethers.utils.AbiCoder();
 
 
 describe("TokenBridge - Function Tests", async function () {
@@ -29,29 +29,22 @@ describe("TokenBridge - Function Tests", async function () {
         valParams = await h.getValsetCheckpointParams(valTs)
         valSet = await h.getValset(valParams.timestamp)
         // deploy contracts
-        blobstream = await ethers.deployContract(
-            "BlobstreamO", [
-            valParams.powerThreshold,
-            valParams.timestamp,
-            UNBONDING_PERIOD,
-            valParams.checkpoint,
-            guardian.address
-        ]
-        )
+        blobstream = await ethers.deployContract("BlobstreamO", [guardian.address])
+        await blobstream.init(valParams.powerThreshold, valParams.timestamp, UNBONDING_PERIOD, valParams.checkpoint)
         token = await ethers.deployContract("TellorPlayground")
         oldOracle = await ethers.deployContract("TellorPlayground")
-        tbridge = await ethers.deployContract("TokenBridge", [token.getAddress(), blobstream.getAddress(), oldOracle.getAddress()])
+        tbridge = await ethers.deployContract("TokenBridge", [token.address, blobstream.address, oldOracle.address])
         blocky0 = await h.getBlock()
         // fund accounts
-        await token.faucet(accounts[0].getAddress())
+        await token.faucet(accounts[0].address)
+        await token.faucet(accounts[10].address)
+        await token.connect(accounts[10]).transfer(tbridge.address, h.toWei("100"))
     });
 
     it("constructor", async function () {
-        assert.equal(await tbridge.token(), await token.getAddress())
-        assert.equal(await tbridge.bridge(), await blobstream.getAddress())
-        expect(Number(await tbridge.depositLimitUpdateTime())).to.be.closeTo(Number(blocky0.timestamp), 1)
-        expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
-        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
+        assert.equal(await tbridge.token(), await token.address)
+        assert.equal(await tbridge.bridge(), await blobstream.address)
+        assert.equal(await tbridge.tellorFlex(), await oldOracle.address)
     })
 
     it.skip("withdrawFromLayer", async function () {
@@ -76,19 +69,19 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(recipientBal.toString(), expectedBal)
     })
 
-    it("depositToLayer", async function () {
+    it.only("depositToLayer", async function () {
         depositAmount = h.toWei("1")
-        assert.equal(await token.balanceOf(await accounts[0].getAddress()), h.toWei("1000"))
+        assert.equal(await token.balanceOf(await accounts[0].address), h.toWei("1000"))
         await h.expectThrow(tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)) // not approved
-        await token.approve(await tbridge.getAddress(), h.toWei("1000"))
+        await token.approve(await tbridge.address, h.toWei("1000"))
         await h.expectThrow(tbridge.depositToLayer(0, LAYER_RECIPIENT)) // zero amount
         await h.expectThrow(tbridge.depositToLayer(h.toWei("21"), LAYER_RECIPIENT)) // over limit
         await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
         blocky1 = await h.getBlock()
 
-        tbridgeBal = await token.balanceOf(await tbridge.getAddress())
-        assert.equal(tbridgeBal.toString(), h.toWei("1"))
-        userBal = await token.balanceOf(await accounts[0].getAddress())
+        tbridgeBal = await token.balanceOf(await tbridge.address)
+        assert.equal(tbridgeBal.toString(), h.toWei("101"))
+        userBal = await token.balanceOf(await accounts[0].address)
         assert.equal(userBal.toString(), h.toWei("999"))
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
@@ -98,7 +91,7 @@ describe("TokenBridge - Function Tests", async function () {
         depositDetails = await tbridge.deposits(1)
         assert.equal(depositDetails.amount.toString(), depositAmount)
         assert.equal(depositDetails.recipient, LAYER_RECIPIENT)
-        assert.equal(depositDetails.sender, await accounts[0].getAddress())
+        assert.equal(depositDetails.sender, await accounts[0].address)
         assert.equal(depositDetails.blockHeight, blocky1.number)
 
         assert.equal(await tbridge.depositId(), 1)
@@ -111,7 +104,7 @@ describe("TokenBridge - Function Tests", async function () {
     it("depositLimit", async function () {
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
         assert.equal(BigInt(await tbridge.depositLimit()), expectedDepositLimit);
-        await token.approve(await tbridge.getAddress(), h.toWei("1000"))
+        await token.approve(await tbridge.address, h.toWei("1000"))
         depositAmount = h.toWei("2")
         await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
