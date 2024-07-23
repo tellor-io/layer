@@ -207,7 +207,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
 	}
-	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
+	powerThreshold := totalPower * 2 / 3
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())

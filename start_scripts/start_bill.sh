@@ -14,6 +14,7 @@ NODE1_HOME_DIR="$HOME/.layer/alice"
 NODE2_HOME_DIR="$HOME/.layer/bill"
 NODE1_CONFIG_DIR=$NODE1_HOME_DIR"/config"
 NODE2_CONFIG_DIR=$NODE2_HOME_DIR"/config"
+AMOUNT_IN_LOYA="45000000000loya"
 
 # Define bill's node home dir to be read by reporter daemon
 export LAYERD_NODE_HOME_BILL=$NODE2_HOME_DIR
@@ -74,7 +75,7 @@ echo "Bill's validator pubkey: $BILL_VAL_PUBKEY"
 VALIDATOR_JSON=$(cat <<EOF
 {
     "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"$BILL_VAL_PUBKEY"},
-    "amount": "1000000000000loya",
+    "amount": "$AMOUNT_IN_LOYA",
     "moniker": "billmoniker",
     "identity": "optional identity signature (ex. UPort or Keybase)",
     "website": "validator's (optional) website",
