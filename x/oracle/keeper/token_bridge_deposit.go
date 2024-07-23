@@ -18,7 +18,7 @@ const (
 	TRBBridgeQueryType = "TRBBridge"
 )
 
-func (k Keeper) tokenBridgeDepositCheck(currentTime time.Time, queryData []byte) (types.QueryMeta, error) {
+func (k Keeper) TokenBridgeDepositCheck(currentTime time.Time, queryData []byte) (types.QueryMeta, error) {
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {

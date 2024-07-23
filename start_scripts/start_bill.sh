@@ -14,9 +14,10 @@ NODE1_HOME_DIR="$HOME/.layer/alice"
 NODE2_HOME_DIR="$HOME/.layer/bill"
 NODE1_CONFIG_DIR=$NODE1_HOME_DIR"/config"
 NODE2_CONFIG_DIR=$NODE2_HOME_DIR"/config"
+AMOUNT_IN_LOYA="45000000000loya"
 
 # Define bill's node home dir to be read by reporter daemon
-export LAYERD_NODE_HOME=$NODE2_HOME_DIR
+export LAYERD_NODE_HOME_BILL=$NODE2_HOME_DIR
 
 # Copy the configuration files from node 1 to node 2
 echo "Copying configuration files..."
@@ -74,7 +75,7 @@ echo "Bill's validator pubkey: $BILL_VAL_PUBKEY"
 VALIDATOR_JSON=$(cat <<EOF
 {
     "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"$BILL_VAL_PUBKEY"},
-    "amount": "1000000000000loya",
+    "amount": "$AMOUNT_IN_LOYA",
     "moniker": "billmoniker",
     "identity": "optional identity signature (ex. UPort or Keybase)",
     "website": "validator's (optional) website",
@@ -102,5 +103,5 @@ sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~
 
 # Start the second node
 echo "Starting the second node..."
-./layerd start --home $NODE2_HOME_DIR --api.enable
+./layerd start --home $NODE2_HOME_DIR --api.enable --keyring-backend $KEYRING_BACKEND --key-name bill
 

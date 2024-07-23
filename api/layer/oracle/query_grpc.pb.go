@@ -21,9 +21,9 @@ type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of GetReportsbyQid items.
-	GetReportsbyQid(ctx context.Context, in *QueryGetReportsbyQidRequest, opts ...grpc.CallOption) (*QueryGetReportsbyQidResponse, error)
-	GetReportsbyReporter(ctx context.Context, in *QueryGetReportsbyReporterRequest, opts ...grpc.CallOption) (*QueryGetReportsbyReporterResponse, error)
-	GetReportsbyReporterQid(ctx context.Context, in *QueryGetReportsbyReporterQidRequest, opts ...grpc.CallOption) (*QueryGetReportsbyQidResponse, error)
+	GetReportsbyQid(ctx context.Context, in *QueryGetReportsbyQidRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error)
+	GetReportsbyReporter(ctx context.Context, in *QueryGetReportsbyReporterRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error)
+	GetReportsbyReporterQid(ctx context.Context, in *QueryGetReportsbyReporterQidRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error)
 	// Queries a list of GetCurrentTip items.
 	GetCurrentTip(ctx context.Context, in *QueryGetCurrentTipRequest, opts ...grpc.CallOption) (*QueryGetCurrentTipResponse, error)
 	// Queries a list of GetUserTipTotal items.
@@ -31,11 +31,12 @@ type QueryClient interface {
 	// Queries a list of GetAggregatedReport items.
 	GetAggregatedReport(ctx context.Context, in *QueryGetCurrentAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
 	// Queries a list of GetAggregatedReport items.
-	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
+	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
 	CurrentCyclelistQuery(ctx context.Context, in *QueryCurrentCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryCurrentCyclelistQueryResponse, error)
+	RetrieveData(ctx context.Context, in *QueryRetrieveDataRequest, opts ...grpc.CallOption) (*QueryRetrieveDataResponse, error)
 }
 
 type queryClient struct {
@@ -55,8 +56,8 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
-func (c *queryClient) GetReportsbyQid(ctx context.Context, in *QueryGetReportsbyQidRequest, opts ...grpc.CallOption) (*QueryGetReportsbyQidResponse, error) {
-	out := new(QueryGetReportsbyQidResponse)
+func (c *queryClient) GetReportsbyQid(ctx context.Context, in *QueryGetReportsbyQidRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error) {
+	out := new(QueryMicroReportsResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetReportsbyQid", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -64,8 +65,8 @@ func (c *queryClient) GetReportsbyQid(ctx context.Context, in *QueryGetReportsby
 	return out, nil
 }
 
-func (c *queryClient) GetReportsbyReporter(ctx context.Context, in *QueryGetReportsbyReporterRequest, opts ...grpc.CallOption) (*QueryGetReportsbyReporterResponse, error) {
-	out := new(QueryGetReportsbyReporterResponse)
+func (c *queryClient) GetReportsbyReporter(ctx context.Context, in *QueryGetReportsbyReporterRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error) {
+	out := new(QueryMicroReportsResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetReportsbyReporter", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -73,8 +74,8 @@ func (c *queryClient) GetReportsbyReporter(ctx context.Context, in *QueryGetRepo
 	return out, nil
 }
 
-func (c *queryClient) GetReportsbyReporterQid(ctx context.Context, in *QueryGetReportsbyReporterQidRequest, opts ...grpc.CallOption) (*QueryGetReportsbyQidResponse, error) {
-	out := new(QueryGetReportsbyQidResponse)
+func (c *queryClient) GetReportsbyReporterQid(ctx context.Context, in *QueryGetReportsbyReporterQidRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error) {
+	out := new(QueryMicroReportsResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetReportsbyReporterQid", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -109,8 +110,8 @@ func (c *queryClient) GetAggregatedReport(ctx context.Context, in *QueryGetCurre
 	return out, nil
 }
 
-func (c *queryClient) GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error) {
-	out := new(QueryGetAggregatedReportResponse)
+func (c *queryClient) GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error) {
+	out := new(QueryGetDataBeforeResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetDataBefore", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -136,6 +137,15 @@ func (c *queryClient) CurrentCyclelistQuery(ctx context.Context, in *QueryCurren
 	return out, nil
 }
 
+func (c *queryClient) RetrieveData(ctx context.Context, in *QueryRetrieveDataRequest, opts ...grpc.CallOption) (*QueryRetrieveDataResponse, error) {
+	out := new(QueryRetrieveDataResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/RetrieveData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -143,9 +153,9 @@ type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of GetReportsbyQid items.
-	GetReportsbyQid(context.Context, *QueryGetReportsbyQidRequest) (*QueryGetReportsbyQidResponse, error)
-	GetReportsbyReporter(context.Context, *QueryGetReportsbyReporterRequest) (*QueryGetReportsbyReporterResponse, error)
-	GetReportsbyReporterQid(context.Context, *QueryGetReportsbyReporterQidRequest) (*QueryGetReportsbyQidResponse, error)
+	GetReportsbyQid(context.Context, *QueryGetReportsbyQidRequest) (*QueryMicroReportsResponse, error)
+	GetReportsbyReporter(context.Context, *QueryGetReportsbyReporterRequest) (*QueryMicroReportsResponse, error)
+	GetReportsbyReporterQid(context.Context, *QueryGetReportsbyReporterQidRequest) (*QueryMicroReportsResponse, error)
 	// Queries a list of GetCurrentTip items.
 	GetCurrentTip(context.Context, *QueryGetCurrentTipRequest) (*QueryGetCurrentTipResponse, error)
 	// Queries a list of GetUserTipTotal items.
@@ -153,11 +163,12 @@ type QueryServer interface {
 	// Queries a list of GetAggregatedReport items.
 	GetAggregatedReport(context.Context, *QueryGetCurrentAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error)
 	// Queries a list of GetAggregatedReport items.
-	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetAggregatedReportResponse, error)
+	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
 	CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error)
+	RetrieveData(context.Context, *QueryRetrieveDataRequest) (*QueryRetrieveDataResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -168,13 +179,13 @@ type UnimplementedQueryServer struct {
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
-func (UnimplementedQueryServer) GetReportsbyQid(context.Context, *QueryGetReportsbyQidRequest) (*QueryGetReportsbyQidResponse, error) {
+func (UnimplementedQueryServer) GetReportsbyQid(context.Context, *QueryGetReportsbyQidRequest) (*QueryMicroReportsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReportsbyQid not implemented")
 }
-func (UnimplementedQueryServer) GetReportsbyReporter(context.Context, *QueryGetReportsbyReporterRequest) (*QueryGetReportsbyReporterResponse, error) {
+func (UnimplementedQueryServer) GetReportsbyReporter(context.Context, *QueryGetReportsbyReporterRequest) (*QueryMicroReportsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReportsbyReporter not implemented")
 }
-func (UnimplementedQueryServer) GetReportsbyReporterQid(context.Context, *QueryGetReportsbyReporterQidRequest) (*QueryGetReportsbyQidResponse, error) {
+func (UnimplementedQueryServer) GetReportsbyReporterQid(context.Context, *QueryGetReportsbyReporterQidRequest) (*QueryMicroReportsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReportsbyReporterQid not implemented")
 }
 func (UnimplementedQueryServer) GetCurrentTip(context.Context, *QueryGetCurrentTipRequest) (*QueryGetCurrentTipResponse, error) {
@@ -186,7 +197,7 @@ func (UnimplementedQueryServer) GetUserTipTotal(context.Context, *QueryGetUserTi
 func (UnimplementedQueryServer) GetAggregatedReport(context.Context, *QueryGetCurrentAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAggregatedReport not implemented")
 }
-func (UnimplementedQueryServer) GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetAggregatedReportResponse, error) {
+func (UnimplementedQueryServer) GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataBefore not implemented")
 }
 func (UnimplementedQueryServer) GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error) {
@@ -194,6 +205,9 @@ func (UnimplementedQueryServer) GetTimeBasedRewards(context.Context, *QueryGetTi
 }
 func (UnimplementedQueryServer) CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CurrentCyclelistQuery not implemented")
+}
+func (UnimplementedQueryServer) RetrieveData(context.Context, *QueryRetrieveDataRequest) (*QueryRetrieveDataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RetrieveData not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -388,6 +402,24 @@ func _Query_CurrentCyclelistQuery_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_RetrieveData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRetrieveDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RetrieveData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/RetrieveData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RetrieveData(ctx, req.(*QueryRetrieveDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -434,6 +466,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CurrentCyclelistQuery",
 			Handler:    _Query_CurrentCyclelistQuery_Handler,
+		},
+		{
+			MethodName: "RetrieveData",
+			Handler:    _Query_RetrieveData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

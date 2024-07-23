@@ -201,12 +201,12 @@ func (s *KeeperTestSuite) TestGetDataBefore() {
 	earlyQuery := time.Unix(goback, 0)
 
 	s.ctx = s.ctx.WithBlockTime(queryAt)
-	retAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, queryAt)
+	retAggregate, _, err := s.oracleKeeper.GetAggregateBefore(s.ctx, qId, queryAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
 
 	s.ctx = s.ctx.WithBlockTime(reportedAt)
-	nilAggregate, err := s.oracleKeeper.GetDataBefore(s.ctx, qId, earlyQuery)
+	nilAggregate, _, err := s.oracleKeeper.GetAggregateBefore(s.ctx, qId, earlyQuery)
 	s.Nil(nilAggregate)
 	s.NotNil(err)
 }
@@ -426,4 +426,15 @@ func (s *KeeperTestSuite) TestGetAggregateByTimestamp() {
 	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, reportedAt)
 	s.NoError(err)
 	s.Equal(aggregate, retAgg)
+}
+
+func (s *KeeperTestSuite) TestGetAggregateByIndex() {
+	reportedAt := time.Now()
+	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
+	s.NoError(err)
+
+	retAgg, retTimestamp, err := s.oracleKeeper.GetAggregateByIndex(s.ctx, qId, 0)
+	s.NoError(err)
+	s.Equal(aggregate, retAgg)
+	s.Equal(reportedAt.Unix(), retTimestamp.Unix())
 }

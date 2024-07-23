@@ -103,7 +103,7 @@ func DecodeParamtypes(data []byte, component []*ABIComponent) (string, error) {
 		return "", fmt.Errorf("failed to unpack query data into its fields: %w", err)
 	}
 
-	return convertToJSON(result)
+	return ConvertToJSON(result)
 }
 
 func convertToArgumentMarshaling(comp ABIComponent) abi.ArgumentMarshaling {

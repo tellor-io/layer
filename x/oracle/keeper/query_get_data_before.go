@@ -10,21 +10,25 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (q Querier) GetDataBefore(goCtx context.Context, req *types.QueryGetDataBeforeRequest) (*types.QueryGetAggregatedReportResponse, error) {
+func (k Querier) GetDataBefore(ctx context.Context, req *types.QueryGetDataBeforeRequest) (*types.QueryGetDataBeforeResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	qId, err := utils.QueryBytesFromString(req.QueryId)
+	qIdBz, err := utils.QueryBytesFromString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid queryId")
+	}
+
+	aggregate, timestamp, err := k.keeper.GetAggregateBefore(ctx, qIdBz, time.UnixMilli(req.Timestamp))
 	if err != nil {
 		return nil, err
 	}
 
-	t := time.Unix(req.Timestamp, 0)
-	report, err := q.keeper.GetDataBefore(goCtx, qId, t)
-	if err != nil {
-		return nil, err
-	}
+	timeUnix := timestamp.UnixMilli()
 
-	return &types.QueryGetAggregatedReportResponse{Report: report}, nil
+	return &types.QueryGetDataBeforeResponse{
+		Aggregate: aggregate,
+		Timestamp: uint64(timeUnix),
+	}, nil
 }

@@ -1,49 +1,53 @@
 package keeper_test
 
 import (
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/tellor-io/layer/utils"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-// TODO: fix all of these to match bytes
+const (
+	queryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	queryType = "SpotPrice"
+)
 
 func (s *KeeperTestSuite) TestGetCycleList() {
-	// require := s.Require()
+	require := s.Require()
+	k := s.oracleKeeper
 
-	// list, err := s.oracleKeeper.GetCyclelist(s.ctx)
-	// require.NoError(err)
-	// require.Contains(list, ethQueryData[2:])
-	// require.Contains(list, btcQueryData[2:])
-	// require.Contains(list, trbQueryData[2:])
+	list, err := k.GetCyclelist(s.ctx)
+	require.NoError(err)
+	require.Equal(len(list), 3)
+
+	require.NoError(k.Cyclelist.Set(s.ctx, []byte("queryId"), []byte("queryData")))
+	list, err = k.GetCyclelist(s.ctx)
+	require.NoError(err)
+	require.Equal(len(list), 4)
 }
 
 func (s *KeeperTestSuite) TestRotateQueries() {
 	require := s.Require()
+	k := s.oracleKeeper
 
-	// todo: match the bytes
-	list, err := s.oracleKeeper.GetCyclelist(s.ctx)
+	list, err := k.GetCyclelist(s.ctx)
 	require.NoError(err)
 
-	// first query from cycle list (trb)
-	firstQuery, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	firstQuery, err := k.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
+	require.NoError(k.RotateQueries(s.ctx))
 	require.Contains(list, firstQuery)
-	// require.Equal(firstQuery, trbQueryData[2:])
 
-	// second query from cycle list (eth)
-	err = s.oracleKeeper.RotateQueries(s.ctx)
-	require.NoError(err)
-	secondQuery, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	secondQuery, err := k.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
 	require.Contains(list, secondQuery)
-	// require.Equal(secondQuery, ethQueryData[2:])
+	require.NotEqual(firstQuery, secondQuery)
+	require.NoError(k.RotateQueries(s.ctx))
 
-	// third query from cycle list (btc)
-	err = s.oracleKeeper.RotateQueries(s.ctx)
-	require.NoError(err)
-	thirdQuery, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
+	thirdQuery, err := k.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)
 	require.Contains(list, thirdQuery)
-	// require.Equal(thirdQuery, btcQueryData[2:])
+	require.NotEqual(firstQuery, thirdQuery)
+	require.NotEqual(secondQuery, thirdQuery)
 
 	// Rotate through a couple times
 	for i := 0; i < 10; i++ {
@@ -55,33 +59,58 @@ func (s *KeeperTestSuite) TestRotateQueries() {
 	}
 }
 
+func (s *KeeperTestSuite) TestGetCurrentQueryInCycleList() {
+	require := s.Require()
+	k := s.oracleKeeper
+	_, err := k.GetCurrentQueryInCycleList(s.ctx)
+	require.NoError(err)
+}
+
 func (s *KeeperTestSuite) TestInitCycleListQuery() {
-	// require := s.Require()
+	require := s.Require()
+	k := s.oracleKeeper
+	rk := s.registryKeeper
+	ctx := s.ctx
 
-	// startingList, err := s.oracleKeeper.GetCyclelist(s.ctx)
-	// require.NoError(err)
-	// require.Contains(startingList, ethQueryData)
-	// require.Contains(startingList, btcQueryData)
-	// require.Contains(startingList, trbQueryData)
-	// newQueryData := "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657469000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	ampleforthQData := "0x000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000019416d706c65666f727468437573746f6d53706f74507269636500000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000"
+	ampleforthQDataBytes := hexutil.MustDecode(ampleforthQData)
+	queries := [][]byte{
+		ampleforthQDataBytes,
+	}
+	rk.On("GetSpec", ctx, "AmpleforthCustomSpotPrice").Return(regtypes.DataSpec{}, nil)
+	require.NoError(k.InitCycleListQuery(s.ctx, queries))
 
-	// s.oracleKeeper.InitCycleListQuery(s.ctx, []string{newQueryData})
-	// newList, err := s.oracleKeeper.GetCyclelist(s.ctx)
-	// fmt.Println(newList)
-	// require.NoError(err)
-	// require.Contains(newList, newQueryData)
+	cycleList, err := s.oracleKeeper.GetCyclelist(s.ctx)
+	require.NoError(err)
+	require.Equal(len(cycleList), 4)
+	require.Contains(cycleList, ampleforthQDataBytes)
+
+	// try to register a query that already exists
+	err = k.InitCycleListQuery(s.ctx, queries)
+	require.NoError(err)
+	cycleList, err = s.oracleKeeper.GetCyclelist(s.ctx)
+	require.NoError(err)
+	require.Equal(len(cycleList), 4)
+	require.Contains(cycleList, ampleforthQDataBytes)
 }
 
 func (s *KeeperTestSuite) TestGenesisCycleList() {
 	require := s.Require()
+	k := s.oracleKeeper
+	rk := s.registryKeeper
+	ctx := s.ctx
 
-	err := s.oracleKeeper.GenesisCycleList(s.ctx, oracletypes.InitialCycleList())
+	querydataBytes := hexutil.MustDecode(queryData)
+	queryType := "AmpleforthCustomSpotPrice"
+	queries := [][]byte{
+		querydataBytes,
+	}
+	rk.On("GetSpec", ctx, queryType).Return(regtypes.DataSpec{}, nil)
+
+	err := k.GenesisCycleList(s.ctx, queries)
 	require.NoError(err)
 
-	cycleList, err := s.oracleKeeper.GetCyclelist(s.ctx)
+	cycleList, err := k.Cyclelist.Get(s.ctx, utils.QueryIDFromData(querydataBytes))
 	require.NoError(err)
-	_ = cycleList
-	// require.Contains(cycleList, ethQueryData[2:])
-	// require.Contains(cycleList, btcQueryData[2:])
-	// require.Contains(cycleList, trbQueryData[2:])
+	require.Equal(cycleList, querydataBytes)
 }

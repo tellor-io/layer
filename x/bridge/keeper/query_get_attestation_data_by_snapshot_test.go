@@ -36,7 +36,9 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.Nil(t, getAttDataBySnapResponse)
 
 	queryId := []byte("queryId")
-	timestampTime := time.Unix(100, 0)
+
+	timestampTime := time.Date(1969, time.December, 31, 18, 1, 40, 0, time.Local)
+
 	aggReport := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "1",
@@ -47,11 +49,12 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.NoError(t, err)
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, types.AttestationSnapshotData{
 		ValidatorCheckpoint:  []byte("checkpoint"),
-		AttestationTimestamp: timestampTime.Unix() - 1,
-		PrevReportTimestamp:  timestampTime.Unix() - 2,
-		NextReportTimestamp:  timestampTime.Unix() + 1,
-		QueryId:              queryId,
-		Timestamp:            timestampTime.Unix(),
+		AttestationTimestamp: timestampTime.UnixMilli() + 1,
+		PrevReportTimestamp:  timestampTime.UnixMilli() - 2,
+		NextReportTimestamp:  timestampTime.UnixMilli() + 2,
+
+		QueryId:   queryId,
+		Timestamp: timestampTime.UnixMilli(),
 	})
 	require.NoError(t, err)
 
@@ -60,10 +63,11 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, getAttDataBySnapResponse.QueryId, hex.EncodeToString(aggReport.QueryId))
-	require.Equal(t, getAttDataBySnapResponse.Timestamp, strconv.FormatInt(timestampTime.Unix(), 10))
+	require.Equal(t, getAttDataBySnapResponse.Timestamp, strconv.FormatInt(timestampTime.UnixMilli(), 10))
 	require.Equal(t, getAttDataBySnapResponse.AggregateValue, aggReport.AggregateValue)
 	require.Equal(t, getAttDataBySnapResponse.AggregatePower, strconv.FormatInt(aggReport.ReporterPower, 10))
 	require.Equal(t, getAttDataBySnapResponse.Checkpoint, hex.EncodeToString([]byte("checkpoint")))
-	require.Equal(t, getAttDataBySnapResponse.PreviousReportTimestamp, strconv.FormatInt(timestampTime.Unix()-2, 10))
-	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatInt(timestampTime.Unix()+1, 10))
+	require.Equal(t, getAttDataBySnapResponse.PreviousReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()-2, 10))
+
+	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatInt(timestampTime.UnixMilli()+2, 10))
 }

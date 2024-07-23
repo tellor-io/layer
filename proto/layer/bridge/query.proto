@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package layer.bridge;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
 import "layer/bridge/params.proto";
 import "layer/oracle/aggregate.proto";
 
@@ -12,68 +12,62 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
 // Query defines the gRPC querier service.
 service Query {
-  
   // Parameters queries the parameters of the module.
-  rpc Params (QueryParamsRequest) returns (QueryParamsResponse) {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/layer/bridge/params";
-  
   }
-  
+
   // Queries a list of GetEvmValidators items.
-  rpc GetEvmValidators (QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
+  rpc GetEvmValidators(QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_validators";
   }
 
-  rpc GetValidatorCheckpoint (QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
+  rpc GetValidatorCheckpoint(QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_checkpoint";
   }
 
-  rpc GetValidatorCheckpointParams (QueryGetValidatorCheckpointParamsRequest) returns (QueryGetValidatorCheckpointParamsResponse) {
+  rpc GetValidatorCheckpointParams(QueryGetValidatorCheckpointParamsRequest) returns (QueryGetValidatorCheckpointParamsResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_checkpoint_params/{timestamp}";
   }
 
-  rpc GetValidatorTimestampByIndex (QueryGetValidatorTimestampByIndexRequest) returns (QueryGetValidatorTimestampByIndexResponse) {
+  rpc GetValidatorTimestampByIndex(QueryGetValidatorTimestampByIndexRequest) returns (QueryGetValidatorTimestampByIndexResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_timestamp_by_index/{index}";
   }
 
-  rpc GetValsetSigs (QueryGetValsetSigsRequest) returns (QueryGetValsetSigsResponse) {
+  rpc GetValsetSigs(QueryGetValsetSigsRequest) returns (QueryGetValsetSigsResponse) {
     option (google.api.http).get = "/layer/bridge/get_valset_sigs/{timestamp}";
   }
 
-  rpc GetEvmAddressByValidatorAddress (QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
+  rpc GetEvmAddressByValidatorAddress(QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validator_address}";
   }
 
-  rpc GetValsetByTimestamp (QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
+  rpc GetValsetByTimestamp(QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
     option (google.api.http).get = "/layer/bridge/get_valset_by_timestamp/{timestamp}";
   }
 
-  rpc GetCurrentAggregateReport (QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
+  rpc GetCurrentAggregateReport(QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
     option (google.api.http).get = "/layer/bridge/get_current_aggregate_report/{query_id}";
   }
 
-  rpc GetDataBefore (QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
-    option (google.api.http).get = "/layer/bridge/get_data_before/{query_id}/{timestamp}";
-  }
-
-  rpc GetSnapshotsByReport (QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
+  rpc GetSnapshotsByReport(QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
     option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}";
   }
 
-  rpc GetAttestationDataBySnapshot (QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
+  rpc GetAttestationDataBySnapshot(QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
     option (google.api.http).get = "/layer/bridge/get_attestation_data_by_snapshot/{snapshot}";
   }
 
-  rpc GetAttestationsBySnapshot (QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
+  rpc GetAttestationsBySnapshot(QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
     option (google.api.http).get = "/layer/bridge/get_attestations_by_snapshot/{snapshot}";
   }
 }
+
 // QueryParamsRequest is request type for the Query/Params RPC method.
 message QueryParamsRequest {}
 
 // QueryParamsResponse is response type for the Query/Params RPC method.
 message QueryParamsResponse {
-  
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
@@ -179,12 +173,12 @@ message QueryGetCurrentAggregateReportResponse {
 }
 
 message Aggregate {
-  bytes query_id = 1; 
-  string aggregateValue = 2; 
-  string aggregateReporter = 3; 
-  int64 reporterPower = 4; 
+  bytes query_id = 1;
+  string aggregateValue = 2;
+  string aggregateReporter = 3;
+  int64 reporterPower = 4;
   double standard_deviation = 5;
-  repeated AggregateReporter reporters = 6; 
+  repeated AggregateReporter reporters = 6;
   bool flagged = 7;
   int64 nonce = 8;
   int64 aggregateReportIndex = 9;
@@ -192,18 +186,8 @@ message Aggregate {
 }
 
 message AggregateReporter {
-  string reporter = 1; 
-  int64 power = 2; 
-}
-
-message QueryGetDataBeforeRequest {
-  string query_id = 1;
-  int64 timestamp = 2;
-}
-
-message QueryGetDataBeforeResponse {
-  layer.oracle.Aggregate aggregate = 1;
-  uint64 timestamp = 2;
+  string reporter = 1;
+  int64 power = 2;
 }
 
 message QueryGetSnapshotsByReportRequest {
