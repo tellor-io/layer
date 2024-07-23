@@ -94,7 +94,7 @@ sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NOD
 
 #echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 echo "printing the node id for this instance"
-./layerd comet show-node-id --home ~/.layer/alice
+./layerd comet show-node-id --home ~/.layer/bill
 
 # echo "Starting chain for node..."
 
