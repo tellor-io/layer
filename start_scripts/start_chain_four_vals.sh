@@ -133,15 +133,15 @@ echo "Creating gentx for alice..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for bill..."
-./layerd genesis gentx bill 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill --chain-id layer
+./layerd genesis gentx $BILL 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill --chain-id layer
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx bob 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob --chain-id layer
+./layerd genesis gentx $BOB 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bob --chain-id layer
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx tom 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom --chain-id layer
+./layerd genesis gentx $TOM 10000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/tom --chain-id layer
 
 echo "copy over gentx transaction so that alice has all the gentx transactions then verify"
 cp ~/.layer/bill/config/gentx/gentx-* \
@@ -194,9 +194,10 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 # update for main dir as well. why is this needed?
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
+echo "printing the node id for this instance"
 ./layerd comet show-node-id --home ~/.layer/alice
 
-sleep 100
+# sleep 100
 
-echo "Starting chain for alice..."
-./layerd start --home $LAYERD_NODE_HOME --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+# echo "Starting chain for alice..."
+# ./layerd start --home $LAYERD_NODE_HOME --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false

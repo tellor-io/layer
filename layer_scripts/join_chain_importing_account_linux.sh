@@ -92,8 +92,10 @@ curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/
 sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 
-echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
+#echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
+echo "printing the node id for this instance"
+./layerd comet show-node-id --home ~/.layer/alice
 
-echo "Starting chain for node..."
+# echo "Starting chain for node..."
 
-./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+# ./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
