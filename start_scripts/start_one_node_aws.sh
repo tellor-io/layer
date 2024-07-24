@@ -120,6 +120,11 @@ sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/alic
 sed -i 's/^enabled-unsafe-cors = false/enabled-unsafe-cors = true/g' ~/.layer/config/app.toml
 sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' ~/.layer/config/app.toml
 
+echo "Enabled metrics sinks/promethues"
+sed -i 's/^enabled = false/enabled = true/g' ~/.layer/alice/config/app.toml
+# echo "Set prometheus retention time to 60s"
+# sed -i 's/^prometheus-retention-time = 0/prometheus-retention-time = 60/g' ~/.layer/alice/config/app.toml
+
 # Modify keyring-backend in client.toml for alice
 echo "Modifying keyring-backend in client.toml for alice..."
 sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
@@ -127,4 +132,4 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger | tee ./first_node_logs.txt
+./layerd start --home $LAYERD_NODE_HOME --key-name alice --api.enable --api.swagger | tee ./first_node_logs.txt
