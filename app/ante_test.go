@@ -3,8 +3,9 @@ package app
 import (
 	"testing"
 
-	"cosmossdk.io/x/tx/signing"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/x/tx/signing"
 
 	// antetestutil "cosmossdk.io/x/auth/ante/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"

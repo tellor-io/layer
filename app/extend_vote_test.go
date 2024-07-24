@@ -3,17 +3,17 @@ package app_test
 import (
 	"testing"
 
-	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/stretchr/testify/suite"
-
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
 	"github.com/tellor-io/layer/app/testutils"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type VoteExtensionTestSuite struct {
