@@ -15,7 +15,7 @@ export KEYRING_BACKEND="test"
 export NODE_MONIKER="bobmoniker"
 export NODE_NAME="bob"
 export AMOUNT_IN_TRB=10000
-export AMOUNT_IN_LOYA="1000000000loya"
+export AMOUNT_IN_LOYA="10000000000loya"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 # # Create a validator account for node
@@ -73,4 +73,4 @@ echo "If status is 3 now is the time to go back to the screen session or termina
 echo "We will wait in this script for 10 seconds before the chain is restarted."
 sleep 10
 
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
