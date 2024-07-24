@@ -4,7 +4,7 @@
 # keeps running it validating blocks.
 echo "LAYERD_NODE_HOME: ${LAYERD_NODE_HOME}"
 # check if environment variables are set
-if [[ -z "${LAYERD_NODE_HOME}" || -z "${MONIKER}" ]]
+if [[ -z "${LAYERD_NODE_HOME}" || -z "${MONIKER}" || -z "${AMOUNT}" ]]
 then
   echo "Environment not setup correctly. Please set: LAYERD_NODE_HOME, MONIKER, AMOUNT variables"
   exit 1
@@ -19,6 +19,23 @@ then
   "height": "0",
   "round": 0,
   "step": 0
+}
+EOF
+fi
+
+# write create validator json if it doesn't exist
+if [[ ! -f ${LAYERD_NODE_HOME}/${MONIKER}.json ]]
+then
+    pubkey=$(layerd comet show-validator --home  ${LAYERD_NODE_HOME})
+    cat <<EOF > ${LAYERD_NODE_HOME}/${MONIKER}.json
+{
+    "pubkey": $pubkey,
+    "amount": "$AMOUNT",
+    "moniker": "$MONIKER",
+    "commission-rate": "0.10",
+    "commission-max-rate": "0.20",
+    "commission-max-change-rate": "0.01",
+    "min-self-delegation": "1"
 }
 EOF
 fi
@@ -40,12 +57,11 @@ fi
   while true
   do
     # create validator
-    layerd tx staking create-validator /${LAYERD_NODE_HOME}/config/${MONIKER}.json \
+    layerd tx staking create-validator /${LAYERD_NODE_HOME}/${MONIKER}.json \
     --chain-id="layer" \
     --from="${MONIKER}" \
     --keyring-backend="test" \
     --home="${LAYERD_NODE_HOME}" \
-    --fees="5000loya" \
     --keyring-dir="${LAYERD_NODE_HOME}" \
     --yes
     output=$(layerd query staking validator "${VAL_ADDRESS}" 2>/dev/null)
@@ -61,5 +77,10 @@ fi
 layerd start \
 --home="${LAYERD_NODE_HOME}" \
 --moniker="${MONIKER}" \
+--key-name="${MONIKER}" \
+--keyring-backend="test" \
 --p2p.persistent_peers=46caafaef9237b2015dca76e5b3e3ae5109736fe@core0:26656 \
---rpc.laddr=tcp://0.0.0.0:26657
+--rpc.laddr=tcp://0.0.0.0:26657 \
+--api.enable \
+--api.swagger \
+--panic-on-daemon-failure-enabled=false
