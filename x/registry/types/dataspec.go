@@ -55,7 +55,7 @@ func (d DataSpec) DecodeValue(value string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to decode value: %w", err)
 	}
-	valueJson, err := convertToJSON(valueInterface)
+	valueJson, err := ConvertToJSON(valueInterface)
 	if err != nil {
 		return "", fmt.Errorf("failed to convert to JSON: %w", err)
 	}

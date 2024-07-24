@@ -117,7 +117,6 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 	for _, validator := range validators {
 		evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, validator.GetOperator())
 		if err != nil {
-			k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 			continue // Skip this validator if the EVM address is not found
 		}
 		adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
@@ -205,7 +204,7 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	for _, validator := range bridgeValidatorSet.BridgeValidatorSet {
 		totalPower += validator.GetPower()
 	}
-	powerThreshold := totalPower * 2 / (3 * uint64(layertypes.PowerReduction.Int64()))
+	powerThreshold := totalPower * 2 / 3
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())

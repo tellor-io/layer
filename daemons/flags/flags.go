@@ -1,9 +1,6 @@
 package flags
 
 import (
-	"os"
-	"strings"
-
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -21,6 +18,7 @@ const (
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
 
 	FlagReporterDaemonEnabled = "reporter-daemon-enabled"
+	FlagKeyringBackend        = "keyring-backend"
 )
 
 // Shared flags contains configuration flags shared by all daemons.
@@ -73,7 +71,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Reporter: ReporterFlags{
 				Enabled: true,
 				// Account `alice` was initialized during `ignite chain serve`
-				AccountName: GetKeyName(),
+				AccountName: "alice",
 			},
 		}
 	}
@@ -169,16 +167,4 @@ func GetDaemonFlagValuesFromOptions(
 	}
 
 	return result
-}
-
-func GetKeyName() string {
-	globalHome := os.ExpandEnv("$HOME/.layer")
-	homeDir := os.Getenv("LAYERD_NODE_HOME")
-
-	if strings.HasPrefix(homeDir, globalHome+"/") {
-
-		name := strings.TrimPrefix(homeDir, globalHome+"/")
-		return name
-	}
-	return ""
 }

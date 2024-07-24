@@ -46,6 +46,13 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			},
 			expErr: false,
 		},
+		{
+			name: "no params",
+			input: &types.MsgUpdateParams{
+				Authority: "bad_address",
+			},
+			expErr: true,
+		},
 	}
 
 	for _, tc := range testCases {

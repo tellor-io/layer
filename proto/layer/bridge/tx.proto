@@ -2,46 +2,46 @@ syntax = "proto3";
 
 package layer.bridge;
 
-import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
 // Msg defines the Msg service.
 service Msg {
-    rpc RequestAttestations (MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
-    rpc WithdrawTokens (MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
-    rpc ClaimDeposit (MsgClaimDepositRequest) returns (MsgClaimDepositResponse);
+  option (cosmos.msg.v1.service) = true;
+  rpc RequestAttestations(MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
+  rpc WithdrawTokens(MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
+  rpc ClaimDeposit(MsgClaimDepositRequest) returns (MsgClaimDepositResponse);
 }
 
 message MsgRequestAttestations {
-    option (cosmos.msg.v1.signer) = "creator";
+  option (cosmos.msg.v1.signer) = "creator";
 
-    string creator = 1;
-    string query_id = 2;
-    string timestamp = 3;
+  string creator = 1;
+  string query_id = 2;
+  string timestamp = 3;
 }
 
 message MsgRequestAttestationsResponse {}
 
 message MsgWithdrawTokens {
-    option (cosmos.msg.v1.signer) = "creator";
+  option (cosmos.msg.v1.signer) = "creator";
 
-    string creator = 1;
-    string recipient = 2;
-    cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  string creator = 1;
+  string recipient = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
 message MsgWithdrawTokensResponse {}
 
 message MsgClaimDepositRequest {
-    option (cosmos.msg.v1.signer) = "creator";
+  option (cosmos.msg.v1.signer) = "creator";
 
-    string creator = 1;
-    uint64 deposit_id = 2;
-    uint64 index = 3;
+  string creator = 1;
+  uint64 deposit_id = 2;
+  uint64 index = 3;
 }
 
 message MsgClaimDepositResponse {}
-

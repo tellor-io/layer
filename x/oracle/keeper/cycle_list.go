@@ -60,7 +60,7 @@ func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) 
 func (k Keeper) InitCycleListQuery(ctx context.Context, queries [][]byte) error {
 	for _, querydata := range queries {
 
-		query, err := k.initializeQuery(ctx, querydata)
+		query, err := k.InitializeQuery(ctx, querydata)
 		if err != nil {
 			return err
 		}

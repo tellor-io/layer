@@ -24,7 +24,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	err = k.keeper.preventBridgeWithdrawalReport(msg.QueryData)
+	err = k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		}
 		// check if query is token bridge deposit since all bridge deposit
 		// also considered in cycle
-		query, err = k.keeper.tokenBridgeDepositCheck(ctx, msg.QueryData)
+		query, err = k.keeper.TokenBridgeDepositCheck(ctx, msg.QueryData)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		if err != nil {
 			return nil, err
 		}
-		err = k.keeper.directReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, true)
+		err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, true)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +84,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 				return nil, err
 			}
 			incycle = bytes.Equal(msg.QueryData, cycleQuery) || strings.EqualFold(query.QueryType, TRBBridgeQueryType)
-			err = k.keeper.directReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, incycle)
+			err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, incycle)
 			if err != nil {
 				return nil, err
 			}
@@ -103,7 +103,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 	incycle = commit.Incycle
 
-	err = k.keeper.setValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
+	err = k.keeper.SetValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
-func (k Keeper) directReveal(ctx context.Context,
+func (k Keeper) DirectReveal(ctx context.Context,
 	query types.QueryMeta,
 	qDataBytes []byte,
 	value string,
@@ -149,5 +149,5 @@ func (k Keeper) directReveal(ctx context.Context,
 	if query.Amount.IsZero() && blockTime.Before(query.Expiration.Add(offset)) {
 		incycle = true
 	}
-	return k.setValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, incycle)
+	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, incycle)
 }
