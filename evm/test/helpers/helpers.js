@@ -82,7 +82,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
     const sigsResponse = response.data.signatures;
     const sigs = [];
     // get sha256 hash of the message
-    const messageHash = ethers.sha256(checkpoint);
+    const messageHash = ethers.utils.sha256(checkpoint);
     for (let i = 0; i < sigsResponse.length; i++) {
       const signature = sigsResponse[i];
       if (signature.length === 128) {
@@ -90,7 +90,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
         let v = 27;
         let r = '0x' + signature.slice(0, 64);
         let s = '0x' + signature.slice(64, 128);
-        let recoveredAddress = ethers.recoverAddress(messageHash, {
+        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
           r: r,
           s: s,
           v: v,
@@ -99,7 +99,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
         if (recoveredAddress.toLowerCase() !== valset[i].addr.toLowerCase()) {
           // try v = 28 if v = 27 did not match
           v = 28;
-          recoveredAddress = ethers.recoverAddress(messageHash, {
+          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
             r: r,
             s: s,
             v: v,
@@ -157,7 +157,8 @@ getCurrentAggregateReport = async (queryId) => {
 
 getDataBefore = async (queryId, timestamp) => {
   const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
-  url = "http://localhost:1317/layer/bridge/get_data_before/" + formattedQueryId + "/" + timestamp
+  url = "http://localhost:1317/tellor-io/layer/oracle/get_data_before/" + formattedQueryId + "/" + timestamp
+  // http://tellornode.com:1317/tellor-io/layer/oracle/get_data_before/
   try {
     const response = await axios.get(url)
     agg = response.data.aggregate
@@ -263,7 +264,7 @@ getAttestationDataBySnapshot = async (snapshot) => {
 
 getAttestationsBySnapshot = async (snapshot, valset) => {
   url = "http://localhost:1317/layer/bridge/get_attestations_by_snapshot/" + snapshot
-  const messageHash = ethers.sha256('0x' + snapshot);
+  const messageHash = ethers.utils.sha256('0x' + snapshot);
   try {
     const response = await axios.get(url)
     attestsResponse = response.data.attestations
@@ -275,14 +276,14 @@ getAttestationsBySnapshot = async (snapshot, valset) => {
         let v = 27
         let r = '0x' + attestation.slice(2, 66)
         let s = '0x' + attestation.slice(66, 130)
-        let recoveredAddress = ethers.recoverAddress(messageHash, {
+        let recoveredAddress = ethers.utils.recoverAddress(messageHash, {
           r: r,
           s: s,
           v: v
         })
         if (recoveredAddress.toLowerCase() != valset[i].addr.toLowerCase()) {
           v = 28
-          recoveredAddress = ethers.recoverAddress(messageHash, {
+          recoveredAddress = ethers.utils.recoverAddress(messageHash, {
             r: r,
             s: s,
             v: v
@@ -482,6 +483,14 @@ getOracleDataStruct = (queryId, value, timestamp, aggregatePower, previousTimest
     },
     attestTimestamp: attestTimestamp
   }
+}
+
+layerSign = (message, privateKey) => {
+  // assumes message is bytesLike
+  messageHash = ethers.utils.sha256(message)
+  signingKey = new ethers.utils.SigningKey(privateKey)
+  signature = signingKey.signDigest(messageHash)
+  return signature
 }
 
 function removeLeadingZeros(hexString) {
