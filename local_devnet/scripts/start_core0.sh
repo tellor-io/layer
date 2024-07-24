@@ -19,7 +19,4 @@ fi
   --rpc.laddr tcp://0.0.0.0:26657 \
   --home /opt \
   --keyring-backend test \
-  --key-name core0 \
-  --api.enable \
-  --api.swagger \
-  --panic-on-daemon-failure-enabled=false
+  --key-name core0
