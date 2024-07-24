@@ -1,7 +1,7 @@
 {
   "app_name": "layer",
   "app_version": "",
-  "genesis_time": "2024-07-21T04:26:15.692672Z",
+  "genesis_time": "2024-07-24T03:12:27.056696Z",
   "chain_id": "layer",
   "initial_height": 1,
   "app_hash": null,
@@ -18,30 +18,37 @@
       "accounts": [
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "tellor1qzmeq3vyd8zv8vrxhjrn3dmuvdx7kwrzrh5kc9",
+          "address": "tellor10nlzpk75qzhhhwyfxnz4x9kl5lpxu9h4yjzcla",
           "pub_key": null,
           "account_number": "0",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "tellor1p02rk94ufqhuxcqwxx75qwvdk8dfwxgswsers3",
+          "address": "tellor18t6fxq8z8ppehkkxe38vma0gvge3mt7ju4qppy",
           "pub_key": null,
           "account_number": "1",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "tellor1kl0erfssly7fa0g84lhzuaaa7l4uhazm2n6eyn",
+          "address": "tellor14r2efzr2vle205za9gr8kmyzj892w85d6j3g2x",
           "pub_key": null,
           "account_number": "2",
           "sequence": "0"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "tellor16rp29mnsy428dts59zqyxxkgqap48zckvk3656",
+          "address": "tellor16awudjvmc3sxzkuftm30u7zp6ceq8myuuvxx0v",
           "pub_key": null,
           "account_number": "3",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "tellor1aqehzp26npukgvt6myw3dngvkgdt8staqr7lpx",
+          "pub_key": null,
+          "account_number": "4",
           "sequence": "0"
         }
       ]
@@ -56,7 +63,7 @@
       },
       "balances": [
         {
-          "address": "tellor1qzmeq3vyd8zv8vrxhjrn3dmuvdx7kwrzrh5kc9",
+          "address": "tellor18t6fxq8z8ppehkkxe38vma0gvge3mt7ju4qppy",
           "coins": [
             {
               "denom": "loya",
@@ -65,7 +72,7 @@
           ]
         },
         {
-          "address": "tellor1p02rk94ufqhuxcqwxx75qwvdk8dfwxgswsers3",
+          "address": "tellor10nlzpk75qzhhhwyfxnz4x9kl5lpxu9h4yjzcla",
           "coins": [
             {
               "denom": "loya",
@@ -74,7 +81,7 @@
           ]
         },
         {
-          "address": "tellor1kl0erfssly7fa0g84lhzuaaa7l4uhazm2n6eyn",
+          "address": "tellor14r2efzr2vle205za9gr8kmyzj892w85d6j3g2x",
           "coins": [
             {
               "denom": "loya",
@@ -83,11 +90,20 @@
           ]
         },
         {
-          "address": "tellor16rp29mnsy428dts59zqyxxkgqap48zckvk3656",
+          "address": "tellor16awudjvmc3sxzkuftm30u7zp6ceq8myuuvxx0v",
           "coins": [
             {
               "denom": "loya",
               "amount": "100000000000"
+            }
+          ]
+        },
+        {
+          "address": "tellor1aqehzp26npukgvt6myw3dngvkgdt8staqr7lpx",
+          "coins": [
+            {
+              "denom": "loya",
+              "amount": "1000000000000000000000000000"
             }
           ]
         }
@@ -95,7 +111,7 @@
       "supply": [
         {
           "denom": "loya",
-          "amount": "400000000000"
+          "amount": "1000000000000000400000000000"
         }
       ],
       "denom_metadata": [
@@ -182,10 +198,10 @@
                 },
                 "min_self_delegation": "1",
                 "delegator_address": "",
-                "validator_address": "tellorvaloper1qzmeq3vyd8zv8vrxhjrn3dmuvdx7kwrzkccyp4",
+                "validator_address": "tellorvaloper10nlzpk75qzhhhwyfxnz4x9kl5lpxu9h43aw2xd",
                 "pubkey": {
                   "@type": "/cosmos.crypto.ed25519.PubKey",
-                  "key": "BJTykNDZe1Yjk+Fkg4LGJu/RhWA7PuZe5LfSXYgI8P8="
+                  "key": "vxn0O4ZKOi6UvywR/1Bkg4XyvuvmP90YaaTQtsvIOoE="
                 },
                 "value": {
                   "denom": "loya",
@@ -193,7 +209,7 @@
                 }
               }
             ],
-            "memo": "46caafaef9237b2015dca76e5b3e3ae5109736fe@172.20.10.3:26656",
+            "memo": "91171d0413637a38d382acb615e068e6ce908ed0@192.168.1.160:26656",
             "timeout_height": "0",
             "extension_options": [],
             "non_critical_extension_options": []
@@ -203,7 +219,7 @@
               {
                 "public_key": {
                   "@type": "/cosmos.crypto.secp256k1.PubKey",
-                  "key": "A4J5ehwhwMXzoCbBTd5xmY/SwNB3D0gnY0tgSkQo36us"
+                  "key": "AyGbHAIVfKOAdXNEMcRG7H5Uuo1rw+HR8w+NdGgBIxEW"
                 },
                 "mode_info": {
                   "single": {
@@ -222,7 +238,7 @@
             "tip": null
           },
           "signatures": [
-            "kuSttRNNmD9rl93h5CD6zRV96Yl7Yxu0irCNVnAalVdDclGkP3+CRjhUgRfhk1xnvhXmw0v52Ff51Uw4R0MIeg=="
+            "c8xWsAWx9cv6l/AuHvE9trcLNDJs/hLOeSkAYns0PZpyuN7VQYNGRsDQF3wFjJFSZPAedDLmU0vyPGFoAMY3Ig=="
           ]
         }
       ]
@@ -376,7 +392,7 @@
     },
     "slashing": {
       "params": {
-        "signed_blocks_window": "100",
+        "signed_blocks_window": "1000",
         "min_signed_per_window": "0.500000000000000000",
         "downtime_jail_duration": "600s",
         "slash_fraction_double_sign": "0.050000000000000000",

@@ -8,22 +8,22 @@ services:
       context: ..
     expose:
       - "26660" # for prometheus
-    environment:
-      - LAYERD_NODE_HOME=/root/.layer/core0
     ports:
       - "9090:9090"
       - "26657:26657"
     entrypoint: [ "/bin/bash" ]
-    command: [ "/root/.layer/core0/start_core0.sh" ]
+    command: [ "/opt/start_core0.sh" ]
     volumes:
-      - ${PWD}/layer-app/core0/config/priv_validator_key.json:/root/.layer/core0/config/priv_validator_key.json:ro
-      - ${PWD}/layer-app/core0/config/node_key.json:/root/.layer/core0/config/node_key.json:ro
-      - ${PWD}/layer-app/core0/keyring-test:/root/.layer/core0/keyring-test:ro
-      - ${PWD}/layer-app/config.toml:/root/.layer/core0/config/config.toml:ro
-      - ${PWD}/layer-app/app.toml:/root/.layer/core0/config/app.toml:ro
-      - ${PWD}/layer-app/client.toml:/root/.layer/core0/config/client.toml:ro
-      - ${PWD}/layer-app/genesis.json:/root/.layer/core0/config/genesis.json:rw
-      - ${PWD}/scripts/start_core0.sh:/root/.layer/core0/start_core0.sh:ro
+      - ${PWD}/layer-app/core0/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/layer-app/core0/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/layer-app/core0/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/layer-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/layer-app/app.toml:/opt/config/app.toml:ro
+      - ${PWD}/layer-app/genesis.json:/opt/config/genesis.json:rw
+      - ${PWD}/layer-app/secrets.yaml:/opt/config/secrets.yaml:ro
+      - ${PWD}/layer-app/market_params.toml:/opt/config/market_params.toml:ro
+      - ${PWD}/layer-app/pricefeed_exchange_config.toml:/opt/config/pricefeed_exchange_config.toml:ro
+      - ${PWD}/scripts/start_core0.sh:/opt/start_core0.sh:ro
 
   core1:
     user: "0:0"
@@ -36,18 +36,21 @@ services:
       - core0
     environment:
       - MONIKER=core1
-      - LAYERD_NODE_HOME=/root/.layer/core1
+      - LAYERD_NODE_HOME=/opt
+      - AMOUNT=24000000loya
     entrypoint: [ "/bin/bash" ]
-    command: [ "/root/.layer/core1/start_node_and_create_validator.sh" ]
+    command: [ "/opt/start_node_and_create_validator.sh" ]
     volumes:
-      - ${PWD}/layer-app/core1.json:/root/.layer/core1/config/core1.json:ro
-      - ${PWD}/layer-app/core1/config/priv_validator_key.json:/root/.layer/core1/config/priv_validator_key.json:ro
-      - ${PWD}/layer-app/core1/config/node_key.json:/root/.layer/core1/config/node_key.json:ro
-      - ${PWD}/layer-app/core1/keyring-test:/root/.layer/core1/keyring-test:ro
-      - ${PWD}/scripts/start_node_and_create_validator.sh:/root/.layer/core1/start_node_and_create_validator.sh:ro
-      - ${PWD}/layer-app/config.toml:/root/.layer/core1/config/config.toml:ro
-      - ${PWD}/layer-app/app.toml:/root/.layer/core1/config/app.toml:ro
-      - ${PWD}/layer-app/genesis.json:/root/.layer/core1/config/genesis.json:ro
+      - ${PWD}/layer-app/core1/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/layer-app/core1/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/layer-app/core1/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
+      - ${PWD}/layer-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/layer-app/secrets.yaml:/opt/config/secrets.yaml:ro
+      - ${PWD}/layer-app/market_params.toml:/opt/config/market_params.toml:ro
+      - ${PWD}/layer-app/pricefeed_exchange_config.toml:/opt/config/pricefeed_exchange_config.toml:ro
+      - ${PWD}/layer-app/app.toml:/opt/config/app.toml:ro
+      - ${PWD}/layer-app/genesis.json:/opt/config/genesis.json:ro
 
   core2:
     user: "0:0"
@@ -60,18 +63,21 @@ services:
       - core0
     environment:
       - MONIKER=core2
-      - LAYERD_NODE_HOME=/root/.layer/core2
+      - LAYERD_NODE_HOME=/opt
+      - AMOUNT=10000000loya
     entrypoint: [ "/bin/bash" ]
-    command: [ "/root/.layer/core2/start_node_and_create_validator.sh" ]
+    command: [ "/opt/start_node_and_create_validator.sh" ]
     volumes:
-      - ${PWD}/layer-app/core2.json:/root/.layer/core2/config/core2.json:ro
-      - ${PWD}/layer-app/core2/config/priv_validator_key.json:/root/.layer/core2/config/priv_validator_key.json:ro
-      - ${PWD}/layer-app/core2/config/node_key.json:/root/.layer/core2/config/node_key.json:ro
-      - ${PWD}/layer-app/core2/keyring-test:/root/.layer/core2/keyring-test:ro
-      - ${PWD}/scripts/start_node_and_create_validator.sh:/root/.layer/core2/start_node_and_create_validator.sh:ro
-      - ${PWD}/layer-app/config.toml:/root/.layer/core2/config/config.toml:ro
-      - ${PWD}/layer-app/app.toml:/root/.layer/core2/config/app.toml:ro
-      - ${PWD}/layer-app/genesis.json:/root/.layer/core2/config/genesis.json:ro
+      - ${PWD}/layer-app/core2/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/layer-app/core2/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/layer-app/core2/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
+      - ${PWD}/layer-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/layer-app/secrets.yaml:/opt/config/secrets.yaml:ro
+      - ${PWD}/layer-app/market_params.toml:/opt/config/market_params.toml:ro
+      - ${PWD}/layer-app/pricefeed_exchange_config.toml:/opt/config/pricefeed_exchange_config.toml:ro
+      - ${PWD}/layer-app/app.toml:/opt/config/app.toml:ro
+      - ${PWD}/layer-app/genesis.json:/opt/config/genesis.json:ro
 
   core3:
     user: "0:0"
@@ -84,18 +90,21 @@ services:
       - core0
     environment:
       - MONIKER=core3
-      - LAYERD_NODE_HOME=/root/.layer/core3
+      - LAYERD_NODE_HOME=/opt
+      - AMOUNT=10000000loya
     entrypoint: [ "/bin/bash" ]
-    command: [ "/root/.layer/core3/start_node_and_create_validator.sh" ]
+    command: [ "/opt/start_node_and_create_validator.sh" ]
     volumes:
-      - ${PWD}/layer-app/core3.json:/root/.layer/core3/config/core3.json:ro
-      - ${PWD}/layer-app/core3/config/priv_validator_key.json:/root/.layer/core3/config/priv_validator_key.json:ro
-      - ${PWD}/layer-app/core3/config/node_key.json:/root/.layer/core3/config/node_key.json:ro
-      - ${PWD}/layer-app/core3/keyring-test:/root/.layer/core3/keyring-test:ro
-      - ${PWD}/scripts/start_node_and_create_validator.sh:/root/.layer/core3/start_node_and_create_validator.sh:ro
-      - ${PWD}/layer-app/config.toml:/root/.layer/core3/config/config.toml:ro
-      - ${PWD}/layer-app/app.toml:/root/.layer/core3/config/app.toml:ro
-      - ${PWD}/layer-app/genesis.json:/root/.layer/core3/config/genesis.json:ro
+      - ${PWD}/layer-app/core3/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/layer-app/core3/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/layer-app/core3/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
+      - ${PWD}/layer-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/layer-app/secrets.yaml:/opt/config/secrets.yaml:ro
+      - ${PWD}/layer-app/market_params.toml:/opt/config/market_params.toml:ro
+      - ${PWD}/layer-app/pricefeed_exchange_config.toml:/opt/config/pricefeed_exchange_config.toml:ro
+      - ${PWD}/layer-app/app.toml:/opt/config/app.toml:ro
+      - ${PWD}/layer-app/genesis.json:/opt/config/genesis.json:ro
 
   prometheus:
     container_name: prometheus
