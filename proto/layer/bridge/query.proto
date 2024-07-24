@@ -61,6 +61,14 @@ service Query {
   rpc GetAttestationsBySnapshot(QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
     option (google.api.http).get = "/layer/bridge/get_attestations_by_snapshot/{snapshot}";
   }
+
+  rpc GetValidatorSetIndexByTimestamp(QueryGetValidatorSetIndexByTimestampRequest) returns (QueryGetValidatorSetIndexByTimestampResponse) {
+    option (google.api.http).get = "/layer/bridge/get_validator_set_index_by_timestamp/{timestamp}";
+  }
+
+  rpc GetCurrentValidatorSetTimestamp(QueryGetCurrentValidatorSetTimestampRequest) returns (QueryGetCurrentValidatorSetTimestampResponse) {
+    option (google.api.http).get = "/layer/bridge/get_current_validator_set_timestamp";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -220,4 +228,18 @@ message QueryGetAttestationsBySnapshotRequest {
 
 message QueryGetAttestationsBySnapshotResponse {
   repeated string attestations = 1;
+}
+
+message QueryGetValidatorSetIndexByTimestampRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValidatorSetIndexByTimestampResponse {
+  int64 index = 1;
+}
+
+message QueryGetCurrentValidatorSetTimestampRequest {}
+
+message QueryGetCurrentValidatorSetTimestampResponse {
+  int64 timestamp = 1;
 }

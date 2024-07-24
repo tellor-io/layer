@@ -14,7 +14,8 @@ NODE1_HOME_DIR="$HOME/.layer/alice"
 NODE2_HOME_DIR="$HOME/.layer/bill"
 NODE1_CONFIG_DIR=$NODE1_HOME_DIR"/config"
 NODE2_CONFIG_DIR=$NODE2_HOME_DIR"/config"
-AMOUNT_IN_LOYA="45000000000loya"
+# AMOUNT_IN_LOYA="45000000000loya"
+AMOUNT_IN_LOYA="1000000000000loya"
 
 # Define bill's node home dir to be read by reporter daemon
 export LAYERD_NODE_HOME_BILL=$NODE2_HOME_DIR

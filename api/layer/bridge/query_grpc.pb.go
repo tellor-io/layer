@@ -32,6 +32,8 @@ type QueryClient interface {
 	GetSnapshotsByReport(ctx context.Context, in *QueryGetSnapshotsByReportRequest, opts ...grpc.CallOption) (*QueryGetSnapshotsByReportResponse, error)
 	GetAttestationDataBySnapshot(ctx context.Context, in *QueryGetAttestationDataBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationDataBySnapshotResponse, error)
 	GetAttestationsBySnapshot(ctx context.Context, in *QueryGetAttestationsBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationsBySnapshotResponse, error)
+	GetValidatorSetIndexByTimestamp(ctx context.Context, in *QueryGetValidatorSetIndexByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValidatorSetIndexByTimestampResponse, error)
+	GetCurrentValidatorSetTimestamp(ctx context.Context, in *QueryGetCurrentValidatorSetTimestampRequest, opts ...grpc.CallOption) (*QueryGetCurrentValidatorSetTimestampResponse, error)
 }
 
 type queryClient struct {
@@ -150,6 +152,24 @@ func (c *queryClient) GetAttestationsBySnapshot(ctx context.Context, in *QueryGe
 	return out, nil
 }
 
+func (c *queryClient) GetValidatorSetIndexByTimestamp(ctx context.Context, in *QueryGetValidatorSetIndexByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValidatorSetIndexByTimestampResponse, error) {
+	out := new(QueryGetValidatorSetIndexByTimestampResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetValidatorSetIndexByTimestamp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetCurrentValidatorSetTimestamp(ctx context.Context, in *QueryGetCurrentValidatorSetTimestampRequest, opts ...grpc.CallOption) (*QueryGetCurrentValidatorSetTimestampResponse, error) {
+	out := new(QueryGetCurrentValidatorSetTimestampResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetCurrentValidatorSetTimestamp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -168,6 +188,8 @@ type QueryServer interface {
 	GetSnapshotsByReport(context.Context, *QueryGetSnapshotsByReportRequest) (*QueryGetSnapshotsByReportResponse, error)
 	GetAttestationDataBySnapshot(context.Context, *QueryGetAttestationDataBySnapshotRequest) (*QueryGetAttestationDataBySnapshotResponse, error)
 	GetAttestationsBySnapshot(context.Context, *QueryGetAttestationsBySnapshotRequest) (*QueryGetAttestationsBySnapshotResponse, error)
+	GetValidatorSetIndexByTimestamp(context.Context, *QueryGetValidatorSetIndexByTimestampRequest) (*QueryGetValidatorSetIndexByTimestampResponse, error)
+	GetCurrentValidatorSetTimestamp(context.Context, *QueryGetCurrentValidatorSetTimestampRequest) (*QueryGetCurrentValidatorSetTimestampResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -210,6 +232,12 @@ func (UnimplementedQueryServer) GetAttestationDataBySnapshot(context.Context, *Q
 }
 func (UnimplementedQueryServer) GetAttestationsBySnapshot(context.Context, *QueryGetAttestationsBySnapshotRequest) (*QueryGetAttestationsBySnapshotResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAttestationsBySnapshot not implemented")
+}
+func (UnimplementedQueryServer) GetValidatorSetIndexByTimestamp(context.Context, *QueryGetValidatorSetIndexByTimestampRequest) (*QueryGetValidatorSetIndexByTimestampResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetValidatorSetIndexByTimestamp not implemented")
+}
+func (UnimplementedQueryServer) GetCurrentValidatorSetTimestamp(context.Context, *QueryGetCurrentValidatorSetTimestampRequest) (*QueryGetCurrentValidatorSetTimestampResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentValidatorSetTimestamp not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -440,6 +468,42 @@ func _Query_GetAttestationsBySnapshot_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetValidatorSetIndexByTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetValidatorSetIndexByTimestampRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetValidatorSetIndexByTimestamp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetValidatorSetIndexByTimestamp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetValidatorSetIndexByTimestamp(ctx, req.(*QueryGetValidatorSetIndexByTimestampRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetCurrentValidatorSetTimestamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCurrentValidatorSetTimestampRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCurrentValidatorSetTimestamp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetCurrentValidatorSetTimestamp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCurrentValidatorSetTimestamp(ctx, req.(*QueryGetCurrentValidatorSetTimestampRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -494,6 +558,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAttestationsBySnapshot",
 			Handler:    _Query_GetAttestationsBySnapshot_Handler,
+		},
+		{
+			MethodName: "GetValidatorSetIndexByTimestamp",
+			Handler:    _Query_GetValidatorSetIndexByTimestamp_Handler,
+		},
+		{
+			MethodName: "GetCurrentValidatorSetTimestamp",
+			Handler:    _Query_GetCurrentValidatorSetTimestamp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
