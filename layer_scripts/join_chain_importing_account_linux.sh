@@ -7,7 +7,7 @@ clear
 set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=tellornode.com
+export LAYER_NODE_URL=18.212.102.176
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
@@ -51,7 +51,7 @@ echo "Creating account keys for node to be able to send and receive loya and sta
 echo "Getting the address of your node to use for faucet request"
 NODE_ADDRESS=$(./layerd keys show $NODE_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME)
 echo "NODE address: $NODE_ADDRESS"
-sleep 10
+sleep 1
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."
