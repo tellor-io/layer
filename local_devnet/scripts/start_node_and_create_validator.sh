@@ -4,7 +4,7 @@
 # keeps running it validating blocks.
 echo "LAYERD_NODE_HOME: ${LAYERD_NODE_HOME}"
 # check if environment variables are set
-if [[ -z "${LAYERD_NODE_HOME}" || -z "${MONIKER}" || -z "${AMOUNT}" ]]
+if [[ -z "${LAYERD_NODE_HOME}" || -z "${MONIKER}" || -z "${AMOUNT}" || -z "${COMMISSION_RATE}" || -z "${MIN_TOKENS_REQUIRED}" ]]
 then
   echo "Environment not setup correctly. Please set: LAYERD_NODE_HOME, MONIKER, AMOUNT variables"
   exit 1
@@ -69,6 +69,24 @@ fi
       break
     fi
     echo "trying to create validator..."
+    sleep 1s
+  done
+
+  REPORTER=$(layerd keys show "${MONIKER}" --keyring-backend test --home  ${LAYERD_NODE_HOME} --keyring-dir ${LAYERD_NODE_HOME} -a)
+  while true
+  do
+  layerd tx reporter create-reporter "${COMMISSION_RATE}" "${MIN_TOKENS_REQUIRED}"  \
+  --from=${MONIKER} \
+  --keyring-backend="test" \
+  --keyring-dir="${LAYERD_NODE_HOME}" \
+  --chain-id="layer" \
+  --yes
+
+  selector=$(layerd query reporter selector-reporter "${REPORTER}" 2>/dev/null)
+    if [[ -n "${selector}" ]] ; then
+      break
+    fi
+    echo "trying to create reporter..."
     sleep 1s
   done
 } &
