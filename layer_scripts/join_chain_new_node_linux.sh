@@ -7,7 +7,7 @@ clear
 set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=tellornode.com
+export LAYER_NODE_URL=18.212.102.176
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
@@ -97,7 +97,7 @@ echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
 
 
 # use the commands to below to download log files from aws instance if applicable
