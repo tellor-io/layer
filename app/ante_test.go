@@ -5,14 +5,14 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/tellor-io/layer/app"
+
 	"cosmossdk.io/x/tx/signing"
 
 	// antetestutil "cosmossdk.io/x/auth/ante/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
-	"github.com/tellor-io/layer/app"
 )
 
 func TestNewAnteHandler(t *testing.T) {
