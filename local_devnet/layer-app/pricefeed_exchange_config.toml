@@ -1,0 +1,87 @@
+# This is a TOML config file.
+	# StaticExchangeStartupConfig represents the mapping of exchanges to the parameters for
+	# querying from them.
+	#
+	# ExchangeId - Unique string identifying an exchange.
+	#
+	# IntervalMs - Delays between sending API requests to get exchange market prices - cannot be 0.
+	#
+	# TimeoutMs - Max time to wait on an API call to an exchange - cannot be 0.
+	#
+	# MaxQueries - Max api calls to get market prices for an exchange to make in a task-loop -
+	# cannot be 0. For multi-market API exchanges, the behavior will default to 1.
+	[[exchanges]]
+	ExchangeId = "Binance"
+	IntervalMs = 2500
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "BinanceUS"
+	IntervalMs = 2500
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Bitfinex"
+	IntervalMs = 2500
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Bitstamp"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Bybit"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "CoinbasePro"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 3
+	[[exchanges]]
+	ExchangeId = "CryptoCom"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Gate"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Huobi"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Kraken"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Kucoin"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Mexc"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "Okx"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
+	ExchangeId = "TestFixedPriceExchange"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 3
+	[[exchanges]]
+	ExchangeId = "TestVolatileExchange"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 3
