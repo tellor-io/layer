@@ -5,8 +5,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 )
 
@@ -52,4 +54,24 @@ func TestReporterDelegatorIndex(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, repAddr.String(), del.Reporter)
 	}
+}
+
+func TestNewSelectorsIndex(t *testing.T) {
+	_, _, _, _, _, store := setupKeeper(t)
+	require := require.New(t)
+
+	sb := collections.NewSchemaBuilder(store)
+	index := keeper.NewSelectorsIndex(sb)
+	require.NotNil(index)
+}
+
+func TestIndexesList(t *testing.T) {
+	_, _, _, _, _, store := setupKeeper(t)
+	require := require.New(t)
+
+	sb := collections.NewSchemaBuilder(store)
+	index := keeper.NewSelectorsIndex(sb)
+	require.NotNil(index)
+	indexes := index.IndexesList()
+	require.Equal(1, len(indexes))
 }
