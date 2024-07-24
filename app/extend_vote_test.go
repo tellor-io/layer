@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"fmt"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -31,8 +32,11 @@ func (s *VoteExtensionTestSuite) TestVoteExtensionTestSuite(t *testing.T) {
 
 func (s *VoteExtensionTestSuite) TestNewVoteExtHandler() *app.VoteExtHandler {
 	require := s.Require()
+
+	fmt.Println("a")
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
+
 	h := app.NewVoteExtHandler(
 		log.NewNopLogger(),
 		cdc,
@@ -40,13 +44,23 @@ func (s *VoteExtensionTestSuite) TestNewVoteExtHandler() *app.VoteExtHandler {
 		mocks.NewBridgeKeeper(s.T()),
 	)
 	require.NotNil(h)
+
 	return h
+}
+
+func (s *VoteExtensionTestSuite) TestGetKeyring() {
+	require := s.Require()
+
+	h := s.TestNewVoteExtHandler()
+	keyring, err := h.GetKeyring()
+	require.NoError(err)
+	require.NotNil(keyring)
+	fmt.Println("keyring: ", keyring)
 }
 
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	require := s.Require()
 	h := s.TestNewVoteExtHandler()
-	require.NotNil(h)
 
 	res, err := h.ExtendVoteHandler(s.ctx, &abci.RequestExtendVote{})
 	require.NoError(err)

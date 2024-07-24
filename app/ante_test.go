@@ -1,4 +1,4 @@
-package app
+package app_test
 
 import (
 	"testing"
@@ -11,52 +11,54 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
+	"github.com/tellor-io/layer/app"
 )
 
 func TestNewAnteHandler(t *testing.T) {
 	require := require.New(t)
 
 	// nil account keeper
-	options := HandlerOptions{
+	options := app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper: nil,
 		},
 	}
-	anteHandler, err := NewAnteHandler(options)
+	anteHandler, err := app.NewAnteHandler(options)
 	require.ErrorContains(err, "account keeper is required for ante builder")
 	require.Nil(anteHandler)
 
 	// nil bank keeper
-	options = HandlerOptions{
+	options = app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper: authkeeper.AccountKeeper{},
 			BankKeeper:    nil,
 		},
 	}
-	anteHandler, err = NewAnteHandler(options)
+	anteHandler, err = app.NewAnteHandler(options)
 	require.ErrorContains(err, "bank keeper is required for ante builder")
 	require.Nil(anteHandler)
 
 	// nil SignModeHandler
-	options = HandlerOptions{
+	options = app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper:   authkeeper.AccountKeeper{},
 			BankKeeper:      bankkeeper.BaseKeeper{},
 			SignModeHandler: nil,
 		},
 	}
-	anteHandler, err = NewAnteHandler(options)
+	anteHandler, err = app.NewAnteHandler(options)
 	require.ErrorContains(err, "sign mode handler is required for ante builder")
 	require.Nil(anteHandler)
 
-	options = HandlerOptions{
+	options = app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper:   authkeeper.AccountKeeper{},
 			BankKeeper:      bankkeeper.BaseKeeper{},
 			SignModeHandler: &signing.HandlerMap{},
 		},
 	}
-	anteHandler, err = NewAnteHandler(options)
+	anteHandler, err = app.NewAnteHandler(options)
 	require.NoError(err)
 	require.NotNil(anteHandler)
 }

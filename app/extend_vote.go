@@ -83,6 +83,7 @@ type BridgeVoteExtension struct {
 }
 
 func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper) *VoteExtHandler {
+	fmt.Println("NewVoteExtHandler")
 	return &VoteExtHandler{
 		oracleKeeper: oracleKeeper,
 		bridgeKeeper: bridgeKeeper,
@@ -92,6 +93,7 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	fmt.Println("ExtendVoteHandler")
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, err := h.GetOperatorAddress()
