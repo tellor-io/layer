@@ -65,8 +65,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidaotr)
 	require.NoError(err)
+	for _, val := range valAccountValAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
+
 	validator, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAccountValAddrs[0])
 	require.NoError(err)
 
@@ -131,7 +136,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
 	queryId := utils.QueryIDFromData(cycleListQuery)
@@ -275,7 +280,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
 	queryId = utils.QueryIDFromData(cycleListQuery)
@@ -446,7 +451,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NotNil(revealResponse)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
 	queryId = utils.QueryIDFromData(cycleListQuery)

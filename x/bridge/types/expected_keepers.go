@@ -20,10 +20,6 @@ type StakingKeeper interface {
 	TotalBondedTokens(ctx context.Context) (math.Int, error)
 }
 
-type SlashingKeeper interface {
-	// Methods imported from slashing should be defined here
-}
-
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

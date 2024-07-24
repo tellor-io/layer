@@ -43,8 +43,11 @@ func (s *E2ETestSuite) TestEditSpec() {
 
 	valAccAddrs, valValAddrs, _ := s.Setup.CreateValidators(1)
 	// valAccAddrs := s.CreateReporters(1, valValAddrs, vals)
-
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	for _, val := range valValAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinTrb})
 	require.NoError(err)

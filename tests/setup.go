@@ -8,12 +8,16 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
+	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
 	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
 	reportermodulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
 	"github.com/tellor-io/layer/app/config"
+	_ "github.com/tellor-io/layer/x/bridge"
+	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
@@ -157,17 +161,17 @@ func ReporterModule() configurator.ModuleOption {
 	}
 }
 
-// func BridgeModule() configurator.ModuleOption {
-// 	return func(config *configurator.Config) {
-// 		config.BeginBlockersOrder = append(config.BeginBlockersOrder, "bridge")
-// 		config.EndBlockersOrder = append(config.EndBlockersOrder, "bridge")
-// 		config.InitGenesisOrder = append(config.InitGenesisOrder, "bridge")
-// 		config.ModuleConfigs["bridge"] = &appv1alpha1.ModuleConfig{
-// 			Name:   "bridge",
-// 			Config: appconfig.WrapAny(&bridgemodulev1.Module{}),
-// 		}
-// 	}
-// }
+func BridgeModule() configurator.ModuleOption {
+	return func(config *configurator.Config) {
+		config.BeginBlockersOrder = append(config.BeginBlockersOrder, "bridge")
+		config.EndBlockersOrder = append(config.EndBlockersOrder, "bridge")
+		config.InitGenesisOrder = append(config.InitGenesisOrder, "bridge")
+		config.ModuleConfigs["bridge"] = &appv1alpha1.ModuleConfig{
+			Name:   "bridge",
+			Config: appconfig.WrapAny(&bridgemodulev1.Module{}),
+		}
+	}
+}
 
 func DefaultStartUpConfig() simtestutil.StartupConfig {
 	priv := secp256k1.GenPrivKey()
@@ -187,6 +191,7 @@ type SharedSetup struct {
 	Registrykeeper registrykeeper.Keeper
 	Mintkeeper     mintkeeper.Keeper
 	Reporterkeeper reporterkeeper.Keeper
+	Bridgekeeper   bridgekeeper.Keeper
 
 	Accountkeeper  authkeeper.AccountKeeper
 	Bankkeeper     bankkeeper.BaseKeeper
@@ -250,7 +255,7 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 	s.slashingKeeper = slashingkeeper.NewKeeper(
 		appCodec,
 		cdc,
-		runtime.NewKVStoreService(s.fetchStoreKey(banktypes.StoreKey).(*storetypes.KVStoreKey)),
+		runtime.NewKVStoreService(s.fetchStoreKey("slashing").(*storetypes.KVStoreKey)),
 		s.Stakingkeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
@@ -274,6 +279,9 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 	)
 	s.Mintkeeper = mintkeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(minttypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	s.Bridgekeeper = bridgekeeper.NewKeeper(
+		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(bridgetypes.StoreKey).(*storetypes.KVStoreKey)), s.Stakingkeeper, s.Oraclekeeper, s.Bankkeeper, s.Reporterkeeper,
 	)
 	s.Stakingkeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
@@ -309,6 +317,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 				RegistryModule(),
 				MintModule(),
 				ReporterModule(),
+				BridgeModule(),
 				configurator.GovModule(),
 			),
 			depinject.Supply(log.NewNopLogger()),

@@ -49,7 +49,6 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		sk,
-		ak,
 		ok,
 		bk,
 		rk,

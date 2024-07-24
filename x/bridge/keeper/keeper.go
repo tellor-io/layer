@@ -52,7 +52,6 @@ type (
 		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
 
 		stakingKeeper  types.StakingKeeper
-		slashingKeeper types.SlashingKeeper
 		oracleKeeper   types.OracleKeeper
 		bankKeeper     types.BankKeeper
 		reporterKeeper types.ReporterKeeper
@@ -63,7 +62,6 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService storetypes.KVStoreService,
 	stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper,
 	oracleKeeper types.OracleKeeper,
 	bankKeeper types.BankKeeper,
 	reporterKeeper types.ReporterKeeper,
@@ -90,7 +88,6 @@ func NewKeeper(
 		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
 
 		stakingKeeper:  stakingKeeper,
-		slashingKeeper: slashingKeeper,
 		oracleKeeper:   oracleKeeper,
 		bankKeeper:     bankKeeper,
 		reporterKeeper: reporterKeeper,

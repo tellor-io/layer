@@ -7,10 +7,13 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/core/appmodule"
+	"cosmossdk.io/core/store"
+	"cosmossdk.io/depinject"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -149,4 +152,53 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	}
 
 	return am.keeper.CreateNewReportSnapshots(sdkCtx)
+}
+
+// ----------------------------------------------------------------------------
+// App Wiring Setup
+// ----------------------------------------------------------------------------
+
+func init() {
+	appmodule.Register(&bridgemodulev1.Module{},
+		appmodule.Provide(ProvideModule))
+}
+
+type BridgeInputs struct {
+	depinject.In
+
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	Config       *bridgemodulev1.Module
+
+	Accountkeeper types.AccountKeeper
+	BankKeeper    types.BankKeeper
+	Stakingkeeper types.StakingKeeper
+	Oraclekeeper  types.OracleKeeper
+
+	ReporterKeeper types.ReporterKeeper
+}
+
+type BridgeOutputs struct {
+	depinject.Out
+
+	BridgeKeeper keeper.Keeper
+	Module       appmodule.AppModule
+}
+
+func ProvideModule(in BridgeInputs) BridgeOutputs {
+	k := keeper.NewKeeper(
+		in.Cdc,
+		in.StoreService,
+		in.Stakingkeeper,
+		in.Oraclekeeper,
+		in.BankKeeper,
+		in.ReporterKeeper,
+	)
+	m := NewAppModule(
+		in.Cdc,
+		k,
+		in.Accountkeeper,
+		in.BankKeeper,
+	)
+	return BridgeOutputs{BridgeKeeper: k, Module: m}
 }
