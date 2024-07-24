@@ -201,3 +201,15 @@ echo "printing the node id for this instance"
 
 # echo "Starting chain for alice..."
 # ./layerd start --home $LAYERD_NODE_HOME --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+
+
+#   cc2634ec30ac61f1182011de54968b5547776bde@18.212.102.176:26656 (layer-testnet-big)
+#   477ee4cf87dd31f6116a713b0e8502c1bb9c76d0@3.80.143.188:26656 (layer testnet cloudwatch)
+#   daeaad888586cedd37c49378e6725ab6fc7522fd@13.212.197.103:26656 (singapore)
+#   b58e61bc063027589327e84a84f0a81c1e20641b@3.66.87.141:26656 (eu-central-1)
+
+
+./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+./layerd start --home ~/.layer/bill --key-name bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+./layerd start --home ~/.layer/bob --key-name bob --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+./layerd start --home ~/.layer/tom --key-name tom --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
