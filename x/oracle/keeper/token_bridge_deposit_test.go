@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	// try trb/usd spot price, should err with NotTokenDeposit
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	res, err := k.TokenBridgeDepositCheck(ctx.BlockTime(), queryBytes)
+	res, err := k.TokenBridgeDepositCheck(ctx, queryBytes)
 	require.ErrorContains(err, types.ErrNotTokenDeposit.Error())
 	require.Equal(types.QueryMeta{}, res)
 
@@ -53,12 +53,12 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
 
-	res, err = k.TokenBridgeDepositCheck(ctx.BlockTime(), queryDataEncoded)
+	res, err = k.TokenBridgeDepositCheck(ctx, queryDataEncoded)
 	require.NoError(err)
 	require.Equal(res.QueryType, "TRBBridge")
 	require.Equal(res.Amount, math.NewInt(0))
 	require.Equal(res.Expiration, ctx.BlockTime().Add(time.Hour))
-	require.Equal(res.RegistrySpecTimeframe, time.Second)
+	require.Equal(res.RegistrySpecTimeframe, time.Hour)
 
 	// try TRBBridge but toLayer is false
 	toLayerBool = false
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	res, err = k.TokenBridgeDepositCheck(ctx.BlockTime(), queryDataEncoded)
+	res, err = k.TokenBridgeDepositCheck(ctx, queryDataEncoded)
 	require.ErrorContains(err, types.ErrNotTokenDeposit.Error())
 	require.Equal(types.QueryMeta{}, res)
 }
