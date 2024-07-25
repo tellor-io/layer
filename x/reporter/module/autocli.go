@@ -26,8 +26,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "SelectorReporter",
 					Use:            "selector-reporter [selector-address]",
-					Short:          "Query reporter of a delegator",
+					Short:          "Query reporter of a selector",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
+				},
+				{
+					RpcMethod:      "AllowedAmount",
+					Use:            "allowed-amount",
+					Short:          "Query current allowed amount to stake or unstake",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},

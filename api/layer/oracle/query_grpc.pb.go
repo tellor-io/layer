@@ -29,14 +29,14 @@ type QueryClient interface {
 	// Queries a list of GetUserTipTotal items.
 	GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTotalRequest, opts ...grpc.CallOption) (*QueryGetUserTipTotalResponse, error)
 	// Queries a list of GetAggregatedReport items.
-	GetAggregatedReport(ctx context.Context, in *QueryGetCurrentAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error)
-	// Queries a list of GetAggregatedReport items.
 	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
 	CurrentCyclelistQuery(ctx context.Context, in *QueryCurrentCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryCurrentCyclelistQueryResponse, error)
 	RetrieveData(ctx context.Context, in *QueryRetrieveDataRequest, opts ...grpc.CallOption) (*QueryRetrieveDataResponse, error)
+	GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error)
+	GetAggregateBeforeByReporter(ctx context.Context, in *QueryGetAggregateBeforeByReporterRequest, opts ...grpc.CallOption) (*QueryGetAggregateBeforeByReporterResponse, error)
 }
 
 type queryClient struct {
@@ -101,15 +101,6 @@ func (c *queryClient) GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTo
 	return out, nil
 }
 
-func (c *queryClient) GetAggregatedReport(ctx context.Context, in *QueryGetCurrentAggregatedReportRequest, opts ...grpc.CallOption) (*QueryGetAggregatedReportResponse, error) {
-	out := new(QueryGetAggregatedReportResponse)
-	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetAggregatedReport", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error) {
 	out := new(QueryGetDataBeforeResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetDataBefore", in, out, opts...)
@@ -146,6 +137,24 @@ func (c *queryClient) RetrieveData(ctx context.Context, in *QueryRetrieveDataReq
 	return out, nil
 }
 
+func (c *queryClient) GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error) {
+	out := new(QueryGetCurrentAggregateReportResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetCurrentAggregateReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetAggregateBeforeByReporter(ctx context.Context, in *QueryGetAggregateBeforeByReporterRequest, opts ...grpc.CallOption) (*QueryGetAggregateBeforeByReporterResponse, error) {
+	out := new(QueryGetAggregateBeforeByReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetAggregateBeforeByReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -161,14 +170,14 @@ type QueryServer interface {
 	// Queries a list of GetUserTipTotal items.
 	GetUserTipTotal(context.Context, *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error)
 	// Queries a list of GetAggregatedReport items.
-	GetAggregatedReport(context.Context, *QueryGetCurrentAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error)
-	// Queries a list of GetAggregatedReport items.
 	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
 	CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error)
 	RetrieveData(context.Context, *QueryRetrieveDataRequest) (*QueryRetrieveDataResponse, error)
+	GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error)
+	GetAggregateBeforeByReporter(context.Context, *QueryGetAggregateBeforeByReporterRequest) (*QueryGetAggregateBeforeByReporterResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -194,9 +203,6 @@ func (UnimplementedQueryServer) GetCurrentTip(context.Context, *QueryGetCurrentT
 func (UnimplementedQueryServer) GetUserTipTotal(context.Context, *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserTipTotal not implemented")
 }
-func (UnimplementedQueryServer) GetAggregatedReport(context.Context, *QueryGetCurrentAggregatedReportRequest) (*QueryGetAggregatedReportResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAggregatedReport not implemented")
-}
 func (UnimplementedQueryServer) GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataBefore not implemented")
 }
@@ -208,6 +214,12 @@ func (UnimplementedQueryServer) CurrentCyclelistQuery(context.Context, *QueryCur
 }
 func (UnimplementedQueryServer) RetrieveData(context.Context, *QueryRetrieveDataRequest) (*QueryRetrieveDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RetrieveData not implemented")
+}
+func (UnimplementedQueryServer) GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentAggregateReport not implemented")
+}
+func (UnimplementedQueryServer) GetAggregateBeforeByReporter(context.Context, *QueryGetAggregateBeforeByReporterRequest) (*QueryGetAggregateBeforeByReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAggregateBeforeByReporter not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -330,24 +342,6 @@ func _Query_GetUserTipTotal_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetAggregatedReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetCurrentAggregatedReportRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetAggregatedReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.oracle.Query/GetAggregatedReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetAggregatedReport(ctx, req.(*QueryGetCurrentAggregatedReportRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_GetDataBefore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetDataBeforeRequest)
 	if err := dec(in); err != nil {
@@ -420,6 +414,42 @@ func _Query_RetrieveData_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCurrentAggregateReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCurrentAggregateReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCurrentAggregateReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetCurrentAggregateReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCurrentAggregateReport(ctx, req.(*QueryGetCurrentAggregateReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetAggregateBeforeByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetAggregateBeforeByReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetAggregateBeforeByReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetAggregateBeforeByReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetAggregateBeforeByReporter(ctx, req.(*QueryGetAggregateBeforeByReporterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -452,10 +482,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_GetUserTipTotal_Handler,
 		},
 		{
-			MethodName: "GetAggregatedReport",
-			Handler:    _Query_GetAggregatedReport_Handler,
-		},
-		{
 			MethodName: "GetDataBefore",
 			Handler:    _Query_GetDataBefore_Handler,
 		},
@@ -470,6 +496,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RetrieveData",
 			Handler:    _Query_RetrieveData_Handler,
+		},
+		{
+			MethodName: "GetCurrentAggregateReport",
+			Handler:    _Query_GetCurrentAggregateReport_Handler,
+		},
+		{
+			MethodName: "GetAggregateBeforeByReporter",
+			Handler:    _Query_GetAggregateBeforeByReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

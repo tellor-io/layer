@@ -79,7 +79,7 @@ func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 		StandardDeviation:    0,
 		Reporters:            nil,
 		Flagged:              false,
-		Nonce:                0,
+		Index:                0,
 		AggregateReportIndex: 0,
 		Height:               ctx.BlockHeight(),
 		MicroHeight:          ctx.BlockHeight(),

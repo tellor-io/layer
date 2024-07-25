@@ -142,19 +142,19 @@ func (s *E2ETestSuite) TestDisputes() {
 	queryId := utils.QueryIDFromData(cycleListQuery)
 	s.NoError(err)
 	// create get aggregated report query
-	getAggReportRequest := oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequest := oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryId),
 	}
 	// aggregated report is stored correctly
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
-	result, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequest)
+	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(int64(0), result.Report.AggregateReportIndex)
-	require.Equal(testutil.EncodeValue(100_000), result.Report.AggregateValue)
-	require.Equal(reporterAccount.String(), result.Report.AggregateReporter)
-	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(4000), result.Report.ReporterPower)
-	require.Equal(int64(1), result.Report.Height)
+	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
+	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
+	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(int64(4000), result.Aggregate.ReporterPower)
+	require.Equal(int64(1), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------
 	// Height 2 - create a dispute
@@ -286,18 +286,18 @@ func (s *E2ETestSuite) TestDisputes() {
 	queryId = utils.QueryIDFromData(cycleListQuery)
 	s.NoError(err)
 	// create get aggregated report query
-	getAggReportRequest = oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequest = oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryId),
 	}
 	// aggregated report is stored correctly
-	result, err = queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequest)
+	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(int64(0), result.Report.AggregateReportIndex)
-	require.Equal(testutil.EncodeValue(100_000), result.Report.AggregateValue)
-	require.Equal(reporterAccount.String(), result.Report.AggregateReporter)
-	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Int64(), result.Report.ReporterPower)
-	require.Equal(int64(4), result.Report.Height)
+	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
+	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
+	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(int64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Int64(), result.Aggregate.ReporterPower)
+	require.Equal(int64(4), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -457,17 +457,17 @@ func (s *E2ETestSuite) TestDisputes() {
 	queryId = utils.QueryIDFromData(cycleListQuery)
 	s.NoError(err)
 	// create get aggregated report query
-	getAggReportRequest = oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequest = oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryId),
 	}
 	// check that aggregated report is stored correctly
-	result, err = queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequest)
+	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(int64(0), result.Report.AggregateReportIndex)
-	require.Equal(testutil.EncodeValue(100_000), result.Report.AggregateValue)
-	require.Equal(reporterAccount.String(), result.Report.AggregateReporter)
-	require.Equal(queryId, result.Report.QueryId)
-	require.Equal(int64(7), result.Report.Height)
+	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
+	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
+	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(int64(7), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -539,10 +539,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeEndTime, disputeStartTime.Add(disputekeeper.THREE_DAYS))
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
 	require.Equal(dispute.DisputeStartBlock, disputeStartHeight)
-	// // todo: handle reporter removal
-	// reporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
-	// fmt.Println(reporter)
-	// require.ErrorContains(err, "not found")
 
 	// create vote tx msg
 	msgVote = disputetypes.MsgVote{

@@ -61,7 +61,7 @@ func TestMsgWithdrawTokens(t *testing.T) {
 		StandardDeviation:    float64(0),
 		Reporters:            []*oracletypes.AggregateReporter{},
 		Flagged:              false,
-		Nonce:                uint64(0),
+		Index:                uint64(0),
 		AggregateReportIndex: int64(0),
 		Height:               int64(10_000),
 		MicroHeight:          int64(0),

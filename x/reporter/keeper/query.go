@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -66,4 +67,31 @@ func (k Querier) SelectorReporter(ctx context.Context, req *types.QuerySelectorR
 	}
 
 	return &types.QuerySelectorReporterResponse{Reporter: sdk.AccAddress(selector.GetReporter()).String()}, nil
+}
+
+// get the current staking/unstaking amount allowed w/out triggering 5% change
+func (k Querier) AllowedAmount(ctx context.Context, req *types.QueryAllowedAmountRequest) (*types.QueryAllowedAmountResponse, error) {
+	amt, err := k.Keeper.Tracker.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	currentAmount, err := k.Keeper.stakingKeeper.TotalBondedTokens(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fivePercentIncrease := amt.Amount.Add(amt.Amount.QuoRaw(20))
+	fivePercentDecrease := amt.Amount.Sub(amt.Amount.QuoRaw(20))
+
+	stakingAmountAllowed := math.ZeroInt()
+	unstakingAmountAllowed := math.ZeroInt()
+	if currentAmount.LT(fivePercentIncrease) {
+		stakingAmountAllowed = fivePercentIncrease.Sub(currentAmount)
+	}
+	if currentAmount.GT(fivePercentDecrease) {
+		unstakingAmountAllowed = fivePercentDecrease.Sub(currentAmount)
+	}
+	return &types.QueryAllowedAmountResponse{
+		StakingAmount:   stakingAmountAllowed,
+		UnstakingAmount: unstakingAmountAllowed,
+	}, nil
 }

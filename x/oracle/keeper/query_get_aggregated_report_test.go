@@ -15,15 +15,15 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	q := s.queryClient
 
 	// nil request
-	res, err := q.GetAggregatedReport(s.ctx, nil)
+	res, err := q.GetCurrentAggregateReport(s.ctx, nil)
 	require.ErrorContains(err, "invalid request")
 	require.Nil(res)
 
 	// bad query id
-	req := types.QueryGetCurrentAggregatedReportRequest{
+	req := types.QueryGetCurrentAggregateReportRequest{
 		QueryId: "badqueryid",
 	}
-	res, err = q.GetAggregatedReport(s.ctx, &req)
+	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
 	require.Error(err)
 	require.Nil(res)
 
@@ -31,8 +31,8 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	qId, err := utils.QueryIDFromDataString(queryData)
 	require.NoError(err)
 	req.QueryId = hex.EncodeToString(qId)
-	res, err = q.GetAggregatedReport(s.ctx, &req)
-	require.ErrorContains(err, "no reports available")
+	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
+	require.ErrorContains(err, "aggregate not found")
 	require.Nil(res)
 
 	// set Aggregates collection
@@ -42,11 +42,11 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 		AggregateReporter: "reporter",
 		ReporterPower:     100,
 	}))
-	res, err = q.GetAggregatedReport(s.ctx, &req)
+	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)
-	require.Equal(res.Report.QueryId, qId)
-	require.Equal(res.Report.AggregateValue, "100")
-	require.Equal(res.Report.AggregateReporter, "reporter")
-	require.Equal(res.Report.ReporterPower, int64(100))
+	require.Equal(res.Aggregate.QueryId, qId)
+	require.Equal(res.Aggregate.AggregateValue, "100")
+	require.Equal(res.Aggregate.AggregateReporter, "reporter")
+	require.Equal(res.Aggregate.ReporterPower, int64(100))
 }

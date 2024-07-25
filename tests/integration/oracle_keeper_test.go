@@ -148,9 +148,9 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.Nil(err)
 
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(queryId)})
+	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)
-	s.Equal(res.Report.AggregateReporter, repAccs[0].String())
+	s.Equal(res.Aggregate.AggregateReporter, repAccs[0].String())
 	// tip should be 0 after aggregated report
 	tips, err = s.Setup.Oraclekeeper.GetQueryTip(s.Setup.Ctx, queryId)
 	s.Nil(err)
@@ -288,12 +288,12 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	// check median
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	expectedMedianReporterIndex := 4
 	expectedMedianReporter := addr[expectedMedianReporterIndex].String()
-	s.Equal(expectedMedianReporter, res.Report.AggregateReporter)
-	s.Equal(reporters[expectedMedianReporterIndex].value, res.Report.AggregateValue)
+	s.Equal(expectedMedianReporter, res.Aggregate.AggregateReporter)
+	s.Equal(reporters[expectedMedianReporterIndex].value, res.Aggregate.AggregateValue)
 }
 
 func report(creator, value, salt, hash string, qdata []byte) (types.MsgCommitReport, types.MsgSubmitValue) {
@@ -374,14 +374,14 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1])
 	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
-	s.Equal(res.Report.AggregateReportIndex, int64(0), "single report should be at index 0")
+	s.Equal(res.Aggregate.AggregateReportIndex, int64(0), "single report should be at index 0")
 
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Report.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
@@ -448,11 +448,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err)
 
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Report.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err, "error allocating rewards")
 	reporterServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	// advance height
@@ -530,9 +530,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(err)
 
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, _ := queryServer.GetAggregatedReport(s.Setup.Ctx, &types.QueryGetCurrentAggregatedReportRequest{QueryId: hex.EncodeToString(qId)})
+	res, _ := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Report.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
@@ -639,8 +639,8 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-	agg, err := ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
-	s.NoError(err)
+	agg, _, err := ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
+	s.Error(err)
 	s.Nil(agg)
 
 	msgCommitReport = types.MsgCommitReport{
@@ -664,7 +664,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 4)
 
@@ -692,7 +692,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 1)
 }
@@ -762,8 +762,8 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-	agg, err := ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
-	s.NoError(err)
+	agg, _, err := ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
+	s.Error(err)
 	s.Nil(agg)
 
 	msgSubmitValue = types.MsgSubmitValue{
@@ -779,7 +779,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 4)
 
@@ -799,7 +799,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	agg, err = ok.GetCurrentValueForQueryId(ctx, crypto.Keccak256(querydata))
+	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 1)
 }

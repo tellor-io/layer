@@ -7,16 +7,27 @@ import "layer/oracle/aggregate_reporter.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
+// aggregate struct to represent meta data of an aggregate report
 message Aggregate {
+  // query_id is the id of the query
   bytes query_id = 1;
-  string aggregateValue = 2;
-  string aggregateReporter = 3;
-  int64 reporterPower = 4;
-  double standardDeviation = 5;
+  // aggregate_value is the value of the aggregate
+  string aggregate_value = 2;
+  // aggregate_reporter is the address of the reporter
+  string aggregate_reporter = 3;
+  // reporter_power is the power of the reporter
+  int64 reporter_power = 4;
+  // standard_deviation is the standard deviation of the reports that were aggregated
+  double standard_deviation = 5;
+  // list of reporters that were included in the aggregate
   repeated AggregateReporter reporters = 6;
+  // flagged is true if the aggregate was flagged by a dispute
   bool flagged = 7;
-  uint64 nonce = 8;
-  int64 aggregateReportIndex = 9;
+  // nonce is the nonce of the aggregate
+  uint64 index = 8;
+  // aggregate_report_index is the index of the aggregate report in the micro reports
+  int64 aggregate_report_index = 9;
+  // height of the aggregate report
   int64 height = 10;
   // height of the micro report
   int64 micro_height = 11;

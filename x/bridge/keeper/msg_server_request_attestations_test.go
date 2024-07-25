@@ -90,7 +90,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 		ReporterPower:     int64(10),
 		AggregateReporter: creatorAddr.String(),
 	}
-	ok.On("GetAggregateByTimestamp", ctx, queryId, timestampTime).Return(&aggReport, nil)
+	ok.On("GetAggregateByTimestamp", ctx, queryId, timestampTime).Return(aggReport, nil)
 	err = k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
 		Checkpoint: []byte("checkpoint"),
 	})

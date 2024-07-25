@@ -28,7 +28,6 @@ type QueryClient interface {
 	GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error)
 	GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(ctx context.Context, in *QueryGetValsetByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValsetByTimestampResponse, error)
-	GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error)
 	GetSnapshotsByReport(ctx context.Context, in *QueryGetSnapshotsByReportRequest, opts ...grpc.CallOption) (*QueryGetSnapshotsByReportResponse, error)
 	GetAttestationDataBySnapshot(ctx context.Context, in *QueryGetAttestationDataBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationDataBySnapshotResponse, error)
 	GetAttestationsBySnapshot(ctx context.Context, in *QueryGetAttestationsBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationsBySnapshotResponse, error)
@@ -116,15 +115,6 @@ func (c *queryClient) GetValsetByTimestamp(ctx context.Context, in *QueryGetVals
 	return out, nil
 }
 
-func (c *queryClient) GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error) {
-	out := new(QueryGetCurrentAggregateReportResponse)
-	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetCurrentAggregateReport", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *queryClient) GetSnapshotsByReport(ctx context.Context, in *QueryGetSnapshotsByReportRequest, opts ...grpc.CallOption) (*QueryGetSnapshotsByReportResponse, error) {
 	out := new(QueryGetSnapshotsByReportResponse)
 	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetSnapshotsByReport", in, out, opts...)
@@ -184,7 +174,6 @@ type QueryServer interface {
 	GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error)
 	GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error)
 	GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error)
-	GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error)
 	GetSnapshotsByReport(context.Context, *QueryGetSnapshotsByReportRequest) (*QueryGetSnapshotsByReportResponse, error)
 	GetAttestationDataBySnapshot(context.Context, *QueryGetAttestationDataBySnapshotRequest) (*QueryGetAttestationDataBySnapshotResponse, error)
 	GetAttestationsBySnapshot(context.Context, *QueryGetAttestationsBySnapshotRequest) (*QueryGetAttestationsBySnapshotResponse, error)
@@ -220,9 +209,6 @@ func (UnimplementedQueryServer) GetEvmAddressByValidatorAddress(context.Context,
 }
 func (UnimplementedQueryServer) GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetValsetByTimestamp not implemented")
-}
-func (UnimplementedQueryServer) GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentAggregateReport not implemented")
 }
 func (UnimplementedQueryServer) GetSnapshotsByReport(context.Context, *QueryGetSnapshotsByReportRequest) (*QueryGetSnapshotsByReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSnapshotsByReport not implemented")
@@ -396,24 +382,6 @@ func _Query_GetValsetByTimestamp_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_GetCurrentAggregateReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetCurrentAggregateReportRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetCurrentAggregateReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.bridge.Query/GetCurrentAggregateReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetCurrentAggregateReport(ctx, req.(*QueryGetCurrentAggregateReportRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Query_GetSnapshotsByReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetSnapshotsByReportRequest)
 	if err := dec(in); err != nil {
@@ -542,10 +510,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetValsetByTimestamp",
 			Handler:    _Query_GetValsetByTimestamp_Handler,
-		},
-		{
-			MethodName: "GetCurrentAggregateReport",
-			Handler:    _Query_GetCurrentAggregateReport_Handler,
 		},
 		{
 			MethodName: "GetSnapshotsByReport",

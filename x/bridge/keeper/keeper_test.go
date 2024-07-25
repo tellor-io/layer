@@ -1085,7 +1085,7 @@ func TestCreateSnapshot(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	ok.On("GetAggregateByTimestamp", ctx, []byte("queryId"), time.Unix(100, 0)).Return(&oracletypes.Aggregate{
+	ok.On("GetAggregateByTimestamp", ctx, []byte("queryId"), time.Unix(100, 0)).Return(oracletypes.Aggregate{
 		QueryId:        []byte("queryId"),
 		AggregateValue: "5000",
 		ReporterPower:  int64(100),
@@ -1142,7 +1142,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	}, nil)
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestamp).Return(timestamp, nil)
-	ok.On("GetAggregateByTimestamp", ctx, queryId, timestamp).Return(&oracletypes.Aggregate{
+	ok.On("GetAggregateByTimestamp", ctx, queryId, timestamp).Return(oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",
 		ReporterPower:  int64(100),
