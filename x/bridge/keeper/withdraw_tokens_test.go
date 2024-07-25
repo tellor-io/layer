@@ -54,7 +54,7 @@ func TestCreateWithdrawalAggregate(t *testing.T) {
 	require.Equal(t, agg.AggregateReportIndex, int64(0))
 	require.Equal(t, agg.Height, int64(0))
 	require.Equal(t, agg.Flagged, false)
-	require.Equal(t, agg.Nonce, uint64(0))
+	require.Equal(t, agg.Index, uint64(0))
 	queryIdExpected, err := k.GetWithdrawalQueryId(1)
 	require.NoError(t, err)
 	require.Equal(t, agg.QueryId, queryIdExpected)
