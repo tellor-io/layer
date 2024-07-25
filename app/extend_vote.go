@@ -263,11 +263,13 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 		return "", fmt.Errorf("failed to get keyring: %w", err)
 	}
 	keyName := viper.GetString("key-name")
+	fmt.Println("keyName: ", keyName)
 	if keyName == "" {
 		return "", fmt.Errorf("key name not found, please set --key-name flag")
 	}
 	// list all keys
 	krlist, err := kr.List()
+	fmt.Println("krlist: ", krlist)
 	if err != nil {
 		return "", fmt.Errorf("failed to list keys: %w", err)
 	}

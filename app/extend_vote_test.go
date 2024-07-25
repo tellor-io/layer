@@ -2,9 +2,11 @@ package app_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
@@ -14,117 +16,76 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type VoteExtensionTestSuite struct {
 	suite.Suite
-	ctx sdk.Context
+	ctx     sdk.Context
+	handler *app.VoteExtHandler
 }
 
 func (s *VoteExtensionTestSuite) SetupTest() {
-	s.ctx = testutils.CreateTestContext(s.T())
-}
+	viper.Set("keyring-backend", "test")
+	viper.Set("keyring-dir", os.TempDir())
+	viper.Set("key-name", "my-key-name")
 
-func (s *VoteExtensionTestSuite) TestVoteExtensionTestSuite(t *testing.T) {
-	suite.Run(t, new(VoteExtensionTestSuite))
-}
-
-func (s *VoteExtensionTestSuite) TestNewVoteExtHandler() *app.VoteExtHandler {
-	require := s.Require()
-
-	fmt.Println("a")
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	h := app.NewVoteExtHandler(
+	s.handler = app.NewVoteExtHandler(
 		log.NewNopLogger(),
 		cdc,
 		mocks.NewOracleKeeper(s.T()),
 		mocks.NewBridgeKeeper(s.T()),
 	)
-	require.NotNil(h)
+}
 
-	return h
+func TestVoteExtensionTestSuite(t *testing.T) {
+	suite.Run(t, new(VoteExtensionTestSuite))
 }
 
 func (s *VoteExtensionTestSuite) TestGetKeyring() {
 	require := s.Require()
+	h := s.handler
 
-	h := s.TestNewVoteExtHandler()
-	keyring, err := h.GetKeyring()
+	kr, err := h.GetKeyring()
 	require.NoError(err)
-	require.NotNil(keyring)
-	fmt.Println("keyring: ", keyring)
+	require.NotNil(kr)
+
+}
+
+func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
+	require := s.Require()
+	h := s.handler
+	kr, err := h.GetKeyring()
+	require.NoError(err)
+	testutils.ClearKeyring(s.T(), kr)
+
+	key, mnemonic, err := kr.NewMnemonic("key-1", keyring.English, sdk.FullFundraiserPath, "", hd.Secp256k1)
+	require.NoError(err)
+	require.NotNil(key)
+	hdPath := "m/44'/118'/0'/0/0" // BIP-44 path for Cosmos SDK
+	record, err := kr.NewAccount("my-key-name", mnemonic, "", hdPath, hd.Secp256k1)
+	fmt.Println("record: ", record)
+	fmt.Println("key: ", key)
+	fmt.Println("mnemonic: ", mnemonic)
+	fmt.Println("kr: ", kr)
+	require.NoError(err)
+	require.NotNil(record)
+	addr, err := h.GetOperatorAddress()
+	require.NoError(err)
+	require.NotNil(addr)
 }
 
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	require := s.Require()
-	h := s.TestNewVoteExtHandler()
+	h := s.handler
 
 	res, err := h.ExtendVoteHandler(s.ctx, &abci.RequestExtendVote{})
 	require.NoError(err)
 	require.NotNil(res)
 	require.Equal(res, &abci.ResponseExtendVote{})
 }
-
-// func SetupTest(tb testing.TB) (sdk.Context, *codec.ProtoCodec, *mocks.OracleKeeper, *mocks.BridgeKeeper, log.Logger) {
-// 	tb.Helper()
-
-// 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
-// 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-
-// 	db := cosmosdb.NewMemDB()
-// 	stateStore := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-// 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-// 	stateStore.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-// 	require.NoError(tb, stateStore.LoadLatestVersion())
-
-// 	registry := codectypes.NewInterfaceRegistry()
-// 	cdc := codec.NewProtoCodec(registry)
-
-// 	ok := mocks.NewOracleKeeper(tb)
-// 	bk := mocks.NewBridgeKeeper(tb)
-// 	logger := log.NewNopLogger()
-
-// 	ctx := sdk.NewContext(nil, tmproto.Header{}, false, logger)
-
-// 	return ctx, cdc, ok, bk, logger
-// }
-
-// func TestNewVoteExtHandler(t *testing.T) {
-// 	require := require.New(t)
-
-// 	_, appCodec, ok, bk, logger := SetupTest(t)
-// 	voteExtHandler := NewVoteExtHandler(logger, appCodec, ok, bk)
-// 	require.NotNil(voteExtHandler)
-// 	require.Equal(voteExtHandler.bridgeKeeper, bk)
-// 	require.Equal(voteExtHandler.oracleKeeper, ok)
-// 	require.Equal(voteExtHandler.codec, appCodec)
-// 	require.Equal(voteExtHandler.logger, logger)
-// }
-
-// func TestExtendVoteHandler(t *testing.T) {
-// 	require := require.New(t)
-
-// 	ctx, appCodec, ok, bk, logger := SetupTest(t)
-// 	h := NewVoteExtHandler(logger, appCodec, ok, bk)
-
-// 	req := abci.RequestExtendVote{
-// 		Hash: []byte("test"),
-// 	}
-// 	res, err := h.ExtendVoteHandler(ctx, &req)
-// 	require.NoError(err)
-// 	require.Equal(res, &abci.ResponseExtendVote{})
-// }
-
-// func TestGetOperatorAddress(t *testing.T) {
-// 	require := require.New(t)
-
-// 	_, appCodec, ok, bk, logger := SetupTest(t)
-// 	h := NewVoteExtHandler(logger, appCodec, ok, bk)
-
-// 	addr, err := h.GetOperatorAddress()
-// 	require.Error(err)
-// 	require.Equal(addr, "")
-// }
