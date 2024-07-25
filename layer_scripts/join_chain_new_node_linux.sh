@@ -86,8 +86,8 @@ rm -f ~/.layer/config/genesis.json
 rm -f ~/.layer/$NODE_NAME/config/genesis.json
 # get genesis file from running node's rpc
 echo "Getting genesis from runnning node....."
-curl $LAYER_NODE_URL/rpc/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
-curl $LAYER_NODE_URL/rpc/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
+curl https://$LAYER_NODE_URL/rpc/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
+curl https://$LAYER_NODE_URL/rpc/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
 sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL'/p2p"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':443/p2p"/g' ~/.layer/$NODE_NAME/config/config.toml
