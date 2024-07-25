@@ -89,15 +89,15 @@ echo "Getting genesis from runnning node....."
 curl https://$LAYER_NODE_URL/rpc/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
 curl https://$LAYER_NODE_URL/rpc/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
-sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL'/p2p"/g' ~/.layer/$NODE_NAME/config/config.toml
-sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':443/p2p"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@https:\/\/'$LAYER_NODE_URL'/p2p"/g' ~/.layer/$NODE_NAME/config/config.toml
+sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@https:\/\/'$LAYER_NODE_URL':443/p2p"/g' ~/.layer/$NODE_NAME/config/config.toml
 
 echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL/p2p"
 
 echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:443/p2p"
+./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@https://$LAYER_NODE_URL:443/p2p"
 # ./layerd start --home ~/.layer/bill --key-name bill --api.swagger --price-daemon-enabled=false --p2p.seeds "f123e64bcb076508f3bdb19ceabc86a75ca1e330@tellornode.com:26656"
 
 
