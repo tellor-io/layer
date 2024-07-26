@@ -1,8 +1,6 @@
 package app_test
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -28,24 +26,50 @@ type VoteExtensionTestSuite struct {
 }
 
 func (s *VoteExtensionTestSuite) SetupTest() {
-	viper.Set("keyring-backend", "test")
-	viper.Set("keyring-dir", os.TempDir())
-	viper.Set("key-name", "my-key-name")
+	require := s.Require()
 
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
+	s.ctx = testutils.CreateTestContext(s.T())
 	s.handler = app.NewVoteExtHandler(
 		log.NewNopLogger(),
 		cdc,
 		mocks.NewOracleKeeper(s.T()),
 		mocks.NewBridgeKeeper(s.T()),
 	)
+
+	viper.Set("keyring-backend", "test")
+	viper.Set("keyring-dir", "~/.layer/my-key-name-5")
+	viper.Set("key-name", "my-key-name-5")
+
+	kr, err := s.handler.InitKeyring()
+	require.NoError(err)
+	require.NotNil(kr)
+
+	// cmd := exec.Command("layerd", "keys", "add", "my-key-name-5")
+	// output, err := cmd.CombinedOutput()
+	// require.NoError(err)
+	// require.NotNil(output)
+	// fmt.Println(string(output))
+
+	key, mnemonic, err := kr.NewMnemonic("my-key-name-4", keyring.English, sdk.FullFundraiserPath, "", hd.Secp256k1)
+	require.NoError(err)
+	require.NotNil(key)
+	require.NotNil(mnemonic)
 }
 
 func TestVoteExtensionTestSuite(t *testing.T) {
 	suite.Run(t, new(VoteExtensionTestSuite))
 }
+
+// create a keyring in the test, sotre in temp directort, modify voteexthandler
+
+// read youre own computer
+
+// create keyring the exact same way
+
+// maybe even pass in a keyring instead of reading it
 
 func (s *VoteExtensionTestSuite) TestGetKeyring() {
 	require := s.Require()
@@ -54,27 +78,14 @@ func (s *VoteExtensionTestSuite) TestGetKeyring() {
 	kr, err := h.GetKeyring()
 	require.NoError(err)
 	require.NotNil(kr)
-
 }
 
 func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	require := s.Require()
 	h := s.handler
-	kr, err := h.GetKeyring()
-	require.NoError(err)
-	testutils.ClearKeyring(s.T(), kr)
+	// kr, err := h.GetKeyring()
+	// require.NoError(err)
 
-	key, mnemonic, err := kr.NewMnemonic("key-1", keyring.English, sdk.FullFundraiserPath, "", hd.Secp256k1)
-	require.NoError(err)
-	require.NotNil(key)
-	hdPath := "m/44'/118'/0'/0/0" // BIP-44 path for Cosmos SDK
-	record, err := kr.NewAccount("my-key-name", mnemonic, "", hdPath, hd.Secp256k1)
-	fmt.Println("record: ", record)
-	fmt.Println("key: ", key)
-	fmt.Println("mnemonic: ", mnemonic)
-	fmt.Println("kr: ", kr)
-	require.NoError(err)
-	require.NotNil(record)
 	addr, err := h.GetOperatorAddress()
 	require.NoError(err)
 	require.NotNil(addr)

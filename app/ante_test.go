@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-
 	"github.com/tellor-io/layer/app"
 
 	"cosmossdk.io/x/tx/signing"

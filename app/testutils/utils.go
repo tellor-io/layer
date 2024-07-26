@@ -1,9 +1,13 @@
 package testutils
 
 import (
+	"crypto/ecdsa"
+	"crypto/sha256"
 	"fmt"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
@@ -50,7 +54,8 @@ func CreateKeyringAccounts(t *testing.T, kr keyring.Keyring, num int) []TestAcco
 
 		addr, err := record.GetAddress()
 		require.NoError(err)
-		kr.Delete(fmt.Sprintf("key-%d", i))
+		err = kr.Delete(fmt.Sprintf("key-%d", i))
+		require.NoError(err)
 
 		accounts[i] = TestAccount{Name: record.Name, Address: addr}
 	}
@@ -65,6 +70,50 @@ func ClearKeyring(t *testing.T, kr keyring.Keyring) {
 	require.NoError(t, err)
 
 	for _, record := range records {
-		kr.Delete(record.Name)
+		err = kr.Delete(record.Name)
+		require.NoError(t, err)
 	}
+}
+
+func GenerateSignatures(t *testing.T) (sigA, sigB []byte, addressExpected common.Address) {
+	t.Helper()
+
+	privateKey, err := crypto.HexToECDSA("fad9c8855b740a0b7ed4c221dbad0f33a83a49cad6b3fe8d5817ac83d38b6a19")
+	require.NotNil(t, privateKey)
+	require.NoError(t, err)
+
+	pkCoord := &ecdsa.PublicKey{
+		X: privateKey.X,
+		Y: privateKey.Y,
+	}
+	addressExpected = crypto.PubkeyToAddress(*pkCoord)
+
+	msgA := "TellorLayer: Initial bridge signature A"
+	msgB := "TellorLayer: Initial bridge signature B"
+	msgBytesA := []byte(msgA)
+	msgBytesB := []byte(msgB)
+
+	// hash messages
+	msgHashBytes32A := sha256.Sum256(msgBytesA)
+	msgHashBytesA := msgHashBytes32A[:]
+
+	msgHashBytes32B := sha256.Sum256(msgBytesB)
+	msgHashBytesB := msgHashBytes32B[:]
+
+	// hash the hash, since the keyring signer automatically hashes the message
+	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
+	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
+
+	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
+	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
+
+	sigA, err = crypto.Sign(msgDoubleHashBytesA, privateKey)
+	require.NoError(t, err)
+	require.NotNil(t, sigA)
+
+	sigB, err = crypto.Sign(msgDoubleHashBytesB, privateKey)
+	require.NoError(t, err)
+	require.NotNil(t, sigB)
+
+	return sigA, sigB, addressExpected
 }
