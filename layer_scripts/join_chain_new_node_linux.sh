@@ -7,7 +7,7 @@ clear
 set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=tellorlayer.com
+export LAYER_NODE_URL=18.212.102.176
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
