@@ -52,7 +52,6 @@ type (
 		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
 
 		stakingKeeper  types.StakingKeeper
-		slashingKeeper types.SlashingKeeper
 		oracleKeeper   types.OracleKeeper
 		bankKeeper     types.BankKeeper
 		reporterKeeper types.ReporterKeeper
@@ -63,7 +62,6 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService storetypes.KVStoreService,
 	stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper,
 	oracleKeeper types.OracleKeeper,
 	bankKeeper types.BankKeeper,
 	reporterKeeper types.ReporterKeeper,
@@ -90,7 +88,6 @@ func NewKeeper(
 		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
 
 		stakingKeeper:  stakingKeeper,
-		slashingKeeper: slashingKeeper,
 		oracleKeeper:   oracleKeeper,
 		bankKeeper:     bankKeeper,
 		reporterKeeper: reporterKeeper,
@@ -387,6 +384,29 @@ func (k Keeper) GetValidatorCheckpointFromStorage(ctx context.Context) (*types.V
 
 func (k Keeper) GetValidatorTimestampByIdxFromStorage(ctx context.Context, checkpointIdx uint64) (types.CheckpointTimestamp, error) {
 	return k.ValidatorCheckpointIdxMap.Get(ctx, checkpointIdx)
+}
+
+func (k Keeper) GetValidatorSetIndexByTimestamp(ctx context.Context, timestamp uint64) (uint64, error) {
+	checkpointIdx, err := k.ValsetTimestampToIdxMap.Get(ctx, timestamp)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get validator set index by timestamp", "error", err)
+		return 0, err
+	}
+	return checkpointIdx.Index, nil
+}
+
+func (k Keeper) GetCurrentValidatorSetTimestamp(ctx context.Context) (uint64, error) {
+	checkpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get latest checkpoint index", "error", err)
+		return 0, err
+	}
+	checkpointTimestamp, err := k.ValidatorCheckpointIdxMap.Get(ctx, checkpointIdx.Index)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to get checkpoint timestamp", "error", err)
+		return 0, err
+	}
+	return checkpointTimestamp.Timestamp, nil
 }
 
 func (k Keeper) GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*types.BridgeValsetSignatures, error) {

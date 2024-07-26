@@ -24,6 +24,8 @@ type QueryClient interface {
 	Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error)
 	// SelectorReporter queries the reporter of a selector.
 	SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error)
+	// AllowedAmount queries the currently allowed amount to stake or unstake.
+	AllowedAmount(ctx context.Context, in *QueryAllowedAmountRequest, opts ...grpc.CallOption) (*QueryAllowedAmountResponse, error)
 }
 
 type queryClient struct {
@@ -61,6 +63,15 @@ func (c *queryClient) SelectorReporter(ctx context.Context, in *QuerySelectorRep
 	return out, nil
 }
 
+func (c *queryClient) AllowedAmount(ctx context.Context, in *QueryAllowedAmountRequest, opts ...grpc.CallOption) (*QueryAllowedAmountResponse, error) {
+	out := new(QueryAllowedAmountResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/AllowedAmount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -71,6 +82,8 @@ type QueryServer interface {
 	Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error)
 	// SelectorReporter queries the reporter of a selector.
 	SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error)
+	// AllowedAmount queries the currently allowed amount to stake or unstake.
+	AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -86,6 +99,9 @@ func (UnimplementedQueryServer) Reporters(context.Context, *QueryReportersReques
 }
 func (UnimplementedQueryServer) SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SelectorReporter not implemented")
+}
+func (UnimplementedQueryServer) AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllowedAmount not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -154,6 +170,24 @@ func _Query_SelectorReporter_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllowedAmount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowedAmountRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllowedAmount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/AllowedAmount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllowedAmount(ctx, req.(*QueryAllowedAmountRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -172,6 +206,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SelectorReporter",
 			Handler:    _Query_SelectorReporter_Handler,
+		},
+		{
+			MethodName: "AllowedAmount",
+			Handler:    _Query_AllowedAmount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

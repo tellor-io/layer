@@ -7,6 +7,8 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 )
 
 func TestReportersQuery(t *testing.T) {
@@ -31,4 +33,22 @@ func TestSelectorReporterQuery(t *testing.T) {
 	res, err := querier.SelectorReporter(ctx, &types.QuerySelectorReporterRequest{SelectorAddress: selector.String()})
 	require.NoError(t, err)
 	require.Equal(t, reporterAddr.String(), res.Reporter)
+}
+
+func TestAllowedAmountQuery(t *testing.T) {
+	k, sk, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	// set the last stored tracked amount
+	amt := math.NewInt(1000)
+	err := k.Tracker.Set(ctx, types.StakeTracker{Amount: amt})
+	require.NoError(t, err)
+
+	sk.On("TotalBondedTokens", ctx).Return(amt, nil)
+	res, err := querier.AllowedAmount(ctx, &types.QueryAllowedAmountRequest{})
+	require.NoError(t, err)
+
+	expectedAllowedAmount := math.NewInt(50)
+	require.Equal(t, expectedAllowedAmount, res.StakingAmount)
+	require.Equal(t, expectedAllowedAmount.Neg(), res.UnstakingAmount)
 }

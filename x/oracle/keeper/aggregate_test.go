@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.Equal(false, res_query.HasRevealedReports)
 	s.Equal(math.ZeroInt(), res_query.Amount)
 
-	aggregate, err := s.oracleKeeper.GetCurrentValueForQueryId(ctx, []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"))
+	aggregate, _, err := s.oracleKeeper.GetCurrentAggregateReport(ctx, []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"))
 	s.NoError(err)
 	s.NotEqual("", aggregate.AggregateValue)
 }
@@ -217,7 +217,7 @@ func (s *KeeperTestSuite) TestGetCurrentValueForQueryId() {
 	s.NoError(err)
 
 	s.ctx = s.ctx.WithBlockTime(reportedAt)
-	retAggregate, err := s.oracleKeeper.GetCurrentValueForQueryId(s.ctx, qId)
+	retAggregate, _, err := s.oracleKeeper.GetCurrentAggregateReport(s.ctx, qId)
 	s.NoError(err)
 	s.Equal(aggregate, retAggregate)
 }
@@ -395,7 +395,8 @@ func (s *KeeperTestSuite) TestGetCurrentAggregateReport() {
 	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
 	s.NoError(err)
 
-	retAgg, timestamp := s.oracleKeeper.GetCurrentAggregateReport(s.ctx, qId)
+	retAgg, timestamp, err := s.oracleKeeper.GetCurrentAggregateReport(s.ctx, qId)
+	s.NoError(err)
 	s.Equal(aggregate, retAgg)
 	s.Equal(reportedAt.Unix(), timestamp.Unix())
 }
@@ -425,7 +426,7 @@ func (s *KeeperTestSuite) TestGetAggregateByTimestamp() {
 
 	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, reportedAt)
 	s.NoError(err)
-	s.Equal(aggregate, retAgg)
+	s.Equal(aggregate, &retAgg)
 }
 
 func (s *KeeperTestSuite) TestGetAggregateByIndex() {
@@ -437,4 +438,14 @@ func (s *KeeperTestSuite) TestGetAggregateByIndex() {
 	s.NoError(err)
 	s.Equal(aggregate, retAgg)
 	s.Equal(reportedAt.Unix(), retTimestamp.Unix())
+}
+
+func (s *KeeperTestSuite) TestGetAggregateBeforeByReporter() {
+	reportedAt := time.Now()
+	aggregate, qId, reporter, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
+	s.NoError(err)
+
+	resAgg, err := s.oracleKeeper.GetAggregateBeforeByReporter(s.ctx, qId, reportedAt.Add(time.Second), reporter)
+	s.NoError(err)
+	s.Equal(aggregate, resAgg)
 }

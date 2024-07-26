@@ -46,11 +46,6 @@ service Query {
   }
 
   // Queries a list of GetAggregatedReport items.
-  rpc GetAggregatedReport(QueryGetCurrentAggregatedReportRequest) returns (QueryGetAggregatedReportResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregated_report/{query_id}";
-  }
-
-  // Queries a list of GetAggregatedReport items.
   rpc GetDataBefore(QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_data_before/{query_id}/{timestamp}";
   }
@@ -67,6 +62,12 @@ service Query {
 
   rpc RetrieveData(QueryRetrieveDataRequest) returns (QueryRetrieveDataResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/retrieve_data/{query_id}/{timestamp}";
+  }
+  rpc GetCurrentAggregateReport(QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_current_aggregate_report/{query_id}";
+  }
+  rpc GetAggregateBeforeByReporter(QueryGetAggregateBeforeByReporterRequest) returns (QueryGetAggregateBeforeByReporterResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregate_before_by_reporter/{query_id}/{timestamp}/{reporter}";
   }
 }
 
@@ -127,14 +128,6 @@ message QueryGetUserTipTotalResponse {
   ];
 }
 
-message QueryGetCurrentAggregatedReportRequest {
-  string query_id = 1;
-}
-
-message QueryGetAggregatedReportResponse {
-  Aggregate report = 1;
-}
-
 message QueryGetDataBeforeRequest {
   string query_id = 1;
   int64 timestamp = 2;
@@ -167,5 +160,35 @@ message QueryRetrieveDataRequest {
 }
 
 message QueryRetrieveDataResponse {
+  Aggregate aggregate = 1;
+}
+
+// QueryGetCurrentAggregateReportRequest is the request type for the Query/GetCurrentAggregateReport RPC method.
+message QueryGetCurrentAggregateReportRequest {
+  // query_id defines the query id hex string.
+  string query_id = 1;
+}
+
+// QueryGetCurrentAggregateReportResponse is the response type for the Query/GetCurrentAggregateReport RPC method.
+message QueryGetCurrentAggregateReportResponse {
+  // aggregate defines the current aggregate report.
+  Aggregate aggregate = 1;
+  // timestamp defines the timestamp of the aggregate report.
+  uint64 timestamp = 2;
+}
+
+// QueryGetAggregateBeforeByReporterRequest is the request type for the Query/GetAggregateBeforeByReporter RPC method.
+message QueryGetAggregateBeforeByReporterRequest {
+  // query_id defines the query id hex string.
+  string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
+  int64 timestamp = 2;
+  // reporter defines the reporter address.
+  string reporter = 3;
+}
+
+// QueryGetAggregateBeforeByReporterResponse is the response type for the Query/GetAggregateBeforeByReporter RPC method.
+message QueryGetAggregateBeforeByReporterResponse {
+  // aggregate defines the aggregate report.
   Aggregate aggregate = 1;
 }

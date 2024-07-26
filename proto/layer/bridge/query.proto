@@ -46,10 +46,6 @@ service Query {
     option (google.api.http).get = "/layer/bridge/get_valset_by_timestamp/{timestamp}";
   }
 
-  rpc GetCurrentAggregateReport(QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
-    option (google.api.http).get = "/layer/bridge/get_current_aggregate_report/{query_id}";
-  }
-
   rpc GetSnapshotsByReport(QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
     option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}";
   }
@@ -60,6 +56,14 @@ service Query {
 
   rpc GetAttestationsBySnapshot(QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
     option (google.api.http).get = "/layer/bridge/get_attestations_by_snapshot/{snapshot}";
+  }
+
+  rpc GetValidatorSetIndexByTimestamp(QueryGetValidatorSetIndexByTimestampRequest) returns (QueryGetValidatorSetIndexByTimestampResponse) {
+    option (google.api.http).get = "/layer/bridge/get_validator_set_index_by_timestamp/{timestamp}";
+  }
+
+  rpc GetCurrentValidatorSetTimestamp(QueryGetCurrentValidatorSetTimestampRequest) returns (QueryGetCurrentValidatorSetTimestampResponse) {
+    option (google.api.http).get = "/layer/bridge/get_current_validator_set_timestamp";
   }
 }
 
@@ -163,33 +167,6 @@ message QueryGetValsetByTimestampResponse {
   repeated QueryBridgeValidator bridge_validator_set = 1;
 }
 
-message QueryGetCurrentAggregateReportRequest {
-  string query_id = 1;
-}
-
-message QueryGetCurrentAggregateReportResponse {
-  Aggregate aggregate = 1;
-  uint64 timestamp = 2;
-}
-
-message Aggregate {
-  bytes query_id = 1;
-  string aggregateValue = 2;
-  string aggregateReporter = 3;
-  int64 reporterPower = 4;
-  double standard_deviation = 5;
-  repeated AggregateReporter reporters = 6;
-  bool flagged = 7;
-  int64 nonce = 8;
-  int64 aggregateReportIndex = 9;
-  int64 height = 10;
-}
-
-message AggregateReporter {
-  string reporter = 1;
-  int64 power = 2;
-}
-
 message QueryGetSnapshotsByReportRequest {
   string query_id = 1;
   string timestamp = 2;
@@ -220,4 +197,18 @@ message QueryGetAttestationsBySnapshotRequest {
 
 message QueryGetAttestationsBySnapshotResponse {
   repeated string attestations = 1;
+}
+
+message QueryGetValidatorSetIndexByTimestampRequest {
+  int64 timestamp = 1;
+}
+
+message QueryGetValidatorSetIndexByTimestampResponse {
+  int64 index = 1;
+}
+
+message QueryGetCurrentValidatorSetTimestampRequest {}
+
+message QueryGetCurrentValidatorSetTimestampResponse {
+  int64 timestamp = 1;
 }

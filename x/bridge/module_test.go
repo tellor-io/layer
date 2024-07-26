@@ -49,7 +49,6 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		sk,
-		ak,
 		ok,
 		bk,
 		rk,
@@ -118,7 +117,7 @@ func TestEndBlock(t *testing.T) {
 
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestamp).Return(timestamp, nil)
-	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, timestamp).Return(&oracletypes.Aggregate{
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, timestamp).Return(oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",
 		ReporterPower:  int64(100),

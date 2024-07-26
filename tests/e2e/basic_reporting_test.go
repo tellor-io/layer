@@ -60,8 +60,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidaotr)
 	require.NoError(err)
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 	validator, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAccountValAddrs[0])
 	require.NoError(err)
 
@@ -154,6 +154,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
 	//---------------------------------------------------------------------------
 	// Height 2
@@ -188,24 +189,25 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(revealResponse1)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
+
 	// get queryId for GetAggregatedReportRequest
 	queryIdEth := utils.QueryIDFromData(cycleListEth)
-	s.NoError(err)
+
 	// check that aggregated report is stored
-	getAggReportRequest1 := oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequest1 := oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryIdEth),
 	}
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
-	result1, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequest1)
+	result1, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest1)
 	require.NoError(err)
-	require.Equal(result1.Report.Height, int64(2))
-	require.Equal(result1.Report.AggregateReportIndex, int64(0))
-	require.Equal(result1.Report.AggregateValue, testutil.EncodeValue(4500))
-	require.Equal(result1.Report.AggregateReporter, reporterAccount.String())
-	require.Equal(result1.Report.QueryId, queryIdEth)
-	require.Equal(int64(4000), result1.Report.ReporterPower)
+	require.Equal(result1.Aggregate.Height, int64(2))
+	require.Equal(result1.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(result1.Aggregate.AggregateValue, testutil.EncodeValue(4500))
+	require.Equal(result1.Aggregate.AggregateReporter, reporterAccount.String())
+	require.Equal(result1.Aggregate.QueryId, queryIdEth)
+	require.Equal(int64(4000), result1.Aggregate.ReporterPower)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)
 	require.Equal(int64(0), tbrModuleAccountBalance.Amount.Int64())
@@ -263,24 +265,25 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(revealResponse2)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
+
 	// get queryId for GetAggregatedReportRequest
 	queryIdTrb := utils.QueryIDFromData(cycleListTrb)
-	s.NoError(err)
+
 	// create get aggregated report query
-	getAggReportRequest2 := oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequest2 := oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryIdTrb),
 	}
 	// check that aggregated report is stored correctly
-	result2, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequest2)
+	result2, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest2)
 	require.NoError(err)
-	require.Equal(int64(0), result2.Report.AggregateReportIndex)
-	require.Equal(testutil.EncodeValue(100_000), result2.Report.AggregateValue)
-	require.Equal(reporterAccount.String(), result2.Report.AggregateReporter)
-	require.Equal(queryIdTrb, result2.Report.QueryId)
-	require.Equal(int64(4000), result2.Report.ReporterPower)
-	require.Equal(int64(3), result2.Report.Height)
+	require.Equal(int64(0), result2.Aggregate.AggregateReportIndex)
+	require.Equal(testutil.EncodeValue(100_000), result2.Aggregate.AggregateValue)
+	require.Equal(reporterAccount.String(), result2.Aggregate.AggregateReporter)
+	require.Equal(queryIdTrb, result2.Aggregate.QueryId)
+	require.Equal(int64(4000), result2.Aggregate.ReporterPower)
+	require.Equal(int64(3), result2.Aggregate.Height)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)
 	require.Equal(int64(0), tbrModuleAccountBalance.Amount.Int64())
@@ -355,8 +358,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(commitResponse1)
 	commitHeight = s.Setup.Ctx.BlockHeight()
 	require.Equal(int64(4), commitHeight)
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(commitHeight + 1)
@@ -378,22 +381,22 @@ func (s *E2ETestSuite) TestBasicReporting() {
 
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
 	// create get aggreagted report query
-	getAggReportRequest1 = oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequest1 = oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryIdEth),
 	}
 	// check that the aggregated report is stored correctly
-	result1, err = queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequest1)
+	result1, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest1)
 	require.NoError(err)
-	require.Equal(result1.Report.AggregateReportIndex, int64(0))
-	require.Equal(result1.Report.AggregateValue, testutil.EncodeValue(5000))
-	require.Equal(result1.Report.AggregateReporter, reporterAccount.String())
-	require.Equal(queryIdEth, result1.Report.QueryId)
-	require.Equal(int64(4000), result1.Report.ReporterPower)
-	require.Equal(int64(5), result1.Report.Height)
+	require.Equal(result1.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(result1.Aggregate.AggregateValue, testutil.EncodeValue(5000))
+	require.Equal(result1.Aggregate.AggregateReporter, reporterAccount.String())
+	require.Equal(queryIdEth, result1.Aggregate.QueryId)
+	require.Equal(int64(4000), result1.Aggregate.ReporterPower)
+	require.Equal(int64(5), result1.Aggregate.Height)
 	// check that the tip is in tip escrow
 	tipEscrowAcct := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
 	tipEscrowBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tipEscrowAcct, s.Setup.Denom) // 98 loya
@@ -414,8 +417,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.Equal(deleBeforeReport.GetShares().Add(math.LegacyNewDec(98+8928)), deleAfter.GetShares())
 
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
 	// case 4: submit without committing for tipped query
 	//---------------------------------------------------------------------------
@@ -457,21 +460,21 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(revealTrb)
 	// advance time and block height to expire the query and aggregate report
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 	// create get aggregated report query
-	getAggReportRequestTrb := oracletypes.QueryGetCurrentAggregatedReportRequest{
+	getAggReportRequestTrb := oracletypes.QueryGetCurrentAggregateReportRequest{
 		QueryId: hex.EncodeToString(queryIdTrb),
 	}
 	// query aggregated report
-	resultTrb, err := queryServer.GetAggregatedReport(s.Setup.Ctx, &getAggReportRequestTrb)
+	resultTrb, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequestTrb)
 	require.NoError(err)
-	require.Equal(resultTrb.Report.AggregateReportIndex, int64(0))
-	require.Equal(resultTrb.Report.AggregateValue, testutil.EncodeValue(1_000_000))
-	require.Equal(resultTrb.Report.AggregateReporter, reporterAccount.String())
-	require.Equal(queryIdTrb, resultTrb.Report.QueryId)
-	require.Equal(int64(4000), resultTrb.Report.ReporterPower)
-	require.Equal(int64(6), resultTrb.Report.Height)
+	require.Equal(resultTrb.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(resultTrb.Aggregate.AggregateValue, testutil.EncodeValue(1_000_000))
+	require.Equal(resultTrb.Aggregate.AggregateReporter, reporterAccount.String())
+	require.Equal(queryIdTrb, resultTrb.Aggregate.QueryId)
+	require.Equal(int64(4000), resultTrb.Aggregate.ReporterPower)
+	require.Equal(int64(6), resultTrb.Aggregate.Height)
 	// check that the tip is in tip escrow
 	tipEscrowBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tipEscrowAcct, s.Setup.Denom) // 98 loya
 	require.Equal(tipAmount.Amount.Sub(twoPercent.Amount), tipEscrowBalance.Amount)
@@ -485,7 +488,4 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	deleAfter, err = s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
 	require.Equal(deleBeforeReport2.GetShares().Add(math.LegacyNewDec(98)), deleAfter.GetShares())
-
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
 }

@@ -44,7 +44,7 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 		AggregateValue: "1",
 		ReporterPower:  int64(10),
 	}
-	ok.On("GetAggregateByTimestamp", ctx, queryId, timestampTime).Return(&aggReport, nil).Once()
+	ok.On("GetAggregateByTimestamp", ctx, queryId, timestampTime).Return(aggReport, nil).Once()
 	snapshot, err := utils.QueryBytesFromString("abcd1234")
 	require.NoError(t, err)
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, types.AttestationSnapshotData{

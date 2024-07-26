@@ -52,6 +52,7 @@ contract BlobstreamO is ECDSA {
     /*Errors*/
     error AlreadyInitialized();
     error InsufficientVotingPower();
+    error InvalidPowerThreshold();
     error InvalidSignature();
     error MalformedCurrentValidatorSet();
     error NotConsensusValue();
@@ -60,6 +61,7 @@ contract BlobstreamO is ECDSA {
     error StaleValidatorSet();
     error SuppliedValidatorSetInvalid();
     error ValidatorSetNotStale();
+    error ValidatorTimestampMustIncrease();
 
     /*Functions*/
     /// @notice Constructor for the BlobstreamO contract.
@@ -108,7 +110,7 @@ contract BlobstreamO is ECDSA {
         if (msg.sender != guardian) {
             revert NotGuardian();
         }
-        if (block.timestamp - validatorTimestamp < unbondingPeriod) {
+        if (block.timestamp - (validatorTimestamp / 1000) < unbondingPeriod) {
             revert ValidatorSetNotStale();
         }
         powerThreshold = _powerThreshold;
@@ -132,6 +134,12 @@ contract BlobstreamO is ECDSA {
     ) external {
         if (_currentValidatorSet.length != _sigs.length) {
             revert MalformedCurrentValidatorSet();
+        }
+        if (_newValidatorTimestamp < validatorTimestamp) {
+            revert ValidatorTimestampMustIncrease();
+        }
+        if (_newPowerThreshold == 0) {
+            revert InvalidPowerThreshold();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
         bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
@@ -225,7 +233,7 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         uint256 _powerThreshold
     ) internal view {
-        if (block.timestamp - validatorTimestamp > unbondingPeriod) {
+        if (block.timestamp - (validatorTimestamp / 1000) > unbondingPeriod) {
             revert StaleValidatorSet();
         }
         uint256 _cumulativePower = 0;

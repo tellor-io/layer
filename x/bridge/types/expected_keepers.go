@@ -20,10 +20,6 @@ type StakingKeeper interface {
 	TotalBondedTokens(ctx context.Context) (math.Int, error)
 }
 
-type SlashingKeeper interface {
-	// Methods imported from slashing should be defined here
-}
-
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
 	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
@@ -41,9 +37,8 @@ type BankKeeper interface {
 }
 
 type OracleKeeper interface {
-	GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *oracletypes.Aggregate, timestamp time.Time)
 	GetAggregateBefore(ctx context.Context, queryId []byte, timestampBefore time.Time) (aggregate *oracletypes.Aggregate, timestamp time.Time, err error)
-	GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate *oracletypes.Aggregate, err error)
+	GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate oracletypes.Aggregate, err error)
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate

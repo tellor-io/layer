@@ -106,7 +106,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 	if err != nil {
 		return err
 	}
-	report.Nonce = nonce
+	report.Index = nonce
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentTimestamp := sdkCtx.BlockTime().UnixMilli()
@@ -123,21 +123,6 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 		),
 	})
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
-}
-
-func (k Keeper) GetCurrentValueForQueryId(ctx context.Context, queryId []byte) (*types.Aggregate, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
-	var mostRecent *types.Aggregate
-	// This should get us the most recent aggregate, as they are walked in descending order
-	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
-		mostRecent = &value
-		return true, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return mostRecent, nil
 }
 
 func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
@@ -195,17 +180,20 @@ func (k Keeper) GetAggregatedReportsByHeight(ctx context.Context, height int64) 
 	return reports
 }
 
-func (k Keeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time) {
+func (k Keeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time, err error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).Descending()
-	err := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		aggregate = &value
 		timestamp = time.UnixMilli(key.K2())
 		return true, nil
 	})
 	if err != nil {
-		panic(err) // Handle the error appropriately
+		return nil, time.Time{}, err
 	}
-	return aggregate, timestamp
+	if aggregate == nil {
+		return nil, time.Time{}, fmt.Errorf("aggregate not found")
+	}
+	return aggregate, timestamp, nil
 }
 
 func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestampBefore time.Time) (aggregate *types.Aggregate, timestamp time.Time, err error) {
@@ -237,38 +225,18 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 	return mostRecent, timestamp, nil
 }
 
-// todo: change
-func (k Keeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate *types.Aggregate, err error) {
-	timestampUnix := timestamp.UnixMilli()
-
-	// Create a range that specifically targets the exact timestamp
-	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).StartInclusive(timestampUnix).EndInclusive(timestampUnix)
-
-	// Walk through the aggregates to find the one that exactly matches the timestamp
-	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
-		if key.K2() == timestampUnix {
-			aggregate = &value
-			return true, nil // Stop when the exact match is found
-		}
-		return false, nil // Continue if this is not the exact match
-	})
+func (k Keeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate types.Aggregate, err error) {
+	agg, err := k.Aggregates.Get(ctx, collections.Join(queryId, timestamp.UnixMilli()))
 	if err != nil {
-		return nil, err
+		return types.Aggregate{}, err
 	}
-
-	if aggregate == nil {
-		return nil, fmt.Errorf("no aggregate report found at timestamp %v for query id %s", timestamp, hex.EncodeToString(queryId))
-	}
-
-	return aggregate, nil
+	return agg, nil
 }
 
 func (k Keeper) GetAggregateByIndex(ctx context.Context, queryId []byte, index uint64) (aggregate *types.Aggregate, timestamp time.Time, err error) {
 	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId)
 
-	// var aggregate *types.Aggregate
 	var currentIndex uint64
-	k.Aggregates.Indexes.IndexesList()
 	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
 		if currentIndex == index {
 			aggregate = &value
@@ -287,4 +255,19 @@ func (k Keeper) GetAggregateByIndex(ctx context.Context, queryId []byte, index u
 	}
 
 	return aggregate, timestamp, nil
+}
+
+func (k Keeper) GetAggregateBeforeByReporter(ctx context.Context, queryId []byte, timestamp time.Time, reporter sdk.AccAddress) (aggregate *types.Aggregate, err error) {
+	rng := collections.NewPrefixedPairRange[[]byte, int64](queryId).EndExclusive(timestamp.UnixMilli()).Descending()
+	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.Aggregate) (stop bool, err error) {
+		if !value.Flagged && sdk.MustAccAddressFromBech32(value.AggregateReporter).Equals(reporter) {
+			aggregate = &value
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return aggregate, nil
 }

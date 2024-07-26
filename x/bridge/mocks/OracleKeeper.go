@@ -83,19 +83,19 @@ func (_m *OracleKeeper) GetAggregateByIndex(ctx context.Context, queryId []byte,
 }
 
 // GetAggregateByTimestamp provides a mock function with given fields: ctx, queryId, timestamp
-func (_m *OracleKeeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (*types.Aggregate, error) {
+func (_m *OracleKeeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (types.Aggregate, error) {
 	ret := _m.Called(ctx, queryId, timestamp)
 
-	var r0 *types.Aggregate
+	var r0 types.Aggregate
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) (*types.Aggregate, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) (types.Aggregate, error)); ok {
 		return rf(ctx, queryId, timestamp)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) *types.Aggregate); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) types.Aggregate); ok {
 		r0 = rf(ctx, queryId, timestamp)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Aggregate)
+			r0 = ret.Get(0).(types.Aggregate)
 		}
 	}
 

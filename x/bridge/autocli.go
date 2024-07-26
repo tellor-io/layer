@@ -60,12 +60,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "timestamp"}},
 				},
 				{
-					RpcMethod:      "GetCurrentAggregateReport",
-					Use:            "get-current-aggregate-report [query_id]",
-					Short:          "Query current aggregate report",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
-				},
-				{
 					RpcMethod:      "GetSnapshotsByReport",
 					Use:            "get-snapshots-by-report [query-id] [timestamp]",
 					Short:          "Query snapshots by report",
