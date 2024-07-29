@@ -1,13 +1,14 @@
 package app_test
 
 import (
-	"encoding/json"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
@@ -103,50 +104,62 @@ func (s *ProposalHandlerTestSuite) TestCheckOracleAttestationsFromLastCommit() {
 	ctx := s.ctx
 	require.NotNil(ctx)
 
-	sigA, sigB, _ := testutils.GenerateSignatures(s.T())
-	valAddr := sample.AccAddressBytes()
-	_ = sdk.ConsAddress(valAddr)
-	voteExt := app.BridgeVoteExtension{
-		OracleAttestations: []app.OracleAttestation{
-			{
-				Attestation: []byte("attestation"),
-			},
-		},
-		InitialSignature: app.InitialSignature{
-			SignatureA: sigA,
-			SignatureB: sigB,
-		},
-		ValsetSignature: app.BridgeValsetSignature{
-			Signature: []byte("signature"),
-			Timestamp: uint64(s.ctx.BlockTime().Unix()),
-		},
-	}
-	_, err := json.Marshal(voteExt)
+	commit, voteExt, _, valAddr, consAddr := testutils.GenerateCommit(s.T(), ctx)
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+	}, nil)
+
+	att, snap, addrs, err := p.CheckOracleAttestationsFromLastCommit(ctx, commit)
 	require.NoError(err)
+	require.Equal(voteExt.OracleAttestations[0].Attestation, att[0])
+	require.Equal(voteExt.OracleAttestations[0].Snapshot, snap[0])
+	require.Equal(valAddr.String(), addrs[0])
+	fmt.Println("addrs: ", addrs, "\natt: ", att, "\nsnap: ", snap)
 }
 
-// func (s *ProposalHandlerTestSuite) TestValidatorOperatorAddressFromVote_NotFound() {
-// 	require := s.Require()
-// 	p := s.proposalHandler
-// 	require.NotNil(p)
-// 	sk := s.stakingKeeper
-// 	require.NotNil(sk)
-// 	ctx := s.ctx
-// 	require.NotNil(ctx)
-// }
-
-func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
+func (s *ProposalHandlerTestSuite) TestSetEVMAddresses() {
 	require := s.Require()
 	p := s.proposalHandler
+	require.NotNil(p)
 	bk := s.bridgeKeeper
 	require.NotNil(bk)
 	ctx := s.ctx
 	require.NotNil(ctx)
 
+	operAddrs := []string{
+		"0x1",
+		"0x2",
+		"0x3",
+	}
+	evmAddrs := []string{
+		"0x1",
+		"0x2",
+		"0x3",
+	}
+	bk.On("SetEVMAddressByOperator", ctx, operAddrs[0], common.HexToAddress(evmAddrs[0]).Bytes()).Return(nil).Once()
+	bk.On("SetEVMAddressByOperator", ctx, operAddrs[1], common.HexToAddress(evmAddrs[1]).Bytes()).Return(nil).Once()
+	bk.On("SetEVMAddressByOperator", ctx, operAddrs[2], common.HexToAddress(evmAddrs[2]).Bytes()).Return(nil).Once()
+	require.NoError(p.SetEVMAddresses(ctx, operAddrs, evmAddrs))
+
+	bk.On("SetEVMAddressByOperator", ctx, operAddrs[0], common.HexToAddress(evmAddrs[0]).Bytes()).Return(errors.New("error")).Once()
+	require.Error(p.SetEVMAddresses(ctx, operAddrs, evmAddrs))
+}
+
+func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
+	require := s.Require()
+	p := s.proposalHandler
+	bk := s.bridgeKeeper
+	sk := s.stakingKeeper
+	require.NotNil(bk)
+	require.NotNil(sk)
+	ctx := s.ctx
+	require.NotNil(ctx)
+
 	// not BlockIDFlagCommit vote
 	valAccAddr1 := sample.AccAddressBytes()
+	consAddr := sdk.ConsAddress(valAccAddr1)
 	val1 := abcitypes.Validator{
-		Address: valAccAddr1,
+		Address: consAddr,
 	}
 	ext := abcitypes.ExtendedCommitInfo{}
 	ext.Votes = []abcitypes.ExtendedVoteInfo{
@@ -160,38 +173,102 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 	require.Empty(res2)
 
 	// BlockIDFlagCommit vote
-	sigA, sigB, addressExpected := testutils.GenerateSignatures(s.T())
-	fmt.Println("addressExpected: ", addressExpected, "\nsigA: ", sigA, "\nsigB: ", sigB)
-
-	voteExt := app.BridgeVoteExtension{
-		OracleAttestations: []app.OracleAttestation{
-			{
-				Attestation: []byte("attestation"),
-			},
-		},
-		InitialSignature: app.InitialSignature{
-			SignatureA: sigA,
-			SignatureB: sigB,
-		},
-		ValsetSignature: app.BridgeValsetSignature{
-			Signature: []byte("signature"),
-			Timestamp: uint64(s.ctx.BlockTime().Unix()),
-		},
-	}
-	voteExtBytes, err := json.Marshal(voteExt)
+	commit, voteExt, addrsExpected, valAddr, consAddr := testutils.GenerateCommit(s.T(), ctx)
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+	}, nil)
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB).Return(addrsExpected, nil)
+	bk.On("GetEVMAddressByOperator", ctx, valAddr.String()).Return(nil, errors.New("error"))
+	res1, res2, err = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
 	require.NoError(err)
+	require.Equal(valAddr.String(), res1[0])
+	require.Equal(addrsExpected.String(), res2[0])
+}
 
-	ext.Votes = []abcitypes.ExtendedVoteInfo{
-		{
-			Validator:     val1,
-			BlockIdFlag:   cmtproto.BlockIDFlagCommit,
-			VoteExtension: voteExtBytes,
-		},
-	}
+func (s *ProposalHandlerTestSuite) TestCheckValsetSignaturesFromLastCommit() {
+	require := s.Require()
+	p := s.proposalHandler
+	bk := s.bridgeKeeper
+	sk := s.stakingKeeper
+	require.NotNil(bk)
+	require.NotNil(sk)
+	ctx := s.ctx
+	require.NotNil(ctx)
 
-	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB).Return(addressExpected, nil)
-	res1, res2, err = p.CheckInitialSignaturesFromLastCommit(ctx, ext)
+	commit, voteExt, _, valAddr, consAddr := testutils.GenerateCommit(s.T(), ctx)
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+	}, nil)
+
+	operAddrs, timestamps, signatures, err := p.CheckValsetSignaturesFromLastCommit(ctx, commit)
 	require.NoError(err)
-	require.Equal(val1.Address, res1)
-	require.Equal(val1.Address, res2)
+	require.Equal(valAddr.String(), operAddrs[0])
+	require.Equal(uint64(timestamps[0]), voteExt.ValsetSignature.Timestamp)
+	require.Equal(signatures[0], hex.EncodeToString(voteExt.ValsetSignature.Signature))
+}
+
+func (s *ProposalHandlerTestSuite) TestPreBlocker() {
+	require := s.Require()
+	// p := s.proposalHandler
+	bk := s.bridgeKeeper
+	sk := s.stakingKeeper
+	require.NotNil(bk)
+	require.NotNil(sk)
+	ctx := s.ctx
+	require.NotNil(ctx)
+
+	// accAddr := sample.AccAddressBytes()
+	// _ = sdk.ConsAddress(accAddr)
+	// sigA, sigB, _ := testutils.GenerateSignatures(s.T())
+
+	// voteExt := app.BridgeVoteExtension{
+	// 	OracleAttestations: []app.OracleAttestation{
+	// 		{
+	// 			Attestation: []byte("attestation"),
+	// 			Snapshot:    []byte("snapshot"),
+	// 		},
+	// 	},
+	// 	InitialSignature: app.InitialSignature{
+	// 		SignatureA: sigA,
+	// 		SignatureB: sigB,
+	// 	},
+	// 	ValsetSignature: app.BridgeValsetSignature{
+	// 		Signature: []byte("signature"),
+	// 		Timestamp: uint64(ctx.BlockTime().Unix()),
+	// 	},
+	// }
+
+	// voteExtBytes, err := json.Marshal(voteExt)
+	// require.NoError(err)
+
+	// req := abcitypes.RequestFinalizeBlock{
+	// 	Txs: [][]byte{
+	// 		voteExtBytes,
+	// 	},
+	// 	Height: 1,
+	// }
+
+	// res, err := p.PreBlocker(ctx, &req)
+	// fmt.Println("res: ", res, "\nerr: ", err)
+}
+
+func (s *ProposalHandlerTestSuite) TestPrepareProposalHandler() {
+	require := s.Require()
+	p := s.proposalHandler
+	require.NotNil(p)
+	bk := s.bridgeKeeper
+	sk := s.stakingKeeper
+	require.NotNil(bk)
+	require.NotNil(sk)
+	ctx := s.ctx
+	require.NotNil(ctx)
+
+	commit, _, _, _, _ := testutils.GenerateCommit(s.T(), ctx)
+	ctx = ctx.WithBlockHeight(2)
+	req := abcitypes.RequestPrepareProposal{
+		Height:          2,
+		LocalLastCommit: commit,
+	}
+	res, err := p.PrepareProposalHandler(ctx, &req)
+	fmt.Println("res: ", res, "\nerr: ", err)
 }

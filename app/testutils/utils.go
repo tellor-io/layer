@@ -3,12 +3,17 @@ package testutils
 import (
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"testing"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/app"
+	"github.com/tellor-io/layer/testutil/sample"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	storetypes "cosmossdk.io/store/types"
@@ -34,6 +39,16 @@ func CreateTestContext(t *testing.T) sdk.Context {
 		key,
 		storetypes.NewTransientStoreKey("test"),
 	)
+
+	// set vote ext enabled height
+	testCtx.Ctx = testCtx.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 0,
+		},
+	})
+
+	// set chain id
+	testCtx.Ctx = testCtx.Ctx.WithChainID("layer")
 
 	return testCtx.Ctx
 }
@@ -116,4 +131,49 @@ func GenerateSignatures(t *testing.T) (sigA, sigB []byte, addressExpected common
 	require.NotNil(t, sigB)
 
 	return sigA, sigB, addressExpected
+}
+
+func GenerateCommit(t *testing.T, ctx sdk.Context) (abcitypes.ExtendedCommitInfo, app.BridgeVoteExtension, common.Address, sdk.AccAddress, sdk.ConsAddress) {
+	t.Helper()
+
+	accAddr := sample.AccAddressBytes()
+	consAddr := sdk.ConsAddress(accAddr)
+
+	sigA, sigB, addressExpected := GenerateSignatures(t)
+
+	voteExt := app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{
+				Attestation: []byte("attestation"),
+				Snapshot:    []byte("snapshot"),
+			},
+		},
+		InitialSignature: app.InitialSignature{
+			SignatureA: sigA,
+			SignatureB: sigB,
+		},
+		ValsetSignature: app.BridgeValsetSignature{
+			Signature: []byte("signature"),
+			Timestamp: uint64(ctx.BlockTime().Unix()),
+		},
+	}
+	voteExtBytes, err := json.Marshal(voteExt)
+	require.NoError(t, err)
+
+	commit := abcitypes.ExtendedCommitInfo{
+		Round: 1,
+		Votes: []abcitypes.ExtendedVoteInfo{
+			{
+				Validator: abcitypes.Validator{
+					Address: consAddr,
+					Power:   1000,
+				},
+				VoteExtension:      voteExtBytes,
+				ExtensionSignature: []byte("extensionSignature"),
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+			},
+		},
+	}
+
+	return commit, voteExt, addressExpected, accAddr, consAddr
 }
