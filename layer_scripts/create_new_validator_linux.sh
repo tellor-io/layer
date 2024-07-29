@@ -14,8 +14,8 @@ export TELLORNODE_ID=d2ab6de0613631c6f6d6cca3c9bc76309a6ed04d
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export AMOUNT_IN_TRB=10000
-export AMOUNT_IN_LOYA="100000000000loya"
+export AMOUNT_IN_TRB=30000
+export AMOUNT_IN_LOYA="30000000000loya"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 # # Create a validator account for node
