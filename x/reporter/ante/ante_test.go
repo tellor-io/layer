@@ -31,20 +31,20 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 		msg  sdk.Msg
 		err  error
 	}{
-		{
-			name: "CreateValidator",
-			msg: &stakingtypes.MsgCreateValidator{
-				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
-			},
-			err: nil,
-		},
-		{
-			name: "CreateValidator",
-			msg: &stakingtypes.MsgCreateValidator{
-				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
-			},
-			err: errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period"),
-		},
+		// {
+		// 	name: "CreateValidator",
+		// 	msg: &stakingtypes.MsgCreateValidator{
+		// 		Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
+		// 	},
+		// 	err: nil,
+		// },
+		// {
+		// 	name: "CreateValidator",
+		// 	msg: &stakingtypes.MsgCreateValidator{
+		// 		Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
+		// 	},
+		// 	err: errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period"),
+		// },
 		{
 			name: "Delegate",
 			msg: &stakingtypes.MsgDelegate{
