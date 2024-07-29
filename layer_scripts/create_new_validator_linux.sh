@@ -9,13 +9,13 @@ set -e
 ### YOU MUST HAVE THE FAUCET RUNNING LOCALLY FOR THIS SCRIPT TO WORK
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=54.166.101.67
-export TELLORNODE_ID=9007e2991e7f07a016559aed4685f4ba0619c631
+export LAYER_NODE_URL=18.212.102.176
+export TELLORNODE_ID=d2ab6de0613631c6f6d6cca3c9bc76309a6ed04d
 export KEYRING_BACKEND="test"
-export NODE_MONIKER="bobmoniker"
-export NODE_NAME="bob"
-export AMOUNT_IN_TRB=10000
-export AMOUNT_IN_LOYA="1000000000loya"
+export NODE_MONIKER="billmoniker"
+export NODE_NAME="bill"
+export AMOUNT_IN_TRB=30000
+export AMOUNT_IN_LOYA="30000000000loya"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 # # Create a validator account for node
@@ -73,4 +73,4 @@ echo "If status is 3 now is the time to go back to the screen session or termina
 echo "We will wait in this script for 10 seconds before the chain is restarted."
 sleep 10
 
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
