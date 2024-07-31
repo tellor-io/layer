@@ -60,7 +60,6 @@ changelog:
       - "^test:"
 
 release:
-
   prerelease: auto
   draft: true
   header: |
