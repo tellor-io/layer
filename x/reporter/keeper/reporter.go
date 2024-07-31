@@ -183,3 +183,15 @@ func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types
 func (k Keeper) Reporter(ctx context.Context, reporter sdk.AccAddress) (types.OracleReporter, error) {
 	return k.Reporters.Get(ctx, reporter.Bytes())
 }
+
+func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr.Bytes())
+	if err != nil {
+		return 0, err
+	}
+	keys, err := iter.FullKeys()
+	if err != nil {
+		return 0, err
+	}
+	return len(keys), nil
+}

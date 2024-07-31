@@ -95,3 +95,37 @@ func (k Querier) AllowedAmount(ctx context.Context, req *types.QueryAllowedAmoun
 		UnstakingAmount: unstakingAmountAllowed,
 	}, nil
 }
+
+// query for num of selectors in reporter
+func (k Querier) NumOfSelectorsByReporter(ctx context.Context, req *types.QueryNumOfSelectorsByReporterRequest) (*types.QueryNumOfSelectorsByReporterResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	repAddr := sdk.MustAccAddressFromBech32(req.ReporterAddress)
+	count, err := k.Keeper.GetNumOfSelectors(ctx, repAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryNumOfSelectorsByReporterResponse{NumOfSelectors: int32(count)}, nil
+}
+
+// query for num of space available in reporter
+func (k Querier) SpaceAvailableByReporter(ctx context.Context, req *types.QuerySpaceAvailableByReporterRequest) (*types.QuerySpaceAvailableByReporterResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	repAddr := sdk.MustAccAddressFromBech32(req.ReporterAddress)
+	count, err := k.Keeper.GetNumOfSelectors(ctx, repAddr)
+	if err != nil {
+		return nil, err
+	}
+	params, err := k.Keeper.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	remaining := int(params.MaxSelectors) - count
+	return &types.QuerySpaceAvailableByReporterResponse{SpaceAvailable: int32(remaining)}, nil
+}
