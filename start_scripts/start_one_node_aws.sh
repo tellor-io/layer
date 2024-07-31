@@ -133,4 +133,4 @@ sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/cli
 
 echo "Starting chain for alice..."
 #./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./first_node_logs.txt
-./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./fulldata_first_node_logs.txt | echo | grep 'failed to execute message' > "filtered_first_node_logs.txt"
+./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./fulldata_first_node_logs.txt | grep 'failed to execute message' >> "filtered_first_node_logs.txt"
