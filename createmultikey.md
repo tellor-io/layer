@@ -1,4 +1,6 @@
-# How to create multisig key through cli using layerd binray stored in test backend
+# How to create multisig key through cli using layerd binray
+
+Note: example keys are stored in test backend but could be stored in os
 
 - Purpose: to create keys locally and share pubkey in order to generate a multikey that will create a tellor prefixed address that is controlled by generating keys.
 
