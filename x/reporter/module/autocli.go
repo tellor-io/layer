@@ -35,6 +35,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query current allowed amount to stake or unstake",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "NumOfSelectorsByReporter",
+					Use:            "num-of-selectors-by-reporter",
+					Short:          "Query how many selectors a reporter has",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "SpaceAvailableByReporter",
+					Use:            "space-available-by-reporter",
+					Short:          "Query how much space a reporter has",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

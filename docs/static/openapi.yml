@@ -4,31 +4,62 @@ info:
   name: ''
   description: ''
 paths:
-  /layer/bridge/get_attestation_data_by_snapshot/{snapshot}:
+  /tellor-io/layer/reporter/allowed-amount:
     get:
-      operationId: LayerBridgeGetAttestationDataBySnapshot
+      summary: AllowedAmount queries the currently allowed amount to stake or unstake.
+      operationId: LayerReporterAllowedAmount
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              query_id:
+              staking_amount:
                 type: string
-              timestamp:
+                description: >-
+                  allowed_amount defines the currently allowed amount to stake
+                  or unstake.
+              unstaking_amount:
                 type: string
-              aggregate_value:
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
                 type: string
-              aggregate_power:
-                type: string
-              checkpoint:
-                type: string
-              attestation_timestamp:
-                type: string
-              previous_report_timestamp:
-                type: string
-              next_report_timestamp:
-                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/reporter/num-of-selectors-by-reporter/{reporter_address}:
+    get:
+      summary: NumOfSelectorsByReporter queries the number of selectors by a reporter.
+      operationId: LayerReporterNumOfSelectorsByReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              num_of_selectors:
+                type: integer
+                format: int32
+                description: >-
+                  num_of_selectors defines the number of selectors by a
+                  reporter.
+            description: |-
+              QueryNumOfSelectorsByReporterResponse is the response type for the
+              Query/NumOfSelectorsByReporter RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -48,514 +79,17 @@ paths:
                       type: string
                   additionalProperties: {}
       parameters:
-        - name: snapshot
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
           in: path
           required: true
           type: string
       tags:
         - Query
-  /layer/bridge/get_attestations_by_snapshot/{snapshot}:
-    get:
-      operationId: LayerBridgeGetAttestationsBySnapshot
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              attestations:
-                type: array
-                items:
-                  type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: snapshot
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /layer/bridge/get_current_aggregate_report/{query_id}:
-    get:
-      operationId: LayerBridgeGetCurrentAggregateReport
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              aggregate:
-                type: object
-                properties:
-                  query_id:
-                    type: string
-                    format: byte
-                  aggregateValue:
-                    type: string
-                  aggregateReporter:
-                    type: string
-                  reporterPower:
-                    type: string
-                    format: int64
-                  standard_deviation:
-                    type: number
-                    format: double
-                  reporters:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        reporter:
-                          type: string
-                        power:
-                          type: string
-                          format: int64
-                  flagged:
-                    type: boolean
-                  nonce:
-                    type: string
-                    format: int64
-                  aggregateReportIndex:
-                    type: string
-                    format: int64
-                  height:
-                    type: string
-                    format: int64
-              timestamp:
-                type: string
-                format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: query_id
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /layer/bridge/get_current_validator_set_timestamp:
-    get:
-      operationId: LayerBridgeGetCurrentValidatorSetTimestamp
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              timestamp:
-                type: string
-                format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /layer/bridge/get_evm_address_by_validator_address/{validator_address}:
-    get:
-      operationId: LayerBridgeGetEvmAddressByValidatorAddress
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              evm_address:
-                type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: validator_address
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /layer/bridge/get_evm_validators:
-    get:
-      summary: Queries a list of GetEvmValidators items.
-      operationId: LayerBridgeGetEvmValidators
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              bridge_validator_set:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    ethereumAddress:
-                      type: string
-                    power:
-                      type: string
-                      format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}:
-    get:
-      operationId: LayerBridgeGetSnapshotsByReport
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              snapshots:
-                type: array
-                items:
-                  type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: query_id
-          in: path
-          required: true
-          type: string
-        - name: timestamp
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /layer/bridge/get_validator_checkpoint:
-    get:
-      operationId: LayerBridgeGetValidatorCheckpoint
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              validator_checkpoint:
-                type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /layer/bridge/get_validator_checkpoint_params/{timestamp}:
-    get:
-      operationId: LayerBridgeGetValidatorCheckpointParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              checkpoint:
-                type: string
-              valset_hash:
-                type: string
-              timestamp:
-                type: string
-                format: int64
-              power_threshold:
-                type: string
-                format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: timestamp
-          in: path
-          required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /layer/bridge/get_validator_set_index_by_timestamp/{timestamp}:
-    get:
-      operationId: LayerBridgeGetValidatorSetIndexByTimestamp
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              index:
-                type: string
-                format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: timestamp
-          in: path
-          required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /layer/bridge/get_validator_timestamp_by_index/{index}:
-    get:
-      operationId: LayerBridgeGetValidatorTimestampByIndex
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              timestamp:
-                type: string
-                format: int64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: index
-          in: path
-          required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /layer/bridge/get_valset_by_timestamp/{timestamp}:
-    get:
-      operationId: LayerBridgeGetValsetByTimestamp
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              bridge_validator_set:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    ethereumAddress:
-                      type: string
-                    power:
-                      type: string
-                      format: uint64
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: timestamp
-          in: path
-          required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /layer/bridge/get_valset_sigs/{timestamp}:
-    get:
-      operationId: LayerBridgeGetValsetSigs
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              signatures:
-                type: array
-                items:
-                  type: string
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: timestamp
-          in: path
-          required: true
-          type: string
-          format: int64
-      tags:
-        - Query
-  /layer/bridge/params:
+  /tellor-io/layer/reporter/params:
     get:
       summary: Parameters queries the parameters of the module.
-      operationId: LayerBridgeParams
+      operationId: LayerReporterParams
       responses:
         '200':
           description: A successful response.
@@ -565,6 +99,19 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+                properties:
+                  min_commission_rate:
+                    type: string
+                    title: >-
+                      min_commission_rate, adopted from staking module, is the
+                      minimum commission rate a reporter can their delegators
+                  min_trb:
+                    type: string
+                    title: min_trb to be a reporter
+                  max_selectors:
+                    type: string
+                    format: uint64
+                    title: max number of selectors for a reporter
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -586,6 +133,231 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/reporter/reporters:
+    get:
+      summary: Reporters queries all the staked reporters.
+      operationId: LayerReporterReporters
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporters:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    metadata:
+                      type: object
+                      properties:
+                        min_tokens_required:
+                          type: string
+                          title: min_tokens_required to select this reporter
+                        commission_rate:
+                          type: string
+                          title: commission for the reporter
+                        jailed:
+                          type: boolean
+                          title: >-
+                            jailed is a bool whether the reporter is jailed or
+                            not
+                        jailed_until:
+                          type: string
+                          format: date-time
+                          title: >-
+                            jailed_until is the time the reporter is jailed
+                            until
+                      title: >-
+                        OracleReporter is the struct that holds the data for a
+                        reporter
+                description: all the reporters.
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryReportersResponse is the response type for the
+              Query/Reporters RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /tellor-io/layer/reporter/selector-reporter/{selector_address}:
+    get:
+      summary: SelectorReporter queries the reporter of a selector.
+      operationId: LayerReporterSelectorReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporter:
+                type: string
+                description: reporter defines the reporter of a selector.
+            description: |-
+              QuerySelectorReporterResponse is the response type for the
+              Query/SelectorReporter RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: selector_address
+          description: selector_address defines the selector address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/reporter/space-available-by-reporter/{reporter_address}:
+    get:
+      summary: SpaceAvailableByReporter queries the space available in a reporter.
+      operationId: LayerReporterSpaceAvailableByReporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              space_available:
+                type: integer
+                format: int32
+                description: space_available defines the space available in a reporter.
+            description: |-
+              QuerySpaceAvailableByReporterResponse is the response type for the
+              Query/SpaceAvailableByReporter RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+          type: string
       tags:
         - Query
 definitions:
@@ -2618,219 +2390,6 @@ definitions:
     type: object
   layer.bridge.MsgWithdrawTokensResponse:
     type: object
-  layer.bridge.Aggregate:
-    type: object
-    properties:
-      query_id:
-        type: string
-        format: byte
-      aggregateValue:
-        type: string
-      aggregateReporter:
-        type: string
-      reporterPower:
-        type: string
-        format: int64
-      standard_deviation:
-        type: number
-        format: double
-      reporters:
-        type: array
-        items:
-          type: object
-          properties:
-            reporter:
-              type: string
-            power:
-              type: string
-              format: int64
-      flagged:
-        type: boolean
-      nonce:
-        type: string
-        format: int64
-      aggregateReportIndex:
-        type: string
-        format: int64
-      height:
-        type: string
-        format: int64
-  layer.bridge.AggregateReporter:
-    type: object
-    properties:
-      reporter:
-        type: string
-      power:
-        type: string
-        format: int64
-  layer.bridge.Params:
-    type: object
-    description: Params defines the parameters for the module.
-  layer.bridge.QueryBridgeValidator:
-    type: object
-    properties:
-      ethereumAddress:
-        type: string
-      power:
-        type: string
-        format: uint64
-  layer.bridge.QueryGetAttestationDataBySnapshotResponse:
-    type: object
-    properties:
-      query_id:
-        type: string
-      timestamp:
-        type: string
-      aggregate_value:
-        type: string
-      aggregate_power:
-        type: string
-      checkpoint:
-        type: string
-      attestation_timestamp:
-        type: string
-      previous_report_timestamp:
-        type: string
-      next_report_timestamp:
-        type: string
-  layer.bridge.QueryGetAttestationsBySnapshotResponse:
-    type: object
-    properties:
-      attestations:
-        type: array
-        items:
-          type: string
-  layer.bridge.QueryGetCurrentAggregateReportResponse:
-    type: object
-    properties:
-      aggregate:
-        type: object
-        properties:
-          query_id:
-            type: string
-            format: byte
-          aggregateValue:
-            type: string
-          aggregateReporter:
-            type: string
-          reporterPower:
-            type: string
-            format: int64
-          standard_deviation:
-            type: number
-            format: double
-          reporters:
-            type: array
-            items:
-              type: object
-              properties:
-                reporter:
-                  type: string
-                power:
-                  type: string
-                  format: int64
-          flagged:
-            type: boolean
-          nonce:
-            type: string
-            format: int64
-          aggregateReportIndex:
-            type: string
-            format: int64
-          height:
-            type: string
-            format: int64
-      timestamp:
-        type: string
-        format: uint64
-  layer.bridge.QueryGetCurrentValidatorSetTimestampResponse:
-    type: object
-    properties:
-      timestamp:
-        type: string
-        format: int64
-  layer.bridge.QueryGetEvmAddressByValidatorAddressResponse:
-    type: object
-    properties:
-      evm_address:
-        type: string
-  layer.bridge.QueryGetEvmValidatorsResponse:
-    type: object
-    properties:
-      bridge_validator_set:
-        type: array
-        items:
-          type: object
-          properties:
-            ethereumAddress:
-              type: string
-            power:
-              type: string
-              format: uint64
-  layer.bridge.QueryGetSnapshotsByReportResponse:
-    type: object
-    properties:
-      snapshots:
-        type: array
-        items:
-          type: string
-  layer.bridge.QueryGetValidatorCheckpointParamsResponse:
-    type: object
-    properties:
-      checkpoint:
-        type: string
-      valset_hash:
-        type: string
-      timestamp:
-        type: string
-        format: int64
-      power_threshold:
-        type: string
-        format: int64
-  layer.bridge.QueryGetValidatorCheckpointResponse:
-    type: object
-    properties:
-      validator_checkpoint:
-        type: string
-  layer.bridge.QueryGetValidatorSetIndexByTimestampResponse:
-    type: object
-    properties:
-      index:
-        type: string
-        format: int64
-  layer.bridge.QueryGetValidatorTimestampByIndexResponse:
-    type: object
-    properties:
-      timestamp:
-        type: string
-        format: int64
-  layer.bridge.QueryGetValsetByTimestampResponse:
-    type: object
-    properties:
-      bridge_validator_set:
-        type: array
-        items:
-          type: object
-          properties:
-            ethereumAddress:
-              type: string
-            power:
-              type: string
-              format: uint64
-  layer.bridge.QueryGetValsetSigsResponse:
-    type: object
-    properties:
-      signatures:
-        type: array
-        items:
-          type: string
-  layer.bridge.QueryParamsResponse:
-    type: object
-    properties:
-      params:
-        description: params holds all the parameters of this module.
-        type: object
-    description: QueryParamsResponse is response type for the Query/Params RPC method.
   layer.mint.MsgMsgInitResponse:
     type: object
   layer.registry.ABIComponent:
@@ -2897,6 +2456,247 @@ definitions:
     description: MsgRegisterSpecResponse defines the Msg/RegisterSpec response type.
   layer.registry.MsgUpdateDataSpecResponse:
     type: object
+  cosmos.base.query.v1beta1.PageRequest:
+    type: object
+    properties:
+      key:
+        type: string
+        format: byte
+        description: |-
+          key is a value returned in PageResponse.next_key to begin
+          querying the next page most efficiently. Only one of offset or key
+          should be set.
+      offset:
+        type: string
+        format: uint64
+        description: |-
+          offset is a numeric offset that can be used when key is unavailable.
+          It is less efficient than using key. Only one of offset or key should
+          be set.
+      limit:
+        type: string
+        format: uint64
+        description: >-
+          limit is the total number of results to be returned in the result
+          page.
+
+          If left empty it will default to a value to be set by each app.
+      count_total:
+        type: boolean
+        description: >-
+          count_total is set to true  to indicate that the result set should
+          include
+
+          a count of the total number of items available for pagination in UIs.
+
+          count_total is only respected when offset is used. It is ignored when
+          key
+
+          is set.
+      reverse:
+        type: boolean
+        description: >-
+          reverse is set to true if results are to be returned in the descending
+          order.
+
+
+          Since: cosmos-sdk 0.43
+    description: |-
+      message SomeRequest {
+               Foo some_parameter = 1;
+               PageRequest pagination = 2;
+       }
+    title: |-
+      PageRequest is to be embedded in gRPC request messages for efficient
+      pagination. Ex:
+  cosmos.base.query.v1beta1.PageResponse:
+    type: object
+    properties:
+      next_key:
+        type: string
+        format: byte
+        description: |-
+          next_key is the key to be passed to PageRequest.key to
+          query the next page most efficiently. It will be empty if
+          there are no more results.
+      total:
+        type: string
+        format: uint64
+        title: |-
+          total is total number of results available if PageRequest.count_total
+          was set, its value is undefined otherwise
+    description: |-
+      PageResponse is to be embedded in gRPC response messages where the
+      corresponding request message has used PageRequest.
+
+       message SomeResponse {
+               repeated Bar results = 1;
+               PageResponse page = 2;
+       }
+  layer.reporter.OracleReporter:
+    type: object
+    properties:
+      min_tokens_required:
+        type: string
+        title: min_tokens_required to select this reporter
+      commission_rate:
+        type: string
+        title: commission for the reporter
+      jailed:
+        type: boolean
+        title: jailed is a bool whether the reporter is jailed or not
+      jailed_until:
+        type: string
+        format: date-time
+        title: jailed_until is the time the reporter is jailed until
+    title: OracleReporter is the struct that holds the data for a reporter
+  layer.reporter.Params:
+    type: object
+    properties:
+      min_commission_rate:
+        type: string
+        title: >-
+          min_commission_rate, adopted from staking module, is the minimum
+          commission rate a reporter can their delegators
+      min_trb:
+        type: string
+        title: min_trb to be a reporter
+      max_selectors:
+        type: string
+        format: uint64
+        title: max number of selectors for a reporter
+    description: Params defines the parameters for the module.
+  layer.reporter.QueryAllowedAmountResponse:
+    type: object
+    properties:
+      staking_amount:
+        type: string
+        description: >-
+          allowed_amount defines the currently allowed amount to stake or
+          unstake.
+      unstaking_amount:
+        type: string
+  layer.reporter.QueryNumOfSelectorsByReporterResponse:
+    type: object
+    properties:
+      num_of_selectors:
+        type: integer
+        format: int32
+        description: num_of_selectors defines the number of selectors by a reporter.
+    description: |-
+      QueryNumOfSelectorsByReporterResponse is the response type for the
+      Query/NumOfSelectorsByReporter RPC method.
+  layer.reporter.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+        properties:
+          min_commission_rate:
+            type: string
+            title: >-
+              min_commission_rate, adopted from staking module, is the minimum
+              commission rate a reporter can their delegators
+          min_trb:
+            type: string
+            title: min_trb to be a reporter
+          max_selectors:
+            type: string
+            format: uint64
+            title: max number of selectors for a reporter
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  layer.reporter.QueryReportersResponse:
+    type: object
+    properties:
+      reporters:
+        type: array
+        items:
+          type: object
+          properties:
+            address:
+              type: string
+            metadata:
+              type: object
+              properties:
+                min_tokens_required:
+                  type: string
+                  title: min_tokens_required to select this reporter
+                commission_rate:
+                  type: string
+                  title: commission for the reporter
+                jailed:
+                  type: boolean
+                  title: jailed is a bool whether the reporter is jailed or not
+                jailed_until:
+                  type: string
+                  format: date-time
+                  title: jailed_until is the time the reporter is jailed until
+              title: OracleReporter is the struct that holds the data for a reporter
+        description: all the reporters.
+      pagination:
+        description: pagination defines the pagination in the response.
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+    description: >-
+      QueryReportersResponse is the response type for the Query/Reporters RPC
+      method.
+  layer.reporter.QuerySelectorReporterResponse:
+    type: object
+    properties:
+      reporter:
+        type: string
+        description: reporter defines the reporter of a selector.
+    description: |-
+      QuerySelectorReporterResponse is the response type for the
+      Query/SelectorReporter RPC method.
+  layer.reporter.QuerySpaceAvailableByReporterResponse:
+    type: object
+    properties:
+      space_available:
+        type: integer
+        format: int32
+        description: space_available defines the space available in a reporter.
+    description: |-
+      QuerySpaceAvailableByReporterResponse is the response type for the
+      Query/SpaceAvailableByReporter RPC method.
+  layer.reporter.reporter:
+    type: object
+    properties:
+      address:
+        type: string
+      metadata:
+        type: object
+        properties:
+          min_tokens_required:
+            type: string
+            title: min_tokens_required to select this reporter
+          commission_rate:
+            type: string
+            title: commission for the reporter
+          jailed:
+            type: boolean
+            title: jailed is a bool whether the reporter is jailed or not
+          jailed_until:
+            type: string
+            format: date-time
+            title: jailed_until is the time the reporter is jailed until
+        title: OracleReporter is the struct that holds the data for a reporter
   layer.reporter.MsgCreateReporterResponse:
     type: object
     description: MsgCreateReporterResponse defines the Msg/CreateReporter response type.
@@ -2919,19 +2719,3 @@ definitions:
   layer.reporter.MsgWithdrawTipResponse:
     type: object
     description: MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
-  layer.reporter.Params:
-    type: object
-    properties:
-      min_commission_rate:
-        type: string
-        title: >-
-          min_commission_rate, adopted from staking module, is the minimum
-          commission rate a reporter can their delegators
-      min_trb:
-        type: string
-        title: min_trb to be a reporter
-      max_selectors:
-        type: string
-        format: uint64
-        title: max number of selectors for a reporter
-    description: Params defines the parameters for the module.
