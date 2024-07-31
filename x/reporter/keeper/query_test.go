@@ -52,3 +52,33 @@ func TestAllowedAmountQuery(t *testing.T) {
 	require.Equal(t, expectedAllowedAmount, res.StakingAmount)
 	require.Equal(t, expectedAllowedAmount.Neg(), res.UnstakingAmount)
 }
+
+func TestNumOfSelectorsByReporter(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	reporterAddr := sample.AccAddressBytes()
+	for i := 0; i < 10; i++ {
+		err := k.Selectors.Set(ctx, sample.AccAddressBytes(), types.NewSelection(reporterAddr, 1))
+		require.NoError(t, err)
+	}
+
+	res, err := querier.NumOfSelectorsByReporter(ctx, &types.QueryNumOfSelectorsByReporterRequest{ReporterAddress: reporterAddr.String()})
+	require.NoError(t, err)
+	require.Equal(t, res.NumOfSelectors, int32(10))
+}
+
+func TestSpaceAvailableByReporter(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	reporterAddr := sample.AccAddressBytes()
+	for i := 0; i < 10; i++ {
+		err := k.Selectors.Set(ctx, sample.AccAddressBytes(), types.NewSelection(reporterAddr, 1))
+		require.NoError(t, err)
+	}
+
+	res, err := querier.SpaceAvailableByReporter(ctx, &types.QuerySpaceAvailableByReporterRequest{ReporterAddress: reporterAddr.String()})
+	require.NoError(t, err)
+	require.Equal(t, res.SpaceAvailable, int32(90))
+}
