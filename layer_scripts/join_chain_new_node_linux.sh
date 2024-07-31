@@ -7,11 +7,11 @@ clear
 set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
-export LAYER_NODE_URL=tellornode.com
+export LAYER_NODE_URL=18.212.102.176
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=9eb337547c01106a92ee4727e40ec103d1741a3a
+export TELLORNODE_ID=d2ab6de0613631c6f6d6cca3c9bc76309a6ed04d
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -86,8 +86,8 @@ rm -f ~/.layer/config/genesis.json
 rm -f ~/.layer/$NODE_NAME/config/genesis.json
 # get genesis file from running node's rpc
 echo "Getting genesis from runnning node....."
-curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
-curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
+curl https://tellorlayer.com/rpc/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
+curl https://tellorlayer.com/rpc/genesis | jq '.result.genesis' > ~/.layer/$NODE_NAME/config/genesis.json
 
 sed -i 's/seeds = ""/seeds = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
 sed -i 's/persistent_peers = ""/persistent_peers = "'$TELLORNODE_ID'@'$LAYER_NODE_URL':26656"/g' ~/.layer/$NODE_NAME/config/config.toml
@@ -97,7 +97,8 @@ echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-./layerd start --home $LAYERD_NODE_HOME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+# ./layerd start --home ~/.layer/bill --key-name bill --api.swagger --price-daemon-enabled=false --p2p.seeds "f123e64bcb076508f3bdb19ceabc86a75ca1e330@tellornode.com:26656"
 
 
 # use the commands to below to download log files from aws instance if applicable
