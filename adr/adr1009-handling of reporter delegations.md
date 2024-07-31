@@ -1,24 +1,31 @@
-# ADR 1009: Handling of Reporter Delegations - Selectors
+# ADR 1009: Handling of Reporter Selections(delegations) and Selectors
 
 ## Authors
 
-@themandalore
+@themandalore @brendaloya
 
 ## Changelog
 
 - 2024-06-25: initial version
+- 2024-07-30: Clarifications added 
 
 ## Context
 
-Part of the layer design is that when a reporter submits a price, the system loops through her "selectors" (all parties who have delegated (or selected to give) reporting duties to this reporter) and checks whether or not they are bonded.  The reason for the bonding check is that only "bonded" tokens or ones delegated to one of the top 100 validators are considered valid for reporting (we need to keep the token amounts for each set equal).  One negative of this approach is that the list of selectors could become so large that looping through this list would cause the transactions to fail.  To prevent this, we limited the number of selectors to 100 per reporter.   This makes sense but there are some UX and attack vectors that arise from this, namely:
+In layer, people can delegate their stakes to validators. To distinguish between delegation to validators and delegations to reporters, delegations to reporters are called selections and those making those selections, selectors.
 
-- Do you allow re-selections, ie selecting a different reporter?  If yes, how fast?  If you allow instant re-selections you can re-select to another reporter to increase your vote power (the first reporter reports early in the report time frame, and the second selected reporter goes later.  You could even do this multiple times) to get extra rewards or manipulate the median.  This is a non-starter.  Additionaly, since we check for bonding status (part of the top 100 validators), there is a scenario where your selected reporter falls out of being bonded.  This means you would effectively lose out on reporting rewards until you reselect.  
+Part of the layer design is that when a reporter submits a price, the system loops through its "selectors" (all parties who have delegated (or selected to give) reporting duties to this reporter) and checks whether or not they are bonded.  The reason for the bonding check is that only "bonded" tokens, ones delegated to one of the top 100 validators, are considered valid for reporting.  One negative of this approach is that the list of selectors could become so large that looping through this list would cause the transactions to fail.  To prevent this, we limited the number of selectors to 100 per reporter. 
 
-- There are additional issues where a party can spam the 100 selector limit with tiny amounts to effectively censor the reporter from getting additional selectors and force them to spin up new addresses and pay more gas for reporting multiple times.  
+However, the cap on selectors and how we handle re-selections can lead to some UX and attack vectors, namely:
+
+- If we allowed instant re-selections you can re-select to another reporter to increase your vote power. To carry out the attack the first reporter would reports early in the report time frame(the user defines the report collection time frame for each queryID), and the second selected reporter goes later.  This could be done multiple times to get extra rewards or manipulate the median. 
+
+- Additionaly, since all reporter tokens have to be bonded (being part of the top 100 validators), there is a scenario where your selected reporter falls out of being bonded.  This means you would effectively lose out on reporting rewards until you reselect.  
+
+- Another issue is that a party can spam the 100 selector limit with tiny amounts to effectively censor the reporter from getting additional selectors and force them to spin up new addresses and pay more gas for reporting multiple times.  
 
 The current solution is to:
 
-- Allow for re-selection after a lock period where the tokens are not counted in any reporters total for that time period.  The time will be the maximum report time frame of 21 days.  
+- To ensure that any reporter only reports once during the time frame window (which has a maximum of 21 days) and can't reselect to exploit this, re-selection will only be allowed after a lock period of 21 days (meaning that tokens are not counted in any reporters total for that time period).    
 
 - The reporter can set a minimum stake amount that they allow to be selected with.  This prevents cheap spam attacks for larger reporters.
 
@@ -26,7 +33,7 @@ The current solution is to:
 
 ### Can never re-select
 
-- This would work, but it makes the UX for selectors very bad.  In this case if your reporter goes down or you want to switch to yourself, you must unstake both your reporter AND validator...which will lead to a loss in rewards.  With the current method, selectors will only lose out on reporting rewards and the validator delegation can remain untouched.
+- This would work, but it makes for poor UX for selectors.  In this case if your reporter goes down or you want to switch to yourself, you must unstake both your reporter AND validator, which will lead to a loss in rewards.  With the current method, selectors will only lose out on reporting rewards and the validator delegation can remain untouched.
 
 ### Selectors are just locked at first 100 with no minimum
 
@@ -44,4 +51,4 @@ The current solution is to:
 
 ### Cost to attack / prevention method
 
-If censoring is still an issue (filling up the 100 slots), the reporter can always get other repelegators to move and then submit a bad value, thus slashing the attackers tokens.  Therefore the cost of spam is 100 slots * min stake amount, and you'll likely lose it.  We see this being a valid solution as the only reason to attack is to prevent repelators from choosing a specific reporter to increase rewards for your own reporter for a specific period of time.  If the rewards for any time period are much greater than the attack to censor (very likely not the case with a non-zero minimum), censoring could happen for a short period of time.  For this reason, we expect reporters, especially validator/reporters with high reputation, to have larger minimums for selection.  
+If censoring is still an issue (filling up the 100 slots), the reporter can always get other redelegators to move and then submit a bad value, thus slashing the attackers tokens.  Therefore the cost of spam is 100 slots * min stake amount, and you'll likely lose it.  We see this being a valid solution as the only reason to attack is to prevent repelators from choosing a specific reporter to increase rewards for your own reporter for a specific period of time.  If the rewards for any time period are much greater than the attack to censor (very likely not the case with a non-zero minimum), censoring could happen for a short period of time.  For this reason, we expect reporters, especially validator/reporters with high reputation, to have larger minimums for selection.  
