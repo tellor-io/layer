@@ -30,11 +30,9 @@ echo "Initializing chain node for alice..."
 # Add a validator account for alice
 echo "Adding validator account for alice..."
 ./layerd keys add alice --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
-echo "charlie user..."
-./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
-# echo "creating account for faucet..."
-# ./layerd keys add faucet --recover=true
+echo "creating account for faucet..."
+./layerd keys add faucet --recover=true --keyring-backend test
 
 # Update vote_extensions_enable_height in genesis.json for alice
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
@@ -50,15 +48,15 @@ sleep 10
 echo "Adding genesis account for alice..."
 ./layerd genesis add-genesis-account $(./layerd keys show alice -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 echo "charlie..."
-./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
-
+echo "Adding genesis account for faucet..."
+./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000loya --home ~/.layer/alice
 
 # echo "Faucet..."
 # ./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 10000000000000loya --home ~/.layer/alice
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 1000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
+./layerd genesis gentx alice 1000000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
@@ -83,4 +81,4 @@ sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/c
 
 
 echo "Starting chain for alice..."
-./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger
+./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./fulldata_first_node_logs.txt
