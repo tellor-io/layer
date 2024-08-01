@@ -63,4 +63,4 @@ release:
   prerelease: auto
   draft: true
   header: |
-    ## Release {{ .CurrentTag }} - ({{ .Date }})
+    ## Release {{ .Tag }} - ({{ .Date }})
