@@ -23,3 +23,5 @@ build/*
 secrets.yaml
 .env
 prod-sim
+
+dist/
