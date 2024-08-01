@@ -12,11 +12,7 @@ func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	q, err := iter.Values()
-	if err != nil {
-		return nil, err
-	}
-	return q, nil
+	return iter.Values()
 }
 
 // rotation of the cycle list

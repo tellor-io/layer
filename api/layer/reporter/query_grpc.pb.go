@@ -26,6 +26,10 @@ type QueryClient interface {
 	SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
 	AllowedAmount(ctx context.Context, in *QueryAllowedAmountRequest, opts ...grpc.CallOption) (*QueryAllowedAmountResponse, error)
+	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
+	NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error)
+	// SpaceAvailableByReporter queries the space available in a reporter.
+	SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error)
 }
 
 type queryClient struct {
@@ -72,6 +76,24 @@ func (c *queryClient) AllowedAmount(ctx context.Context, in *QueryAllowedAmountR
 	return out, nil
 }
 
+func (c *queryClient) NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error) {
+	out := new(QueryNumOfSelectorsByReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/NumOfSelectorsByReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error) {
+	out := new(QuerySpaceAvailableByReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/SpaceAvailableByReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -84,6 +106,10 @@ type QueryServer interface {
 	SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
 	AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error)
+	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
+	NumOfSelectorsByReporter(context.Context, *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error)
+	// SpaceAvailableByReporter queries the space available in a reporter.
+	SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -102,6 +128,12 @@ func (UnimplementedQueryServer) SelectorReporter(context.Context, *QuerySelector
 }
 func (UnimplementedQueryServer) AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllowedAmount not implemented")
+}
+func (UnimplementedQueryServer) NumOfSelectorsByReporter(context.Context, *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NumOfSelectorsByReporter not implemented")
+}
+func (UnimplementedQueryServer) SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpaceAvailableByReporter not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -188,6 +220,42 @@ func _Query_AllowedAmount_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_NumOfSelectorsByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryNumOfSelectorsByReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).NumOfSelectorsByReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/NumOfSelectorsByReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).NumOfSelectorsByReporter(ctx, req.(*QueryNumOfSelectorsByReporterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SpaceAvailableByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpaceAvailableByReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SpaceAvailableByReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/SpaceAvailableByReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SpaceAvailableByReporter(ctx, req.(*QuerySpaceAvailableByReporterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -210,6 +278,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllowedAmount",
 			Handler:    _Query_AllowedAmount_Handler,
+		},
+		{
+			MethodName: "NumOfSelectorsByReporter",
+			Handler:    _Query_NumOfSelectorsByReporter_Handler,
+		},
+		{
+			MethodName: "SpaceAvailableByReporter",
+			Handler:    _Query_SpaceAvailableByReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
