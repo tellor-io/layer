@@ -26,6 +26,7 @@ type QueryClient interface {
 	SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
 	AllowedAmount(ctx context.Context, in *QueryAllowedAmountRequest, opts ...grpc.CallOption) (*QueryAllowedAmountResponse, error)
+	AllowedAmountExpiration(ctx context.Context, in *QueryAllowedAmountExpirationRequest, opts ...grpc.CallOption) (*QueryAllowedAmountExpirationResponse, error)
 	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
 	NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error)
 	// SpaceAvailableByReporter queries the space available in a reporter.
@@ -76,6 +77,15 @@ func (c *queryClient) AllowedAmount(ctx context.Context, in *QueryAllowedAmountR
 	return out, nil
 }
 
+func (c *queryClient) AllowedAmountExpiration(ctx context.Context, in *QueryAllowedAmountExpirationRequest, opts ...grpc.CallOption) (*QueryAllowedAmountExpirationResponse, error) {
+	out := new(QueryAllowedAmountExpirationResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/AllowedAmountExpiration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error) {
 	out := new(QueryNumOfSelectorsByReporterResponse)
 	err := c.cc.Invoke(ctx, "/layer.reporter.Query/NumOfSelectorsByReporter", in, out, opts...)
@@ -106,6 +116,7 @@ type QueryServer interface {
 	SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
 	AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error)
+	AllowedAmountExpiration(context.Context, *QueryAllowedAmountExpirationRequest) (*QueryAllowedAmountExpirationResponse, error)
 	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
 	NumOfSelectorsByReporter(context.Context, *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error)
 	// SpaceAvailableByReporter queries the space available in a reporter.
@@ -128,6 +139,9 @@ func (UnimplementedQueryServer) SelectorReporter(context.Context, *QuerySelector
 }
 func (UnimplementedQueryServer) AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllowedAmount not implemented")
+}
+func (UnimplementedQueryServer) AllowedAmountExpiration(context.Context, *QueryAllowedAmountExpirationRequest) (*QueryAllowedAmountExpirationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllowedAmountExpiration not implemented")
 }
 func (UnimplementedQueryServer) NumOfSelectorsByReporter(context.Context, *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NumOfSelectorsByReporter not implemented")
@@ -220,6 +234,24 @@ func _Query_AllowedAmount_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllowedAmountExpiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowedAmountExpirationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllowedAmountExpiration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/AllowedAmountExpiration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllowedAmountExpiration(ctx, req.(*QueryAllowedAmountExpirationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_NumOfSelectorsByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryNumOfSelectorsByReporterRequest)
 	if err := dec(in); err != nil {
@@ -278,6 +310,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllowedAmount",
 			Handler:    _Query_AllowedAmount_Handler,
+		},
+		{
+			MethodName: "AllowedAmountExpiration",
+			Handler:    _Query_AllowedAmountExpiration_Handler,
 		},
 		{
 			MethodName: "NumOfSelectorsByReporter",
