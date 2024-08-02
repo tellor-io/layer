@@ -96,6 +96,15 @@ func (k Querier) AllowedAmount(ctx context.Context, req *types.QueryAllowedAmoun
 	}, nil
 }
 
+func (k Querier) AllowedAmountExpiration(ctx context.Context, req *types.QueryAllowedAmountExpirationRequest) (*types.QueryAllowedAmountExpirationResponse, error) {
+	tracker, err := k.Keeper.Tracker.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	timeMilli := tracker.Expiration.UnixMilli()
+	return &types.QueryAllowedAmountExpirationResponse{Expiration: timeMilli}, nil
+}
+
 // query for num of selectors in reporter
 func (k Querier) NumOfSelectorsByReporter(ctx context.Context, req *types.QueryNumOfSelectorsByReporterRequest) (*types.QueryNumOfSelectorsByReporterResponse, error) {
 	if req == nil {

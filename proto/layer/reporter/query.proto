@@ -30,6 +30,11 @@ service Query {
   rpc AllowedAmount(QueryAllowedAmountRequest) returns (QueryAllowedAmountResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/allowed-amount";
   }
+
+  rpc AllowedAmountExpiration(QueryAllowedAmountExpirationRequest) returns (QueryAllowedAmountExpirationResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/allowed-amount-expiration";
+  }
+
   // NumOfSelectorsByReporter queries the number of selectors by a reporter.
   rpc NumOfSelectorsByReporter(QueryNumOfSelectorsByReporterRequest) returns (QueryNumOfSelectorsByReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/num-of-selectors-by-reporter/{reporter_address}";
@@ -101,6 +106,12 @@ message QueryAllowedAmountResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+}
+
+message QueryAllowedAmountExpirationRequest {}
+
+message QueryAllowedAmountExpirationResponse {
+  int64 expiration = 1;
 }
 
 // QueryNumOfSelectorsByReporterRequest is the request type for the
