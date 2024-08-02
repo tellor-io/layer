@@ -43,6 +43,7 @@ contract TellorPlayground {
     uint8 private _decimals;
     address public oracleMintRecipient;
     uint256 public lastReleaseTimeDao;
+    address public deployer;
 
     // Structs
     struct StakeInfo {
@@ -63,6 +64,7 @@ contract TellorPlayground {
         _decimals = 18;
         token = address(this);
         lastReleaseTimeDao = block.timestamp;
+        deployer = msg.sender;
     }
 
     /**
@@ -144,8 +146,16 @@ contract TellorPlayground {
         uint256 _releasedAmount = (146.94 ether *
             (block.timestamp - lastReleaseTimeDao)) /
             86400;
-        _mint(oracleMintRecipient, _releasedAmount);
         lastReleaseTimeDao = block.timestamp;
+        uint256 _stakingRewards = (_releasedAmount * 2) / 100;
+        _mint(oracleMintRecipient, _releasedAmount - _stakingRewards);
+        _mint(address(this), _stakingRewards);
+        _allowances[address(this)][
+            oracleMintRecipient
+        ] = _stakingRewards;
+        TellorPlayground(oracleMintRecipient).addStakingRewards(
+            _stakingRewards
+        );
     }
 
     /**
@@ -169,6 +179,7 @@ contract TellorPlayground {
      * @param _oracle The new oracle mint recipient
      */
     function setOracleMintRecipient(address _oracle) external {
+        require(msg.sender == deployer, "only deployer can set oracle mint recipient");
         oracleMintRecipient = _oracle;
     }
 
