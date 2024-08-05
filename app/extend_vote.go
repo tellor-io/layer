@@ -97,7 +97,12 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
 		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", err)
-		return &abci.ResponseExtendVote{}, nil
+		bz, err := json.Marshal(voteExt)
+		if err != nil {
+			h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
+			return &abci.ResponseExtendVote{}, err
+		}
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
@@ -105,7 +110,12 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("ExtendVoteHandler: failed to sign initial message", "error", err)
-			return &abci.ResponseExtendVote{}, nil
+			bz, err := json.Marshal(voteExt)
+			if err != nil {
+				h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
+				return &abci.ResponseExtendVote{}, err
+			}
+			return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 		}
 		// include the initial sig in the vote extension
 		initialSignature := InitialSignature{
@@ -186,7 +196,7 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			h.logger.Error("VerifyVoteExtensionHandler: failed to get attestation requests", "error", err)
-			return nil, err
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		} else if len(voteExt.OracleAttestations) > 0 {
 			h.logger.Error("VerifyVoteExtensionHandler: oracle attestations length is greater than 0, should be 0", "voteExt", voteExt)
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
