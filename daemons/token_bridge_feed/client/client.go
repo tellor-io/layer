@@ -133,7 +133,7 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	ethRpcUrl, err := c. getEthRpcUrl()
+	ethRpcUrl, err := c.getEthRpcUrl()
 	if err != nil {
 		return fmt.Errorf("failed to get ETH RPC url: %w", err)
 	}
@@ -343,7 +343,7 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error
 	return reportValueArgsEncoded, nil
 }
 
-func (c *Client)  getEthRpcUrl() (string, error) {
+func (c *Client) getEthRpcUrl() (string, error) {
 	viper.SetConfigName("secrets")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
