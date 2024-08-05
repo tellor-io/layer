@@ -351,19 +351,9 @@ func (c *Client)  getEthRpcUrl() (string, error) {
 	if err != nil {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	ethRpcUrl := viper.GetString(eth_rpc_url)
+	ethRpcUrl := viper.GetString("eth_rpc_url")
 	if ethRpcUrl == "" {
 		return "", fmt.Errorf("eth_rpc_url not set")
 	}
 	return ethRpcUrl, nil
-}
-
-func main() {
-	client := &Client{}
-	apiKey, err := client.getEthApiKey()
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(apiKey)
-	}
 }
