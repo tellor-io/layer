@@ -12,6 +12,7 @@
 - 2024-04-01: made the distinction clearer for tips not going into the reporter stake
 - 2024-04-02: clarity / wording changes
 - 2024-06-12: clarify tips locked state
+- 2024-0/-03: clean up
 
 ## Context
 
@@ -25,14 +26,14 @@ Another potential attack is that they could use tipping to bypass the deposit st
 
 ### Higher fee burn on tips
 
-The other method we could do is just increase that 2% fee to something like 5 or 10%, thus completely draining the attacker if they did this method.  Although this could be a solution, limiting that fee is important because it supports having on-chain tips (can be tracked for governance/ usage purposes) vs off-chain.  It also only mildly fixes the depositStake bypass.  
+Another method we talked about to prevent vote farming was to increase the 2% fee to 5 or 10%, thus completely draining the attacker if they used this method of attack.  Although this could be a solution, limiting that fee is important because it supports having on-chain tips (can be tracked for governance/ usage purposes) vs off-chain.  This solution also only mildly fixes the depositStake bypass.  
 
 ### Tips locked as stake and limit the amount
 
-We could just lock the tips as stake, but then tipping a query only you report is essentially a "deposit stake" function.  This could be handled by just limiting the amount you could unlock, but this dual structure could cause issues for tracking voting power and stake.  Keeping it in a separate escrow was deemed cleaner in the code.
+We discussed locking the tips as stake to prevent vote farming, but then reporters would be able to tip a query only they support and essentially use this as a "deposit stake" function.  This could be handled by limiting the amount you could unlock, but this dual structure could cause issues for tracking voting power and stake.  Keeping it in a separate escrow was deemed cleaner in the code.
 
-### just cap tip size or total amount
+### Cap tip size or total amount
 
-One could just cap the tip size, but this could easily be avoided by just splitting up tips.  We had also discussed limiting total tips to some % of total stake (e.g. 2%), but then a) you could get around the deposits by just tipping smaller amounts for fast queries; and b)  you could potentially censor the system by capping out the amount of tips (i.e. if you tip to the limit, now no one can do a legitimate tip).
+Alternatively, we could cap the tip size to prevent farming or bypassing the depositStake, but this could easily be avoided by splitting up tips.  We had also discussed limiting total tips to some % of total stake (e.g. 2%), but then a) bypassing the depositStake could still be done by tipping smaller amounts for fast queries; and b)  an attacker could potentially censor the system by capping out the amount of tips (i.e. if an attaker tips to the limit, now no one can do a legitimate tip).
 
 ## Issues / Notes on Implementation
