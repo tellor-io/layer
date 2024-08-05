@@ -1,13 +1,18 @@
 package app_test
 
 import (
+	"bytes"
+	"crypto/ed25519"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"testing"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
@@ -17,8 +22,14 @@ import (
 	"github.com/tellor-io/layer/app/testutils"
 	"github.com/tellor-io/layer/testutil/sample"
 
+	"cosmossdk.io/api/tendermint/abci"
+	tenderminttypes "cosmossdk.io/api/tendermint/types"
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseappmock "github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -33,6 +44,7 @@ type ProposalHandlerTestSuite struct {
 	oracleKeeper    *mocks.OracleKeeper
 	bridgeKeeper    *mocks.BridgeKeeper
 	stakingKeeper   *mocks.StakingKeeper
+	valStore        *baseappmock.MockValidatorStore
 }
 
 func (s *ProposalHandlerTestSuite) SetupTest() {
@@ -54,10 +66,10 @@ func (s *ProposalHandlerTestSuite) SetupTest() {
 
 	s.ctx = testutils.CreateTestContext(s.T())
 	ctrl := gomock.NewController(s.T())
-	valStore := baseappmock.NewMockValidatorStore(ctrl)
+	s.valStore = baseappmock.NewMockValidatorStore(ctrl)
 	s.proposalHandler = app.NewProposalHandler(
 		log.NewNopLogger(),
-		valStore,
+		s.valStore,
 		cdc,
 		ok,
 		bk,
@@ -104,7 +116,7 @@ func (s *ProposalHandlerTestSuite) TestCheckOracleAttestationsFromLastCommit() {
 	ctx := s.ctx
 	require.NotNil(ctx)
 
-	commit, voteExt, _, valAddr, consAddr := testutils.GenerateCommit(s.T(), ctx)
+	commit, voteExt, _, valAddr, consAddr, _ := testutils.GenerateCommit(s.T(), ctx)
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 	}, nil)
@@ -173,7 +185,7 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 	require.Empty(res2)
 
 	// BlockIDFlagCommit vote
-	commit, voteExt, addrsExpected, valAddr, consAddr := testutils.GenerateCommit(s.T(), ctx)
+	commit, voteExt, addrsExpected, valAddr, consAddr, _ := testutils.GenerateCommit(s.T(), ctx)
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 	}, nil)
@@ -195,7 +207,7 @@ func (s *ProposalHandlerTestSuite) TestCheckValsetSignaturesFromLastCommit() {
 	ctx := s.ctx
 	require.NotNil(ctx)
 
-	commit, voteExt, _, valAddr, consAddr := testutils.GenerateCommit(s.T(), ctx)
+	commit, voteExt, _, valAddr, consAddr, _ := testutils.GenerateCommit(s.T(), ctx)
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 	}, nil)
@@ -207,15 +219,187 @@ func (s *ProposalHandlerTestSuite) TestCheckValsetSignaturesFromLastCommit() {
 	require.Equal(signatures[0], hex.EncodeToString(voteExt.ValsetSignature.Signature))
 }
 
-func (s *ProposalHandlerTestSuite) TestPreBlocker() {
+func (s *ProposalHandlerTestSuite) TestPrepareProposalHandler() ([][]byte, sdk.AccAddress) {
 	require := s.Require()
-	// p := s.proposalHandler
+	p := s.proposalHandler
 	bk := s.bridgeKeeper
 	sk := s.stakingKeeper
+	ctx := s.ctx
+	require.NotNil(p)
 	require.NotNil(bk)
 	require.NotNil(sk)
+	require.NotNil(ctx)
+
+	extCommit, voteExt, evmAddr, accAddr, consAddr, _ := testutils.GenerateCommit(s.T(), ctx)
+
+	lastCommit := abcitypes.CommitInfo{
+		Round: 2,
+		Votes: []abcitypes.VoteInfo{
+			{
+				Validator: abcitypes.Validator{
+					Address: []byte("validator"),
+					Power:   1000,
+				},
+			},
+		},
+	}
+	cometInfo := baseapp.NewBlockInfo(
+		nil,
+		nil,
+		nil,
+		lastCommit,
+	)
+
+	ctx = ctx.WithBlockHeight(3)
+	ctx = ctx.WithCometInfo(cometInfo)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{
+		Height: 3,
+	})
+
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: consAddr.String(),
+	}, nil)
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB).Return(evmAddr, nil)
+	bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
+
+	req := abcitypes.RequestPrepareProposal{
+		Height:          3,
+		LocalLastCommit: extCommit,
+	}
+
+	res, err := p.PrepareProposalHandler(ctx, &req)
+	fmt.Println("res: ", res, "\nerr: ", err)
+	require.NoError(err)
+	require.NotNil(res)
+
+	return res.Txs, accAddr
+}
+
+func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
+	require := s.Require()
+	p := s.proposalHandler
+	require.NotNil(p)
 	ctx := s.ctx
 	require.NotNil(ctx)
+
+	pubKey, privKey, consAddr, _ := testutils.GenerateProposer(s.T())
+
+	operatorAndEvm := testutils.OperatorAndEVM{
+		OperatorAddresses: []string{consAddr.String()},
+		EVMAddresses:      []string{"evm1"},
+	}
+	valsetSigs := testutils.ValsetSignatures{
+		OperatorAddresses: []string{consAddr.String()},
+		Timestamps:        []int64{1},
+		Signatures:        []string{"signature1", "signature2"},
+	}
+	oracleAttestations := testutils.OracleAttestations{
+		OperatorAddresses: []string{consAddr.String()},
+		Attestations:      [][]byte{[]byte("attestation1")},
+		Snapshots:         [][]byte{[]byte("snapshot1")},
+	}
+
+	cve := cmtproto.CanonicalVoteExtension{
+		Extension: []byte("voteExtension"),
+		Height:    2, // the vote extension was signed in the previous height
+		Round:     2,
+		ChainId:   "layer",
+	}
+
+	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
+		var buf bytes.Buffer
+		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
+			return nil, err
+		}
+
+		return buf.Bytes(), nil
+	}
+
+	extSignBytes, err := marshalDelimitedFn(&cve)
+	require.NoError(err)
+
+	// sign extSignBytes
+	sig := ed25519.Sign(privKey, extSignBytes)
+
+	localLastCommit := abci.ExtendedCommitInfo{
+		Votes: []*abci.ExtendedVoteInfo{
+			{
+				Validator: &abci.Validator{
+					Address: consAddr.Bytes(),
+					Power:   1000000000000,
+				},
+				VoteExtension:      []byte("voteExtension"),
+				BlockIdFlag:        tenderminttypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT,
+				ExtensionSignature: sig,
+			},
+		},
+		Round: 2,
+	}
+
+	injectedVoteExtTx := testutils.VoteExtTx{
+		BlockHeight:        int64(2),
+		OpAndEVMAddrs:      operatorAndEvm,
+		ValsetSigs:         valsetSigs,
+		OracleAttestations: oracleAttestations,
+		ExtendedCommitInfo: &localLastCommit,
+	}
+	bz, err := json.Marshal(injectedVoteExtTx)
+	require.NoError(err)
+
+	lastCommit := abcitypes.CommitInfo{
+		Round: 2,
+		Votes: []abcitypes.VoteInfo{
+			{
+				Validator: abcitypes.Validator{
+					Address: consAddr.Bytes(),
+					Power:   1000000000000,
+				},
+				BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			},
+		},
+	}
+	cometInfo := baseapp.NewBlockInfo(
+		nil,
+		nil,
+		nil,
+		lastCommit,
+	)
+
+	ctx = ctx.WithBlockHeight(3)
+	ctx = ctx.WithCometInfo(cometInfo)
+	ctx = ctx.WithHeaderInfo(coreheader.Info{
+		Height:  3,
+		ChainID: "layer",
+	})
+
+	req := abcitypes.RequestProcessProposal{
+		Txs:                [][]byte{bz},
+		Height:             3,
+		ProposedLastCommit: lastCommit,
+	}
+
+	validPubKey := cmtprotocrypto.PublicKey{
+		Sum: &cmtprotocrypto.PublicKey_Ed25519{
+			Ed25519: pubKey,
+		},
+	}
+	s.valStore.EXPECT().GetPubKeyByConsAddr(ctx, consAddr).Return(validPubKey, nil).AnyTimes()
+
+	res, err := p.ProcessProposalHandler(ctx, &req)
+	fmt.Println("res: ", res, "\nerr: ", err)
+	require.NoError(err)
+	require.NotNil(res)
+
+}
+func (s *ProposalHandlerTestSuite) TestPreBlocker() {
+	// require := s.Require()
+	// p := s.proposalHandler
+	// bk := s.bridgeKeeper
+	// sk := s.stakingKeeper
+	// require.NotNil(bk)
+	// require.NotNil(sk)
+	// ctx := s.ctx
+	// require.NotNil(ctx)
 
 	// accAddr := sample.AccAddressBytes()
 	// _ = sdk.ConsAddress(accAddr)
@@ -250,25 +434,4 @@ func (s *ProposalHandlerTestSuite) TestPreBlocker() {
 
 	// res, err := p.PreBlocker(ctx, &req)
 	// fmt.Println("res: ", res, "\nerr: ", err)
-}
-
-func (s *ProposalHandlerTestSuite) TestPrepareProposalHandler() {
-	require := s.Require()
-	p := s.proposalHandler
-	require.NotNil(p)
-	bk := s.bridgeKeeper
-	sk := s.stakingKeeper
-	require.NotNil(bk)
-	require.NotNil(sk)
-	ctx := s.ctx
-	require.NotNil(ctx)
-
-	commit, _, _, _, _ := testutils.GenerateCommit(s.T(), ctx)
-	ctx = ctx.WithBlockHeight(2)
-	req := abcitypes.RequestPrepareProposal{
-		Height:          2,
-		LocalLastCommit: commit,
-	}
-	res, err := p.PrepareProposalHandler(ctx, &req)
-	fmt.Println("res: ", res, "\nerr: ", err)
 }
