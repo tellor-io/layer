@@ -16,7 +16,7 @@
 
 ## Context
 
-In layer, when a user sends free floating tokens as a tip, the party(ies) that report for that queryId in the reporting window are given the tip.  Once reported for, these tips are locked in an escrow account that can be withdrawn but observing the same waiting period as unstaking. The tokens are in a locked state until the user calls `WithdrawTip` which delegates the tokens to the specified validator, thereafter the user can undelegate and enter the unbonding period before the tokens are able to be released as free floating tokens.
+In Layer, when a user sends free floating tokens as a tip, the party(ies) that report for that queryId in the reporting window are given the tip.  Once reported for, these tips are locked in an escrow account that can be withdrawn but observing the same waiting period as unstaking. The tokens are in a locked state until the user calls `WithdrawTip` which delegates the tokens to the specified validator, thereafter the user can undelegate and enter the unbonding period before the tokens are able to be released as free floating tokens.
 
 One of the goals of the Tellor governance structure is to prevent people from farming voting power.  If tips were not locked, a party could tip a random query that only they know how to report for.  They could report, then tip those exact same tokens, thus looping them in order to look like there is ton of tip demand for this query and increase their 'user' and 'reporter' voting power.  The two methods to prevent this are a) a 2% fee on tips and b) locking the tip in escrow.  Now if the party wishes to withdraw that tip, they will have to wait the 21 day unbonding period, similar to the unstaking.  
 

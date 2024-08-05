@@ -4,17 +4,20 @@
 
 @themandalore
 @tkernell
+@brendaloya
 
 ## Changelog
 
 - 2024-02-21: initial version
 - 2024-02-26: unbonding period 
 - 2024-04-04: clarity in background
-
+- 2024-08-04: clean up
 
 ## Context
 
-Allowing users to request old data can create optionality in the data used in other protocols (e.g. allowing users to request old price data for their benefit instead of the latest available). This raised the question, should Layer allow older signed data to be pushed after newer signed data? To make it transparent or not allow it nonces are needed to keep track of when data is created. 
+Nonces can help keep track of the order that data is added to Layer and the validator updates to the bridge. Keeping track of this order is important because allowing users to request old data can create optionality in the data used in other protocols (e.g. allowing users to request old price data for their benefit instead of the latest available). This raised the question, should Layer allow older signed data to be pushed after newer signed data? To make it transparent (or not allow it) when this is happening, nonces are needed to keep track of when data is created. 
+
+The order of the validator set updates is also very important because it helps maintain a list of validators that are still bonded and active. While blobstream has used nonces to track the order of these important pieces, in Layer we have opted to use timestamps as described below for oracle data attestations and validator set changes. 
 
 ### Data attestations
 
@@ -34,6 +37,7 @@ We considered implementing a universal nonce but bacause that would mean that ev
 
 ## Issues / Notes on Implementation
 
+TODO: explain how this is related to the nonce/disputes and valid set of validator set
 We had originally wanted the validator to be staked until unbonded (e.g. 21 day unbonding period), but a validator set can change significantly very quickly due to disputes and slashing events, so comparing a validator set's age to the unbonding period does not ensure that a given validator still has tokens at stake. For this reason, we use the validator nonce and don't allow them to keep reporting if the validator set changes quickly.
 
 ## Links
