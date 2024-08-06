@@ -14,6 +14,7 @@ contract SimpleLayerUser {
         uint256 aggregatePower;
         uint256 previousTimestamp;
         uint256 nextTimestamp;
+        uint256 relayTimestamp;
     }
 
     constructor(address _blobstreamO, bytes32 _queryId) {
@@ -34,7 +35,8 @@ contract SimpleLayerUser {
             _attestData.attestationTimestamp, 
             _attestData.report.aggregatePower, 
             _attestData.report.previousTimestamp, 
-            _attestData.report.nextTimestamp
+            _attestData.report.nextTimestamp,
+            block.timestamp
             )
         );
     }
