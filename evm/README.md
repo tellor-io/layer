@@ -30,9 +30,9 @@ Create a `secrets.yaml` file in the root layer directory:
 ```
 touch secrets.yaml
 ```
-And set your alchemy eth-mainnet key:
+And set your eth-mainnet rpc url:
 ```yaml
-eth_api_key: "your-alchemy-eth-mainnet-key"
+eth_rpc_url: "your-eth-mainnet-rpc-url"
 ```
 
 To run the start scripts for the layer chain, you need `jq` installed. For MacOS, you can install it with 
