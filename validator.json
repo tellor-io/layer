@@ -1,6 +1,6 @@
 {
     "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"c+EuycPpudgiyVl6guYG9oyPSImHHJz1z0Pg4ODKveo="},
-    "amount": "100000000000loya",
+    "amount": "99000000loya",
     "moniker": "calebmoniker",
     "identity": "optional identity signature (ex. UPort or Keybase)",
     "website": "validator's (optional) website",
