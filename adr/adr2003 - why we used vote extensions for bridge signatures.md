@@ -1,4 +1,4 @@
-# ADR 2003: Vote extensions vs transactions for bridge signatures
+# ADR 2003: Why we used vote extensions for bridge signatures
 
 ## Authors
 
