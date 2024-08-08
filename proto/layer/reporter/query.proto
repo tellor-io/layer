@@ -30,6 +30,19 @@ service Query {
   rpc AllowedAmount(QueryAllowedAmountRequest) returns (QueryAllowedAmountResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/allowed-amount";
   }
+
+  rpc AllowedAmountExpiration(QueryAllowedAmountExpirationRequest) returns (QueryAllowedAmountExpirationResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/allowed-amount-expiration";
+  }
+
+  // NumOfSelectorsByReporter queries the number of selectors by a reporter.
+  rpc NumOfSelectorsByReporter(QueryNumOfSelectorsByReporterRequest) returns (QueryNumOfSelectorsByReporterResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/num-of-selectors-by-reporter/{reporter_address}";
+  }
+  //  SpaceAvailableByReporter queries the space available in a reporter.
+  rpc SpaceAvailableByReporter(QuerySpaceAvailableByReporterRequest) returns (QuerySpaceAvailableByReporterResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/space-available-by-reporter/{reporter_address}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -93,4 +106,44 @@ message QueryAllowedAmountResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+}
+
+message QueryAllowedAmountExpirationRequest {}
+
+message QueryAllowedAmountExpirationResponse {
+  int64 expiration = 1;
+}
+
+// QueryNumOfSelectorsByReporterRequest is the request type for the
+// Query/NumOfSelectorsByReporter RPC method.
+message QueryNumOfSelectorsByReporterRequest {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // reporter_address defines the reporter address to query for.
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryNumOfSelectorsByReporterResponse is the response type for the
+// Query/NumOfSelectorsByReporter RPC method.
+message QueryNumOfSelectorsByReporterResponse {
+  // num_of_selectors defines the number of selectors by a reporter.
+  int32 num_of_selectors = 1;
+}
+
+// QuerySpaceAvailableByReporterRequest is the request type for the
+// Query/SpaceAvailableByReporter RPC method.
+message QuerySpaceAvailableByReporterRequest {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // reporter_address defines the reporter address to query for.
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QuerySpaceAvailableByReporterResponse is the response type for the
+// Query/SpaceAvailableByReporter RPC method.
+message QuerySpaceAvailableByReporterResponse {
+  // space_available defines the space available in a reporter.
+  int32 space_available = 1;
 }

@@ -898,6 +898,10 @@ func New(
 		panic(err)
 	}
 
+	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
+	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
+	app.RegisterUpgradeHandlers()
+
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
@@ -954,6 +958,48 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *App) RegisterUpgradeHandlers() {
+	const UpgradeName = "v0.2.0"
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		UpgradeName,
+		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// one time thing, changing the team address
+			currentParams, err := app.DisputeKeeper.Params.Get(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			addrCdc := address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			}
+
+			currentParams.TeamAddress, err = addrCdc.StringToBytes("tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97")
+			if err != nil {
+				return nil, err
+			}
+
+			if err = app.DisputeKeeper.Params.Set(ctx, currentParams); err != nil {
+				return nil, err
+			}
+
+			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
+		},
+	)
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
 
 // Name returns the name of the App

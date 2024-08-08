@@ -99,7 +99,12 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	operatorAddress, err := h.GetOperatorAddress()
 	if err != nil {
 		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", err)
-		return &abci.ResponseExtendVote{}, nil
+		bz, err := json.Marshal(voteExt)
+		if err != nil {
+			h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
+			return &abci.ResponseExtendVote{}, err
+		}
+		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 	}
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
@@ -107,7 +112,12 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSigA, initialSigB, err := h.SignInitialMessage()
 		if err != nil {
 			h.logger.Info("ExtendVoteHandler: failed to sign initial message", "error", err)
-			return &abci.ResponseExtendVote{}, nil
+			bz, err := json.Marshal(voteExt)
+			if err != nil {
+				h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
+				return &abci.ResponseExtendVote{}, err
+			}
+			return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 		}
 		// include the initial sig in the vote extension
 		initialSignature := InitialSignature{
@@ -181,6 +191,18 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	err := json.Unmarshal(req.VoteExtension, &voteExt)
 	if err != nil {
 		h.logger.Error("VerifyVoteExtensionHandler: failed to unmarshal vote extension", "error", err)
+		// lookup whether validator has registered evm address
+		validatorAddress, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), req.ValidatorAddress)
+		if err != nil {
+			h.logger.Error("VerifyVoteExtensionHandler: failed to convert validator address to Bech32", "error", err)
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+		_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, validatorAddress)
+		if err != nil {
+			h.logger.Info("VerifyVoteExtensionHandler: validator does not have evm address, accepting vote", "validatorAddress", validatorAddress)
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+		}
+		h.logger.Info("VerifyVoteExtensionHandler: validator has evm address, rejecting vote", "validatorAddress", validatorAddress)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 	// ensure oracle attestations length is less than or equal to the number of attestation requests
@@ -188,7 +210,7 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			h.logger.Error("VerifyVoteExtensionHandler: failed to get attestation requests", "error", err)
-			return nil, err
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 		} else if len(voteExt.OracleAttestations) > 0 {
 			h.logger.Error("VerifyVoteExtensionHandler: oracle attestations length is greater than 0, should be 0", "voteExt", voteExt)
 			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil

@@ -432,6 +432,260 @@ func (m *QueryAllowedAmountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAllowedAmountResponse proto.InternalMessageInfo
 
+type QueryAllowedAmountExpirationRequest struct {
+}
+
+func (m *QueryAllowedAmountExpirationRequest) Reset()         { *m = QueryAllowedAmountExpirationRequest{} }
+func (m *QueryAllowedAmountExpirationRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryAllowedAmountExpirationRequest) ProtoMessage()    {}
+func (*QueryAllowedAmountExpirationRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a043abc58a7b99a9, []int{9}
+}
+func (m *QueryAllowedAmountExpirationRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllowedAmountExpirationRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllowedAmountExpirationRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllowedAmountExpirationRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllowedAmountExpirationRequest.Merge(m, src)
+}
+func (m *QueryAllowedAmountExpirationRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllowedAmountExpirationRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllowedAmountExpirationRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllowedAmountExpirationRequest proto.InternalMessageInfo
+
+type QueryAllowedAmountExpirationResponse struct {
+	Expiration int64 `protobuf:"varint,1,opt,name=expiration,proto3" json:"expiration,omitempty"`
+}
+
+func (m *QueryAllowedAmountExpirationResponse) Reset()         { *m = QueryAllowedAmountExpirationResponse{} }
+func (m *QueryAllowedAmountExpirationResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryAllowedAmountExpirationResponse) ProtoMessage()    {}
+func (*QueryAllowedAmountExpirationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a043abc58a7b99a9, []int{10}
+}
+func (m *QueryAllowedAmountExpirationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryAllowedAmountExpirationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryAllowedAmountExpirationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryAllowedAmountExpirationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryAllowedAmountExpirationResponse.Merge(m, src)
+}
+func (m *QueryAllowedAmountExpirationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryAllowedAmountExpirationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryAllowedAmountExpirationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryAllowedAmountExpirationResponse proto.InternalMessageInfo
+
+func (m *QueryAllowedAmountExpirationResponse) GetExpiration() int64 {
+	if m != nil {
+		return m.Expiration
+	}
+	return 0
+}
+
+// QueryNumOfSelectorsByReporterRequest is the request type for the
+// Query/NumOfSelectorsByReporter RPC method.
+type QueryNumOfSelectorsByReporterRequest struct {
+	// reporter_address defines the reporter address to query for.
+	ReporterAddress string `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (m *QueryNumOfSelectorsByReporterRequest) Reset()         { *m = QueryNumOfSelectorsByReporterRequest{} }
+func (m *QueryNumOfSelectorsByReporterRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryNumOfSelectorsByReporterRequest) ProtoMessage()    {}
+func (*QueryNumOfSelectorsByReporterRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a043abc58a7b99a9, []int{11}
+}
+func (m *QueryNumOfSelectorsByReporterRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryNumOfSelectorsByReporterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryNumOfSelectorsByReporterRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryNumOfSelectorsByReporterRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryNumOfSelectorsByReporterRequest.Merge(m, src)
+}
+func (m *QueryNumOfSelectorsByReporterRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryNumOfSelectorsByReporterRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryNumOfSelectorsByReporterRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryNumOfSelectorsByReporterRequest proto.InternalMessageInfo
+
+// QueryNumOfSelectorsByReporterResponse is the response type for the
+// Query/NumOfSelectorsByReporter RPC method.
+type QueryNumOfSelectorsByReporterResponse struct {
+	// num_of_selectors defines the number of selectors by a reporter.
+	NumOfSelectors int32 `protobuf:"varint,1,opt,name=num_of_selectors,json=numOfSelectors,proto3" json:"num_of_selectors,omitempty"`
+}
+
+func (m *QueryNumOfSelectorsByReporterResponse) Reset()         { *m = QueryNumOfSelectorsByReporterResponse{} }
+func (m *QueryNumOfSelectorsByReporterResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryNumOfSelectorsByReporterResponse) ProtoMessage()    {}
+func (*QueryNumOfSelectorsByReporterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a043abc58a7b99a9, []int{12}
+}
+func (m *QueryNumOfSelectorsByReporterResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryNumOfSelectorsByReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryNumOfSelectorsByReporterResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryNumOfSelectorsByReporterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryNumOfSelectorsByReporterResponse.Merge(m, src)
+}
+func (m *QueryNumOfSelectorsByReporterResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryNumOfSelectorsByReporterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryNumOfSelectorsByReporterResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryNumOfSelectorsByReporterResponse proto.InternalMessageInfo
+
+func (m *QueryNumOfSelectorsByReporterResponse) GetNumOfSelectors() int32 {
+	if m != nil {
+		return m.NumOfSelectors
+	}
+	return 0
+}
+
+// QuerySpaceAvailableByReporterRequest is the request type for the
+// Query/SpaceAvailableByReporter RPC method.
+type QuerySpaceAvailableByReporterRequest struct {
+	// reporter_address defines the reporter address to query for.
+	ReporterAddress string `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (m *QuerySpaceAvailableByReporterRequest) Reset()         { *m = QuerySpaceAvailableByReporterRequest{} }
+func (m *QuerySpaceAvailableByReporterRequest) String() string { return proto.CompactTextString(m) }
+func (*QuerySpaceAvailableByReporterRequest) ProtoMessage()    {}
+func (*QuerySpaceAvailableByReporterRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a043abc58a7b99a9, []int{13}
+}
+func (m *QuerySpaceAvailableByReporterRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySpaceAvailableByReporterRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySpaceAvailableByReporterRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySpaceAvailableByReporterRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySpaceAvailableByReporterRequest.Merge(m, src)
+}
+func (m *QuerySpaceAvailableByReporterRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySpaceAvailableByReporterRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySpaceAvailableByReporterRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySpaceAvailableByReporterRequest proto.InternalMessageInfo
+
+// QuerySpaceAvailableByReporterResponse is the response type for the
+// Query/SpaceAvailableByReporter RPC method.
+type QuerySpaceAvailableByReporterResponse struct {
+	// space_available defines the space available in a reporter.
+	SpaceAvailable int32 `protobuf:"varint,1,opt,name=space_available,json=spaceAvailable,proto3" json:"space_available,omitempty"`
+}
+
+func (m *QuerySpaceAvailableByReporterResponse) Reset()         { *m = QuerySpaceAvailableByReporterResponse{} }
+func (m *QuerySpaceAvailableByReporterResponse) String() string { return proto.CompactTextString(m) }
+func (*QuerySpaceAvailableByReporterResponse) ProtoMessage()    {}
+func (*QuerySpaceAvailableByReporterResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a043abc58a7b99a9, []int{14}
+}
+func (m *QuerySpaceAvailableByReporterResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QuerySpaceAvailableByReporterResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QuerySpaceAvailableByReporterResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QuerySpaceAvailableByReporterResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QuerySpaceAvailableByReporterResponse.Merge(m, src)
+}
+func (m *QuerySpaceAvailableByReporterResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QuerySpaceAvailableByReporterResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QuerySpaceAvailableByReporterResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QuerySpaceAvailableByReporterResponse proto.InternalMessageInfo
+
+func (m *QuerySpaceAvailableByReporterResponse) GetSpaceAvailable() int32 {
+	if m != nil {
+		return m.SpaceAvailable
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.reporter.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.reporter.QueryParamsResponse")
@@ -442,59 +696,80 @@ func init() {
 	proto.RegisterType((*QuerySelectorReporterResponse)(nil), "layer.reporter.QuerySelectorReporterResponse")
 	proto.RegisterType((*QueryAllowedAmountRequest)(nil), "layer.reporter.QueryAllowedAmountRequest")
 	proto.RegisterType((*QueryAllowedAmountResponse)(nil), "layer.reporter.QueryAllowedAmountResponse")
+	proto.RegisterType((*QueryAllowedAmountExpirationRequest)(nil), "layer.reporter.QueryAllowedAmountExpirationRequest")
+	proto.RegisterType((*QueryAllowedAmountExpirationResponse)(nil), "layer.reporter.QueryAllowedAmountExpirationResponse")
+	proto.RegisterType((*QueryNumOfSelectorsByReporterRequest)(nil), "layer.reporter.QueryNumOfSelectorsByReporterRequest")
+	proto.RegisterType((*QueryNumOfSelectorsByReporterResponse)(nil), "layer.reporter.QueryNumOfSelectorsByReporterResponse")
+	proto.RegisterType((*QuerySpaceAvailableByReporterRequest)(nil), "layer.reporter.QuerySpaceAvailableByReporterRequest")
+	proto.RegisterType((*QuerySpaceAvailableByReporterResponse)(nil), "layer.reporter.QuerySpaceAvailableByReporterResponse")
 }
 
 func init() { proto.RegisterFile("layer/reporter/query.proto", fileDescriptor_a043abc58a7b99a9) }
 
 var fileDescriptor_a043abc58a7b99a9 = []byte{
-	// 742 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xcf, 0x4f, 0x13, 0x4f,
-	0x14, 0xef, 0xf2, 0xfd, 0x8a, 0x74, 0x08, 0x3f, 0x1c, 0x81, 0x94, 0x05, 0xb7, 0x64, 0x11, 0xac,
-	0xc5, 0xee, 0x4a, 0x35, 0x26, 0x72, 0x30, 0x82, 0x11, 0xc3, 0x49, 0x5c, 0xa2, 0x07, 0x2f, 0xcd,
-	0xb4, 0x9d, 0x2c, 0x1b, 0x76, 0x77, 0x96, 0xd9, 0xa9, 0x8a, 0xc4, 0x8b, 0x17, 0x3d, 0x9a, 0x78,
-	0xd1, 0x1b, 0x47, 0x8f, 0x1e, 0x48, 0xfc, 0x17, 0x38, 0x12, 0xbc, 0x18, 0x0f, 0xc4, 0x50, 0x13,
-	0xfd, 0x33, 0x4c, 0xe7, 0x47, 0x4b, 0x97, 0x56, 0xf0, 0xd2, 0xec, 0xbc, 0xf7, 0x79, 0x9f, 0xf7,
-	0x79, 0x9f, 0x7d, 0xd3, 0x05, 0xba, 0x8f, 0xb6, 0x30, 0xb5, 0x29, 0x8e, 0x08, 0x65, 0x98, 0xda,
-	0x9b, 0x35, 0x4c, 0xb7, 0xac, 0x88, 0x12, 0x46, 0xe0, 0x20, 0xcf, 0x59, 0x2a, 0xa7, 0x5f, 0x40,
-	0x81, 0x17, 0x12, 0x9b, 0xff, 0x0a, 0x88, 0x9e, 0xaf, 0x90, 0x38, 0x20, 0xb1, 0x5d, 0x46, 0x31,
-	0x16, 0xb5, 0xf6, 0xb3, 0xf9, 0x32, 0x66, 0x68, 0xde, 0x8e, 0x90, 0xeb, 0x85, 0x88, 0x79, 0x24,
-	0x94, 0x58, 0xe3, 0x38, 0x56, 0xa1, 0x2a, 0xc4, 0x53, 0xf9, 0x71, 0x91, 0x2f, 0xf1, 0x93, 0x2d,
-	0x0e, 0x32, 0x35, 0xe2, 0x12, 0x97, 0x88, 0x78, 0xe3, 0x49, 0x46, 0x27, 0x5d, 0x42, 0x5c, 0x1f,
-	0xdb, 0x28, 0xf2, 0x6c, 0x14, 0x86, 0x84, 0xf1, 0x6e, 0xaa, 0xe6, 0x72, 0x62, 0x32, 0x42, 0x51,
-	0xc5, 0xc7, 0x25, 0x75, 0x96, 0xa8, 0x89, 0x04, 0x2a, 0x42, 0x14, 0x05, 0x92, 0xc2, 0x1c, 0x01,
-	0xf0, 0x51, 0x63, 0xa6, 0x55, 0x1e, 0x74, 0xf0, 0x66, 0x0d, 0xc7, 0xcc, 0x5c, 0x05, 0x17, 0xdb,
-	0xa2, 0x71, 0x44, 0xc2, 0x18, 0xc3, 0xdb, 0xa0, 0x57, 0x14, 0x67, 0xb4, 0x29, 0x2d, 0xd7, 0x5f,
-	0x1c, 0xb3, 0xda, 0xed, 0xb3, 0x04, 0x7e, 0x29, 0xbd, 0x77, 0x98, 0x4d, 0x7d, 0xfa, 0xf5, 0x39,
-	0xaf, 0x39, 0xb2, 0xc0, 0x2c, 0x81, 0x51, 0xce, 0xe8, 0x48, 0xa8, 0x6a, 0x05, 0x97, 0x01, 0x68,
-	0xd9, 0x28, 0x79, 0x67, 0x2d, 0x69, 0x4d, 0xc3, 0x47, 0x4b, 0xbc, 0x2f, 0xe9, 0xa6, 0xb5, 0x8a,
-	0x5c, 0x2c, 0x6b, 0x9d, 0x63, 0x95, 0xe6, 0x4b, 0xd0, 0xa7, 0x64, 0xc0, 0x22, 0x38, 0x8f, 0xaa,
-	0x55, 0x8a, 0x63, 0x21, 0x34, 0xbd, 0x94, 0x39, 0xd8, 0x2d, 0x8c, 0x48, 0xce, 0x45, 0x91, 0x59,
-	0x63, 0xd4, 0x0b, 0x5d, 0x47, 0x01, 0xe1, 0x02, 0xe8, 0x0b, 0x30, 0x43, 0x55, 0xc4, 0x50, 0xa6,
-	0x87, 0xab, 0x30, 0x92, 0xd3, 0x3d, 0xe4, 0xf6, 0xaa, 0x09, 0x9c, 0x26, 0xde, 0xfc, 0xa8, 0x81,
-	0xb1, 0xe4, 0x74, 0xd2, 0xb2, 0x5b, 0x20, 0xad, 0xea, 0x1b, 0x62, 0xfe, 0xcb, 0xf5, 0x17, 0x33,
-	0x49, 0x5e, 0xf5, 0xe0, 0xb4, 0xa0, 0xf0, 0x41, 0x9b, 0x2d, 0x42, 0xd0, 0x95, 0x53, 0x6d, 0x11,
-	0x4d, 0xdb, 0x7c, 0x09, 0xc0, 0x24, 0x97, 0xb6, 0x86, 0x7d, 0x5c, 0x61, 0x84, 0x36, 0xe5, 0x4b,
-	0xff, 0xef, 0x81, 0xe1, 0x58, 0xa6, 0x4a, 0x67, 0x35, 0x6d, 0x48, 0x55, 0xc8, 0xf0, 0x42, 0xdf,
-	0xdb, 0x9d, 0x6c, 0xea, 0xf7, 0x4e, 0x36, 0x65, 0x3e, 0x06, 0x97, 0xba, 0xb4, 0x93, 0x86, 0xdc,
-	0x6c, 0xbd, 0xa7, 0x53, 0xfb, 0x34, 0x91, 0xe6, 0x04, 0x18, 0xe7, 0xb4, 0x8b, 0xbe, 0x4f, 0x9e,
-	0xe3, 0xea, 0x62, 0x40, 0x6a, 0x21, 0x53, 0xdb, 0xba, 0xa7, 0x01, 0xbd, 0x53, 0x56, 0x76, 0x74,
-	0xc0, 0x60, 0xcc, 0xd0, 0x86, 0x17, 0xba, 0x25, 0xc4, 0x33, 0xb2, 0xef, 0x5c, 0x63, 0x4b, 0xbf,
-	0x1f, 0x66, 0x47, 0x45, 0xef, 0xb8, 0xba, 0x61, 0x79, 0xc4, 0x0e, 0x10, 0x5b, 0xb7, 0x56, 0x42,
-	0x76, 0xb0, 0x5b, 0x00, 0x52, 0xd4, 0x4a, 0xc8, 0x9c, 0x01, 0x49, 0x21, 0xb8, 0xe1, 0x13, 0x30,
-	0x5c, 0x0b, 0x13, 0xac, 0x3d, 0xff, 0xce, 0x3a, 0xd4, 0x24, 0x11, 0xbc, 0xc5, 0xfa, 0xff, 0xe0,
-	0x1c, 0x1f, 0x05, 0x6e, 0x83, 0x5e, 0x71, 0x9b, 0xa0, 0x99, 0xdc, 0x97, 0x93, 0x17, 0x56, 0x9f,
-	0xfe, 0x2b, 0x46, 0x18, 0x61, 0xe6, 0x5e, 0x7f, 0xfd, 0xf9, 0xbe, 0xc7, 0x84, 0x53, 0x36, 0xc3,
-	0xbe, 0x4f, 0x68, 0xc1, 0x23, 0x76, 0xc7, 0xff, 0x06, 0xf8, 0x46, 0x03, 0xe9, 0xe6, 0x2e, 0xc3,
-	0x99, 0x8e, 0xe4, 0xc9, 0x9b, 0xac, 0xcf, 0x9e, 0x06, 0x93, 0x32, 0xe6, 0xb8, 0x8c, 0x19, 0x38,
-	0xdd, 0x5d, 0x46, 0xeb, 0x1e, 0x7c, 0xd1, 0xc0, 0x70, 0x72, 0x97, 0xe0, 0xb5, 0x8e, 0x9d, 0xba,
-	0x6c, 0xb8, 0x5e, 0x38, 0x23, 0x5a, 0xca, 0x5b, 0xe6, 0xf2, 0xee, 0xc2, 0x3b, 0xdd, 0xe5, 0xa9,
-	0xf5, 0x2f, 0x34, 0x23, 0xdb, 0xc9, 0x3b, 0xf4, 0x0a, 0x7e, 0xd0, 0xc0, 0x40, 0xdb, 0x42, 0xc2,
-	0xab, 0x1d, 0x85, 0x74, 0x5a, 0x69, 0x3d, 0x7f, 0x16, 0xa8, 0x14, 0x7c, 0x9d, 0x0b, 0xce, 0xc3,
-	0x5c, 0x77, 0xc1, 0x48, 0x14, 0x16, 0xc4, 0xa6, 0x2e, 0xdd, 0xdf, 0x3b, 0x32, 0xb4, 0xfd, 0x23,
-	0x43, 0xfb, 0x71, 0x64, 0x68, 0xef, 0xea, 0x46, 0x6a, 0xbf, 0x6e, 0xa4, 0xbe, 0xd5, 0x8d, 0xd4,
-	0xd3, 0x39, 0xd7, 0x63, 0xeb, 0xb5, 0xb2, 0x55, 0x21, 0xc1, 0x09, 0xb6, 0x17, 0x2d, 0x3e, 0xb6,
-	0x15, 0xe1, 0xb8, 0xdc, 0xcb, 0x3f, 0x21, 0x37, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0x09, 0x44,
-	0x57, 0x52, 0x61, 0x07, 0x00, 0x00,
+	// 978 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcf, 0x6f, 0xdc, 0x54,
+	0x17, 0x1d, 0xa7, 0x6a, 0xbe, 0xcc, 0xad, 0x9a, 0xe4, 0x7b, 0xa4, 0x65, 0xea, 0x96, 0x49, 0xe5,
+	0x34, 0xed, 0x90, 0x60, 0x9b, 0x26, 0x2d, 0x12, 0x45, 0x42, 0x24, 0xa8, 0x81, 0x80, 0x44, 0x27,
+	0x8e, 0x60, 0xc1, 0x66, 0xf4, 0x66, 0xe6, 0xc5, 0xb5, 0x6a, 0xfb, 0xb9, 0xf6, 0x73, 0xe9, 0x50,
+	0x75, 0xc3, 0x06, 0x96, 0x48, 0x6c, 0x60, 0xd7, 0x25, 0x4b, 0x16, 0x95, 0x58, 0xb3, 0xcb, 0xb2,
+	0x2a, 0x1b, 0xe8, 0xa2, 0xaa, 0x12, 0x24, 0xf8, 0x33, 0xd0, 0xbc, 0x1f, 0x9e, 0x8c, 0x67, 0x1c,
+	0x4f, 0x16, 0x6c, 0x22, 0xfb, 0xdd, 0x73, 0xef, 0x3d, 0xe7, 0xbe, 0xeb, 0x93, 0x01, 0xdd, 0xc7,
+	0x3d, 0x12, 0xdb, 0x31, 0x89, 0x68, 0xcc, 0x48, 0x6c, 0xdf, 0x4f, 0x49, 0xdc, 0xb3, 0xa2, 0x98,
+	0x32, 0x8a, 0x66, 0x79, 0xcc, 0x52, 0x31, 0xfd, 0xff, 0x38, 0xf0, 0x42, 0x6a, 0xf3, 0xbf, 0x02,
+	0xa2, 0xaf, 0x74, 0x68, 0x12, 0xd0, 0xc4, 0x6e, 0xe3, 0x84, 0x88, 0x5c, 0xfb, 0xc1, 0xf5, 0x36,
+	0x61, 0xf8, 0xba, 0x1d, 0x61, 0xd7, 0x0b, 0x31, 0xf3, 0x68, 0x28, 0xb1, 0xf5, 0xa3, 0x58, 0x85,
+	0xea, 0x50, 0x4f, 0xc5, 0x2f, 0x88, 0x78, 0x8b, 0xbf, 0xd9, 0xe2, 0x45, 0x86, 0x16, 0x5c, 0xea,
+	0x52, 0x71, 0xde, 0x7f, 0x92, 0xa7, 0x97, 0x5c, 0x4a, 0x5d, 0x9f, 0xd8, 0x38, 0xf2, 0x6c, 0x1c,
+	0x86, 0x94, 0xf1, 0x6e, 0x2a, 0xe7, 0x4a, 0x4e, 0x19, 0x8d, 0x71, 0xc7, 0x27, 0x2d, 0xf5, 0x2e,
+	0x51, 0x17, 0x73, 0xa8, 0x08, 0xc7, 0x38, 0x90, 0x25, 0x8c, 0x05, 0x40, 0x3b, 0x7d, 0x4d, 0x4d,
+	0x7e, 0xe8, 0x90, 0xfb, 0x29, 0x49, 0x98, 0xd1, 0x84, 0xd7, 0x86, 0x4e, 0x93, 0x88, 0x86, 0x09,
+	0x41, 0xef, 0xc2, 0xb4, 0x48, 0xae, 0x69, 0x97, 0xb5, 0xc6, 0x99, 0xb5, 0xf3, 0xd6, 0xf0, 0xf8,
+	0x2c, 0x81, 0xdf, 0xac, 0xee, 0xbf, 0x5c, 0xac, 0xfc, 0xfc, 0xf7, 0x2f, 0x2b, 0x9a, 0x23, 0x13,
+	0x8c, 0x16, 0x9c, 0xe3, 0x15, 0x1d, 0x09, 0x55, 0xad, 0xd0, 0x16, 0xc0, 0x60, 0x8c, 0xb2, 0xee,
+	0x55, 0x4b, 0x8e, 0xa6, 0x3f, 0x47, 0x4b, 0xdc, 0x97, 0x9c, 0xa6, 0xd5, 0xc4, 0x2e, 0x91, 0xb9,
+	0xce, 0x91, 0x4c, 0xe3, 0x6b, 0x98, 0x51, 0x34, 0xd0, 0x1a, 0xfc, 0x0f, 0x77, 0xbb, 0x31, 0x49,
+	0x04, 0xd1, 0xea, 0x66, 0xed, 0xf9, 0x53, 0x73, 0x41, 0xd6, 0xdc, 0x10, 0x91, 0x5d, 0x16, 0x7b,
+	0xa1, 0xeb, 0x28, 0x20, 0xba, 0x05, 0x33, 0x01, 0x61, 0xb8, 0x8b, 0x19, 0xae, 0x4d, 0x71, 0x16,
+	0xf5, 0xbc, 0xba, 0x3b, 0x7c, 0xbc, 0x4a, 0x81, 0x93, 0xe1, 0x8d, 0x9f, 0x34, 0x38, 0x9f, 0x57,
+	0x27, 0x47, 0xf6, 0x0e, 0x54, 0x55, 0x7e, 0x9f, 0xcc, 0xa9, 0xc6, 0x99, 0xb5, 0x5a, 0xbe, 0xae,
+	0x7a, 0x70, 0x06, 0x50, 0xf4, 0xd1, 0xd0, 0x58, 0x04, 0xa1, 0x6b, 0xa5, 0x63, 0x11, 0x4d, 0x87,
+	0xe6, 0x12, 0xc0, 0x25, 0x4e, 0x6d, 0x97, 0xf8, 0xa4, 0xc3, 0x68, 0x9c, 0xd1, 0x97, 0xf3, 0xff,
+	0x10, 0xe6, 0x13, 0x19, 0x6a, 0x4d, 0x3a, 0xb4, 0x39, 0x95, 0x21, 0x8f, 0x6f, 0xcd, 0x7c, 0xf7,
+	0x64, 0xb1, 0xf2, 0xcf, 0x93, 0xc5, 0x8a, 0xf1, 0x39, 0xbc, 0x51, 0xd0, 0x4e, 0x0e, 0xe4, 0xc6,
+	0xe0, 0x9e, 0x4a, 0xfb, 0x64, 0x48, 0xe3, 0x22, 0x5c, 0xe0, 0x65, 0x37, 0x7c, 0x9f, 0x7e, 0x45,
+	0xba, 0x1b, 0x01, 0x4d, 0x43, 0xa6, 0xb6, 0x75, 0x5f, 0x03, 0x7d, 0x5c, 0x54, 0x76, 0x74, 0x60,
+	0x36, 0x61, 0xf8, 0x9e, 0x17, 0xba, 0x2d, 0xcc, 0x23, 0xb2, 0xef, 0x6a, 0x7f, 0x4b, 0x5f, 0xbc,
+	0x5c, 0x3c, 0x27, 0x7a, 0x27, 0xdd, 0x7b, 0x96, 0x47, 0xed, 0x00, 0xb3, 0xbb, 0xd6, 0x76, 0xc8,
+	0x9e, 0x3f, 0x35, 0x41, 0x92, 0xda, 0x0e, 0x99, 0x73, 0x56, 0x96, 0x10, 0xb5, 0xd1, 0x17, 0x30,
+	0x9f, 0x86, 0xb9, 0xaa, 0x53, 0x27, 0xaf, 0x3a, 0x97, 0x15, 0x11, 0x75, 0x8d, 0x65, 0x58, 0x1a,
+	0x55, 0x72, 0xfb, 0x61, 0xe4, 0xc5, 0xfc, 0x36, 0x95, 0xe2, 0x2d, 0xb8, 0x72, 0x3c, 0x4c, 0x4a,
+	0xaf, 0x03, 0x90, 0xec, 0x94, 0xcb, 0x3e, 0xe5, 0x1c, 0x39, 0x31, 0x52, 0x59, 0xe7, 0xb3, 0x34,
+	0xb8, 0xb3, 0xa7, 0xae, 0x2c, 0xd9, 0xec, 0x8d, 0x59, 0x12, 0x75, 0x15, 0x93, 0x2f, 0x89, 0xca,
+	0x18, 0x5d, 0x92, 0x1d, 0x58, 0x2e, 0x69, 0x2b, 0xf9, 0x37, 0x60, 0x3e, 0x4c, 0x83, 0x16, 0xdd,
+	0x6b, 0xa9, 0x8d, 0x13, 0x7d, 0x4f, 0x3b, 0xb3, 0xe1, 0x50, 0x6e, 0xa6, 0x64, 0x37, 0xc2, 0x1d,
+	0xb2, 0xf1, 0x00, 0x7b, 0x3e, 0x6e, 0xfb, 0xe4, 0x3f, 0x57, 0xd2, 0x94, 0x4a, 0x8a, 0xdb, 0x4a,
+	0x25, 0xd7, 0x60, 0x2e, 0xe9, 0x63, 0x5a, 0x58, 0x81, 0x94, 0x90, 0x64, 0x28, 0x75, 0xed, 0x55,
+	0x15, 0x4e, 0xf3, 0x92, 0xe8, 0x11, 0x4c, 0x0b, 0x3f, 0x45, 0x46, 0xde, 0x31, 0x46, 0x2d, 0x5b,
+	0x5f, 0x3a, 0x16, 0x23, 0x58, 0x18, 0x8d, 0x6f, 0x7e, 0xff, 0xeb, 0x87, 0x29, 0x03, 0x5d, 0xb6,
+	0x19, 0xf1, 0x7d, 0x1a, 0x9b, 0x1e, 0xb5, 0xc7, 0xfe, 0x77, 0x40, 0xdf, 0x6a, 0x50, 0xcd, 0xdc,
+	0x0c, 0x2d, 0x8f, 0x2d, 0x9e, 0xf7, 0x72, 0xfd, 0x6a, 0x19, 0x4c, 0xd2, 0x58, 0xe5, 0x34, 0x96,
+	0xd1, 0x52, 0x31, 0x8d, 0x81, 0x13, 0xfe, 0xaa, 0xc1, 0x7c, 0xde, 0x4d, 0xd0, 0x5b, 0x63, 0x3b,
+	0x15, 0x78, 0x9c, 0x6e, 0x4e, 0x88, 0x96, 0xf4, 0xb6, 0x38, 0xbd, 0x0f, 0xd0, 0xfb, 0xc5, 0xf4,
+	0xd4, 0x3a, 0x9a, 0xd9, 0xc9, 0xa3, 0xbc, 0x8b, 0x3e, 0x46, 0x3f, 0x6a, 0x70, 0x76, 0xe8, 0x0b,
+	0x45, 0x6f, 0x8e, 0x25, 0x32, 0xce, 0xd4, 0xf4, 0x95, 0x49, 0xa0, 0x92, 0xf0, 0xdb, 0x9c, 0xf0,
+	0x0a, 0x6a, 0x14, 0x13, 0xc6, 0x22, 0xd1, 0x14, 0x5e, 0x85, 0x7e, 0xd3, 0xe0, 0xf5, 0x02, 0xf3,
+	0x40, 0xeb, 0xe5, 0x9d, 0x47, 0x1c, 0x49, 0xbf, 0x71, 0xb2, 0x24, 0x49, 0xfc, 0x3d, 0x4e, 0xfc,
+	0x26, 0x5a, 0x9f, 0x94, 0xb8, 0x39, 0x30, 0x2f, 0xf4, 0x42, 0x83, 0x5a, 0x91, 0x83, 0xa0, 0xf1,
+	0x7c, 0x4a, 0x7c, 0x4e, 0xbf, 0x79, 0xc2, 0x2c, 0x29, 0x63, 0x87, 0xcb, 0xf8, 0x14, 0x6d, 0x17,
+	0xcb, 0x08, 0xd3, 0xc0, 0xa4, 0x7b, 0x66, 0x66, 0x63, 0x66, 0xbb, 0x77, 0x64, 0x77, 0xf2, 0x96,
+	0xf4, 0x18, 0xfd, 0xa9, 0x41, 0xad, 0xc8, 0x54, 0x0a, 0xc4, 0x95, 0x58, 0x5f, 0x81, 0xb8, 0x32,
+	0xe7, 0x32, 0x9a, 0x5c, 0xdc, 0x27, 0xe8, 0xe3, 0x63, 0xbe, 0x86, 0x7e, 0x0d, 0x33, 0x73, 0xb6,
+	0x12, 0x6d, 0x9b, 0xb7, 0xf7, 0x0f, 0xea, 0xda, 0xb3, 0x83, 0xba, 0xf6, 0xea, 0xa0, 0xae, 0x7d,
+	0x7f, 0x58, 0xaf, 0x3c, 0x3b, 0xac, 0x57, 0xfe, 0x38, 0xac, 0x57, 0xbe, 0x5c, 0x75, 0x3d, 0x76,
+	0x37, 0x6d, 0x5b, 0x1d, 0x1a, 0x8c, 0x74, 0x7b, 0x38, 0xe8, 0xc7, 0x7a, 0x11, 0x49, 0xda, 0xd3,
+	0xfc, 0x17, 0xec, 0xfa, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x8b, 0xa1, 0xef, 0xc9, 0xe0, 0x0b,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -517,6 +792,11 @@ type QueryClient interface {
 	SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
 	AllowedAmount(ctx context.Context, in *QueryAllowedAmountRequest, opts ...grpc.CallOption) (*QueryAllowedAmountResponse, error)
+	AllowedAmountExpiration(ctx context.Context, in *QueryAllowedAmountExpirationRequest, opts ...grpc.CallOption) (*QueryAllowedAmountExpirationResponse, error)
+	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
+	NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error)
+	//  SpaceAvailableByReporter queries the space available in a reporter.
+	SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error)
 }
 
 type queryClient struct {
@@ -563,6 +843,33 @@ func (c *queryClient) AllowedAmount(ctx context.Context, in *QueryAllowedAmountR
 	return out, nil
 }
 
+func (c *queryClient) AllowedAmountExpiration(ctx context.Context, in *QueryAllowedAmountExpirationRequest, opts ...grpc.CallOption) (*QueryAllowedAmountExpirationResponse, error) {
+	out := new(QueryAllowedAmountExpirationResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/AllowedAmountExpiration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error) {
+	out := new(QueryNumOfSelectorsByReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/NumOfSelectorsByReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error) {
+	out := new(QuerySpaceAvailableByReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/SpaceAvailableByReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -573,6 +880,11 @@ type QueryServer interface {
 	SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
 	AllowedAmount(context.Context, *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error)
+	AllowedAmountExpiration(context.Context, *QueryAllowedAmountExpirationRequest) (*QueryAllowedAmountExpirationResponse, error)
+	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
+	NumOfSelectorsByReporter(context.Context, *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error)
+	//  SpaceAvailableByReporter queries the space available in a reporter.
+	SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -590,6 +902,15 @@ func (*UnimplementedQueryServer) SelectorReporter(ctx context.Context, req *Quer
 }
 func (*UnimplementedQueryServer) AllowedAmount(ctx context.Context, req *QueryAllowedAmountRequest) (*QueryAllowedAmountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AllowedAmount not implemented")
+}
+func (*UnimplementedQueryServer) AllowedAmountExpiration(ctx context.Context, req *QueryAllowedAmountExpirationRequest) (*QueryAllowedAmountExpirationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllowedAmountExpiration not implemented")
+}
+func (*UnimplementedQueryServer) NumOfSelectorsByReporter(ctx context.Context, req *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NumOfSelectorsByReporter not implemented")
+}
+func (*UnimplementedQueryServer) SpaceAvailableByReporter(ctx context.Context, req *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpaceAvailableByReporter not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -668,6 +989,60 @@ func _Query_AllowedAmount_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllowedAmountExpiration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowedAmountExpirationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllowedAmountExpiration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/AllowedAmountExpiration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllowedAmountExpiration(ctx, req.(*QueryAllowedAmountExpirationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_NumOfSelectorsByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryNumOfSelectorsByReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).NumOfSelectorsByReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/NumOfSelectorsByReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).NumOfSelectorsByReporter(ctx, req.(*QueryNumOfSelectorsByReporterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_SpaceAvailableByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuerySpaceAvailableByReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).SpaceAvailableByReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/SpaceAvailableByReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).SpaceAvailableByReporter(ctx, req.(*QuerySpaceAvailableByReporterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.reporter.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -687,6 +1062,18 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AllowedAmount",
 			Handler:    _Query_AllowedAmount_Handler,
+		},
+		{
+			MethodName: "AllowedAmountExpiration",
+			Handler:    _Query_AllowedAmountExpiration_Handler,
+		},
+		{
+			MethodName: "NumOfSelectorsByReporter",
+			Handler:    _Query_NumOfSelectorsByReporter_Handler,
+		},
+		{
+			MethodName: "SpaceAvailableByReporter",
+			Handler:    _Query_SpaceAvailableByReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1001,6 +1388,173 @@ func (m *QueryAllowedAmountResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryAllowedAmountExpirationRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllowedAmountExpirationRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllowedAmountExpirationRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryAllowedAmountExpirationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryAllowedAmountExpirationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryAllowedAmountExpirationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Expiration != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Expiration))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryNumOfSelectorsByReporterRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryNumOfSelectorsByReporterRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryNumOfSelectorsByReporterRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ReporterAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryNumOfSelectorsByReporterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryNumOfSelectorsByReporterResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryNumOfSelectorsByReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.NumOfSelectors != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.NumOfSelectors))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySpaceAvailableByReporterRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySpaceAvailableByReporterRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySpaceAvailableByReporterRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ReporterAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QuerySpaceAvailableByReporterResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QuerySpaceAvailableByReporterResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QuerySpaceAvailableByReporterResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SpaceAvailable != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.SpaceAvailable))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -1126,6 +1680,77 @@ func (m *QueryAllowedAmountResponse) Size() (n int) {
 	n += 1 + l + sovQuery(uint64(l))
 	l = m.UnstakingAmount.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryAllowedAmountExpirationRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryAllowedAmountExpirationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Expiration != 0 {
+		n += 1 + sovQuery(uint64(m.Expiration))
+	}
+	return n
+}
+
+func (m *QueryNumOfSelectorsByReporterRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ReporterAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryNumOfSelectorsByReporterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.NumOfSelectors != 0 {
+		n += 1 + sovQuery(uint64(m.NumOfSelectors))
+	}
+	return n
+}
+
+func (m *QuerySpaceAvailableByReporterRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ReporterAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QuerySpaceAvailableByReporterResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SpaceAvailable != 0 {
+		n += 1 + sovQuery(uint64(m.SpaceAvailable))
+	}
 	return n
 }
 
@@ -1903,6 +2528,427 @@ func (m *QueryAllowedAmountResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllowedAmountExpirationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllowedAmountExpirationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllowedAmountExpirationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryAllowedAmountExpirationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryAllowedAmountExpirationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryAllowedAmountExpirationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Expiration", wireType)
+			}
+			m.Expiration = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Expiration |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryNumOfSelectorsByReporterRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryNumOfSelectorsByReporterRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryNumOfSelectorsByReporterRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryNumOfSelectorsByReporterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryNumOfSelectorsByReporterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryNumOfSelectorsByReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NumOfSelectors", wireType)
+			}
+			m.NumOfSelectors = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NumOfSelectors |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySpaceAvailableByReporterRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySpaceAvailableByReporterRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySpaceAvailableByReporterRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReporterAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QuerySpaceAvailableByReporterResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QuerySpaceAvailableByReporterResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QuerySpaceAvailableByReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SpaceAvailable", wireType)
+			}
+			m.SpaceAvailable = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SpaceAvailable |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])
