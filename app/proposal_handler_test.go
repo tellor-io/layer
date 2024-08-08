@@ -1,8 +1,6 @@
 package app_test
 
 import (
-	"bytes"
-	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -11,8 +9,8 @@ import (
 	"testing"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
-	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
@@ -22,12 +20,8 @@ import (
 	"github.com/tellor-io/layer/app/testutils"
 	"github.com/tellor-io/layer/testutil/sample"
 
-	"cosmossdk.io/api/tendermint/abci"
-	tenderminttypes "cosmossdk.io/api/tendermint/types"
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseappmock "github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
@@ -281,69 +275,74 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	require.NotNil(p)
 	ctx := s.ctx
 	require.NotNil(ctx)
+	bk := s.bridgeKeeper
+	require.NotNil(bk)
+	sk := s.stakingKeeper
+	require.NotNil(sk)
 
 	pubKey, privKey, consAddr, _ := testutils.GenerateProposer(s.T())
+	sigA, sigB, evmAddr := testutils.GenerateSignatures(s.T())
 
-	operatorAndEvm := testutils.OperatorAndEVM{
-		OperatorAddresses: []string{consAddr.String()},
-		EVMAddresses:      []string{"evm1"},
+	ve := app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{
+				Attestation: []byte("attestation"),
+				Snapshot:    []byte("snapshot"),
+			},
+		},
+		InitialSignature: app.InitialSignature{
+			SignatureA: sigA,
+			SignatureB: sigB,
+		},
+		ValsetSignature: app.BridgeValsetSignature{
+			Signature: []byte("valSetSignature"),
+			Timestamp: uint64(ctx.BlockTime().Unix()),
+		},
 	}
-	valsetSigs := testutils.ValsetSignatures{
-		OperatorAddresses: []string{consAddr.String()},
-		Timestamps:        []int64{1},
-		Signatures:        []string{"signature1", "signature2"},
-	}
-	oracleAttestations := testutils.OracleAttestations{
-		OperatorAddresses: []string{consAddr.String()},
-		Attestations:      [][]byte{[]byte("attestation1")},
-		Snapshots:         [][]byte{[]byte("snapshot1")},
-	}
-
-	cve := cmtproto.CanonicalVoteExtension{
-		Extension: []byte("voteExtension"),
-		Height:    2, // the vote extension was signed in the previous height
-		Round:     2,
-		ChainId:   "layer",
-	}
-
-	marshalDelimitedFn := func(msg proto.Message) ([]byte, error) {
-		var buf bytes.Buffer
-		if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
-			return nil, err
-		}
-
-		return buf.Bytes(), nil
-	}
-
-	extSignBytes, err := marshalDelimitedFn(&cve)
+	veBz, err := json.Marshal(ve)
 	require.NoError(err)
 
-	// sign extSignBytes
-	sig := ed25519.Sign(privKey, extSignBytes)
+	_, _, sig, err := testutils.SignCVE(veBz, 2, 2, privKey)
+	require.NoError(err)
 
-	localLastCommit := abci.ExtendedCommitInfo{
-		Votes: []*abci.ExtendedVoteInfo{
+	localLastCommit := abcitypes.ExtendedCommitInfo{
+		Votes: []abcitypes.ExtendedVoteInfo{
 			{
-				Validator: &abci.Validator{
+				Validator: abcitypes.Validator{
 					Address: consAddr.Bytes(),
 					Power:   1000000000000,
 				},
-				VoteExtension:      []byte("voteExtension"),
-				BlockIdFlag:        tenderminttypes.BlockIDFlag_BLOCK_ID_FLAG_COMMIT,
+				VoteExtension:      veBz,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 				ExtensionSignature: sig,
 			},
 		},
 		Round: 2,
 	}
 
-	injectedVoteExtTx := testutils.VoteExtTx{
+	opAndEVMAddrs := app.OperatorAndEVM{
+		OperatorAddresses: []string{consAddr.String()},
+		EVMAddresses:      []string{evmAddr.String()},
+	}
+	valsetSigs := app.ValsetSignatures{
+		OperatorAddresses: []string{consAddr.String()},
+		Timestamps:        []int64{int64(ve.ValsetSignature.Timestamp)},
+		Signatures:        []string{hex.EncodeToString(ve.ValsetSignature.Signature)},
+	}
+	oracleAttestations := app.OracleAttestations{
+		OperatorAddresses: []string{consAddr.String()},
+		Attestations:      [][]byte{ve.OracleAttestations[0].Attestation},
+		Snapshots:         [][]byte{ve.OracleAttestations[0].Snapshot},
+	}
+
+	injectedVoteExtTx := app.VoteExtTx{
 		BlockHeight:        int64(2),
-		OpAndEVMAddrs:      operatorAndEvm,
+		OpAndEVMAddrs:      opAndEVMAddrs,
 		ValsetSigs:         valsetSigs,
 		OracleAttestations: oracleAttestations,
-		ExtendedCommitInfo: &localLastCommit,
+		ExtendedCommitInfo: localLastCommit,
 	}
-	bz, err := json.Marshal(injectedVoteExtTx)
+	injBz, err := json.Marshal(injectedVoteExtTx)
 	require.NoError(err)
 
 	lastCommit := abcitypes.CommitInfo{
@@ -373,7 +372,7 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	})
 
 	req := abcitypes.RequestProcessProposal{
-		Txs:                [][]byte{bz},
+		Txs:                [][]byte{injBz},
 		Height:             3,
 		ProposedLastCommit: lastCommit,
 	}
@@ -385,12 +384,16 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	}
 	s.valStore.EXPECT().GetPubKeyByConsAddr(ctx, consAddr).Return(validPubKey, nil).AnyTimes()
 
+	bk.On("EVMAddressFromSignatures", ctx, sigA, sigB).Return(evmAddr, nil)
+	bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: consAddr.String(),
+	}, nil)
 	res, err := p.ProcessProposalHandler(ctx, &req)
-	fmt.Println("res: ", res, "\nerr: ", err)
 	require.NoError(err)
 	require.NotNil(res)
-
 }
+
 func (s *ProposalHandlerTestSuite) TestPreBlocker() {
 	// require := s.Require()
 	// p := s.proposalHandler

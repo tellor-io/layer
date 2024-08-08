@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -64,9 +63,6 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 }
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-	fmt.Println("ctx.BlockHeight(): ", ctx.BlockHeight())
-	fmt.Println("ctx.HeaderInfo().Height: ", ctx.HeaderInfo().Height)
-	fmt.Println("ctx.BlockHeader().Height: ", ctx.BlockHeader().Height)
 	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
 		h.logger.Info("PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", req.LocalLastCommit.Votes)
@@ -149,14 +145,10 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		var injectedVoteExtTx VoteExtTx
 		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
-			fmt.Println("err: ", err)
 			h.logger.Error("ProcessProposalHandler: failed to decode injected vote extension tx", "err", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
-		fmt.Println("ctx.BlockHeight(): ", ctx.BlockHeight())
-		fmt.Println("ctx.HeaderInfo().Height: ", ctx.HeaderInfo().Height)
-		fmt.Println("ctx.BlockHeader().Height: ", ctx.BlockHeader().Height)
-		fmt.Println("ctx: ", ctx, "\nh.valStore: ", h.valStore, "\nreq.Height: ", req.Height, "\nctx.ChainID(): ", ctx.ChainID(), "\ninjectedVoteExtTx.ExtendedCommitInfo: ", injectedVoteExtTx.ExtendedCommitInfo)
+
 		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
 		if err != nil {
 			return nil, err
@@ -168,15 +160,11 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
-		fmt.Println("operatorAddresses: ", operatorAddresses)
-		fmt.Println("injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses: ", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses)
 		if !reflect.DeepEqual(operatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, operator addresses do not match", "operatorAddresses", operatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
-		fmt.Println("evmAddresses: ", evmAddresses)
-		fmt.Println("injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses: ", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
 		if !reflect.DeepEqual(evmAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses) {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, evm addresses do not match", "evmAddresses", evmAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
@@ -234,7 +222,6 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 		return res, nil
 	}
 
-	fmt.Println("req.Height: ", req.Height, "\nctx.ConsensusParams().Abci.VoteExtensionsEnableHeight: ", ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight)
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		var injectedVoteExtTx VoteExtTx
 		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
@@ -242,9 +229,6 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 			return nil, errors.New("failed to decode injected vote extension tx")
 		}
 
-		fmt.Println("injectedVoteExtTx: ", injectedVoteExtTx)
-		fmt.Println("injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses: ", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses)
-		fmt.Println("injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses: ", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
 		if len(injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) > 0 {
 			if err := h.SetEVMAddresses(ctx, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses); err != nil {
 				h.logger.Error("PreBlocker: failed to set EVM addresses", "error", err)
