@@ -731,7 +731,7 @@ func New(
 	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
 	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
 	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
-	app.BaseApp.SetPreBlocker(prepareProposalHandler.PreBlocker)
+	app.BaseApp.SetPreBlocker(app.preBlocker)
 	app.RegistryKeeper.SetHooks(
 		registrymoduletypes.NewMultiRegistryHooks(
 			app.OracleKeeper.Hooks(),
@@ -958,6 +958,24 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *App) preBlocker(ph ProposalHandler) func(sdk.Context, *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		res, err := app.ModuleManager().PreBlock(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		changed := res.ConsensusParamsChanged
+
+		res, err = ph.PreBlocker(ctx, req)
+		if changed != res.ConsensusParamsChanged {
+			res.ConsensusParamsChanged = true
+		}
+
+		return res, err
+	}
 }
 
 func (app *App) RegisterUpgradeHandlers() {
