@@ -731,7 +731,7 @@ func New(
 	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
 	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
 	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
-	app.BaseApp.SetPreBlocker(app.preBlocker)
+	app.BaseApp.SetPreBlocker(app.preBlocker(*prepareProposalHandler))
 	app.RegistryKeeper.SetHooks(
 		registrymoduletypes.NewMultiRegistryHooks(
 			app.OracleKeeper.Hooks(),
