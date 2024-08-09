@@ -50,6 +50,7 @@ type (
 		SnapshotToAttestationsMap    collections.Map[[]byte, types.OracleAttestations]
 		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
 		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
+		ValidatorSetTimestamps       collections.Item[types.ValidatorSetTimestamps]
 
 		stakingKeeper  types.StakingKeeper
 		oracleKeeper   types.OracleKeeper
@@ -86,6 +87,7 @@ func NewKeeper(
 		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
 		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
 		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
+		ValidatorSetTimestamps:       collections.NewItem(sb, types.ValidatorSetTimestampsKey, "validator_set_timestamps", codec.CollValue[types.ValidatorSetTimestamps](cdc)),
 
 		stakingKeeper:  stakingKeeper,
 		oracleKeeper:   oracleKeeper,
@@ -266,6 +268,19 @@ func (k Keeper) SetBridgeValidatorParams(ctx context.Context, bridgeValidatorSet
 	err = k.BridgeValsetSignaturesMap.Set(ctx, validatorTimestamp, *valsetSigs)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting bridge valset signatures: ", "error", err)
+		return err
+	}
+
+	// add timestamp to ValidatorSetTimestamps array
+	validatorSetTimestamps, err := k.ValidatorSetTimestamps.Get(ctx)
+	if err != nil {
+		// if not found, create new array
+		validatorSetTimestamps = types.ValidatorSetTimestamps{}
+	}
+	validatorSetTimestamps.Timestamps = append(validatorSetTimestamps.Timestamps, types.ValidatorSetTimestamp{Timestamp: validatorTimestamp})
+	err = k.ValidatorSetTimestamps.Set(ctx, validatorSetTimestamps)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting validator set timestamps: ", "error", err)
 		return err
 	}
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
@@ -1009,4 +1024,25 @@ func (k Keeper) GetAttestationRequestsByHeight(ctx context.Context, height uint6
 
 func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (types.ValidatorCheckpointParams, error) {
 	return k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
+}
+
+func (k Keeper) GetValidatorSetTimestampBefore(ctx context.Context, targetTimestamp uint64) (uint64, error) {
+	timestamps, err := k.ValidatorSetTimestamps.Get(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(timestamps.Timestamps) == 0 {
+		return 0, nil
+	}
+
+	index := sort.Search(len(timestamps.Timestamps), func(i int) bool {
+		return timestamps.Timestamps[i].Timestamp > targetTimestamp
+	})
+
+	if index == 0 {
+		return 0, nil
+	}
+
+	return timestamps.Timestamps[index-1].Timestamp, nil
 }
