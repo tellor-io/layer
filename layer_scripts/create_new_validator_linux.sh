@@ -10,12 +10,12 @@ set -e
 
 ## YOU WILL NEED TO SET THIS TO WHATEVER NODE YOU WOULD LIKE TO USE
 export LAYER_NODE_URL=18.212.102.176
-export TELLORNODE_ID=d2ab6de0613631c6f6d6cca3c9bc76309a6ed04d
+export TELLORNODE_ID=18f58b3bc1756ad3872b00b349429fd4f56d2b34
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export AMOUNT_IN_TRB=30000
-export AMOUNT_IN_LOYA="30000000000loya"
+export AMOUNT_IN_TRB=100000
+export AMOUNT_IN_LOYA="100000000000loya"
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 # # Create a validator account for node
@@ -60,7 +60,7 @@ echo "Creating bill's validator.json..."
 echo "$VALIDATOR_JSON" > ./validator.json
 
 echo "Creating and broadcasting transaction to create validator on chain...."
-./layerd tx staking create-validator ./validator.json --from $NODE_ADDRESS --home $LAYERD_NODE_HOME --chain-id layer --node="http://$LAYER_NODE_URL:26657" --gas "400000"
+./layerd tx staking create-validator ./validator.json --from $NODE_ADDRESS --home $LAYERD_NODE_HOME --chain-id layertest-1 --node="http://$LAYER_NODE_URL:26657" --gas "400000"
 
 echo "Wait for 2 seconds to allow for validator to be bonded before we query the validator info"
 sleep 2
@@ -74,3 +74,10 @@ echo "We will wait in this script for 10 seconds before the chain is restarted."
 sleep 10
 
 ./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+
+# ./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+# ./layerd start --home ~/.layer/bill --key-name bill --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "24f122520ccbee0fac50a3df1fe89314ca274caa@18.212.102.176:26656"
+# ./layerd start --home ~/.layer/bob --key-name bob --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "24f122520ccbee0fac50a3df1fe89314ca274caa@18.212.102.176:26656"
+# ./layerd start --home ~/.layer/caleb --key-name caleb --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "24f122520ccbee0fac50a3df1fe89314ca274caa@18.212.102.176:26656"
+# ./layerd start --home ~/.layer/dune --key-name dune --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "24f122520ccbee0fac50a3df1fe89314ca274caa@18.212.102.176:26656"
+# ./layerd start --home ~/.layer/leomessi --key-name leomessi --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "24f122520ccbee0fac50a3df1fe89314ca274caa@18.212.102.176:26656"

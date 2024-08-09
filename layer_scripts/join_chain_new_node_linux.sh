@@ -11,7 +11,7 @@ export LAYER_NODE_URL=18.212.102.176
 export KEYRING_BACKEND="test"
 export NODE_MONIKER="billmoniker"
 export NODE_NAME="bill"
-export TELLORNODE_ID=d2ab6de0613631c6f6d6cca3c9bc76309a6ed04d
+export TELLORNODE_ID=18f58b3bc1756ad3872b00b349429fd4f56d2b34
 export LAYERD_NODE_HOME="$HOME/.layer/$NODE_NAME"
 
 
@@ -25,11 +25,11 @@ go build ./cmd/layerd
 
 # Initialize the chain
 echo "Initializing the chain..."
-./layerd init layer --chain-id layer
+./layerd init layer --chain-id layertest-1
 
 # Initialize chain node with the folder for node
 echo "Initializing chain node for node..."
-./layerd init $NODE_MONIKER --chain-id layer --home ~/.layer/$NODE_NAME
+./layerd init $NODE_MONIKER --chain-id layertest-1 --home ~/.layer/$NODE_NAME
 
 echo "Change denom to loya in config files..."
 sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/$NODE_NAME/config/app.toml
@@ -97,10 +97,15 @@ echo "Path: $TELLORNODE_ID@$LAYER_NODE_URL:26656"
 echo "Starting chain for node..."
 
 #./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
-./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656"
+./layerd start --home $LAYERD_NODE_HOME --key-name $NODE_NAME --api.swagger --price-daemon-enabled=false --p2p.seeds "$TELLORNODE_ID@$LAYER_NODE_URL:26656" | tee ./fulldata_first_node_logs.txt
 # ./layerd start --home ~/.layer/bill --key-name bill --api.swagger --price-daemon-enabled=false --p2p.seeds "f123e64bcb076508f3bdb19ceabc86a75ca1e330@tellornode.com:26656"
 
 
 # use the commands to below to download log files from aws instance if applicable
-# sudo scp -i /Users/caleb/layer-doc-test-key.pem ubuntu@ec2-100-26-53-93.compute-1.amazonaws.com:/home/ubuntu/layer/second_node_logs.txt .
-# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-54-166-101-67.compute-1.amazonaws.com:/home/ubuntu/layer/first_node_logs.txt .
+# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-18-212-102-176.compute-1.amazonaws.com:/home/ubuntu/layer/upgrade_logs.txt .
+# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-18-215-40-125.compute-1.amazonaws.com:/home/ubuntu/layer/first_node_logs.txt .
+
+# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-18-212-102-176.compute-1.amazonaws.com:/home/ubuntu/.layer/alice/config/config.toml .
+# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-18-212-102-176.compute-1.amazonaws.com:/home/ubuntu/.layer/alice/config/app.toml .
+# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-18-212-102-176.compute-1.amazonaws.com:/home/ubuntu/.layer/alice/config/client.toml .
+# sudo scp -i /Users/caleb/layer-testnet.pem ubuntu@ec2-18-212-102-176.compute-1.amazonaws.com:/home/ubuntu/.layer/alice/config/genesis.json .
