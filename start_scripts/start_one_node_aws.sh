@@ -21,11 +21,11 @@ go build ./cmd/layerd
 
 # Initialize the chain
 echo "Initializing the chain..."
-./layerd init layer --chain-id layer
+./layerd init layer --chain-id layertest-1
 
 # Initialize chain node with the folder for alice
 echo "Initializing chain node for alice..."
-./layerd init alicemoniker --chain-id layer --home ~/.layer/alice
+./layerd init alicemoniker --chain-id layertest-1 --home ~/.layer/alice
 
 echo "Change denom to loya in genesis file..."
 sed -i 's/"stake"/"loya"/g' ~/.layer/alice/config/genesis.json
@@ -36,8 +36,8 @@ sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/alice/config/app.toml
 sed -i 's/([0-9]+)stake/1loya/g' ~/.layer/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
-sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/alice/config/app.toml
-sed -i 's/^chain-id = .*$/chain-id = "layer"/g' ~/.layer/config/app.toml
+sed -i 's/^chain-id = .*$/chain-id = "layertest-1"/g' ~/.layer/alice/config/app.toml
+sed -i 's/^chain-id = .*$/chain-id = "layertest-1"/g' ~/.layer/config/app.toml
 
 echo "Set the keyring backend in client.toml to environment variable..."
 sed -i 's/^keyring-backend = .*"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/alice/config/client.toml
@@ -51,8 +51,8 @@ echo "creating account for faucet..."
 ./layerd keys add faucet --recover=true --keyring-backend test
 
 echo "set chain id in genesis file to layer..."
-sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/alice/config/genesis.json
-sed -ie 's/"chain_id": .*"/"chain_id": '\"layer\"'/g' ~/.layer/config/genesis.json
+sed -ie 's/"chain_id": .*"/"chain_id": '\"layertest-1\"'/g' ~/.layer/alice/config/genesis.json
+sed -ie 's/"chain_id": .*"/"chain_id": '\"layertest-1\"'/g' ~/.layer/config/genesis.json
 
 # Update vote_extensions_enable_height in genesis.json for alice
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
@@ -83,7 +83,10 @@ echo "Adding genesis account for alice..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layer
+./layerd genesis gentx alice 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layertest-1
+
+echo "Adding team account"
+./layerd genesis add-team-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 --home ~/.layer/alice
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
@@ -132,5 +135,5 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
-#./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./first_node_logs.txt
-./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./fulldata_first_node_logs.txt | grep 'failed to execute message' >> "filtered_first_node_logs.txt"
+#./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false | tee ./fulldata_first_node_logs.txt
+
