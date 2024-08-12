@@ -41,7 +41,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 		return types.ErrDepositAlreadyClaimed
 	}
 	// get power threshold at report time
-	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, uint64(aggregateTimestamp.Unix()))
+	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, uint64(aggregateTimestamp.UnixMilli()))
 	if err != nil {
 		return err
 	}
