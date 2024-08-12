@@ -26,6 +26,8 @@ After specifying the dispute category, the disputer will submit an amount of TRB
 
 To clarify, a warning is more of a pause.  For example, your machine submitted a bad value.  Address it and run the "unjail" function to resume. A minor infraction will usually come after a warning, for example, you're submitting 1% under everyone else repeatedly and threatening to pull down the median. Finally, a major infraction should be saved for attacks. The reporter is slashed entirely. For example, if a bad value is submitted for (e.g. BTC 1M), we can assume it's not an attack and submit a warning. If however, they unjail themselves and continue to submit bad values, they run the risk of being slashed entirely.
 
+ ![ ADR1006](./graphics/adr1006.png)
+
 ## Alternative Approaches
 
 ### No categories - free floating percentages

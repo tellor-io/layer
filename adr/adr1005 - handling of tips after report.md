@@ -22,6 +22,7 @@ One of the goals of the Tellor governance structure is to prevent people from fa
 
 Another potential attack is that they could use tipping to bypass the deposit stake caps.  Notably, they could tip a large portion of the entire staked supply (e.g. 66%) and then halt the chain or force a fork.  
 
+
 ## Alternative Approaches
 
 ### Higher fee burn on tips

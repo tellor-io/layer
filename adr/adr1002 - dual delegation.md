@@ -23,6 +23,8 @@ The reason for this dual delegation is threefold:
     *  The cost of bridging is directly tied to the validator set size (verifying signatures for the light client bridges), so a large validator set such as Ethereum is infeasible for our intended uses (the need for fast and cheap bridging of data).  
     *  Reporting and validating are separate duties. Cosmos validators for the most part just run hardware and have little interaction with the chain. Running a reporter however is more resource intensive. You must maintain lists of API's, monitor for disputes, and help users make sure they're getting the best data on-chain. These roles should be separate so that each party can specialize.  
 
+     ![ ADR1002](./graphics/adr1002.png)
+
 ## Alternative Approaches
 
 ### Validators and Reporters are the same thing
