@@ -31,8 +31,8 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	var msgAmount math.Int
 	for _, msg := range tx.GetMsgs() {
 		switch msg := msg.(type) {
-		// case *stakingtypes.MsgCreateValidator:
-		// 	msgAmount = msg.Value.Amount
+		case *stakingtypes.MsgCreateValidator:
+			msgAmount = msg.Value.Amount
 		case *stakingtypes.MsgDelegate:
 			msgAmount = msg.Amount.Amount
 		case *stakingtypes.MsgBeginRedelegate:
