@@ -150,7 +150,8 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 		}
 		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
 		if err != nil {
-			return nil, err
+			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to validate vote extension", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
 		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
@@ -242,7 +243,6 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 				err := h.bridgeKeeper.SetBridgeValsetSignature(ctx, operatorAddress, uint64(timestamp), sigHexString)
 				if err != nil {
 					h.logger.Error("PreBlocker: failed to set valset signature", "error", err)
-					return nil, err
 				}
 			}
 		}
@@ -254,7 +254,6 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 				err := h.bridgeKeeper.SetOracleAttestation(ctx, operatorAddress, snapshot, attestation)
 				if err != nil {
 					h.logger.Error("PreBlocker: failed to set oracle attestation", "error", err)
-					return nil, err
 				}
 			}
 		}
@@ -346,7 +345,6 @@ func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses, ev
 		err := h.bridgeKeeper.SetEVMAddressByOperator(ctx, operatorAddress, bzAddress.Bytes())
 		if err != nil {
 			h.logger.Error("SetEVMAddresses: failed to set evm address by operator", "error", err)
-			return err
 		}
 	}
 	return nil

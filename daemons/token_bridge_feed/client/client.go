@@ -133,18 +133,18 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	ethApiKey, err := c.getEthApiKey()
+	ethRpcUrl, err := c.getEthRpcUrl()
 	if err != nil {
-		return fmt.Errorf("failed to get ETH API key: %w", err)
+		return fmt.Errorf("failed to get ETH RPC url: %w", err)
 	}
-	eclient, err := ethclient.Dial("wss://eth-sepolia.g.alchemy.com/v2/" + ethApiKey)
+	eclient, err := ethclient.Dial(ethRpcUrl)
 	if err != nil {
 		return fmt.Errorf("failed to connect to the Ethereum client: %w", err)
 	}
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x33ECe02327a3f90C0B2C84Cd8Ce3c380c04aB6D6")
+	contractAddress := common.HexToAddress("0x1AaF421491171930e71fb032B765DF252CE3F97e")
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
@@ -343,7 +343,7 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error
 	return reportValueArgsEncoded, nil
 }
 
-func (c *Client) getEthApiKey() (string, error) {
+func (c *Client) getEthRpcUrl() (string, error) {
 	viper.SetConfigName("secrets")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")
@@ -351,9 +351,9 @@ func (c *Client) getEthApiKey() (string, error) {
 	if err != nil {
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	ethApiKey := viper.GetString("eth_api_key")
-	if ethApiKey == "" {
-		return "", fmt.Errorf("eth_api_key not set")
+	ethRpcUrl := viper.GetString("eth_rpc_url")
+	if ethRpcUrl == "" {
+		return "", fmt.Errorf("eth_rpc_url not set")
 	}
-	return ethApiKey, nil
+	return ethRpcUrl, nil
 }
