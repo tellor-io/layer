@@ -17,6 +17,7 @@ A fee on tips is necessary to discourage vote farming and spamming the network b
 
 The 2% fee on tips was chosen relatively arbitrarily, but is consistent with the 2% fee that has been present on previous versions of [Tellor's autopay contract](https://github.com/tellor-io/autoPay). 
 
+ ![ adr1004](./graphics/adr1004.png)
 
 ## Alternative Approaches
 

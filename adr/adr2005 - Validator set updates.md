@@ -15,6 +15,7 @@
 The validator set will be allowed to change up to 5% of total staked every 12 hours.  Setting the cap at 5% allows for 6, 12 hour periods(3 days) to pass before the validator set changes by 30%. Although, it may not deter all attacks, having to wait 3.5 days to take over the network for an attack can be enough deterrent. 
 
 Based on talks with others that have used the cosmos sdk, changes larger than 5-10% are rarely observed once the new chain novelty passes and validators settle.
+ ![ ADR2005](./graphics/adr2005.png)
 
 ## Alternative Approaches
 
