@@ -9,6 +9,7 @@ set -e
 KEYRING_BACKEND="test"
 PASSWORD="password"
 KEY_NAME="alice"
+CHAIN_ID="layertest-1"
 
 
 export LAYERD_NODE_HOME_1="$HOME/.layer/$KEY_NAME"
@@ -23,14 +24,14 @@ go build ./cmd/layerd
 
 # Initialize the chain
 echo "Initializing the chain..."
-./layerd init layer --chain-id layer
+./layerd init $CHAIN_ID --chain-id $CHAIN_ID
 
 # Init two different chain nodes with two different folders
 echo "Initializing chain nodes..."
 echo "$KEY_NAME..."
-./layerd init alicemoniker --chain-id layer --home $LAYERD_NODE_HOME_1
+./layerd init alicemoniker --chain-id $CHAIN_ID --home $LAYERD_NODE_HOME_1
 echo "bill..."
-./layerd init billmoniker --chain-id layer --home ~/.layer/bill
+./layerd init billmoniker --chain-id $CHAIN_ID --home ~/.layer/bill
 
 # Add a validator account alice
 echo "Adding validator accounts..."
@@ -75,7 +76,7 @@ echo "charlie..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx $KEY_NAME..."
-./layerd genesis gentx $KEY_NAME 1000000000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1 --keyring-dir $LAYERD_NODE_HOME_1
+./layerd genesis gentx $KEY_NAME 1000000000000loya --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1 --keyring-dir $LAYERD_NODE_HOME_1
 
 # Add the transactions to the genesis block:q
 echo "Collecting gentxs..."
