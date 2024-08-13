@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"strings"
@@ -78,18 +77,18 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
 		} else {
-			// if there is no commit check if in cycle
-			cycleQuery, err := k.keeper.GetCurrentQueryInCycleList(ctx)
-			if err != nil {
-				return nil, err
-			}
-			incycle = bytes.Equal(msg.QueryData, cycleQuery) || strings.EqualFold(query.QueryType, TRBBridgeQueryType)
+			incycle = query.CycleList || strings.EqualFold(query.QueryType, TRBBridgeQueryType)
 			err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, incycle)
 			if err != nil {
 				return nil, err
 			}
 			return &types.MsgSubmitValueResponse{}, nil
 		}
+	}
+	// remove commit from store
+	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
+	if err != nil {
+		return nil, err
 	}
 
 	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
@@ -104,11 +103,6 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	incycle = commit.Incycle
 
 	err = k.keeper.SetValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
-	if err != nil {
-		return nil, err
-	}
-	// remove commit from store
-	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -130,14 +124,14 @@ func (k Keeper) DirectReveal(ctx context.Context,
 		return types.ErrNoTipsNotInCycle
 	}
 
-	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(blockTime) && incycle {
-		nextId, err := k.QuerySequencer.Next(ctx)
-		if err != nil {
-			return err
-		}
-		query.Id = nextId
-		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
-	}
+	// if query.Amount.IsZero() && query.Expiration.Add(offset).Before(blockTime) && incycle {
+	// 	nextId, err := k.QuerySequencer.Next(ctx)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	query.Id = nextId
+	// 	query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
+	// }
 
 	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Add(offset).Before(blockTime) && !incycle {
 		return errors.New("tip submission window expired and query is not in cycle")

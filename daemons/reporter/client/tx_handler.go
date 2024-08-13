@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -88,7 +89,7 @@ func (c Client) Status(ctx context.Context) (*cmttypes.ResultStatus, error) {
 }
 
 func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
 	for {
@@ -103,30 +104,31 @@ func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 		case <-ctx.Done():
 			return fmt.Errorf("timeout exceeded waiting for block, err: %w", ctx.Err())
 		case <-ticker.C:
+			fmt.Println("Waiting for block height", h, "current height", latestHeight)
 		}
 	}
 }
 
-func (c *Client) sendTx(ctx context.Context, msg sdk.Msg, seq *uint64) error {
-	txf := newFactory(c.cosmosCtx)
+var mus sync.Mutex
 
-	if seq == nil {
-		var accountSeq uint64
-		_, accountSeq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
-		if err != nil {
-			return fmt.Errorf("error getting account number sequence for: %w", err)
-		}
-
-		seq = &accountSeq
-	}
-
-	txf = txf.WithSequence(*seq)
-	txf, err := txf.Prepare(c.cosmosCtx)
+func (c *Client) sendTx(ctx context.Context, msg []sdk.Msg, nonce uint64) error {
+	mus.Lock()
+	defer mus.Unlock()
+	block, err := c.cosmosCtx.Client.Block(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("error preparing transaction during: %w", err)
+		fmt.Println("Error getting block: ", err)
+	}
+	txf := newFactory(c.cosmosCtx)
+	txf = txf.WithSequence(nonce)
+	txf = txf.WithTimeoutHeight(uint64(block.Block.Header.Height + 2))
+	c.logger.Info("Transaction nonce", "nonce", nonce)
+
+	txf, err = txf.Prepare(c.cosmosCtx)
+	if err != nil {
+		return fmt.Errorf("error preparing transaction factory: %w", err)
 	}
 
-	txn, err := txf.BuildUnsignedTx(msg)
+	txn, err := txf.BuildUnsignedTx(msg...)
 	if err != nil {
 		return fmt.Errorf("error building unsigned transaction: %w", err)
 	}
@@ -140,12 +142,13 @@ func (c *Client) sendTx(ctx context.Context, msg sdk.Msg, seq *uint64) error {
 	}
 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
-		return fmt.Errorf("error broadcasting transaction after 'handleBroadcastResult': %w", err)
+		return fmt.Errorf("error broadcasting transaction result: %w", err)
 	}
-	txnResult, err := c.WaitForTx(ctx, res.TxHash)
+	txnReponse, err := c.WaitForTx(ctx, res.TxHash)
 	if err != nil {
 		return fmt.Errorf("error waiting for transaction: %w", err)
 	}
-	c.logger.Info(sdk.MsgTypeURL(msg), "TxResult", txnResult)
+	c.logger.Info("TxResult", "result", txnReponse.TxResult)
+
 	return nil
 }

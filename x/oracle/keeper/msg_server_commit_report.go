@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 
@@ -62,13 +61,9 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 			return nil, err
 		}
 	}
-	// get current query in cycle
-	cycleQuery, err := k.keeper.GetCurrentQueryInCycleList(ctx)
-	if err != nil {
-		return nil, err
-	}
+
 	// bool to check if query is in cycle
-	incycle := bytes.Equal(msg.QueryData, cycleQuery)
+	incycle := query.CycleList
 
 	isBridgeDeposit := query.QueryType == TRBBridgeQueryType
 
@@ -76,8 +71,8 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 		return nil, types.ErrNoTipsNotInCycle.Wrapf("query does not have tips and is not in cycle")
 	}
 
-	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Before(blockTime) && !incycle && !isBridgeDeposit {
-		return nil, errors.New("query's tip is expired and is not in cycle")
+	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Before(blockTime) && !isBridgeDeposit {
+		return nil, errors.New("query's tip is expired and is not a bridge deposit")
 	}
 
 	// if tip is zero and expired, move query forward only if in cycle
@@ -86,7 +81,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	// or the query was in cycle and expired (either revealed or not)
 	// in either case move query forward by incrementing id and setting expiration
 	// if the query is a bridge deposit, it should always be in cycle
-	if query.Amount.IsZero() && query.Expiration.Before(blockTime) && (incycle || isBridgeDeposit) {
+	if query.Amount.IsZero() && query.Expiration.Before(blockTime) && isBridgeDeposit {
 		nextId, err := k.keeper.QuerySequencer.Next(ctx)
 		if err != nil {
 			return nil, err
@@ -105,7 +100,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	// if tip amount is greater than zero and query timeframe is expired, it means that the query didn't have any revealed reports
 	// and the tip is still there and so the time can be extended only if the query is in cycle or via a tip transaction
 	// maintains the same id until the query is paid out
-	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Before(blockTime) && (incycle || isBridgeDeposit) {
+	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Before(blockTime) && isBridgeDeposit {
 		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
 		err = k.keeper.Query.Set(ctx, queryId, query)
 		if err != nil {

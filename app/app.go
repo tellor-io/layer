@@ -664,8 +664,9 @@ func New(
 						marketParamsConfig,
 						indexPriceCache,
 						tokenDepositsCache,
-						app.CreateQueryContext,
+						// app.CreateQueryContext,
 						*app.StakingKeeper,
+						app.ChainID(),
 					); err != nil {
 						panic(err)
 					}

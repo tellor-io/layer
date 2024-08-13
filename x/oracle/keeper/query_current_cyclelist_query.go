@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,6 +19,10 @@ func (k Querier) CurrentCyclelistQuery(ctx context.Context, req *types.QueryCurr
 	if err != nil {
 		return nil, err
 	}
-
-	return &types.QueryCurrentCyclelistQueryResponse{QueryData: hex.EncodeToString(querydata)}, nil
+	queryId := utils.QueryIDFromData(querydata)
+	query, err := k.keeper.Query.Get(ctx, queryId)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryCurrentCyclelistQueryResponse{QueryData: hex.EncodeToString(querydata), QueryMeta: &query}, nil
 }

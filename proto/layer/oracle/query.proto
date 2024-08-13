@@ -11,6 +11,7 @@ import "google/api/annotations.proto";
 import "layer/oracle/aggregate.proto";
 import "layer/oracle/micro_report.proto";
 import "layer/oracle/params.proto";
+import "layer/oracle/query_meta.proto";
 import "layer/oracle/reports.proto";
 import "layer/oracle/tips.proto";
 import "layer/oracle/user_tip.proto";
@@ -152,6 +153,7 @@ message QueryCurrentCyclelistQueryRequest {}
 
 message QueryCurrentCyclelistQueryResponse {
   string query_data = 1;
+  QueryMeta query_meta = 2;
 }
 
 message QueryRetrieveDataRequest {

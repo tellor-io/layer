@@ -37,4 +37,6 @@ message QueryMeta {
   bytes query_id = 6;
   // string identifier of the data spec
   string query_type = 7;
+  // bool cycle list query
+  bool cycle_list = 8;
 }

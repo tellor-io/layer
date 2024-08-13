@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
@@ -30,12 +31,34 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	}
 
 	max := len(q)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime()
 	switch {
 	case n == uint64(max-1):
-		return k.CyclelistSequencer.Set(ctx, 0)
+		err := k.CyclelistSequencer.Set(ctx, 0)
+		if err != nil {
+			return err
+		}
+		n = 0
 	default:
+		n += 1
+	}
+	queryId := utils.QueryIDFromData(q[n])
+	querymeta, err := k.Query.Get(ctx, queryId)
+	if err != nil {
+		return err
+	}
+	// if it has yet to aggregate, don't update the query meta
+	if querymeta.HasRevealedReports {
 		return nil
 	}
+	nextId, err := k.QuerySequencer.Next(ctx)
+	if err != nil {
+		return err
+	}
+	querymeta.Id = nextId
+	querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+	return k.Query.Set(ctx, queryId, querymeta)
 }
 
 func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) {
@@ -85,6 +108,7 @@ func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist [][]byte) error 
 			Id:                    nextId,
 			RegistrySpecTimeframe: 0,
 			QueryId:               queryId,
+			CycleList:             true,
 		}
 		err = k.Query.Set(ctx, queryId, meta)
 		if err != nil {
