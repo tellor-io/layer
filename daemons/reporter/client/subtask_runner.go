@@ -28,9 +28,7 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 	commitCh chan sdk.Msg,
 	submitCh chan sdk.Msg,
 	broadcastTrigger chan struct{},
-
 ) error {
-
 	reporterCreated := false
 	conditionCh := make(chan struct{})
 
@@ -41,7 +39,10 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 			reporterCreated = daemonClient.checkReporter(ctx)
 			if reporterCreated {
 				close(conditionCh)
-				daemonClient.WaitForNextBlock(ctx)
+				err := daemonClient.WaitForNextBlock(ctx)
+				if err != nil {
+					daemonClient.logger.Error("Waiting for next block after creating a reporter", "error", err)
+				}
 			} else {
 				time.Sleep(time.Second)
 			}

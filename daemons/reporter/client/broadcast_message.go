@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (c *Client) generateDepositCommits(commitCh chan<- sdk.Msg) error {
@@ -158,7 +159,6 @@ func collectMessages(chA, submitCh <-chan sdk.Msg, broadcastTrigger chan<- struc
 }
 
 func (c *Client) broadcastMessages(ctx context.Context, broadcastTrigger <-chan struct{}) {
-
 	for range broadcastTrigger {
 		bmu.Lock()
 		if len(messagesA) > 0 || len(messagesB) > 0 {
