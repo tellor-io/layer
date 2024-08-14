@@ -42,6 +42,7 @@ var (
 	bmu              sync.Mutex
 	messagesA        []sdk.Msg
 	messagesB        []sdk.Msg
+	messagesC        []sdk.Msg
 	depositCommitMap = make(map[string]bool)
 	depositMeta      = make(map[string]commit)
 )

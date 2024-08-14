@@ -3,7 +3,9 @@ package client
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/tellor-io/layer/utils"
@@ -158,18 +160,52 @@ func collectMessages(chA, submitCh <-chan sdk.Msg, broadcastTrigger chan<- struc
 	}
 }
 
-func (c *Client) broadcastMessages(ctx context.Context, broadcastTrigger <-chan struct{}) {
+func (c *Client) broadcastMessages(ctx context.Context, broadcastTrigger <-chan struct{}) error {
 	for range broadcastTrigger {
 		bmu.Lock()
-		if len(messagesA) > 0 || len(messagesB) > 0 {
+		if len(messagesA) > 0 || len(messagesB) > 0 || len(messagesC) > 0 {
 			combinedMessages := append(messagesA, messagesB...)
+			combinedMessages = append(combinedMessages, messagesC...)
 			fmt.Println("Combined messages:", combinedMessages)
 			_, seq, _ := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
-			fmt.Println("sending transaction", c.sendTx(ctx, combinedMessages, seq))
+			err := c.sendTx(ctx, combinedMessages, seq)
+			if err != nil {
+				return fmt.Errorf("error sending tx: %w", err)
+			}
 
 			messagesA = []sdk.Msg{}
 			messagesB = []sdk.Msg{}
+			messagesC = []sdk.Msg{}
 		}
 		bmu.Unlock()
 	}
+	return nil
+}
+
+func (c *Client) generateExternalMessages(filepath string, trigger chan<- struct{}) error {
+	jsonFile, err := os.ReadFile(filepath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		return fmt.Errorf("error reading from file: %w", err)
+	}
+	if err := os.Remove(filepath); err != nil {
+		return fmt.Errorf("error deleting transactions file: %w", err)
+	}
+	tx, err := c.cosmosCtx.TxConfig.TxJSONDecoder()(jsonFile)
+	if err != nil {
+		return fmt.Errorf("error decoding json file: %w", err)
+	}
+	msgs := tx.GetMsgs()
+
+	bmu.Lock()
+	messagesC = msgs
+	fmt.Println("External message:", msgs)
+	bmu.Unlock()
+	if len(messagesC) > 0 {
+		trigger <- struct{}{}
+	}
+
+	return nil
 }

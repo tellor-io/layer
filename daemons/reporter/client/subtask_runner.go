@@ -32,10 +32,9 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 	reporterCreated := false
 	conditionCh := make(chan struct{})
 
-	// Start a goroutine to monitor the condition
+	// Check if the reporter is created
 	go func() {
 		for !reporterCreated {
-			// Replace this with your actual condition check
 			reporterCreated = daemonClient.checkReporter(ctx)
 			if reporterCreated {
 				close(conditionCh)
@@ -52,12 +51,43 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 	// Wait for the condition to be met before starting the tasks
 	<-conditionCh
 
-	go daemonClient.generateCommitMessages(ctx, commitCh)
-	go daemonClient.generateSubmitMessages(ctx, submitCh)
+	go func() {
+		err := daemonClient.generateCommitMessages(ctx, commitCh)
+		if err != nil {
+			daemonClient.logger.Error("Generating commit messages", "error", err)
+		}
+	}()
+	go func() {
+		err := daemonClient.generateSubmitMessages(ctx, submitCh)
+		if err != nil {
+			daemonClient.logger.Error("Generating submit messages", "error", err)
+		}
+	}()
 	go collectMessages(commitCh, submitCh, broadcastTrigger)
-	go daemonClient.generateDepositCommits(commitCh)
-	go daemonClient.generateDepositSubmits(ctx, submitCh)
-	go daemonClient.broadcastMessages(ctx, broadcastTrigger)
+	go func() {
+		err := daemonClient.generateDepositCommits(commitCh)
+		if err != nil {
+			daemonClient.logger.Error("Generating deposit commits", "error", err)
+		}
+	}()
+	go func() {
+		err := daemonClient.generateDepositSubmits(ctx, submitCh)
+		if err != nil {
+			daemonClient.logger.Error("Generating deposit submits", "error", err)
+		}
+	}()
+	go func() {
+		err := daemonClient.generateExternalMessages("unsignedtx.json", broadcastTrigger)
+		if err != nil {
+			daemonClient.logger.Error("Generating external messages", "error", err)
+		}
+	}()
+	go func() {
+		err := daemonClient.broadcastMessages(ctx, broadcastTrigger)
+		if err != nil {
+			daemonClient.logger.Error("Broadcasting messages", "error", err)
+		}
+	}()
 
 	return nil
 }
