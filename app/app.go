@@ -732,7 +732,7 @@ func New(
 	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
 	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
 	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
-	app.BaseApp.SetPreBlocker(prepareProposalHandler.PreBlocker)
+	app.BaseApp.SetPreBlocker(app.preBlocker(prepareProposalHandler))
 	app.RegistryKeeper.SetHooks(
 		registrymoduletypes.NewMultiRegistryHooks(
 			app.OracleKeeper.Hooks(),
@@ -899,6 +899,10 @@ func New(
 		panic(err)
 	}
 
+	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
+	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
+	app.RegisterUpgradeHandlers()
+
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
@@ -955,6 +959,47 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		res, err := app.ModuleManager().PreBlock(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		changed := res.ConsensusParamsChanged
+
+		res, err = ph.PreBlocker(ctx, req)
+		if changed != res.ConsensusParamsChanged {
+			res.ConsensusParamsChanged = true
+		}
+
+		return res, err
+	}
+}
+
+func (app *App) RegisterUpgradeHandlers() {
+	const UpgradeName = "v0.3.0"
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		UpgradeName,
+		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
+		},
+	)
+
+	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
+	if err != nil {
+		panic(err)
+	}
+
+	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
+		storeUpgrades := storetypes.StoreUpgrades{}
+
+		// configure store loader that checks if version == upgradeHeight and applies store upgrades
+		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
+	}
 }
 
 // Name returns the name of the App

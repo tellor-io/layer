@@ -62,6 +62,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 			sdk.NewAttribute("value", val),
 			sdk.NewAttribute("cyclelist", fmt.Sprintf("%t", incycle)),
 			sdk.NewAttribute("aggregate_method", dataSpec.AggregationMethod),
+			sdk.NewAttribute("query_data", hex.EncodeToString(queryData)),
 		),
 	})
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
