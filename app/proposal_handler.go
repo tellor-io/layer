@@ -148,6 +148,7 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			h.logger.Error("ProcessProposalHandler: failed to decode injected vote extension tx", "err", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
+
 		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
 		if err != nil {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to validate vote extension", "error", err)
