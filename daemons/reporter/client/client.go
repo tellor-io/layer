@@ -102,7 +102,7 @@ func (c *Client) Start(
 		panic("account name is empty, please use --key-name flag")
 	}
 	accountName := c.AccountName
-	c.cosmosCtx = c.cosmosCtx.WithChainID("layer")
+	c.cosmosCtx = c.cosmosCtx.WithChainID("layertest-1")
 	homeDir := viper.GetString("home")
 	if homeDir != "" {
 		c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)

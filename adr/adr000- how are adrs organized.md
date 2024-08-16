@@ -17,7 +17,7 @@ ADRs key:
 
 001-999: ADRs are a catch all for other architecture design discussions (may create further categories as these expand)
 1000s: ADRs relating to tokenomics (delegation, rewards, tips, usage of staked tokens, voting, fees, etc...)
-2000s: ADRs about bridging data (bridging data, vote extenstion, validators, etc...) 
+2000s: ADRs about bridging data (bridging data, vote extension, validators, etc...) 
 3000s: ADRs include information about the token bridge
 
 

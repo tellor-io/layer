@@ -731,7 +731,7 @@ func New(
 	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
 	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
 	app.BaseApp.SetProcessProposal(prepareProposalHandler.ProcessProposalHandler)
-	app.BaseApp.SetPreBlocker(prepareProposalHandler.PreBlocker)
+	app.BaseApp.SetPreBlocker(app.preBlocker(prepareProposalHandler))
 	app.RegistryKeeper.SetHooks(
 		registrymoduletypes.NewMultiRegistryHooks(
 			app.OracleKeeper.Hooks(),
@@ -960,31 +960,30 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 	app.SetAnteHandler(anteHandler)
 }
 
+func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+		res, err := app.ModuleManager().PreBlock(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		changed := res.ConsensusParamsChanged
+
+		res, err = ph.PreBlocker(ctx, req)
+		if changed != res.ConsensusParamsChanged {
+			res.ConsensusParamsChanged = true
+		}
+
+		return res, err
+	}
+}
+
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v0.2.0"
+	const UpgradeName = "v0.3.0"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			// one time thing, changing the team address
-			currentParams, err := app.DisputeKeeper.Params.Get(ctx)
-			if err != nil {
-				return nil, err
-			}
-
-			addrCdc := address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			}
-
-			currentParams.TeamAddress, err = addrCdc.StringToBytes("tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97")
-			if err != nil {
-				return nil, err
-			}
-
-			if err = app.DisputeKeeper.Params.Set(ctx, currentParams); err != nil {
-				return nil, err
-			}
-
 			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)
