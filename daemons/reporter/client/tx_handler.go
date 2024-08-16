@@ -109,7 +109,7 @@ func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 
 func (c *Client) sendTx(ctx context.Context, msg sdk.Msg, seq *uint64) error {
 	txf := newFactory(c.cosmosCtx)
-
+	txf = txf.WithGasPrices(c.minGasFee)
 	if seq == nil {
 		var accountSeq uint64
 		_, accountSeq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)

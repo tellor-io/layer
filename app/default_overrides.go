@@ -3,6 +3,9 @@ package app
 import (
 	"encoding/json"
 
+	"github.com/strangelove-ventures/globalfee/x/globalfee"
+	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
+
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -80,11 +83,23 @@ type govModule struct {
 	gov.AppModuleBasic
 }
 
-// DefaultGenesis returns custom x/distribution module genesis state.
+// DefaultGenesis returns custom x/gov module genesis state.
 func (govModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := govtypes.DefaultGenesisState()
 	genState.Params.MinDeposit = sdk.Coins{sdk.NewInt64Coin(BondDenom, 10000000)}
 	genState.Params.ExpeditedMinDeposit = sdk.Coins{sdk.NewInt64Coin(BondDenom, 50000000)}
+
+	return cdc.MustMarshalJSON(genState)
+}
+
+type globalFeeModule struct {
+	*globalfee.AppModule
+}
+
+// DefaultGenesis returns custom x/globalfee module genesis state.
+func (globalFeeModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	genState := globalfeetypes.DefaultGenesisState()
+	genState.Params.MinimumGasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(BondDenom, math.LegacyNewDecWithPrec(25, 4)))
 
 	return cdc.MustMarshalJSON(genState)
 }

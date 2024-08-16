@@ -33,6 +33,9 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
+	globalfee "github.com/strangelove-ventures/globalfee/x/globalfee"
+	globalfeekeeper "github.com/strangelove-ventures/globalfee/x/globalfee/keeper"
+	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 	_ "github.com/tellor-io/layer/app/config"
 	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/configs"
@@ -242,8 +245,9 @@ type App struct {
 
 	DisputeKeeper disputemodulekeeper.Keeper
 
-	BridgeKeeper   bridgemodulekeeper.Keeper
-	ReporterKeeper reportermodulekeeper.Keeper
+	BridgeKeeper    bridgemodulekeeper.Keeper
+	ReporterKeeper  reportermodulekeeper.Keeper
+	GlobalFeeKeeper globalfeekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// mm is the module manager
@@ -314,6 +318,7 @@ func New(
 		disputemoduletypes.StoreKey,
 		bridgemoduletypes.StoreKey,
 		reportermoduletypes.StoreKey,
+		globalfeetypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 
@@ -436,7 +441,11 @@ func New(
 		app.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.GlobalFeeKeeper = globalfeekeeper.NewKeeper(
+		appCodec,
+		app.keys[globalfeetypes.StoreKey],
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	groupConfig := group.DefaultConfig()
 	/*
 		Example of setting group params:
@@ -666,6 +675,7 @@ func New(
 						tokenDepositsCache,
 						app.CreateQueryContext,
 						*app.StakingKeeper,
+						app.ChainID(),
 					); err != nil {
 						panic(err)
 					}
@@ -771,6 +781,8 @@ func New(
 		disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper),
 		bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper),
 		reportermodule.NewAppModule(appCodec, app.ReporterKeeper, app.AccountKeeper, app.BankKeeper),
+		// globalfee
+		globalFeeModule{globalfee.NewAppModule(appCodec, app.GlobalFeeKeeper)},
 
 		// IBC modules
 		ibctm.AppModule{},
@@ -884,6 +896,7 @@ func New(
 		disputemoduletypes.ModuleName,
 		bridgemoduletypes.ModuleName,
 		reportermoduletypes.ModuleName,
+		globalfeetypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/initGenesis
 	}
 	app.mm.SetOrderInitGenesis(genesisModuleOrder...)
@@ -950,6 +963,7 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 			},
 			app.ReporterKeeper,
 			app.StakingKeeper,
+			app.GlobalFeeKeeper,
 		},
 	)
 	if err != nil {
