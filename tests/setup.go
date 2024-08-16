@@ -7,9 +7,12 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	globalfeekeeper "github.com/strangelove-ventures/globalfee/x/globalfee/keeper"
+	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 	"github.com/stretchr/testify/require"
 	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
+	globalfeemodulev1 "github.com/tellor-io/layer/api/layer/globalfee/module"
 	mintmodulev1 "github.com/tellor-io/layer/api/layer/mint/module"
 	oraclemodulev1 "github.com/tellor-io/layer/api/layer/oracle/module"
 	registrymodulev1 "github.com/tellor-io/layer/api/layer/registry/module"
@@ -173,6 +176,16 @@ func BridgeModule() configurator.ModuleOption {
 	}
 }
 
+func GlobalFeeModule() configurator.ModuleOption {
+	return func(config *configurator.Config) {
+		config.InitGenesisOrder = append(config.InitGenesisOrder, "globalfee")
+		config.ModuleConfigs["globalfee"] = &appv1alpha1.ModuleConfig{
+			Name:   "globalfee",
+			Config: appconfig.WrapAny(&globalfeemodulev1.Module{}),
+		}
+	}
+}
+
 func DefaultStartUpConfig() simtestutil.StartupConfig {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
@@ -186,12 +199,13 @@ func DefaultStartUpConfig() simtestutil.StartupConfig {
 }
 
 type SharedSetup struct {
-	Oraclekeeper   oraclekeeper.Keeper
-	Disputekeeper  disputekeeper.Keeper
-	Registrykeeper registrykeeper.Keeper
-	Mintkeeper     mintkeeper.Keeper
-	Reporterkeeper reporterkeeper.Keeper
-	Bridgekeeper   bridgekeeper.Keeper
+	Oraclekeeper    oraclekeeper.Keeper
+	Disputekeeper   disputekeeper.Keeper
+	Registrykeeper  registrykeeper.Keeper
+	Mintkeeper      mintkeeper.Keeper
+	Reporterkeeper  reporterkeeper.Keeper
+	Bridgekeeper    bridgekeeper.Keeper
+	GlobalFeekeeper globalfeekeeper.Keeper
 
 	Accountkeeper  authkeeper.AccountKeeper
 	Bankkeeper     bankkeeper.BaseKeeper
@@ -283,6 +297,9 @@ func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
 	s.Bridgekeeper = bridgekeeper.NewKeeper(
 		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(bridgetypes.StoreKey).(*storetypes.KVStoreKey)), s.Stakingkeeper, s.Oraclekeeper, s.Bankkeeper, s.Reporterkeeper,
 	)
+	s.GlobalFeekeeper = globalfeekeeper.NewKeeper(
+		appCodec, s.fetchStoreKey(globalfeetypes.StoreKey).(*storetypes.KVStoreKey), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
 	s.Stakingkeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
 			s.distrKeeper.Hooks(),
@@ -312,6 +329,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.DistributionModule(),
+				GlobalFeeModule(),
 				OracleModule(),
 				DisputeModule(),
 				RegistryModule(),
