@@ -3,6 +3,8 @@ package app
 import (
 	"errors"
 
+	globalfeeante "github.com/strangelove-ventures/globalfee/x/globalfee/ante"
+	globalfeekeeper "github.com/strangelove-ventures/globalfee/x/globalfee/keeper"
 	rante "github.com/tellor-io/layer/x/reporter/ante"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -14,8 +16,9 @@ import (
 // HandlerOptions are the options required for constructing a default SDK AnteHandler.
 type HandlerOptions struct {
 	ante.HandlerOptions
-	ReporterKeeper keeper.Keeper
-	StakingKeeper  types.StakingKeeper
+	ReporterKeeper  keeper.Keeper
+	StakingKeeper   types.StakingKeeper
+	GlobalFeeKeeper globalfeekeeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -48,6 +51,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
+		globalfeeante.NewFeeDecorator([]string{}, options.GlobalFeeKeeper, 2_000_000),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

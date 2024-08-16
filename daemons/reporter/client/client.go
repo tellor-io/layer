@@ -3,9 +3,11 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
+	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/flags"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
@@ -33,6 +35,7 @@ type Client struct {
 	OracleQueryClient oracletypes.QueryClient
 	StakingClient     stakingtypes.QueryClient
 	ReporterClient    reportertypes.QueryClient
+	GlobalfeeClient   globalfeetypes.QueryClient
 
 	cosmosCtx          client.Context
 	MarketParams       []pricefeedtypes.MarketParam
@@ -40,7 +43,8 @@ type Client struct {
 	TokenDepositsCache *tokenbridgetypes.DepositReports
 	StakingKeeper      stakingkeeper.Keeper
 
-	accAddr sdk.AccAddress
+	accAddr   sdk.AccAddress
+	minGasFee string
 	// logger is the logger for the daemon.
 	logger log.Logger
 }
@@ -63,6 +67,7 @@ func (c *Client) Start(
 	tokenDepositsCache *tokenbridgetypes.DepositReports,
 	ctxGetter func(int64, bool) (sdk.Context, error),
 	stakingKeeper stakingkeeper.Keeper,
+	chainId string,
 ) error {
 	// Log the daemon flags.
 	c.logger.Info(
@@ -92,6 +97,7 @@ func (c *Client) Start(
 	c.OracleQueryClient = oracletypes.NewQueryClient(queryConn)
 	c.StakingClient = stakingtypes.NewQueryClient(queryConn)
 	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
+	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
 
 	ticker := time.NewTicker(time.Second)
 	stop := make(chan bool)
@@ -102,7 +108,7 @@ func (c *Client) Start(
 		panic("account name is empty, please use --key-name flag")
 	}
 	accountName := c.AccountName
-	c.cosmosCtx = c.cosmosCtx.WithChainID("layertest-1")
+	c.cosmosCtx = c.cosmosCtx.WithChainID(chainId)
 	homeDir := viper.GetString("home")
 	if homeDir != "" {
 		c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)
@@ -143,6 +149,13 @@ func StartReporterDaemonTaskLoop(
 	for {
 		select {
 		case <-ticker.C:
+			gfResponse, err := client.GlobalfeeClient.MinimumGasPrices(ctx, &globalfeetypes.QueryMinimumGasPricesRequest{})
+			if err != nil {
+				if strings.Contains(err.Error(), "layer is not ready") {
+					continue
+				}
+			}
+			client.minGasFee = gfResponse.MinimumGasPrices[0].String()
 			if err := s.RunReporterDaemonTaskLoop(
 				ctx,
 				client,
