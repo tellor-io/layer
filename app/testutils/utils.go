@@ -209,35 +209,6 @@ func GenerateCommit(t *testing.T, ctx sdk.Context) (abcitypes.ExtendedCommitInfo
 	return extCommit, voteExt, evmAddr, accAddr, consAddr, voteExtBytes
 }
 
-// type extendedVoteInfos []abci.ExtendedVoteInfo
-
-// func extendedCommitToLastCommit(commit abci.ExtendedCommitInfo) (abci.ExtendedCommitInfo, comet.BlockInfo) {
-// 	// sort the extended commit info
-// 	sort.Sort(extendedVoteInfos(commit.Votes))
-
-// 	// convert the extended commit info to last commit info
-// 	lastCommit := abci.CommitInfo{
-// 		Round: ec.Round,
-// 		Votes: make([]abci.VoteInfo, len(ec.Votes)),
-// 	}
-
-// 	for i, vote := range ec.Votes {
-// 		lastCommit.Votes[i] = abci.VoteInfo{
-// 			Validator: abci.Validator{
-// 				Address: vote.Validator.Address,
-// 				Power:   vote.Validator.Power,
-// 			},
-// 			BlockIdFlag: vote.BlockIdFlag,
-// 		}
-// 	}
-
-//		return ec, baseapp.NewBlockInfo(
-//			nil,
-//			nil,
-//			nil,
-//			lastCommit,
-//		)
-//	}
 func GenerateProposer(t *testing.T) (pubKey ed25519.PublicKey, privKey ed25519.PrivateKey, consAddr sdk.ConsAddress, accAddr sdk.AccAddress) {
 	t.Helper()
 
@@ -309,48 +280,3 @@ func SignCVE(veBz []byte, height, round int64, privKey ed25519.PrivateKey) (cmtp
 
 	return cve, extSignBytes, sig, nil
 }
-
-// func signInitialMessage() ([]byte, []byte, error) {
-// 	messageA := "TellorLayer: Initial bridge signature A"
-// 	messageB := "TellorLayer: Initial bridge signature B"
-
-// 	// convert message to bytes
-// 	msgBytesA := []byte(messageA)
-// 	msgBytesB := []byte(messageB)
-
-// 	// hash message
-// 	msgHashABytes32 := sha256.Sum256(msgBytesA)
-// 	msgHashBBytes32 := sha256.Sum256(msgBytesB)
-
-// 	// convert [32]byte to []byte
-// 	msgHashABytes := msgHashABytes32[:]
-// 	msgHashBBytes := msgHashBBytes32[:]
-
-// 	// sign message
-// 	sigA, err := h.SignMessage(msgHashABytes)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-
-// 	sigB, err := h.SignMessage(msgHashBBytes)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	return sigA, sigB, nil
-// }
-
-// func signMessage(msg []byte) ([]byte, error) {
-// 	kr, err := h.GetKeyring()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get keyring: %w", err)
-// 	}
-// 	keyName := viper.GetString("key-name")
-// 	if keyName == "" {
-// 		return nil, fmt.Errorf("key name not found, please set --key-name flag")
-// 	}
-// 	sig, _, err := kr.Sign(keyName, msg, 1)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to sign message: %w", err)
-// 	}
-// 	return sig, nil
-// }

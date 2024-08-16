@@ -236,6 +236,7 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	kr, err := h.GetKeyring()
+	fmt.Println("kr: ", kr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get keyring: %w", err)
 	}

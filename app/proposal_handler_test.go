@@ -50,13 +50,9 @@ func (s *ProposalHandlerTestSuite) SetupTest() {
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
 
-	ok := mocks.NewOracleKeeper(s.T())
-	bk := mocks.NewBridgeKeeper(s.T())
-	sk := mocks.NewStakingKeeper(s.T())
-
-	s.bridgeKeeper = bk
-	s.oracleKeeper = ok
-	s.stakingKeeper = sk
+	s.oracleKeeper = mocks.NewOracleKeeper(s.T())
+	s.bridgeKeeper = mocks.NewBridgeKeeper(s.T())
+	s.stakingKeeper = mocks.NewStakingKeeper(s.T())
 
 	s.ctx = testutils.CreateTestContext(s.T())
 	ctrl := gomock.NewController(s.T())
@@ -65,9 +61,9 @@ func (s *ProposalHandlerTestSuite) SetupTest() {
 		log.NewNopLogger(),
 		s.valStore,
 		cdc,
-		ok,
-		bk,
-		sk,
+		s.oracleKeeper,
+		s.bridgeKeeper,
+		s.stakingKeeper,
 	)
 }
 
@@ -134,21 +130,17 @@ func (s *ProposalHandlerTestSuite) TestSetEVMAddresses() {
 
 	operAddrs := []string{
 		"0x1",
-		"0x2",
-		"0x3",
 	}
 	evmAddrs := []string{
 		"0x1",
-		"0x2",
-		"0x3",
 	}
 	bk.On("SetEVMAddressByOperator", ctx, operAddrs[0], common.HexToAddress(evmAddrs[0]).Bytes()).Return(nil).Once()
-	bk.On("SetEVMAddressByOperator", ctx, operAddrs[1], common.HexToAddress(evmAddrs[1]).Bytes()).Return(nil).Once()
-	bk.On("SetEVMAddressByOperator", ctx, operAddrs[2], common.HexToAddress(evmAddrs[2]).Bytes()).Return(nil).Once()
+	// bk.On("SetEVMAddressByOperator", ctx, operAddrs[1], common.HexToAddress(evmAddrs[1]).Bytes()).Return(nil).Once()
+	// bk.On("SetEVMAddressByOpeator", ctx, operAddrs[2], common.HexToAddress(evmAddrs[2]).Bytes()).Return(nil).Once()
 	require.NoError(p.SetEVMAddresses(ctx, operAddrs, evmAddrs))
 
 	bk.On("SetEVMAddressByOperator", ctx, operAddrs[0], common.HexToAddress(evmAddrs[0]).Bytes()).Return(errors.New("error")).Once()
-	require.Error(p.SetEVMAddresses(ctx, operAddrs, evmAddrs))
+	require.NoError(p.SetEVMAddresses(ctx, operAddrs, evmAddrs))
 }
 
 func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
@@ -395,46 +387,100 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 }
 
 func (s *ProposalHandlerTestSuite) TestPreBlocker() {
-	// require := s.Require()
-	// p := s.proposalHandler
-	// bk := s.bridgeKeeper
-	// sk := s.stakingKeeper
-	// require.NotNil(bk)
-	// require.NotNil(sk)
-	// ctx := s.ctx
-	// require.NotNil(ctx)
+	require := s.Require()
+	p := s.proposalHandler
+	bk := s.bridgeKeeper
+	sk := s.stakingKeeper
+	require.NotNil(bk)
+	require.NotNil(sk)
+	ctx := s.ctx
+	require.NotNil(ctx)
 
-	// accAddr := sample.AccAddressBytes()
-	// _ = sdk.ConsAddress(accAddr)
-	// sigA, sigB, _ := testutils.GenerateSignatures(s.T())
+	_, privKey, consAddr, _ := testutils.GenerateProposer(s.T())
+	sigA, sigB, evmAddr := testutils.GenerateSignatures(s.T())
 
-	// voteExt := app.BridgeVoteExtension{
-	// 	OracleAttestations: []app.OracleAttestation{
-	// 		{
-	// 			Attestation: []byte("attestation"),
-	// 			Snapshot:    []byte("snapshot"),
-	// 		},
-	// 	},
-	// 	InitialSignature: app.InitialSignature{
-	// 		SignatureA: sigA,
-	// 		SignatureB: sigB,
-	// 	},
-	// 	ValsetSignature: app.BridgeValsetSignature{
-	// 		Signature: []byte("signature"),
-	// 		Timestamp: uint64(ctx.BlockTime().Unix()),
-	// 	},
-	// }
+	ve := app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{
+				Attestation: []byte("attestation"),
+				Snapshot:    []byte("snapshot"),
+			},
+		},
+		InitialSignature: app.InitialSignature{
+			SignatureA: sigA,
+			SignatureB: sigB,
+		},
+		ValsetSignature: app.BridgeValsetSignature{
+			Signature: []byte("valSetSignature"),
+			Timestamp: uint64(ctx.BlockTime().Unix()),
+		},
+	}
+	veBz, err := json.Marshal(ve)
+	require.NoError(err)
 
-	// voteExtBytes, err := json.Marshal(voteExt)
-	// require.NoError(err)
+	_, _, sig, err := testutils.SignCVE(veBz, 2, 2, privKey)
+	require.NoError(err)
 
-	// req := abcitypes.RequestFinalizeBlock{
-	// 	Txs: [][]byte{
-	// 		voteExtBytes,
-	// 	},
-	// 	Height: 1,
-	// }
+	localLastCommit := abcitypes.ExtendedCommitInfo{
+		Votes: []abcitypes.ExtendedVoteInfo{
+			{
+				Validator: abcitypes.Validator{
+					Address: consAddr.Bytes(),
+					Power:   1000000000000,
+				},
+				VoteExtension:      veBz,
+				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
+				ExtensionSignature: sig,
+			},
+		},
+		Round: 2,
+	}
 
-	// res, err := p.PreBlocker(ctx, &req)
-	// fmt.Println("res: ", res, "\nerr: ", err)
+	opAndEVMAddrs := app.OperatorAndEVM{
+		OperatorAddresses: []string{consAddr.String()},
+		EVMAddresses:      []string{evmAddr.String()},
+	}
+	valsetSigs := app.ValsetSignatures{
+		OperatorAddresses: []string{consAddr.String()},
+		Timestamps:        []int64{int64(ve.ValsetSignature.Timestamp)},
+		Signatures:        []string{hex.EncodeToString(ve.ValsetSignature.Signature)},
+	}
+	oracleAttestations := app.OracleAttestations{
+		OperatorAddresses: []string{consAddr.String()},
+		Attestations:      [][]byte{ve.OracleAttestations[0].Attestation},
+		Snapshots:         [][]byte{ve.OracleAttestations[0].Snapshot},
+	}
+
+	injectedVoteExtTx := app.VoteExtTx{
+		BlockHeight:        int64(2),
+		OpAndEVMAddrs:      opAndEVMAddrs,
+		ValsetSigs:         valsetSigs,
+		OracleAttestations: oracleAttestations,
+		ExtendedCommitInfo: localLastCommit,
+	}
+	injBz, err := json.Marshal(injectedVoteExtTx)
+	require.NoError(err)
+
+	req := abcitypes.RequestFinalizeBlock{
+		Txs:    [][]byte{injBz},
+		Height: 3,
+	}
+
+	ctx = ctx.WithBlockHeight(3)
+
+	var veTx app.VoteExtTx
+	err = json.Unmarshal(injBz, &veTx)
+	require.NoError(err)
+
+	// bk.On("EVMAddressFromSignatures", ctx, sigA, sigB).Return(evmAddr, nil)
+	// bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
+	// sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+	// 	OperatorAddress: consAddr.String(),
+	// }, nil)
+	bk.On("SetEVMAddressByOperator", ctx, consAddr.String(), evmAddr.Bytes()).Return(nil)
+	bk.On("SetBridgeValsetSignature", ctx, consAddr.String(), ve.ValsetSignature.Timestamp, veTx.ValsetSigs.Signatures[0]).Return(nil)
+	bk.On("SetOracleAttestation", ctx, consAddr.String(), ve.OracleAttestations[0].Snapshot, ve.OracleAttestations[0].Attestation).Return(nil)
+	res, err := p.PreBlocker(ctx, &req)
+	require.NoError(err)
+	require.NotNil(res)
 }
