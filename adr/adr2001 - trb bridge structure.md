@@ -15,7 +15,7 @@
 
 Tellor Tributes (TRB) is the tellor token. It exists on Ethereum and cannot be changed. It mints ~4k to the team each month and ~4k to the oracle contract for time based inflationary rewards (tbr). When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer. Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 1 hour window (this is allowed so that reporters are able to wait a certain amount of blocks before reporting so that the state of Ethereum has reached a high level of finality) and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specified deposit ID.  
 
-Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the first time will not have TRB available on Layer to pay the required gas fee to claim the deposit. This is problematic because it creates a whitelisting environment(only those that the team calls the claim function are able to participate on the chain). To avoid this, when depositing to the bridge a 'claim tip' for anyone that calls the claim deposit function for on Layer can be included (not required). 
+Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the first time will not have TRB available on Layer to pay the required gas fee to claim the deposit. This is problematic because it creates a whitelisting environment (only those with TRB balances on the chain and whoever they are willing to call the claim function for can participate on the chain). To avoid this, when depositing to the bridge a 'claim tip' for anyone that calls the claim deposit function for on Layer can be included (not required). 
 
  ![ ADR2001](./graphics/adr2001.png)
 
@@ -46,11 +46,11 @@ It was considered to allow depositors to include a tip to incentivize reporters 
 
 ### Don't allow a claimDeposit tip with the deposit on Ethereum
 
-It was considered to not allow depositors to include a tip to incentivize running the claim deposit function on Layer. However, that would mean the new Layer participants have to depend on the team or other validators to 'admit' them by running the claim deposit function for them and inadvertendly allowing for censoring participation.
+It was considered to not allow depositors to include a tip to incentivize running the claim deposit function on Layer. However, that would mean the new Layer participants have to depend on the team or other validators to 'admit' them by running the claim deposit function for them and inadvertently allowing for censoring participation.
 
-### Make the claimDeposit fucntion free on Layer
+### Make the claimDeposit function free on Layer
 
-We considered allowing that fuction to be free but we didn't want the transaction to be used to spam Layer with microdeposits as Ethereum transactions fee continue to decrease.
+We considered allowing the claimDeposit function to be free but we didn't want the transaction to be used to spam Layer with microdeposits as Ethereum transactions fee continue to decrease.
 
 
 ## Issues / Notes on Implementation
