@@ -63,6 +63,7 @@ fi
     --keyring-backend="test" \
     --home="${LAYERD_NODE_HOME}" \
     --keyring-dir="${LAYERD_NODE_HOME}" \
+    --gas-prices="1loya" \
     --yes
     output=$(layerd query staking validator "${VAL_ADDRESS}" 2>/dev/null)
     if [[ -n "${output}" ]] ; then
@@ -80,6 +81,7 @@ fi
   --keyring-backend="test" \
   --keyring-dir="${LAYERD_NODE_HOME}" \
   --chain-id="layer" \
+  --gas-prices="1loya" \
   --yes
 
   selector=$(layerd query reporter selector-reporter "${REPORTER}" 2>/dev/null)

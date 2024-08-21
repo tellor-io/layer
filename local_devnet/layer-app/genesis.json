@@ -243,6 +243,16 @@
         }
       ]
     },
+    "globalfee": {
+      "params": {
+        "minimum_gas_prices": [
+          {
+            "denom": "loya",
+            "amount": "0.002500000000000000"
+          }
+        ]
+      }
+    },
     "gov": {
       "starting_proposal_id": "1",
       "deposits": [],

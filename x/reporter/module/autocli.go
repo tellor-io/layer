@@ -47,6 +47,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query how much space a reporter has",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
+				{
+					RpcMethod:      "AvailableTips",
+					Use:            "available-tips",
+					Short:          "Query how much how much tips a selector has",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
