@@ -9,12 +9,16 @@
 - 2024-03-28: initial version
 - 2024-04-01: revised for more discussion and align with data spec
 - 2024-08-12: spelling
+- 2024-08-20: added the claim deposit tip
 
 ## Context
 
 Tellor Tributes (TRB) is the tellor token. It exists on Ethereum and cannot be changed. It mints ~4k to the team each month and ~4k to the oracle contract for time based inflationary rewards (tbr). When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer. Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 1 hour window (this is allowed so that reporters are able to wait a certain amount of blocks before reporting so that the state of Ethereum has reached a high level of finality) and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specified deposit ID.  
 
+Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the first time will not have TRB available on Layer to pay the required gas fee to claim the deposit. This is problematic because it creates a whitelisting environment (only those with TRB balances on the chain and whoever they are willing to call the claim function for can participate on the chain). To avoid this, when depositing to the bridge a 'claim tip' for anyone that calls the claim deposit function for on Layer can be included (not required). 
+
  ![ ADR2001](./graphics/adr2001.png)
+
 
 As an additional security measure, the bridge contract will not allow more than 20% of the total supply on Layer to be bridged within a 12 hour period (the function will be locked). This will be to ensure that someone does not bridge over a very large amount to stake/grief the network, manipulate votes, or grief the system via disputes without proper time to analyze the situation. For the reverse direction, parties will burn TRB on Layer, the validators will then attest that it happened and then the bridge contract on Ethereum can use the tellor data as any other user, but this time reading burn events. A 20% withdraw limit is also used in this direction and the bridge contract will also use the data optimistically (12 hours old) to further reduce attack vectors.  
 
@@ -36,9 +40,18 @@ Forcing parties to report for the bridge might not be feasible when there are no
 
 The reason we want to use it optimistically here is for chain rollbacks. Although it's unlikely to happen and validator set changes are limited by percent, you could still pretend to deposit a bunch, roll back the chain, and then double spend or dispute on our chain with unlocked tokens. Since there is no immediate need for trb to be bridged, we will simply make it take 12 hours and then even limit the amount bridged over. 
 
-### Allow a tip to be included along with the deposit on Ethereum
+### Allow a reporter tip to be included along with the deposit on Ethereum
 
 It was considered to allow depositors to include a tip to incentivize reporters to bridge over the data faster to Layer. However, the process for verifying the data was reported to Layer and reporting back the reporters to Ethereum to claim the tip would be inefficient, make the process more complex, and require more storage to track the tips than tipping and distributing tips on Layer. 
+
+### Don't allow a claimDeposit tip with the deposit on Ethereum
+
+It was considered to not allow depositors to include a tip to incentivize running the claim deposit function on Layer. However, that would mean the new Layer participants have to depend on the team or other validators to 'admit' them by running the claim deposit function for them and inadvertently allowing for censoring participation.
+
+### Make the claimDeposit function free on Layer
+
+We considered allowing the claimDeposit function to be free but we didn't want the transaction to be used to spam Layer with microdeposits as Ethereum transactions fee continue to decrease.
+
 
 ## Issues / Notes on Implementation
 
