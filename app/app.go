@@ -1002,7 +1002,10 @@ func (app *App) RegisterUpgradeHandlers() {
 			sdkctx := sdk.UnwrapSDKContext(ctx)
 			params := app.GlobalFeeKeeper.GetParams(sdkctx)
 			params.MinimumGasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(BondDenom, math.LegacyNewDecWithPrec(25, 4)))
-			_ = app.GlobalFeeKeeper.SetParams(sdkctx, params)
+			err := app.GlobalFeeKeeper.SetParams(sdkctx, params)
+			if err != nil {
+				return nil, err
+			}
 			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)
