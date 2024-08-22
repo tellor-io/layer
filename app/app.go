@@ -77,6 +77,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -993,11 +994,15 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v0.3.0"
+	const UpgradeName = "v0.4.1"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			sdkctx := sdk.UnwrapSDKContext(ctx)
+			params := app.GlobalFeeKeeper.GetParams(sdkctx)
+			params.MinimumGasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(BondDenom, math.LegacyNewDecWithPrec(25, 4)))
+			_ = app.GlobalFeeKeeper.SetParams(sdkctx, params)
 			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)
