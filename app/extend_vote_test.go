@@ -350,7 +350,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
-				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
 			},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
@@ -367,8 +367,8 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				patches.ApplyMethod(h, "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
 					return []byte("signatureA"), []byte("signatureB"), nil
 				})
-				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, errors.New("error"))
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!")).Once()
 			},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
@@ -383,7 +383,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
-				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil)
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
 				attReq := bridgetypes.AttestationRequests{
 					Requests: []*bridgetypes.AttestationRequest{
 						{
@@ -391,70 +391,57 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 						},
 					},
 				}
-				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
 				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})
-				// bk.On("GetLatestCheckpointIndex", ctx).Return(nil, errors.New("error"))
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error")).Once()
 			},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
 			},
 		},
-		// {
-		// 	name: "GetAttestationRequestsByHeight error",
-		// 	setupMocks: func() {
-		// 		oppAddr := sample.AccAddress()
-		// 		patches := gomonkey.NewPatches()
-		// 		defer patches.Reset()
-		// 		patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-		// 			return oppAddr, nil
-		// 		})
-		// 		patches.ApplyMethod(h, "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
-		// 			return []byte("signatureA"), []byte("signatureB"), nil
-		// 		})
-		// 		bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, errors.New("error")).Once()
-		// 		bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, errors.New("error")).Once()
-		// 	},
-		// 	expectedError: nil,
-		// 	validateResponse: func(resp *abci.ResponseExtendVote) {
-		// 		require.NotNil(resp)
-		// 	},
-		// },
-		// {
-		// 	name: "Signing error",
-		// 	setupMocks: func() {
-		// 		oppAddr := sample.AccAddress()
-		// 		attReq := bridgetypes.AttestationRequests{
-		// 			Requests: []*bridgetypes.AttestationRequest{
-		// 				{
-		// 					Snapshot: []byte("snapshot"),
-		// 				},
-		// 			},
-		// 		}
-		// 		patches := gomonkey.NewPatches()
-		// 		defer patches.Reset()
-		// 		patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-		// 			return oppAddr, nil
-		// 		})
-		// 		patches.ApplyMethod(h, "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
-		// 			return []byte("signatureA"), []byte("signatureB"), nil
-		// 		})
-		// 		bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, errors.New("error")).Once()
-		// 		bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
-		// 	},
-		// 	expectedError: nil,
-		// 	validateResponse: func(resp *abci.ResponseExtendVote) {
-		// 		require.NotNil(resp)
-		// 	},
-		// },
+		{
+			name: "no errors",
+			setupMocks: func() {
+				oppAddr := sample.AccAddress()
+				evmAddr := common.BytesToAddress([]byte("evmAddr"))
+				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return oppAddr, nil
+				})
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
+				attReq := bridgetypes.AttestationRequests{
+					Requests: []*bridgetypes.AttestationRequest{
+						{
+							Snapshot: []byte("snapshot"),
+						},
+					},
+				}
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
+				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+					return []byte("signedMsg"), nil
+				})
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
+				checkpointTimestamp := bridgetypes.CheckpointTimestamp{
+					Timestamp: 1,
+				}
+				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(checkpointTimestamp, nil).Once()
+				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(1)).Return(true, int64(1), nil).Once()
+				patches.ApplyMethod(h, "EncodeAndSignMessage", func(_ *app.VoteExtHandler, checkpoint string) ([]byte, error) {
+					return []byte("signedCheckpoint"), nil
+				})
+			},
+			expectedError: nil,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			tc.setupMocks()
-			defer patches.Reset()
 			req := &abci.RequestExtendVote{}
 			resp, err := h.ExtendVoteHandler(ctx, req)
 			if tc.expectedError != nil {
@@ -464,6 +451,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				require.NoError(err)
 			}
 			tc.validateResponse(resp)
+			defer patches.Reset()
 		})
 	}
 }
