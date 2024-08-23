@@ -335,8 +335,8 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 	testCases := []testCase{
 		{
-			name: "GetOperatorAddress error",
-			setupMocks: func() {},
+			name:          "GetOperatorAddress error",
+			setupMocks:    func() {},
 			request:       &abci.RequestExtendVote{},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
@@ -368,7 +368,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					return []byte("signatureA"), []byte("signatureB"), nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, errors.New("error"))		
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, errors.New("error"))
 			},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
