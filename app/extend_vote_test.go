@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/agiledragon/gomonkey/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
 	"github.com/tellor-io/layer/app/testutils"
+	"github.com/tellor-io/layer/testutil/sample"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
@@ -32,6 +35,7 @@ type VoteExtensionTestSuite struct {
 	stakingKeeper *mocks.StakingKeeper
 	kr            keyring.Keyring
 	tempDir       string
+	cdc           codec.Codec
 }
 
 func (s *VoteExtensionTestSuite) SetupTest() {
@@ -39,7 +43,7 @@ func (s *VoteExtensionTestSuite) SetupTest() {
 
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-
+	s.cdc = cdc
 	s.oracleKeeper = mocks.NewOracleKeeper(s.T())
 	s.bridgeKeeper = mocks.NewBridgeKeeper(s.T())
 	s.stakingKeeper = mocks.NewStakingKeeper(s.T())
@@ -131,20 +135,76 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// no err unmarshalling, coll not found err from GetAttestationRequestsByHeight, oracle att length > 0, reject
-	_ = bridgetypes.AttestationRequests{
-		Requests: []*bridgetypes.AttestationRequest{
-			{
-				Snapshot: []byte("snapshot"),
-			},
-		},
-	}
 	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(nil, collections.ErrNotFound).Once()
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
-	// bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(nil, collections.ErrNotFound).Once()
+	attReq := bridgetypes.AttestationRequests{
+		Requests: []*bridgetypes.AttestationRequest{
+			{
+				Snapshot: []byte("snapshot"),
+			},
+		},
+	}
+	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
+		Attestation: []byte("attestation2"),
+		Snapshot:    []byte("snapshot2"),
+	})
+	require.Equal(len(bridgeVoteExt.OracleAttestations), 2)
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig too big, reject
+	bridgeVoteExt.InitialSignature.SignatureA = make([]byte, 100000)
+	bridgeVoteExt.OracleAttestations = []app.OracleAttestation{
+		oracleAtt,
+	}
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig good, valset sig too big, reject
+	bridgeVoteExt.ValsetSignature.Signature = make([]byte, 100000)
+	bridgeVoteExt.InitialSignature = app.InitialSignature{
+		SignatureA: []byte("signature"),
+		SignatureB: []byte("signature"),
+	}
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no errs unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig good, valset sig good, accept
+	bridgeVoteExt.ValsetSignature.Signature = []byte("signature")
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
 }
 
 // create a keyring in the test, sotre in temp directort, modify voteexthandler
@@ -256,12 +316,142 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	// require.NotNil(addr)
 }
 
+// use test case struct
+
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	require := s.Require()
 	h := s.handler
+	bk := s.bridgeKeeper
+	ctx := s.ctx.WithBlockHeight(3)
+	patches := gomonkey.NewPatches()
 
-	res, err := h.ExtendVoteHandler(s.ctx, &abci.RequestExtendVote{})
-	require.NoError(err)
-	require.NotNil(res)
-	// require.Equal(res, &abci.ResponseExtendVote{})
+	type testCase struct {
+		name             string
+		setupMocks       func()
+		request          *abci.RequestExtendVote
+		expectedError    error
+		validateResponse func(*abci.ResponseExtendVote)
+	}
+
+	testCases := []testCase{
+		{
+			name:          "GetOperatorAddress error",
+			setupMocks:    func() {},
+			request:       &abci.RequestExtendVote{},
+			expectedError: nil,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+			},
+		},
+		{
+			name: "err on SignInitialMessage",
+			setupMocks: func() {
+				oppAddr := sample.AccAddress()
+				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return oppAddr, nil
+				})
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
+			},
+			expectedError: nil,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+			},
+		},
+		{
+			name: "err on GetAttestationRequestsByHeight",
+			setupMocks: func() {
+				oppAddr := sample.AccAddress()
+				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return oppAddr, nil
+				})
+				patches.ApplyMethod(h, "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
+					return []byte("signatureA"), []byte("signatureB"), nil
+				})
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!")).Once()
+			},
+			expectedError: nil,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+			},
+		},
+		{
+			name: "err signing checkpoint",
+			setupMocks: func() {
+				oppAddr := sample.AccAddress()
+				evmAddr := common.BytesToAddress([]byte("evmAddr"))
+				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return oppAddr, nil
+				})
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
+				attReq := bridgetypes.AttestationRequests{
+					Requests: []*bridgetypes.AttestationRequest{
+						{
+							Snapshot: []byte("snapshot"),
+						},
+					},
+				}
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
+				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+					return []byte("signedMsg"), nil
+				})
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error")).Once()
+			},
+			expectedError: nil,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+			},
+		},
+		{
+			name: "no errors",
+			setupMocks: func() {
+				oppAddr := sample.AccAddress()
+				evmAddr := common.BytesToAddress([]byte("evmAddr"))
+				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return oppAddr, nil
+				})
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
+				attReq := bridgetypes.AttestationRequests{
+					Requests: []*bridgetypes.AttestationRequest{
+						{
+							Snapshot: []byte("snapshot"),
+						},
+					},
+				}
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
+				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+					return []byte("signedMsg"), nil
+				})
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
+				checkpointTimestamp := bridgetypes.CheckpointTimestamp{
+					Timestamp: 1,
+				}
+				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(checkpointTimestamp, nil).Once()
+				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(1)).Return(true, int64(1), nil).Once()
+				patches.ApplyMethod(h, "EncodeAndSignMessage", func(_ *app.VoteExtHandler, checkpoint string) ([]byte, error) {
+					return []byte("signedCheckpoint"), nil
+				})
+			},
+			expectedError: nil,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			tc.setupMocks()
+			req := &abci.RequestExtendVote{}
+			resp, err := h.ExtendVoteHandler(ctx, req)
+			if tc.expectedError != nil {
+				require.Error(err)
+				require.Equal(tc.expectedError, err)
+			} else {
+				require.NoError(err)
+			}
+			tc.validateResponse(resp)
+			defer patches.Reset()
+		})
+	}
 }
