@@ -159,6 +159,12 @@ func (k Keeper) GetCurrentValidatorSetEVMCompatible(ctx context.Context) (*types
 // function for loading last saved bridge validator set and comparing it to current set
 func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error) {
 	// load current validator set in EVM compatible format
+	k.Logger(ctx).Info("Getting validator set timestamp before")
+	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, uint64(time.Now().UnixMilli()))
+	if err != nil {
+		k.Logger(ctx).Info("Error getting timestamp before", "error", err)
+	}
+	k.Logger(ctx).Info("Got validator set timestamp before", "timestamp", valsetTimestampBefore)
 	currentValidatorSetEVMCompatible, err := k.GetCurrentValidatorSetEVMCompatible(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("No current validator set found")
@@ -1009,4 +1015,25 @@ func (k Keeper) GetAttestationRequestsByHeight(ctx context.Context, height uint6
 
 func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx context.Context, timestamp uint64) (types.ValidatorCheckpointParams, error) {
 	return k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
+}
+
+func (k Keeper) GetValidatorSetTimestampBefore(ctx context.Context, targetTimestamp uint64) (uint64, error) {
+	var mostRecentTimestamp uint64
+
+	rng := new(collections.Range[uint64]).EndExclusive(targetTimestamp).Descending()
+
+	err := k.ValidatorCheckpointParamsMap.Walk(ctx, rng, func(key uint64, value types.ValidatorCheckpointParams) (bool, error) {
+		mostRecentTimestamp = key
+		return true, nil // Stop after finding the first (most recent) timestamp
+	})
+
+	if err != nil {
+		return 0, fmt.Errorf("error walking through ValidatorCheckpointParamsMap: %w", err)
+	}
+
+	if mostRecentTimestamp == 0 {
+		return 0, fmt.Errorf("no validator set timestamp found before %d", targetTimestamp)
+	}
+
+	return mostRecentTimestamp, nil
 }
