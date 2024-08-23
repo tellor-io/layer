@@ -155,7 +155,7 @@ func TestGetDepositQueryId(t *testing.T) {
 }
 
 func TestClaimDeposit(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -184,13 +184,16 @@ func TestClaimDeposit(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(67),
+		ReporterPower:        int64(68),
 	}
+	powerThreshold := uint64(67)
+	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
+	valSetHash := []byte("valSetHash")
+	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	totalBondedTokens := math.NewInt(100)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
-	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
@@ -265,7 +268,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 }
 
 func TestClaimDepositNotEnoughPower(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -295,13 +298,16 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(66),
+		ReporterPower:        int64(65),
 	}
+	powerThreshold := uint64(67)
+	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
+	valSetHash := []byte("valSetHash")
+	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
-	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
@@ -312,7 +318,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 }
 
 func TestClaimDepositReportTooYoung(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -341,13 +347,16 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(90 * 1e6),
+		ReporterPower:        int64(68),
 	}
+	powerThreshold := uint64(67)
+	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
+	valSetHash := []byte("valSetHash")
+	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	totalBondedTokens := math.NewInt(100 * 1e6)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
-	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
@@ -358,7 +367,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 }
 
 func TestClaimDepositSpam(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -387,13 +396,16 @@ func TestClaimDepositSpam(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(67),
+		ReporterPower:        int64(68),
 	}
+	powerThreshold := uint64(67)
+	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
+	valSetHash := []byte("valSetHash")
+	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	totalBondedTokens := math.NewInt(100)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
-	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 

@@ -1019,21 +1019,16 @@ func (k Keeper) GetValidatorCheckpointParamsFromStorage(ctx context.Context, tim
 
 func (k Keeper) GetValidatorSetTimestampBefore(ctx context.Context, targetTimestamp uint64) (uint64, error) {
 	var mostRecentTimestamp uint64
-
 	rng := new(collections.Range[uint64]).EndExclusive(targetTimestamp).Descending()
-
 	err := k.ValidatorCheckpointParamsMap.Walk(ctx, rng, func(key uint64, value types.ValidatorCheckpointParams) (bool, error) {
 		mostRecentTimestamp = key
 		return true, nil // Stop after finding the first (most recent) timestamp
 	})
-
 	if err != nil {
 		return 0, fmt.Errorf("error walking through ValidatorCheckpointParamsMap: %w", err)
 	}
-
 	if mostRecentTimestamp == 0 {
 		return 0, fmt.Errorf("no validator set timestamp found before %d", targetTimestamp)
 	}
-
 	return mostRecentTimestamp, nil
 }

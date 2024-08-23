@@ -13,14 +13,12 @@ import (
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
-	math "cosmossdk.io/math"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgClaimDeposit(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, ctx := setupKeeper(t)
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	require.Panics(t, func() {
@@ -53,13 +51,16 @@ func TestMsgClaimDeposit(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(67),
+		ReporterPower:        int64(68),
 	}
+	powerThreshold := uint64(67)
+	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
+	valSetHash := []byte("valSetHash")
+	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	totalBondedTokens := math.NewInt(100)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
-	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
