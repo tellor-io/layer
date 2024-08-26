@@ -27,11 +27,12 @@ contract TokenBridge is LayerTransition{
         address sender;
         string recipient;
         uint256 amount;
+        uint256 tip;
         uint256 blockHeight;
     }
 
     /*Events*/
-    event Deposit(uint256 _depositId, address _sender, string _recipient, uint256 _amount);
+    event Deposit(uint256 _depositId, address _sender, string _recipient, uint256 _amount, uint256 _tip);
     event Withdrawal(uint256 _depositId, string _sender, address _recipient, uint256 _amount);
 
     /*Functions*/
@@ -63,16 +64,18 @@ contract TokenBridge is LayerTransition{
     }
 
     /// @notice deposits tokens from Ethereum to layer
-    /// @param _amount amount of tokens to bridge over
+    /// @param _amount total amount of tokens to bridge over
+    /// @param _tip amount of tokens to tip the claimDeposit caller on layer
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
-    function depositToLayer(uint256 _amount, string memory _layerRecipient) external {
+    function depositToLayer(uint256 _amount, uint256 _tip, string memory _layerRecipient) external {
         require(_amount > 0, "TokenBridge: amount must be greater than 0");
         require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit for time period");
+        require(_tip <= _amount, "TokenBridge: tip must be less than or equal to amount");
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
         depositLimitRecord -= _amount;
-        deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, block.number);
-        emit Deposit(depositId, msg.sender, _layerRecipient, _amount);
+        deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, _tip, block.number);
+        emit Deposit(depositId, msg.sender, _layerRecipient, _amount, _tip);
     }
 
     /// @notice This withdraws tokens from layer to mainnet Ethereum
@@ -93,7 +96,7 @@ contract TokenBridge is LayerTransition{
         bridge.verifyOracleData(_attestData, _valset, _sigs);
         require(_attestData.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawalClaimed[_depositId] = true;    
-        (address _recipient, string memory _layerSender,uint256 _amountLoya) = abi.decode(_attestData.report.value, (address, string, uint256));
+        (address _recipient, string memory _layerSender,uint256 _amountLoya,) = abi.decode(_attestData.report.value, (address, string, uint256, uint256));
         uint256 _amountConverted = _amountLoya * 1e12; 
         uint256 _depositLimit = _refreshDepositLimit();
         if(_depositLimit < _amountConverted){
