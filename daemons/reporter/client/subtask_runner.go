@@ -2,18 +2,13 @@ package client
 
 import (
 	"context"
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"sync"
 )
 
 type SubTaskRunner interface {
 	RunReporterDaemonTaskLoop(
 		ctx context.Context,
 		client *Client,
-		commitCh chan sdk.Msg,
-		submitCh chan sdk.Msg,
-		broadcasttrigger chan struct{},
 	) error
 }
 
@@ -25,69 +20,47 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 	ctx context.Context,
 	daemonClient *Client,
-	commitCh chan sdk.Msg,
-	submitCh chan sdk.Msg,
-	broadcastTrigger chan struct{},
 ) error {
-	reporterCreated := false
-	conditionCh := make(chan struct{})
+	var bg sync.WaitGroup
 
-	// Check if the reporter is created
-	go func() {
-		for !reporterCreated {
-			reporterCreated = daemonClient.checkReporter(ctx)
-			if reporterCreated {
-				close(conditionCh)
-				err := daemonClient.WaitForNextBlock(ctx)
-				if err != nil {
-					daemonClient.logger.Error("Waiting for next block after creating a reporter", "error", err)
-				}
-			} else {
-				time.Sleep(time.Second)
-			}
-		}
-	}()
-
-	// Wait for the condition to be met before starting the tasks
-	<-conditionCh
+	bg.Add(3)
 
 	go func() {
-		err := daemonClient.generateCommitMessages(ctx, commitCh)
+		err := daemonClient.EthMessages(ctx, &bg)
 		if err != nil {
-			daemonClient.logger.Error("Generating commit messages", "error", err)
+			daemonClient.logger.Error("Generating eth messages", "error", err)
 		}
 	}()
 	go func() {
-		err := daemonClient.generateSubmitMessages(ctx, submitCh)
+		err := daemonClient.BTCMessages(ctx, &bg)
 		if err != nil {
-			daemonClient.logger.Error("Generating submit messages", "error", err)
-		}
-	}()
-	go collectMessages(commitCh, submitCh, broadcastTrigger)
-	go func() {
-		err := daemonClient.generateDepositCommits(commitCh)
-		if err != nil {
-			daemonClient.logger.Error("Generating deposit commits", "error", err)
+			daemonClient.logger.Error("Generating btc messages", "error", err)
 		}
 	}()
 	go func() {
-		err := daemonClient.generateDepositSubmits(ctx, submitCh)
+		err := daemonClient.TRBMessages(ctx, &bg)
 		if err != nil {
-			daemonClient.logger.Error("Generating deposit submits", "error", err)
+			daemonClient.logger.Error("Generating trb messages", "error", err)
 		}
 	}()
+
+	bg.Add(1)
 	go func() {
-		err := daemonClient.generateExternalMessages("unsignedtx.json", broadcastTrigger)
+		err := daemonClient.generateDepositmessages(ctx, &bg)
+		if err != nil {
+			daemonClient.logger.Error("Generating deposit messages", "error", err)
+		}
+	}()
+
+	bg.Add(1)
+	go func() {
+		err := daemonClient.generateExternalMessages(ctx, "unsignedtx.json", &bg)
 		if err != nil {
 			daemonClient.logger.Error("Generating external messages", "error", err)
 		}
 	}()
-	go func() {
-		err := daemonClient.broadcastMessages(ctx, broadcastTrigger)
-		if err != nil {
-			daemonClient.logger.Error("Broadcasting messages", "error", err)
-		}
-	}()
+
+	bg.Wait()
 
 	return nil
 }

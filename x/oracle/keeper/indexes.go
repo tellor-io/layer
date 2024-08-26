@@ -90,27 +90,27 @@ func NewReportsIndex(sb *collections.SchemaBuilder) reportsIndex {
 }
 
 type queryMetaIndex struct {
-	HasReveals *indexes.Multi[bool, []byte, types.QueryMeta]
-	QueryType  *indexes.Multi[string, []byte, types.QueryMeta]
+	HasReveals *indexes.Multi[bool, collections.Pair[[]byte, uint64], types.QueryMeta]
+	QueryType  *indexes.Multi[string, collections.Pair[[]byte, uint64], types.QueryMeta]
 }
 
-func (a queryMetaIndex) IndexesList() []collections.Index[[]byte, types.QueryMeta] {
-	return []collections.Index[[]byte, types.QueryMeta]{a.HasReveals, a.QueryType}
+func (a queryMetaIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], types.QueryMeta] {
+	return []collections.Index[collections.Pair[[]byte, uint64], types.QueryMeta]{a.HasReveals, a.QueryType}
 }
 
 func NewQueryIndex(sb *collections.SchemaBuilder) queryMetaIndex {
 	return queryMetaIndex{
 		HasReveals: indexes.NewMulti(
 			sb, types.QueryRevealedIdsIndexPrefix, "query_by_revealed",
-			collections.BoolKey, collections.BytesKey,
-			func(_ []byte, v types.QueryMeta) (bool, error) {
+			collections.BoolKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			func(_ collections.Pair[[]byte, uint64], v types.QueryMeta) (bool, error) {
 				return v.HasRevealedReports, nil
 			},
 		),
 		QueryType: indexes.NewMulti(
 			sb, types.QueryTypeIndexPrefix, "query_by_type",
-			collections.StringKey, collections.BytesKey,
-			func(_ []byte, v types.QueryMeta) (string, error) {
+			collections.StringKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			func(_ collections.Pair[[]byte, uint64], v types.QueryMeta) (string, error) {
 				return v.QueryType, nil
 			},
 		),

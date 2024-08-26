@@ -664,7 +664,7 @@ func New(
 			// enabled by default, set flag `--reporter-daemon-enabled=false` to false to disable
 			if daemonFlags.Reporter.Enabled {
 				go func() {
-					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName)
+					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName, cast.ToString(appOpts.Get(server.FlagMinGasPrices)))
 					if err := app.ReporterClient.Start(
 						context.Background(),
 						daemonFlags,

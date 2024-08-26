@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	gomath "math"
 	"time"
 
 	"github.com/tellor-io/layer/utils"
@@ -40,7 +41,7 @@ type (
 		Nonces             collections.Map[[]byte, uint64]                                                                      // key: queryId
 		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, reportsIndex] // key: queryId, reporter, query.id
 		QuerySequencer     collections.Sequence
-		Query              *collections.IndexedMap[[]byte, types.QueryMeta, queryMetaIndex]                           // key: queryId
+		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, queryMetaIndex] // key: queryId
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, int64], types.Aggregate, aggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
 		Cyclelist          collections.Map[[]byte, []byte]
 		CyclelistSequencer collections.Sequence
@@ -99,7 +100,7 @@ func NewKeeper(
 		Query: collections.NewIndexedMap(sb,
 			types.QueryTipPrefix,
 			"query",
-			collections.BytesKey,
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			codec.CollValue[types.QueryMeta](cdc),
 			NewQueryIndex(sb),
 		),
@@ -158,6 +159,20 @@ func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.Qu
 	return query, nil
 }
 
+func (k Keeper) CurrentQuery(ctx context.Context, queryId []byte) (query types.QueryMeta, err error) {
+	err = k.Query.Walk(ctx, collections.NewPrefixedPairRange[[]byte, uint64](queryId).EndInclusive(gomath.MaxUint64).Descending(), func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (bool, error) {
+		query = value
+		return true, nil
+	})
+	if err != nil {
+		return types.QueryMeta{}, err
+	}
+	if query.QueryId == nil {
+		return types.QueryMeta{}, collections.ErrNotFound
+	}
+	return query, nil
+}
+
 func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe time.Duration) error {
 	iter, err := k.Query.Indexes.QueryType.MatchExact(ctx, queryType)
 	if err != nil {
@@ -170,7 +185,7 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe 
 	}
 	for _, query := range queries {
 		query.RegistrySpecTimeframe = newTimeframe
-		err = k.Query.Set(ctx, query.QueryId, query)
+		err = k.Query.Set(ctx, collections.Join(query.QueryId, query.Id), query)
 		if err != nil {
 			return err
 		}

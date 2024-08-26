@@ -3,8 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -28,25 +26,17 @@ import (
 
 const defaultGas = uint64(300000)
 
-type commit struct {
-	querydata  []byte
-	value      string
-	salt       string
-	expiration time.Time
+type Commit struct {
+	querydata []byte
+	value     string
+	salt      string
+	Id        uint64
 }
 
 var (
 	commitedIds      = make(map[uint64]bool)
-	idToCommit       = make(map[int64]commit)
-	commitCh         = make(chan sdk.Msg, 10000)
-	submitCh         = make(chan sdk.Msg, 10000)
-	broadcastTrigger = make(chan struct{})
-	bmu              sync.Mutex
-	messagesA        []sdk.Msg
-	messagesB        []sdk.Msg
-	messagesC        []sdk.Msg
 	depositCommitMap = make(map[string]bool)
-	depositMeta      = make(map[string]commit)
+	depositMeta      = make(map[string]Commit)
 )
 
 type Client struct {
@@ -68,14 +58,17 @@ type Client struct {
 	minGasFee string
 	// logger is the logger for the daemon.
 	logger log.Logger
+
+	SubMgr *SubmissionMgr
 }
 
-func NewClient(clctx client.Context, logger log.Logger, accountName string) *Client {
+func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {
 	logger = logger.With("module", "reporter-client")
 	return &Client{
 		AccountName: accountName,
 		cosmosCtx:   clctx,
 		logger:      logger,
+		minGasFee:   valGasMin,
 	}
 }
 
@@ -121,7 +114,7 @@ func (c *Client) Start(
 	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
 	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
 
-	ticker := time.NewTicker(time.Second / 2)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	stop := make(chan bool)
 
 	// get account
@@ -143,6 +136,8 @@ func (c *Client) Start(
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
+
+	c.SubMgr = NewSubmissionManager(c)
 
 	StartReporterDaemonTaskLoop(
 		c,
@@ -166,22 +161,31 @@ func StartReporterDaemonTaskLoop(
 	stop <-chan bool,
 	// ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
+	reporterCreated := false
+	// Check if the reporter is created
+	for !reporterCreated {
+		reporterCreated = client.checkReporter(ctx)
+		if reporterCreated {
+			err := client.SetGasPrice(ctx)
+			if err != nil {
+				client.logger.Error("Setting gas, required before reporter can report", "error", err)
+				reporterCreated = false
+			}
+		} else {
+			time.Sleep(time.Second)
+		}
+	}
+
+	err := client.WaitForNextBlock(ctx)
+	if err != nil {
+		client.logger.Error("Waiting for next block", "error", err)
+	}
 	for {
 		select {
 		case <-ticker.C:
-			gfResponse, err := client.GlobalfeeClient.MinimumGasPrices(ctx, &globalfeetypes.QueryMinimumGasPricesRequest{})
-			if err != nil {
-				if strings.Contains(err.Error(), "layer is not ready") {
-					continue
-				}
-			}
-			client.minGasFee = gfResponse.MinimumGasPrices[0].String()
 			if err := s.RunReporterDaemonTaskLoop(
 				ctx,
 				client,
-				commitCh,
-				submitCh,
-				broadcastTrigger,
 			); err != nil {
 				client.logger.Error("Reporter daemon returned error", "error", err)
 			} else {

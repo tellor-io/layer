@@ -72,6 +72,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{
+					RpcMethod:      "NextCyclelistQuery",
+					Use:            "next-cyclelist-query",
+					Short:          "Query next query in cycle list",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
 					RpcMethod:      "GetCurrentAggregateReport",
 					Use:            "get-current-aggregate-report [query_id]",
 					Short:          "Query current aggregate report",
@@ -82,6 +88,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "get-aggregate-before-by-reporter [query_id] [timestamp] [reporter]",
 					Short:          "Query aggregate before a timestamp by reporter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}, {ProtoField: "reporter"}},
+				},
+				{
+					RpcMethod:      "GetQuery",
+					Use:            "get-query [query_id] [id]",
+					Short:          "Query to get query metadata",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "id"}},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},

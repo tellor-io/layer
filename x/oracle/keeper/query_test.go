@@ -52,7 +52,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 		AggregateValue:       "10_000",
 		AggregateReporter:    "reporter1",
 		ReporterPower:        int64(100),
-		StandardDeviation:    float64(0),
+		StandardDeviation:    "0",
 		Reporters:            []*types.AggregateReporter{{}},
 		Flagged:              false,
 		Index:                uint64(0),

@@ -1,7 +1,7 @@
 {
   "app_name": "layer",
   "app_version": "",
-  "genesis_time": "2024-07-24T03:12:27.056696Z",
+  "genesis_time": "2024-08-17T16:02:20.128111Z",
   "chain_id": "layer",
   "initial_height": 1,
   "app_hash": null,
@@ -243,6 +243,16 @@
         }
       ]
     },
+    "globalfee": {
+      "params": {
+        "minimum_gas_prices": [
+          {
+            "denom": "loya",
+            "amount": "0.002500000000000000"
+          }
+        ]
+      }
+    },
     "gov": {
       "starting_proposal_id": "1",
       "deposits": [],
@@ -380,7 +390,7 @@
         ],
         "aggregation_method": "weighted-median",
         "registrar": "genesis",
-        "report_buffer_window": "0s"
+        "report_buffer_window": "2s"
       }
     },
     "reporter": {

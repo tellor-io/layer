@@ -37,7 +37,7 @@ func ReturnTestQueryMeta(tip math.Int) types.QueryMeta {
 
 func (s *KeeperTestSuite) TestGetQueryTip() {
 	queryMeta := ReturnTestQueryMeta(math.NewInt(1 * 1e6))
-	s.NoError(s.oracleKeeper.Query.Set(s.ctx, queryMeta.QueryId, queryMeta))
+	s.NoError(s.oracleKeeper.Query.Set(s.ctx, collections.Join(queryMeta.QueryId, queryMeta.Id), queryMeta))
 
 	// test with a valid queryId
 	res, err := s.oracleKeeper.GetQueryTip(s.ctx, queryMeta.QueryId)

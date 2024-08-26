@@ -1,21 +1,35 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (c *Client) generateDepositCommits(commitCh chan<- sdk.Msg) error {
+// cycle list
+const (
+	ethQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	btcQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	trbQueryData = "0x00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+)
+
+var (
+	eth, _ = utils.QueryBytesFromString(ethQueryData)
+	btc, _ = utils.QueryBytesFromString(btcQueryData)
+	trb, _ = utils.QueryBytesFromString(trbQueryData)
+)
+
+func (c *Client) generateDepositmessages(ctx context.Context, bg *sync.WaitGroup) error {
+	defer bg.Done()
 	depositQuerydata, value, err := c.deposits()
 	if err != nil {
 		return fmt.Errorf("error getting deposits: %w", err)
@@ -26,163 +40,47 @@ func (c *Client) generateDepositCommits(commitCh chan<- sdk.Msg) error {
 		if err != nil {
 			return fmt.Errorf("error generating salt: %w", err)
 		}
-		fmt.Println("Salt:", salt)
-		fmt.Println("Value:", value)
-		fmt.Println("Hash: ")
 		hash := oracleutils.CalculateCommitment(value, salt)
 		msgCommit := &oracletypes.MsgCommitReport{
 			Creator:   c.accAddr.String(),
 			QueryData: depositQuerydata,
 			Hash:      hash,
 		}
-		commitCh <- msgCommit
-
+		resp, err := c.sendTx(ctx, msgCommit)
+		if err != nil {
+			return fmt.Errorf("error sending tx: %w", err)
+		}
+		fmt.Println("response after deposit commit message", resp.TxResult.Code)
+		fmt.Println("deposit commit transaction hash", resp.Hash.String())
+		commitId, err := getcommitId(resp.TxResult.Events)
+		if err != nil {
+			return fmt.Errorf("error getting commit id from response: %w", err)
+		}
+		fmt.Println("commit id", commitId)
 		depositCommitMap[queryId] = true
-		depositMeta[queryId] = commit{
-			querydata:  depositQuerydata,
-			value:      value,
-			salt:       salt,
-			expiration: time.Now().Add(time.Hour), // todo: have to change this to make it accurate
+		commit := Commit{
+			querydata: depositQuerydata,
+			value:     value,
+			salt:      salt,
+			Id:        commitId,
 		}
-	}
-	return nil
-}
-
-func (c *Client) generateDepositSubmits(ctx context.Context, submitCh chan<- sdk.Msg) error {
-	for id, commit := range depositMeta {
+		queryresp, err := c.OracleQueryClient.GetQuery(ctx, &oracletypes.QueryGetQueryRequest{QueryId: queryId, Id: commitId})
+		if err != nil {
+			return fmt.Errorf("error getting query meta: %w", err)
+		}
 		block, err := c.cosmosCtx.Client.Block(ctx, nil)
 		if err != nil {
 			return fmt.Errorf("error getting block: %w", err)
 		}
-		blockTime := block.Block.Header.Time
-		commitWindowExpired := commit.expiration.Before(blockTime)
-		inrevealWindow := commit.expiration.Add(time.Second * 3).After(blockTime)
-
-		if commitWindowExpired && inrevealWindow {
-			msg := &oracletypes.MsgSubmitValue{
-				Creator:   c.accAddr.String(),
-				QueryData: commit.querydata,
-				Value:     commit.value,
-				Salt:      commit.salt,
-			}
-
-			submitCh <- msg
-			delete(depositMeta, id)
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) generateCommitMessages(ctx context.Context, commitCh chan<- sdk.Msg) error {
-	querydata, querymeta, err := c.CurrentQuery(ctx)
-	if err != nil {
-		return fmt.Errorf("error calling 'CurrentQuery': %w", err)
-	}
-
-	if !commitedIds[querymeta.Id] {
-		value, err := c.median(querydata)
-		if err != nil {
-			return fmt.Errorf("error getting median from median client': %w", err)
-		}
-		salt, err := oracleutils.Salt(32)
-		if err != nil {
-			return fmt.Errorf("error generating salt: %w", err)
-		}
-		fmt.Println("Salt:", salt)
-		fmt.Println("Value:", value)
-		fmt.Println("Hash: ")
-		hash := oracleutils.CalculateCommitment(value, salt)
-		fmt.Println("Hash: ", hash)
-		commitmsg := &oracletypes.MsgCommitReport{
-			Creator:   c.accAddr.String(),
-			QueryData: querydata,
-			Hash:      hash,
-		}
-
-		commitCh <- commitmsg
-
-		commitedIds[querymeta.Id] = true
-		idToCommit[int64(querymeta.Id)] = commit{
-			querydata:  querydata,
-			value:      value,
-			salt:       salt,
-			expiration: querymeta.Expiration,
-		}
-
-	}
-
-	return nil
-}
-
-func (c *Client) generateSubmitMessages(ctx context.Context, submitCh chan<- sdk.Msg) error {
-	for id, commit := range idToCommit {
-		block, err := c.cosmosCtx.Client.Block(ctx, nil)
-		if err != nil {
-			return fmt.Errorf("error getting block: %w", err)
-		}
-		blockTime := block.Block.Header.Time
-		commitWindowExpired := commit.expiration.Before(blockTime)
-		inrevealWindow := commit.expiration.Add(time.Second * 3).After(blockTime)
-
-		if commitWindowExpired && inrevealWindow {
-			msg := &oracletypes.MsgSubmitValue{
-				Creator:   c.accAddr.String(),
-				QueryData: commit.querydata,
-				Value:     commit.value,
-				Salt:      commit.salt,
-			}
-
-			submitCh <- msg
-			delete(idToCommit, id)
-		}
-	}
-
-	return nil
-}
-
-func collectMessages(chA, submitCh <-chan sdk.Msg, broadcastTrigger chan<- struct{}) {
-	for {
-		select {
-		case msg := <-chA:
-			bmu.Lock()
-			messagesA = append(messagesA, msg)
-			bmu.Unlock()
-
-			broadcastTrigger <- struct{}{} // Trigger broadcast
-
-		case msg := <-submitCh:
-			bmu.Lock()
-			messagesB = append(messagesB, msg)
-			broadcastTrigger <- struct{}{}
-			bmu.Unlock()
-		}
-	}
-}
-
-func (c *Client) broadcastMessages(ctx context.Context, broadcastTrigger <-chan struct{}) error {
-	for range broadcastTrigger {
-		bmu.Lock()
-		if len(messagesA) > 0 || len(messagesB) > 0 || len(messagesC) > 0 {
-			combinedMessages := append(messagesA, messagesB...)
-			combinedMessages = append(combinedMessages, messagesC...)
-			fmt.Println("Combined messages:", combinedMessages)
-			_, seq, _ := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
-			err := c.sendTx(ctx, combinedMessages, seq)
-			if err != nil {
-				return fmt.Errorf("error sending tx: %w", err)
-			}
-
-			messagesA = []sdk.Msg{}
-			messagesB = []sdk.Msg{}
-			messagesC = []sdk.Msg{}
-		}
-		bmu.Unlock()
+		expiry := block.Block.Time.Sub(queryresp.Query.Expiration)
+		// add error handling
+		c.SubMgr.AddDepositCommit(ctx, queryId, commit, expiry)
 	}
 	return nil
 }
 
-func (c *Client) generateExternalMessages(filepath string, trigger chan<- struct{}) error {
+func (c *Client) generateExternalMessages(ctx context.Context, filepath string, bg *sync.WaitGroup) error {
+	defer bg.Done()
 	jsonFile, err := os.ReadFile(filepath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -199,13 +97,177 @@ func (c *Client) generateExternalMessages(filepath string, trigger chan<- struct
 	}
 	msgs := tx.GetMsgs()
 
-	bmu.Lock()
-	messagesC = msgs
-	fmt.Println("External message:", msgs)
-	bmu.Unlock()
-	if len(messagesC) > 0 {
-		trigger <- struct{}{}
+	resp, err := c.sendTx(ctx, msgs...)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
 	}
+	fmt.Println("response after external message", resp.TxResult.Code)
+
+	return nil
+}
+
+func (c *Client) EthMessages(ctx context.Context, bg *sync.WaitGroup) error {
+	defer bg.Done()
+	querydata, querymeta, err := c.CurrentQuery(ctx)
+	if err != nil {
+		// log error
+		c.logger.Error("getting current eth query", "error", err)
+	}
+	for !bytes.Equal(querydata, eth) || commitedIds[querymeta.Id] {
+		time.Sleep(time.Millisecond * 500)
+		querydata, querymeta, err = c.CurrentQuery(ctx)
+		if err != nil {
+			// log error
+			c.logger.Error("getting current eth query on recursion", "error", err)
+		}
+	}
+	value, err := c.median(querydata)
+	if err != nil {
+		return fmt.Errorf("error getting median from median client': %w", err)
+	}
+	salt, err := oracleutils.Salt(32)
+	if err != nil {
+		return fmt.Errorf("error generating salt: %w", err)
+	}
+
+	hash := oracleutils.CalculateCommitment(value, salt)
+	commitmsg := &oracletypes.MsgCommitReport{
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+
+	resp, err := c.sendTx(ctx, commitmsg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response code after commit message", resp.TxResult.Code)
+
+	time.Sleep(querymeta.RegistrySpecTimeframe)
+	msg := &oracletypes.MsgSubmitValue{
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+		CommitId:  querymeta.Id,
+	}
+
+	resp, err = c.sendTx(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response after submit message", resp.TxResult.Code)
+	commitedIds[querymeta.Id] = true
+	return nil
+}
+
+func (c *Client) TRBMessages(ctx context.Context, bg *sync.WaitGroup) error {
+	defer bg.Done()
+	querydata, querymeta, err := c.CurrentQuery(ctx)
+	if err != nil {
+		// log error
+		c.logger.Error("getting current trb query", "error", err)
+	}
+
+	for !bytes.Equal(querydata, trb) || commitedIds[querymeta.Id] {
+		time.Sleep(time.Millisecond * 500)
+		querydata, querymeta, err = c.CurrentQuery(ctx)
+		if err != nil {
+			// log error
+			c.logger.Error("getting current trb query on recursion", "error", err)
+		}
+	}
+
+	value, err := c.median(querydata)
+	if err != nil {
+		return fmt.Errorf("error getting median from median client': %w", err)
+	}
+	salt, err := oracleutils.Salt(32)
+	if err != nil {
+		return fmt.Errorf("error generating salt: %w", err)
+	}
+
+	hash := oracleutils.CalculateCommitment(value, salt)
+	commitmsg := &oracletypes.MsgCommitReport{
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+
+	resp, err := c.sendTx(ctx, commitmsg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response after commit message", resp.TxResult.Code)
+	time.Sleep(querymeta.RegistrySpecTimeframe)
+	msg := &oracletypes.MsgSubmitValue{
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+		CommitId:  querymeta.Id,
+	}
+
+	resp, err = c.sendTx(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response after submit message", resp.TxResult.Code)
+	commitedIds[querymeta.Id] = true
+	return nil
+}
+
+func (c *Client) BTCMessages(ctx context.Context, bg *sync.WaitGroup) error {
+	defer bg.Done()
+	querydata, querymeta, err := c.CurrentQuery(ctx)
+	if err != nil {
+		// log error
+		c.logger.Error("getting current btc query", "error", err)
+	}
+	for !bytes.Equal(querydata, btc) || commitedIds[querymeta.Id] {
+		time.Sleep(time.Millisecond * 500)
+		querydata, querymeta, err = c.CurrentQuery(ctx)
+		if err != nil {
+			// log error
+			c.logger.Error("getting current btc query on recursion", "error", err)
+		}
+	}
+	value, err := c.median(querydata)
+	if err != nil {
+		return fmt.Errorf("error getting median from median client': %w", err)
+	}
+	salt, err := oracleutils.Salt(32)
+	if err != nil {
+		return fmt.Errorf("error generating salt: %w", err)
+	}
+
+	hash := oracleutils.CalculateCommitment(value, salt)
+	commitmsg := &oracletypes.MsgCommitReport{
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
+		Hash:      hash,
+	}
+
+	resp, err := c.sendTx(ctx, commitmsg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response after commit message", resp.TxResult.Code)
+	time.Sleep(querymeta.RegistrySpecTimeframe)
+	msg := &oracletypes.MsgSubmitValue{
+		Creator:   c.accAddr.String(),
+		QueryData: querydata,
+		Value:     value,
+		Salt:      salt,
+		CommitId:  querymeta.Id,
+	}
+
+	resp, err = c.sendTx(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response after submit message", resp.TxResult.Code)
+	commitedIds[querymeta.Id] = true
 
 	return nil
 }

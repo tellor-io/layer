@@ -76,7 +76,7 @@ func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 		AggregateValue:       hex.EncodeToString(reportValue),
 		AggregateReporter:    "",
 		ReporterPower:        reporterPower,
-		StandardDeviation:    0,
+		StandardDeviation:    "0",
 		Reporters:            nil,
 		Flagged:              false,
 		Index:                0,

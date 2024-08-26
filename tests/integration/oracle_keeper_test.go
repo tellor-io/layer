@@ -138,8 +138,9 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	value := testutil.EncodeValue(29266)
 	hash := oracleutils.CalculateCommitment(value, salt)
 	commit, reveal := report(repAccs[0].String(), value, salt, hash, ethQueryData)
-	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
+	resp, err := msgServer.CommitReport(s.Setup.Ctx, &commit)
 	s.Nil(err)
+	reveal.CommitId = resp.CommitId
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
@@ -275,8 +276,9 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			hash := oracleutils.CalculateCommitment(r.value, salt)
 			s.Nil(err)
 			commit, reveal := report(repAccs[i].String(), r.value, salt, hash, ethQueryData)
-			_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
+			resp, err := msgServer.CommitReport(s.Setup.Ctx, &commit)
 			s.Nil(err)
+			reveal.CommitId = resp.CommitId
 			_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 			s.Nil(err)
 		})
@@ -285,6 +287,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.Nil(err)
+	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	// check median
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
@@ -577,18 +580,20 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	hash := oracleutils.CalculateCommitment(value, salt)
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	msgCommitReport := types.MsgCommitReport{
 		Creator:   reporter1.String(),
 		QueryData: querydata,
 		Hash:      hash,
 	}
-	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	resp, err := msgServer.CommitReport(ctx, &msgCommitReport)
 	s.NoError(err)
 	msgSubmitValue := types.MsgSubmitValue{
 		Creator:   reporter1.String(),
 		QueryData: querydata,
 		Value:     value,
 		Salt:      salt,
+		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -597,18 +602,20 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	msgCommitReport = types.MsgCommitReport{
 		Creator:   reporter2.String(),
 		QueryData: querydata,
 		Hash:      hash,
 	}
-	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
 	s.NoError(err)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter2.String(),
 		QueryData: querydata,
 		Value:     value,
 		Salt:      salt,
+		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -617,18 +624,20 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	msgCommitReport = types.MsgCommitReport{
 		Creator:   reporter3.String(),
 		QueryData: querydata,
 		Hash:      hash,
 	}
-	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
 	s.NoError(err)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter3.String(),
 		QueryData: querydata,
 		Value:     value,
 		Salt:      salt,
+		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -639,6 +648,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	agg, _, err := ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.Error(err)
 	s.Nil(agg)
@@ -648,13 +658,14 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 		QueryData: querydata,
 		Hash:      hash,
 	}
-	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
 	s.NoError(err)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter4.String(),
 		QueryData: querydata,
 		Value:     value,
 		Salt:      salt,
+		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -664,6 +675,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 4)
@@ -674,13 +686,14 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 		QueryData: querydata,
 		Hash:      hash,
 	}
-	_, err = msgServer.CommitReport(ctx, &msgCommitReport)
+	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
 	s.NoError(err)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter5.String(),
 		QueryData: querydata,
 		Value:     value,
 		Salt:      salt,
+		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -721,7 +734,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-
+	_, _ = app.EndBlocker(ctx)
 	msgSubmitValue := types.MsgSubmitValue{
 		Creator:   reporter1.String(),
 		QueryData: querydata,
@@ -734,7 +747,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-
+	_, _ = app.EndBlocker(ctx)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter2.String(),
 		QueryData: querydata,
@@ -747,7 +760,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
-
+	_, _ = app.EndBlocker(ctx)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter3.String(),
 		QueryData: querydata,
@@ -762,6 +775,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	agg, _, err := ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.Error(err)
 	s.Nil(agg)
@@ -779,6 +793,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
+	_, _ = app.EndBlocker(ctx)
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 4)
@@ -807,6 +822,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	s.NoError(s.Setup.Oraclekeeper.RotateQueries(s.Setup.Ctx))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
@@ -846,7 +862,7 @@ func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	// commit report with query data not in cycle list and has no tip
 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData3)
 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-	s.ErrorContains(err, "query not part of cyclelist")
+	s.ErrorContains(err, "query doesn't exist plus not a bridge deposit: not a token deposit")
 }
 
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
@@ -885,10 +901,10 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	reporterPower := int64(1)
 	value := []string{"000001"}
 	reports := testutil.GenerateReports(repAccs, value, []int64{reporterPower}, queryId)
-	query, err := s.Setup.Oraclekeeper.Query.Get(s.Setup.Ctx, queryId)
+	query, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
-	s.Nil(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, queryId, query))
+	s.Nil(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryId, query.Id), query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
@@ -963,10 +979,10 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	reporterPower2 := int64(2)
 	value := []string{"000001", "000002"}
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []int64{reporterPower, reporterPower2}, queryId)
-	query, err := s.Setup.Oraclekeeper.Query.Get(s.Setup.Ctx, queryId)
+	query, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, queryId, query))
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryId, query.Id), query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[1].Bytes(), query.Id), reports[1])

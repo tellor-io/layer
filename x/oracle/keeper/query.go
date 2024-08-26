@@ -74,3 +74,15 @@ func (k Querier) GetAggregateBeforeByReporter(ctx context.Context, req *types.Qu
 	}
 	return &types.QueryGetAggregateBeforeByReporterResponse{Aggregate: aggregate}, nil
 }
+
+func (k Querier) GetQuery(ctx context.Context, req *types.QueryGetQueryRequest) (*types.QueryGetQueryResponse, error) {
+	queryId, err := utils.QueryBytesFromString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid queryId")
+	}
+	query, err := k.keeper.Query.Get(ctx, collections.Join(queryId, req.Id))
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryGetQueryResponse{Query: &query}, nil
+}

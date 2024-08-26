@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: rep1.String(),
 		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Int64(),
-		StandardDeviation: 0.3,
+		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: rep1.String(), Power: 100000000}, {Reporter: rep2.String(), Power: 100000000}},
 		Flagged:           false,
 		Height:            10,
@@ -105,7 +105,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 		QueryType:             "SpotPrice",
 	}
 
-	err := s.oracleKeeper.Query.Set(ctx, queryData.QueryId, queryData)
+	err := s.oracleKeeper.Query.Set(ctx, collections.Join(queryData.QueryId, queryData.Id), queryData)
 	s.NoError(err)
 
 	val := encodeValue(1.00)
@@ -152,10 +152,9 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	reporter_four_balance := s.bankKeeper.GetBalance(ctx, rep4, "loya")
 	s.True(reporter_four_balance.Amount.GTE(div4_totalTip))
 
-	res_query, err := s.oracleKeeper.Query.Get(ctx, queryData.QueryId)
-	s.NoError(err)
-	s.Equal(false, res_query.HasRevealedReports)
-	s.Equal(math.ZeroInt(), res_query.Amount)
+	res_query, err := s.oracleKeeper.Query.Get(ctx, collections.Join(queryData.QueryId, queryData.Id))
+	s.ErrorIs(err, collections.ErrNotFound)
+	s.Equal(types.QueryMeta{}, res_query)
 
 	aggregate, _, err := s.oracleKeeper.GetCurrentAggregateReport(ctx, []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"))
 	s.NoError(err)
@@ -175,7 +174,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: reporter.String(),
 		ReporterPower:     100000000,
-		StandardDeviation: 0.3,
+		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: reporter.String(), Power: 100000000}},
 		Flagged:           false,
 	}

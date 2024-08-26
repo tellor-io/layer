@@ -53,40 +53,47 @@ fi
   done
 
   VAL_ADDRESS=$(layerd keys show "${MONIKER}" --keyring-backend test --bech=val --home  ${LAYERD_NODE_HOME} --keyring-dir ${LAYERD_NODE_HOME} -a)
-  # keep retrying to create a validator
-  while true
-  do
-    # create validator
-    layerd tx staking create-validator /${LAYERD_NODE_HOME}/${MONIKER}.json \
-    --chain-id="layer" \
-    --from="${MONIKER}" \
-    --keyring-backend="test" \
-    --home="${LAYERD_NODE_HOME}" \
-    --keyring-dir="${LAYERD_NODE_HOME}" \
-    --yes
-    output=$(layerd query staking validator "${VAL_ADDRESS}" 2>/dev/null)
-    if [[ -n "${output}" ]] ; then
-      break
-    fi
-    echo "trying to create validator..."
-    sleep 1s
-  done
+
+while true
+do
+  # check if the validator already exists
+  output=$(layerd query staking validator "${VAL_ADDRESS}" 2>/dev/null)
+  if [[ -n "${output}" ]] ; then
+    echo "Validator already exists."
+    break
+  fi
+
+  # create validator
+  layerd tx staking create-validator /${LAYERD_NODE_HOME}/${MONIKER}.json \
+  --chain-id="layer" \
+  --from="${MONIKER}" \
+  --keyring-backend="test" \
+  --home="${LAYERD_NODE_HOME}" \
+  --keyring-dir="${LAYERD_NODE_HOME}" \
+  --gas-prices="1loya" \
+  --yes
+
+  echo "trying to create validator..."
+  sleep 1s
+done
+
 
   REPORTER=$(layerd keys show "${MONIKER}" --keyring-backend test --home  ${LAYERD_NODE_HOME} --keyring-dir ${LAYERD_NODE_HOME} -a)
   while true
   do
-  layerd tx reporter create-reporter "${COMMISSION_RATE}" "${MIN_TOKENS_REQUIRED}"  \
-  --from=${MONIKER} \
-  --keyring-backend="test" \
-  --keyring-dir="${LAYERD_NODE_HOME}" \
-  --chain-id="layer" \
-  --yes
 
   selector=$(layerd query reporter selector-reporter "${REPORTER}" 2>/dev/null)
     if [[ -n "${selector}" ]] ; then
       break
     fi
     echo "trying to create reporter..."
+    layerd tx reporter create-reporter "${COMMISSION_RATE}" "${MIN_TOKENS_REQUIRED}"  \
+  --from=${MONIKER} \
+  --keyring-backend="test" \
+  --keyring-dir="${LAYERD_NODE_HOME}" \
+  --chain-id="layer" \
+  --gas-prices="1loya" \
+  --yes
     sleep 1s
   done
 } &

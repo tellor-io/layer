@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   core0:
     user: "0:0"

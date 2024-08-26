@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) TestGetCycleList() {
 func (s *KeeperTestSuite) TestRotateQueries() {
 	require := s.Require()
 	k := s.oracleKeeper
-
+	s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(regtypes.DataSpec{}, nil)
 	list, err := k.GetCyclelist(s.ctx)
 	require.NoError(err)
 

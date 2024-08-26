@@ -29,18 +29,22 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		return err
 	}
 
-	defer idsIterator.Close()
-	queries, err := indexes.CollectValues(ctx, k.Query, idsIterator)
-	if err != nil {
-		return err
-	}
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
 
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
-	for _, query := range queries {
+
+	defer idsIterator.Close()
+	for ; idsIterator.Valid(); idsIterator.Next() {
+		key, err := idsIterator.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		query, err := k.Query.Get(ctx, key)
+		if err != nil {
+			return err
+		}
 		if query.Expiration.Add(offset).Before(blockTime) {
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
 			if err != nil {
@@ -78,9 +82,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			if reports[0].Cyclelist {
 				reportersToPay = append(reportersToPay, report.Reporters...)
 			}
-
-			query.HasRevealedReports = false
-			err = k.Query.Set(ctx, query.QueryId, query)
+			err = k.Query.Remove(ctx, key)
 			if err != nil {
 				return err
 			}
@@ -88,10 +90,10 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	}
 
 	// Process time-based rewards for reporters.
-	tbr := k.GetTimeBasedRewards(ctx)
 	if len(reportersToPay) == 0 {
 		return nil
 	}
+	tbr := k.GetTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
 	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }
@@ -117,7 +119,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 			"aggregate_report",
 			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
 			sdk.NewAttribute("value", report.AggregateValue),
-			sdk.NewAttribute("standard_deviation", fmt.Sprintf("%f", report.StandardDeviation)),
+			sdk.NewAttribute("standard_deviation", report.StandardDeviation),
 			sdk.NewAttribute("number_of_reporters", fmt.Sprintf("%d", len(report.Reporters))),
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),

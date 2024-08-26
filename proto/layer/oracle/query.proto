@@ -61,6 +61,11 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/current_cyclelist_query";
   }
 
+  // Queries a list of NextCyclelistQuery items.
+  rpc NextCyclelistQuery(QueryNextCyclelistQueryRequest) returns (QueryNextCyclelistQueryResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/next_cyclelist_query";
+  }
+
   rpc RetrieveData(QueryRetrieveDataRequest) returns (QueryRetrieveDataResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/retrieve_data/{query_id}/{timestamp}";
   }
@@ -69,6 +74,9 @@ service Query {
   }
   rpc GetAggregateBeforeByReporter(QueryGetAggregateBeforeByReporterRequest) returns (QueryGetAggregateBeforeByReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregate_before_by_reporter/{query_id}/{timestamp}/{reporter}";
+  }
+  rpc GetQuery(QueryGetQueryRequest) returns (QueryGetQueryResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_query/{query_id}/{id}";
   }
 }
 
@@ -156,6 +164,13 @@ message QueryCurrentCyclelistQueryResponse {
   QueryMeta query_meta = 2;
 }
 
+message QueryNextCyclelistQueryRequest {}
+
+message QueryNextCyclelistQueryResponse {
+  string query_data = 1;
+  QueryMeta query_meta = 2;
+}
+
 message QueryRetrieveDataRequest {
   string query_id = 1;
   int64 timestamp = 2;
@@ -193,4 +208,18 @@ message QueryGetAggregateBeforeByReporterRequest {
 message QueryGetAggregateBeforeByReporterResponse {
   // aggregate defines the aggregate report.
   Aggregate aggregate = 1;
+}
+
+// QueryGetQueryRequest is the request type for the Query/GetQuery RPC method.
+message QueryGetQueryRequest {
+  // query_id defines the query id hex string.
+  string query_id = 1;
+  // id defines the query id.
+  uint64 id = 2;
+}
+
+// QueryGetQueryResponse is the response type for the Query/GetQuery RPC method.
+message QueryGetQueryResponse {
+  // query defines the query.
+  QueryMeta query = 1;
 }

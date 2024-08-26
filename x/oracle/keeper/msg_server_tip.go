@@ -34,7 +34,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
 	// get query info for the query id
-	query, err := k.keeper.Query.Get(ctx, queryId)
+	query, err := k.keeper.CurrentQuery(ctx, queryId)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
@@ -57,7 +57,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
 		// in aggregate you set revealed reports to false after pay out
 		// so if query either has reports or is paid out then new id should be generated
-		if query.HasRevealedReports || prevAmt.IsZero() {
+		if prevAmt.IsZero() {
 			id, err := k.keeper.QuerySequencer.Next(ctx)
 			if err != nil {
 				return nil, err
@@ -65,9 +65,10 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			query.Id = id
 			query.Amount = tip.Amount
 			query.HasRevealedReports = false
+			query.CycleList = false
 		}
 	}
-	err = k.keeper.Query.Set(ctx, queryId, query)
+	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"golang.org/x/text/cases"
@@ -24,8 +25,9 @@ func GenesisDataSpec() DataSpec {
 			{Name: "asset", FieldType: "string"},
 			{Name: "currency", FieldType: "string"},
 		},
-		AggregationMethod: "weighted-median",
-		Registrar:         "genesis",
+		AggregationMethod:  "weighted-median",
+		Registrar:          "genesis",
+		ReportBufferWindow: time.Second * 2,
 	}
 }
 

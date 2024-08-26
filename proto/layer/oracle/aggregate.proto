@@ -18,7 +18,7 @@ message Aggregate {
   // reporter_power is the power of the reporter
   int64 reporter_power = 4;
   // standard_deviation is the standard deviation of the reports that were aggregated
-  double standard_deviation = 5;
+  string standard_deviation = 5;
   // list of reporters that were included in the aggregate
   repeated AggregateReporter reporters = 6;
   // flagged is true if the aggregate was flagged by a dispute
