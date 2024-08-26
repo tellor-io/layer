@@ -138,3 +138,16 @@ func (k Querier) SpaceAvailableByReporter(ctx context.Context, req *types.QueryS
 	remaining := int(params.MaxSelectors) - count
 	return &types.QuerySpaceAvailableByReporterResponse{SpaceAvailable: int32(remaining)}, nil
 }
+
+func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTipsRequest) (*types.QueryAvailableTipsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	selectorAcc := sdk.MustAccAddressFromBech32(req.SelectorAddress)
+
+	rewards, err := k.Keeper.SelectorTips.Get(ctx, selectorAcc)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryAvailableTipsResponse{AvailableTips: rewards}, nil
+}
