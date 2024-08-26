@@ -68,9 +68,12 @@ contract TokenBridge is LayerTransition{
     /// @param _tip amount of tokens to tip the claimDeposit caller on layer
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, uint256 _tip, string memory _layerRecipient) external {
-        require(_amount > 0, "TokenBridge: amount must be greater than 0");
+        require(_amount > 0.1 ether, "TokenBridge: amount must be greater than 0.1 tokens");
         require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit for time period");
         require(_tip <= _amount, "TokenBridge: tip must be less than or equal to amount");
+        if (_tip > 0) {
+            require(_tip >= 1e12, "TokenBridge: tip must be greater than or equal to 1 loya");
+        }
         require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridge: transferFrom failed");
         depositId++;
         depositLimitRecord -= _amount;

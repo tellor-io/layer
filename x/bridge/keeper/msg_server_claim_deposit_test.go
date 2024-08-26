@@ -40,11 +40,13 @@ func TestMsgClaimDeposit(t *testing.T) {
 		{Type: AddressType},
 		{Type: StringType},
 		{Type: Uint256Type},
+		{Type: Uint256Type},
 	}
 	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
 	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
 	amountUint64 := big.NewInt(100 * 1e12)
-	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	tipAmountUint64 := big.NewInt(1 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64, tipAmountUint64)
 	require.NoError(t, err)
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
@@ -56,18 +58,22 @@ func TestMsgClaimDeposit(t *testing.T) {
 		ReporterPower:        int64(67),
 	}
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
-	recipient, amount, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	// convert ethAddress (common.Address) to sdk.Address
+	msgSender := sdk.AccAddress(ethAddress.Bytes())
+	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100)
+	claimAmount := amount.Sub(tip...)
 	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
-	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, claimAmount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, msgSender, tip).Return(err)
 
 	depositId := uint64(0)
 	reportIndex := uint64(0)
 
 	result, err := msgServer.ClaimDeposit(sdkCtx, &bridgetypes.MsgClaimDepositRequest{
-		Creator:   ethAddress.String(),
+		Creator:   msgSender.String(),
 		DepositId: depositId,
 		Index:     reportIndex,
 	})
