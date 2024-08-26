@@ -100,6 +100,7 @@ type DepositReceipt struct {
 	Sender      common.Address
 	Recipient   string
 	Amount      *big.Int
+	Tip         *big.Int
 	BlockHeight *big.Int
 }
 
@@ -144,7 +145,7 @@ func (c *Client) InitializeDeposits() error {
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x1AaF421491171930e71fb032B765DF252CE3F97e")
+	contractAddress := common.HexToAddress("0x108C4c3d369bC5BE6305090b8A88dD5Af724fdA3")
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
@@ -235,6 +236,7 @@ func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error)
 		Sender:      depositDetails.Sender,
 		Recipient:   depositDetails.Recipient,
 		Amount:      depositDetails.Amount,
+		Tip:         depositDetails.Tip,
 		BlockHeight: depositDetails.BlockHeight,
 	}
 
@@ -332,10 +334,11 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error
 		{Type: AddressType},
 		{Type: StringType},
 		{Type: Uint256Type},
+		{Type: Uint256Type},
 	}
 
 	// encode report value arguments
-	reportValueArgsEncoded, err := reportValueArgs.Pack(depositReceipt.Sender, depositReceipt.Recipient, depositReceipt.Amount)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(depositReceipt.Sender, depositReceipt.Recipient, depositReceipt.Amount, depositReceipt.Tip)
 	if err != nil {
 		return nil, err
 	}
