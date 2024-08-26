@@ -142,7 +142,7 @@ func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
 }
 
 // replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount, uint256 tip))
-func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, tip sdk.Coins, err error) {
+func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount, tip sdk.Coins, err error) {
 	// prepare decoding
 	AddressType, err := abi.NewType("address", "", nil)
 	if err != nil {
@@ -156,14 +156,12 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 	if err != nil {
 		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
-
 	reportValueArgs := abi.Arguments{
 		{Type: AddressType},
 		{Type: StringType},
 		{Type: Uint256Type},
 		{Type: Uint256Type},
 	}
-
 	// decode report value
 	reportValueBytes, err := hex.DecodeString(reportValue)
 	if err != nil {
@@ -175,7 +173,6 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to decode report value, err: %w", err))
 		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
-
 	recipientString := reportValueDecoded[1].(string)
 	amountBigInt := reportValueDecoded[2].(*big.Int)
 	tipBigInt := reportValueDecoded[3].(*big.Int)
@@ -185,13 +182,10 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to convert layer recipient to cosmos address, err: %w", err))
 		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
-
 	amountDecimalConverted := amountBigInt.Div(amountBigInt, big.NewInt(1e12))
 	tipDecimalConverted := tipBigInt.Div(tipBigInt, big.NewInt(1e12))
-
 	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted.Int64())
 	amountCoins := sdk.NewCoins(amountCoin)
-
 	tipCoin := sdk.NewInt64Coin(layer.BondDenom, tipDecimalConverted.Int64())
 	tipCoins := sdk.NewCoins(tipCoin)
 
