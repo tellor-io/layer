@@ -75,7 +75,7 @@ echo "ALICE: $ALICE"
 
 # Create a tx to give alice loyas to stake
 echo "Adding genesis account for alice..."
-./layerd genesis add-genesis-account $ALICE 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+./layerd genesis add-genesis-account $ALICE 1000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 # Create a tx to give faucet loyas to have on hold to give to users
 echo "Adding genesis account for alice..."
@@ -84,6 +84,9 @@ echo "Adding genesis account for alice..."
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
 ./layerd genesis gentx alice 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --chain-id layertest-1
+
+echo "Adding team account"
+./layerd genesis add-team-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 --home ~/.layer/alice
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
@@ -132,5 +135,4 @@ sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/alice/con
 sed -i 's/keyring-backend = "os"/keyring-backend = "test"/g' ~/.layer/config/client.toml
 
 echo "Starting chain for alice..."
-#./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger | tee ./first_node_logs.txt
-./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false | tee ./fulldata_first_node_logs.txt
+#./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --panic-on-daemon-failure-enabled=false | tee ./fulldata_first_node_logs.txt

@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
@@ -24,6 +26,7 @@ func (k Querier) GetDataBefore(ctx context.Context, req *types.QueryGetDataBefor
 	if err != nil {
 		return nil, err
 	}
+	telemetry.IncrCounterWithLabels([]string{"getDataBefore"}, 1, []metrics.Label{{Name: "queryID", Value: req.GetQueryId()}})
 
 	timeUnix := timestamp.UnixMilli()
 

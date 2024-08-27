@@ -7,6 +7,8 @@ import (
 	"math/big"
 	"sort"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -33,6 +35,9 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 		totalReporterPower.Add(&totalReporterPower, big.NewInt(r.Power))
 		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 	}
+
+	totalReporterPowerForMetric, _ := totalReporterPower.Float64()
+	telemetry.SetGaugeWithLabels([]string{"TotalReporterPowerForAggregate"}, float32(totalReporterPowerForMetric), []metrics.Label{{Name: "queryID", Value: string(medianReport.QueryId)}})
 
 	halfTotalPower := new(big.Int).Div(&totalReporterPower, big.NewInt(2))
 	cumulativePower := new(big.Int)

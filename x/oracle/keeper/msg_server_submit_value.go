@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -15,6 +16,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -97,6 +99,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
 		return nil, errors.New("missed commit reveal window")
 	}
+
 	genHash := oracleutils.CalculateCommitment(msg.Value, msg.Salt)
 	if genHash != commit.Hash {
 		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
@@ -112,6 +115,10 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
+
+	telemetry.IncrCounterWithLabels([]string{"SubmitValueCounter"}, 1, []metrics.Label{{Name: "queryID", Value: string(queryId)}})
+	telemetry.SetGaugeWithLabels([]string{"SubmitValueGasCost"}, float32(sdkCtx.GasMeter().GasConsumed()), []metrics.Label{{Name: "queryID", Value: string(queryId)}})
+
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
