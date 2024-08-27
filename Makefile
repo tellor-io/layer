@@ -132,7 +132,6 @@ mock-gen-app:
 	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
 	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
 
-
 mock-gen-bridge:
 	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
 	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks

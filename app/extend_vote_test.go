@@ -3,13 +3,14 @@ package app_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
@@ -38,12 +39,20 @@ type VoteExtensionTestSuite struct {
 	cdc           codec.Codec
 }
 
+type MockKeyring struct {
+	mock.Mock
+}
+
+func (m *MockKeyring) List() ([]*keyring.Record, error) {
+	args := m.Called()
+	return args.Get(0).([]*keyring.Record), args.Error(1)
+}
+
 func (s *VoteExtensionTestSuite) SetupTest() {
 	require := s.Require()
 
 	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-	s.cdc = cdc
+	s.cdc = codec.NewProtoCodec(registry)
 	s.oracleKeeper = mocks.NewOracleKeeper(s.T())
 	s.bridgeKeeper = mocks.NewBridgeKeeper(s.T())
 	s.stakingKeeper = mocks.NewStakingKeeper(s.T())
@@ -52,12 +61,11 @@ func (s *VoteExtensionTestSuite) SetupTest() {
 	s.ctx = testutils.CreateTestContext(s.T())
 	s.handler = app.NewVoteExtHandler(
 		log.NewNopLogger(),
-		cdc,
+		s.cdc,
 		s.oracleKeeper,
 		s.bridgeKeeper,
 	)
 
-	// create new keyring in
 	s.tempDir = s.T().TempDir()
 	viper.Set("keyring-backend", "test")
 	viper.Set("keyring-dir", s.tempDir)
@@ -65,18 +73,6 @@ func (s *VoteExtensionTestSuite) SetupTest() {
 	s.kr, err = s.handler.InitKeyring()
 	require.NoError(err)
 	require.NotNil(s.kr)
-
-	// backend := "test"
-	// tempDir := s.T().TempDir()
-	// keyring, err := keyring.New("TestExport", backend, tempDir, nil, cdc)
-	// fmt.Println("keyring: ", keyring)
-	// fmt.Println("temp dir: ", tempDir)
-	// s.kr = keyring
-	// require.NoError(err)
-
-	// keys, err := s.kr.List()
-	// require.NoError(err)
-	// fmt.Println("Keys in keyring: ", keys)
 }
 
 func TestVoteExtensionTestSuite(t *testing.T) {
@@ -207,117 +203,6 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
 }
 
-// create a keyring in the test, sotre in temp directort, modify voteexthandler
-// or read youre own computer
-// maybe even pass in a keyring instead of reading it
-
-func (s *VoteExtensionTestSuite) TestSignMessage() {
-	require := s.Require()
-	h := s.handler
-
-	// Initial keyring state
-	keys, err := s.kr.List()
-	require.NoError(err)
-	fmt.Println("Initial keys in keyring: ", keys)
-
-	res, err := h.SignMessage([]byte("msg"))
-	require.Error(err)
-	require.Nil(res)
-
-	// create key
-	// cmd := exec.Command("layerd", "keys", "add", "key0", "--keyring-backend", "test", "--keyring-dir", s.tempDir)
-	// output, err := cmd.CombinedOutput()
-	// require.NoError(err)
-	// require.NotNil(output)
-	// fmt.Println(string(output))
-
-	// cmd = exec.Command("layerd", "keys", "list", "--keyring-backend", "test", "--keyring-dir", s.tempDir)
-	// output, err = cmd.CombinedOutput()
-	// require.NoError(err)
-	// require.NotNil(output)
-	// fmt.Println(string(output))
-
-	// Log the keyring state after adding the key
-	// keys, err = s.kr.List()
-	// require.NoError(err)
-	// fmt.Println("Keys in keyring after adding key: ", keys)
-
-	// viper.Set("key-name", "key0")
-	// res, err = h.SignMessage([]byte("msg"))
-	// require.NoError(err)
-	// require.NotNil(res)
-
-	// kr := s.kr
-	// uid := "testOne"
-	// // encryptPassphrase := "this passphrase has been used for all test vectors"
-	// // armor := "-----BEGIN TENDERMINT PRIVATE KEY-----\nkdf: bcrypt\nsalt: 6BC5D5187F9DF241E1A1243EECFF9C17\ntype: secp256k1\n\nGDPpPfrSVZloiwufbal19fmd75QeiqwToZ949SwmnxxM03qL75xXVf3tTD/BrF4l\nFs14HuhwntDBM2xgZvymTBk2edHlEI20Phv6oC0=\n=/zZh\n-----END TENDERMINT PRIVATE KEY-----"
-	// // err := kr.ImportPrivKey(uid, armor, encryptPassphrase)
-	// // require.NoError(err)
-	// record, mn, err := kr.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, "", hd.Secp256k1)
-	// require.NoError(err)
-	// require.NotNil(mn)
-	// require.NotNil(record)
-	// record2, err := kr.NewAccount(uid, mn, "", "", hd.Secp256k1)
-	// require.NoError(err)
-	// require.NotNil(record2)
-
-	// // List keys after adding
-	// keys, err := kr.List()
-	// require.NoError(err)
-	// fmt.Println("Keys in keyring after cmd: ", keys)
-	// s.T().TempDir()
-
-	// Create a temporary directory for the keyring
-	// tempDir, err := os.MkdirTemp("", "keyring-test")
-	// require.NoError(err)
-	// defer os.RemoveAll(tempDir)
-
-	// viper.Set("keyring-backend", "test")
-	// viper.Set("keyring-dir", tempDir)
-	// viper.Set("key-name", "key5")
-
-	// kr, err := s.handler.InitKeyring()
-	// require.NoError(err)
-	// require.NotNil(kr)
-	// fmt.Println("Initialized keyring: ", kr)
-
-	// // Add key using command
-	// cmd := exec.Command("layerd", "keys", "add", "key5", "--keyring-dir", tempDir)
-	// output, err := cmd.CombinedOutput()
-	// require.NoError(err)
-	// require.NotNil(output)
-	// fmt.Println("Output from adding key: ", string(output))
-
-	// // List keys after adding
-	// keys, err := kr.List()
-	// require.NoError(err)
-	// require.NotNil(keys)
-	// fmt.Println("Keys in keyring: ", keys)
-}
-
-func (s *VoteExtensionTestSuite) TestGetKeyring() {
-	require := s.Require()
-	h := s.handler
-
-	kr, err := h.GetKeyring()
-	require.NoError(err)
-	require.NotNil(kr)
-}
-
-func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
-	// require := s.Require()
-	// h := s.handler
-	// kr := s.kr
-
-	// viper.Set("key-name", "key20")
-
-	// addr, err := h.GetOperatorAddress()
-	// require.NoError(err)
-	// require.NotNil(addr)
-}
-
-// use test case struct
-
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	require := s.Require()
 	h := s.handler
@@ -328,7 +213,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	type testCase struct {
 		name             string
 		setupMocks       func()
-		request          *abci.RequestExtendVote
 		expectedError    error
 		validateResponse func(*abci.ResponseExtendVote)
 	}
@@ -337,7 +221,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 		{
 			name:          "GetOperatorAddress error",
 			setupMocks:    func() {},
-			request:       &abci.RequestExtendVote{},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
@@ -452,6 +335,129 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			}
 			tc.validateResponse(resp)
 			defer patches.Reset()
+		})
+	}
+}
+
+func (s *VoteExtensionTestSuite) TestSignMessage() {
+	require := s.Require()
+	h := s.handler
+	kr := s.kr
+
+	// Initial keyring state
+	keys, err := s.kr.List()
+	require.NoError(err)
+	require.Len(keys, 0)
+
+	testCases := []struct {
+		name          string
+		message       []byte
+		expectedError bool
+		setup         func()
+	}{
+		{
+			name:          "Empty keyring",
+			message:       []byte("msg"),
+			expectedError: true,
+		},
+		// Add more test cases here
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			res, err := h.SignMessage(tc.message)
+			if tc.expectedError {
+				require.Error(err)
+				require.Nil(res)
+			} else {
+				require.NoError(err)
+				require.NotNil(res)
+			}
+			defer func() {
+				viper.Set("key-name", "")
+			}()
+		})
+	}
+}
+
+func (s *VoteExtensionTestSuite) TestGetKeyring() {
+	require := s.Require()
+	h := s.handler
+
+	kr, err := h.GetKeyring()
+	require.NoError(err)
+	require.NotNil(kr)
+}
+
+func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
+	require := s.Require()
+	h := s.handler
+	patches := gomonkey.NewPatches()
+
+	type testCase struct {
+		name             string
+		setupMocks       func()
+		expectedError    bool
+		expectedErrorMsg string
+	}
+
+	testCases := []testCase{
+		{
+			name: "err getting keyring",
+			setupMocks: func() {
+				patches.ApplyMethod(h, "GetKeyring", func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+					return nil, errors.New("error!")
+				})
+			},
+			expectedError:    true,
+			expectedErrorMsg: "failed to get keyring: error!",
+		},
+		{
+			name: "err getting keyname",
+			setupMocks: func() {
+				viper.Set("key-name", "")
+			},
+			expectedError:    true,
+			expectedErrorMsg: "key name not found, please set --key-name flag",
+		},
+		{
+			name: "keyring list error",
+			setupMocks: func() {
+				viper.Set("key-name", "testkey")
+				patches.ApplyMethod(reflect.TypeOf(s.kr), "List", func(_ keyring.Keyring) ([]keyring.Record, error) {
+					return nil, errors.New("error!")
+				})
+			},
+			expectedError:    true,
+			expectedErrorMsg: "failed to list keys: error!",
+		},
+		{
+			name: "keyring list success",
+			setupMocks: func() {
+				viper.Set("key-name", "testkey")
+				patches.ApplyMethod(reflect.TypeOf(s.kr), "List", func(_ keyring.Keyring) ([]keyring.Record, error) {
+					return []keyring.Record{}, nil
+				})
+			},
+			expectedError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			tc.setupMocks()
+			defer patches.Reset()
+			resp, err := h.GetOperatorAddress()
+			if tc.expectedError {
+				require.Error(err)
+				require.Equal(tc.expectedErrorMsg, err.Error())
+			} else {
+				require.NoError(err)
+				require.NotEmpty(resp)
+			}
 		})
 	}
 }

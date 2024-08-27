@@ -127,6 +127,8 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	// generate oracle attestations and include them via vote extensions
 	blockHeight := ctx.BlockHeight() - 1
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
+	fmt.Println("attestationRequests: ", attestationRequests)
+	fmt.Println("err: ", err)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			h.logger.Error("ExtendVoteHandler: failed to get attestation requests", "error", err)
@@ -139,6 +141,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		}
 	} else {
 		snapshots := attestationRequests.Requests
+		fmt.Println("snapshots: ", snapshots)
 		// iterate through snapshots and generate sigs
 		if len(snapshots) > 0 {
 			for _, snapshot := range snapshots {
