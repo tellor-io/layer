@@ -94,7 +94,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	if len(reportersToPay) == 0 {
 		return nil
 	}
-	
+
 	// Allocate time-based rewards to all eligible reporters.
 	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }
