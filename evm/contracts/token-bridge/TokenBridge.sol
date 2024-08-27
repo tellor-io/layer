@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import "../bridge/BlobstreamO.sol";
+import "../interfaces/IBlobstreamO.sol";
 import { LayerTransition } from "./LayerTransition.sol";
 
 /// @title TokenBridge
@@ -12,7 +12,7 @@ import { LayerTransition } from "./LayerTransition.sol";
 /// bridging back.  There is a long delay in bridging back (enforced by layer) of 12 hours
 contract TokenBridge is LayerTransition{
     /*Storage*/
-    BlobstreamO public bridge;
+    IBlobstreamO public bridge;
     uint256 public depositId;//counterOfHowManydeposits have been made
     uint256 public depositLimitUpdateTime;//last time the limit was updated
     uint256 public depositLimitRecord;//amount you can bridge per limit period
@@ -41,7 +41,7 @@ contract TokenBridge is LayerTransition{
     /// @param _blobstream address of BlobstreamO data bridge
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
     constructor(address _token, address _blobstream, address _tellorFlex) LayerTransition(_tellorFlex, _token){
-        bridge = BlobstreamO(_blobstream);
+        bridge = IBlobstreamO(_blobstream);
     }
 
     /// @notice claim extra withdrawals that were not fully withdrawn
