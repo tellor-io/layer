@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"time"
 
@@ -41,14 +40,17 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64,
 	} else if depositClaimedStatus.Claimed {
 		return types.ErrDepositAlreadyClaimed
 	}
-
-	// get total bonded tokens
-	totalBondedTokens, err := k.reporterKeeper.TotalReporterPower(ctx)
+	// get power threshold at report time
+	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, uint64(aggregateTimestamp.UnixMilli()))
 	if err != nil {
 		return err
 	}
-	powerThreshold := int64(math.Round(float64(totalBondedTokens.Int64()) * 2 / 3))
-	if aggregate.ReporterPower*layer.PowerReduction.Int64() < powerThreshold {
+	valsetCheckpointParams, err := k.GetValidatorCheckpointParamsFromStorage(ctx, valsetTimestampBefore)
+	if err != nil {
+		return err
+	}
+	powerThreshold := valsetCheckpointParams.PowerThreshold
+	if aggregate.ReporterPower < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
