@@ -21,11 +21,11 @@ go build ./cmd/layerd
 
 # Initialize the chain
 echo "Initializing the chain..."
-./layerd init layer --chain-id layer
+./layerd init layer --chain-id layertest-1
 
 # Initialize chain node with the folder for alice
 echo "Initializing chain node for alice..."
-./layerd init alicemoniker --chain-id layer --home ~/.layer/alice
+./layerd init alicemoniker --chain-id layertest-1 --home ~/.layer/alice
 
 # Add a validator account for alice
 echo "Adding validator account for alice..."
@@ -42,7 +42,6 @@ jq '.consensus.params.abci.vote_extensions_enable_height = "1"' ~/.layer/alice/c
 echo "Updating block grace period from 100 to 500"
 jq '.slashing.params.signed_blocks_window = "500"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
 jq '.slashing.params.signed_blocks_window = "500"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
-sleep 10
 
 # Create a tx to give alice loyas to stake
 echo "Adding genesis account for alice..."
@@ -56,7 +55,7 @@ echo "Adding genesis account for faucet..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 1000000000loya --chain-id layer --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
+./layerd genesis gentx alice 1000000000loya --chain-id layertest-1 --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
