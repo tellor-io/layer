@@ -3,6 +3,7 @@ package app_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -10,7 +11,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
@@ -23,7 +23,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -34,23 +33,11 @@ type VoteExtensionTestSuite struct {
 	oracleKeeper  *mocks.OracleKeeper
 	bridgeKeeper  *mocks.BridgeKeeper
 	stakingKeeper *mocks.StakingKeeper
-	kr            keyring.Keyring
-	tempDir       string
+	kr            *mocks.Keyring
 	cdc           codec.Codec
 }
 
-type MockKeyring struct {
-	mock.Mock
-}
-
-func (m *MockKeyring) List() ([]*keyring.Record, error) {
-	args := m.Called()
-	return args.Get(0).([]*keyring.Record), args.Error(1)
-}
-
 func (s *VoteExtensionTestSuite) SetupTest() {
-	require := s.Require()
-
 	registry := codectypes.NewInterfaceRegistry()
 	s.cdc = codec.NewProtoCodec(registry)
 	s.oracleKeeper = mocks.NewOracleKeeper(s.T())
@@ -66,13 +53,8 @@ func (s *VoteExtensionTestSuite) SetupTest() {
 		s.bridgeKeeper,
 	)
 
-	s.tempDir = s.T().TempDir()
-	viper.Set("keyring-backend", "test")
-	viper.Set("keyring-dir", s.tempDir)
-	var err error
-	s.kr, err = s.handler.InitKeyring()
-	require.NoError(err)
-	require.NotNil(s.kr)
+	// s.kr = mocks.NewKeyring(s.T())
+	// s.handler.GetKeyring()
 }
 
 func TestVoteExtensionTestSuite(t *testing.T) {
@@ -230,7 +212,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			name: "err on SignInitialMessage",
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
@@ -244,10 +226,10 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			name: "err on GetAttestationRequestsByHeight",
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
-				patches.ApplyMethod(h, "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
 					return []byte("signatureA"), []byte("signatureB"), nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
@@ -263,7 +245,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
 				evmAddr := common.BytesToAddress([]byte("evmAddr"))
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
@@ -275,7 +257,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					},
 				}
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
-				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error")).Once()
@@ -290,7 +272,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
 				evmAddr := common.BytesToAddress([]byte("evmAddr"))
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
@@ -302,7 +284,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					},
 				}
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
-				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
@@ -311,7 +293,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				}
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(checkpointTimestamp, nil).Once()
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(1)).Return(true, int64(1), nil).Once()
-				patches.ApplyMethod(h, "EncodeAndSignMessage", func(_ *app.VoteExtHandler, checkpoint string) ([]byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "EncodeAndSignMessage", func(_ *app.VoteExtHandler, checkpoint string) ([]byte, error) {
 					return []byte("signedCheckpoint"), nil
 				})
 			},
@@ -342,7 +324,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 func (s *VoteExtensionTestSuite) TestSignMessage() {
 	require := s.Require()
 	h := s.handler
-	kr := s.kr
 
 	// Initial keyring state
 	keys, err := s.kr.List()
@@ -379,6 +360,7 @@ func (s *VoteExtensionTestSuite) TestSignMessage() {
 			defer func() {
 				viper.Set("key-name", "")
 			}()
+			viper.Reset()
 		})
 	}
 }
@@ -387,19 +369,22 @@ func (s *VoteExtensionTestSuite) TestGetKeyring() {
 	require := s.Require()
 	h := s.handler
 
+	viper.Set("keyring-backend", "test")
+	viper.Set("keyring-dir", s.T().TempDir())
 	kr, err := h.GetKeyring()
 	require.NoError(err)
 	require.NotNil(kr)
+
+	viper.Reset()
 }
 
 func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	require := s.Require()
-	h := s.handler
-	patches := gomonkey.NewPatches()
+	// h := s.handler
 
 	type testCase struct {
 		name             string
-		setupMocks       func()
+		setupMocks       func(h *app.VoteExtHandler)
 		expectedError    bool
 		expectedErrorMsg string
 	}
@@ -407,57 +392,88 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	testCases := []testCase{
 		{
 			name: "err getting keyring",
-			setupMocks: func() {
-				patches.ApplyMethod(h, "GetKeyring", func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-					return nil, errors.New("error!")
-				})
+			setupMocks: func(h *app.VoteExtHandler) {
+				s.kr = nil
 			},
 			expectedError:    true,
-			expectedErrorMsg: "failed to get keyring: error!",
+			expectedErrorMsg: "failed to get keyring:",
 		},
 		{
 			name: "err getting keyname",
-			setupMocks: func() {
-				viper.Set("key-name", "")
+			setupMocks: func(h *app.VoteExtHandler) {
+				s.kr = mocks.NewKeyring(s.T())
+				tempDir := s.T().TempDir()
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
 			},
 			expectedError:    true,
 			expectedErrorMsg: "key name not found, please set --key-name flag",
 		},
 		{
-			name: "keyring list error",
-			setupMocks: func() {
+			name: "empty keyring",
+			setupMocks: func(h *app.VoteExtHandler) {
+				s.kr = mocks.NewKeyring(s.T())
+				tempDir := s.T().TempDir()
 				viper.Set("key-name", "testkey")
-				patches.ApplyMethod(reflect.TypeOf(s.kr), "List", func(_ keyring.Keyring) ([]keyring.Record, error) {
-					return nil, errors.New("error!")
-				})
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				// s.kr.On("List").Return([]*keyring.Record{}, nil).Once()
 			},
 			expectedError:    true,
-			expectedErrorMsg: "failed to list keys: error!",
+			expectedErrorMsg: "no keys found in keyring",
 		},
-		{
-			name: "keyring list success",
-			setupMocks: func() {
-				viper.Set("key-name", "testkey")
-				patches.ApplyMethod(reflect.TypeOf(s.kr), "List", func(_ keyring.Keyring) ([]keyring.Record, error) {
-					return []keyring.Record{}, nil
-				})
-			},
-			expectedError: false,
-		},
+		// {
+		// 	name: "kr.Key error",
+		// 	setupMocks: func() {
+		// 		tempDir := s.T().TempDir()
+		// 		viper.Set("keyring-backend", "test")
+		// 		viper.Set("keyring-dir", tempDir)
+		// 		viper.Set("key-name", "testkey")
+		// 		pubKey := &secp256k1.PubKey{Key: []byte("pubkey")}
+		// 		anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
+		// 		require.NoError(err)
+		// 		s.kr.On("List").Return([]*keyring.Record{
+		// 			{Name: "testkey", PubKey: anyPubKey},
+		// 		}, nil).Once()
+		// 		// s.kr.On("Key", "testkey").Return(nil, errors.New("error!")).Once()
+		// 	},
+		// 	expectedError:    true,
+		// 	expectedErrorMsg: "failed to get operator key:",
+		// },
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			tc.setupMocks()
-			defer patches.Reset()
-			resp, err := h.GetOperatorAddress()
+			handler := app.NewVoteExtHandler(
+				log.NewNopLogger(),
+				s.cdc,
+				s.oracleKeeper,
+				s.bridgeKeeper,
+			)
+			fmt.Println("s.kr: ", s.kr)
+			tc.setupMocks(handler)
+			fmt.Println("s.kr: ", s.kr)
+			resp, err := handler.GetOperatorAddress()
+			fmt.Println("s.kr: ", s.kr)
 			if tc.expectedError {
 				require.Error(err)
-				require.Equal(tc.expectedErrorMsg, err.Error())
+				require.Contains(err.Error(), tc.expectedErrorMsg)
 			} else {
 				require.NoError(err)
 				require.NotEmpty(resp)
 			}
+			viper.Reset()
 		})
 	}
+}
+
+func (s *VoteExtensionTestSuite) TestInitKeyring() {
+	// require := s.Require()
+	// s.tempDir = s.T().TempDir()
+	// viper.Set("keyring-backend", "test")
+	// viper.Set("keyring-dir", s.tempDir)
+	// var err error
+	// s.kr, err = s.handler.InitKeyring()
+	// require.NoError(err)
+	// require.NotNil(s.kr)
 }

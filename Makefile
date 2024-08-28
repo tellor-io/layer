@@ -127,11 +127,6 @@ proto-update-deps:
 mock-clean-all:
 	@find . -type f -name "*.go" -path "*/mocks/*" -exec rm -f {} +
 
-mock-gen-app:
-	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
-	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
-	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
-
 mock-gen-bridge:
 	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
 	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
@@ -179,6 +174,13 @@ mock-gen-daemon:
 	@go run github.com/vektra/mockery/v2 --name=QueryClient --dir=$(CURDIR)/testutil/grpc --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=$(CURDIR)/daemons/types --recursive --output=$(CURDIR)/daemons/mocks
 	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=$(CURDIR)/lib/time --recursive --output=$(CURDIR)/daemons/mocks
+
+mock-gen-app:
+	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
+	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
+	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
+	@go run github.com/vektra/mockery/v2 --name=Keyring --dir=$(GOPATH)/pkg/mod/github.com/cosmos/cosmos-sdk@$(COSMOS_VERSION)/crypto/keyring --recursive --output=./app/mocks
+
 mock-gen:
 	$(MAKE) mock-gen-bridge
 	$(MAKE) mock-gen-dispute

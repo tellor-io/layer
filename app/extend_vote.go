@@ -294,6 +294,7 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to list keys: %w", err)
 	}
+	fmt.Println("krlist: ", krlist)
 	if len(krlist) == 0 {
 		return "", fmt.Errorf("no keys found in keyring")
 	}
