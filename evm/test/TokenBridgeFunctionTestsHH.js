@@ -155,19 +155,16 @@ describe("TokenBridge - Function Tests", async function () {
         await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
-    it("claim extraWithdraw", async function () {
-        await tbridge.refreshDepositLimit()
-        expectedDepositLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) * BigInt(2) / BigInt(10)
-        depositAmount = expectedDepositLimit
-        tip = h.toWei("0")
-        await h.expectThrow(tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)) // not approved
-        await token.approve(await tbridge.address, h.toWei("100"))
-        await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
-        await h.advanceTime(43200) 
-        await token.approve(await tbridge.address, h.toWei("100"))
-        await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
+
+    it("withdrawLimit", async function () {
+        expectedWithdrawLimit = BigInt(100e18) / BigInt(20)
+        withdrawLimit = await tbridge.withdrawLimit()
+        assert(withdrawLimit == expectedWithdrawLimit, "withdrawLimit should be correct")
+    })
+    it("claimExtraWithdraw", async function () {
+        const WITHDRAW_AMOUNT = h.toWei("10")
         let _addy = await accounts[2].address
-        value = h.getWithdrawValue(_addy,LAYER_RECIPIENT,40000000)
+        value = h.getWithdrawValue(_addy,LAYER_RECIPIENT,BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
         blocky = await h.getBlock()
         timestamp = (blocky.timestamp - 2) * 1000
         aggregatePower = 3
@@ -201,7 +198,9 @@ describe("TokenBridge - Function Tests", async function () {
         )
         await h.advanceTime(43200)
         await tbridge.refreshDepositLimit()
-        let _limit = await tbridge.depositLimit.call()
+        expectedWithdrawLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
+        let _limit0 = await tbridge.withdrawLimit.call()
+        assert(_limit0 == expectedWithdrawLimit, "withdrawLimit should be correct")
         assert(await token.balanceOf(_addy) == 0)
         await tbridge.withdrawFromLayer(
             oracleDataStruct,
@@ -209,21 +208,26 @@ describe("TokenBridge - Function Tests", async function () {
             sigStructArray,
             1,
         )
-        recipientBal = await token.balanceOf(_addy)
-        assert(recipientBal - _limit == 0, "token balance should be correct")
+        recipientBal0 = await token.balanceOf(_addy)
+        assert(recipientBal0 - _limit0 == 0, "token balance should be correct")
         tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
-        assert(tokensToClaim == BigInt(40e18) - BigInt(recipientBal), "tokensToClaim should be correct")
+        assert(tokensToClaim == BigInt(WITHDRAW_AMOUNT) - BigInt(recipientBal0), "tokensToClaim should be correct")
         await h.expectThrow(tbridge.claimExtraWithdraw(await accounts[2].address))
         await h.advanceTime(43200)
+        _limit1 = await tbridge.withdrawLimit.call()
+
         await tbridge.claimExtraWithdraw(await accounts[2].address);
         await h.expectThrow(tbridge.claimExtraWithdraw(await accounts[2].address))
-        recipientBal = await token.balanceOf(await accounts[2].address)
-        assert(recipientBal == BigInt(40e18), "token balance should be correct")
+        recipientBal1 = await token.balanceOf(await accounts[2].address)
+        assert(recipientBal1 == BigInt(recipientBal0) + BigInt(_limit1), "token balance should be correct")
+        tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
+        assert(tokensToClaim == BigInt(WITHDRAW_AMOUNT) - BigInt(recipientBal1), "tokensToClaim should be correct")
         await h.advanceTime(43200)
-        await tbridge.refreshDepositLimit()
-        _limit = await tbridge.depositLimit()
-        assert(BigInt(await tbridge.depositLimitRecord()) - expectedDepositLimit == BigInt(0));
-        assert(_limit == expectedDepositLimit, "deposit Limit should be correct")
+        
+        await tbridge.claimExtraWithdraw(await accounts[2].address);
+        await h.expectThrow(tbridge.claimExtraWithdraw(await accounts[2].address))
+        recipientBal2 = await token.balanceOf(await accounts[2].address)
+        assert(recipientBal2 == WITHDRAW_AMOUNT, "token balance should be correct")
         tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
         assert(tokensToClaim == BigInt(0), "tokensToClaim should be correct")
     })
@@ -337,14 +341,14 @@ describe("TokenBridge - Function Tests", async function () {
                 attestationTimestamp
             )
 
-            depositLimitBefore0 = await tbridge.depositLimit()
+            withdrawLimitBefore0 = await tbridge.withdrawLimit()
             await tbridge.withdrawFromLayer(
                 oracleDataStruct0,
                 currentValSetArray,
                 sigStructArray0,
                 withdrawId0,
             )
-            depositLimitBefore1 = await tbridge.depositLimit()
+            withdrawLimitBefore1 = await tbridge.withdrawLimit()
             await tbridge.withdrawFromLayer(
                 oracleDataStruct1,
                 currentValSetArray,
@@ -352,18 +356,18 @@ describe("TokenBridge - Function Tests", async function () {
                 withdrawId1,
             )
             
-            if (BigInt(depositAmount0) > BigInt(depositLimitBefore0)) {
-                expectedBal0 += BigInt(depositLimitBefore0)
-                expTokensToClaim0 += BigInt(depositAmount0) - BigInt(depositLimitBefore0)
-                expectedBalBridge -= BigInt(depositLimitBefore0)
+            if (BigInt(depositAmount0) > BigInt(withdrawLimitBefore0)) {
+                expectedBal0 += BigInt(withdrawLimitBefore0)
+                expTokensToClaim0 += BigInt(depositAmount0) - BigInt(withdrawLimitBefore0)
+                expectedBalBridge -= BigInt(withdrawLimitBefore0)
             } else {
                 expectedBal0 += BigInt(depositAmount0)
                 expectedBalBridge -= BigInt(depositAmount0)
             }
-            if (depositAmount1 > depositLimitBefore1) {
-                expectedBal1 += BigInt(depositLimitBefore1)
-                expTokensToClaim1 += BigInt(depositAmount1) - BigInt(depositLimitBefore1)
-                expectedBalBridge -= BigInt(depositLimitBefore1)
+            if (depositAmount1 > withdrawLimitBefore1) {
+                expectedBal1 += BigInt(withdrawLimitBefore1)
+                expTokensToClaim1 += BigInt(depositAmount1) - BigInt(withdrawLimitBefore1)
+                expectedBalBridge -= BigInt(withdrawLimitBefore1)
             } else {
                 expectedBal1 += BigInt(depositAmount1)
                 expectedBalBridge -= BigInt(depositAmount1)
