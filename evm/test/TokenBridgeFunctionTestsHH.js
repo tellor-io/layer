@@ -123,7 +123,7 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(userBal.toString(), h.toWei("999"))
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
-        await tbridge.refreshDepositLimit()
+        await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         assert.equal(await tbridge.depositId(), 1)
         depositDetails = await tbridge.deposits(1)
@@ -135,24 +135,24 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(await tbridge.depositId(), 1)
         await h.advanceTime(43200)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) * BigInt(2) / BigInt(10)
-        await tbridge.refreshDepositLimit()
+        await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
 
     it("depositLimit", async function () {
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
-        await tbridge.refreshDepositLimit()
+        await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         await token.approve(await tbridge.address, h.toWei("900"))
         depositAmount = h.toWei("2")
         tip = h.toWei("0")
         await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
-        await tbridge.refreshDepositLimit()
+        await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         await h.advanceTime(43200)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) / BigInt(5)
-        await tbridge.refreshDepositLimit()
+        await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
 
@@ -197,7 +197,6 @@ describe("TokenBridge - Function Tests", async function () {
             attestTimestamp
         )
         await h.advanceTime(43200)
-        await tbridge.refreshDepositLimit()
         expectedWithdrawLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
         let _limit0 = await tbridge.withdrawLimit.call()
         assert(_limit0 == expectedWithdrawLimit, "withdrawLimit should be correct")

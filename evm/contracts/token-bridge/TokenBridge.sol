@@ -63,7 +63,7 @@ contract TokenBridge is LayerTransition{
     function claimExtraWithdraw(address _recipient) external {
         uint256 _amountConverted = tokensToClaim[_recipient];
         require(_amountConverted > 0, "amount must be > 0");
-        uint256 _withdrawLimit = _refreshWithdrawLimit();
+        uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
         require(_withdrawLimit > 0, "TokenBridge: withdraw limit must be > 0");
         if(_withdrawLimit < _amountConverted){
             tokensToClaim[_recipient] = tokensToClaim[_recipient] - _withdrawLimit;
@@ -82,7 +82,7 @@ contract TokenBridge is LayerTransition{
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, uint256 _tip, string memory _layerRecipient) external {
         require(_amount > 0.1 ether, "TokenBridge: amount must be greater than 0.1 tokens");
-        require(_amount <= _refreshDepositLimit(), "TokenBridge: amount exceeds deposit limit for time period");
+        require(_amount <= _refreshDepositLimit(_amount), "TokenBridge: amount exceeds deposit limit for time period");
         require(_tip <= _amount, "TokenBridge: tip must be less than or equal to amount");
         if (_tip > 0) {
             require(_tip >= 1e12, "TokenBridge: tip must be greater than or equal to 1 loya");
@@ -114,7 +114,7 @@ contract TokenBridge is LayerTransition{
         withdrawClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya,) = abi.decode(_attestData.report.value, (address, string, uint256, uint256));
         uint256 _amountConverted = _amountLoya * 1e12; 
-        uint256 _withdrawLimit = _refreshWithdrawLimit();
+        uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
         if(_withdrawLimit < _amountConverted){
             tokensToClaim[_recipient] = tokensToClaim[_recipient] + (_amountConverted - _withdrawLimit);
             _amountConverted = _withdrawLimit;
@@ -149,11 +149,11 @@ contract TokenBridge is LayerTransition{
 
     /* Internal Functions */
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
-    /// @return amount of tokens that can be deposited
-    function _refreshDepositLimit() internal returns (uint256) {
+    /// @return max amount of tokens that can be deposited
+    function _refreshDepositLimit(uint256 _amount) internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
             uint256 _tokenBalance = token.balanceOf(address(this));
-            if (_tokenBalance < 100 ether) {
+            if (_tokenBalance < _amount) {
                 token.mintToOracle();
                 _tokenBalance = token.balanceOf(address(this));
             }
@@ -164,10 +164,12 @@ contract TokenBridge is LayerTransition{
     }
 
     /// @notice refreshes the withdraw limit every 12 hours so no one can spam layer with new tokens
-    function _refreshWithdrawLimit() internal returns (uint256) {
+    /// @param _amount of tokens to withdraw
+    /// @return max amount of tokens that can be withdrawn
+    function _refreshWithdrawLimit(uint256 _amount) internal returns (uint256) {
         if (block.timestamp - withdrawLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
             uint256 _tokenBalance = token.balanceOf(address(this));
-            if (_tokenBalance < 100 ether) {
+            if (_tokenBalance < _amount) {
                 token.mintToOracle();
                 _tokenBalance = token.balanceOf(address(this));
             }
