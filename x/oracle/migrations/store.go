@@ -53,23 +53,35 @@ func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc co
 	)
 
 	blockTime := sdk.UnwrapSDKContext(ctx).BlockTime()
-	var itererror error
+
+	type query struct {
+		key   collections.Pair[[]byte, uint64]
+		value types.QueryMeta
+	}
+
+	newqueries := make([]query, 0)
+	oldqueries := make([]query, 0)
+
 	err := oldquery.Walk(ctx, nil, func(key []byte, value types.QueryMeta) (bool, error) {
-		if value.Expiration.Add(time.Second * 3).Before(blockTime) {
-			itererror = oldquery.Remove(ctx, key)
-			if itererror != nil {
-				return true, itererror
-			}
-		} else {
-			itererror = newquery.Set(ctx, collections.Join(key, value.Id), value)
-			if itererror != nil {
-				return true, itererror
-			}
+		oldqueries = append(oldqueries, query{key: collections.Join(key, value.Id), value: value})
+		if !value.Expiration.Add(time.Second * 3).Before(blockTime) {
+			newqueries = append(newqueries, query{key: collections.Join(key, value.Id), value: value})
 		}
 		return false, nil
 	})
-	if itererror != nil {
-		return itererror
+	if err != nil {
+		return err
 	}
-	return err
+
+	for _, q := range oldqueries {
+		if err := oldquery.Remove(ctx, q.key.K1()); err != nil {
+			return err
+		}
+	}
+	for _, q := range newqueries {
+		if err := newquery.Set(ctx, q.key, q.value); err != nil {
+			return err
+		}
+	}
+	return nil
 }
