@@ -14,14 +14,18 @@ import { LayerTransition } from "./LayerTransition.sol";
 contract TokenBridge is LayerTransition{
     /*Storage*/
     IBlobstreamO public bridge;
-    uint256 public depositId;// counter of how many deposits have been made
-    uint256 public depositLimitUpdateTime;// last time the deposit limit was updated
-    uint256 public depositLimitRecord;// amount you can deposit per limit period
-    uint256 public withdrawLimitUpdateTime;// last time the withdraw limit was updated
-    uint256 public withdrawLimitRecord;// amount you can withdraw per limit period
-    uint256 public constant TWELVE_HOUR_UPDATE_INTERVAL = 12 hours;
-    uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
-    uint256 public immutable WITHDRAW_LIMIT_DENOMINATOR = 100e18 / 5e18; // 100/withdrawLimitPercentage
+    uint256 public depositId; // counter of how many deposits have been made
+    uint256 public depositLimitUpdateTime; // last time the deposit limit was updated
+    uint256 public depositLimitRecord; // amount you can deposit per limit period
+    BridgeState public bridgeState; // state of the bridge
+    uint256 public bridgeStateUpdateTime; // last time the bridge state was updated
+    uint256 public withdrawLimitUpdateTime; // last time the withdraw limit was updated
+    uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
+    uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
+    uint256 public constant PAUSE_PERIOD = 21 days; // time period guardian can pause bridge, only once
+    uint256 public constant PAUSE_TRIBUTE_AMOUNT = 10000 ether; // amount of tokens burned to pause bridge
+    uint256 public constant TWELVE_HOUR_UPDATE_INTERVAL = 12 hours; // deposit and withdraw limits update interval
+    uint256 public constant WITHDRAW_LIMIT_DENOMINATOR = 100e18 / 5e18; // 100/withdrawLimitPercentage
 
     mapping(uint256 => bool) public withdrawClaimed; // withdraw id => claimed status
     mapping(address => uint256) public tokensToClaim; // recipient => extra amount to claim
@@ -35,7 +39,15 @@ contract TokenBridge is LayerTransition{
         uint256 blockHeight;
     }
 
+    enum BridgeState {
+        NORMAL,
+        PAUSED,
+        UNPAUSED
+    }
+
     /*Events*/
+    event BridgeStateUpdated(BridgeState _newState);
+    event ExtraWithdrawClaimed(address _recipient, uint256 _amount);
     event Deposit(uint256 _depositId, address _sender, string _recipient, uint256 _amount, uint256 _tip);
     event Withdraw(uint256 _depositId, string _sender, address _recipient, uint256 _amount);
 
@@ -74,6 +86,7 @@ contract TokenBridge is LayerTransition{
         }
         withdrawLimitRecord -= _amountConverted;
         require(token.transfer(_recipient, _amountConverted), "TokenBridge: transfer failed");
+        emit ExtraWithdrawClaimed(_recipient, _amountConverted);
     }
 
     /// @notice deposits tokens from Ethereum to layer
@@ -136,6 +149,15 @@ contract TokenBridge is LayerTransition{
         }
     }
 
+    function pauseBridge() external {
+        require(msg.sender == bridge.guardian(), "TokenBridge: only guardian can pause bridge");
+        require(bridgeState == BridgeState.NORMAL, "TokenBridge: bridge is already paused");
+        require(token.transferFrom(msg.sender, address(0), 10000 ether), "TokenBridge: transfer failed");
+        bridgeState = BridgeState.PAUSED;
+        bridgeStateUpdateTime = block.timestamp;
+        emit BridgeStateUpdated(BridgeState.PAUSED);
+    }
+
     /// @notice returns the withdraw limit
     /// @return amount of tokens that can be withdrawn
     function withdrawLimit() external view returns (uint256) {
@@ -144,6 +166,18 @@ contract TokenBridge is LayerTransition{
         }
         else{
             return withdrawLimitRecord;
+        }
+    }
+
+    function _checkBridgeState() internal {
+        if (bridgeState == BridgeState.NORMAL || bridgeState == BridgeState.UNPAUSED){
+            return;
+        } else if (bridgeState == BridgeState.PAUSED && block.timestamp - bridgeStateUpdateTime > PAUSE_PERIOD){
+            bridgeState = BridgeState.UNPAUSED;
+            bridgeStateUpdateTime = block.timestamp;
+            emit BridgeStateUpdated(BridgeState.UNPAUSED);
+        } else {
+            revert("TokenBridge: bridge is paused");
         }
     }
 

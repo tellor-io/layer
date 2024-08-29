@@ -27,6 +27,7 @@ struct Validator {
 }
 
 interface IBlobstreamO {
+    function guardian() external view returns (address);
     function powerThreshold() external view returns (uint256);
     function unbondingPeriod() external view returns (uint256);
     function validatorTimestamp() external view returns (uint256);
