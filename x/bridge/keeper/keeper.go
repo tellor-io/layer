@@ -383,7 +383,7 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 func (k Keeper) LastSavedValidatorSetStale(ctx context.Context) (bool, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// get current block timestamp
-	blockTime := sdkCtx.BlockTime()
+	blockTime := sdkCtx.BlockTime().Add(1 * time.Second)
 	valsetTimestamp, err := k.GetValidatorSetTimestampBefore(ctx, uint64(blockTime.UnixMilli()))
 	if err != nil {
 		k.Logger(ctx).Info("Error getting validator set timestamp before", "error", err)
