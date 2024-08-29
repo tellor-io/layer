@@ -530,7 +530,6 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 				require.NoError(err)
 				require.NotEmpty(resp)
 			}
-
 		})
 	}
 }
