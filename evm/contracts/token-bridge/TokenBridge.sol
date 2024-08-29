@@ -73,6 +73,7 @@ contract TokenBridge is LayerTransition{
     /// @notice claim extra withdraws that were not fully withdrawn
     /// @param _recipient address of the recipient
     function claimExtraWithdraw(address _recipient) external {
+        _checkBridgeState();
         uint256 _amountConverted = tokensToClaim[_recipient];
         require(_amountConverted > 0, "amount must be > 0");
         uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
@@ -118,6 +119,7 @@ contract TokenBridge is LayerTransition{
         Signature[] calldata _sigs,
         uint256 _depositId
     ) external {
+        _checkBridgeState();
         require(_attestData.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawClaimed[_depositId], "TokenBridge: withdraw already claimed");
         require(block.timestamp - (_attestData.report.timestamp / 1000) > 12 hours, "TokenBridge: premature attestation");
