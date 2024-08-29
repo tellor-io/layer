@@ -19,7 +19,7 @@ contract TokenBridge is LayerTransition{
     uint256 public depositLimitRecord;// amount you can deposit per limit period
     uint256 public withdrawLimitUpdateTime;// last time the withdraw limit was updated
     uint256 public withdrawLimitRecord;// amount you can withdraw per limit period
-    uint256 public constant DEPOSIT_LIMIT_UPDATE_INTERVAL = 12 hours;
+    uint256 public constant TWELVE_HOUR_UPDATE_INTERVAL = 12 hours;
     uint256 public immutable DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public immutable WITHDRAW_LIMIT_DENOMINATOR = 100e18 / 5e18; // 100/withdrawLimitPercentage
 
@@ -128,7 +128,7 @@ contract TokenBridge is LayerTransition{
     /// @notice returns the amount of tokens that can be deposited in the current 12 hour period
     /// @return amount of tokens that can be deposited
     function depositLimit() external view returns (uint256) {
-        if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+        if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
             return token.balanceOf(address(this)) / DEPOSIT_LIMIT_DENOMINATOR;
         }
         else{
@@ -139,7 +139,7 @@ contract TokenBridge is LayerTransition{
     /// @notice returns the withdraw limit
     /// @return amount of tokens that can be withdrawn
     function withdrawLimit() external view returns (uint256) {
-        if (block.timestamp - withdrawLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+        if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
             return token.balanceOf(address(this)) / WITHDRAW_LIMIT_DENOMINATOR;
         }
         else{
@@ -151,7 +151,7 @@ contract TokenBridge is LayerTransition{
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     /// @return max amount of tokens that can be deposited
     function _refreshDepositLimit(uint256 _amount) internal returns (uint256) {
-        if (block.timestamp - depositLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+        if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
             uint256 _tokenBalance = token.balanceOf(address(this));
             if (_tokenBalance < _amount) {
                 token.mintToOracle();
@@ -167,7 +167,7 @@ contract TokenBridge is LayerTransition{
     /// @param _amount of tokens to withdraw
     /// @return max amount of tokens that can be withdrawn
     function _refreshWithdrawLimit(uint256 _amount) internal returns (uint256) {
-        if (block.timestamp - withdrawLimitUpdateTime > DEPOSIT_LIMIT_UPDATE_INTERVAL) {
+        if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
             uint256 _tokenBalance = token.balanceOf(address(this));
             if (_tokenBalance < _amount) {
                 token.mintToOracle();
