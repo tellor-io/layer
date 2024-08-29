@@ -153,8 +153,8 @@ contract TokenBridge is LayerTransition{
 
     function pauseBridge() external {
         require(msg.sender == bridge.guardian(), "TokenBridge: only guardian can pause bridge");
-        require(bridgeState == BridgeState.NORMAL, "TokenBridge: bridge is already paused");
-        require(token.transferFrom(msg.sender, address(0), 10000 ether), "TokenBridge: transfer failed");
+        require(bridgeState == BridgeState.NORMAL, "TokenBridge: can only pause once");
+        require(token.transferFrom(msg.sender, address(0), PAUSE_TRIBUTE_AMOUNT), "TokenBridge: transfer failed");
         bridgeState = BridgeState.PAUSED;
         bridgeStateUpdateTime = block.timestamp;
         emit BridgeStateUpdated(BridgeState.PAUSED);
