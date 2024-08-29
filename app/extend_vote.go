@@ -309,7 +309,10 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 
 	// Convert the operator's public key to a Bech32 validator address
 	config := sdk.GetConfig()
+	fmt.Println("config: ", config)
 	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
+	fmt.Println("bech32PrefixValAddr: ", bech32PrefixValAddr)
+	fmt.Println("key.Address().Bytes(): ", key.Address().Bytes())
 	bech32ValAddr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, key.Address().Bytes())
 	if err != nil {
 		return "", fmt.Errorf("failed to convert operator public key to Bech32 validator address: %w", err)

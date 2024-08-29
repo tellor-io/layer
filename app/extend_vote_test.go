@@ -11,6 +11,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
@@ -18,11 +19,14 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
+	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -326,9 +330,7 @@ func (s *VoteExtensionTestSuite) TestSignMessage() {
 	h := s.handler
 
 	// Initial keyring state
-	keys, err := s.kr.List()
-	require.NoError(err)
-	require.Len(keys, 0)
+	s.kr = mocks.NewKeyring(s.T())
 
 	testCases := []struct {
 		name          string
@@ -340,6 +342,18 @@ func (s *VoteExtensionTestSuite) TestSignMessage() {
 			name:          "Empty keyring",
 			message:       []byte("msg"),
 			expectedError: true,
+			setup: func() {
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("Sign", mock.Anything, mock.Anything, mock.Anything).Return(nil, nil, errors.New("empty keyring")).Maybe()
+
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				s.T().Cleanup(func() {
+					patches.Reset()
+				})
+			},
 		},
 		// Add more test cases here
 	}
@@ -381,10 +395,11 @@ func (s *VoteExtensionTestSuite) TestGetKeyring() {
 func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	require := s.Require()
 	// h := s.handler
+	patches := gomonkey.NewPatches()
 
 	type testCase struct {
 		name             string
-		setupMocks       func(h *app.VoteExtHandler)
+		setupMocks       func(h *app.VoteExtHandler) *gomonkey.Patches
 		expectedError    bool
 		expectedErrorMsg string
 	}
@@ -392,54 +407,108 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	testCases := []testCase{
 		{
 			name: "err getting keyring",
-			setupMocks: func(h *app.VoteExtHandler) {
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
 				s.kr = nil
+				return nil
 			},
 			expectedError:    true,
 			expectedErrorMsg: "failed to get keyring:",
 		},
 		{
 			name: "err getting keyname",
-			setupMocks: func(h *app.VoteExtHandler) {
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
 				s.kr = mocks.NewKeyring(s.T())
 				tempDir := s.T().TempDir()
 				viper.Set("keyring-backend", "test")
 				viper.Set("keyring-dir", tempDir)
+				return nil
 			},
 			expectedError:    true,
 			expectedErrorMsg: "key name not found, please set --key-name flag",
 		},
 		{
 			name: "empty keyring",
-			setupMocks: func(h *app.VoteExtHandler) {
-				s.kr = mocks.NewKeyring(s.T())
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
 				tempDir := s.T().TempDir()
 				viper.Set("key-name", "testkey")
 				viper.Set("keyring-backend", "test")
 				viper.Set("keyring-dir", tempDir)
-				// s.kr.On("List").Return([]*keyring.Record{}, nil).Once()
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("List").Return([]*keyring.Record{}, nil).Once()
+
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				return patches
 			},
 			expectedError:    true,
 			expectedErrorMsg: "no keys found in keyring",
 		},
-		// {
-		// 	name: "kr.Key error",
-		// 	setupMocks: func() {
-		// 		tempDir := s.T().TempDir()
-		// 		viper.Set("keyring-backend", "test")
-		// 		viper.Set("keyring-dir", tempDir)
-		// 		viper.Set("key-name", "testkey")
-		// 		pubKey := &secp256k1.PubKey{Key: []byte("pubkey")}
-		// 		anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
-		// 		require.NoError(err)
-		// 		s.kr.On("List").Return([]*keyring.Record{
-		// 			{Name: "testkey", PubKey: anyPubKey},
-		// 		}, nil).Once()
-		// 		// s.kr.On("Key", "testkey").Return(nil, errors.New("error!")).Once()
-		// 	},
-		// 	expectedError:    true,
-		// 	expectedErrorMsg: "failed to get operator key:",
-		// },
+		{
+			name: "kr.Key error",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				tempDir := s.T().TempDir()
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				viper.Set("key-name", "testkey")
+				pubKey := &secp256k1.PubKey{Key: []byte("pubkey")}
+				anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
+				require.NoError(err)
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("List").Return([]*keyring.Record{
+					{Name: "testkey", PubKey: anyPubKey},
+				}, nil).Once()
+				mockKr.On("Key", "testkey").Return(nil, errors.New("error!")).Once()
+
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				return patches
+			},
+			expectedError:    true,
+			expectedErrorMsg: "failed to get operator key:",
+		},
+		{
+			name: "success",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				tempDir := s.T().TempDir()
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				viper.Set("key-name", "testkey")
+				priv := hd.Secp256k1.Generate()([]byte("test"))
+				// Create a public key
+				pubKey := priv.PubKey()
+				// Create an AnyPubKey
+				anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
+				require.NoError(err)
+				// Create a local item
+				localItem, err := keyring.NewLocalRecord(
+					"testkey",
+					priv,
+					pubKey,
+				)
+				require.NoError(err)
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("List").Return([]*keyring.Record{
+					{Name: "testkey", PubKey: anyPubKey},
+				}, nil).Once()
+
+				mockKr.On("Key", "testkey").Return(&keyring.Record{
+					Name:   "testkey",
+					PubKey: anyPubKey,
+					Item:   localItem.Item,
+				}, nil).Once()
+				fmt.Println("anyPubKey: ", anyPubKey)
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				return patches
+			},
+			expectedError: false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -450,11 +519,10 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 				s.oracleKeeper,
 				s.bridgeKeeper,
 			)
-			fmt.Println("s.kr: ", s.kr)
+			defer patches.Reset()
+			defer viper.Reset()
 			tc.setupMocks(handler)
-			fmt.Println("s.kr: ", s.kr)
 			resp, err := handler.GetOperatorAddress()
-			fmt.Println("s.kr: ", s.kr)
 			if tc.expectedError {
 				require.Error(err)
 				require.Contains(err.Error(), tc.expectedErrorMsg)
@@ -462,7 +530,7 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 				require.NoError(err)
 				require.NotEmpty(resp)
 			}
-			viper.Reset()
+
 		})
 	}
 }
