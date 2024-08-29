@@ -1,8 +1,9 @@
 # ADR 2001: TRB bridge structure
 ## Authors
 
-@themandalore 
+@themandalore
 @brendaloya
+@tkernell
 
 ## Changelog
 
@@ -10,7 +11,7 @@
 - 2024-04-01: revised for more discussion and align with data spec
 - 2024-08-12: spelling
 - 2024-08-20: added the claim deposit tip
-
+- 2024-08-29: add separate withdraw and deposit limits and minimum deposit amount
 ## Context
 
 Tellor Tributes (TRB) is the tellor token. It exists on Ethereum and cannot be changed. It mints ~4k to the team each month and ~4k to the oracle contract for time based inflationary rewards (tbr). When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer. Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 1 hour window (this is allowed so that reporters are able to wait a certain amount of blocks before reporting so that the state of Ethereum has reached a high level of finality) and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specified deposit ID.  
@@ -20,7 +21,7 @@ Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the f
  ![ ADR2001](./graphics/adr2001.png)
 
 
-As an additional security measure, the bridge contract will not allow more than 20% of the total supply on Layer to be bridged within a 12 hour period (the function will be locked). This will be to ensure that someone does not bridge over a very large amount to stake/grief the network, manipulate votes, or grief the system via disputes without proper time to analyze the situation. For the reverse direction, parties will burn TRB on Layer, the validators will then attest that it happened and then the bridge contract on Ethereum can use the tellor data as any other user, but this time reading burn events. A 20% withdraw limit is also used in this direction and the bridge contract will also use the data optimistically (12 hours old) to further reduce attack vectors.  
+As an additional security measure, the bridge contract will not allow more than 20% of the total supply on Layer to be bridged to Layer within a 12 hour period (the function will be locked). This will be to ensure that someone does not bridge over a very large amount to stake/grief the network, manipulate votes, or grief the system via disputes without proper time to analyze the situation. The bridge contract also enforces a minimum deposit amount of 0.1 TRB to prevent spamming the bridge with small deposits. For the reverse direction, parties will burn TRB on Layer, the validators will then attest that it happened and then the bridge contract on Ethereum can use the tellor data as any other user, but this time reading burn events. A 5% withdraw limit per 12 hours is used in this direction and the bridge contract will also use the data optimistically (12 hours old) to further reduce attack vectors.  The 5% withdraw limit mitigates the worst case scenario where a supermajority of the reporter set is compromised, allowing time to react and coordinate a social fork.
 
 The cycle list helps keep the network alive by providing a list of data requests that reporters can support to receive time-based rewards(inflationary rewards) when there are no tips available to claim. Each data request on the cycle list rotates over time so that each request gets pushed on chain on a regular basis. The bridge deposit data request will not appear in the "next request" of the cycle list, however reporters will be allowed to report for it and claim time based rewards for it. Time based rewards will be split between the data request on the cycle list and the bridged deposit request. Parties can also use the tip functionality to incentivize faster updates for deposits. 
 
