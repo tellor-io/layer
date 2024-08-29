@@ -993,7 +993,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v0.4.2"
+	const UpgradeName = "v0.5.0"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
@@ -1008,11 +1008,7 @@ func (app *App) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				globalfee.ModuleName,
-			},
-		}
+		storeUpgrades := storetypes.StoreUpgrades{}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
