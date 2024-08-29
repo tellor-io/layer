@@ -69,7 +69,6 @@ func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc co
 		}
 		return false, nil
 	})
-
 	if err != nil {
 		return err
 	}

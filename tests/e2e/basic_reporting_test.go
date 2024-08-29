@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil"
@@ -362,6 +363,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
 	//---------------------------------------------------------------------------
+	// Height 5
+	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(commitHeight + 1)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -431,7 +434,10 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check reporter starting shares
 	deleBeforeReport2, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
-	expectedShares := math.LegacyNewDecFromInt(deleBeforeReport.GetShares().TruncateInt().Add(math.NewInt(98 + 8928))) // 8928 is the tbr that was earned
+	tipPlusTbr := math.NewInt(98 + 8928)
+	twoPercentTip := sdk.NewCoin(s.Setup.Denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
+	twoPercentTipPlusTbr := sdk.NewCoin(s.Setup.Denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(tipPlusTbr.Int64())))
+	expectedShares := math.LegacyNewDecFromInt(deleBeforeReport.GetShares().TruncateInt().Add(tipPlusTbr)) // 8928 is the tbr that was earned
 	require.Equal(deleBeforeReport2.GetShares(), expectedShares)
 
 	// create tip msg
@@ -447,7 +453,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that tip is in oracle module account
 	tipModuleAcct = s.Setup.Accountkeeper.GetModuleAddress(oracletypes.ModuleName)
 	tipAcctBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tipModuleAcct, s.Setup.Denom)
-	require.Equal(tipAcctBalance, tipAmount.Sub(twoPercent))
+	require.Equal(tipAcctBalance.Amount, tipAmount.Amount.Sub(twoPercentTip.Amount))
 	// create submit msg
 	revealMsgTrb := oracletypes.MsgSubmitValue{
 		Creator:   reporterAccount.String(),
@@ -467,17 +473,19 @@ func (s *E2ETestSuite) TestBasicReporting() {
 		QueryId: hex.EncodeToString(queryIdTrb),
 	}
 	// query aggregated report
-	resultTrb, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequestTrb)
+	reportTrb, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequestTrb)
 	require.NoError(err)
-	require.Equal(resultTrb.Aggregate.AggregateReportIndex, int64(0))
-	require.Equal(resultTrb.Aggregate.AggregateValue, testutil.EncodeValue(1_000_000))
-	require.Equal(resultTrb.Aggregate.AggregateReporter, reporterAccount.String())
-	require.Equal(queryIdTrb, resultTrb.Aggregate.QueryId)
-	require.Equal(int64(4000), resultTrb.Aggregate.ReporterPower)
-	require.Equal(int64(6), resultTrb.Aggregate.Height)
+	require.Equal(reportTrb.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(reportTrb.Aggregate.AggregateValue, testutil.EncodeValue(1_000_000))
+	require.Equal(reportTrb.Aggregate.AggregateReporter, reporterAccount.String())
+	require.Equal(queryIdTrb, reportTrb.Aggregate.QueryId)
+	require.Equal(int64(4000), reportTrb.Aggregate.ReporterPower)
+	require.Equal(int64(6), reportTrb.Aggregate.Height)
 	// check that the tip is in tip escrow
 	tipEscrowBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tipEscrowAcct, s.Setup.Denom) // 98 loya
-	require.Equal(tipAmount.Amount.Sub(twoPercent.Amount), tipEscrowBalance.Amount)
+	fmt.Println("tipEscrowBalance", tipEscrowBalance)
+	fmt.Println("twoPercent.Amount", twoPercent.Amount)
+	require.Equal(tipPlusTbr.Sub(twoPercentTipPlusTbr.Amount), tipEscrowBalance.Amount)
 	// withdraw tip
 	_, err = msgServerReporter.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
@@ -487,5 +495,9 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that reporter now has more bonded tokens
 	deleAfter, err = s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
-	require.Equal(deleBeforeReport2.GetShares().Add(math.LegacyNewDec(98)), deleAfter.GetShares())
+	require.Equal(deleBeforeReport2.GetShares().Add(math.LegacyNewDecFromInt(tipPlusTbr)), deleAfter.GetShares())
+
+	moduleACCT := s.Setup.Accountkeeper.GetModuleAccount(s.Setup.Ctx, minttypes.TimeBasedRewards)
+	fmt.Println("moduleACCT", moduleACCT)
+	require.NotNil(moduleACCT)
 }

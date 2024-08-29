@@ -54,10 +54,10 @@ func TestMigrateStore(t *testing.T) {
 		types.NewQueryIndex(sb),
 	)
 
-	oldquery.Set(ctx, []byte("key"), types.QueryMeta{Id: 1, Expiration: ctx.BlockTime()})
-	oldquery.Set(ctx, []byte("key2"), types.QueryMeta{Id: 2, Expiration: ctx.BlockTime().Add(time.Hour)})
-	oldquery.Set(ctx, []byte("key3"), types.QueryMeta{Id: 3, Expiration: ctx.BlockTime().Add(2 * time.Hour)})
-	oldquery.Set(ctx, []byte("key4"), types.QueryMeta{Id: 4, Expiration: ctx.BlockTime().Add(-3 * time.Hour)})
+	require.NoError(t, oldquery.Set(ctx, []byte("key"), types.QueryMeta{Id: 1, Expiration: ctx.BlockTime()}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key2"), types.QueryMeta{Id: 2, Expiration: ctx.BlockTime().Add(time.Hour)}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key3"), types.QueryMeta{Id: 3, Expiration: ctx.BlockTime().Add(2 * time.Hour)}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key4"), types.QueryMeta{Id: 4, Expiration: ctx.BlockTime().Add(-3 * time.Hour)}))
 	err := migrations.MigrateStore(ctx, storeService, cdc, newquery)
 	require.NoError(t, err)
 
@@ -75,5 +75,4 @@ func TestMigrateStore(t *testing.T) {
 
 	_, err = newquery.Get(ctx, collections.Join([]byte("key4"), uint64(4)))
 	require.ErrorIs(t, err, collections.ErrNotFound)
-
 }
