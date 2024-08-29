@@ -55,7 +55,7 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(await tbridge.token(), await token.address)
         assert.equal(await tbridge.bridge(), await blobstream.address)
     })
-    it("withdrawFromLayer", async function () {
+    it.only("withdrawFromLayer", async function () {
         depositAmount = h.toWei("20")
         tip = h.toWei("0")
         await h.expectThrow(tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)) // not approved
@@ -102,6 +102,97 @@ describe("TokenBridge - Function Tests", async function () {
         )
         recipientBal = await token.balanceOf(EVM_RECIPIENT)
         expectedBal = 20e12 // 20 loya
+        assert.equal(recipientBal.toString(), expectedBal)
+
+        // assemble another withdraw, freeze bridge, then unfreeze
+        await token.faucet(accounts[0].address)
+        await token.transfer(tbridge.address, h.toWei("1000"))
+        await h.advanceTime(43200)
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        attestTimestamp = blocky.timestamp * 1000
+        WITHDRAW2_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 2])
+        WITHDRAW2_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridge", WITHDRAW2_QUERY_DATA_ARGS])
+        WITHDRAW2_QUERY_ID = h.hash(WITHDRAW2_QUERY_DATA)
+        value = h.getWithdrawValue(EVM_RECIPIENT,LAYER_RECIPIENT,20)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp
+        )
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp
+        )
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(guardian.address)
+        }
+        await token.connect(guardian).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(guardian).pauseBridge()
+        await h.expectThrow(tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            2
+        ))
+        balanceDead = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
+        assert.equal(balanceDead.toString(), h.toWei("10000"))
+
+        await h.advanceTime(86400 * 21)
+        // update the validator set
+        blocky = await h.getBlock()
+        valTimestamp = (blocky.timestamp - 2) * 1000
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        await blobstream.connect(guardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
+
+        // withdraw
+        timestamp = (blocky.timestamp - 43200) * 1000
+        attestTimestamp = blocky.timestamp * 1000
+        value = h.getWithdrawValue(EVM_RECIPIENT,LAYER_RECIPIENT,20)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp
+        )
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp
+        )
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            2
+        )
+        recipientBal = await token.balanceOf(EVM_RECIPIENT)
+        expectedBal = 40e12 // 40 loya
         assert.equal(recipientBal.toString(), expectedBal)
     })
     it("depositToLayer", async function () {
