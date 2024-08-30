@@ -8,13 +8,16 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
+	"github.com/agiledragon/gomonkey/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
 	"github.com/tellor-io/layer/app/testutils"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/testutil/sample"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
@@ -127,12 +130,61 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 
 	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
 	attReq := bridgetypes.AttestationRequests{
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(nil, collections.ErrNotFound).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
+	attReq := bridgetypes.AttestationRequests{
 		Requests: []*bridgetypes.AttestationRequest{
 			{
 				Snapshot: []byte("snapshot"),
 			},
 		},
 	}
+	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
+		Attestation: []byte("attestation2"),
+		Snapshot:    []byte("snapshot2"),
+	})
+	require.Equal(len(bridgeVoteExt.OracleAttestations), 2)
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig too big, reject
+	bridgeVoteExt.InitialSignature.SignatureA = make([]byte, 100000)
+	bridgeVoteExt.OracleAttestations = []app.OracleAttestation{
+		oracleAtt,
+	}
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig good, valset sig too big, reject
+	bridgeVoteExt.ValsetSignature.Signature = make([]byte, 100000)
+	bridgeVoteExt.InitialSignature = app.InitialSignature{
+		SignatureA: []byte("signature"),
+		SignatureB: []byte("signature"),
+	}
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
 		Attestation: []byte("attestation2"),
 		Snapshot:    []byte("snapshot2"),

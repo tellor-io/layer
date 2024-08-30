@@ -139,6 +139,7 @@ func initRootCmd(
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
+		ModuleHashByHeightQuery(newApp),
 	)
 }
 

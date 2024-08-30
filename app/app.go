@@ -77,7 +77,6 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -994,18 +993,11 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v0.4.2"
+	const UpgradeName = "v0.5.0"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			sdkctx := sdk.UnwrapSDKContext(ctx)
-			params := app.GlobalFeeKeeper.GetParams(sdkctx)
-			params.MinimumGasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(BondDenom, math.LegacyNewDecWithPrec(25, 4)))
-			err := app.GlobalFeeKeeper.SetParams(sdkctx, params)
-			if err != nil {
-				return nil, err
-			}
 			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)
@@ -1016,11 +1008,7 @@ func (app *App) RegisterUpgradeHandlers() {
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				globalfee.ModuleName,
-			},
-		}
+		storeUpgrades := storetypes.StoreUpgrades{}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
