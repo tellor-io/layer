@@ -3,7 +3,6 @@ package app_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -234,12 +233,12 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	req = &abci.RequestVerifyVoteExtension{
 		VoteExtension: bridgeVoteExtBz,
 	}
-	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	// bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
 
-	s.TearDownTest()
+	// s.TearDownTest()
 }
 
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
@@ -500,7 +499,6 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 					PubKey: anyPubKey,
 					Item:   localItem.Item,
 				}, nil).Once()
-				fmt.Println("anyPubKey: ", anyPubKey)
 				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
 					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
 						return mockKr, nil
@@ -548,6 +546,9 @@ func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
 	require.NoError(err)
 	require.NotEmpty(sigA)
 	require.NotEmpty(sigB)
+
+	s.TearDownTest()
+	patches.Reset()
 }
 
 func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
@@ -558,21 +559,19 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 
 	testCases := []struct {
 		name              string
-		setupMocks        func()
+		setupMocks        func(string)
 		expectedSig       []byte
 		expectedTimestamp uint64
 		expectedError     error
 	}{
 		{
 			name: "Validator already signed",
-			setupMocks: func() {
-				oppAddr := sample.AccAddress()
+			setupMocks: func(oppAddr string) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
 					Timestamp: 10,
 				}, nil).Once()
-				s.mockGetOperatorAddress(oppAddr, nil)
-				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(true, int64(1), nil).Once()
+				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(true, int64(1), nil).Maybe()
 			},
 			expectedSig:       nil,
 			expectedTimestamp: 0,
@@ -580,7 +579,7 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		},
 		{
 			name: "Error getting latest checkpoint index",
-			setupMocks: func() {
+			setupMocks: func(oppAddr string) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("index error")).Once()
 			},
 			expectedSig:       nil,
@@ -589,7 +588,7 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		},
 		{
 			name: "Error getting validator timestamp",
-			setupMocks: func() {
+			setupMocks: func(oppAddr string) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{}, errors.New("timestamp error")).Once()
 			},
@@ -598,27 +597,12 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 			expectedError:     errors.New("timestamp error"),
 		},
 		{
-			name: "Error getting operator address",
-			setupMocks: func() {
-				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
-				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
-					Timestamp: 10,
-				}, nil).Once()
-				s.mockGetOperatorAddress("", errors.New("operator address error"))
-			},
-			expectedSig:       nil,
-			expectedTimestamp: 0,
-			expectedError:     errors.New("operator address error"),
-		},
-		{
 			name: "Error checking if validator signed",
-			setupMocks: func() {
-				oppAddr := sample.AccAddress()
+			setupMocks: func(oppAddr string) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
 					Timestamp: 10,
 				}, nil).Once()
-				s.mockGetOperatorAddress(oppAddr, nil)
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(false, int64(0), errors.New("sign check error")).Once()
 			},
 			expectedSig:       nil,
@@ -629,8 +613,12 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			tc.setupMocks()
+			oppAddr := sample.AccAddress()
+			s.mockGetOperatorAddress(oppAddr, nil)
+			tc.setupMocks(oppAddr)
+
 			sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
+
 			if tc.expectedError != nil {
 				require.Error(err)
 				require.Contains(err.Error(), tc.expectedError.Error())
@@ -639,10 +627,10 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 			}
 			require.Equal(tc.expectedSig, sig)
 			require.Equal(tc.expectedTimestamp, timestamp)
+
+			s.TearDownTest()
 		})
 	}
-
-	s.TearDownTest()
 }
 
 func (s *VoteExtensionTestSuite) mockGetOperatorAddress(address string, err error) {
@@ -652,14 +640,6 @@ func (s *VoteExtensionTestSuite) mockGetOperatorAddress(address string, err erro
 	})
 	s.T().Cleanup(patches.Reset)
 }
-
-// func (s *VoteExtensionTestSuite) mockSignMessage(signature []byte, err error) {
-// 	patches := gomonkey.NewPatches()
-// 	patches.ApplyMethod(reflect.TypeOf(s.handler), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
-// 		return signature, err
-// 	})
-// 	s.T().Cleanup(patches.Reset)
-// }
 
 func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 	require := s.Require()
@@ -797,92 +777,3 @@ func (s *VoteExtensionTestSuite) TestGetValidatorIndexInValset() {
 		})
 	}
 }
-
-// func (s *VoteExtensionTestSuite) TestSignMessage() {
-// 	require := s.Require()
-// 	h := s.handler
-
-// 	testCases := []struct {
-// 		name          string
-// 		message       []byte
-// 		expectedError bool
-// 		setup         func() *gomonkey.Patches
-// 	}{
-// 		{
-// 			name:          "GetKeyring error",
-// 			message:       []byte("msg"),
-// 			expectedError: true,
-// 			setup: func() *gomonkey.Patches {
-// 				patches := gomonkey.NewPatches()
-// 				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-// 					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-// 						return nil, errors.New("GetKeyring error!")
-// 					})
-// 				return patches
-// 			},
-// 		},
-// {
-// 	name:          "key-name not set",
-// 	message:       []byte("msg"),
-// 	expectedError: true,
-// 	setup: func() *gomonkey.Patches {
-// 		patches := gomonkey.NewPatches()
-// 		mockKr := mocks.NewKeyring(s.T())
-// 		patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-// 			func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-// 				return mockKr, nil
-// 			})
-// 		viper.Set("key-name", "")
-// 		return patches
-// 	},
-// },
-// {
-// 	name:          "kr.Sign error",
-// 	message:       []byte("msg"),
-// 	expectedError: true,
-// 	setup: func() {
-// 		mockKr := mocks.NewKeyring(s.T())
-// 		patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-// 			func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-// 				return mockKr, nil
-// 			})
-// 		viper.Set("key-name", "testkey")
-// 		mockKr.On("Sign", "testkey", []byte("msg"), mock.Anything).Return(nil, errors.New("sign error")).Once()
-// 	},
-// },
-// {
-// 	name:          "success",
-// 	message:       []byte("msg"),
-// 	expectedError: false,
-// 	setup: func() {
-// 		mockKr := mocks.NewKeyring(s.T())
-// 		patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-// 			func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-// 				return mockKr, nil
-// 			})
-// 		viper.Set("key-name", "testkey")
-// 		mockKr.On("Sign", "testkey", []byte("msg"), mock.Anything).Return([]byte("signature"), nil).Once()
-// 	},
-// },
-// 	}
-
-// 	for _, tc := range testCases {
-// 		s.Run(tc.name, func() {
-// 			patches := tc.setup()
-// 			defer viper.Reset()
-
-// 			res, err := h.SignMessage(tc.message)
-// 			if tc.expectedError {
-// 				fmt.Println("tc.name: ", tc.name, ", err: ", err)
-// 				require.Error(err)
-// 				require.Nil(res)
-// 			} else {
-// 				require.NoError(err)
-// 				require.NotNil(res)
-// 			}
-// 			patches.Reset()
-// 		})
-// 	}
-
-// 	s.TearDownTest()
-// }

@@ -127,8 +127,6 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	// generate oracle attestations and include them via vote extensions
 	blockHeight := ctx.BlockHeight() - 1
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(blockHeight))
-	fmt.Println("attestationRequests: ", attestationRequests)
-	fmt.Println("err: ", err)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			h.logger.Error("ExtendVoteHandler: failed to get attestation requests", "error", err)
@@ -141,7 +139,6 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		}
 	} else {
 		snapshots := attestationRequests.Requests
-		fmt.Println("snapshots: ", snapshots)
 		// iterate through snapshots and generate sigs
 		if len(snapshots) > 0 {
 			for _, snapshot := range snapshots {
@@ -294,7 +291,6 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to list keys: %w", err)
 	}
-	fmt.Println("krlist: ", krlist)
 	if len(krlist) == 0 {
 		return "", fmt.Errorf("no keys found in keyring")
 	}
@@ -309,10 +305,7 @@ func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 
 	// Convert the operator's public key to a Bech32 validator address
 	config := sdk.GetConfig()
-	fmt.Println("config: ", config)
 	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
-	fmt.Println("bech32PrefixValAddr: ", bech32PrefixValAddr)
-	fmt.Println("key.Address().Bytes(): ", key.Address().Bytes())
 	bech32ValAddr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, key.Address().Bytes())
 	if err != nil {
 		return "", fmt.Errorf("failed to convert operator public key to Bech32 validator address: %w", err)
