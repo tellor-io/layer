@@ -8,16 +8,13 @@ import (
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
-	"github.com/agiledragon/gomonkey/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
 	"github.com/tellor-io/layer/app/testutils"
-	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/testutil/sample"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
@@ -129,7 +126,6 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
-	attReq := bridgetypes.AttestationRequests{
 	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(nil, collections.ErrNotFound).Once()
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
