@@ -34,26 +34,26 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
     it("query layer api, deploy and verify with real params", async function () {
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
-        console.log("deploying bridge...")
+        // console.log("deploying bridge...")
         bridge = await ethers.deployContract("BlobstreamO", [guardian.address]);
         await bridge.init(vp0.powerThreshold, vp0.timestamp, UNBONDING_PERIOD, vp0.checkpoint)
         vts1 = await h.getValsetTimestampByIndex(1)
         vp1 = await h.getValsetCheckpointParams(vts1)
         valSet0 = await h.getValset(vp0.timestamp)
         valSet1 = await h.getValset(vp1.timestamp)
-        console.log("valSet0: ", valSet0)
-        console.log("valSet1: ", valSet1)
+        // console.log("valSet0: ", valSet0)
+        // console.log("valSet1: ", valSet1)
         vsigs1 = await h.getValsetSigs(vp1.timestamp, valSet0, vp1.checkpoint)
-        console.log("valsetSigs1: ", vsigs1)
-        console.log("updating validator set...")
+        // console.log("valsetSigs1: ", vsigs1)
+        //console.log("updating validator set...")
         await bridge.updateValidatorSet(vp1.valsetHash, vp1.powerThreshold, vp1.timestamp, valSet0, vsigs1);
         ethUsdRep0 = await h.getCurrentAggregateReport(ETH_USD_QUERY_ID)
-        console.log("ethUsdRep0: ", ethUsdRep0)
+        // console.log("ethUsdRep0: ", ethUsdRep0)
         snapshots = await h.getSnapshotsByReport(ETH_USD_QUERY_ID, ethUsdRep0.report.timestamp)
-        console.log("snapshots: ", snapshots)
+        // console.log("snapshots: ", snapshots)
         lastSnapshot = snapshots[snapshots.length - 1]
         attestationData = await h.getAttestationDataBySnapshot(lastSnapshot)
-        console.log("attestationData: ", attestationData)
+        // console.log("attestationData: ", attestationData)
         oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
         if (oattests.length == 0) {
             sleeptime = 2
@@ -61,8 +61,8 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             await h.sleep(2)
             oattests = await h.getAttestationsBySnapshot(lastSnapshot, valSet1)
         }
-        console.log("oattests: ", oattests)
-        console.log("verifying oracle data...")
+        // console.log("oattests: ", oattests)
+        // console.log("verifying oracle data...")
         await bridge.verifyOracleData(
             attestationData,
             valSet1,
@@ -72,7 +72,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
     it("optimistic value", async function () {
         // request new attestations on layer and update PAST_REPORT_TS
-        const PAST_REPORT_TS = 1725030526673
+        const PAST_REPORT_TS = 1725039875058
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         bridge = await ethers.deployContract("BlobstreamO", [guardian.address]);
@@ -107,7 +107,8 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             console.log("oracle data verified")
         } catch (error) {
             console.log("Please request new attestations for the eth/usd past report timestamp %s:", pastReport.timestamp)
-            console.log("\n./layerd tx bridge request-attestations {your-address} 83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992 %s --from {your-key-name} --chain-id {chain-id} --keyring-backend {keyring-backend} --keyring-dir {your-keyring-dir} --fees 1000loya --yes", pastReport.timestamp)
+            console.log("\ncharlies_address=$(./layerd keys show charlie --home ~/.layer/alice -a)")
+            console.log("./layerd tx bridge request-attestations $charlies_address 83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992 %s --from charlie --chain-id layertest-1 --keyring-backend test --keyring-dir ~/.layer/alice --fees 1000loya --yes", pastReport.timestamp)
             console.log("\nand update PAST_REPORT_TS variable.")
             assert(false)
         }
