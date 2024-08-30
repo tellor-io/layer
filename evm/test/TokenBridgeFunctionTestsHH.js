@@ -55,7 +55,7 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(await tbridge.token(), await token.address)
         assert.equal(await tbridge.bridge(), await blobstream.address)
     })
-    it.only("withdrawFromLayer", async function () {
+    it("withdrawFromLayer", async function () {
         depositAmount = h.toWei("20")
         tip = h.toWei("0")
         await h.expectThrow(tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)) // not approved
@@ -185,6 +185,7 @@ describe("TokenBridge - Function Tests", async function () {
             nextTimestamp,
             attestTimestamp
         )
+        await tbridge.unpauseBridge()
         await tbridge.withdrawFromLayer(
             oracleDataStruct,
             currentValSetArray,
@@ -321,6 +322,50 @@ describe("TokenBridge - Function Tests", async function () {
         tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
         assert(tokensToClaim == BigInt(0), "tokensToClaim should be correct")
     })
+
+    it("pauseBridge", async function () {
+        bridgeState = await tbridge.bridgeState()
+        assert.equal(bridgeState, 0, "bridge state should be correct")
+        for (let i = 0; i < 20; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await h.expectThrow(tbridge.connect(accounts[1]).pauseBridge()) // not guardian
+        await token.connect(accounts[1]).transfer(guardian.address, h.toWei("20000"))
+        await h.expectThrow(tbridge.connect(guardian).pauseBridge()) // not approved
+        await token.connect(guardian).approve(tbridge.address, h.toWei("1000"))
+        await h.expectThrow(tbridge.connect(guardian).pauseBridge()) // not enought approved
+        await token.connect(guardian).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(guardian).pauseBridge()
+        blocky = await h.getBlock()
+        bridgeState = await tbridge.bridgeState()
+        bridgeStateUpdateTime = await tbridge.bridgeStateUpdateTime()
+        burnedBalance = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
+        assert.equal(bridgeState, 1, "bridge state should be correct")
+        assert.equal(bridgeStateUpdateTime, blocky.timestamp, "bridge state update time should be correct")
+        assert.equal(burnedBalance.toString(), h.toWei("10000"), "burned balance should be correct")
+        await token.connect(guardian).approve(tbridge.address, h.toWei("10000"))
+        await h.expectThrow(tbridge.connect(guardian).pauseBridge()) // already paused
+        await h.advanceTime(86400 * 21)
+        await tbridge.unpauseBridge()
+        await h.expectThrow(tbridge.connect(guardian).unpauseBridge()) // can't pause again
+    })
+
+    it("unpauseBridge", async function () {
+        await h.expectThrow(tbridge.unpauseBridge()) // not paused
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(guardian.address)
+        }
+        await token.connect(guardian).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(guardian).pauseBridge()
+        await h.expectThrow(tbridge.unpauseBridge()) // not enough time
+        await h.advanceTime(86400 * 21)
+        await tbridge.unpauseBridge()
+        bridgeState = await tbridge.bridgeState()
+        assert.equal(bridgeState, 2, "bridge state should be correct")
+        await h.expectThrow(tbridge.unpauseBridge()) // already unpaused
+    })
+
     // more complex tests
     it("100 deposits and withdrawals", async function () {
         this.timeout(300000)

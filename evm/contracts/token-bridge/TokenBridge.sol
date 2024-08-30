@@ -73,7 +73,7 @@ contract TokenBridge is LayerTransition{
     /// @notice claim extra withdraws that were not fully withdrawn
     /// @param _recipient address of the recipient
     function claimExtraWithdraw(address _recipient) external {
-        _checkBridgeState();
+        require(bridgeState != BridgeState.PAUSED, "TokenBridge: bridge is paused");
         uint256 _amountConverted = tokensToClaim[_recipient];
         require(_amountConverted > 0, "amount must be > 0");
         uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
@@ -108,6 +108,22 @@ contract TokenBridge is LayerTransition{
         emit Deposit(depositId, msg.sender, _layerRecipient, _amount, _tip);
     }
 
+    function pauseBridge() external {
+        require(msg.sender == bridge.guardian(), "TokenBridge: only guardian can pause bridge");
+        require(bridgeState == BridgeState.NORMAL, "TokenBridge: can only pause once");
+        require(token.transferFrom(msg.sender, address(0xdEaD), PAUSE_TRIBUTE_AMOUNT), "TokenBridge: transfer failed");
+        bridgeState = BridgeState.PAUSED;
+        bridgeStateUpdateTime = block.timestamp;
+        emit BridgeStateUpdated(BridgeState.PAUSED);
+    }
+
+    function unpauseBridge() external {
+        require(bridgeState == BridgeState.PAUSED, "TokenBridge: bridge is not paused");
+        require(block.timestamp - bridgeStateUpdateTime > PAUSE_PERIOD, "TokenBridge: must wait before unpausing");
+        bridgeState = BridgeState.UNPAUSED;
+        emit BridgeStateUpdated(BridgeState.UNPAUSED);
+    }
+
     /// @notice This withdraws tokens from layer to mainnet Ethereum
     /// @param _attestData The data being verified
     /// @param _valset array of current validator set
@@ -119,7 +135,7 @@ contract TokenBridge is LayerTransition{
         Signature[] calldata _sigs,
         uint256 _depositId
     ) external {
-        _checkBridgeState();
+        require(bridgeState != BridgeState.PAUSED, "TokenBridge: bridge is paused");
         require(_attestData.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawClaimed[_depositId], "TokenBridge: withdraw already claimed");
         require(block.timestamp - (_attestData.report.timestamp / 1000) > 12 hours, "TokenBridge: premature attestation");
@@ -151,15 +167,6 @@ contract TokenBridge is LayerTransition{
         }
     }
 
-    function pauseBridge() external {
-        require(msg.sender == bridge.guardian(), "TokenBridge: only guardian can pause bridge");
-        require(bridgeState == BridgeState.NORMAL, "TokenBridge: can only pause once");
-        require(token.transferFrom(msg.sender, address(0xdEaD), PAUSE_TRIBUTE_AMOUNT), "TokenBridge: transfer failed");
-        bridgeState = BridgeState.PAUSED;
-        bridgeStateUpdateTime = block.timestamp;
-        emit BridgeStateUpdated(BridgeState.PAUSED);
-    }
-
     /// @notice returns the withdraw limit
     /// @return amount of tokens that can be withdrawn
     function withdrawLimit() external view returns (uint256) {
@@ -168,18 +175,6 @@ contract TokenBridge is LayerTransition{
         }
         else{
             return withdrawLimitRecord;
-        }
-    }
-
-    function _checkBridgeState() internal {
-        if (bridgeState == BridgeState.NORMAL || bridgeState == BridgeState.UNPAUSED){
-            return;
-        } else if (bridgeState == BridgeState.PAUSED && block.timestamp - bridgeStateUpdateTime > PAUSE_PERIOD){
-            bridgeState = BridgeState.UNPAUSED;
-            bridgeStateUpdateTime = block.timestamp;
-            emit BridgeStateUpdated(BridgeState.UNPAUSED);
-        } else {
-            revert("TokenBridge: bridge is paused");
         }
     }
 

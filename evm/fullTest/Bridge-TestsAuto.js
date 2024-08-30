@@ -72,7 +72,7 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
 
     it("optimistic value", async function () {
         // request new attestations on layer and update PAST_REPORT_TS
-        const PAST_REPORT_TS = 1721762307161
+        const PAST_REPORT_TS = 1725030526673
         vts0 = await h.getValsetTimestampByIndex(0)
         vp0 = await h.getValsetCheckpointParams(vts0)
         bridge = await ethers.deployContract("BlobstreamO", [guardian.address]);
@@ -106,8 +106,9 @@ describe("BlobstreamO - Auto Function and e2e Tests", function () {
             ))
             console.log("oracle data verified")
         } catch (error) {
-            console.log("Please request new attestations for the past report timestamp: %s", pastReport.timestamp)
-            console.log("and update PAST_REPORT_TS variable.")
+            console.log("Please request new attestations for the eth/usd past report timestamp %s:", pastReport.timestamp)
+            console.log("\n./layerd tx bridge request-attestations {your-address} 83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992 %s --from {your-key-name} --chain-id {chain-id} --keyring-backend {keyring-backend} --keyring-dir {your-keyring-dir} --fees 1000loya --yes", pastReport.timestamp)
+            console.log("\nand update PAST_REPORT_TS variable.")
             assert(false)
         }
     })
