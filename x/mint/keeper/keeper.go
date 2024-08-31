@@ -19,10 +19,11 @@ import (
 
 // Keeper of the mint store
 type Keeper struct {
-	cdc          codec.BinaryCodec
-	storeService storetypes.KVStoreService
-	Schema       collections.Schema
-	bankKeeper   types.BankKeeper
+	cdc           codec.BinaryCodec
+	storeService  storetypes.KVStoreService
+	Schema        collections.Schema
+	bankKeeper    types.BankKeeper
+	accountKeeper types.AccountKeeper
 
 	Minter collections.Item[types.Minter]
 
@@ -51,9 +52,10 @@ func NewKeeper(
 
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:          cdc,
-		storeService: storeService,
-		bankKeeper:   bankKeeper,
+		cdc:           cdc,
+		storeService:  storeService,
+		bankKeeper:    bankKeeper,
+		accountKeeper: accountKeeper,
 
 		Minter:    collections.NewItem(sb, collections.NewPrefix(0), "minter", codec.CollValue[types.Minter](cdc)),
 		authority: authority,

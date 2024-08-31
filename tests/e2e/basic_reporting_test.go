@@ -496,8 +496,4 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	deleAfter, err = s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
 	require.Equal(deleBeforeReport2.GetShares().Add(math.LegacyNewDecFromInt(tipPlusTbr)), deleAfter.GetShares())
-
-	moduleACCT := s.Setup.Accountkeeper.GetModuleAccount(s.Setup.Ctx, minttypes.TimeBasedRewards)
-	fmt.Println("moduleACCT", moduleACCT)
-	require.NotNil(moduleACCT)
 }

@@ -34,7 +34,7 @@ func TestMigrateStore(t *testing.T) {
 
 	require.NoError(t, stateStore.LoadLatestVersion())
 
-	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(stateStore, tmproto.Header{Time: time.Now()}, false, log.NewNopLogger())
 	cdc := codec.NewProtoCodec(registry)
 	sb := collections.NewSchemaBuilder(storeService)
 
