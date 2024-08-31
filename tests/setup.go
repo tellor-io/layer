@@ -19,19 +19,14 @@ import (
 	"github.com/tellor-io/layer/app/config"
 	_ "github.com/tellor-io/layer/x/bridge"
 	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
-
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
-
 	_ "github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
-
 	_ "github.com/tellor-io/layer/x/oracle"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	_ "github.com/tellor-io/layer/x/registry/module"
-
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	_ "github.com/tellor-io/layer/x/reporter/module"
 
@@ -52,23 +47,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
-
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
