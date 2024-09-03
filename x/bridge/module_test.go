@@ -127,6 +127,15 @@ func TestEndBlock(t *testing.T) {
 		Checkpoint: []byte("checkpoint"),
 	})
 	require.NoError(t, err)
+	// save checkpoint params
+	checkpointParams := types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint"),
+		ValsetHash:     []byte("validatorSetHash"),
+		Timestamp:      timestamp.UnixMilli(),
+		PowerThreshold: int64(100),
+	}
+	err = k.ValidatorCheckpointParamsMap.Set(ctx, uint64(timestamp.UnixMilli()), checkpointParams)
+	require.NoError(t, err)
 	ok.On("GetTimestampAfter", sdkCtx, queryId, timestamp).Return(timestampPlus1, nil)
 	err = k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
 		BridgeValidatorSet: []*types.BridgeValidator{

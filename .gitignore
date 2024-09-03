@@ -8,6 +8,8 @@ release/
 .hypothesis
 evm/artifacts
 evm/cache
+evm/.deploys/
+evm/contracts/*/artifacts
 evm/node_modules
 evm/package-lock.json
 prod-sim/deskAlice
