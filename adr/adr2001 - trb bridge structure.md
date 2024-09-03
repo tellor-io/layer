@@ -11,6 +11,7 @@
 - 2024-04-01: revised for more discussion and align with data spec
 - 2024-08-12: spelling
 - 2024-08-20: added the claim deposit tip
+
 - 2024-08-29: add separate withdraw and deposit limits and minimum deposit amount
 ## Context
 
@@ -24,6 +25,7 @@ Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the f
 As an additional security measure, the bridge contract will not allow more than 20% of the total supply on Layer to be bridged to Layer within a 12 hour period (the function will be locked). This will be to ensure that someone does not bridge over a very large amount to stake/grief the network, manipulate votes, or grief the system via disputes without proper time to analyze the situation. The bridge contract also enforces a minimum deposit amount of 0.1 TRB to prevent spamming the bridge with small deposits. For the reverse direction, parties will burn TRB on Layer, the validators will then attest that it happened and then the bridge contract on Ethereum can use the tellor data as any other user, but this time reading burn events. A 5% withdraw limit per 12 hours is used in this direction and the bridge contract will also use the data optimistically (12 hours old) to further reduce attack vectors.  The 5% withdraw limit mitigates the worst case scenario where a supermajority of the reporter set is compromised, allowing time to react and coordinate a social fork.
 
 The cycle list helps keep the network alive by providing a list of data requests that reporters can support to receive time-based rewards(inflationary rewards) when there are no tips available to claim. Each data request on the cycle list rotates over time so that each request gets pushed on chain on a regular basis. The bridge deposit data request will not appear in the "next request" of the cycle list, however reporters will be allowed to report for it and claim time based rewards for it. Time based rewards will be split between the data request on the cycle list and the bridged deposit request. Parties can also use the tip functionality to incentivize faster updates for deposits. 
+
 
  ![ ADR1003](./graphics/adr1003.png)
 
