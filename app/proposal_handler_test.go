@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 	"testing"
 
@@ -116,7 +115,6 @@ func (s *ProposalHandlerTestSuite) TestCheckOracleAttestationsFromLastCommit() {
 	require.Equal(voteExt.OracleAttestations[0].Attestation, att[0])
 	require.Equal(voteExt.OracleAttestations[0].Snapshot, snap[0])
 	require.Equal(valAddr.String(), addrs[0])
-	fmt.Println("addrs: ", addrs, "\natt: ", att, "\nsnap: ", snap)
 }
 
 func (s *ProposalHandlerTestSuite) TestSetEVMAddresses() {
@@ -254,7 +252,6 @@ func (s *ProposalHandlerTestSuite) TestPrepareProposalHandler() ([][]byte, sdk.A
 	}
 
 	res, err := p.PrepareProposalHandler(ctx, &req)
-	fmt.Println("res: ", res, "\nerr: ", err)
 	require.NoError(err)
 	require.NotNil(res)
 
