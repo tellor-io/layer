@@ -144,6 +144,7 @@ func (k Keeper) GetWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress,
 	ethAddress := common.BytesToAddress(recipient)
 	layerAddressString := sender.String()
 	amountUint64 := new(big.Int).SetUint64(amount.Amount.Uint64())
+	tipUint64 := new(big.Int).SetUint64(0)
 
 	// prepare encoding
 	AddressType, err := abi.NewType("address", "", nil)
@@ -163,10 +164,11 @@ func (k Keeper) GetWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress,
 		{Type: AddressType},
 		{Type: StringType},
 		{Type: Uint256Type},
+		{Type: Uint256Type},
 	}
 
 	// encode report value arguments
-	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64, tipUint64)
 	if err != nil {
 		return nil, err
 	}

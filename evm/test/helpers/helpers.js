@@ -132,7 +132,7 @@ getValsetSigs = async (timestamp, valset, checkpoint) => {
 
 getCurrentAggregateReport = async (queryId) => {
   const formattedQueryId = queryId.startsWith("0x") ? queryId.slice(2) : queryId;
-  url = "http://localhost:1317/layer/bridge/get_current_aggregate_report/" + formattedQueryId
+  url = "http://localhost:1317/tellor-io/layer/oracle/get_current_aggregate_report/" + formattedQueryId
   try {
     const response = await axios.get(url)
     agg = response.data.aggregate
