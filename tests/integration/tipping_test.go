@@ -2,20 +2,19 @@ package integration_test
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-)
 
-var pl = fmt.Println
+	"cosmossdk.io/math"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 // Test adding tip to a query that is already in cycle and not expired
 func (s *IntegrationTestSuite) TestTipQueryInCycle() {
@@ -99,5 +98,4 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(err)
 	s.Equal(math.NewInt(980_000), query.Amount)      // 2% burn
 	s.True(query.Expiration.Before(ctx.BlockTime())) // expired commit time window but still has 3 seconds left in reveal time window
-
 }
