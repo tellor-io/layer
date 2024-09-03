@@ -78,6 +78,9 @@ service Query {
   rpc GetQuery(QueryGetQueryRequest) returns (QueryGetQueryResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_query/{query_id}/{id}";
   }
+  rpc TippedQueries(QueryTippedQueriesRequest) returns (QueryTippedQueriesResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/tipped_queries";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -222,4 +225,15 @@ message QueryGetQueryRequest {
 message QueryGetQueryResponse {
   // query defines the query.
   QueryMeta query = 1;
+}
+
+// QueryTippedQueriesRequest is the request type for the Query/TippedQueries RPC method.
+message QueryTippedQueriesRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryTippedQueriesResponse is the response type for the Query/TippedQueries RPC method.
+message QueryTippedQueriesResponse {
+  // queries defines the tipped queries.
+  repeated QueryMeta queries = 1;
 }

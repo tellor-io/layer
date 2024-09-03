@@ -90,10 +90,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}, {ProtoField: "reporter"}},
 				},
 				{
-					RpcMethod:      "GetQuery",
-					Use:            "get-query [query_id] [id]",
-					Short:          "Query to get query metadata",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "id"}},
+					RpcMethod:      "TippedQueries",
+					Use:            "tipped-queries",
+					Short:          "Query to get all available tipped queries",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},

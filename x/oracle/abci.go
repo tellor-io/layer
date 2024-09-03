@@ -8,8 +8,8 @@ import (
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	// Rotate through the cycle list and set the current query index
-	if err := k.RotateQueries(ctx); err != nil {
+	if err := k.SetAggregatedReport(ctx); err != nil {
 		return err
 	}
-	return k.SetAggregatedReport(ctx)
+	return k.RotateQueries(ctx)
 }

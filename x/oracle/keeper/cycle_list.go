@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 
@@ -35,7 +36,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
 	switch {
-	case n >= uint64(max-1):
+	case n >= uint64(max-1): // n could be gt if the cycle list is updated, otherwise n == max-1
 		err := k.CyclelistSequencer.Set(ctx, 0)
 		if err != nil {
 			return err
@@ -45,6 +46,12 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		n += 1
 	}
 	queryId := utils.QueryIDFromData(q[n])
+	// queries that are without tip (ie cycle list queries) could linger in the store
+	// if there are no reports to be aggregated (where queries removed) since you each query cycle we generate a new query
+	err = k.ClearOldqueries(ctx, queryId)
+	if err != nil {
+		return err
+	}
 	querymeta, err := k.CurrentQuery(ctx, queryId)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
@@ -59,7 +66,15 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
 	}
-
+	// if query has a tip don't generate a new query but extend if revealing time is expired
+	if !querymeta.Amount.IsZero() {
+		querymeta.CycleList = true
+		if querymeta.Expiration.Add(offset).Before(blockTime) {
+			querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+		}
+		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+	}
+	// if query has no tip generate a new query window
 	nextId, err := k.QuerySequencer.Next(ctx)
 	if err != nil {
 		return err
@@ -69,6 +84,19 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	querymeta.HasRevealedReports = false
 	querymeta.CycleList = true
 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+}
+
+func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
+	return k.Query.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (stop bool, err error) {
+		if value.Expiration.Add(offset).Before(sdk.UnwrapSDKContext(ctx).BlockTime()) && !value.HasRevealedReports && value.Amount.IsZero() {
+			err := k.Query.Remove(ctx, key)
+			if err != nil {
+				return false, err
+			}
+		}
+		return false, nil
+	})
 }
 
 func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) {

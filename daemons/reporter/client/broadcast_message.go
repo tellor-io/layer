@@ -106,19 +106,19 @@ func (c *Client) generateExternalMessages(ctx context.Context, filepath string, 
 	return nil
 }
 
-func (c *Client) EthMessages(ctx context.Context, bg *sync.WaitGroup) error {
+func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.WaitGroup) error {
 	defer bg.Done()
 	querydata, querymeta, err := c.CurrentQuery(ctx)
 	if err != nil {
 		// log error
-		c.logger.Error("getting current eth query", "error", err)
+		c.logger.Error("getting current query", "error", err)
 	}
-	for !bytes.Equal(querydata, eth) || commitedIds[querymeta.Id] {
+	for !bytes.Equal(querydata, qd) || commitedIds[querymeta.Id] {
 		time.Sleep(time.Millisecond * 500)
 		querydata, querymeta, err = c.CurrentQuery(ctx)
 		if err != nil {
 			// log error
-			c.logger.Error("getting current eth query on recursion", "error", err)
+			c.logger.Error("getting current query on recursion", "error", err)
 		}
 	}
 	value, err := c.median(querydata)
@@ -141,116 +141,8 @@ func (c *Client) EthMessages(ctx context.Context, bg *sync.WaitGroup) error {
 	if err != nil {
 		return fmt.Errorf("error sending tx: %w", err)
 	}
-	fmt.Println("response code after commit message", resp.TxResult.Code)
-
-	time.Sleep(querymeta.RegistrySpecTimeframe)
-	msg := &oracletypes.MsgSubmitValue{
-		Creator:   c.accAddr.String(),
-		QueryData: querydata,
-		Value:     value,
-		Salt:      salt,
-		CommitId:  querymeta.Id,
-	}
-
-	resp, err = c.sendTx(ctx, msg)
-	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
-	}
-	fmt.Println("response after submit message", resp.TxResult.Code)
-	commitedIds[querymeta.Id] = true
-	return nil
-}
-
-func (c *Client) TRBMessages(ctx context.Context, bg *sync.WaitGroup) error {
-	defer bg.Done()
-	querydata, querymeta, err := c.CurrentQuery(ctx)
-	if err != nil {
-		// log error
-		c.logger.Error("getting current trb query", "error", err)
-	}
-
-	for !bytes.Equal(querydata, trb) || commitedIds[querymeta.Id] {
-		time.Sleep(time.Millisecond * 500)
-		querydata, querymeta, err = c.CurrentQuery(ctx)
-		if err != nil {
-			// log error
-			c.logger.Error("getting current trb query on recursion", "error", err)
-		}
-	}
-
-	value, err := c.median(querydata)
-	if err != nil {
-		return fmt.Errorf("error getting median from median client': %w", err)
-	}
-	salt, err := oracleutils.Salt(32)
-	if err != nil {
-		return fmt.Errorf("error generating salt: %w", err)
-	}
-
-	hash := oracleutils.CalculateCommitment(value, salt)
-	commitmsg := &oracletypes.MsgCommitReport{
-		Creator:   c.accAddr.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-
-	resp, err := c.sendTx(ctx, commitmsg)
-	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
-	}
-	fmt.Println("response after commit message", resp.TxResult.Code)
-	time.Sleep(querymeta.RegistrySpecTimeframe)
-	msg := &oracletypes.MsgSubmitValue{
-		Creator:   c.accAddr.String(),
-		QueryData: querydata,
-		Value:     value,
-		Salt:      salt,
-		CommitId:  querymeta.Id,
-	}
-
-	resp, err = c.sendTx(ctx, msg)
-	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
-	}
-	fmt.Println("response after submit message", resp.TxResult.Code)
-	commitedIds[querymeta.Id] = true
-	return nil
-}
-
-func (c *Client) BTCMessages(ctx context.Context, bg *sync.WaitGroup) error {
-	defer bg.Done()
-	querydata, querymeta, err := c.CurrentQuery(ctx)
-	if err != nil {
-		// log error
-		c.logger.Error("getting current btc query", "error", err)
-	}
-	for !bytes.Equal(querydata, btc) || commitedIds[querymeta.Id] {
-		time.Sleep(time.Millisecond * 500)
-		querydata, querymeta, err = c.CurrentQuery(ctx)
-		if err != nil {
-			// log error
-			c.logger.Error("getting current btc query on recursion", "error", err)
-		}
-	}
-	value, err := c.median(querydata)
-	if err != nil {
-		return fmt.Errorf("error getting median from median client': %w", err)
-	}
-	salt, err := oracleutils.Salt(32)
-	if err != nil {
-		return fmt.Errorf("error generating salt: %w", err)
-	}
-
-	hash := oracleutils.CalculateCommitment(value, salt)
-	commitmsg := &oracletypes.MsgCommitReport{
-		Creator:   c.accAddr.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-
-	resp, err := c.sendTx(ctx, commitmsg)
-	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
+	if resp.TxResult.Code != 0 {
+		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
 	}
 	fmt.Println("response after commit message", resp.TxResult.Code)
 	time.Sleep(querymeta.RegistrySpecTimeframe)

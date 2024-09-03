@@ -52,11 +52,14 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	query.Amount = query.Amount.Add(tip.Amount)
 
 	// expired submission window
-	if query.Expiration.Before(ctx.BlockTime()) {
-		// query expired, create new expiration time and new id
+	if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
+		// query expired, create new expiration time
 		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
-		// in aggregate you set revealed reports to false after pay out
-		// so if query either has reports or is paid out then new id should be generated
+		query.CycleList = false
+		// when report is expired and aggregated the query struct is removed
+		// so when is this condition true?
+		// when a cycle list query hasn't been reported and the time is expired (time=expiration+Offset)
+		// and before it becomes in cycle a tip comes in then a new query is created to identify the tip
 		if prevAmt.IsZero() {
 			id, err := k.keeper.QuerySequencer.Next(ctx)
 			if err != nil {
@@ -65,7 +68,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			query.Id = id
 			query.Amount = tip.Amount
 			query.HasRevealedReports = false
-			query.CycleList = false
+
 		}
 	}
 	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)

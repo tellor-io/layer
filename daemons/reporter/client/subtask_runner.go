@@ -26,19 +26,19 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 	bg.Add(3)
 
 	go func() {
-		err := daemonClient.EthMessages(ctx, &bg)
+		err := daemonClient.CyclelistMessages(ctx, eth, &bg)
 		if err != nil {
 			daemonClient.logger.Error("Generating eth messages", "error", err)
 		}
 	}()
 	go func() {
-		err := daemonClient.BTCMessages(ctx, &bg)
+		err := daemonClient.CyclelistMessages(ctx, btc, &bg)
 		if err != nil {
 			daemonClient.logger.Error("Generating btc messages", "error", err)
 		}
 	}()
 	go func() {
-		err := daemonClient.TRBMessages(ctx, &bg)
+		err := daemonClient.CyclelistMessages(ctx, trb, &bg)
 		if err != nil {
 			daemonClient.logger.Error("Generating trb messages", "error", err)
 		}
