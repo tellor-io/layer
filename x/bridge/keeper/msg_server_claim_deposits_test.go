@@ -17,12 +17,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func TestMsgClaimDeposit(t *testing.T) {
+func TestMsgClaimDeposits(t *testing.T) {
 	k, _, bk, ok, _, _, ctx := setupKeeper(t)
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	require.Panics(t, func() {
-		_, err := msgServer.ClaimDeposit(ctx, nil)
+		_, err := msgServer.ClaimDeposits(ctx, nil)
 		require.Error(t, err)
 	})
 
@@ -73,10 +73,10 @@ func TestMsgClaimDeposit(t *testing.T) {
 	depositId := uint64(0)
 	reportIndex := uint64(0)
 
-	result, err := msgServer.ClaimDeposit(sdkCtx, &bridgetypes.MsgClaimDepositRequest{
-		Creator:   msgSender.String(),
-		DepositId: depositId,
-		Index:     reportIndex,
+	result, err := msgServer.ClaimDeposits(sdkCtx, &bridgetypes.MsgClaimDepositsRequest{
+		Creator:    msgSender.String(),
+		DepositIds: []uint64{depositId},
+		Indices:    []uint64{reportIndex},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, result)

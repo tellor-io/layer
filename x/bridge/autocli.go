@@ -97,12 +97,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "recipient"}, {ProtoField: "amount"}},
 				},
 				{
-					RpcMethod:      "ClaimDeposit",
-					Use:            "claim-deposit [creator] [deposit-id] [index]",
-					Short:          "Execute the ClaimDeposit RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "deposit_id"}, {ProtoField: "index"}},
-				},
-				{
 					RpcMethod:      "ClaimDeposits",
 					Use:            "claim-deposits [creator] [deposit-ids] [indices]",
 					Short:          "Execute the ClaimDeposits RPC method",
