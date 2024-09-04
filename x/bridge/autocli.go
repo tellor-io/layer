@@ -102,6 +102,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Execute the ClaimDeposit RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "deposit_id"}, {ProtoField: "index"}},
 				},
+				{
+					RpcMethod:      "ClaimDeposits",
+					Use:            "claim-deposits [creator] [deposit-ids] [indices]",
+					Short:          "Execute the ClaimDeposits RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "deposit_ids"}, {ProtoField: "indices"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
