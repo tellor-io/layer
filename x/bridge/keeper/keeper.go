@@ -763,7 +763,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		if err != nil {
 			return nil
 		}
-		err = k.CreateSnapshot(ctx, queryId, reportTime)
+		err = k.CreateSnapshot(ctx, queryId, reportTime, false)
 		if err != nil {
 			return err
 		}
@@ -772,7 +772,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 }
 
 // Called with each new agg report and with new request for optimistic attestations
-func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp time.Time) error {
+func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp time.Time, isExternalRequest bool) error {
 	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
@@ -891,6 +891,9 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	if err != nil {
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
+	}
+	if isExternalRequest && len(attestRequests.Requests) > 40 {
+		return errors.New("too many external requests")
 	}
 	request := types.AttestationRequest{
 		Snapshot: snapshotBytes,
