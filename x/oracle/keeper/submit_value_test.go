@@ -23,13 +23,15 @@ func (s *KeeperTestSuite) TestSetValue() {
 	reporter := sample.AccAddressBytes()
 	queryId, err := utils.QueryIDFromDataString(queryData)
 	require.NoError(err)
+	querydatabytes, err := utils.QueryBytesFromString(queryData)
+	require.NoError(err)
 	query := types.QueryMeta{
 		Id:                    1,
 		Amount:                math.NewInt(1_000_000),
 		Expiration:            ctx.BlockTime().Add(time.Hour),
 		RegistrySpecTimeframe: time.Hour,
 		HasRevealedReports:    false,
-		QueryId:               queryId,
+		QueryData:             querydatabytes,
 		QueryType:             "SpotPrice",
 	}
 

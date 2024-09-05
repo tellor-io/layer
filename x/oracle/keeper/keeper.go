@@ -154,7 +154,7 @@ func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.Qu
 	query := types.QueryMeta{
 		Id:                    id,
 		RegistrySpecTimeframe: dataSpec.ReportBufferWindow,
-		QueryId:               utils.QueryIDFromData(querydata),
+		QueryData:             querydata,
 	}
 	return query, nil
 }
@@ -167,7 +167,7 @@ func (k Keeper) CurrentQuery(ctx context.Context, queryId []byte) (query types.Q
 	if err != nil {
 		return types.QueryMeta{}, err
 	}
-	if query.QueryId == nil {
+	if query.QueryData == nil {
 		return types.QueryMeta{}, collections.ErrNotFound
 	}
 	return query, nil
@@ -185,7 +185,8 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe 
 	}
 	for _, query := range queries {
 		query.RegistrySpecTimeframe = newTimeframe
-		err = k.Query.Set(ctx, collections.Join(query.QueryId, query.Id), query)
+		queryId := utils.QueryIDFromData(query.QueryData)
+		err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 		if err != nil {
 			return err
 		}

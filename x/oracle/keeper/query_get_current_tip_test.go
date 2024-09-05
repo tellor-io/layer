@@ -39,13 +39,15 @@ func (s *KeeperTestSuite) TestGetCurrentTip() {
 	// good queryData, 1 tip
 	queryID, err := utils.QueryIDFromDataString(queryData)
 	require.NoError(err)
+	querydatabytes, err := utils.QueryBytesFromString(queryData)
+	require.NoError(err)
 	require.NoError(k.Query.Set(ctx, collections.Join(queryID, uint64(1)), types.QueryMeta{
 		Amount:             math.NewInt(10),
 		Id:                 1,
 		Expiration:         ctx.BlockTime().Add(time.Hour),
 		HasRevealedReports: false,
 		QueryType:          "SpotPrice",
-		QueryId:            queryID,
+		QueryData:          querydatabytes,
 	}))
 	res, err = q.GetCurrentTip(ctx, &types.QueryGetCurrentTipRequest{
 		QueryData: queryData,

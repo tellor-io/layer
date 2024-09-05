@@ -33,8 +33,8 @@ message QueryMeta {
   ];
   // indicates whether query has revealed reports
   bool has_revealed_reports = 5;
-  // unique id of the query according to the data spec
-  bytes query_id = 6;
+  // query_data: decodable bytes to field of the data spec
+  bytes query_data = 6;
   // string identifier of the data spec
   string query_type = 7;
   // bool cycle list query
