@@ -59,7 +59,8 @@ func TestCalculateRewardAmount(t *testing.T) {
 				math.LegacyNewDec(10 * 2).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
 				math.LegacyNewDec(20).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
 				math.LegacyNewDec(30).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
-				math.LegacyNewDec(40).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100))},
+				math.LegacyNewDec(40).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
+			},
 			totalPower: 110, // 40 + 30 + 20 + (10 * 2)
 		},
 		{

@@ -1,13 +1,16 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 )
 
@@ -70,4 +73,92 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	res, err = k.TokenBridgeDepositCheck(ctx, queryDataEncoded)
 	require.ErrorContains(err, types.ErrNotTokenDeposit.Error())
 	require.Equal(types.QueryMeta{}, res)
+}
+
+func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+	ctx = ctx.WithBlockTime(time.Now())
+	queryId, _ := utils.QueryIDFromDataString("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
+
+	queryMeta := types.QueryMeta{
+		Id:                    1,
+		Amount:                math.NewInt(100 * 1e6),
+		Expiration:            time.Now().Add(1 * time.Minute),
+		RegistrySpecTimeframe: 1 * time.Minute,
+		HasRevealedReports:    false,
+		QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryType:             "TRBBridge",
+	}
+
+	testCases := []struct {
+		name      string
+		setup     func()
+		queryMeta types.QueryMeta
+		queryId   []byte
+		err       bool
+		checks    func()
+	}{
+		{
+			name:      "tipped and window not expired",
+			queryMeta: queryMeta,
+			err:       false,
+		},
+		{
+			name: "tipped and window expired before offset",
+			queryMeta: types.QueryMeta{
+				Id:                    2,
+				Amount:                math.NewInt(100 * 1e6),
+				Expiration:            time.Now().Add(-1 * time.Minute),
+				RegistrySpecTimeframe: 1 * time.Minute,
+				HasRevealedReports:    false,
+				QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+				QueryType:             "TRBBridge",
+			},
+			err: false,
+			checks: func() {
+				query, err := k.Query.Get(ctx, collections.Join(queryId, uint64(2)))
+				require.NoError(err)
+				require.Equal(query.Expiration, ctx.BlockTime().Add(queryMeta.RegistrySpecTimeframe))
+			},
+		},
+		{
+			name: "no tip and expired before blocktime",
+			queryMeta: types.QueryMeta{
+				Id:                    3,
+				Amount:                math.NewInt(0),
+				Expiration:            time.Now().Add(-24 * time.Hour),
+				RegistrySpecTimeframe: 1 * time.Minute,
+				HasRevealedReports:    false,
+				QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+				QueryType:             "TRBBridge",
+			},
+			err: false,
+			checks: func() {
+				query, err := k.Query.Get(ctx, collections.Join(queryId, uint64(0)))
+				require.NoError(err)
+				require.Equal(query.Expiration, ctx.BlockTime().Add(queryMeta.RegistrySpecTimeframe))
+				require.Equal(query.Id, uint64(0))
+			},
+		},
+	}
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			fmt.Println("TEST: ", tc.name)
+			if tc.setup != nil {
+				tc.setup()
+			}
+			reporterAcc := sample.AccAddressBytes()
+			err := k.HandleBridgeDepositCommit(ctx, queryId, tc.queryMeta, reporterAcc, "hash")
+			if tc.err {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+			}
+			if tc.checks != nil {
+				tc.checks()
+			}
+		})
+	}
 }

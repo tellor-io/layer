@@ -13,7 +13,7 @@ service Msg {
   option (cosmos.msg.v1.service) = true;
   rpc RequestAttestations(MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
   rpc WithdrawTokens(MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
-  rpc ClaimDeposit(MsgClaimDepositRequest) returns (MsgClaimDepositResponse);
+  rpc ClaimDeposits(MsgClaimDepositsRequest) returns (MsgClaimDepositsResponse);
 }
 
 message MsgRequestAttestations {
@@ -36,12 +36,12 @@ message MsgWithdrawTokens {
 
 message MsgWithdrawTokensResponse {}
 
-message MsgClaimDepositRequest {
+message MsgClaimDepositsRequest {
   option (cosmos.msg.v1.signer) = "creator";
 
   string creator = 1;
-  uint64 deposit_id = 2;
-  uint64 index = 3;
+  repeated uint64 deposit_ids = 2;
+  repeated uint64 indices = 3;
 }
 
-message MsgClaimDepositResponse {}
+message MsgClaimDepositsResponse {}
