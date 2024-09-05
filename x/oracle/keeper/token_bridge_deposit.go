@@ -108,6 +108,7 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, queryId []byte, q
 	fmt.Println("blockTime: ", blockTime)
 	fmt.Println("query.Expiration1: ", query.Expiration)
 
+	fmt.Println("query.Amount: ", query.Amount)
 	if query.Amount.IsZero() && query.Expiration.Before(blockTime) {
 
 		nextId, err := k.QuerySequencer.Next(ctx)

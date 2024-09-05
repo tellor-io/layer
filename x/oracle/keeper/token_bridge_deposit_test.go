@@ -80,14 +80,15 @@ func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
 	k := s.oracleKeeper
 	ctx := s.ctx
 	ctx = ctx.WithBlockTime(time.Now())
+	queryId, _ := utils.QueryIDFromDataString("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
 
 	queryMeta := types.QueryMeta{
 		Id:                    1,
-		Amount:                math.NewInt(100),
+		Amount:                math.NewInt(100 * 1e6),
 		Expiration:            time.Now().Add(1 * time.Minute),
 		RegistrySpecTimeframe: 1 * time.Minute,
 		HasRevealedReports:    false,
-		QueryId:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
 		QueryType:             "TRBBridge",
 	}
 
@@ -107,16 +108,16 @@ func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
 			name: "tipped and window expired before offset",
 			queryMeta: types.QueryMeta{
 				Id:                    1,
-				Amount:                math.NewInt(100),
+				Amount:                math.NewInt(100 * 1e6),
 				Expiration:            time.Now().Add(-time.Hour),
 				RegistrySpecTimeframe: 1 * time.Minute,
 				HasRevealedReports:    false,
-				QueryId:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+				QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
 				QueryType:             "TRBBridge",
 			},
 			err: false,
 			checks: func() {
-				query, err := k.Query.Get(ctx, collections.Join(queryMeta.QueryId, queryMeta.Id))
+				query, err := k.Query.Get(ctx, collections.Join(queryId, queryMeta.Id))
 				require.NoError(err)
 				require.Equal(query.Expiration, ctx.BlockTime().Add(queryMeta.RegistrySpecTimeframe))
 			},
@@ -129,7 +130,7 @@ func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
 				tc.setup()
 			}
 			reporterAcc := sample.AccAddressBytes()
-			err := k.HandleBridgeDepositCommit(ctx, tc.queryMeta, reporterAcc, "hash")
+			err := k.HandleBridgeDepositCommit(ctx, queryId, tc.queryMeta, reporterAcc, "hash")
 			if tc.err {
 				require.Error(err)
 			} else {

@@ -261,10 +261,10 @@ func (s *KeeperTestSuite) TestGetQuery() {
 				Id:      1,
 			},
 			setup: func() {
-				queryId, _ := utils.QueryBytesFromString("0x1234")
-				require.NoError(k.Query.Set(ctx, collections.Join(queryId, uint64(1)), types.QueryMeta{
-					QueryId: queryId,
-					Id:      1,
+				queryData, _ := utils.QueryBytesFromString("0x1234")
+				require.NoError(k.Query.Set(ctx, collections.Join(queryData, uint64(1)), types.QueryMeta{
+					QueryData: queryData,
+					Id:        1,
 				}))
 			},
 			wantErr: false,
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 		{
 			name: "success one tipped query",
 			setup: func() {
-				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryId, uint64(1)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
 			},
 			req: &types.QueryTippedQueriesRequest{
 				Pagination: &query.PageRequest{
@@ -358,9 +358,9 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 		{
 			name: "success multiple tips same query",
 			setup: func() {
-				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryId, uint64(1)), queryMeta))
-				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryId, uint64(2)), queryMeta))
-				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryId, uint64(3)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(2)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(3)), queryMeta))
 			},
 			req: &types.QueryTippedQueriesRequest{
 				Pagination: &query.PageRequest{
@@ -373,19 +373,19 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 		{
 			name: "success multiple tips different query",
 			setup: func() {
-				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryId, uint64(1)), queryMeta))
-				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryId, uint64(2)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(2)), queryMeta))
 				secondQueryMeta := types.QueryMeta{
 					Id:                    1,
 					Amount:                math.NewInt(100),
 					Expiration:            time.Now().Add(1 * time.Minute),
 					RegistrySpecTimeframe: 1 * time.Minute,
 					HasRevealedReports:    false,
-					QueryId:               []byte("0x4c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067dec0"),
+					QueryData:             []byte("0x4c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067dec0"),
 					QueryType:             "SpotPrice",
 				}
-				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryId, uint64(3)), secondQueryMeta))
-				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryId, uint64(4)), secondQueryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryData, uint64(3)), secondQueryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryData, uint64(4)), secondQueryMeta))
 			},
 			req: &types.QueryTippedQueriesRequest{
 				Pagination: &query.PageRequest{
