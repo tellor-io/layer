@@ -14,27 +14,31 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) WithdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte) error {
+func (k Keeper) WithdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte) (uint64, error) {
 	// send coins from the sender to the bridge module
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(amount)); err != nil {
-		return err
+		return 0, err
 	}
 	// burn the coins
 	if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(amount)); err != nil {
-		return err
+		return 0, err
 	}
 
 	withdrawalId, err := k.IncrementWithdrawalId(ctx)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	aggregate, err := k.CreateWithdrawalAggregate(ctx, amount, sender, recipient, withdrawalId)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return k.oracleKeeper.SetAggregate(ctx, aggregate)
+	err = k.oracleKeeper.SetAggregate(ctx, aggregate)
+	if err != nil {
+		return 0, err
+	}
+	return withdrawalId, nil
 }
 
 func (k Keeper) IncrementWithdrawalId(goCtx context.Context) (uint64, error) {
