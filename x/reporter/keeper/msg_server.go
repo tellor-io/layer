@@ -299,18 +299,30 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, shares, val.Status, val, false)
+	amtToDelegate := shares.TruncateInt()
+	if amtToDelegate.IsZero() {
+		return nil, errors.New("no tips to withdraw")
+	}
+	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
-	if err != nil {
-		return nil, err
+	remainder := shares.Sub(shares.TruncateDec())
+	if remainder.IsZero() {
+		err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = k.Keeper.SelectorTips.Set(ctx, delAddr, remainder)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// send coins
-	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, shares)))
+	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtToDelegate)))
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +331,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 			"tip_withdrawn",
 			sdk.NewAttribute("selector", msg.SelectorAddress),
 			sdk.NewAttribute("validator", msg.ValidatorAddress),
-			sdk.NewAttribute("amount", shares.String()),
+			sdk.NewAttribute("amount", amtToDelegate.String()),
 		),
 	})
 	return &types.MsgWithdrawTipResponse{}, nil

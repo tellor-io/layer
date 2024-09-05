@@ -1838,30 +1838,122 @@ func (x *fastReflection_MsgWithdrawTokensResponse) ProtoMethods() *protoiface.Me
 	}
 }
 
+var _ protoreflect.List = (*_MsgClaimDepositsRequest_2_list)(nil)
+
+type _MsgClaimDepositsRequest_2_list struct {
+	list *[]uint64
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfUint64((*x.list)[i])
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Uint()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Uint()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message MsgClaimDepositsRequest at list field DepositIds as it is not of Message kind"))
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) NewElement() protoreflect.Value {
+	v := uint64(0)
+	return protoreflect.ValueOfUint64(v)
+}
+
+func (x *_MsgClaimDepositsRequest_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_MsgClaimDepositsRequest_3_list)(nil)
+
+type _MsgClaimDepositsRequest_3_list struct {
+	list *[]uint64
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfUint64((*x.list)[i])
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Uint()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Uint()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message MsgClaimDepositsRequest at list field Indices as it is not of Message kind"))
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) NewElement() protoreflect.Value {
+	v := uint64(0)
+	return protoreflect.ValueOfUint64(v)
+}
+
+func (x *_MsgClaimDepositsRequest_3_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_MsgClaimDepositRequest            protoreflect.MessageDescriptor
-	fd_MsgClaimDepositRequest_creator    protoreflect.FieldDescriptor
-	fd_MsgClaimDepositRequest_deposit_id protoreflect.FieldDescriptor
-	fd_MsgClaimDepositRequest_index      protoreflect.FieldDescriptor
+	md_MsgClaimDepositsRequest             protoreflect.MessageDescriptor
+	fd_MsgClaimDepositsRequest_creator     protoreflect.FieldDescriptor
+	fd_MsgClaimDepositsRequest_deposit_ids protoreflect.FieldDescriptor
+	fd_MsgClaimDepositsRequest_indices     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_tx_proto_init()
-	md_MsgClaimDepositRequest = File_layer_bridge_tx_proto.Messages().ByName("MsgClaimDepositRequest")
-	fd_MsgClaimDepositRequest_creator = md_MsgClaimDepositRequest.Fields().ByName("creator")
-	fd_MsgClaimDepositRequest_deposit_id = md_MsgClaimDepositRequest.Fields().ByName("deposit_id")
-	fd_MsgClaimDepositRequest_index = md_MsgClaimDepositRequest.Fields().ByName("index")
+	md_MsgClaimDepositsRequest = File_layer_bridge_tx_proto.Messages().ByName("MsgClaimDepositsRequest")
+	fd_MsgClaimDepositsRequest_creator = md_MsgClaimDepositsRequest.Fields().ByName("creator")
+	fd_MsgClaimDepositsRequest_deposit_ids = md_MsgClaimDepositsRequest.Fields().ByName("deposit_ids")
+	fd_MsgClaimDepositsRequest_indices = md_MsgClaimDepositsRequest.Fields().ByName("indices")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgClaimDepositRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgClaimDepositsRequest)(nil)
 
-type fastReflection_MsgClaimDepositRequest MsgClaimDepositRequest
+type fastReflection_MsgClaimDepositsRequest MsgClaimDepositsRequest
 
-func (x *MsgClaimDepositRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgClaimDepositRequest)(x)
+func (x *MsgClaimDepositsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgClaimDepositsRequest)(x)
 }
 
-func (x *MsgClaimDepositRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgClaimDepositsRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_bridge_tx_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1873,43 +1965,43 @@ func (x *MsgClaimDepositRequest) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgClaimDepositRequest_messageType fastReflection_MsgClaimDepositRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgClaimDepositRequest_messageType{}
+var _fastReflection_MsgClaimDepositsRequest_messageType fastReflection_MsgClaimDepositsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgClaimDepositsRequest_messageType{}
 
-type fastReflection_MsgClaimDepositRequest_messageType struct{}
+type fastReflection_MsgClaimDepositsRequest_messageType struct{}
 
-func (x fastReflection_MsgClaimDepositRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgClaimDepositRequest)(nil)
+func (x fastReflection_MsgClaimDepositsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgClaimDepositsRequest)(nil)
 }
-func (x fastReflection_MsgClaimDepositRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgClaimDepositRequest)
+func (x fastReflection_MsgClaimDepositsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgClaimDepositsRequest)
 }
-func (x fastReflection_MsgClaimDepositRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgClaimDepositRequest
+func (x fastReflection_MsgClaimDepositsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClaimDepositsRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgClaimDepositRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgClaimDepositRequest
+func (x *fastReflection_MsgClaimDepositsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClaimDepositsRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgClaimDepositRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgClaimDepositRequest_messageType
+func (x *fastReflection_MsgClaimDepositsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgClaimDepositsRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgClaimDepositRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgClaimDepositRequest)
+func (x *fastReflection_MsgClaimDepositsRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgClaimDepositsRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgClaimDepositRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgClaimDepositRequest)(x)
+func (x *fastReflection_MsgClaimDepositsRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgClaimDepositsRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1917,22 +2009,22 @@ func (x *fastReflection_MsgClaimDepositRequest) Interface() protoreflect.ProtoMe
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgClaimDepositRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgClaimDepositsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Creator != "" {
 		value := protoreflect.ValueOfString(x.Creator)
-		if !f(fd_MsgClaimDepositRequest_creator, value) {
+		if !f(fd_MsgClaimDepositsRequest_creator, value) {
 			return
 		}
 	}
-	if x.DepositId != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.DepositId)
-		if !f(fd_MsgClaimDepositRequest_deposit_id, value) {
+	if len(x.DepositIds) != 0 {
+		value := protoreflect.ValueOfList(&_MsgClaimDepositsRequest_2_list{list: &x.DepositIds})
+		if !f(fd_MsgClaimDepositsRequest_deposit_ids, value) {
 			return
 		}
 	}
-	if x.Index != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Index)
-		if !f(fd_MsgClaimDepositRequest_index, value) {
+	if len(x.Indices) != 0 {
+		value := protoreflect.ValueOfList(&_MsgClaimDepositsRequest_3_list{list: &x.Indices})
+		if !f(fd_MsgClaimDepositsRequest_indices, value) {
 			return
 		}
 	}
@@ -1949,19 +2041,19 @@ func (x *fastReflection_MsgClaimDepositRequest) Range(f func(protoreflect.FieldD
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgClaimDepositRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgClaimDepositsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.bridge.MsgClaimDepositRequest.creator":
+	case "layer.bridge.MsgClaimDepositsRequest.creator":
 		return x.Creator != ""
-	case "layer.bridge.MsgClaimDepositRequest.deposit_id":
-		return x.DepositId != uint64(0)
-	case "layer.bridge.MsgClaimDepositRequest.index":
-		return x.Index != uint64(0)
+	case "layer.bridge.MsgClaimDepositsRequest.deposit_ids":
+		return len(x.DepositIds) != 0
+	case "layer.bridge.MsgClaimDepositsRequest.indices":
+		return len(x.Indices) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsRequest"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1971,19 +2063,19 @@ func (x *fastReflection_MsgClaimDepositRequest) Has(fd protoreflect.FieldDescrip
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgClaimDepositsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.bridge.MsgClaimDepositRequest.creator":
+	case "layer.bridge.MsgClaimDepositsRequest.creator":
 		x.Creator = ""
-	case "layer.bridge.MsgClaimDepositRequest.deposit_id":
-		x.DepositId = uint64(0)
-	case "layer.bridge.MsgClaimDepositRequest.index":
-		x.Index = uint64(0)
+	case "layer.bridge.MsgClaimDepositsRequest.deposit_ids":
+		x.DepositIds = nil
+	case "layer.bridge.MsgClaimDepositsRequest.indices":
+		x.Indices = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsRequest"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1993,22 +2085,28 @@ func (x *fastReflection_MsgClaimDepositRequest) Clear(fd protoreflect.FieldDescr
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgClaimDepositRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgClaimDepositsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.bridge.MsgClaimDepositRequest.creator":
+	case "layer.bridge.MsgClaimDepositsRequest.creator":
 		value := x.Creator
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.MsgClaimDepositRequest.deposit_id":
-		value := x.DepositId
-		return protoreflect.ValueOfUint64(value)
-	case "layer.bridge.MsgClaimDepositRequest.index":
-		value := x.Index
-		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgClaimDepositsRequest.deposit_ids":
+		if len(x.DepositIds) == 0 {
+			return protoreflect.ValueOfList(&_MsgClaimDepositsRequest_2_list{})
+		}
+		listValue := &_MsgClaimDepositsRequest_2_list{list: &x.DepositIds}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.MsgClaimDepositsRequest.indices":
+		if len(x.Indices) == 0 {
+			return protoreflect.ValueOfList(&_MsgClaimDepositsRequest_3_list{})
+		}
+		listValue := &_MsgClaimDepositsRequest_3_list{list: &x.Indices}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsRequest"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2022,19 +2120,23 @@ func (x *fastReflection_MsgClaimDepositRequest) Get(descriptor protoreflect.Fiel
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgClaimDepositsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.bridge.MsgClaimDepositRequest.creator":
+	case "layer.bridge.MsgClaimDepositsRequest.creator":
 		x.Creator = value.Interface().(string)
-	case "layer.bridge.MsgClaimDepositRequest.deposit_id":
-		x.DepositId = value.Uint()
-	case "layer.bridge.MsgClaimDepositRequest.index":
-		x.Index = value.Uint()
+	case "layer.bridge.MsgClaimDepositsRequest.deposit_ids":
+		lv := value.List()
+		clv := lv.(*_MsgClaimDepositsRequest_2_list)
+		x.DepositIds = *clv.list
+	case "layer.bridge.MsgClaimDepositsRequest.indices":
+		lv := value.List()
+		clv := lv.(*_MsgClaimDepositsRequest_3_list)
+		x.Indices = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsRequest"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2048,48 +2150,58 @@ func (x *fastReflection_MsgClaimDepositRequest) Set(fd protoreflect.FieldDescrip
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgClaimDepositsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.MsgClaimDepositRequest.creator":
-		panic(fmt.Errorf("field creator of message layer.bridge.MsgClaimDepositRequest is not mutable"))
-	case "layer.bridge.MsgClaimDepositRequest.deposit_id":
-		panic(fmt.Errorf("field deposit_id of message layer.bridge.MsgClaimDepositRequest is not mutable"))
-	case "layer.bridge.MsgClaimDepositRequest.index":
-		panic(fmt.Errorf("field index of message layer.bridge.MsgClaimDepositRequest is not mutable"))
+	case "layer.bridge.MsgClaimDepositsRequest.deposit_ids":
+		if x.DepositIds == nil {
+			x.DepositIds = []uint64{}
+		}
+		value := &_MsgClaimDepositsRequest_2_list{list: &x.DepositIds}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.MsgClaimDepositsRequest.indices":
+		if x.Indices == nil {
+			x.Indices = []uint64{}
+		}
+		value := &_MsgClaimDepositsRequest_3_list{list: &x.Indices}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.MsgClaimDepositsRequest.creator":
+		panic(fmt.Errorf("field creator of message layer.bridge.MsgClaimDepositsRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsRequest"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgClaimDepositRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgClaimDepositsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.bridge.MsgClaimDepositRequest.creator":
+	case "layer.bridge.MsgClaimDepositsRequest.creator":
 		return protoreflect.ValueOfString("")
-	case "layer.bridge.MsgClaimDepositRequest.deposit_id":
-		return protoreflect.ValueOfUint64(uint64(0))
-	case "layer.bridge.MsgClaimDepositRequest.index":
-		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgClaimDepositsRequest.deposit_ids":
+		list := []uint64{}
+		return protoreflect.ValueOfList(&_MsgClaimDepositsRequest_2_list{list: &list})
+	case "layer.bridge.MsgClaimDepositsRequest.indices":
+		list := []uint64{}
+		return protoreflect.ValueOfList(&_MsgClaimDepositsRequest_3_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsRequest"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgClaimDepositRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgClaimDepositsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgClaimDepositRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgClaimDepositsRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2097,7 +2209,7 @@ func (x *fastReflection_MsgClaimDepositRequest) WhichOneof(d protoreflect.OneofD
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgClaimDepositRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgClaimDepositsRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2108,7 +2220,7 @@ func (x *fastReflection_MsgClaimDepositRequest) GetUnknown() protoreflect.RawFie
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgClaimDepositsRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2120,7 +2232,7 @@ func (x *fastReflection_MsgClaimDepositRequest) SetUnknown(fields protoreflect.R
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgClaimDepositRequest) IsValid() bool {
+func (x *fastReflection_MsgClaimDepositsRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -2130,9 +2242,9 @@ func (x *fastReflection_MsgClaimDepositRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgClaimDepositsRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgClaimDepositRequest)
+		x := input.Message.Interface().(*MsgClaimDepositsRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2148,11 +2260,19 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.DepositId != 0 {
-			n += 1 + runtime.Sov(uint64(x.DepositId))
+		if len(x.DepositIds) > 0 {
+			l = 0
+			for _, e := range x.DepositIds {
+				l += runtime.Sov(uint64(e))
+			}
+			n += 1 + runtime.Sov(uint64(l)) + l
 		}
-		if x.Index != 0 {
-			n += 1 + runtime.Sov(uint64(x.Index))
+		if len(x.Indices) > 0 {
+			l = 0
+			for _, e := range x.Indices {
+				l += runtime.Sov(uint64(e))
+			}
+			n += 1 + runtime.Sov(uint64(l)) + l
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2164,7 +2284,7 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgClaimDepositRequest)
+		x := input.Message.Interface().(*MsgClaimDepositsRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2183,15 +2303,45 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Index != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Index))
+		if len(x.Indices) > 0 {
+			var pksize2 int
+			for _, num := range x.Indices {
+				pksize2 += runtime.Sov(uint64(num))
+			}
+			i -= pksize2
+			j1 := i
+			for _, num := range x.Indices {
+				for num >= 1<<7 {
+					dAtA[j1] = uint8(uint64(num)&0x7f | 0x80)
+					num >>= 7
+					j1++
+				}
+				dAtA[j1] = uint8(num)
+				j1++
+			}
+			i = runtime.EncodeVarint(dAtA, i, uint64(pksize2))
 			i--
-			dAtA[i] = 0x18
+			dAtA[i] = 0x1a
 		}
-		if x.DepositId != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.DepositId))
+		if len(x.DepositIds) > 0 {
+			var pksize4 int
+			for _, num := range x.DepositIds {
+				pksize4 += runtime.Sov(uint64(num))
+			}
+			i -= pksize4
+			j3 := i
+			for _, num := range x.DepositIds {
+				for num >= 1<<7 {
+					dAtA[j3] = uint8(uint64(num)&0x7f | 0x80)
+					num >>= 7
+					j3++
+				}
+				dAtA[j3] = uint8(num)
+				j3++
+			}
+			i = runtime.EncodeVarint(dAtA, i, uint64(pksize4))
 			i--
-			dAtA[i] = 0x10
+			dAtA[i] = 0x12
 		}
 		if len(x.Creator) > 0 {
 			i -= len(x.Creator)
@@ -2211,7 +2361,7 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgClaimDepositRequest)
+		x := input.Message.Interface().(*MsgClaimDepositsRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2243,10 +2393,10 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositsRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -2282,42 +2432,156 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 				x.Creator = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositId", wireType)
-				}
-				x.DepositId = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				if wireType == 0 {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
 					}
-					if iNdEx >= l {
+					x.DepositIds = append(x.DepositIds, v)
+				} else if wireType == 2 {
+					var packedLen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						packedLen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if packedLen < 0 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+					}
+					postIndex := iNdEx + packedLen
+					if postIndex < 0 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+					}
+					if postIndex > l {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.DepositId |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
+					var elementCount int
+					var count int
+					for _, integer := range dAtA[iNdEx:postIndex] {
+						if integer < 128 {
+							count++
+						}
 					}
+					elementCount = count
+					if elementCount != 0 && len(x.DepositIds) == 0 {
+						x.DepositIds = make([]uint64, 0, elementCount)
+					}
+					for iNdEx < postIndex {
+						var v uint64
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							v |= uint64(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						x.DepositIds = append(x.DepositIds, v)
+					}
+				} else {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositIds", wireType)
 				}
 			case 3:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
-				}
-				x.Index = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				if wireType == 0 {
+					var v uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint64(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
 					}
-					if iNdEx >= l {
+					x.Indices = append(x.Indices, v)
+				} else if wireType == 2 {
+					var packedLen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+						}
+						if iNdEx >= l {
+							return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						packedLen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if packedLen < 0 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+					}
+					postIndex := iNdEx + packedLen
+					if postIndex < 0 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+					}
+					if postIndex > l {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.Index |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
+					var elementCount int
+					var count int
+					for _, integer := range dAtA[iNdEx:postIndex] {
+						if integer < 128 {
+							count++
+						}
 					}
+					elementCount = count
+					if elementCount != 0 && len(x.Indices) == 0 {
+						x.Indices = make([]uint64, 0, elementCount)
+					}
+					for iNdEx < postIndex {
+						var v uint64
+						for shift := uint(0); ; shift += 7 {
+							if shift >= 64 {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+							}
+							if iNdEx >= l {
+								return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+							}
+							b := dAtA[iNdEx]
+							iNdEx++
+							v |= uint64(b&0x7F) << shift
+							if b < 0x80 {
+								break
+							}
+						}
+						x.Indices = append(x.Indices, v)
+					}
+				} else {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Indices", wireType)
 				}
 			default:
 				iNdEx = preIndex
@@ -2355,23 +2619,23 @@ func (x *fastReflection_MsgClaimDepositRequest) ProtoMethods() *protoiface.Metho
 }
 
 var (
-	md_MsgClaimDepositResponse protoreflect.MessageDescriptor
+	md_MsgClaimDepositsResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_layer_bridge_tx_proto_init()
-	md_MsgClaimDepositResponse = File_layer_bridge_tx_proto.Messages().ByName("MsgClaimDepositResponse")
+	md_MsgClaimDepositsResponse = File_layer_bridge_tx_proto.Messages().ByName("MsgClaimDepositsResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgClaimDepositResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgClaimDepositsResponse)(nil)
 
-type fastReflection_MsgClaimDepositResponse MsgClaimDepositResponse
+type fastReflection_MsgClaimDepositsResponse MsgClaimDepositsResponse
 
-func (x *MsgClaimDepositResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgClaimDepositResponse)(x)
+func (x *MsgClaimDepositsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgClaimDepositsResponse)(x)
 }
 
-func (x *MsgClaimDepositResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgClaimDepositsResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_bridge_tx_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2383,43 +2647,43 @@ func (x *MsgClaimDepositResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgClaimDepositResponse_messageType fastReflection_MsgClaimDepositResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgClaimDepositResponse_messageType{}
+var _fastReflection_MsgClaimDepositsResponse_messageType fastReflection_MsgClaimDepositsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgClaimDepositsResponse_messageType{}
 
-type fastReflection_MsgClaimDepositResponse_messageType struct{}
+type fastReflection_MsgClaimDepositsResponse_messageType struct{}
 
-func (x fastReflection_MsgClaimDepositResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgClaimDepositResponse)(nil)
+func (x fastReflection_MsgClaimDepositsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgClaimDepositsResponse)(nil)
 }
-func (x fastReflection_MsgClaimDepositResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgClaimDepositResponse)
+func (x fastReflection_MsgClaimDepositsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgClaimDepositsResponse)
 }
-func (x fastReflection_MsgClaimDepositResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgClaimDepositResponse
+func (x fastReflection_MsgClaimDepositsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClaimDepositsResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgClaimDepositResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgClaimDepositResponse
+func (x *fastReflection_MsgClaimDepositsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgClaimDepositsResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgClaimDepositResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgClaimDepositResponse_messageType
+func (x *fastReflection_MsgClaimDepositsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgClaimDepositsResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgClaimDepositResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgClaimDepositResponse)
+func (x *fastReflection_MsgClaimDepositsResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgClaimDepositsResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgClaimDepositResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgClaimDepositResponse)(x)
+func (x *fastReflection_MsgClaimDepositsResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgClaimDepositsResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -2427,7 +2691,7 @@ func (x *fastReflection_MsgClaimDepositResponse) Interface() protoreflect.ProtoM
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgClaimDepositResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgClaimDepositsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -2441,13 +2705,13 @@ func (x *fastReflection_MsgClaimDepositResponse) Range(f func(protoreflect.Field
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgClaimDepositResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgClaimDepositsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsResponse"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2457,13 +2721,13 @@ func (x *fastReflection_MsgClaimDepositResponse) Has(fd protoreflect.FieldDescri
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgClaimDepositsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsResponse"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2473,13 +2737,13 @@ func (x *fastReflection_MsgClaimDepositResponse) Clear(fd protoreflect.FieldDesc
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgClaimDepositResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgClaimDepositsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsResponse"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2493,13 +2757,13 @@ func (x *fastReflection_MsgClaimDepositResponse) Get(descriptor protoreflect.Fie
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgClaimDepositsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsResponse"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2513,36 +2777,36 @@ func (x *fastReflection_MsgClaimDepositResponse) Set(fd protoreflect.FieldDescri
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgClaimDepositsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsResponse"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgClaimDepositResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgClaimDepositsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgClaimDepositsResponse"))
 		}
-		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.bridge.MsgClaimDepositsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgClaimDepositResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgClaimDepositsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgClaimDepositResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgClaimDepositsResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2550,7 +2814,7 @@ func (x *fastReflection_MsgClaimDepositResponse) WhichOneof(d protoreflect.Oneof
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgClaimDepositResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgClaimDepositsResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -2561,7 +2825,7 @@ func (x *fastReflection_MsgClaimDepositResponse) GetUnknown() protoreflect.RawFi
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgClaimDepositResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgClaimDepositsResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -2573,7 +2837,7 @@ func (x *fastReflection_MsgClaimDepositResponse) SetUnknown(fields protoreflect.
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgClaimDepositResponse) IsValid() bool {
+func (x *fastReflection_MsgClaimDepositsResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -2583,9 +2847,9 @@ func (x *fastReflection_MsgClaimDepositResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgClaimDepositResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgClaimDepositsResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgClaimDepositResponse)
+		x := input.Message.Interface().(*MsgClaimDepositsResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2607,7 +2871,7 @@ func (x *fastReflection_MsgClaimDepositResponse) ProtoMethods() *protoiface.Meth
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgClaimDepositResponse)
+		x := input.Message.Interface().(*MsgClaimDepositsResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2637,7 +2901,7 @@ func (x *fastReflection_MsgClaimDepositResponse) ProtoMethods() *protoiface.Meth
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgClaimDepositResponse)
+		x := input.Message.Interface().(*MsgClaimDepositsResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2669,10 +2933,10 @@ func (x *fastReflection_MsgClaimDepositResponse) ProtoMethods() *protoiface.Meth
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositsResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgClaimDepositsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -2877,18 +3141,18 @@ func (*MsgWithdrawTokensResponse) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{3}
 }
 
-type MsgClaimDepositRequest struct {
+type MsgClaimDepositsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Creator   string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
-	DepositId uint64 `protobuf:"varint,2,opt,name=deposit_id,json=depositId,proto3" json:"deposit_id,omitempty"`
-	Index     uint64 `protobuf:"varint,3,opt,name=index,proto3" json:"index,omitempty"`
+	Creator    string   `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	DepositIds []uint64 `protobuf:"varint,2,rep,packed,name=deposit_ids,json=depositIds,proto3" json:"deposit_ids,omitempty"`
+	Indices    []uint64 `protobuf:"varint,3,rep,packed,name=indices,proto3" json:"indices,omitempty"`
 }
 
-func (x *MsgClaimDepositRequest) Reset() {
-	*x = MsgClaimDepositRequest{}
+func (x *MsgClaimDepositsRequest) Reset() {
+	*x = MsgClaimDepositsRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_bridge_tx_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2896,46 +3160,46 @@ func (x *MsgClaimDepositRequest) Reset() {
 	}
 }
 
-func (x *MsgClaimDepositRequest) String() string {
+func (x *MsgClaimDepositsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgClaimDepositRequest) ProtoMessage() {}
+func (*MsgClaimDepositsRequest) ProtoMessage() {}
 
-// Deprecated: Use MsgClaimDepositRequest.ProtoReflect.Descriptor instead.
-func (*MsgClaimDepositRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgClaimDepositsRequest.ProtoReflect.Descriptor instead.
+func (*MsgClaimDepositsRequest) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *MsgClaimDepositRequest) GetCreator() string {
+func (x *MsgClaimDepositsRequest) GetCreator() string {
 	if x != nil {
 		return x.Creator
 	}
 	return ""
 }
 
-func (x *MsgClaimDepositRequest) GetDepositId() uint64 {
+func (x *MsgClaimDepositsRequest) GetDepositIds() []uint64 {
 	if x != nil {
-		return x.DepositId
+		return x.DepositIds
 	}
-	return 0
+	return nil
 }
 
-func (x *MsgClaimDepositRequest) GetIndex() uint64 {
+func (x *MsgClaimDepositsRequest) GetIndices() []uint64 {
 	if x != nil {
-		return x.Index
+		return x.Indices
 	}
-	return 0
+	return nil
 }
 
-type MsgClaimDepositResponse struct {
+type MsgClaimDepositsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgClaimDepositResponse) Reset() {
-	*x = MsgClaimDepositResponse{}
+func (x *MsgClaimDepositsResponse) Reset() {
+	*x = MsgClaimDepositsResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_bridge_tx_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2943,14 +3207,14 @@ func (x *MsgClaimDepositResponse) Reset() {
 	}
 }
 
-func (x *MsgClaimDepositResponse) String() string {
+func (x *MsgClaimDepositsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgClaimDepositResponse) ProtoMessage() {}
+func (*MsgClaimDepositsResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgClaimDepositResponse.ProtoReflect.Descriptor instead.
-func (*MsgClaimDepositResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgClaimDepositsResponse.ProtoReflect.Descriptor instead.
+func (*MsgClaimDepositsResponse) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{5}
 }
 
@@ -2985,45 +3249,46 @@ var file_layer_bridge_tx_proto_rawDesc = []byte{
 	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63,
 	0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x1b, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
 	0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x75, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44,
-	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a,
-	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
-	0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6f, 0x73,
-	0x69, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x3a, 0x0c, 0x82, 0xe7,
-	0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73,
-	0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xb0, 0x02, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x69, 0x0a,
-	0x13, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x73, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74,
-	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5a, 0x0a, 0x0e, 0x57, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
-	0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x1a, 0x27, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69,
-	0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5b, 0x0a, 0x0c, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
+	0x6e, 0x73, 0x65, 0x22, 0x7c, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44,
+	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18,
+	0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x1f, 0x0a, 0x0b, 0x64, 0x65, 0x70, 0x6f,
+	0x73, 0x69, 0x74, 0x5f, 0x69, 0x64, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x04, 0x52, 0x0a, 0x64,
+	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x69, 0x6e, 0x64,
+	0x69, 0x63, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x04, 0x52, 0x07, 0x69, 0x6e, 0x64, 0x69,
+	0x63, 0x65, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f,
+	0x72, 0x22, 0x1a, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70,
+	0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xb3, 0x02,
+	0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x69, 0x0a, 0x13, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x24, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x73, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65,
+	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x5a, 0x0a, 0x0e, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x73, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b,
+	0x65, 0x6e, 0x73, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f,
+	0x6b, 0x65, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0d,
+	0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x12, 0x25, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67,
+	0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
 	0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f,
-	0x73, 0x69, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61,
-	0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x07, 0x54,
-	0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7,
+	0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x42,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3044,18 +3309,18 @@ var file_layer_bridge_tx_proto_goTypes = []interface{}{
 	(*MsgRequestAttestationsResponse)(nil), // 1: layer.bridge.MsgRequestAttestationsResponse
 	(*MsgWithdrawTokens)(nil),              // 2: layer.bridge.MsgWithdrawTokens
 	(*MsgWithdrawTokensResponse)(nil),      // 3: layer.bridge.MsgWithdrawTokensResponse
-	(*MsgClaimDepositRequest)(nil),         // 4: layer.bridge.MsgClaimDepositRequest
-	(*MsgClaimDepositResponse)(nil),        // 5: layer.bridge.MsgClaimDepositResponse
+	(*MsgClaimDepositsRequest)(nil),        // 4: layer.bridge.MsgClaimDepositsRequest
+	(*MsgClaimDepositsResponse)(nil),       // 5: layer.bridge.MsgClaimDepositsResponse
 	(*v1beta1.Coin)(nil),                   // 6: cosmos.base.v1beta1.Coin
 }
 var file_layer_bridge_tx_proto_depIdxs = []int32{
 	6, // 0: layer.bridge.MsgWithdrawTokens.amount:type_name -> cosmos.base.v1beta1.Coin
 	0, // 1: layer.bridge.Msg.RequestAttestations:input_type -> layer.bridge.MsgRequestAttestations
 	2, // 2: layer.bridge.Msg.WithdrawTokens:input_type -> layer.bridge.MsgWithdrawTokens
-	4, // 3: layer.bridge.Msg.ClaimDeposit:input_type -> layer.bridge.MsgClaimDepositRequest
+	4, // 3: layer.bridge.Msg.ClaimDeposits:input_type -> layer.bridge.MsgClaimDepositsRequest
 	1, // 4: layer.bridge.Msg.RequestAttestations:output_type -> layer.bridge.MsgRequestAttestationsResponse
 	3, // 5: layer.bridge.Msg.WithdrawTokens:output_type -> layer.bridge.MsgWithdrawTokensResponse
-	5, // 6: layer.bridge.Msg.ClaimDeposit:output_type -> layer.bridge.MsgClaimDepositResponse
+	5, // 6: layer.bridge.Msg.ClaimDeposits:output_type -> layer.bridge.MsgClaimDepositsResponse
 	4, // [4:7] is the sub-list for method output_type
 	1, // [1:4] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -3118,7 +3383,7 @@ func file_layer_bridge_tx_proto_init() {
 			}
 		}
 		file_layer_bridge_tx_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgClaimDepositRequest); i {
+			switch v := v.(*MsgClaimDepositsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3130,7 +3395,7 @@ func file_layer_bridge_tx_proto_init() {
 			}
 		}
 		file_layer_bridge_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgClaimDepositResponse); i {
+			switch v := v.(*MsgClaimDepositsResponse); i {
 			case 0:
 				return &v.state
 			case 1:

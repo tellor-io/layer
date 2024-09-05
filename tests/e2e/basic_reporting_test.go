@@ -219,7 +219,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check reporters outstaning rewards
 	outstandingRewards, err := s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, reporterAccount.Bytes())
 	require.NoError(err)
-	require.Equal(outstandingRewards, expectedTbr.Amount)
+	require.Equal(outstandingRewards.TruncateInt(), expectedTbr.Amount)
 	// withdraw tbr
 	rewards, err := msgServerReporter.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: reporterAddress, ValidatorAddress: validator.OperatorAddress})
 	require.NoError(err)
@@ -296,7 +296,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check reporters outstaning rewards
 	outstandingRewards, err = s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, reporterAccount.Bytes())
 	require.NoError(err)
-	require.Equal(outstandingRewards, expectedTbr.Amount)
+	require.Equal(outstandingRewards.TruncateInt(), expectedTbr.Amount)
 	// withdraw tbr
 	tbrEarned = tbrEarned.Add(outstandingRewards)
 	rewards, err = msgServerReporter.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: reporterAddress, ValidatorAddress: validator.OperatorAddress})
@@ -317,7 +317,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// get reporters shares
 	deleBeforeReport, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
-	require.Equal(deleBeforeReport.GetShares(), math.LegacyNewDecFromInt(math.NewInt(4000*1e6).Add(tbrEarned)))
+	require.Equal(deleBeforeReport.GetShares(), math.LegacyNewDec(4000*1e6).Add(tbrEarned))
 
 	// create tip msg
 	balanceBeforetip := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)

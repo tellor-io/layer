@@ -278,7 +278,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 		Amount:                math.NewInt(0),
 		Expiration:            ctx.BlockTime(),
 		RegistrySpecTimeframe: time.Hour,
-		QueryId:               queryId,
+		QueryData:             qDataBz,
 		QueryType:             "SpotPrice",
 	}
 	reporter := sample.AccAddressBytes()

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.22;
 
-import "../bridge/BlobstreamO.sol";
+import "../interfaces/IBlobstreamO.sol";
 
 contract SimpleLayerUser {
-    BlobstreamO public blobstreamO;
+    IBlobstreamO public blobstreamO;
     PriceData[] public priceData;
     bytes32 public queryId;
 
@@ -18,7 +18,7 @@ contract SimpleLayerUser {
     }
 
     constructor(address _blobstreamO, bytes32 _queryId) {
-        blobstreamO = BlobstreamO(_blobstreamO);
+        blobstreamO = IBlobstreamO(_blobstreamO);
         queryId = _queryId;
     }
 

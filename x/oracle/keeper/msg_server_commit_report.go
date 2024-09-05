@@ -72,7 +72,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 	}
 
 	if query.QueryType == TRBBridgeQueryType {
-		err = k.keeper.HandleBridgeDepositCommit(ctx, query, reporterAddr, msg.Hash)
+		err = k.keeper.HandleBridgeDepositCommit(ctx, queryId, query, reporterAddr, msg.Hash)
 		if err != nil {
 			return nil, err
 		}

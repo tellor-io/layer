@@ -42,7 +42,7 @@ func TestMigrateStore(t *testing.T) {
 		types.QueryTipPrefix,
 		"query",
 		collections.BytesKey,
-		codec.CollValue[types.QueryMeta](cdc),
+		codec.CollValue[migrations.QueryMeta](cdc),
 		migrations.NewQueryIndex(sb),
 	)
 
@@ -54,10 +54,10 @@ func TestMigrateStore(t *testing.T) {
 		types.NewQueryIndex(sb),
 	)
 
-	require.NoError(t, oldquery.Set(ctx, []byte("key"), types.QueryMeta{Id: 1, Expiration: ctx.BlockTime()}))
-	require.NoError(t, oldquery.Set(ctx, []byte("key2"), types.QueryMeta{Id: 2, Expiration: ctx.BlockTime().Add(time.Hour)}))
-	require.NoError(t, oldquery.Set(ctx, []byte("key3"), types.QueryMeta{Id: 3, Expiration: ctx.BlockTime().Add(2 * time.Hour)}))
-	require.NoError(t, oldquery.Set(ctx, []byte("key4"), types.QueryMeta{Id: 4, Expiration: ctx.BlockTime().Add(-3 * time.Hour)}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key"), migrations.QueryMeta{Id: 1, Expiration: ctx.BlockTime()}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key2"), migrations.QueryMeta{Id: 2, Expiration: ctx.BlockTime().Add(time.Hour)}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key3"), migrations.QueryMeta{Id: 3, Expiration: ctx.BlockTime().Add(2 * time.Hour)}))
+	require.NoError(t, oldquery.Set(ctx, []byte("key4"), migrations.QueryMeta{Id: 4, Expiration: ctx.BlockTime().Add(-3 * time.Hour)}))
 	err := migrations.MigrateStore(ctx, storeService, cdc, newquery)
 	require.NoError(t, err)
 

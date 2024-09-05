@@ -391,7 +391,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 
 	tip, err := s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, repAccs[0].Bytes())
 	s.NoError(err)
-	s.Equal(tip, reward, "reporter should get the reward")
+	s.Equal(tip.TruncateInt(), reward, "reporter should get the reward")
 	// withdraw the reward
 	repServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = repServer.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: repAccs[0].String(), ValidatorAddress: valAddrs[0].String()})
@@ -436,14 +436,14 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			name:                 "reporter with 1 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 2 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 	}
@@ -511,21 +511,21 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			name:                 "reporter with 100 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 200 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 		{
 			name:                 "reporter with 300 voting power",
 			reporterIndex:        2,
 			beforeBalance:        reporterStake3,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[2],
 		},
 	}
@@ -1007,8 +1007,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	// delegation shares should increase after reporting and withdrawing
 	del1After, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, delegator1.Bytes(), valAddr1)
 	s.Nil(err)
-	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(327))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
-
+	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(326))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
 	// withdraw del2 delegation from tip escrow
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: delegator2.String(), ValidatorAddress: valAddr2.String()})
 	require.NoError(err)

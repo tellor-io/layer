@@ -69,14 +69,14 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(recipientBal.toString(), expectedBal)
     })
 
-    it.only("depositToLayer", async function () {
+    it("depositToLayer", async function () {
         depositAmount = h.toWei("1")
         assert.equal(await token.balanceOf(await accounts[0].address), h.toWei("1000"))
-        await h.expectThrow(tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)) // not approved
+        await h.expectThrow(tbridge.depositToLayer(depositAmount, 0, LAYER_RECIPIENT)) // not approved
         await token.approve(await tbridge.address, h.toWei("1000"))
-        await h.expectThrow(tbridge.depositToLayer(0, LAYER_RECIPIENT)) // zero amount
-        await h.expectThrow(tbridge.depositToLayer(h.toWei("21"), LAYER_RECIPIENT)) // over limit
-        await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
+        await h.expectThrow(tbridge.depositToLayer(0, 0, LAYER_RECIPIENT)) // zero amount
+        await h.expectThrow(tbridge.depositToLayer(h.toWei("21"), 0, LAYER_RECIPIENT)) // over limit
+        await tbridge.depositToLayer(depositAmount, 0, LAYER_RECIPIENT)
         blocky1 = await h.getBlock()
 
         tbridgeBal = await token.balanceOf(await tbridge.address)
@@ -96,7 +96,7 @@ describe("TokenBridge - Function Tests", async function () {
 
         assert.equal(await tbridge.depositId(), 1)
 
-        await h.advanceTime(43200)
+        await h.advanceTime(43201)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) * BigInt(2) / BigInt(10)
         assert.equal(BigInt(await tbridge.depositLimit()), expectedDepositLimit2);
     })
@@ -106,10 +106,10 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(BigInt(await tbridge.depositLimit()), expectedDepositLimit);
         await token.approve(await tbridge.address, h.toWei("1000"))
         depositAmount = h.toWei("2")
-        await tbridge.depositToLayer(depositAmount, LAYER_RECIPIENT)
+        await tbridge.depositToLayer(depositAmount, 0, LAYER_RECIPIENT)
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
         assert.equal(BigInt(await tbridge.depositLimit()), expectedDepositLimit);
-        await h.advanceTime(43200)
+        await h.advanceTime(43201)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) / BigInt(5)
         assert.equal(BigInt(await tbridge.depositLimit()), expectedDepositLimit2);
     })

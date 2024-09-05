@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
@@ -85,7 +84,6 @@ func (k Keeper) TokenBridgeDepositCheck(ctx context.Context, queryData []byte) (
 		return types.QueryMeta{}, types.ErrNotTokenDeposit
 	}
 
-	queryId := utils.QueryIDFromData(queryData)
 	nextId, err := k.QuerySequencer.Next(ctx)
 	if err != nil {
 		return types.QueryMeta{}, err
@@ -96,7 +94,7 @@ func (k Keeper) TokenBridgeDepositCheck(ctx context.Context, queryData []byte) (
 		RegistrySpecTimeframe: time.Hour,
 		Expiration:            sdk.UnwrapSDKContext(ctx).BlockTime().Add(time.Hour),
 		QueryType:             TRBBridgeQueryType,
-		QueryId:               queryId,
+		QueryData:             queryData,
 		Amount:                math.NewInt(0),
 		CycleList:             true,
 	}
@@ -104,7 +102,7 @@ func (k Keeper) TokenBridgeDepositCheck(ctx context.Context, queryData []byte) (
 	return query, nil
 }
 
-func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, query types.QueryMeta, reporterAcc sdk.AccAddress, hash string) error {
+func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, queryId []byte, query types.QueryMeta, reporterAcc sdk.AccAddress, hash string) error {
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkctx.BlockTime()
 	fmt.Println("blockTime: ", blockTime)
@@ -120,7 +118,7 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, query types.Query
 		// reset query fields when generating next id
 		query.HasRevealedReports = false
 		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
-		err = k.Query.Set(ctx, collections.Join(query.QueryId, query.Id), query)
+		err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 		if err != nil {
 			return err
 		}
@@ -133,7 +131,7 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, query types.Query
 	fmt.Println("query.Expiration.Add(offset).Before(blockTime): ", query.Expiration.Add(offset).Before(blockTime))
 	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Add(offset).Before(blockTime) {
 		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
-		err := k.Query.Set(ctx, collections.Join(query.QueryId, query.Id), query)
+		err := k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 		if err != nil {
 			return err
 		}
@@ -146,7 +144,7 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, query types.Query
 
 	commit := types.Commit{
 		Reporter: reporterAcc.String(),
-		QueryId:  query.QueryId,
+		QueryId:  queryId,
 		Hash:     hash,
 		Incycle:  query.CycleList,
 	}
@@ -155,7 +153,7 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, query types.Query
 		sdk.NewEvent(
 			"new_commit",
 			sdk.NewAttribute("reporter", reporterAcc.String()),
-			sdk.NewAttribute("query_id", hex.EncodeToString(query.QueryId)),
+			sdk.NewAttribute("query_id", hex.EncodeToString(queryId)),
 			sdk.NewAttribute("commit_id", strconv.FormatUint(query.Id, 10)),
 		),
 	})
