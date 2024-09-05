@@ -96,6 +96,7 @@ func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
 		name      string
 		setup     func()
 		queryMeta types.QueryMeta
+		queryId   []byte
 		err       bool
 		checks    func()
 	}{
@@ -107,9 +108,9 @@ func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
 		{
 			name: "tipped and window expired before offset",
 			queryMeta: types.QueryMeta{
-				Id:                    1,
+				Id:                    2,
 				Amount:                math.NewInt(100 * 1e6),
-				Expiration:            time.Now().Add(-time.Hour),
+				Expiration:            time.Now().Add(-1 * time.Minute),
 				RegistrySpecTimeframe: 1 * time.Minute,
 				HasRevealedReports:    false,
 				QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
@@ -117,9 +118,28 @@ func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {
 			},
 			err: false,
 			checks: func() {
-				query, err := k.Query.Get(ctx, collections.Join(queryId, queryMeta.Id))
+				query, err := k.Query.Get(ctx, collections.Join(queryId, uint64(2)))
 				require.NoError(err)
 				require.Equal(query.Expiration, ctx.BlockTime().Add(queryMeta.RegistrySpecTimeframe))
+			},
+		},
+		{
+			name: "no tip and expired before blocktime",
+			queryMeta: types.QueryMeta{
+				Id:                    3,
+				Amount:                math.NewInt(0),
+				Expiration:            time.Now().Add(-24 * time.Hour),
+				RegistrySpecTimeframe: 1 * time.Minute,
+				HasRevealedReports:    false,
+				QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+				QueryType:             "TRBBridge",
+			},
+			err: false,
+			checks: func() {
+				query, err := k.Query.Get(ctx, collections.Join(queryId, uint64(0)))
+				require.NoError(err)
+				require.Equal(query.Expiration, ctx.BlockTime().Add(queryMeta.RegistrySpecTimeframe))
+				require.Equal(query.Id, uint64(0))
 			},
 		},
 	}

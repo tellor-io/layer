@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"reflect"
 	"strconv"
 	"time"
@@ -105,10 +104,7 @@ func (k Keeper) TokenBridgeDepositCheck(ctx context.Context, queryData []byte) (
 func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, queryId []byte, query types.QueryMeta, reporterAcc sdk.AccAddress, hash string) error {
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkctx.BlockTime()
-	fmt.Println("blockTime: ", blockTime)
-	fmt.Println("query.Expiration1: ", query.Expiration)
 
-	fmt.Println("query.Amount: ", query.Amount)
 	if query.Amount.IsZero() && query.Expiration.Before(blockTime) {
 
 		nextId, err := k.QuerySequencer.Next(ctx)
@@ -129,7 +125,6 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, queryId []byte, q
 	// if tip amount is greater than zero and query timeframe plus offset is expired, it means that the query didn't have any revealed reports
 	// and the tip is still there and so the time can be extended only if the query is a bridge deposit or via a tip transaction
 	// maintains the same id until the query is paid out
-	fmt.Println("query.Expiration.Add(offset).Before(blockTime): ", query.Expiration.Add(offset).Before(blockTime))
 	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Add(offset).Before(blockTime) {
 		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
 		err := k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
@@ -138,7 +133,6 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, queryId []byte, q
 		}
 	}
 
-	fmt.Println("query.Expiration2: ", query.Expiration)
 	if query.Expiration.Before(blockTime) {
 		return types.ErrCommitWindowExpired.Wrapf("query for bridge deposit is expired")
 	}
