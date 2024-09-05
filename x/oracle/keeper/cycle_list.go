@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 
@@ -151,16 +150,4 @@ func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist [][]byte) error 
 		}
 	}
 	return nil
-}
-
-func (k Keeper) IncycleCheck(ctx context.Context, queryId []byte) (bool, error) {
-	peek, err := k.CyclelistSequencer.Peek(ctx)
-	if err != nil {
-		return false, err
-	}
-	cyclelist, err := k.GetCyclelist(ctx)
-	if err != nil {
-		return false, err
-	}
-	return bytes.Equal(queryId, cyclelist[peek]), nil
 }

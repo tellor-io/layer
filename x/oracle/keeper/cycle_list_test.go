@@ -114,3 +114,18 @@ func (s *KeeperTestSuite) TestGenesisCycleList() {
 	require.NoError(err)
 	require.Equal(cycleList, querydataBytes)
 }
+
+func (s *KeeperTestSuite) TestGetNextCurrentQueryInCycleList() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	currentQuery, err := k.GetCurrentQueryInCycleList(ctx)
+	require.NoError(err)
+	require.NotNil(currentQuery)
+
+	query, err := k.GetNextCurrentQueryInCycleList(ctx)
+	require.NoError(err)
+	require.NotNil(query)
+	require.NotEqual(currentQuery, query)
+}
