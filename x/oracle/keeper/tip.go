@@ -26,7 +26,7 @@ func (k Keeper) transfer(ctx context.Context, tipper sdk.AccAddress, tip sdk.Coi
 }
 
 func (k Keeper) GetQueryTip(ctx context.Context, queryId []byte) (math.Int, error) {
-	tip, err := k.Query.Get(ctx, queryId)
+	tip, err := k.CurrentQuery(ctx, queryId)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return math.ZeroInt(), nil

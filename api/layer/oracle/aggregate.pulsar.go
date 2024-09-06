@@ -2,7 +2,6 @@
 package oracle
 
 import (
-	binary "encoding/binary"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -11,7 +10,6 @@ import (
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
-	math "math"
 	reflect "reflect"
 	sync "sync"
 )
@@ -187,8 +185,8 @@ func (x *fastReflection_Aggregate) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.StandardDeviation != float64(0) || math.Signbit(x.StandardDeviation) {
-		value := protoreflect.ValueOfFloat64(x.StandardDeviation)
+	if x.StandardDeviation != "" {
+		value := protoreflect.ValueOfString(x.StandardDeviation)
 		if !f(fd_Aggregate_standard_deviation, value) {
 			return
 		}
@@ -253,7 +251,7 @@ func (x *fastReflection_Aggregate) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.oracle.Aggregate.reporter_power":
 		return x.ReporterPower != int64(0)
 	case "layer.oracle.Aggregate.standard_deviation":
-		return x.StandardDeviation != float64(0) || math.Signbit(x.StandardDeviation)
+		return x.StandardDeviation != ""
 	case "layer.oracle.Aggregate.reporters":
 		return len(x.Reporters) != 0
 	case "layer.oracle.Aggregate.flagged":
@@ -291,7 +289,7 @@ func (x *fastReflection_Aggregate) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.Aggregate.reporter_power":
 		x.ReporterPower = int64(0)
 	case "layer.oracle.Aggregate.standard_deviation":
-		x.StandardDeviation = float64(0)
+		x.StandardDeviation = ""
 	case "layer.oracle.Aggregate.reporters":
 		x.Reporters = nil
 	case "layer.oracle.Aggregate.flagged":
@@ -334,7 +332,7 @@ func (x *fastReflection_Aggregate) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfInt64(value)
 	case "layer.oracle.Aggregate.standard_deviation":
 		value := x.StandardDeviation
-		return protoreflect.ValueOfFloat64(value)
+		return protoreflect.ValueOfString(value)
 	case "layer.oracle.Aggregate.reporters":
 		if len(x.Reporters) == 0 {
 			return protoreflect.ValueOfList(&_Aggregate_6_list{})
@@ -385,7 +383,7 @@ func (x *fastReflection_Aggregate) Set(fd protoreflect.FieldDescriptor, value pr
 	case "layer.oracle.Aggregate.reporter_power":
 		x.ReporterPower = value.Int()
 	case "layer.oracle.Aggregate.standard_deviation":
-		x.StandardDeviation = value.Float()
+		x.StandardDeviation = value.Interface().(string)
 	case "layer.oracle.Aggregate.reporters":
 		lv := value.List()
 		clv := lv.(*_Aggregate_6_list)
@@ -468,7 +466,7 @@ func (x *fastReflection_Aggregate) NewField(fd protoreflect.FieldDescriptor) pro
 	case "layer.oracle.Aggregate.reporter_power":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "layer.oracle.Aggregate.standard_deviation":
-		return protoreflect.ValueOfFloat64(float64(0))
+		return protoreflect.ValueOfString("")
 	case "layer.oracle.Aggregate.reporters":
 		list := []*AggregateReporter{}
 		return protoreflect.ValueOfList(&_Aggregate_6_list{list: &list})
@@ -566,8 +564,9 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 		if x.ReporterPower != 0 {
 			n += 1 + runtime.Sov(uint64(x.ReporterPower))
 		}
-		if x.StandardDeviation != 0 || math.Signbit(x.StandardDeviation) {
-			n += 9
+		l = len(x.StandardDeviation)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if len(x.Reporters) > 0 {
 			for _, e := range x.Reporters {
@@ -665,11 +664,12 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 				dAtA[i] = 0x32
 			}
 		}
-		if x.StandardDeviation != 0 || math.Signbit(x.StandardDeviation) {
-			i -= 8
-			binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(x.StandardDeviation))))
+		if len(x.StandardDeviation) > 0 {
+			i -= len(x.StandardDeviation)
+			copy(dAtA[i:], x.StandardDeviation)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.StandardDeviation)))
 			i--
-			dAtA[i] = 0x29
+			dAtA[i] = 0x2a
 		}
 		if x.ReporterPower != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.ReporterPower))
@@ -864,16 +864,37 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 					}
 				}
 			case 5:
-				if wireType != 1 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StandardDeviation", wireType)
 				}
-				var v uint64
-				if (iNdEx + 8) > l {
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
-				iNdEx += 8
-				x.StandardDeviation = float64(math.Float64frombits(v))
+				x.StandardDeviation = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			case 6:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporters", wireType)
@@ -1561,7 +1582,7 @@ type Aggregate struct {
 	// reporter_power is the power of the reporter
 	ReporterPower int64 `protobuf:"varint,4,opt,name=reporter_power,json=reporterPower,proto3" json:"reporter_power,omitempty"`
 	// standard_deviation is the standard deviation of the reports that were aggregated
-	StandardDeviation float64 `protobuf:"fixed64,5,opt,name=standard_deviation,json=standardDeviation,proto3" json:"standard_deviation,omitempty"`
+	StandardDeviation string `protobuf:"bytes,5,opt,name=standard_deviation,json=standardDeviation,proto3" json:"standard_deviation,omitempty"`
 	// list of reporters that were included in the aggregate
 	Reporters []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
 	// flagged is true if the aggregate was flagged by a dispute
@@ -1624,11 +1645,11 @@ func (x *Aggregate) GetReporterPower() int64 {
 	return 0
 }
 
-func (x *Aggregate) GetStandardDeviation() float64 {
+func (x *Aggregate) GetStandardDeviation() string {
 	if x != nil {
 		return x.StandardDeviation
 	}
-	return 0
+	return ""
 }
 
 func (x *Aggregate) GetReporters() []*AggregateReporter {
@@ -1731,7 +1752,7 @@ var file_layer_oracle_aggregate_proto_rawDesc = []byte{
 	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20,
 	0x01, 0x28, 0x03, 0x52, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f, 0x77,
 	0x65, 0x72, 0x12, 0x2d, 0x0a, 0x12, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x5f, 0x64,
-	0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x01, 0x52, 0x11,
+	0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11,
 	0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f,
 	0x6e, 0x12, 0x3d, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x18, 0x06,
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61,

@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: rep1.String(),
 		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Int64(),
-		StandardDeviation: 0.3,
+		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: rep1.String(), Power: 100000000}, {Reporter: rep2.String(), Power: 100000000}},
 		Flagged:           false,
 		Height:            10,
@@ -101,11 +101,11 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 		Expiration:            time.Unix(expiration, 0),
 		RegistrySpecTimeframe: 0,
 		HasRevealedReports:    true,
-		QueryId:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
 		QueryType:             "SpotPrice",
 	}
-
-	err := s.oracleKeeper.Query.Set(ctx, queryData.QueryId, queryData)
+	queryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
+	err := s.oracleKeeper.Query.Set(ctx, collections.Join(queryId, queryData.Id), queryData)
 	s.NoError(err)
 
 	val := encodeValue(1.00)
@@ -114,13 +114,13 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	report_three := createMicroReportForQuery(rep3.String(), "weighted-median", val, 1000000000, time.Now())
 	report_four := createMicroReportForQuery(rep4.String(), "weighted-median", val, 1000000000, time.Now())
 
-	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep1.Bytes(), queryData.Id), report_one)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep1.Bytes(), queryData.Id), report_one)
 	s.NoError(err)
-	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep2.Bytes(), queryData.Id), report_two)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep2.Bytes(), queryData.Id), report_two)
 	s.NoError(err)
-	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep3.Bytes(), queryData.Id), report_three)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep3.Bytes(), queryData.Id), report_three)
 	s.NoError(err)
-	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryData.QueryId, rep4.Bytes(), queryData.Id), report_four)
+	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep4.Bytes(), queryData.Id), report_four)
 	s.NoError(err)
 
 	// use auth types GetModule Account
@@ -152,10 +152,9 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	reporter_four_balance := s.bankKeeper.GetBalance(ctx, rep4, "loya")
 	s.True(reporter_four_balance.Amount.GTE(div4_totalTip))
 
-	res_query, err := s.oracleKeeper.Query.Get(ctx, queryData.QueryId)
-	s.NoError(err)
-	s.Equal(false, res_query.HasRevealedReports)
-	s.Equal(math.ZeroInt(), res_query.Amount)
+	res_query, err := s.oracleKeeper.Query.Get(ctx, collections.Join(queryId, queryData.Id))
+	s.ErrorIs(err, collections.ErrNotFound)
+	s.Equal(types.QueryMeta{}, res_query)
 
 	aggregate, _, err := s.oracleKeeper.GetCurrentAggregateReport(ctx, []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"))
 	s.NoError(err)
@@ -175,7 +174,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: reporter.String(),
 		ReporterPower:     100000000,
-		StandardDeviation: 0.3,
+		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: reporter.String(), Power: 100000000}},
 		Flagged:           false,
 	}

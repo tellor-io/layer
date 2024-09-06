@@ -29,11 +29,11 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := int64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.
-	reportCounts := make(map[string]ReportersReportCount)
+	_reporters := make(map[string]ReportersReportCount)
 
 	// Loop through each reporter to calculate total power and individual report counts.
 	for _, r := range reporters {
-		reporter, found := reportCounts[r.Reporter]
+		reporter, found := _reporters[r.Reporter]
 		if found {
 			// If the reporter is already in the map, increment their report count.
 			reporter.Reports++
@@ -41,16 +41,22 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 			// If not found, add the reporter with their initial power and report count set to 1.
 			reporter = ReportersReportCount{Power: r.Power, Reports: 1, Height: r.BlockNumber}
 		}
-		reportCounts[r.Reporter] = reporter
+		_reporters[r.Reporter] = reporter
 		// Add the reporter's power to the total power.
 		totalPower += r.Power
 	}
-
-	for r, c := range reportCounts {
+	i := len(_reporters)
+	totaldist := math.LegacyZeroDec()
+	for r, c := range _reporters {
 		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward)
+		totaldist = totaldist.Add(amount)
 		reporterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
 			return err
+		}
+		i--
+		if i == 0 {
+			amount = amount.Add(math.LegacyNewDecFromInt(reward).Sub(totaldist))
 		}
 		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, c.Height)
 		if err != nil {
@@ -71,12 +77,12 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward math.Int) math.Int {
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward math.Int) math.LegacyDec {
 	power := math.LegacyNewDec(reporterPower * reportsCount)
-	amount := power.Quo(math.LegacyNewDec(totalPower)).MulTruncate(math.LegacyNewDecFromBigInt(reward.BigInt()))
-	return amount.RoundInt()
+	amount := power.Quo(math.LegacyNewDec(totalPower)).Mul(math.LegacyNewDecFromInt(reward))
+	return amount
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.Int, height int64) error {
+func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec, height int64) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, height)
 }

@@ -22,4 +22,6 @@ var (
 	ErrNoTipsNotInCycle            = sdkerrors.Register(ModuleName, 1110, "no tips not in cycle")
 	ErrNotTokenDeposit             = sdkerrors.Register(ModuleName, 1111, "not a token deposit")
 	ErrInvalidQueryData            = sdkerrors.Register(ModuleName, 1112, "invalid query data")
+	ErrCommitWindowExpired         = sdkerrors.Register(ModuleName, 1113, "commit window expired")
+	ErrSubmissionWindowExpired     = sdkerrors.Register(ModuleName, 1114, "submission window expired")
 )

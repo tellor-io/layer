@@ -1184,3 +1184,101 @@ func TestEncodeOracleAttestationData(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
+
+func TestGetCurrentValidatorSetTimestamp(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	testCases := []struct {
+		name              string
+		setup             func()
+		expectedTimestamp uint64
+		err               bool
+	}{
+		{
+			name: "LatestCheckpointIdx not set",
+			err:  true,
+		},
+		{
+			name: "ValidatorCheckpointIdxMap not set",
+			setup: func() {
+				err := k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{
+					Index: 1,
+				})
+				require.NoError(t, err)
+			},
+			err: true,
+		},
+		{
+			name: "all good",
+			setup: func() {
+				err := k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{
+					Index: 1,
+				})
+				require.NoError(t, err)
+				err = k.ValidatorCheckpointIdxMap.Set(ctx, 1, types.CheckpointTimestamp{
+					Timestamp: 100,
+				})
+				require.NoError(t, err)
+			},
+			expectedTimestamp: 100,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			timestamp, err := k.GetCurrentValidatorSetTimestamp(ctx)
+			if tc.err {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, timestamp, tc.expectedTimestamp)
+			}
+		})
+	}
+}
+
+func TestGetValidatorSetIndexByTimestamp(t *testing.T) {
+	k, _, _, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	testCases := []struct {
+		name          string
+		setup         func()
+		expectedIndex uint64
+		err           bool
+	}{
+		{
+			name: "ValsetTimestampToIdxMap not set",
+			err:  true,
+		},
+		{
+			name: "all good",
+			setup: func() {
+				err := k.ValsetTimestampToIdxMap.Set(ctx, 100, types.CheckpointIdx{
+					Index: 1,
+				})
+				require.NoError(t, err)
+			},
+			expectedIndex: 1,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			index, err := k.GetValidatorSetIndexByTimestamp(ctx, 100)
+			if tc.err {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, index, tc.expectedIndex)
+			}
+		})
+	}
+}

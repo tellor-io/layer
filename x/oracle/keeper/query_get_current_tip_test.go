@@ -6,6 +6,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 )
 
@@ -38,12 +39,15 @@ func (s *KeeperTestSuite) TestGetCurrentTip() {
 	// good queryData, 1 tip
 	queryID, err := utils.QueryIDFromDataString(queryData)
 	require.NoError(err)
-	require.NoError(k.Query.Set(ctx, queryID, types.QueryMeta{
+	querydatabytes, err := utils.QueryBytesFromString(queryData)
+	require.NoError(err)
+	require.NoError(k.Query.Set(ctx, collections.Join(queryID, uint64(1)), types.QueryMeta{
 		Amount:             math.NewInt(10),
 		Id:                 1,
 		Expiration:         ctx.BlockTime().Add(time.Hour),
 		HasRevealedReports: false,
 		QueryType:          "SpotPrice",
+		QueryData:          querydatabytes,
 	}))
 	res, err = q.GetCurrentTip(ctx, &types.QueryGetCurrentTipRequest{
 		QueryData: queryData,
