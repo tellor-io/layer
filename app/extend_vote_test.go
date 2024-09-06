@@ -3,7 +3,7 @@ package app_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/agiledragon/gomonkey/v2"
@@ -17,11 +17,13 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
+	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -33,17 +35,13 @@ type VoteExtensionTestSuite struct {
 	oracleKeeper  *mocks.OracleKeeper
 	bridgeKeeper  *mocks.BridgeKeeper
 	stakingKeeper *mocks.StakingKeeper
-	kr            keyring.Keyring
-	tempDir       string
+	kr            *mocks.Keyring
 	cdc           codec.Codec
 }
 
 func (s *VoteExtensionTestSuite) SetupTest() {
-	require := s.Require()
-
 	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
-	s.cdc = cdc
+	s.cdc = codec.NewProtoCodec(registry)
 	s.oracleKeeper = mocks.NewOracleKeeper(s.T())
 	s.bridgeKeeper = mocks.NewBridgeKeeper(s.T())
 	s.stakingKeeper = mocks.NewStakingKeeper(s.T())
@@ -52,31 +50,17 @@ func (s *VoteExtensionTestSuite) SetupTest() {
 	s.ctx = testutils.CreateTestContext(s.T())
 	s.handler = app.NewVoteExtHandler(
 		log.NewNopLogger(),
-		cdc,
+		s.cdc,
 		s.oracleKeeper,
 		s.bridgeKeeper,
 	)
+}
 
-	// create new keyring in
-	s.tempDir = s.T().TempDir()
-	viper.Set("keyring-backend", "test")
-	viper.Set("keyring-dir", s.tempDir)
-	var err error
-	s.kr, err = s.handler.InitKeyring()
-	require.NoError(err)
-	require.NotNil(s.kr)
-
-	// backend := "test"
-	// tempDir := s.T().TempDir()
-	// keyring, err := keyring.New("TestExport", backend, tempDir, nil, cdc)
-	// fmt.Println("keyring: ", keyring)
-	// fmt.Println("temp dir: ", tempDir)
-	// s.kr = keyring
-	// require.NoError(err)
-
-	// keys, err := s.kr.List()
-	// require.NoError(err)
-	// fmt.Println("Keys in keyring: ", keys)
+func (s *VoteExtensionTestSuite) TearDownTest() {
+	s.oracleKeeper.AssertExpectations(s.T())
+	s.bridgeKeeper.AssertExpectations(s.T())
+	s.stakingKeeper.AssertExpectations(s.T())
+	viper.Reset()
 }
 
 func TestVoteExtensionTestSuite(t *testing.T) {
@@ -141,6 +125,12 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(nil, collections.ErrNotFound).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
 	attReq := bridgetypes.AttestationRequests{
 		Requests: []*bridgetypes.AttestationRequest{
 			{
@@ -148,6 +138,48 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 			},
 		},
 	}
+	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
+		Attestation: []byte("attestation2"),
+		Snapshot:    []byte("snapshot2"),
+	})
+	require.Equal(len(bridgeVoteExt.OracleAttestations), 2)
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig too big, reject
+	bridgeVoteExt.InitialSignature.SignatureA = make([]byte, 100000)
+	bridgeVoteExt.OracleAttestations = []app.OracleAttestation{
+		oracleAtt,
+	}
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
+	require.NoError(err)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
+
+	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig good, valset sig too big, reject
+	bridgeVoteExt.ValsetSignature.Signature = make([]byte, 100000)
+	bridgeVoteExt.InitialSignature = app.InitialSignature{
+		SignatureA: []byte("signature"),
+		SignatureB: []byte("signature"),
+	}
+	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
+	require.NoError(err)
+	req = &abci.RequestVerifyVoteExtension{
+		VoteExtension: bridgeVoteExtBz,
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
 		Attestation: []byte("attestation2"),
 		Snapshot:    []byte("snapshot2"),
@@ -201,122 +233,13 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	req = &abci.RequestVerifyVoteExtension{
 		VoteExtension: bridgeVoteExtBz,
 	}
-	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
+	// bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
+
+	// s.TearDownTest()
 }
-
-// create a keyring in the test, sotre in temp directort, modify voteexthandler
-// or read youre own computer
-// maybe even pass in a keyring instead of reading it
-
-func (s *VoteExtensionTestSuite) TestSignMessage() {
-	require := s.Require()
-	h := s.handler
-
-	// Initial keyring state
-	keys, err := s.kr.List()
-	require.NoError(err)
-	fmt.Println("Initial keys in keyring: ", keys)
-
-	res, err := h.SignMessage([]byte("msg"))
-	require.Error(err)
-	require.Nil(res)
-
-	// create key
-	// cmd := exec.Command("layerd", "keys", "add", "key0", "--keyring-backend", "test", "--keyring-dir", s.tempDir)
-	// output, err := cmd.CombinedOutput()
-	// require.NoError(err)
-	// require.NotNil(output)
-	// fmt.Println(string(output))
-
-	// cmd = exec.Command("layerd", "keys", "list", "--keyring-backend", "test", "--keyring-dir", s.tempDir)
-	// output, err = cmd.CombinedOutput()
-	// require.NoError(err)
-	// require.NotNil(output)
-	// fmt.Println(string(output))
-
-	// Log the keyring state after adding the key
-	// keys, err = s.kr.List()
-	// require.NoError(err)
-	// fmt.Println("Keys in keyring after adding key: ", keys)
-
-	// viper.Set("key-name", "key0")
-	// res, err = h.SignMessage([]byte("msg"))
-	// require.NoError(err)
-	// require.NotNil(res)
-
-	// kr := s.kr
-	// uid := "testOne"
-	// // encryptPassphrase := "this passphrase has been used for all test vectors"
-	// // armor := "-----BEGIN TENDERMINT PRIVATE KEY-----\nkdf: bcrypt\nsalt: 6BC5D5187F9DF241E1A1243EECFF9C17\ntype: secp256k1\n\nGDPpPfrSVZloiwufbal19fmd75QeiqwToZ949SwmnxxM03qL75xXVf3tTD/BrF4l\nFs14HuhwntDBM2xgZvymTBk2edHlEI20Phv6oC0=\n=/zZh\n-----END TENDERMINT PRIVATE KEY-----"
-	// // err := kr.ImportPrivKey(uid, armor, encryptPassphrase)
-	// // require.NoError(err)
-	// record, mn, err := kr.NewMnemonic(uid, keyring.English, sdk.FullFundraiserPath, "", hd.Secp256k1)
-	// require.NoError(err)
-	// require.NotNil(mn)
-	// require.NotNil(record)
-	// record2, err := kr.NewAccount(uid, mn, "", "", hd.Secp256k1)
-	// require.NoError(err)
-	// require.NotNil(record2)
-
-	// // List keys after adding
-	// keys, err := kr.List()
-	// require.NoError(err)
-	// fmt.Println("Keys in keyring after cmd: ", keys)
-	// s.T().TempDir()
-
-	// Create a temporary directory for the keyring
-	// tempDir, err := os.MkdirTemp("", "keyring-test")
-	// require.NoError(err)
-	// defer os.RemoveAll(tempDir)
-
-	// viper.Set("keyring-backend", "test")
-	// viper.Set("keyring-dir", tempDir)
-	// viper.Set("key-name", "key5")
-
-	// kr, err := s.handler.InitKeyring()
-	// require.NoError(err)
-	// require.NotNil(kr)
-	// fmt.Println("Initialized keyring: ", kr)
-
-	// // Add key using command
-	// cmd := exec.Command("layerd", "keys", "add", "key5", "--keyring-dir", tempDir)
-	// output, err := cmd.CombinedOutput()
-	// require.NoError(err)
-	// require.NotNil(output)
-	// fmt.Println("Output from adding key: ", string(output))
-
-	// // List keys after adding
-	// keys, err := kr.List()
-	// require.NoError(err)
-	// require.NotNil(keys)
-	// fmt.Println("Keys in keyring: ", keys)
-}
-
-func (s *VoteExtensionTestSuite) TestGetKeyring() {
-	require := s.Require()
-	h := s.handler
-
-	kr, err := h.GetKeyring()
-	require.NoError(err)
-	require.NotNil(kr)
-}
-
-func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
-	// require := s.Require()
-	// h := s.handler
-	// kr := s.kr
-
-	// viper.Set("key-name", "key20")
-
-	// addr, err := h.GetOperatorAddress()
-	// require.NoError(err)
-	// require.NotNil(addr)
-}
-
-// use test case struct
 
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	require := s.Require()
@@ -328,7 +251,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	type testCase struct {
 		name             string
 		setupMocks       func()
-		request          *abci.RequestExtendVote
 		expectedError    error
 		validateResponse func(*abci.ResponseExtendVote)
 	}
@@ -337,7 +259,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 		{
 			name:          "GetOperatorAddress error",
 			setupMocks:    func() {},
-			request:       &abci.RequestExtendVote{},
 			expectedError: nil,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
@@ -347,7 +268,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			name: "err on SignInitialMessage",
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
@@ -361,10 +282,10 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			name: "err on GetAttestationRequestsByHeight",
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
-				patches.ApplyMethod(h, "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
 					return []byte("signatureA"), []byte("signatureB"), nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound).Once()
@@ -380,7 +301,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
 				evmAddr := common.BytesToAddress([]byte("evmAddr"))
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
@@ -392,7 +313,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					},
 				}
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
-				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error")).Once()
@@ -407,7 +328,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			setupMocks: func() {
 				oppAddr := sample.AccAddress()
 				evmAddr := common.BytesToAddress([]byte("evmAddr"))
-				patches.ApplyMethod(h, "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil).Once()
@@ -419,7 +340,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					},
 				}
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil).Once()
-				patches.ApplyMethod(h, "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
@@ -428,7 +349,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				}
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(checkpointTimestamp, nil).Once()
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(1)).Return(true, int64(1), nil).Once()
-				patches.ApplyMethod(h, "EncodeAndSignMessage", func(_ *app.VoteExtHandler, checkpoint string) ([]byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "EncodeAndSignMessage", func(_ *app.VoteExtHandler, checkpoint string) ([]byte, error) {
 					return []byte("signedCheckpoint"), nil
 				})
 			},
@@ -441,6 +362,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
+			defer patches.Reset()
 			tc.setupMocks()
 			req := &abci.RequestExtendVote{}
 			resp, err := h.ExtendVoteHandler(ctx, req)
@@ -451,7 +373,407 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				require.NoError(err)
 			}
 			tc.validateResponse(resp)
+			s.TearDownTest()
+		})
+	}
+}
+
+func (s *VoteExtensionTestSuite) TestGetKeyring() {
+	require := s.Require()
+	h := s.handler
+
+	viper.Set("keyring-backend", "test")
+	viper.Set("keyring-dir", s.T().TempDir())
+	kr, err := h.GetKeyring()
+	require.NoError(err)
+	require.NotNil(kr)
+
+	s.TearDownTest()
+}
+
+func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
+	require := s.Require()
+	// h := s.handler
+	patches := gomonkey.NewPatches()
+
+	type testCase struct {
+		name             string
+		setupMocks       func(h *app.VoteExtHandler) *gomonkey.Patches
+		expectedError    bool
+		expectedErrorMsg string
+	}
+
+	testCases := []testCase{
+		{
+			name: "err getting keyring",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				s.kr = nil
+				return nil
+			},
+			expectedError:    true,
+			expectedErrorMsg: "failed to get keyring:",
+		},
+		{
+			name: "err getting keyname",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				s.kr = mocks.NewKeyring(s.T())
+				tempDir := s.T().TempDir()
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				return patches
+			},
+			expectedError:    true,
+			expectedErrorMsg: "key name not found, please set --key-name flag",
+		},
+		{
+			name: "empty keyring",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				tempDir := s.T().TempDir()
+				viper.Set("key-name", "testkey")
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("List").Return([]*keyring.Record{}, nil).Once()
+
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				return patches
+			},
+			expectedError:    true,
+			expectedErrorMsg: "no keys found in keyring",
+		},
+		{
+			name: "kr.Key error",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				tempDir := s.T().TempDir()
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				viper.Set("key-name", "testkey")
+				pubKey := &secp256k1.PubKey{Key: []byte("pubkey")}
+				anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
+				require.NoError(err)
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("List").Return([]*keyring.Record{
+					{Name: "testkey", PubKey: anyPubKey},
+				}, nil).Once()
+				mockKr.On("Key", "testkey").Return(nil, errors.New("error!")).Once()
+
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				return patches
+			},
+			expectedError:    true,
+			expectedErrorMsg: "failed to get operator key:",
+		},
+		{
+			name: "success",
+			setupMocks: func(h *app.VoteExtHandler) *gomonkey.Patches {
+				tempDir := s.T().TempDir()
+				viper.Set("keyring-backend", "test")
+				viper.Set("keyring-dir", tempDir)
+				viper.Set("key-name", "testkey")
+				priv := hd.Secp256k1.Generate()([]byte("test"))
+				// Create a public key
+				pubKey := priv.PubKey()
+				// Create an AnyPubKey
+				anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
+				require.NoError(err)
+				// Create a local item
+				localItem, err := keyring.NewLocalRecord(
+					"testkey",
+					priv,
+					pubKey,
+				)
+				require.NoError(err)
+				mockKr := mocks.NewKeyring(s.T())
+				mockKr.On("List").Return([]*keyring.Record{
+					{Name: "testkey", PubKey: anyPubKey},
+				}, nil).Once()
+
+				mockKr.On("Key", "testkey").Return(&keyring.Record{
+					Name:   "testkey",
+					PubKey: anyPubKey,
+					Item:   localItem.Item,
+				}, nil).Once()
+				patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
+					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+						return mockKr, nil
+					})
+				return patches
+			},
+			expectedError: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			handler := app.NewVoteExtHandler(
+				log.NewNopLogger(),
+				s.cdc,
+				s.oracleKeeper,
+				s.bridgeKeeper,
+			)
 			defer patches.Reset()
+			defer viper.Reset()
+			tc.setupMocks(handler)
+			resp, err := handler.GetOperatorAddress()
+			if tc.expectedError {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expectedErrorMsg)
+			} else {
+				require.NoError(err)
+				require.NotEmpty(resp)
+			}
+			s.TearDownTest()
+		})
+	}
+}
+
+func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
+	require := s.Require()
+	h := s.handler
+
+	patches := gomonkey.NewPatches()
+	patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+		return []byte("signedMsg"), nil
+	})
+
+	sigA, sigB, err := h.SignInitialMessage()
+	require.NoError(err)
+	require.NotEmpty(sigA)
+	require.NotEmpty(sigB)
+
+	s.TearDownTest()
+	patches.Reset()
+}
+
+func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
+	require := s.Require()
+	h := s.handler
+	bk := s.bridgeKeeper
+	ctx := s.ctx.WithBlockHeight(2)
+
+	testCases := []struct {
+		name              string
+		setupMocks        func(string)
+		expectedSig       []byte
+		expectedTimestamp uint64
+		expectedError     error
+	}{
+		{
+			name: "Validator already signed",
+			setupMocks: func(oppAddr string) {
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
+				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
+					Timestamp: 10,
+				}, nil).Once()
+				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(true, int64(1), nil).Maybe()
+			},
+			expectedSig:       nil,
+			expectedTimestamp: 0,
+			expectedError:     nil,
+		},
+		{
+			name: "Error getting latest checkpoint index",
+			setupMocks: func(oppAddr string) {
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("index error")).Once()
+			},
+			expectedSig:       nil,
+			expectedTimestamp: 0,
+			expectedError:     errors.New("index error"),
+		},
+		{
+			name: "Error getting validator timestamp",
+			setupMocks: func(oppAddr string) {
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
+				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{}, errors.New("timestamp error")).Once()
+			},
+			expectedSig:       nil,
+			expectedTimestamp: 0,
+			expectedError:     errors.New("timestamp error"),
+		},
+		{
+			name: "Error checking if validator signed",
+			setupMocks: func(oppAddr string) {
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
+				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
+					Timestamp: 10,
+				}, nil).Once()
+				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(false, int64(0), errors.New("sign check error")).Once()
+			},
+			expectedSig:       nil,
+			expectedTimestamp: 0,
+			expectedError:     errors.New("sign check error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			oppAddr := sample.AccAddress()
+			s.mockGetOperatorAddress(oppAddr, nil)
+			tc.setupMocks(oppAddr)
+
+			sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
+
+			if tc.expectedError != nil {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expectedError.Error())
+			} else {
+				require.NoError(err)
+			}
+			require.Equal(tc.expectedSig, sig)
+			require.Equal(tc.expectedTimestamp, timestamp)
+
+			s.TearDownTest()
+		})
+	}
+}
+
+func (s *VoteExtensionTestSuite) mockGetOperatorAddress(address string, err error) {
+	patches := gomonkey.NewPatches()
+	patches.ApplyMethod(reflect.TypeOf(s.handler), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+		return address, err
+	})
+	s.T().Cleanup(patches.Reset)
+}
+
+func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
+	require := s.Require()
+	h := s.handler
+
+	tests := []struct {
+		name              string
+		checkpointString  string
+		mockSignature     []byte
+		mockError         error
+		expectedSignature []byte
+		expectedError     string
+	}{
+		{
+			name:              "Valid checkpoint",
+			checkpointString:  "0123456789abcdef",
+			mockSignature:     []byte("mocksignature"),
+			mockError:         nil,
+			expectedSignature: []byte("mocksignature"),
+			expectedError:     "",
+		},
+		{
+			name:              "Invalid hex string",
+			checkpointString:  "invalid hex",
+			mockSignature:     nil,
+			mockError:         nil,
+			expectedSignature: nil,
+			expectedError:     "encoding/hex: invalid byte",
+		},
+		{
+			name:              "SignMessage error",
+			checkpointString:  "0123456789abcdef",
+			mockSignature:     nil,
+			mockError:         errors.New("signing error"),
+			expectedSignature: nil,
+			expectedError:     "signing error",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			// Mock the SignMessage method
+			patches := gomonkey.ApplyMethod(reflect.TypeOf(h), "SignMessage",
+				func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+					return tt.mockSignature, tt.mockError
+				})
+			defer patches.Reset()
+
+			// Call the function
+			signature, err := h.EncodeAndSignMessage(tt.checkpointString)
+
+			// Assert the results
+			if tt.expectedError != "" {
+				require.Error(err)
+				require.Contains(err.Error(), tt.expectedError)
+			} else {
+				require.NoError(err)
+			}
+			require.Equal(tt.expectedSignature, signature)
+		})
+	}
+}
+
+func (s *VoteExtensionTestSuite) TestGetValidatorIndexInValset() {
+	require := s.Require()
+	h := s.handler
+	ctx := s.ctx
+
+	testCases := []struct {
+		name          string
+		evmAddr       []byte
+		valset        *bridgetypes.BridgeValidatorSet
+		expectedIndex int
+		expectedError error
+	}{
+		{
+			name:    "Validator found at index 0",
+			evmAddr: []byte("evmAddr1"),
+			valset: &bridgetypes.BridgeValidatorSet{
+				BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+					{EthereumAddress: []byte("evmAddr1"), Power: 1},
+					{EthereumAddress: []byte("evmAddr2"), Power: 2},
+				},
+			},
+			expectedIndex: 0,
+			expectedError: nil,
+		},
+		{
+			name:    "Validator found at index 1",
+			evmAddr: []byte("evmAddr2"),
+			valset: &bridgetypes.BridgeValidatorSet{
+				BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+					{EthereumAddress: []byte("evmAddr1"), Power: 1},
+					{EthereumAddress: []byte("evmAddr2"), Power: 2},
+				},
+			},
+			expectedIndex: 1,
+			expectedError: nil,
+		},
+		{
+			name:    "Validator not found",
+			evmAddr: []byte("evmAddr3"),
+			valset: &bridgetypes.BridgeValidatorSet{
+				BridgeValidatorSet: []*bridgetypes.BridgeValidator{
+					{EthereumAddress: []byte("evmAddr1"), Power: 1},
+					{EthereumAddress: []byte("evmAddr2"), Power: 2},
+				},
+			},
+			expectedIndex: -1,
+			expectedError: errors.New("validator not found in valset"),
+		},
+		{
+			name:    "Empty valset",
+			evmAddr: []byte("evmAddr1"),
+			valset: &bridgetypes.BridgeValidatorSet{
+				BridgeValidatorSet: []*bridgetypes.BridgeValidator{},
+			},
+			expectedIndex: -1,
+			expectedError: errors.New("validator not found in valset"),
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			index, err := h.GetValidatorIndexInValset(ctx, tc.evmAddr, tc.valset)
+
+			if tc.expectedError != nil {
+				require.Error(err)
+				require.Contains(err.Error(), tc.expectedError.Error())
+			} else {
+				require.NoError(err)
+			}
+
+			require.Equal(tc.expectedIndex, index)
 		})
 	}
 }

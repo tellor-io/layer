@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"math/big"
 	"time"
 
@@ -19,7 +18,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64) error {
+func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64, msgSender sdk.AccAddress) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
 	queryId, err := k.GetDepositQueryId(depositId)
 	if err != nil {
@@ -41,14 +40,17 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 	} else if depositClaimedStatus.Claimed {
 		return types.ErrDepositAlreadyClaimed
 	}
-
-	// get total bonded tokens
-	totalBondedTokens, err := k.reporterKeeper.TotalReporterPower(ctx)
+	// get power threshold at report time
+	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, uint64(aggregateTimestamp.UnixMilli()))
 	if err != nil {
 		return err
 	}
-	powerThreshold := int64(math.Round(float64(totalBondedTokens.Int64()) * 2 / 3))
-	if aggregate.ReporterPower*layer.PowerReduction.Int64() < powerThreshold {
+	valsetCheckpointParams, err := k.GetValidatorCheckpointParamsFromStorage(ctx, valsetTimestampBefore)
+	if err != nil {
+		return err
+	}
+	powerThreshold := valsetCheckpointParams.PowerThreshold
+	if aggregate.ReporterPower < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
@@ -56,7 +58,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 		return types.ErrReportTooYoung
 	}
 
-	recipient, amount, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
+	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
 	if err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%s: %w", types.ErrInvalidDepositReportValue.Error(), err)
@@ -74,7 +76,17 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64)
 		return err
 	}
 
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, amount); err != nil {
+	claimAmount := amount
+	if tip.IsAllPositive() {
+		claimAmount = amount.Sub(tip...)
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgSender, tip)
+		if err != nil {
+			k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
+			return err
+		}
+	}
+
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, claimAmount); err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
 		return err
 	}
@@ -131,54 +143,53 @@ func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
 	return queryId, nil
 }
 
-// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount))
-func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount sdk.Coins, err error) {
+// replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount, uint256 tip))
+func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string) (recipient sdk.AccAddress, amount, tip sdk.Coins, err error) {
 	// prepare decoding
 	AddressType, err := abi.NewType("address", "", nil)
 	if err != nil {
-		return nil, sdk.Coins{}, err
+		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
-		return nil, sdk.Coins{}, err
+		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
-		return nil, sdk.Coins{}, err
+		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
-
 	reportValueArgs := abi.Arguments{
 		{Type: AddressType},
 		{Type: StringType},
 		{Type: Uint256Type},
+		{Type: Uint256Type},
 	}
-
 	// decode report value
 	reportValueBytes, err := hex.DecodeString(reportValue)
 	if err != nil {
 		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to decode report value, err: %w", err))
-		return nil, sdk.Coins{}, err
+		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
 	reportValueDecoded, err := reportValueArgs.Unpack(reportValueBytes)
 	if err != nil {
 		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to decode report value, err: %w", err))
-		return nil, sdk.Coins{}, err
+		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
-
 	recipientString := reportValueDecoded[1].(string)
 	amountBigInt := reportValueDecoded[2].(*big.Int)
-
+	tipBigInt := reportValueDecoded[3].(*big.Int)
 	// convert layer recipient to cosmos address
 	layerRecipientAddress, err := sdk.AccAddressFromBech32(recipientString)
 	if err != nil {
 		k.Logger(ctx).Error("@decodeDepositReportValue", "error", fmt.Errorf("failed to convert layer recipient to cosmos address, err: %w", err))
-		return nil, sdk.Coins{}, err
+		return nil, sdk.Coins{}, sdk.Coins{}, err
 	}
-
 	amountDecimalConverted := amountBigInt.Div(amountBigInt, big.NewInt(1e12))
-
+	tipDecimalConverted := tipBigInt.Div(tipBigInt, big.NewInt(1e12))
 	amountCoin := sdk.NewInt64Coin(layer.BondDenom, amountDecimalConverted.Int64())
 	amountCoins := sdk.NewCoins(amountCoin)
+	tipCoin := sdk.NewInt64Coin(layer.BondDenom, tipDecimalConverted.Int64())
+	tipCoins := sdk.NewCoins(tipCoin)
 
-	return layerRecipientAddress, amountCoins, nil
+	return layerRecipientAddress, amountCoins, tipCoins, nil
 }

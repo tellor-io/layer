@@ -187,8 +187,9 @@ getOracleDataStruct = (queryId, value, timestamp, aggregatePower, previousTimest
 }
 
 getWithdrawValue = (_recipient, _sender, _amount) =>{
-  myVal = abiCoder.encode(["address", "string", "uint256"],
-  [_recipient, _sender, _amount])
+  myVal = abiCoder.encode(["address", "string", "uint256", "uint256"],
+  // tip is 0 for withdrawals
+  [_recipient, _sender, _amount, 0])
   return myVal
 }
 
