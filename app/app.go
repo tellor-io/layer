@@ -674,6 +674,7 @@ func New(
 						indexPriceCache,
 						tokenDepositsCache,
 						// app.CreateQueryContext,
+						// app.CreateQueryContext,
 						*app.StakingKeeper,
 						app.ChainID(),
 					); err != nil {
