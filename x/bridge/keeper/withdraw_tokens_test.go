@@ -91,6 +91,7 @@ func TestWithdrawTokens(t *testing.T) {
 	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 
-	err = k.WithdrawTokens(ctx, amount, creatorAddr, []byte(recipientAddr))
+	withdrawId, err := k.WithdrawTokens(ctx, amount, creatorAddr, []byte(recipientAddr))
 	require.NoError(t, err)
+	require.Equal(t, withdrawId, uint64(1))
 }
