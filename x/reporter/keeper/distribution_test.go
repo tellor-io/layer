@@ -50,7 +50,7 @@ func TestDivvyingTips(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(12)
-	err = k.DivvyingTips(ctx, addr, math.NewInt(10*1e6), 10)
+	err = k.DivvyingTips(ctx, addr, math.LegacyNewDec(10*1e6), 10)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(13)
@@ -59,10 +59,10 @@ func TestDivvyingTips(t *testing.T) {
 	del2, err := k.SelectorTips.Get(ctx, addr2.Bytes())
 
 	fmt.Printf("delegator1: %v, delegator2: %v\r", del1, del2)
-	require.Equal(t, math.NewInt(5*1e6), del1)
+	require.Equal(t, math.LegacyNewDec(5*1e6), del1)
 
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(5*1e6), del2)
+	require.Equal(t, math.LegacyNewDec(5*1e6), del2)
 }
 
 func TestReturnSlashedTokens(t *testing.T) {

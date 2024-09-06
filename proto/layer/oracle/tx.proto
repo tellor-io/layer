@@ -46,6 +46,7 @@ message MsgSubmitValue {
   bytes query_data = 2;
   string value = 3;
   string salt = 4; // hex encoded 32 bytes salt
+  uint64 commit_id = 5;
 }
 
 message MsgSubmitValueResponse {}
@@ -57,7 +58,9 @@ message MsgCommitReport {
   string hash = 3; // hex encoded sha256 of "salt:value"
 }
 
-message MsgCommitReportResponse {}
+message MsgCommitReportResponse {
+  uint64 commit_id = 1;
+}
 
 message MsgTip {
   option (cosmos.msg.v1.signer) = "tipper";

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
@@ -81,4 +82,95 @@ func TestSpaceAvailableByReporter(t *testing.T) {
 	res, err := querier.SpaceAvailableByReporter(ctx, &types.QuerySpaceAvailableByReporterRequest{ReporterAddress: reporterAddr.String()})
 	require.NoError(t, err)
 	require.Equal(t, res.SpaceAvailable, int32(90))
+}
+
+func TestAllowedAmountExpiration(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+	ctx = ctx.WithBlockTime(time.Now())
+
+	expiration := ctx.BlockTime().Add(1)
+	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)}))
+
+	res, err := querier.AllowedAmountExpiration(ctx, &types.QueryAllowedAmountExpirationRequest{})
+	require.NoError(t, err)
+	require.Equal(t, res.Expiration, ctx.BlockTime().Add(1).UnixMilli())
+}
+
+func TestAvailableTips(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+	require := require.New(t)
+
+	selectorAddr := sample.AccAddressBytes()
+
+	cleanup := func() {
+		iter, err := k.SelectorTips.Iterate(ctx, nil)
+		require.NoError(err)
+		defer iter.Close()
+
+		for ; iter.Valid(); iter.Next() {
+			key, err := iter.Key()
+			require.NoError(err)
+			require.NoError(k.SelectorTips.Remove(ctx, key))
+		}
+	}
+
+	testCases := []struct {
+		name     string
+		setup    func()
+		req      *types.QueryAvailableTipsRequest
+		err      bool
+		expected math.LegacyDec
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  true,
+		},
+		{
+			name:     "no tips",
+			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
+			err:      true,
+			expected: math.LegacyDec(math.NewInt(0)),
+		},
+		{
+			name: "one tip",
+			setup: func() {
+				err := k.SelectorTips.Set(ctx, selectorAddr, math.LegacyDec(math.NewInt(100)))
+				require.NoError(err)
+			},
+			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
+			err:      false,
+			expected: math.LegacyDec(math.NewInt(100)),
+		},
+		{
+			name: "amount changes",
+			setup: func() {
+				err := k.SelectorTips.Set(ctx, selectorAddr, math.LegacyDec(math.NewInt(100)))
+				require.NoError(err)
+				err = k.SelectorTips.Set(ctx, selectorAddr, math.LegacyDec(math.NewInt(200)))
+				require.NoError(err)
+			},
+			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
+			err:      false,
+			expected: math.LegacyDec(math.NewInt(200)),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cleanup()
+
+			if tc.setup != nil {
+				tc.setup()
+			}
+			res, err := querier.AvailableTips(ctx, tc.req)
+			if tc.err {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				require.Equal(tc.expected, res.AvailableTips)
+			}
+		})
+	}
 }

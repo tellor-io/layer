@@ -301,7 +301,7 @@ func (pf *PriceFetcher) runSubTask(
 		}
 
 		// Log each new price (per-market per-exchange).
-		pf.logger.Info(
+		pf.logger.Debug(
 			"price_fetcher: Adding new price for market.",
 			constants.PriceLogKey,
 			price.Price,

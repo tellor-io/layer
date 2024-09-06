@@ -3,8 +3,11 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
+
+	"cosmossdk.io/collections"
 )
 
 func (s *KeeperTestSuite) TestHooks() {
@@ -25,9 +28,10 @@ func (s *KeeperTestSuite) TestAfterDataSpecUpdated() {
 	query := types.QueryMeta{
 		RegistrySpecTimeframe: 100,
 		QueryType:             "query",
-		QueryId:               []byte("query"),
+		QueryData:             []byte("query"),
 	}
-	require.NoError(k.Query.Set(ctx, []byte("query"), query))
+	queryId := utils.QueryIDFromData([]byte("query"))
+	require.NoError(k.Query.Set(ctx, collections.Join(queryId, query.Id), query))
 
 	// update spec to 50
 	require.NoError(hooks.AfterDataSpecUpdated(ctx, "query", regtypes.DataSpec{
@@ -35,7 +39,7 @@ func (s *KeeperTestSuite) TestAfterDataSpecUpdated() {
 	}))
 
 	// check that spec is updated to 50
-	meta, err := k.Query.Get(ctx, []byte("query"))
+	meta, err := k.Query.Get(ctx, collections.Join(queryId, query.Id))
 	require.NoError(err)
 	require.EqualValues(meta.RegistrySpecTimeframe, time.Duration(50))
 }

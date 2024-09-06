@@ -14,16 +14,16 @@ import (
 )
 
 // distributes tips paid in oracle module to delegators that were part of reporting the tip's report
-func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.Int, height int64) error {
+func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, height int64) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
 	}
 	// Calculate commission
-	commission := math.LegacyNewDecFromInt(reward).Mul(reporter.CommissionRate)
+	commission := reward.Mul(reporter.CommissionRate)
 
 	// Calculate net reward
-	netReward := math.LegacyNewDecFromInt(reward).Sub(commission)
+	netReward := reward.Sub(commission)
 
 	delAddrs, err := k.Report.Get(ctx, collections.Join(reporterAddr.Bytes(), height))
 	if err != nil {
@@ -39,12 +39,12 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 		oldTips, err := k.SelectorTips.Get(ctx, del.DelegatorAddress)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
-				oldTips = math.ZeroInt()
+				oldTips = math.LegacyZeroDec()
 			} else {
 				return err
 			}
 		}
-		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare.TruncateInt()))
+		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare))
 		if err != nil {
 			return err
 		}

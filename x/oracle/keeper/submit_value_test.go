@@ -23,13 +23,15 @@ func (s *KeeperTestSuite) TestSetValue() {
 	reporter := sample.AccAddressBytes()
 	queryId, err := utils.QueryIDFromDataString(queryData)
 	require.NoError(err)
+	querydatabytes, err := utils.QueryBytesFromString(queryData)
+	require.NoError(err)
 	query := types.QueryMeta{
 		Id:                    1,
 		Amount:                math.NewInt(1_000_000),
 		Expiration:            ctx.BlockTime().Add(time.Hour),
 		RegistrySpecTimeframe: time.Hour,
 		HasRevealedReports:    false,
-		QueryId:               queryId,
+		QueryData:             querydatabytes,
 		QueryType:             "SpotPrice",
 	}
 
@@ -109,7 +111,7 @@ func (s *KeeperTestSuite) TestGetDataSpec() {
 	require.Equal(spec.DocumentHash, "")
 	require.Equal(spec.AggregationMethod, "weighted-median")
 	require.Equal(spec.Registrar, "genesis")
-	require.Equal(spec.ReportBufferWindow, time.Duration(0))
+	require.Equal(spec.ReportBufferWindow, time.Second*2)
 	require.Equal(spec.ResponseValueType, "uint256")
 
 	regK.On("GetSpec", ctx, "BadQueryType").Return(regtypes.GenesisDataSpec(), errors.New("not found")).Once()

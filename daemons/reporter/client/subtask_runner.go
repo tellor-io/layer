@@ -2,15 +2,13 @@ package client
 
 import (
 	"context"
-
-	"github.com/cosmos/cosmos-sdk/client"
+	"sync"
 )
 
 type SubTaskRunner interface {
 	RunReporterDaemonTaskLoop(
 		ctx context.Context,
 		client *Client,
-		cosmosClient client.Context,
 	) error
 }
 
@@ -22,11 +20,47 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 	ctx context.Context,
 	daemonClient *Client,
-	cosmosClient client.Context,
 ) error {
-	err := daemonClient.SubmitReport(ctx)
-	if err != nil {
-		return err
-	}
+	var bg sync.WaitGroup
+
+	bg.Add(3)
+
+	go func() {
+		err := daemonClient.CyclelistMessages(ctx, eth, &bg)
+		if err != nil {
+			daemonClient.logger.Error("Generating eth messages", "error", err)
+		}
+	}()
+	go func() {
+		err := daemonClient.CyclelistMessages(ctx, btc, &bg)
+		if err != nil {
+			daemonClient.logger.Error("Generating btc messages", "error", err)
+		}
+	}()
+	go func() {
+		err := daemonClient.CyclelistMessages(ctx, trb, &bg)
+		if err != nil {
+			daemonClient.logger.Error("Generating trb messages", "error", err)
+		}
+	}()
+
+	bg.Add(1)
+	go func() {
+		err := daemonClient.generateDepositmessages(ctx, &bg)
+		if err != nil {
+			daemonClient.logger.Error("Generating deposit messages", "error", err)
+		}
+	}()
+
+	bg.Add(1)
+	go func() {
+		err := daemonClient.generateExternalMessages(ctx, "unsignedtx.json", &bg)
+		if err != nil {
+			daemonClient.logger.Error("Generating external messages", "error", err)
+		}
+	}()
+
+	bg.Wait()
+
 	return nil
 }

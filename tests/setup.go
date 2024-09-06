@@ -8,7 +8,6 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	globalfeekeeper "github.com/strangelove-ventures/globalfee/x/globalfee/keeper"
-	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 	"github.com/stretchr/testify/require"
 	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	disputemodulev1 "github.com/tellor-io/layer/api/layer/dispute/module"
@@ -20,22 +19,16 @@ import (
 	"github.com/tellor-io/layer/app/config"
 	_ "github.com/tellor-io/layer/x/bridge"
 	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
-	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	_ "github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
-	minttypes "github.com/tellor-io/layer/x/mint/types"
 	_ "github.com/tellor-io/layer/x/oracle"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	_ "github.com/tellor-io/layer/x/registry/module"
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	_ "github.com/tellor-io/layer/x/reporter/module"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -54,28 +47,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -87,6 +75,7 @@ func AuthModule() configurator.ModuleOption {
 			Config: appconfig.WrapAny(&authmodulev1.Module{
 				Bech32Prefix: "tellor",
 				ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
+					{Account: "minter", Permissions: []string{"minter"}},
 					{Account: "fee_collector"},
 					{Account: "distribution"},
 					{Account: "oracle", Permissions: []string{"burner"}},
@@ -226,93 +215,6 @@ type SharedSetup struct {
 	require *require.Assertions
 }
 
-func (s *SharedSetup) initKeepersWithmAccPerms(blockedAddrs map[string]bool) {
-	maccPerms := map[string][]string{}
-	for _, permission := range s.authConfig.ModuleAccountPermissions {
-		maccPerms[permission.Account] = permission.Permissions
-	}
-
-	appCodec := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Codec
-	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}, staking.AppModuleBasic{}).Amino
-
-	maccPerms[authtypes.Burner] = []string{authtypes.Burner}
-	maccPerms[authtypes.Minter] = []string{authtypes.Minter}
-
-	s.Accountkeeper = authkeeper.NewAccountKeeper(
-		appCodec,
-		runtime.NewKVStoreService(s.fetchStoreKey(banktypes.StoreKey).(*storetypes.KVStoreKey)),
-		authtypes.ProtoBaseAccount,
-		maccPerms,
-		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-		sdk.GetConfig().GetBech32AccountAddrPrefix(), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
-	s.Bankkeeper = bankkeeper.NewBaseKeeper(
-		appCodec,
-		runtime.NewKVStoreService(s.fetchStoreKey(banktypes.StoreKey).(*storetypes.KVStoreKey)),
-		s.Accountkeeper,
-		blockedAddrs,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		log.NewNopLogger(),
-	)
-
-	s.Stakingkeeper = stakingkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(s.fetchStoreKey(stakingtypes.StoreKey).(*storetypes.KVStoreKey)),
-		s.Accountkeeper,
-		s.Bankkeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
-		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-	)
-
-	s.slashingKeeper = slashingkeeper.NewKeeper(
-		appCodec,
-		cdc,
-		runtime.NewKVStoreService(s.fetchStoreKey("slashing").(*storetypes.KVStoreKey)),
-		s.Stakingkeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
-	s.Registrykeeper = registrykeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(s.fetchStoreKey(registrytypes.StoreKey).(*storetypes.KVStoreKey)),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	s.distrKeeper = distrkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(distrtypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Stakingkeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	s.Reporterkeeper = reporterkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(reportertypes.StoreKey).(*storetypes.KVStoreKey)), log.NewNopLogger(), authtypes.NewModuleAddress(govtypes.ModuleName).String(), s.Stakingkeeper, s.Bankkeeper, s.Registrykeeper,
-	)
-	s.Oraclekeeper = oraclekeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(oracletypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Registrykeeper, s.Reporterkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	s.Disputekeeper = disputekeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(disputetypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, s.Oraclekeeper, s.Reporterkeeper,
-	)
-	s.Mintkeeper = mintkeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(minttypes.StoreKey).(*storetypes.KVStoreKey)), s.Accountkeeper, s.Bankkeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	s.Bridgekeeper = bridgekeeper.NewKeeper(
-		appCodec, runtime.NewKVStoreService(s.fetchStoreKey(bridgetypes.StoreKey).(*storetypes.KVStoreKey)), s.Stakingkeeper, s.Oraclekeeper, s.Bankkeeper, s.Reporterkeeper,
-	)
-	s.GlobalFeekeeper = globalfeekeeper.NewKeeper(
-		appCodec, s.fetchStoreKey(globalfeetypes.StoreKey).(*storetypes.KVStoreKey), authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	s.Stakingkeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(
-			s.distrKeeper.Hooks(),
-			s.Reporterkeeper.Hooks(),
-		),
-	)
-	s.Registrykeeper.SetHooks(
-		registrytypes.NewMultiRegistryHooks(
-			s.Oraclekeeper.Hooks(),
-		),
-	)
-}
-
 func (s *SharedSetup) SetupTest(t *testing.T) {
 	t.Helper()
 	s.require = require.New(t)
@@ -341,17 +243,17 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		DefaultStartUpConfig(),
-		&s.Accountkeeper, &s.Bankkeeper, &s.Stakingkeeper, &s.slashingKeeper,
-		&s.interfaceRegistry, &s.appCodec, &s.authConfig, &s.Oraclekeeper,
-		&s.Disputekeeper, &s.Registrykeeper, &s.Govkeeper, &s.distrKeeper, &s.Mintkeeper, &s.Reporterkeeper)
+		&s.Accountkeeper, &s.Bankkeeper, &s.Stakingkeeper, &s.slashingKeeper, &s.interfaceRegistry,
+		&s.appCodec, &s.authConfig, &s.Oraclekeeper, &s.Mintkeeper, &s.Bridgekeeper, &s.GlobalFeekeeper,
+		&s.Disputekeeper, &s.Registrykeeper, &s.Govkeeper, &s.distrKeeper, &s.Reporterkeeper)
+	s.Ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
 
 	s.require.NoError(err)
-	s.Ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
+
 	s.fetchStoreKey = app.UnsafeFindStoreKey
 
 	s.queryHelper = baseapp.NewQueryServerTestHelper(s.Ctx, s.interfaceRegistry)
 	s.Denom = sdk.DefaultBondDenom
-	s.initKeepersWithmAccPerms(make(map[string]bool))
 	s.App = app
 }
 

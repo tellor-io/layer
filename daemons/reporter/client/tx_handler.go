@@ -4,10 +4,16 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
+	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -41,26 +47,30 @@ func handleBroadcastResult(resp *sdk.TxResponse, err error) error {
 }
 
 func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx, error) {
+	waiting := true
 	bz, err := hex.DecodeString(hash)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode tx hash '%s'; err: %w", hash, err)
 	}
-	for {
+	for waiting {
 		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
-				// Tx not found, wait for next block and try again
-				err := c.WaitForNextBlock(ctx)
-				if err != nil {
-					return nil, fmt.Errorf("waiting for next block: err: %w", err)
-				}
 				continue
+
+				// Tx not found, wait for next block and try again
+				// err := c.WaitForNextBlock(ctx)
+				// if err != nil {
+				// 	return nil, fmt.Errorf("waiting for next block: err: %w", err)
+				// }
+				// continue
 			}
 			return nil, fmt.Errorf("fetching tx '%s'; err: %w", hash, err)
 		}
 		// Tx found
 		return resp, nil
 	}
+	return nil, fmt.Errorf("fetching tx '%s'; err: %w", hash, err)
 }
 
 func (c Client) WaitForNextBlock(ctx context.Context) error {
@@ -88,7 +98,7 @@ func (c Client) Status(ctx context.Context) (*cmttypes.ResultStatus, error) {
 }
 
 func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
 	for {
@@ -107,45 +117,108 @@ func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 	}
 }
 
-func (c *Client) sendTx(ctx context.Context, msg sdk.Msg, seq *uint64) error {
+var mus sync.Mutex
+
+func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
+	mus.Lock()
+	defer mus.Unlock()
+	block, err := c.cosmosCtx.Client.Block(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error getting block: %w", err)
+	}
 	txf := newFactory(c.cosmosCtx)
+	_, nonce, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
+	if err != nil {
+		return nil, fmt.Errorf("error getting account number and sequence: %w", err)
+	}
+
+	txf = txf.WithSequence(nonce)
 	txf = txf.WithGasPrices(c.minGasFee)
-	if seq == nil {
-		var accountSeq uint64
-		_, accountSeq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
-		if err != nil {
-			return fmt.Errorf("error getting account number sequence for: %w", err)
-		}
+	txf = txf.WithTimeoutHeight(uint64(block.Block.Header.Height + 2))
+	c.logger.Info("Transaction nonce", "nonce", nonce)
 
-		seq = &accountSeq
+	txf, err = txf.Prepare(c.cosmosCtx)
+	if err != nil {
+		return nil, fmt.Errorf("error preparing transaction factory: %w", err)
 	}
 
-	txf = txf.WithSequence(*seq)
-	txf, err := txf.Prepare(c.cosmosCtx)
+	txn, err := txf.BuildUnsignedTx(msg...)
 	if err != nil {
-		return fmt.Errorf("error preparing transaction during: %w", err)
-	}
-
-	txn, err := txf.BuildUnsignedTx(msg)
-	if err != nil {
-		return fmt.Errorf("error building unsigned transaction: %w", err)
+		return nil, fmt.Errorf("error building unsigned transaction: %w", err)
 	}
 	if err = tx.Sign(c.cosmosCtx.CmdContext, txf, c.cosmosCtx.FromName, txn, true); err != nil {
-		return fmt.Errorf("error when signing transaction: %w", err)
+		return nil, fmt.Errorf("error when signing transaction: %w", err)
 	}
 
 	txBytes, err := c.cosmosCtx.TxConfig.TxEncoder()(txn.GetTx())
 	if err != nil {
-		return fmt.Errorf("error encoding transaction: %w", err)
+		return nil, fmt.Errorf("error encoding transaction: %w", err)
 	}
 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
-		return fmt.Errorf("error broadcasting transaction after 'handleBroadcastResult': %w", err)
+		return nil, fmt.Errorf("error broadcasting transaction result: %w", err)
 	}
-	txnResult, err := c.WaitForTx(ctx, res.TxHash)
+	txnResponse, err := c.WaitForTx(ctx, res.TxHash)
 	if err != nil {
-		return fmt.Errorf("error waiting for transaction: %w", err)
+		return nil, fmt.Errorf("error waiting for transaction: %w", err)
 	}
-	c.logger.Info(sdk.MsgTypeURL(msg), "TxResult", txnResult)
+	c.logger.Info("TxResult", "result", txnResponse.TxResult)
+	fmt.Println("transaction hash ", res.TxHash)
+
+	return txnResponse, nil
+}
+
+func (c *Client) SetGasPrice(ctx context.Context) error {
+	gfResponse, err := c.GlobalfeeClient.MinimumGasPrices(ctx, &globalfeetypes.QueryMinimumGasPricesRequest{})
+	if err != nil {
+		return fmt.Errorf("getting minimum gas price (globalfee): %w", err)
+	}
+	localPrice, err := sdk.ParseDecCoins(c.minGasFee)
+	if err != nil {
+		return fmt.Errorf("parsing local gas price: %w", err)
+	}
+
+	p := gasprice(gfResponse.MinimumGasPrices, localPrice)
+	if p.IsZero() {
+		return fmt.Errorf("unable to set gas price, global and local gas prices are zero")
+	}
+	c.minGasFee = p.String()
 	return nil
+}
+
+func gasprice(local, global sdk.DecCoins) sdk.DecCoin {
+	_local := sdk.NewDecCoin("loya", math.ZeroInt())
+	for _, coin := range local {
+		if coin.Denom == "loya" && coin.Amount.GT(math.LegacyZeroDec()) {
+			_local = coin
+		}
+	}
+	_global := sdk.NewDecCoin("loya", math.ZeroInt())
+	for _, coin := range global {
+		if coin.Denom == "loya" && coin.Amount.GT(math.LegacyZeroDec()) {
+			_global = coin
+		}
+	}
+
+	return sdk.DecCoin{
+		Denom:  "loya",
+		Amount: math.LegacyMaxDec(_local.Amount, _global.Amount),
+	}
+}
+
+func getcommitId(events []abcitypes.Event) (uint64, error) {
+	for _, event := range events {
+		if event.Type == "new_commit" {
+			for _, attr := range event.Attributes {
+				if attr.Key == "commit_id" {
+					value, err := strconv.Atoi(attr.Value)
+					if err != nil {
+						return 0, err
+					}
+					return uint64(value), nil
+				}
+			}
+		}
+	}
+	return 0, fmt.Errorf("commit_id not found")
 }

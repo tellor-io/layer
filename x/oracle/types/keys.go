@@ -39,7 +39,6 @@ var (
 	ReportsIdIndexPrefix             = collections.NewPrefix(11)
 	QueryCyclePrefix                 = collections.NewPrefix(12)
 	CycleSeqPrefix                   = collections.NewPrefix(13)
-	QueryTipPrefix2                  = collections.NewPrefix(14)
 	NextInListPrefix                 = collections.NewPrefix(15)
 	QueryRevealedIdsIndexPrefix      = collections.NewPrefix(16)
 	CyclelistPrefix                  = collections.NewPrefix(17)

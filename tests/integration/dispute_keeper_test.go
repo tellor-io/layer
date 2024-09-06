@@ -853,6 +853,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	queryid, err := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	s.NoError(err)
 	aggmethod := "weighted-median"
 	s.NoError(err)
 
@@ -902,7 +903,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// add query
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, queryid, oracletypes.QueryMeta{Id: 1, HasRevealedReports: true}))
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryid, uint64(1)), oracletypes.QueryMeta{Id: 1, HasRevealedReports: true}))
 	// set aggregate
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.NoError(err)

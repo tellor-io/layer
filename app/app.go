@@ -664,7 +664,7 @@ func New(
 			// enabled by default, set flag `--reporter-daemon-enabled=false` to false to disable
 			if daemonFlags.Reporter.Enabled {
 				go func() {
-					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName)
+					app.ReporterClient = reporterclient.NewClient(cltx, logger, daemonFlags.Reporter.AccountName, cast.ToString(appOpts.Get(server.FlagMinGasPrices)))
 					if err := app.ReporterClient.Start(
 						context.Background(),
 						daemonFlags,
@@ -673,7 +673,7 @@ func New(
 						marketParamsConfig,
 						indexPriceCache,
 						tokenDepositsCache,
-						app.CreateQueryContext,
+						// app.CreateQueryContext,
 						*app.StakingKeeper,
 						app.ChainID(),
 					); err != nil {
@@ -993,7 +993,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v0.6.1"
+	const UpgradeName = "v0.7.0-alpha1"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,

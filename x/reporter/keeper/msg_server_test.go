@@ -291,7 +291,7 @@ func TestWithdrawTip(t *testing.T) {
 	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	require.NoError(t, k.SelectorTips.Set(ctx, selector, math.OneInt()))
+	require.NoError(t, k.SelectorTips.Set(ctx, selector, math.LegacyOneDec()))
 
 	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)

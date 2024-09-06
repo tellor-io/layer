@@ -48,7 +48,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 	}
 
 	query.HasRevealedReports = true
-	err = k.Query.Set(ctx, queryId, query)
+	err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {
 		return err
 	}

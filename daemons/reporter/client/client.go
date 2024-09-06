@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -15,7 +14,6 @@ import (
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/log"
@@ -27,6 +25,19 @@ import (
 )
 
 const defaultGas = uint64(300000)
+
+type Commit struct {
+	querydata []byte
+	value     string
+	salt      string
+	Id        uint64
+}
+
+var (
+	commitedIds      = make(map[uint64]bool)
+	depositCommitMap = make(map[string]bool)
+	depositMeta      = make(map[string]Commit)
+)
 
 type Client struct {
 	// reporter account name
@@ -47,13 +58,17 @@ type Client struct {
 	minGasFee string
 	// logger is the logger for the daemon.
 	logger log.Logger
+
+	SubMgr *SubmissionMgr
 }
 
-func NewClient(clctx client.Context, logger log.Logger, accountName string) *Client {
+func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {
+	logger = logger.With("module", "reporter-client")
 	return &Client{
 		AccountName: accountName,
 		cosmosCtx:   clctx,
 		logger:      logger,
+		minGasFee:   valGasMin,
 	}
 }
 
@@ -65,7 +80,7 @@ func (c *Client) Start(
 	marketParams []pricefeedtypes.MarketParam,
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
 	tokenDepositsCache *tokenbridgetypes.DepositReports,
-	ctxGetter func(int64, bool) (sdk.Context, error),
+	// ctxGetter func(int64, bool) (sdk.Context, error),
 	stakingKeeper stakingkeeper.Keeper,
 	chainId string,
 ) error {
@@ -99,7 +114,7 @@ func (c *Client) Start(
 	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
 	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
 
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	stop := make(chan bool)
 
 	// get account
@@ -122,15 +137,16 @@ func (c *Client) Start(
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
 
+	c.SubMgr = NewSubmissionManager(c)
+
 	StartReporterDaemonTaskLoop(
 		c,
 		ctx,
-		c.cosmosCtx,
 		&SubTaskRunnerImpl{},
 		flags,
 		ticker,
 		stop,
-		ctxGetter,
+		// ctxGetter,
 	)
 
 	return nil
@@ -139,27 +155,37 @@ func (c *Client) Start(
 func StartReporterDaemonTaskLoop(
 	client *Client,
 	ctx context.Context,
-	cosmosClient client.Context,
 	s SubTaskRunner,
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
 	stop <-chan bool,
-	ctxGetter func(int64, bool) (sdk.Context, error),
+	// ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
+	reporterCreated := false
+	// Check if the reporter is created
+	for !reporterCreated {
+		reporterCreated = client.checkReporter(ctx)
+		if reporterCreated {
+			err := client.SetGasPrice(ctx)
+			if err != nil {
+				client.logger.Error("Setting gas, required before reporter can report", "error", err)
+				reporterCreated = false
+			}
+		} else {
+			time.Sleep(time.Second)
+		}
+	}
+
+	err := client.WaitForNextBlock(ctx)
+	if err != nil {
+		client.logger.Error("Waiting for next block", "error", err)
+	}
 	for {
 		select {
 		case <-ticker.C:
-			gfResponse, err := client.GlobalfeeClient.MinimumGasPrices(ctx, &globalfeetypes.QueryMinimumGasPricesRequest{})
-			if err != nil {
-				if strings.Contains(err.Error(), "layer is not ready") {
-					continue
-				}
-			}
-			client.minGasFee = gfResponse.MinimumGasPrices[0].String()
 			if err := s.RunReporterDaemonTaskLoop(
 				ctx,
 				client,
-				cosmosClient,
 			); err != nil {
 				client.logger.Error("Reporter daemon returned error", "error", err)
 			} else {
@@ -171,53 +197,7 @@ func StartReporterDaemonTaskLoop(
 	}
 }
 
-func (c *Client) SubmitReport(ctx context.Context) error {
-	querydata, value, err := c.deposits()
-	if err != nil {
-		querydata, err = c.CurrentQuery(ctx)
-		if err != nil {
-			return fmt.Errorf("error calling 'CurrentQuery': %w", err)
-		}
-		value, err = c.median(querydata)
-		if err != nil {
-			return fmt.Errorf("error getting median from median client': %w", err)
-		}
-	} else {
-		// delete this
-		c.logger.Info("Submitting for token bridge")
-	}
-	c.logger.Info("SubmitReport", "Median value", value)
-	// Salt and hash the value
-	salt, err := oracleutils.Salt(32)
-	if err != nil {
-		return fmt.Errorf("error generating salt: %w", err)
-	}
-	hash := oracleutils.CalculateCommitment(value, salt)
-
-	// ***********************MsgCommitReport***************************
-	msgCommit := &oracletypes.MsgCommitReport{
-		Creator:   c.accAddr.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-
-	_, seq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
-	if err != nil {
-		return fmt.Errorf("error getting account number sequence for 'MsgCommitReport': %w", err)
-	}
-	err = c.sendTx(ctx, msgCommit, &seq)
-	if err != nil {
-		return fmt.Errorf("error generating 'MsgCommitReport': %w", err)
-	}
-
-	// ***********************MsgSubmitValue***************************
-	msgSubmit := &oracletypes.MsgSubmitValue{
-		Creator:   c.accAddr.String(),
-		QueryData: querydata,
-		Value:     value,
-		Salt:      salt,
-	}
-	// no need to call GetAccountNumberSequence here, just increment sequence by 1 for next transaction
-	seq++
-	return c.sendTx(ctx, msgSubmit, &seq)
+func (c *Client) checkReporter(ctx context.Context) bool {
+	_, err := c.ReporterClient.SelectorReporter(ctx, &reportertypes.QuerySelectorReporterRequest{SelectorAddress: c.accAddr.String()})
+	return err == nil
 }

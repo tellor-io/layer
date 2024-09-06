@@ -115,9 +115,9 @@ func (s *KeeperTestSuite) TestInitializeQuery() {
 	queryMeta, err = k.InitializeQuery(ctx, querydataBytes)
 	require.NotNil(queryMeta)
 	require.NoError(err)
-	require.Equal(queryMeta.Id, uint64(3))
-	expectedId := utils.QueryIDFromData(querydataBytes)
-	require.Equal(queryMeta.QueryId, expectedId)
+	require.Equal(queryMeta.Id, uint64(0))
+	expectedId := querydataBytes
+	require.Equal(queryMeta.QueryData, expectedId)
 	require.Equal(queryMeta.RegistrySpecTimeframe, time.Duration(1000))
 }
 
@@ -128,9 +128,11 @@ func (s *KeeperTestSuite) TestUpdateQuery() {
 
 	// set spotprice query at 500ns
 	queryType := "SpotPrice"
-	require.NoError(k.Query.Set(ctx, []byte("SpotPrice"), types.QueryMeta{
+	queryId := utils.QueryIDFromData([]byte("SpotPrice"))
+	require.NoError(k.Query.Set(ctx, collections.Join(queryId, uint64(1)), types.QueryMeta{
 		QueryType:             queryType,
 		RegistrySpecTimeframe: 500,
+		QueryData:             []byte("SpotPrice"),
 	}))
 
 	// update spotprice type to 1000 ns
