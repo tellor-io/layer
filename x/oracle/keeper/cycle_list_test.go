@@ -28,7 +28,7 @@ func (s *KeeperTestSuite) TestGetCycleList() {
 func (s *KeeperTestSuite) TestRotateQueries() {
 	require := s.Require()
 	k := s.oracleKeeper
-
+	s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(regtypes.DataSpec{}, nil)
 	list, err := k.GetCyclelist(s.ctx)
 	require.NoError(err)
 
@@ -113,4 +113,19 @@ func (s *KeeperTestSuite) TestGenesisCycleList() {
 	cycleList, err := k.Cyclelist.Get(s.ctx, utils.QueryIDFromData(querydataBytes))
 	require.NoError(err)
 	require.Equal(cycleList, querydataBytes)
+}
+
+func (s *KeeperTestSuite) TestGetNextCurrentQueryInCycleList() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	currentQuery, err := k.GetCurrentQueryInCycleList(ctx)
+	require.NoError(err)
+	require.NotNil(currentQuery)
+
+	query, err := k.GetNextCurrentQueryInCycleList(ctx)
+	require.NoError(err)
+	require.NotNil(query)
+	require.NotEqual(currentQuery, query)
 }

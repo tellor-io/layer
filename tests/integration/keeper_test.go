@@ -55,18 +55,6 @@ func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
 	return Addr
 }
 
-type ModuleAccs struct {
-	staking sdk.AccountI
-	dispute sdk.AccountI
-}
-
-func (s *IntegrationTestSuite) ModuleAccs() ModuleAccs {
-	return ModuleAccs{
-		staking: s.Setup.Accountkeeper.GetModuleAccount(s.Setup.Ctx, "bonded_tokens_pool"),
-		dispute: s.Setup.Accountkeeper.GetModuleAccount(s.Setup.Ctx, "dispute"),
-	}
-}
-
 func CreateRandomPrivateKeys(accNum int) []ed25519.PrivKey {
 	testAddrs := make([]ed25519.PrivKey, accNum)
 	for i := 0; i < accNum; i++ {
@@ -92,7 +80,7 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 		account := authtypes.BaseAccount{
 			Address:       testAddrs[i].String(),
 			PubKey:        codectypes.UnsafePackAny(pk.PubKey()),
-			AccountNumber: uint64(i + 1),
+			AccountNumber: uint64(i + 100),
 		}
 		s.Setup.Accountkeeper.SetAccount(s.Setup.Ctx, &account)
 		valMsg, err := stakingtypes.NewMsgCreateValidator(

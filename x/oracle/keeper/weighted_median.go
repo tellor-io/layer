@@ -3,16 +3,17 @@ package keeper
 import (
 	"context"
 	"errors"
-	"math"
 	"math/big"
 	"sort"
 
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	cosmomath "cosmossdk.io/math"
 )
 
 func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error) {
 	var medianReport types.Aggregate
-	values := make(map[string]*big.Int)
+	values := make(map[string]cosmomath.LegacyDec)
 
 	for _, r := range reports {
 		val, ok := new(big.Int).SetString(r.Value, 16)
@@ -20,28 +21,28 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 			k.Logger(ctx).Error("WeightedMedian", "error", "failed to parse value")
 			return nil, errors.New("failed to parse value")
 		}
-		values[r.Reporter] = val
+		values[r.Reporter] = cosmomath.LegacyNewDecFromBigInt(val)
 	}
 
 	sort.SliceStable(reports, func(i, j int) bool {
-		return values[reports[i].Reporter].Cmp(values[reports[j].Reporter]) < 0
+		return values[reports[i].Reporter].BigInt().Cmp(values[reports[j].Reporter].BigInt()) < 0
 	})
 
-	var totalReporterPower, weightedSum big.Int
+	totalReporterPower, weightedSum := cosmomath.LegacyZeroDec(), cosmomath.LegacyZeroDec()
 	for _, r := range reports {
-		weightedSum.Add(&weightedSum, new(big.Int).Mul(values[r.Reporter], big.NewInt(r.Power)))
-		totalReporterPower.Add(&totalReporterPower, big.NewInt(r.Power))
+		weightedSum = weightedSum.Add(values[r.Reporter].Mul(cosmomath.LegacyNewDec(r.Power)))
+		totalReporterPower = totalReporterPower.Add(cosmomath.LegacyNewDec(r.Power))
 		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 	}
 
-	halfTotalPower := new(big.Int).Div(&totalReporterPower, big.NewInt(2))
-	cumulativePower := new(big.Int)
+	halfTotalPower := totalReporterPower.Quo(cosmomath.LegacyNewDec(2))
+	cumulativePower := cosmomath.LegacyZeroDec()
 
 	// Find the weighted median
 	for i, s := range reports {
-		cumulativePower.Add(cumulativePower, big.NewInt(s.Power))
-		if cumulativePower.Cmp(halfTotalPower) >= 0 {
-			medianReport.ReporterPower = totalReporterPower.Int64()
+		cumulativePower = cumulativePower.Add(cosmomath.LegacyNewDec(s.Power))
+		if cumulativePower.BigInt().Cmp(halfTotalPower.BigInt()) >= 0 {
+			medianReport.ReporterPower = totalReporterPower.TruncateInt64()
 			medianReport.AggregateReporter = s.Reporter
 			medianReport.AggregateValue = s.Value
 			medianReport.QueryId = s.QueryId
@@ -52,21 +53,26 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 	}
 
 	// Calculate the weighted standard deviation
-	var sumWeightedSquaredDiffs float64
-	weightedMean := new(big.Float).Quo(new(big.Float).SetInt(&weightedSum), new(big.Float).SetInt(&totalReporterPower))
+	sumWeightedSquaredDiffs := cosmomath.LegacyZeroDec()
+	weightedMeanDec := weightedSum.Quo(totalReporterPower)
 
 	for _, r := range reports {
-		valBigFloat := new(big.Float).SetInt(values[r.Reporter])
-		diff := new(big.Float).Sub(valBigFloat, weightedMean)
-		diffSquared := new(big.Float).Mul(diff, diff)
-		weightedSquaredDiff := diffSquared.Mul(diffSquared, new(big.Float).SetInt64(r.Power))
-		diffStdDev, _ := weightedSquaredDiff.Float64()
-		sumWeightedSquaredDiffs += diffStdDev
+		diffDec := values[r.Reporter].Sub(weightedMeanDec)
+		diffDecSquared := diffDec.Mul(diffDec)
+		weightedSquaredDiffDec := diffDecSquared.Mul(cosmomath.LegacyNewDec(r.Power))
+		sumWeightedSquaredDiffs = sumWeightedSquaredDiffs.Add(weightedSquaredDiffDec)
 	}
-	weightedStdDev := math.Sqrt(sumWeightedSquaredDiffs / float64(totalReporterPower.Int64()))
-	medianReport.StandardDeviation = weightedStdDev
 
-	err := k.SetAggregate(ctx, &medianReport)
+	weightedVariance := sumWeightedSquaredDiffs.Quo(totalReporterPower)
+	wstdDeviation, err := weightedVariance.ApproxSqrt()
+	if err != nil {
+		k.Logger(ctx).Error("WeightedMedian", "error", "failed to calculate weighted standard deviation")
+		medianReport.StandardDeviation = "0"
+	} else {
+		medianReport.StandardDeviation = wstdDeviation.String()
+	}
+
+	err = k.SetAggregate(ctx, &medianReport)
 	if err != nil {
 		return nil, err
 	}

@@ -30,17 +30,17 @@ func ReturnTestQueryMeta(tip math.Int) types.QueryMeta {
 		Expiration:            time.Now().Add(1 * time.Minute),
 		RegistrySpecTimeframe: 1 * time.Minute,
 		HasRevealedReports:    false,
-		QueryId:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
 		QueryType:             "SpotPrice",
 	}
 }
 
 func (s *KeeperTestSuite) TestGetQueryTip() {
 	queryMeta := ReturnTestQueryMeta(math.NewInt(1 * 1e6))
-	s.NoError(s.oracleKeeper.Query.Set(s.ctx, queryMeta.QueryId, queryMeta))
+	s.NoError(s.oracleKeeper.Query.Set(s.ctx, collections.Join(TRB_queryId, queryMeta.Id), queryMeta))
 
 	// test with a valid queryId
-	res, err := s.oracleKeeper.GetQueryTip(s.ctx, queryMeta.QueryId)
+	res, err := s.oracleKeeper.GetQueryTip(s.ctx, TRB_queryId)
 	s.NoError(err)
 	s.Equal(math.NewInt(1*1e6), res)
 
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) TestGetUserTips() {
 	s.NoError(err)
 	s.Equal(math.NewInt(1*1e6), res)
 
-	query.QueryId = ETH_queryId
+	query.QueryData = ETH_queryId
 	query.Id = 2
 	// adding the flow here to show how its handled in msgTip
 	tipperTotal, err := s.oracleKeeper.TipperTotal.Get(s.ctx, collections.Join(acc.Bytes(), s.ctx.BlockHeight()))

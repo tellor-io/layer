@@ -15,6 +15,7 @@ func (k Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, gen *ty
 	if err != nil {
 		panic(err)
 	}
+	k.accountKeeper.GetModuleAccount(ctx, types.TimeBasedRewards)
 }
 
 // ExportGenesis returns a x/mint GenesisState for the given context.

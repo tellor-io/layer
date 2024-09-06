@@ -17,9 +17,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
+func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte, uint64) {
 	// get the current query in cycle list
 	s.ctx = s.ctx.WithBlockTime(time.Now())
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+	s.NoError(s.oracleKeeper.RotateQueries(s.ctx))
+	s.NoError(s.oracleKeeper.RotateQueries(s.ctx))
 	queryData, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 	salt, err := oracleutils.Salt(32)
@@ -28,7 +31,6 @@ func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
 
 	addr := sample.AccAddressBytes()
 
-	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
 	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	commitreq := types.MsgCommitReport{
@@ -36,18 +38,18 @@ func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte) {
 		QueryData: queryData,
 		Hash:      hash,
 	}
-	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
+	resp, err := s.msgServer.CommitReport(s.ctx, &commitreq)
 	s.Nil(err)
 
 	qId := utils.QueryIDFromData(queryData)
-	query, err := s.oracleKeeper.Query.Get(s.ctx, qId)
+	query, err := s.oracleKeeper.CurrentQuery(s.ctx, qId)
 	s.Nil(err)
 	s.NotNil(query)
 	commitValue, err := s.oracleKeeper.Commits.Get(s.ctx, collections.Join(addr.Bytes(), query.Id))
 	s.Nil(err)
 	s.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
 	s.Equal(commitValue.Reporter, addr.String())
-	return addr, salt, queryData
+	return addr, salt, queryData, resp.CommitId
 }
 
 func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
@@ -69,12 +71,14 @@ func (s *KeeperTestSuite) TestCommitQueryNotInCycleList() {
 		Hash:      hash,
 	}
 	_, err = s.msgServer.CommitReport(s.ctx, &commitreq)
-	s.ErrorContains(err, "query not part of cyclelist")
+	s.ErrorContains(err, "query doesn't exist plus not a bridge deposit")
 }
 
 func (s *KeeperTestSuite) TestCommitQueryInCycleListPlusTippedQuery() {
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	// commit query in cycle list
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+	s.NoError(s.oracleKeeper.RotateQueries(s.ctx))
 	queryData1, err := s.oracleKeeper.GetCurrentQueryInCycleList(s.ctx)
 	s.Nil(err)
 

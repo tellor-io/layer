@@ -160,8 +160,8 @@ message QueryAvailableTipsRequest {
 message QueryAvailableTipsResponse {
   // available_tips defines the tips available for withdrawal for a given selector.
   string available_tips = 1 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
 }

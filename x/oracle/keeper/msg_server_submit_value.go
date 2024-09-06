@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"strings"
@@ -13,7 +12,6 @@ import (
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -48,67 +46,60 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
-	query, err := k.keeper.Query.Get(ctx, queryId)
-	if err != nil {
-		// if entered here it means that there is no tip because in cycle query are initialized in genesis
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		// check if query is token bridge deposit since all bridge deposit
-		// also considered in cycle
-		query, err = k.keeper.TokenBridgeDepositCheck(ctx, msg.QueryData)
+	if msg.CommitId == 0 {
+		query, err := k.keeper.CurrentQuery(ctx, queryId)
 		if err != nil {
-			return nil, err
-		}
-
-		err = k.keeper.Query.Set(ctx, queryId, query)
-		if err != nil {
-			return nil, err
-		}
-		err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, true)
-		if err != nil {
-			return nil, err
-		}
-		return &types.MsgSubmitValueResponse{}, nil
-	}
-	var incycle bool
-	// get commit by identifier
-	commit, err := k.keeper.Commits.Get(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		} else {
-			// if there is no commit check if in cycle
-			cycleQuery, err := k.keeper.GetCurrentQueryInCycleList(ctx)
+			if !errors.Is(err, collections.ErrNotFound) {
+				return nil, err
+			}
+			query, err = k.keeper.TokenBridgeDepositCheck(ctx, msg.QueryData)
 			if err != nil {
 				return nil, err
 			}
-			incycle = bytes.Equal(msg.QueryData, cycleQuery) || strings.EqualFold(query.QueryType, TRBBridgeQueryType)
-			err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, incycle)
+
+			err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
+			if err != nil {
+				return nil, err
+			}
+			err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, votingPower)
 			if err != nil {
 				return nil, err
 			}
 			return &types.MsgSubmitValueResponse{}, nil
 		}
+		isBridgeDeposit := strings.EqualFold(query.QueryType, TRBBridgeQueryType)
+		err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, isBridgeDeposit)
+		if err != nil {
+			return nil, err
+		}
+		return &types.MsgSubmitValueResponse{}, nil
 	}
 
+	commit, err := k.keeper.Commits.Get(ctx, collections.Join(reporterAddr.Bytes(), msg.CommitId))
+	if err != nil {
+		return nil, err
+	}
+	// remove commit from store
+	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), msg.CommitId))
+	if err != nil {
+		return nil, err
+	}
+
+	query, err := k.keeper.Query.Get(ctx, collections.Join(commit.QueryId, msg.CommitId))
+	if err != nil {
+		return nil, err
+	}
 	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
-		return nil, errors.New("missed commit reveal window")
+		return nil, types.ErrSubmissionWindowExpired
 	}
 	genHash := oracleutils.CalculateCommitment(msg.Value, msg.Salt)
 	if genHash != commit.Hash {
 		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
 	}
-	incycle = commit.Incycle
 
-	err = k.keeper.SetValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, incycle)
-	if err != nil {
-		return nil, err
-	}
-	// remove commit from store
-	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), query.Id))
+	err = k.keeper.SetValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, query.CycleList)
 	if err != nil {
 		return nil, err
 	}
@@ -121,33 +112,22 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	value string,
 	reporterAddr sdk.AccAddress,
 	votingPower int64,
-	incycle bool,
+	bridgeDeposit bool,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
 
-	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(blockTime) && !incycle {
+	if bridgeDeposit {
+		return k.HandleBridgeDepositDirectReveal(ctx, query, qDataBytes, reporterAddr, value, votingPower)
+	}
+
+	if query.Amount.IsZero() && !query.CycleList {
 		return types.ErrNoTipsNotInCycle
 	}
 
-	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(blockTime) && incycle {
-		nextId, err := k.QuerySequencer.Next(ctx)
-		if err != nil {
-			return err
-		}
-		query.Id = nextId
-		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
+	if query.Expiration.Add(offset).Before(blockTime) {
+		return types.ErrSubmissionWindowExpired
 	}
 
-	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Add(offset).Before(blockTime) && !incycle {
-		return errors.New("tip submission window expired and query is not in cycle")
-	}
-
-	if query.Amount.GT(math.ZeroInt()) && query.Expiration.Add(offset).Before(blockTime) && incycle {
-		query.Expiration = blockTime.Add(query.RegistrySpecTimeframe)
-	}
-	if query.Amount.IsZero() && blockTime.Before(query.Expiration.Add(offset)) {
-		incycle = true
-	}
-	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, incycle)
+	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, query.CycleList)
 }
