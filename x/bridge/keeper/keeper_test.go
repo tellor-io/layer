@@ -1111,7 +1111,7 @@ func TestCreateSnapshot(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = k.CreateSnapshot(ctx, queryId, timestamp)
+	err = k.CreateSnapshot(ctx, queryId, timestamp, false)
 	require.NoError(t, err)
 
 	// check if snapshot is created

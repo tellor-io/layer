@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"strconv"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -25,7 +26,8 @@ func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawT
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
-	if err := k.Keeper.WithdrawTokens(sdkCtx, msg.Amount, sender, recipient); err != nil {
+	withdrawalId, err := k.Keeper.WithdrawTokens(sdkCtx, msg.Amount, sender, recipient)
+	if err != nil {
 		return nil, err
 	}
 	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
@@ -34,6 +36,7 @@ func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawT
 			sdk.NewAttribute("sender", msg.Creator),
 			sdk.NewAttribute("recipient_evm_address", msg.Recipient),
 			sdk.NewAttribute("amount", msg.Amount.String()),
+			sdk.NewAttribute("withdraw_id", strconv.FormatUint(withdrawalId, 10)),
 		),
 	})
 	return &types.MsgWithdrawTokensResponse{}, nil
