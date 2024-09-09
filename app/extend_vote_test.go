@@ -19,13 +19,11 @@ import (
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
-	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -129,12 +127,6 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
-	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(nil, collections.ErrNotFound).Once()
-	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
-	require.NoError(err)
-	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
-
-	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length > length request, reject
 	attReq := bridgetypes.AttestationRequests{
 		Requests: []*bridgetypes.AttestationRequest{
 			{
@@ -142,48 +134,6 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 			},
 		},
 	}
-	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
-		Attestation: []byte("attestation2"),
-		Snapshot:    []byte("snapshot2"),
-	})
-	require.Equal(len(bridgeVoteExt.OracleAttestations), 2)
-	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
-	require.NoError(err)
-	req = &abci.RequestVerifyVoteExtension{
-		VoteExtension: bridgeVoteExtBz,
-	}
-	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
-	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
-	require.NoError(err)
-	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
-
-	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig too big, reject
-	bridgeVoteExt.InitialSignature.SignatureA = make([]byte, 100000)
-	bridgeVoteExt.OracleAttestations = []app.OracleAttestation{
-		oracleAtt,
-	}
-	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
-	require.NoError(err)
-	req = &abci.RequestVerifyVoteExtension{
-		VoteExtension: bridgeVoteExtBz,
-	}
-	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
-	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
-	require.NoError(err)
-	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
-
-	// no err unmarshalling, no err from GetAttestationRequestsByHeight, voteExt oracle att length == length request, initial sig good, valset sig too big, reject
-	bridgeVoteExt.ValsetSignature.Signature = make([]byte, 100000)
-	bridgeVoteExt.InitialSignature = app.InitialSignature{
-		SignatureA: []byte("signature"),
-		SignatureB: []byte("signature"),
-	}
-	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
-	require.NoError(err)
-	req = &abci.RequestVerifyVoteExtension{
-		VoteExtension: bridgeVoteExtBz,
-	}
-	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
 		Attestation: []byte("attestation2"),
 		Snapshot:    []byte("snapshot2"),
@@ -280,10 +230,11 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 		VoteExtension: bridgeVoteExtBz,
 	}
 	// bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
-	// bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
+
+	bk.AssertExpectations(s.T())
 }
 
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
@@ -564,6 +515,7 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			patches := gomonkey.NewPatches()
+			patches.Reset()
 			h, _, _, _ := s.CreateHandlerAndMocks()
 			s.T().Cleanup(func() {
 				patches.Reset()
@@ -580,6 +532,9 @@ func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
 				require.NoError(err)
 				require.NotEmpty(resp)
 			}
+			s.T().Cleanup(func() {
+				patches.Reset()
+			})
 		})
 	}
 }
@@ -589,6 +544,7 @@ func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
 	h, _, _, _ := s.CreateHandlerAndMocks()
 
 	patches := gomonkey.NewPatches()
+	patches.Reset()
 	patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 		return []byte("signedMsg"), nil
 	})
@@ -661,7 +617,6 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
 					return oppAddr, nil
 				})
-				fmt.Println("oppAddr in setupMocks", oppAddr)
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(false, int64(0), errors.New("sig check error!"))
 			},
 			expectedSig:       nil,
@@ -694,19 +649,12 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			fmt.Println("NAME: ", tc.name)
 			patches := gomonkey.NewPatches()
-			fmt.Println("Patches: ", patches)
-			s.T().Cleanup(func() {
-				patches.Reset()
-			})
-			fmt.Println("Patches: ", patches)
-
+			patches.Reset()
 			h, _, bk, _ := s.CreateHandlerAndMocks()
 			if tc.setupMocks != nil {
 				tc.setupMocks(h, bk, patches)
 			}
-			fmt.Println("Patches: ", patches)
 			sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
 			if tc.expectedError != nil {
 				require.Error(err)
@@ -717,7 +665,9 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 			require.Equal(tc.expectedSig, sig)
 			require.Equal(tc.expectedTimestamp, timestamp)
 			bk.AssertExpectations(s.T())
-			fmt.Println(tc.name, " finished!!")
+			s.T().Cleanup(func() {
+				patches.Reset()
+			})
 		})
 	}
 }
@@ -763,6 +713,7 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 		s.Run(tt.name, func() {
 			h, _, _, _ := s.CreateHandlerAndMocks()
 			patches := gomonkey.NewPatches()
+			patches.Reset()
 			patches.ApplyMethod(reflect.TypeOf(h), "SignMessage",
 				func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return tt.mockSignature, tt.mockError
