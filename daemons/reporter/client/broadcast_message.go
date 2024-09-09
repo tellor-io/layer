@@ -72,7 +72,7 @@ func (c *Client) generateDepositmessages(ctx context.Context, bg *sync.WaitGroup
 		if err != nil {
 			return fmt.Errorf("error getting block: %w", err)
 		}
-		expiry := block.Block.Time.Sub(queryresp.Query.Expiration)
+		expiry := queryresp.Query.Expiration.Sub(block.Block.Time)
 		// add error handling
 		c.SubMgr.AddDepositCommit(ctx, queryId, commit, expiry)
 	}
