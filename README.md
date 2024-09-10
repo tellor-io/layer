@@ -17,6 +17,8 @@ crypto-economically incentivized to honestly report requested data.
 
 For more in-depth information, checkout the [Tellor Layer tech paper](https://github.com/tellor-io/layer/blob/main/TellorLayer%20-%20tech.pdf) and our [ADRs](https://github.com/tellor-io/layer/tree/main/adr).
 
+For docs on how to join our public testnet go here:  [https://docs.tellor.io/layer-docs](https://docs.tellor.io/layer-docs)
+
 ## Starting a New Chain:
 
 1) Select the start script that works for you
