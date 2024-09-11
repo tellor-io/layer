@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	storemetrics "cosmossdk.io/store/metrics"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmdb "github.com/cosmos/cosmos-db"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -27,10 +26,11 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -284,9 +284,8 @@ func TestAggregateLegacyCodec(t *testing.T) {
 		count++
 		return false, nil
 	})
-	require.Equal(t, 101, count) // make sure we walked all the values succesfully
+	require.Equal(t, 101, count) // make sure we walked all the values successfully
 	require.NoError(t, err)
-
 }
 
 type legacyAggregatesIndex struct {
