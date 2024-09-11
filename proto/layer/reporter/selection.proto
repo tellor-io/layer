@@ -18,5 +18,5 @@ message Selection {
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
-  int64 delegations_count = 3;
+  uint64 delegations_count = 3;
 }

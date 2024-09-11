@@ -108,8 +108,8 @@ func (x *fastReflection_Selection) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.DelegationsCount != int64(0) {
-		value := protoreflect.ValueOfInt64(x.DelegationsCount)
+	if x.DelegationsCount != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DelegationsCount)
 		if !f(fd_Selection_delegations_count, value) {
 			return
 		}
@@ -134,7 +134,7 @@ func (x *fastReflection_Selection) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.reporter.Selection.locked_until_time":
 		return x.LockedUntilTime != nil
 	case "layer.reporter.Selection.delegations_count":
-		return x.DelegationsCount != int64(0)
+		return x.DelegationsCount != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Selection"))
@@ -156,7 +156,7 @@ func (x *fastReflection_Selection) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.reporter.Selection.locked_until_time":
 		x.LockedUntilTime = nil
 	case "layer.reporter.Selection.delegations_count":
-		x.DelegationsCount = int64(0)
+		x.DelegationsCount = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Selection"))
@@ -181,7 +181,7 @@ func (x *fastReflection_Selection) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "layer.reporter.Selection.delegations_count":
 		value := x.DelegationsCount
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Selection"))
@@ -207,7 +207,7 @@ func (x *fastReflection_Selection) Set(fd protoreflect.FieldDescriptor, value pr
 	case "layer.reporter.Selection.locked_until_time":
 		x.LockedUntilTime = value.Message().Interface().(*timestamppb.Timestamp)
 	case "layer.reporter.Selection.delegations_count":
-		x.DelegationsCount = value.Int()
+		x.DelegationsCount = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Selection"))
@@ -256,7 +256,7 @@ func (x *fastReflection_Selection) NewField(fd protoreflect.FieldDescriptor) pro
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.reporter.Selection.delegations_count":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Selection"))
@@ -525,7 +525,7 @@ func (x *fastReflection_Selection) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.DelegationsCount |= int64(b&0x7F) << shift
+					x.DelegationsCount |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -589,7 +589,7 @@ type Selection struct {
 	// locked_until_time is the time until which the tokens are locked before they
 	// can be used for reporting again
 	LockedUntilTime  *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=locked_until_time,json=lockedUntilTime,proto3" json:"locked_until_time,omitempty"`
-	DelegationsCount int64                  `protobuf:"varint,3,opt,name=delegations_count,json=delegationsCount,proto3" json:"delegations_count,omitempty"`
+	DelegationsCount uint64                 `protobuf:"varint,3,opt,name=delegations_count,json=delegationsCount,proto3" json:"delegations_count,omitempty"`
 }
 
 func (x *Selection) Reset() {
@@ -626,7 +626,7 @@ func (x *Selection) GetLockedUntilTime() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Selection) GetDelegationsCount() int64 {
+func (x *Selection) GetDelegationsCount() uint64 {
 	if x != nil {
 		return x.DelegationsCount
 	}
@@ -654,7 +654,7 @@ var file_layer_reporter_selection_proto_rawDesc = []byte{
 	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01,
 	0x52, 0x0f, 0x6c, 0x6f, 0x63, 0x6b, 0x65, 0x64, 0x55, 0x6e, 0x74, 0x69, 0x6c, 0x54, 0x69, 0x6d,
 	0x65, 0x12, 0x2b, 0x0a, 0x11, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
-	0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x10, 0x64, 0x65,
+	0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x10, 0x64, 0x65,
 	0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0xac,
 	0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70,
 	0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x0e, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
