@@ -211,8 +211,8 @@ func (x *fastReflection_Dispute) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
-	if x.DisputeStartBlock != int64(0) {
-		value := protoreflect.ValueOfInt64(x.DisputeStartBlock)
+	if x.DisputeStartBlock != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DisputeStartBlock)
 		if !f(fd_Dispute_dispute_start_block, value) {
 			return
 		}
@@ -253,8 +253,8 @@ func (x *fastReflection_Dispute) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
-	if x.BlockNumber != int64(0) {
-		value := protoreflect.ValueOfInt64(x.BlockNumber)
+	if x.BlockNumber != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.BlockNumber)
 		if !f(fd_Dispute_block_number, value) {
 			return
 		}
@@ -295,7 +295,7 @@ func (x *fastReflection_Dispute) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.dispute.Dispute.dispute_end_time":
 		return x.DisputeEndTime != nil
 	case "layer.dispute.Dispute.dispute_start_block":
-		return x.DisputeStartBlock != int64(0)
+		return x.DisputeStartBlock != uint64(0)
 	case "layer.dispute.Dispute.dispute_round":
 		return x.DisputeRound != uint64(0)
 	case "layer.dispute.Dispute.slash_amount":
@@ -309,7 +309,7 @@ func (x *fastReflection_Dispute) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.dispute.Dispute.prev_dispute_ids":
 		return len(x.PrevDisputeIds) != 0
 	case "layer.dispute.Dispute.block_number":
-		return x.BlockNumber != int64(0)
+		return x.BlockNumber != uint64(0)
 	case "layer.dispute.Dispute.open":
 		return x.Open != false
 	default:
@@ -343,7 +343,7 @@ func (x *fastReflection_Dispute) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.dispute.Dispute.dispute_end_time":
 		x.DisputeEndTime = nil
 	case "layer.dispute.Dispute.dispute_start_block":
-		x.DisputeStartBlock = int64(0)
+		x.DisputeStartBlock = uint64(0)
 	case "layer.dispute.Dispute.dispute_round":
 		x.DisputeRound = uint64(0)
 	case "layer.dispute.Dispute.slash_amount":
@@ -357,7 +357,7 @@ func (x *fastReflection_Dispute) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.dispute.Dispute.prev_dispute_ids":
 		x.PrevDisputeIds = nil
 	case "layer.dispute.Dispute.block_number":
-		x.BlockNumber = int64(0)
+		x.BlockNumber = uint64(0)
 	case "layer.dispute.Dispute.open":
 		x.Open = false
 	default:
@@ -399,7 +399,7 @@ func (x *fastReflection_Dispute) Get(descriptor protoreflect.FieldDescriptor) pr
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "layer.dispute.Dispute.dispute_start_block":
 		value := x.DisputeStartBlock
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.dispute.Dispute.dispute_round":
 		value := x.DisputeRound
 		return protoreflect.ValueOfUint64(value)
@@ -423,7 +423,7 @@ func (x *fastReflection_Dispute) Get(descriptor protoreflect.FieldDescriptor) pr
 		return protoreflect.ValueOfList(listValue)
 	case "layer.dispute.Dispute.block_number":
 		value := x.BlockNumber
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.dispute.Dispute.open":
 		value := x.Open
 		return protoreflect.ValueOfBool(value)
@@ -462,7 +462,7 @@ func (x *fastReflection_Dispute) Set(fd protoreflect.FieldDescriptor, value prot
 	case "layer.dispute.Dispute.dispute_end_time":
 		x.DisputeEndTime = value.Message().Interface().(*timestamppb.Timestamp)
 	case "layer.dispute.Dispute.dispute_start_block":
-		x.DisputeStartBlock = value.Int()
+		x.DisputeStartBlock = value.Uint()
 	case "layer.dispute.Dispute.dispute_round":
 		x.DisputeRound = value.Uint()
 	case "layer.dispute.Dispute.slash_amount":
@@ -478,7 +478,7 @@ func (x *fastReflection_Dispute) Set(fd protoreflect.FieldDescriptor, value prot
 		clv := lv.(*_Dispute_14_list)
 		x.PrevDisputeIds = *clv.list
 	case "layer.dispute.Dispute.block_number":
-		x.BlockNumber = value.Int()
+		x.BlockNumber = value.Uint()
 	case "layer.dispute.Dispute.open":
 		x.Open = value.Bool()
 	default:
@@ -576,7 +576,7 @@ func (x *fastReflection_Dispute) NewField(fd protoreflect.FieldDescriptor) proto
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.dispute.Dispute.dispute_start_block":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.dispute.Dispute.dispute_round":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.dispute.Dispute.slash_amount":
@@ -592,7 +592,7 @@ func (x *fastReflection_Dispute) NewField(fd protoreflect.FieldDescriptor) proto
 		list := []uint64{}
 		return protoreflect.ValueOfList(&_Dispute_14_list{list: &list})
 	case "layer.dispute.Dispute.block_number":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.dispute.Dispute.open":
 		return protoreflect.ValueOfBool(false)
 	default:
@@ -1150,7 +1150,7 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.DisputeStartBlock |= int64(b&0x7F) << shift
+					x.DisputeStartBlock |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1396,7 +1396,7 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.BlockNumber |= int64(b&0x7F) << shift
+					x.BlockNumber |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -2566,7 +2566,7 @@ type Dispute struct {
 	// end time that the dispute stop taking votes and creating new rounds
 	DisputeEndTime *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=dispute_end_time,json=disputeEndTime,proto3" json:"dispute_end_time,omitempty"`
 	// height of the block that started the dispute
-	DisputeStartBlock int64 `protobuf:"varint,8,opt,name=dispute_start_block,json=disputeStartBlock,proto3" json:"dispute_start_block,omitempty"`
+	DisputeStartBlock uint64 `protobuf:"varint,8,opt,name=dispute_start_block,json=disputeStartBlock,proto3" json:"dispute_start_block,omitempty"`
 	// current dispute round
 	DisputeRound uint64 `protobuf:"varint,9,opt,name=dispute_round,json=disputeRound,proto3" json:"dispute_round,omitempty"`
 	// reporter's slashed amount
@@ -2581,8 +2581,8 @@ type Dispute struct {
 	// list of dispute ids that preceded before this current round began
 	PrevDisputeIds []uint64 `protobuf:"varint,14,rep,packed,name=prev_dispute_ids,json=prevDisputeIds,proto3" json:"prev_dispute_ids,omitempty"`
 	// block number when this specific dispute was created
-	BlockNumber int64 `protobuf:"varint,15,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
-	Open        bool  `protobuf:"varint,16,opt,name=open,proto3" json:"open,omitempty"`
+	BlockNumber uint64 `protobuf:"varint,15,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	Open        bool   `protobuf:"varint,16,opt,name=open,proto3" json:"open,omitempty"`
 }
 
 func (x *Dispute) Reset() {
@@ -2654,7 +2654,7 @@ func (x *Dispute) GetDisputeEndTime() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Dispute) GetDisputeStartBlock() int64 {
+func (x *Dispute) GetDisputeStartBlock() uint64 {
 	if x != nil {
 		return x.DisputeStartBlock
 	}
@@ -2703,7 +2703,7 @@ func (x *Dispute) GetPrevDisputeIds() []uint64 {
 	return nil
 }
 
-func (x *Dispute) GetBlockNumber() int64 {
+func (x *Dispute) GetBlockNumber() uint64 {
 	if x != nil {
 		return x.BlockNumber
 	}
@@ -2854,7 +2854,7 @@ var file_layer_dispute_dispute_proto_rawDesc = []byte{
 	0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x45, 0x6e,
 	0x64, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x2e, 0x0a, 0x13, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
 	0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x08, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x11, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74,
+	0x28, 0x04, 0x52, 0x11, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x72, 0x74,
 	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x23, 0x0a, 0x0d, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
 	0x5f, 0x72, 0x6f, 0x75, 0x6e, 0x64, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x64, 0x69,
 	0x73, 0x70, 0x75, 0x74, 0x65, 0x52, 0x6f, 0x75, 0x6e, 0x64, 0x12, 0x4e, 0x0a, 0x0c, 0x73, 0x6c,
@@ -2880,7 +2880,7 @@ var file_layer_dispute_dispute_proto_rawDesc = []byte{
 	0x70, 0x72, 0x65, 0x76, 0x5f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x73,
 	0x18, 0x0e, 0x20, 0x03, 0x28, 0x04, 0x52, 0x0e, 0x70, 0x72, 0x65, 0x76, 0x44, 0x69, 0x73, 0x70,
 	0x75, 0x74, 0x65, 0x49, 0x64, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f,
-	0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c,
+	0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c,
 	0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x6f, 0x70, 0x65,
 	0x6e, 0x18, 0x10, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x6f, 0x70, 0x65, 0x6e, 0x22, 0x6d, 0x0a,
 	0x09, 0x50, 0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d,
