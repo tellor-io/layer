@@ -5,6 +5,6 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message AggregateReporter {
   string reporter = 1;
-  int64 power = 2;
-  int64 block_number = 3;
+  uint64 power = 2;
+  uint64 block_number = 3;
 }

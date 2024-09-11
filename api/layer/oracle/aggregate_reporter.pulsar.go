@@ -98,14 +98,14 @@ func (x *fastReflection_AggregateReporter) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
-	if x.Power != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Power)
+	if x.Power != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Power)
 		if !f(fd_AggregateReporter_power, value) {
 			return
 		}
 	}
-	if x.BlockNumber != int64(0) {
-		value := protoreflect.ValueOfInt64(x.BlockNumber)
+	if x.BlockNumber != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.BlockNumber)
 		if !f(fd_AggregateReporter_block_number, value) {
 			return
 		}
@@ -128,9 +128,9 @@ func (x *fastReflection_AggregateReporter) Has(fd protoreflect.FieldDescriptor) 
 	case "layer.oracle.AggregateReporter.reporter":
 		return x.Reporter != ""
 	case "layer.oracle.AggregateReporter.power":
-		return x.Power != int64(0)
+		return x.Power != uint64(0)
 	case "layer.oracle.AggregateReporter.block_number":
-		return x.BlockNumber != int64(0)
+		return x.BlockNumber != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -150,9 +150,9 @@ func (x *fastReflection_AggregateReporter) Clear(fd protoreflect.FieldDescriptor
 	case "layer.oracle.AggregateReporter.reporter":
 		x.Reporter = ""
 	case "layer.oracle.AggregateReporter.power":
-		x.Power = int64(0)
+		x.Power = uint64(0)
 	case "layer.oracle.AggregateReporter.block_number":
-		x.BlockNumber = int64(0)
+		x.BlockNumber = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -174,10 +174,10 @@ func (x *fastReflection_AggregateReporter) Get(descriptor protoreflect.FieldDesc
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.AggregateReporter.power":
 		value := x.Power
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.AggregateReporter.block_number":
 		value := x.BlockNumber
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -201,9 +201,9 @@ func (x *fastReflection_AggregateReporter) Set(fd protoreflect.FieldDescriptor, 
 	case "layer.oracle.AggregateReporter.reporter":
 		x.Reporter = value.Interface().(string)
 	case "layer.oracle.AggregateReporter.power":
-		x.Power = value.Int()
+		x.Power = value.Uint()
 	case "layer.oracle.AggregateReporter.block_number":
-		x.BlockNumber = value.Int()
+		x.BlockNumber = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -246,9 +246,9 @@ func (x *fastReflection_AggregateReporter) NewField(fd protoreflect.FieldDescrip
 	case "layer.oracle.AggregateReporter.reporter":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.AggregateReporter.power":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.AggregateReporter.block_number":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -469,7 +469,7 @@ func (x *fastReflection_AggregateReporter) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Power |= int64(b&0x7F) << shift
+					x.Power |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -488,7 +488,7 @@ func (x *fastReflection_AggregateReporter) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.BlockNumber |= int64(b&0x7F) << shift
+					x.BlockNumber |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -547,8 +547,8 @@ type AggregateReporter struct {
 	unknownFields protoimpl.UnknownFields
 
 	Reporter    string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Power       int64  `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
-	BlockNumber int64  `protobuf:"varint,3,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	Power       uint64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+	BlockNumber uint64 `protobuf:"varint,3,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 }
 
 func (x *AggregateReporter) Reset() {
@@ -578,14 +578,14 @@ func (x *AggregateReporter) GetReporter() string {
 	return ""
 }
 
-func (x *AggregateReporter) GetPower() int64 {
+func (x *AggregateReporter) GetPower() uint64 {
 	if x != nil {
 		return x.Power
 	}
 	return 0
 }
 
-func (x *AggregateReporter) GetBlockNumber() int64 {
+func (x *AggregateReporter) GetBlockNumber() uint64 {
 	if x != nil {
 		return x.BlockNumber
 	}
@@ -602,9 +602,9 @@ var file_layer_oracle_aggregate_reporter_proto_rawDesc = []byte{
 	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x21, 0x0a, 0x0c,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x21, 0x0a, 0x0c,
 	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x42,
+	0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x42,
 	0xa8, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72,
 	0x61, 0x63, 0x6c, 0x65, 0x42, 0x16, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52,
 	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b,
