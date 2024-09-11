@@ -108,15 +108,15 @@ message BridgeValidatorSet {
 
 message BridgeValidatorSetParams {
   BridgeValidatorSet bridge_validator_set = 1;
-  int64 validator_timestamp = 2;
-  int64 validator_power_threshold = 3;
+  uint64 validator_timestamp = 2;
+  uint64 validator_power_threshold = 3;
   bytes validator_set_hash = 4;
   bytes validator_checkpoint = 5;
 }
 
 message BridgeValidatorSetCheckpointParams {
-  int64 validator_timestamp = 1;
-  int64 validator_power_threshold = 2;
+  uint64 validator_timestamp = 1;
+  uint64 validator_power_threshold = 2;
   bytes validator_set_hash = 3;
 }
 
@@ -125,26 +125,26 @@ message BridgeValidatorSetCheckpoint {
 }
 
 message QueryGetValidatorCheckpointParamsRequest {
-  int64 timestamp = 1;
+  uint64 timestamp = 1;
 }
 
 message QueryGetValidatorCheckpointParamsResponse {
   string checkpoint = 1;
   string valset_hash = 2;
-  int64 timestamp = 3;
-  int64 power_threshold = 4;
+  uint64 timestamp = 3;
+  uint64 power_threshold = 4;
 }
 
 message QueryGetValidatorTimestampByIndexRequest {
-  int64 index = 1;
+  uint64 index = 1;
 }
 
 message QueryGetValidatorTimestampByIndexResponse {
-  int64 timestamp = 1;
+  uint64 timestamp = 1;
 }
 
 message QueryGetValsetSigsRequest {
-  int64 timestamp = 1;
+  uint64 timestamp = 1;
 }
 
 message QueryGetValsetSigsResponse {
@@ -160,7 +160,7 @@ message QueryGetEvmAddressByValidatorAddressResponse {
 }
 
 message QueryGetValsetByTimestampRequest {
-  int64 timestamp = 1;
+  uint64 timestamp = 1;
 }
 
 message QueryGetValsetByTimestampResponse {
@@ -200,15 +200,15 @@ message QueryGetAttestationsBySnapshotResponse {
 }
 
 message QueryGetValidatorSetIndexByTimestampRequest {
-  int64 timestamp = 1;
+  uint64 timestamp = 1;
 }
 
 message QueryGetValidatorSetIndexByTimestampResponse {
-  int64 index = 1;
+  uint64 index = 1;
 }
 
 message QueryGetCurrentValidatorSetTimestampRequest {}
 
 message QueryGetCurrentValidatorSetTimestampResponse {
-  int64 timestamp = 1;
+  uint64 timestamp = 1;
 }
