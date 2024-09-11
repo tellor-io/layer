@@ -33,6 +33,33 @@ message Aggregate {
   int64 micro_height = 11;
 }
 
+// LegacyAggregate is the old aggregate struct, it is used to decode old aggregates
+message LegacyAggregate {
+  // query_id is the id of the query
+  bytes query_id = 1;
+  // aggregate_value is the value of the aggregate
+  string aggregate_value = 2;
+  // aggregate_reporter is the address of the reporter
+  string aggregate_reporter = 3;
+  // reporter_power is the power of the reporter
+  int64 reporter_power = 4;
+  // standard_deviation is the standard deviation of the reports that were aggregated
+  double standard_deviation = 5;
+  // list of reporters that were included in the aggregate
+  repeated AggregateReporter reporters = 6;
+  // flagged is true if the aggregate was flagged by a dispute
+  bool flagged = 7;
+  // nonce is the nonce of the aggregate
+  uint64 index = 8;
+  // aggregate_report_index is the index of the aggregate report in the micro reports
+  int64 aggregate_report_index = 9;
+  // height of the aggregate report
+  int64 height = 10;
+  // height of the micro report
+  int64 micro_height = 11;
+}
+
+
 message AvailableTimestamps {
   repeated google.protobuf.Timestamp timestamps = 1 [
     (gogoproto.nullable) = false,
