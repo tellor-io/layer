@@ -19,6 +19,6 @@ func (q Querier) GetValidatorTimestampByIndex(ctx context.Context, req *types.Qu
 	}
 
 	return &types.QueryGetValidatorTimestampByIndexResponse{
-		Timestamp: int64(validatorTimestamp.Timestamp),
+		Timestamp: validatorTimestamp.Timestamp,
 	}, nil
 }

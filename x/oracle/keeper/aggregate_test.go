@@ -22,7 +22,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-func createMicroReportForQuery(reporterAdd, aggMethod, value string, power int64, timestamp time.Time) types.MicroReport {
+func createMicroReportForQuery(reporterAdd, aggMethod, value string, power uint64, timestamp time.Time) types.MicroReport {
 	return types.MicroReport{
 		Reporter:        reporterAdd,
 		Power:           power,
@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		QueryId:           queryId,
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: rep1.String(),
-		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Int64(),
+		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
 		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: rep1.String(), Power: 100000000}, {Reporter: rep2.String(), Power: 100000000}},
 		Flagged:           false,

@@ -191,8 +191,8 @@ func TestClaimDeposit(t *testing.T) {
 	aggregate := &oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(68),
+		AggregateReportIndex: uint64(0),
+		ReporterPower:        uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -259,8 +259,8 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	aggregate := &oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(90 * 1e6),
+		AggregateReportIndex: uint64(0),
+		ReporterPower:        uint64(90 * 1e6),
 		Flagged:              true,
 	}
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
@@ -308,8 +308,8 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	aggregate := &oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(65),
+		AggregateReportIndex: uint64(0),
+		ReporterPower:        uint64(65),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -358,8 +358,8 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	aggregate := &oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(68),
+		AggregateReportIndex: uint64(0),
+		ReporterPower:        uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -408,8 +408,8 @@ func TestClaimDepositSpam(t *testing.T) {
 	aggregate := &oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(68),
+		AggregateReportIndex: uint64(0),
+		ReporterPower:        uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)

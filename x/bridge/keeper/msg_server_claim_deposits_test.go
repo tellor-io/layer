@@ -52,8 +52,8 @@ func TestMsgClaimDeposits(t *testing.T) {
 	aggregate := &oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
-		AggregateReportIndex: int64(0),
-		ReporterPower:        int64(68),
+		AggregateReportIndex: uint64(0),
+		ReporterPower:        uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)

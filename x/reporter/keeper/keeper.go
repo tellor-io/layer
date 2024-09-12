@@ -29,7 +29,7 @@ type (
 		Selectors                 *collections.IndexedMap[[]byte, types.Selection, ReporterSelectorsIndex]
 		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]
-		Report                    collections.Map[collections.Pair[[]byte, int64], types.DelegationsAmounts]
+		Report                    collections.Map[collections.Pair[[]byte, uint64], types.DelegationsAmounts]
 
 		Schema collections.Schema
 		logger log.Logger

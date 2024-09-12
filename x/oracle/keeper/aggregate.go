@@ -111,7 +111,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentTimestamp := sdkCtx.BlockTime().UnixMilli()
-	report.Height = sdkCtx.BlockHeight()
+	report.Height = uint64(sdkCtx.BlockHeight())
 
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

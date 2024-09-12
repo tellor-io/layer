@@ -35,9 +35,9 @@ type (
 		Schema         collections.Schema
 		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                            // key: reporter, queryid
 		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]       // key: queryId, tipper
-		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, int64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
+		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
 		// total tips given over time
-		TotalTips          collections.Map[int64, math.Int]                                                                           // key: blockNumber, value: total tips                                  // key: queryId, timestamp
+		TotalTips          collections.Map[uint64, math.Int]                                                                           // key: blockNumber, value: total tips                                  // key: queryId, timestamp
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
 		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, query.id
 		QuerySequencer     collections.Sequence

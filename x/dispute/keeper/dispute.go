@@ -88,7 +88,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		DisputeStatus:     types.Prevote,
 		DisputeStartTime:  ctx.BlockTime(),
 		DisputeEndTime:    ctx.BlockTime().Add(ONE_DAY), // one day to fully pay fee
-		DisputeStartBlock: ctx.BlockHeight(),
+		DisputeStartBlock: uint64(ctx.BlockHeight()),
 		DisputeRound:      1,
 		SlashAmount:       disputeFee,
 		// burn amount is calculated as 5% of dispute fee
@@ -138,7 +138,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 			sdk.NewAttribute("value", msg.Report.Value),
 			sdk.NewAttribute("query_type", msg.Report.QueryType),
 			sdk.NewAttribute("query_id", hex.EncodeToString(msg.Report.QueryId)),
-			sdk.NewAttribute("report_block_number", strconv.FormatInt(msg.Report.BlockNumber, 10)),
+			sdk.NewAttribute("report_block_number", strconv.FormatUint(msg.Report.BlockNumber, 10)),
 		),
 	})
 	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
@@ -157,7 +157,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	if err != nil {
 		return err
 	}
-	amount := math.NewInt(report.Power).Mul(layertypes.PowerReduction)
+	amount := math.NewInt(int64(report.Power)).Mul(layertypes.PowerReduction)
 	slashAmount := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
 	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmount.TruncateInt(), hashId)
 	if err != nil {

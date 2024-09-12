@@ -37,7 +37,7 @@ func TestGetValsetSigs(t *testing.T) {
 	}
 
 	getSigsResponse, err = keeper.NewQuerier(k).GetValsetSigs(ctx, &types.QueryGetValsetSigsRequest{
-		Timestamp: int64(1),
+		Timestamp: uint64(1),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, getSigsResponse)
