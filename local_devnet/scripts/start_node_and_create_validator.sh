@@ -70,7 +70,7 @@ do
   --keyring-backend="test" \
   --home="${LAYERD_NODE_HOME}" \
   --keyring-dir="${LAYERD_NODE_HOME}" \
-  --gas-prices="1loya" \
+  --gas-prices="1000loya" \
   --yes
 
   echo "trying to create validator..."
@@ -92,7 +92,7 @@ done
   --keyring-backend="test" \
   --keyring-dir="${LAYERD_NODE_HOME}" \
   --chain-id="layer" \
-  --gas-prices="1loya" \
+  --gas-prices="1000loya" \
   --yes
     sleep 1s
   done
