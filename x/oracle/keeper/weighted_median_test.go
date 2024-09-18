@@ -40,7 +40,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
 	//  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
 	// //  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
 	// //  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
 	// //  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")

@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.Equal(res.Aggregate.QueryId, qId)
 	require.Equal(res.Aggregate.AggregateValue, "100")
 	require.Equal(res.Aggregate.AggregateReporter, "reporter")
-	require.Equal(res.Aggregate.ReporterPower, int64(100))
+	require.Equal(res.Aggregate.ReporterPower, uint64(100))
 }
 
 func TestGetCurrentAggregateReport(t *testing.T) {

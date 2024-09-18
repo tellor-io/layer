@@ -185,7 +185,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
 	s.NoError(err)
 	s.Equal(encodeValue(96.50), res.AggregateValue)
-	s.Equal(int64(100000000), res.ReporterPower)
+	s.Equal(uint64(100000000), res.ReporterPower)
 }
 
 func (s *KeeperTestSuite) TestGetDataBefore() {

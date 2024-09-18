@@ -126,8 +126,8 @@ func (s *KeeperTestSuite) TestAllocateRewards() {
 	require.NoError(err)
 	rep2Addr, err := sdk.AccAddressFromBech32(rep2)
 	require.NoError(err)
-	rk.On("DivvyingTips", ctx, rep1Addr, math.LegacyNewDec(50), int64(0)).Return(nil).Once()
-	rk.On("DivvyingTips", ctx, rep2Addr, math.LegacyNewDec(50), int64(0)).Return(nil).Once()
+	rk.On("DivvyingTips", ctx, rep1Addr, math.LegacyNewDec(50), uint64(0)).Return(nil).Once()
+	rk.On("DivvyingTips", ctx, rep2Addr, math.LegacyNewDec(50), uint64(0)).Return(nil).Once()
 	bk.On("SendCoinsFromModuleToModule", ctx, "oracle", "tips_escrow_pool", sdk.NewCoins(sdk.NewCoin("loya", reward))).Return(nil)
 	require.NoError(k.AllocateRewards(ctx, reporters, reward, types.ModuleName))
 }

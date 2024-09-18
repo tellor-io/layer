@@ -58,14 +58,14 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, "aaa", "aggregate value is not correct")
-	s.Equal(res.Aggregate.ReporterPower, int64(44), "aggregate reporter power is not correct")
+	s.Equal(res.Aggregate.ReporterPower, uint64(44), "aggregate reporter power is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Aggregate.Reporters[0].Reporter, reporters[0].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[1].Reporter, reporters[1].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[2].Reporter, reporters[2].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[3].Reporter, expectedReporter, "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[4].Reporter, reporters[4].String(), "reporter is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(3), "report index is not correct")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(3), "report index is not correct")
 
 	// scenario where mode is not decided by most powerful reporter
 	qId2, _ := hex.DecodeString("a6f013ee236804827b77696d350e9f0ac3e879328f2a3021d473a0b778ad78ac")
@@ -110,12 +110,12 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Aggregate.QueryId, qId2, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, "ccc", "aggregate value is not correct")
-	s.Equal(res.Aggregate.ReporterPower, int64(11), "aggregate reporter power is not correct")
+	s.Equal(res.Aggregate.ReporterPower, uint64(11), "aggregate reporter power is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Aggregate.Reporters[0].Reporter, reporters[5].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[1].Reporter, expectedReporter, "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[2].Reporter, reporters[7].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[3].Reporter, reporters[8].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[4].Reporter, reporters[9].String(), "reporter is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(1), "report index is not correct")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(1), "report index is not correct")
 }

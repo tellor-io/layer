@@ -47,8 +47,8 @@ func (s *KeeperTestSuite) TestSetValue() {
 	require.Equal(report.QueryId, queryId)
 	require.Equal(report.Reporter, reporter.String())
 	require.Equal(report.QueryType, "SpotPrice")
-	require.Equal(report.Power, int64(1))
-	require.Equal(report.BlockNumber, ctx.BlockHeight())
+	require.Equal(report.Power, uint64(1))
+	require.Equal(report.BlockNumber, uint64(ctx.BlockHeight()))
 }
 
 func (s *KeeperTestSuite) TestVerifyCommit() {
