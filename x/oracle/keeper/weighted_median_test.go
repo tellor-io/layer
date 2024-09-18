@@ -46,7 +46,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
 	// weightedMean := testutil.CalculateWeightedMean(valuesInt, powers)
-	s.Equal(res.Aggregate.StandardDeviation, "14.517017656973919999", "std deviation is not correct")
+	s.Equal(res.Aggregate.StandardDeviation, "0", "std deviation is not correct")
 
 	// // special case A -- lower weighted median and upper weighted median are equal, powers are equal
 	// // calculates lower median
@@ -79,7 +79,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
-	s.Equal(res.Aggregate.StandardDeviation, "5.000000000000000000", "std deviation is not correct")
+	s.Equal(res.Aggregate.StandardDeviation, "0", "std deviation is not correct")
 
 	// special case B -- lower weighted median and upper weighted median are equal, powers are not all equal
 	// calculates lower median
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
-	s.Equal(res.Aggregate.StandardDeviation, "5.000000000000000000", "std deviation is not correct")
+	s.Equal(res.Aggregate.StandardDeviation, "0", "std deviation is not correct")
 
 	// // 5 reporters with even weights, should be equal to normal median
 	qId, _ = hex.DecodeString("907154958baee4fb0ce2bbe50728141ac76eb2dc1731b3d40f0890746dd07e62")
@@ -144,5 +144,5 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
-	s.Equal(res.Aggregate.StandardDeviation, "14.142135623730950488", "std deviation is not correct")
+	s.Equal(res.Aggregate.StandardDeviation, "0", "std deviation is not correct")
 }
