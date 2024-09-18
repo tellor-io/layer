@@ -68,19 +68,19 @@ func (s *KeeperTestSuite) TestGetUserTotalTips() {
 	ctx := s.ctx
 
 	voter := sample.AccAddressBytes()
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, int64(1), voter).Return(math.NewInt(100), nil).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(1), voter).Return(math.NewInt(100), nil).Once()
 
 	userTips, err := k.GetUserTotalTips(ctx, voter, 1)
 	require.NoError(err)
 	require.Equal(userTips, math.NewInt(100))
 
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, int64(1), voter).Return(math.NewInt(100), collections.ErrNotFound).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(1), voter).Return(math.NewInt(100), collections.ErrNotFound).Once()
 
 	userTips, err = k.GetUserTotalTips(ctx, voter, 1)
 	require.NoError(err)
 	require.Equal(userTips, math.NewInt(0))
 
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, int64(1), voter).Return(math.NewInt(100), errors.New("error")).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(1), voter).Return(math.NewInt(100), errors.New("error")).Once()
 
 	userTips, err = k.GetUserTotalTips(ctx, voter, 1)
 	require.Error(err)
@@ -93,17 +93,17 @@ func (s *KeeperTestSuite) TestSetVoterTips() {
 	ctx := s.ctx
 
 	voter := sample.AccAddressBytes()
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, int64(1), voter).Return(math.NewInt(100), nil).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(1), voter).Return(math.NewInt(100), nil).Once()
 	tips, err := k.SetVoterTips(ctx, uint64(1), voter, 1)
 	require.NoError(err)
 	require.Equal(tips, math.NewInt(100))
 
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, int64(1), voter).Return(math.NewInt(0), nil).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(1), voter).Return(math.NewInt(0), nil).Once()
 	tips, err = k.SetVoterTips(ctx, uint64(1), voter, 1)
 	require.NoError(err)
 	require.Equal(tips, math.NewInt(0))
 
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, int64(1), voter).Return(math.NewInt(100), errors.New("error")).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(1), voter).Return(math.NewInt(100), errors.New("error")).Once()
 	tips, err = k.SetVoterTips(ctx, uint64(1), voter, 1)
 	require.Error(err)
 	require.Equal(tips, math.Int{})
