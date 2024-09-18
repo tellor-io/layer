@@ -25,7 +25,7 @@ func TestBeforeDelegationCreated(t *testing.T) {
 
 	selector, err := k.Selectors.Get(ctx, delAddr)
 	require.NoError(t, err)
-	require.Equal(t, int64(2), selector.DelegationsCount)
+	require.Equal(t, uint64(2), selector.DelegationsCount)
 }
 
 func TestBeforeDelegationRemoved(t *testing.T) {
@@ -41,5 +41,5 @@ func TestBeforeDelegationRemoved(t *testing.T) {
 
 	selector, err := k.Selectors.Get(ctx, delAddr)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), selector.DelegationsCount)
+	require.Equal(t, uint64(0), selector.DelegationsCount)
 }
