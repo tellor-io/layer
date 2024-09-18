@@ -191,7 +191,7 @@ func (s *IntegrationTestSuite) TestDelegatorCount() {
 	s.NoError(err)
 	del, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, delegatorAddr.Bytes())
 	s.NoError(err)
-	s.Equal(int64(5), del.DelegationsCount)
+	s.Equal(uint64(5), del.DelegationsCount)
 }
 
 // add 100 delegators to a reporter and check if the delegator count is 100

@@ -379,7 +379,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
-	s.Equal(res.Aggregate.AggregateReportIndex, int64(0), "single report should be at index 0")
+	s.Equal(res.Aggregate.AggregateReportIndex, uint64(0), "single report should be at index 0")
 
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
