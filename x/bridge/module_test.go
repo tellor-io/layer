@@ -103,7 +103,7 @@ func TestEndBlock(t *testing.T) {
 	}
 	sk.On("GetAllValidators", sdkCtx).Return(validators, nil)
 
-	ok.On("GetAggregatedReportsByHeight", sdkCtx, int64(0)).Return([]oracletypes.Aggregate{
+	ok.On("GetAggregatedReportsByHeight", sdkCtx, uint64(0)).Return([]oracletypes.Aggregate{
 		{
 			Height:         1,
 			QueryId:        []byte("queryId"),
