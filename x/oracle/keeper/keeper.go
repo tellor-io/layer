@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	gomath "math"
-	"strconv"
 	"time"
 
 	"github.com/tellor-io/layer/utils"
@@ -13,7 +12,6 @@ import (
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -89,7 +87,7 @@ func NewKeeper(
 		),
 		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Int64Key, sdk.IntValue),
 		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
-		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), NewAggregateLegacyValueCodec(cdc), types.NewAggregatesIndex(sb)),
+		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",
@@ -124,32 +122,6 @@ func NewKeeper(
 	k.Schema = schema
 
 	return k
-}
-
-func NewAggregateLegacyValueCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Aggregate] {
-	return collcodec.NewAltValueCodec(codec.CollValue[types.Aggregate](cdc), func(b []byte) (types.Aggregate, error) {
-		legacyAgg := types.LegacyAggregate{}
-		if err := cdc.Unmarshal(b, &legacyAgg); err != nil {
-			return types.Aggregate{}, err
-		}
-
-		standardDeviation := strconv.FormatFloat(legacyAgg.StandardDeviation, 'f', -1, 64)
-		newAgg := types.Aggregate{
-			QueryId:              legacyAgg.QueryId,
-			AggregateValue:       legacyAgg.AggregateValue,
-			AggregateReporter:    legacyAgg.AggregateReporter,
-			ReporterPower:        legacyAgg.ReporterPower,
-			StandardDeviation:    standardDeviation,
-			Reporters:            legacyAgg.Reporters,
-			Flagged:              legacyAgg.Flagged,
-			Index:                legacyAgg.Index,
-			AggregateReportIndex: legacyAgg.AggregateReportIndex,
-			Height:               legacyAgg.Height,
-			MicroHeight:          legacyAgg.MicroHeight,
-		}
-
-		return newAgg, nil
-	})
 }
 
 // GetAuthority returns the module's authority.
