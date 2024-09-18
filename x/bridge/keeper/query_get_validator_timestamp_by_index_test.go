@@ -31,5 +31,5 @@ func TestGetValidatorTimestampByIndex(t *testing.T) {
 		Index: 0,
 	})
 	require.NoError(t, err)
-	require.Equal(t, getValResponse.Timestamp, int64(10))
+	require.Equal(t, getValResponse.Timestamp, uint64(10))
 }

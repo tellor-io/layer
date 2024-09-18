@@ -932,8 +932,8 @@ func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, res.Checkpoint, []byte("checkpoint"))
 	require.Equal(t, res.ValsetHash, []byte("valsetHash"))
-	require.Equal(t, res.Timestamp, int64(timestamp))
-	require.Equal(t, res.PowerThreshold, int64(100))
+	require.Equal(t, res.Timestamp, (timestamp))
+	require.Equal(t, res.PowerThreshold, uint64(100))
 }
 
 func TestSetOracleAttestation(t *testing.T) {
@@ -1132,7 +1132,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	timestampPlus1 := timestamp.Add(time.Second)
 
 	queryId := []byte("queryId")
-	ok.On("GetAggregatedReportsByHeight", ctx, int64(0)).Return([]oracletypes.Aggregate{
+	ok.On("GetAggregatedReportsByHeight", ctx, uint64(0)).Return([]oracletypes.Aggregate{
 		{
 			Height:         0,
 			QueryId:        queryId,

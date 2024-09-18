@@ -19,7 +19,7 @@ func TestQuery_GetValidatorSetIndexByTimestamp(t *testing.T) {
 		name          string
 		setup         func()
 		req           *types.QueryGetValidatorSetIndexByTimestampRequest
-		expectedIndex int64
+		expectedIndex uint64
 		err           bool
 	}{
 		{
