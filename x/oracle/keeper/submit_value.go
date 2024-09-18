@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power int64, incycle bool) error {
+func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
@@ -44,7 +44,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		AggregateMethod: dataSpec.AggregationMethod,
 		Timestamp:       sdkCtx.BlockTime(),
 		Cyclelist:       incycle,
-		BlockNumber:     sdkCtx.BlockHeight(),
+		BlockNumber:     uint64(sdkCtx.BlockHeight()),
 	}
 
 	query.HasRevealedReports = true

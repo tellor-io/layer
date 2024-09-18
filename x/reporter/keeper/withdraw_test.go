@@ -126,7 +126,7 @@ func TestEscrowReporterStake(t *testing.T) {
 	k, sk, bk, _, ctx, _ := setupKeeper(t)
 	reporterAddr := sample.AccAddressBytes()
 	stake := math.NewIntWithDecimal(100, 6)
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporterAddr.Bytes(), ctx.BlockHeight()), types.DelegationsAmounts{
+	require.NoError(t, k.Report.Set(ctx, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{
 		TokenOrigins: []*types.TokenOriginInfo{
 			{DelegatorAddress: reporterAddr, ValidatorAddress: sdk.ValAddress(reporterAddr), Amount: stake},
 		},
@@ -140,14 +140,14 @@ func TestEscrowReporterStake(t *testing.T) {
 	require.NoError(t, err)
 	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(reporterAddr), delTokens).Return(stake, nil)
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake))).Return(nil)
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 100, ctx.BlockHeight(), stake, []byte("hashId")))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 100, uint64(ctx.BlockHeight()), stake, []byte("hashId")))
 }
 
 func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 	k, sk, bk, _, ctx, _ := setupKeeper(t)
 	reporterAddr, selector2, selector3, valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 	stake := math.NewIntWithDecimal(1000, 6)
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporterAddr.Bytes(), ctx.BlockHeight()), types.DelegationsAmounts{
+	require.NoError(t, k.Report.Set(ctx, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{
 		TokenOrigins: []*types.TokenOriginInfo{
 			{DelegatorAddress: reporterAddr, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
 			{DelegatorAddress: selector2, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: stake},
@@ -202,5 +202,5 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 		},
 	}, nil)
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, ctx.BlockHeight(), math.NewIntWithDecimal(1500, 6), []byte("hashId")))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, uint64(ctx.BlockHeight()), math.NewIntWithDecimal(1500, 6), []byte("hashId")))
 }

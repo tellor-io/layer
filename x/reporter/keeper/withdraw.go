@@ -156,7 +156,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		return err
 	}
 
-	totalTokens := layertypes.PowerReduction.MulRaw(power)
+	totalTokens := layertypes.PowerReduction.MulRaw(int64(power))
 	disputeTokens := make([]*types.TokenOriginInfo, 0)
 	leftover := amt
 	for i, del := range report.TokenOrigins {

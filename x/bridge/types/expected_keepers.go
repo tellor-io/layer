@@ -41,7 +41,7 @@ type OracleKeeper interface {
 	GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate oracletypes.Aggregate, err error)
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
-	GetAggregatedReportsByHeight(ctx context.Context, height int64) []oracletypes.Aggregate
+	GetAggregatedReportsByHeight(ctx context.Context, height uint64) []oracletypes.Aggregate
 	SetAggregate(ctx context.Context, report *oracletypes.Aggregate) error
 	GetAggregateByIndex(ctx context.Context, queryId []byte, index uint64) (*oracletypes.Aggregate, time.Time, error)
 }

@@ -201,7 +201,7 @@ func TestClaimDeposit(t *testing.T) {
 	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
@@ -267,7 +267,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, aggregate.AggregateReportIndex).Return(aggregate, aggregateTimestamp, err)
 	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
@@ -319,7 +319,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
@@ -369,7 +369,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
@@ -419,7 +419,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 

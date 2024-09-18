@@ -162,7 +162,7 @@ func (s *KeeperTestSuite) TestFlagAggregateReport() {
 	reporter2 := sample.AccAddress()
 	require.NoError(k.Aggregates.Set(
 		s.ctx,
-		collections.Join(queryId, ctx.BlockTime().UnixMilli()),
+		collections.Join(queryId, uint64(ctx.BlockTime().UnixMilli())),
 		types.Aggregate{
 			Reporters: []*types.AggregateReporter{
 				{
@@ -186,7 +186,7 @@ func (s *KeeperTestSuite) TestFlagAggregateReport() {
 	require.NoError(k.FlagAggregateReport(ctx, report))
 
 	// check that report is flagged
-	aggregate, err := k.Aggregates.Get(ctx, collections.Join(queryId, ctx.BlockTime().UnixMilli()))
+	aggregate, err := k.Aggregates.Get(ctx, collections.Join(queryId, uint64(ctx.BlockTime().UnixMilli())))
 	require.NoError(err)
 	require.True(aggregate.Flagged)
 }

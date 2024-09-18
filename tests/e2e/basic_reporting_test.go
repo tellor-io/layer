@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil"
@@ -203,12 +202,12 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	result1, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest1)
 	require.NoError(err)
-	require.Equal(result1.Aggregate.Height, int64(2))
-	require.Equal(result1.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(result1.Aggregate.Height, uint64(2))
+	require.Equal(result1.Aggregate.AggregateReportIndex, uint64(0))
 	require.Equal(result1.Aggregate.AggregateValue, testutil.EncodeValue(4500))
 	require.Equal(result1.Aggregate.AggregateReporter, reporterAccount.String())
 	require.Equal(result1.Aggregate.QueryId, queryIdEth)
-	require.Equal(int64(4000), result1.Aggregate.ReporterPower)
+	require.Equal(uint64(4000), result1.Aggregate.ReporterPower)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)
 	require.Equal(int64(0), tbrModuleAccountBalance.Amount.Int64())
@@ -279,12 +278,12 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that aggregated report is stored correctly
 	result2, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest2)
 	require.NoError(err)
-	require.Equal(int64(0), result2.Aggregate.AggregateReportIndex)
+	require.Equal(uint64(0), result2.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result2.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result2.Aggregate.AggregateReporter)
 	require.Equal(queryIdTrb, result2.Aggregate.QueryId)
-	require.Equal(int64(4000), result2.Aggregate.ReporterPower)
-	require.Equal(int64(3), result2.Aggregate.Height)
+	require.Equal(uint64(4000), result2.Aggregate.ReporterPower)
+	require.Equal(uint64(3), result2.Aggregate.Height)
 	// check that tbr is no longer in timeBasedRewards module acct
 	tbrModuleAccountBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)
 	require.Equal(int64(0), tbrModuleAccountBalance.Amount.Int64())
@@ -394,12 +393,12 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that the aggregated report is stored correctly
 	result1, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest1)
 	require.NoError(err)
-	require.Equal(result1.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(result1.Aggregate.AggregateReportIndex, uint64(0))
 	require.Equal(result1.Aggregate.AggregateValue, testutil.EncodeValue(5000))
 	require.Equal(result1.Aggregate.AggregateReporter, reporterAccount.String())
 	require.Equal(queryIdEth, result1.Aggregate.QueryId)
-	require.Equal(int64(4000), result1.Aggregate.ReporterPower)
-	require.Equal(int64(5), result1.Aggregate.Height)
+	require.Equal(uint64(4000), result1.Aggregate.ReporterPower)
+	require.Equal(uint64(5), result1.Aggregate.Height)
 	// check that the tip is in tip escrow
 	tipEscrowAcct := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
 	tipEscrowBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tipEscrowAcct, s.Setup.Denom) // 98 loya
@@ -475,16 +474,14 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// query aggregated report
 	reportTrb, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequestTrb)
 	require.NoError(err)
-	require.Equal(reportTrb.Aggregate.AggregateReportIndex, int64(0))
+	require.Equal(reportTrb.Aggregate.AggregateReportIndex, uint64(0))
 	require.Equal(reportTrb.Aggregate.AggregateValue, testutil.EncodeValue(1_000_000))
 	require.Equal(reportTrb.Aggregate.AggregateReporter, reporterAccount.String())
 	require.Equal(queryIdTrb, reportTrb.Aggregate.QueryId)
-	require.Equal(int64(4000), reportTrb.Aggregate.ReporterPower)
-	require.Equal(int64(6), reportTrb.Aggregate.Height)
+	require.Equal(uint64(4000), reportTrb.Aggregate.ReporterPower)
+	require.Equal(uint64(6), reportTrb.Aggregate.Height)
 	// check that the tip is in tip escrow
 	tipEscrowBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tipEscrowAcct, s.Setup.Denom) // 98 loya
-	fmt.Println("tipEscrowBalance", tipEscrowBalance)
-	fmt.Println("twoPercent.Amount", twoPercent.Amount)
 	require.Equal(tipPlusTbr.Sub(twoPercentTipPlusTbr.Amount), tipEscrowBalance.Amount)
 	// withdraw tip
 	_, err = msgServerReporter.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)

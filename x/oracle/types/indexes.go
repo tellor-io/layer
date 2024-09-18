@@ -27,12 +27,12 @@ func NewTipsIndex(sb *collections.SchemaBuilder) TipsIndex {
 }
 
 type AggregatesIndex struct {
-	BlockHeight *indexes.Multi[int64, collections.Pair[[]byte, int64], Aggregate]
-	MicroHeight *indexes.Multi[int64, collections.Pair[[]byte, int64], Aggregate]
+	BlockHeight *indexes.Multi[uint64, collections.Pair[[]byte, uint64], Aggregate]
+	MicroHeight *indexes.Multi[uint64, collections.Pair[[]byte, uint64], Aggregate]
 }
 
-func (a AggregatesIndex) IndexesList() []collections.Index[collections.Pair[[]byte, int64], Aggregate] {
-	return []collections.Index[collections.Pair[[]byte, int64], Aggregate]{
+func (a AggregatesIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], Aggregate] {
+	return []collections.Index[collections.Pair[[]byte, uint64], Aggregate]{
 		a.BlockHeight, a.MicroHeight,
 	}
 }
@@ -41,15 +41,15 @@ func NewAggregatesIndex(sb *collections.SchemaBuilder) AggregatesIndex {
 	return AggregatesIndex{
 		BlockHeight: indexes.NewMulti(
 			sb, AggregatesHeightIndexPrefix, "aggregates_by_height",
-			collections.Int64Key, collections.PairKeyCodec[[]byte, int64](collections.BytesKey, collections.Int64Key),
-			func(_ collections.Pair[[]byte, int64], v Aggregate) (int64, error) {
+			collections.Uint64Key, collections.PairKeyCodec[[]byte, uint64](collections.BytesKey, collections.Uint64Key),
+			func(_ collections.Pair[[]byte, uint64], v Aggregate) (uint64, error) {
 				return v.Height, nil
 			},
 		),
 		MicroHeight: indexes.NewMulti(
 			sb, AggregatesMicroHeightIndexPrefix, "aggregates_by_micro_height",
-			collections.Int64Key, collections.PairKeyCodec[[]byte, int64](collections.BytesKey, collections.Int64Key),
-			func(_ collections.Pair[[]byte, int64], v Aggregate) (int64, error) {
+			collections.Uint64Key, collections.PairKeyCodec[[]byte, uint64](collections.BytesKey, collections.Uint64Key),
+			func(_ collections.Pair[[]byte, uint64], v Aggregate) (uint64, error) {
 				return v.MicroHeight, nil
 			},
 		),
@@ -116,19 +116,19 @@ func NewQueryIndex(sb *collections.SchemaBuilder) QueryMetaIndex {
 }
 
 type TipperTotalIndex struct {
-	BlockNumber *indexes.Unique[int64, collections.Pair[[]byte, int64], math.Int]
+	BlockNumber *indexes.Unique[uint64, collections.Pair[[]byte, uint64], math.Int]
 }
 
-func (a TipperTotalIndex) IndexesList() []collections.Index[collections.Pair[[]byte, int64], math.Int] {
-	return []collections.Index[collections.Pair[[]byte, int64], math.Int]{a.BlockNumber}
+func (a TipperTotalIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], math.Int] {
+	return []collections.Index[collections.Pair[[]byte, uint64], math.Int]{a.BlockNumber}
 }
 
 func NewTippersIndex(sb *collections.SchemaBuilder) TipperTotalIndex {
 	return TipperTotalIndex{
 		BlockNumber: indexes.NewUnique(
 			sb, TipsBlockIndexPrefix, "tips_by_block",
-			collections.Int64Key, collections.PairKeyCodec(collections.BytesKey, collections.Int64Key),
-			func(k collections.Pair[[]byte, int64], v math.Int) (int64, error) {
+			collections.Uint64Key, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			func(k collections.Pair[[]byte, uint64], v math.Int) (uint64, error) {
 				return k.K2(), nil
 			},
 		),

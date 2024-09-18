@@ -59,7 +59,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err
 	}
-	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(addr.Bytes(), count)); err != nil {
+	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(addr.Bytes(), uint64(count))); err != nil {
 		return nil, err
 	}
 	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
@@ -114,7 +114,7 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 		return nil, fmt.Errorf("reporter's min requirement %s not met by selector", reporter.MinTokensRequired.String())
 	}
 	// set the selector
-	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(reporterAddr.Bytes(), count)); err != nil {
+	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(reporterAddr.Bytes(), uint64(count))); err != nil {
 		return nil, err
 	}
 	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
@@ -173,8 +173,8 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 
 	// check if selector was part of a report before switching
 	var prevReportedPower math.Int
-	rng := collections.NewPrefixedPairRange[[]byte, int64](selector.Reporter).EndInclusive(sdk.UnwrapSDKContext(goCtx).BlockHeight()).Descending()
-	err = k.Keeper.Report.Walk(goCtx, rng, func(_ collections.Pair[[]byte, int64], value types.DelegationsAmounts) (stop bool, err error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](selector.Reporter).EndInclusive(uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight())).Descending()
+	err = k.Keeper.Report.Walk(goCtx, rng, func(_ collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (stop bool, err error) {
 		prevReportedPower = value.Total
 		return true, nil
 	})

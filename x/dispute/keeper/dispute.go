@@ -166,7 +166,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	return k.JailReporter(ctx, reporterAddr, jailDuration)
 }
 
-func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration int64) error {
+func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration uint64) error {
 	// noop for major duration, reporter is removed from store so no need to jail
 	if jailDuration == gomath.MaxInt64 {
 		return nil
@@ -175,7 +175,7 @@ func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDu
 }
 
 // Get percentage of slash amount based on category
-func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, int64, error) {
+func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, uint64, error) {
 	switch category {
 	case types.Warning:
 		return math.LegacyNewDecWithPrec(1, 2), 0, nil // 1%
@@ -190,7 +190,7 @@ func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.Leg
 
 // Get dispute fee
 func (k Keeper) GetDisputeFee(ctx sdk.Context, rep oracletypes.MicroReport, category types.DisputeCategory) (math.Int, error) {
-	stake := layertypes.PowerReduction.MulRaw(rep.Power)
+	stake := layertypes.PowerReduction.MulRaw(int64(rep.Power))
 	switch category {
 	case types.Warning:
 		// calculate 1 percent of bond
@@ -253,7 +253,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	dispute.DisputeStartTime = ctx.BlockTime()
 	// add 3 days to block time
 	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
-	dispute.DisputeStartBlock = ctx.BlockHeight()
+	dispute.DisputeStartBlock = uint64(ctx.BlockHeight())
 	dispute.DisputeRound++
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 

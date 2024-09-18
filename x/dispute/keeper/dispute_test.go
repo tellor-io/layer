@@ -18,7 +18,7 @@ import (
 func report() oracletypes.MicroReport {
 	return oracletypes.MicroReport{
 		Reporter:    sample.AccAddressBytes().String(),
-		Power:       int64(1),
+		Power:       uint64(1),
 		QueryId:     []byte{},
 		Value:       "0x",
 		Timestamp:   time.Unix(1696516597, 0),
@@ -154,8 +154,8 @@ func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 
 func (s *KeeperTestSuite) TestJailReporter() {
 	reporterAcc := sample.AccAddressBytes()
-	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, int64(0)).Return(nil)
-	s.NoError(s.disputeKeeper.JailReporter(s.ctx, reporterAcc, int64(0)))
+	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0)).Return(nil)
+	s.NoError(s.disputeKeeper.JailReporter(s.ctx, reporterAcc, uint64(0)))
 }
 
 func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {

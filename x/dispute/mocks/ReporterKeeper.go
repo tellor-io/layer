@@ -58,11 +58,11 @@ func (_m *ReporterKeeper) Delegation(ctx context.Context, delegator types.AccAdd
 }
 
 // EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt, hashId
-func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power int64, height int64, amt math.Int, hashId []byte) error {
+func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power uint64, height uint64, amt math.Int, hashId []byte) error {
 	ret := _m.Called(ctx, reporterAddr, power, height, amt, hashId)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, int64, int64, math.Int, []byte) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, math.Int, []byte) error); ok {
 		r0 = rf(ctx, reporterAddr, power, height, amt, hashId)
 	} else {
 		r0 = ret.Error(0)
@@ -100,21 +100,21 @@ func (_m *ReporterKeeper) FeefromReporterStake(ctx context.Context, reporterAddr
 }
 
 // GetDelegatorTokensAtBlock provides a mock function with given fields: ctx, delegator, blockNumber
-func (_m *ReporterKeeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error) {
+func (_m *ReporterKeeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error) {
 	ret := _m.Called(ctx, delegator, blockNumber)
 
 	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, int64) (math.Int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) (math.Int, error)); ok {
 		return rf(ctx, delegator, blockNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, int64) math.Int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) math.Int); ok {
 		r0 = rf(ctx, delegator, blockNumber)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []byte, int64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, uint64) error); ok {
 		r1 = rf(ctx, delegator, blockNumber)
 	} else {
 		r1 = ret.Error(1)
@@ -124,21 +124,21 @@ func (_m *ReporterKeeper) GetDelegatorTokensAtBlock(ctx context.Context, delegat
 }
 
 // GetReporterTokensAtBlock provides a mock function with given fields: ctx, reporter, blockNumber
-func (_m *ReporterKeeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {
+func (_m *ReporterKeeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
 	ret := _m.Called(ctx, reporter, blockNumber)
 
 	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, int64) (math.Int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) (math.Int, error)); ok {
 		return rf(ctx, reporter, blockNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, int64) math.Int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) math.Int); ok {
 		r0 = rf(ctx, reporter, blockNumber)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []byte, int64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, uint64) error); ok {
 		r1 = rf(ctx, reporter, blockNumber)
 	} else {
 		r1 = ret.Error(1)
@@ -148,11 +148,11 @@ func (_m *ReporterKeeper) GetReporterTokensAtBlock(ctx context.Context, reporter
 }
 
 // JailReporter provides a mock function with given fields: ctx, reporterAddr, jailDuration
-func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration int64) error {
+func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration uint64) error {
 	ret := _m.Called(ctx, reporterAddr, jailDuration)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, int64) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64) error); ok {
 		r0 = rf(ctx, reporterAddr, jailDuration)
 	} else {
 		r0 = ret.Error(0)

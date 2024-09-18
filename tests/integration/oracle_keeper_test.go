@@ -108,7 +108,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	addr := s.newKeysWithTokens()
 
 	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(1000))
@@ -213,7 +213,7 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200, 300, 400, 500})
 	tipper := s.newKeysWithTokens()
 	for _, rep := range repAccs {
 		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
@@ -315,7 +315,7 @@ func report(creator, value, salt, hash string, qdata []byte) (types.MsgCommitRep
 }
 
 func (s *IntegrationTestSuite) TestGetCylceListQueries() {
-	accs, _, _ := s.createValidatorAccs([]int64{100, 200, 300, 400, 500})
+	accs, _, _ := s.createValidatorAccs([]uint64{100, 200, 300, 400, 500})
 	// Get supported queries
 	resp, err := s.Setup.Oraclekeeper.GetCyclelist(s.Setup.Ctx)
 	s.NoError(err)
@@ -356,8 +356,8 @@ func (s *IntegrationTestSuite) TestGetCylceListQueries() {
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
-	reporterPower := int64(1)
-	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{reporterPower})
+	reporterPower := uint64(1)
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{reporterPower})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
@@ -372,7 +372,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	qId := utils.QueryIDFromData(ethQueryData)
 	value := []string{"000001"}
 
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []int64{reporterPower}, qId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
 
 	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1])
 	s.NoError(err)
@@ -405,10 +405,10 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	qId := utils.QueryIDFromData(ethQueryData)
 
 	value := []string{"000001", "000002"}
-	reporterPower1 := int64(1)
-	reporterPower2 := int64(2)
+	reporterPower1 := uint64(1)
+	reporterPower2 := uint64(2)
 	totalReporterPower := reporterPower1 + reporterPower2
-	repAccs, _, _ := s.createValidatorAccs([]int64{reporterPower1, reporterPower2})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{reporterPower1, reporterPower2})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
@@ -423,7 +423,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	err = s.Setup.Bankkeeper.SendCoinsFromAccountToModule(s.Setup.Ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, reward)))
 	s.NoError(err)
 	// generate 2 reports for ethQueryData
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []int64{reporterPower1, reporterPower2}, qId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []uint64{reporterPower1, reporterPower2}, qId)
 
 	testCases := []struct {
 		name                 string
@@ -474,11 +474,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	values := []string{"000001", "000002", "000003", "000004"}
 
-	reporterPower1 := int64(1)
-	reporterPower2 := int64(2)
-	reporterPower3 := int64(3)
+	reporterPower1 := uint64(1)
+	reporterPower2 := uint64(2)
+	reporterPower3 := uint64(3)
 	totalPower := reporterPower1 + reporterPower2 + reporterPower3
-	repAccs, _, _ := s.createValidatorAccs([]int64{reporterPower1, reporterPower2, reporterPower3})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{reporterPower1, reporterPower2, reporterPower3})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
@@ -498,7 +498,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(err)
 	// generate 4 reports for ethQueryData
 	qId := utils.QueryIDFromData(ethQueryData)
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []int64{reporterPower1, reporterPower2, reporterPower3}, qId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []uint64{reporterPower1, reporterPower2, reporterPower3}, qId)
 
 	testCases := []struct {
 		name                 string
@@ -821,7 +821,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 
 func (s *IntegrationTestSuite) TestCommitQueryMixed() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	s.NoError(s.Setup.Oraclekeeper.RotateQueries(s.Setup.Ctx))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
@@ -870,7 +870,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	require := s.Require()
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	stakeAmount, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
@@ -898,9 +898,9 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.Nil(err)
 	s.True(delBefore.GetShares().Equal(math.LegacyNewDecFromInt(stakeAmount)), "delegation shares should be equal to the stake amount")
 
-	reporterPower := int64(1)
+	reporterPower := uint64(1)
 	value := []string{"000001"}
-	reports := testutil.GenerateReports(repAccs, value, []int64{reporterPower}, queryId)
+	reports := testutil.GenerateReports(repAccs, value, []uint64{reporterPower}, queryId)
 	query, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true
@@ -936,7 +936,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	require := s.Require()
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{1, 2})
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1, 2})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	reporterStake1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
@@ -975,10 +975,10 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.Nil(err)
 	s.True(del2Before.GetShares().Equal(math.LegacyNewDecFromInt(reporterStake2)), "delegation 2 shares should be equal to the stake amount")
 
-	reporterPower := int64(1)
-	reporterPower2 := int64(2)
+	reporterPower := uint64(1)
+	reporterPower2 := uint64(2)
 	value := []string{"000001", "000002"}
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []int64{reporterPower, reporterPower2}, queryId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []uint64{reporterPower, reporterPower2}, queryId)
 	query, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryId)
 	s.Nil(err)
 	query.HasRevealedReports = true

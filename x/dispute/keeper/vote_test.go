@@ -116,7 +116,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 	ctx := s.ctx
 	reporter := sample.AccAddressBytes()
 	selector := sample.AccAddressBytes()
-	blockNum := int64(0)
+	blockNum := uint64(0)
 	id := uint64(1)
 
 	// delegation not found, collections not found

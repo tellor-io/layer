@@ -14,7 +14,7 @@ func (q Querier) GetValidatorCheckpointParams(ctx context.Context, req *types.Qu
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	checkpointParams, err := q.k.ValidatorCheckpointParamsMap.Get(ctx, uint64(req.Timestamp))
+	checkpointParams, err := q.k.ValidatorCheckpointParamsMap.Get(ctx, req.Timestamp)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get validator checkpoint params")
 	}

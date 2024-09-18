@@ -78,7 +78,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 			continue
 		}
 		var iterError error
-		if selector.DelegationsCount > int64(maxValSet) {
+		if selector.DelegationsCount > uint64(maxValSet) {
 			// iterate over bonded validators
 			err = valSet.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 				valAddrr, err := sdk.ValAddressFromBech32(validator.GetOperator())
@@ -130,7 +130,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 			return math.Int{}, iterError
 		}
 	}
-	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
 		return math.Int{}, err
 	}

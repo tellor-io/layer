@@ -398,11 +398,11 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
-		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   revealTime,
-		BlockNumber: reportBlock,
+		BlockNumber: uint64(reportBlock),
 	}
 
 	// disputedBal := disputedRep.TotalTokens
@@ -509,7 +509,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	report.Power = repTokens.Quo(sdk.DefaultPowerReduction).Int64()
+	report.Power = repTokens.Quo(sdk.DefaultPowerReduction).Uint64()
 	fee, err = s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, disputetypes.Warning)
 	require.NoError(err)
 	disputeFee = sdk.NewCoin(s.Setup.Denom, fee) // warning should be 1% of bonded tokens
@@ -517,11 +517,11 @@ func (s *E2ETestSuite) TestDisputes2() {
 	// get microreport for dispute
 	report = oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
-		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   revealTime,
-		BlockNumber: revealBlock,
+		BlockNumber: uint64(revealBlock),
 	}
 
 	// create msg for propose dispute tx
@@ -615,11 +615,11 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	report = oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
-		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   revealTime,
-		BlockNumber: revealBlock,
+		BlockNumber: uint64(revealBlock),
 	}
 
 	// create msg for propose dispute tx

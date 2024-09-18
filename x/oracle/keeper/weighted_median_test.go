@@ -20,11 +20,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	// list of addresses
 	valuesInt := []int{10, 20, 30, 40, 50}
 	values := testutil.IntToHex(valuesInt)
-	powers := []int64{10, 4, 2, 20, 8}
+	powers := []uint64{10, 4, 2, 20, 8}
 	expectedIndex := 3
 	expectedValue := values[expectedIndex]
 	expectedReporter := reporters[expectedIndex].String()
-	var sumPowers int64
+	var sumPowers uint64
 	for _, power := range powers {
 		sumPowers += power
 	}
@@ -54,11 +54,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	currentReporters = reporters[5:9]
 	valuesInt = []int{10, 10, 20, 20}
 	values = testutil.IntToHex(valuesInt)
-	powers = []int64{1, 1, 1, 1}
+	powers = []uint64{1, 1, 1, 1}
 	expectedIndex = 1
 	expectedReporter = currentReporters[expectedIndex].String()
 	expectedValue = values[expectedIndex]
-	sumPowers = int64(0)
+	sumPowers = uint64(0)
 	for _, power := range powers {
 		sumPowers += power
 	}
@@ -87,11 +87,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	currentReporters = reporters[9:13]
 	valuesInt = []int{10, 10, 20, 20}
 	values = testutil.IntToHex(valuesInt)
-	powers = []int64{1, 2, 1, 2}
+	powers = []uint64{1, 2, 1, 2}
 	expectedIndex = 1
 	expectedReporter = currentReporters[expectedIndex].String()
 	expectedValue = values[expectedIndex]
-	sumPowers = int64(0)
+	sumPowers = uint64(0)
 	for _, power := range powers {
 		sumPowers += power
 	}
@@ -119,11 +119,11 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	currentReporters = reporters[13:18]
 	valuesInt = []int{10, 20, 30, 40, 50}
 	values = testutil.IntToHex(valuesInt)
-	powers = []int64{5, 5, 5, 5, 5}
+	powers = []uint64{5, 5, 5, 5, 5}
 	expectedIndex = 2
 	expectedReporter = currentReporters[expectedIndex].String()
 	expectedValue = values[expectedIndex]
-	sumPowers = int64(0)
+	sumPowers = uint64(0)
 	for _, power := range powers {
 		sumPowers += power
 	}

@@ -88,7 +88,7 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 	return math.ZeroInt(), nil
 }
 
-func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber int64) (math.Int, error) {
+func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64) (math.Int, error) {
 	delegation, err := k.reporterKeeper.Delegation(ctx, voter)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -100,8 +100,6 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	// Check if reporter has voted. If not, store voter tokens either full if reporter or delegation amount
 	// this amount the amount to reduce from reporter so total amount of delegators that voted
 	reporterTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
-	fmt.Println("reporterTokensVoted: ", reporterTokensVoted)
-	fmt.Println("err: ", err)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return math.Int{}, err

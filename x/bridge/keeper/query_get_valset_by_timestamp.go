@@ -14,7 +14,7 @@ func (q Querier) GetValsetByTimestamp(ctx context.Context, req *types.QueryGetVa
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	valset, err := q.k.GetBridgeValsetByTimestamp(ctx, uint64(req.Timestamp))
+	valset, err := q.k.GetBridgeValsetByTimestamp(ctx, req.Timestamp)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get eth address")
 	}

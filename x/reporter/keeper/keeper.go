@@ -69,7 +69,7 @@ func NewKeeper(
 		SelectorTips:              collections.NewMap(sb, types.SelectorTipsPrefix, "delegator_tips", collections.BytesKey, disputetypes.LegacyDecValue),
 		DisputedDelegationAmounts: collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
 		FeePaidFromStake:          collections.NewMap(sb, types.FeePaidFromStakePrefix, "fee_paid_from_stake", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
-		Report:                    collections.NewMap(sb, types.ReporterPrefix, "report", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.DelegationsAmounts](cdc)),
+		Report:                    collections.NewMap(sb, types.ReporterPrefix, "report", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.DelegationsAmounts](cdc)),
 		authority:                 authority,
 		logger:                    logger,
 		stakingKeeper:             stakingKeeper,
@@ -94,14 +94,14 @@ func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber int64) (math.Int, error) {
+func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error) {
 	del, err := k.Selectors.Get(ctx, delegator)
 	if err != nil {
 		return math.Int{}, err
 	}
-	rng := collections.NewPrefixedPairRange[[]byte, int64](del.Reporter).EndInclusive(blockNumber).Descending()
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](del.Reporter).EndInclusive(blockNumber).Descending()
 	rep := types.DelegationsAmounts{}
-	err = k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsAmounts) (bool, error) {
+	err = k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (bool, error) {
 		rep = value
 		return true, nil
 	})
@@ -117,10 +117,10 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 	return delegatorTokens, nil
 }
 
-func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber int64) (math.Int, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, int64](reporter).EndInclusive(blockNumber).Descending()
+func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](reporter).EndInclusive(blockNumber).Descending()
 	total := math.ZeroInt()
-	err := k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, int64], value types.DelegationsAmounts) (bool, error) {
+	err := k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (bool, error) {
 		total = value.Total
 		return true, nil
 	})

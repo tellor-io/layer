@@ -65,7 +65,7 @@ func TestMsgClaimDeposits(t *testing.T) {
 	msgSender := sdk.AccAddress(ethAddress.Bytes())
 	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	claimAmount := amount.Sub(tip...)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, aggregate.AggregateReportIndex).Return(aggregate, aggregateTimestamp, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, claimAmount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, msgSender, tip).Return(err)

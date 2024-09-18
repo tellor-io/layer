@@ -922,7 +922,7 @@ func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	err = k.ValidatorCheckpointParamsMap.Set(ctx, timestamp, types.ValidatorCheckpointParams{
 		Checkpoint:     []byte("checkpoint"),
 		ValsetHash:     []byte("valsetHash"),
-		Timestamp:      uint64(timestamp),
+		Timestamp:      timestamp,
 		PowerThreshold: uint64(100),
 	})
 	require.NoError(t, err)

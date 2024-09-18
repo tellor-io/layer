@@ -30,8 +30,8 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 
 	totalReporterPower, weightedSum := cosmomath.LegacyZeroDec(), cosmomath.LegacyZeroDec()
 	for _, r := range reports {
-		weightedSum = weightedSum.Add(values[r.Reporter].Mul(cosmomath.LegacyNewDec(r.Power)))
-		totalReporterPower = totalReporterPower.Add(cosmomath.LegacyNewDec(r.Power))
+		weightedSum = weightedSum.Add(values[r.Reporter].Mul(cosmomath.LegacyNewDec(int64(r.Power))))
+		totalReporterPower = totalReporterPower.Add(cosmomath.LegacyNewDec(int64(r.Power)))
 		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 	}
 
@@ -40,13 +40,13 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 
 	// Find the weighted median
 	for i, s := range reports {
-		cumulativePower = cumulativePower.Add(cosmomath.LegacyNewDec(s.Power))
+		cumulativePower = cumulativePower.Add(cosmomath.LegacyNewDec(int64(s.Power)))
 		if cumulativePower.BigInt().Cmp(halfTotalPower.BigInt()) >= 0 {
-			medianReport.ReporterPower = totalReporterPower.TruncateInt64()
+			medianReport.ReporterPower = uint64(totalReporterPower.TruncateInt64())
 			medianReport.AggregateReporter = s.Reporter
 			medianReport.AggregateValue = s.Value
 			medianReport.QueryId = s.QueryId
-			medianReport.AggregateReportIndex = int64(i)
+			medianReport.AggregateReportIndex = uint64(i)
 			medianReport.MicroHeight = s.BlockNumber
 			break
 		}
@@ -59,7 +59,7 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 	for _, r := range reports {
 		diffDec := values[r.Reporter].Sub(weightedMeanDec)
 		diffDecSquared := diffDec.Mul(diffDec)
-		weightedSquaredDiffDec := diffDecSquared.Mul(cosmomath.LegacyNewDec(r.Power))
+		weightedSquaredDiffDec := diffDecSquared.Mul(cosmomath.LegacyNewDec(int64(r.Power)))
 		sumWeightedSquaredDiffs = sumWeightedSquaredDiffs.Add(weightedSquaredDiffDec)
 	}
 

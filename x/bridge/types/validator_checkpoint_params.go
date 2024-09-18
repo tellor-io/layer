@@ -9,8 +9,8 @@ import (
 type ValidatorCheckpointParams struct {
 	Checkpoint     []byte `protobuf:"bytes,1,opt,name=checkpoint,proto3"`
 	ValsetHash     []byte `protobuf:"bytes,2,opt,name=valset_hash,proto3"`
-	Timestamp      uint64  `protobuf:"varint,3,opt,name=timestamp,proto3"`
-	PowerThreshold uint64  `protobuf:"varint,4,opt,name=power_threshold,proto3"`
+	Timestamp      uint64 `protobuf:"varint,3,opt,name=timestamp,proto3"`
+	PowerThreshold uint64 `protobuf:"varint,4,opt,name=power_threshold,proto3"`
 }
 
 // Ensure ValidatorCheckpointParams implements proto.Message
