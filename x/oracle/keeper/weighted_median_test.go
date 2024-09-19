@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	currentReporters := reporters[:5]
 	reports := testutil.GenerateReports(currentReporters, values, powers, qId)
 
-	_, err := s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, 1)
 	s.NoError(err)
 	res, err := s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
@@ -41,6 +41,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.MetaId, uint64(1), "report meta id is not correct")
 	//  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
@@ -64,7 +65,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 2)
 	s.NoError(err)
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
@@ -74,6 +75,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.MetaId, uint64(2), "report meta id is not correct")
 	// //  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
@@ -97,7 +99,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 3)
 	s.NoError(err)
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
@@ -107,6 +109,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.MetaId, uint64(3), "report meta id is not correct")
 	// //  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
@@ -129,7 +132,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 4)
 	s.NoError(err)
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
@@ -139,6 +142,7 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.AggregateReportIndex, int64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.MetaId, uint64(4), "report meta id is not correct")
 	// //  check list of reporters in the aggregate report
 	for i, reporter := range currentReporters {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")

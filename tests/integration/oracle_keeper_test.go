@@ -374,7 +374,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []int64{reporterPower}, qId)
 
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1])
+	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
 	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
@@ -447,7 +447,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			delegator:            repAccs[1],
 		},
 	}
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports)
+	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
 	s.NoError(err)
 
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
@@ -529,7 +529,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			delegator:            repAccs[2],
 		},
 	}
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3])
+	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
 	s.NoError(err)
 
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
