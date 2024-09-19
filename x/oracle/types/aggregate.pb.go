@@ -4,6 +4,7 @@
 package types
 
 import (
+	encoding_binary "encoding/binary"
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -163,6 +164,142 @@ func (m *Aggregate) GetMicroHeight() uint64 {
 	return 0
 }
 
+// LegacyAggregate is the old aggregate struct, it is used to decode old aggregates
+type LegacyAggregate struct {
+	// query_id is the id of the query
+	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	// aggregate_value is the value of the aggregate
+	AggregateValue string `protobuf:"bytes,2,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
+	// aggregate_reporter is the address of the reporter
+	AggregateReporter string `protobuf:"bytes,3,opt,name=aggregate_reporter,json=aggregateReporter,proto3" json:"aggregate_reporter,omitempty"`
+	// reporter_power is the power of the reporter
+	ReporterPower int64 `protobuf:"varint,4,opt,name=reporter_power,json=reporterPower,proto3" json:"reporter_power,omitempty"`
+	// standard_deviation is the standard deviation of the reports that were aggregated
+	StandardDeviation float64 `protobuf:"fixed64,5,opt,name=standard_deviation,json=standardDeviation,proto3" json:"standard_deviation,omitempty"`
+	// list of reporters that were included in the aggregate
+	Reporters []*AggregateReporter `protobuf:"bytes,6,rep,name=reporters,proto3" json:"reporters,omitempty"`
+	// flagged is true if the aggregate was flagged by a dispute
+	Flagged bool `protobuf:"varint,7,opt,name=flagged,proto3" json:"flagged,omitempty"`
+	// nonce is the nonce of the aggregate
+	Index uint64 `protobuf:"varint,8,opt,name=index,proto3" json:"index,omitempty"`
+	// aggregate_report_index is the index of the aggregate report in the micro reports
+	AggregateReportIndex int64 `protobuf:"varint,9,opt,name=aggregate_report_index,json=aggregateReportIndex,proto3" json:"aggregate_report_index,omitempty"`
+	// height of the aggregate report
+	Height int64 `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
+	// height of the micro report
+	MicroHeight int64 `protobuf:"varint,11,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
+}
+
+func (m *LegacyAggregate) Reset()         { *m = LegacyAggregate{} }
+func (m *LegacyAggregate) String() string { return proto.CompactTextString(m) }
+func (*LegacyAggregate) ProtoMessage()    {}
+func (*LegacyAggregate) Descriptor() ([]byte, []int) {
+	return fileDescriptor_788ad347f505f8a6, []int{1}
+}
+func (m *LegacyAggregate) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *LegacyAggregate) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_LegacyAggregate.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *LegacyAggregate) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LegacyAggregate.Merge(m, src)
+}
+func (m *LegacyAggregate) XXX_Size() int {
+	return m.Size()
+}
+func (m *LegacyAggregate) XXX_DiscardUnknown() {
+	xxx_messageInfo_LegacyAggregate.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LegacyAggregate proto.InternalMessageInfo
+
+func (m *LegacyAggregate) GetQueryId() []byte {
+	if m != nil {
+		return m.QueryId
+	}
+	return nil
+}
+
+func (m *LegacyAggregate) GetAggregateValue() string {
+	if m != nil {
+		return m.AggregateValue
+	}
+	return ""
+}
+
+func (m *LegacyAggregate) GetAggregateReporter() string {
+	if m != nil {
+		return m.AggregateReporter
+	}
+	return ""
+}
+
+func (m *LegacyAggregate) GetReporterPower() int64 {
+	if m != nil {
+		return m.ReporterPower
+	}
+	return 0
+}
+
+func (m *LegacyAggregate) GetStandardDeviation() float64 {
+	if m != nil {
+		return m.StandardDeviation
+	}
+	return 0
+}
+
+func (m *LegacyAggregate) GetReporters() []*AggregateReporter {
+	if m != nil {
+		return m.Reporters
+	}
+	return nil
+}
+
+func (m *LegacyAggregate) GetFlagged() bool {
+	if m != nil {
+		return m.Flagged
+	}
+	return false
+}
+
+func (m *LegacyAggregate) GetIndex() uint64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+func (m *LegacyAggregate) GetAggregateReportIndex() int64 {
+	if m != nil {
+		return m.AggregateReportIndex
+	}
+	return 0
+}
+
+func (m *LegacyAggregate) GetHeight() int64 {
+	if m != nil {
+		return m.Height
+	}
+	return 0
+}
+
+func (m *LegacyAggregate) GetMicroHeight() int64 {
+	if m != nil {
+		return m.MicroHeight
+	}
+	return 0
+}
+
 type AvailableTimestamps struct {
 	Timestamps []time.Time `protobuf:"bytes,1,rep,name=timestamps,proto3,stdtime" json:"timestamps"`
 }
@@ -171,7 +308,7 @@ func (m *AvailableTimestamps) Reset()         { *m = AvailableTimestamps{} }
 func (m *AvailableTimestamps) String() string { return proto.CompactTextString(m) }
 func (*AvailableTimestamps) ProtoMessage()    {}
 func (*AvailableTimestamps) Descriptor() ([]byte, []int) {
-	return fileDescriptor_788ad347f505f8a6, []int{1}
+	return fileDescriptor_788ad347f505f8a6, []int{2}
 }
 func (m *AvailableTimestamps) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -209,6 +346,7 @@ func (m *AvailableTimestamps) GetTimestamps() []time.Time {
 
 func init() {
 	proto.RegisterType((*Aggregate)(nil), "layer.oracle.Aggregate")
+	proto.RegisterType((*LegacyAggregate)(nil), "layer.oracle.LegacyAggregate")
 	proto.RegisterType((*AvailableTimestamps)(nil), "layer.oracle.AvailableTimestamps")
 }
 
@@ -346,6 +484,105 @@ func (m *Aggregate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *LegacyAggregate) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *LegacyAggregate) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *LegacyAggregate) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MicroHeight != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.MicroHeight))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.Height != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.Height))
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.AggregateReportIndex != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.AggregateReportIndex))
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.Index != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.Index))
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.Flagged {
+		i--
+		if m.Flagged {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x38
+	}
+	if len(m.Reporters) > 0 {
+		for iNdEx := len(m.Reporters) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Reporters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintAggregate(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if m.StandardDeviation != 0 {
+		i -= 8
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.StandardDeviation))))
+		i--
+		dAtA[i] = 0x29
+	}
+	if m.ReporterPower != 0 {
+		i = encodeVarintAggregate(dAtA, i, uint64(m.ReporterPower))
+		i--
+		dAtA[i] = 0x20
+	}
+	if len(m.AggregateReporter) > 0 {
+		i -= len(m.AggregateReporter)
+		copy(dAtA[i:], m.AggregateReporter)
+		i = encodeVarintAggregate(dAtA, i, uint64(len(m.AggregateReporter)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.AggregateValue) > 0 {
+		i -= len(m.AggregateValue)
+		copy(dAtA[i:], m.AggregateValue)
+		i = encodeVarintAggregate(dAtA, i, uint64(len(m.AggregateValue)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.QueryId) > 0 {
+		i -= len(m.QueryId)
+		copy(dAtA[i:], m.QueryId)
+		i = encodeVarintAggregate(dAtA, i, uint64(len(m.QueryId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *AvailableTimestamps) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -416,6 +653,54 @@ func (m *Aggregate) Size() (n int) {
 	l = len(m.StandardDeviation)
 	if l > 0 {
 		n += 1 + l + sovAggregate(uint64(l))
+	}
+	if len(m.Reporters) > 0 {
+		for _, e := range m.Reporters {
+			l = e.Size()
+			n += 1 + l + sovAggregate(uint64(l))
+		}
+	}
+	if m.Flagged {
+		n += 2
+	}
+	if m.Index != 0 {
+		n += 1 + sovAggregate(uint64(m.Index))
+	}
+	if m.AggregateReportIndex != 0 {
+		n += 1 + sovAggregate(uint64(m.AggregateReportIndex))
+	}
+	if m.Height != 0 {
+		n += 1 + sovAggregate(uint64(m.Height))
+	}
+	if m.MicroHeight != 0 {
+		n += 1 + sovAggregate(uint64(m.MicroHeight))
+	}
+	return n
+}
+
+func (m *LegacyAggregate) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.QueryId)
+	if l > 0 {
+		n += 1 + l + sovAggregate(uint64(l))
+	}
+	l = len(m.AggregateValue)
+	if l > 0 {
+		n += 1 + l + sovAggregate(uint64(l))
+	}
+	l = len(m.AggregateReporter)
+	if l > 0 {
+		n += 1 + l + sovAggregate(uint64(l))
+	}
+	if m.ReporterPower != 0 {
+		n += 1 + sovAggregate(uint64(m.ReporterPower))
+	}
+	if m.StandardDeviation != 0 {
+		n += 9
 	}
 	if len(m.Reporters) > 0 {
 		for _, e := range m.Reporters {
@@ -766,6 +1051,314 @@ func (m *Aggregate) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.MicroHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAggregate(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *LegacyAggregate) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAggregate
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: LegacyAggregate: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: LegacyAggregate: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryId = append(m.QueryId[:0], dAtA[iNdEx:postIndex]...)
+			if m.QueryId == nil {
+				m.QueryId = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AggregateValue", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AggregateValue = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AggregateReporter", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AggregateReporter = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterPower", wireType)
+			}
+			m.ReporterPower = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ReporterPower |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StandardDeviation", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.StandardDeviation = float64(math.Float64frombits(v))
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reporters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthAggregate
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reporters = append(m.Reporters, &AggregateReporter{})
+			if err := m.Reporters[len(m.Reporters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flagged", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Flagged = bool(v != 0)
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Index |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AggregateReportIndex", wireType)
+			}
+			m.AggregateReportIndex = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AggregateReportIndex |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Height", wireType)
+			}
+			m.Height = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Height |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MicroHeight", wireType)
+			}
+			m.MicroHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAggregate
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MicroHeight |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
