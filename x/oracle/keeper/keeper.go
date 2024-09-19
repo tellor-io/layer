@@ -33,16 +33,16 @@ type (
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
 		Schema         collections.Schema
-		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                            // key: reporter, queryid
-		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]       // key: queryId, tipper
-		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, int64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
+		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                             // key: reporter, queryid
+		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]        // key: queryId, tipper
+		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
 		// total tips given over time
-		TotalTips          collections.Map[int64, math.Int]                                                                           // key: blockNumber, value: total tips                                  // key: queryId, timestamp
+		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber, value: total tips                                  // key: queryId, timestamp
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
 		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, query.id
 		QuerySequencer     collections.Sequence
-		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex] // key: queryId
-		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, int64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
+		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId
+		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
 		Cyclelist          collections.Map[[]byte, []byte]
 		CyclelistSequencer collections.Sequence
 		// the address capable of executing a MsgUpdateParams message. Typically, this
@@ -65,6 +65,7 @@ func NewKeeper(
 	}
 
 	sb := collections.NewSchemaBuilder(storeService)
+
 	k := Keeper{
 		cdc:          cdc,
 		storeService: storeService,
@@ -85,9 +86,13 @@ func NewKeeper(
 			sdk.IntValue,
 			types.NewTipsIndex(sb),
 		),
-		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Int64Key, sdk.IntValue),
+		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
 		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
+<<<<<<< HEAD
 		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
+=======
+		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
+>>>>>>> f85883384431ff270acba66f0135ed355b7688df
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",
@@ -109,7 +114,7 @@ func NewKeeper(
 		TipperTotal: collections.NewIndexedMap(sb,
 			types.TipperTotalPrefix,
 			"tipper_total",
-			collections.PairKeyCodec(collections.BytesKey, collections.Int64Key),
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			sdk.IntValue,
 			types.NewTippersIndex(sb),
 		),

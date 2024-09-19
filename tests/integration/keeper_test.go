@@ -64,7 +64,7 @@ func CreateRandomPrivateKeys(accNum int) []ed25519.PrivKey {
 	return testAddrs
 }
 
-func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAddress, []sdk.ValAddress, []ed25519.PrivKey) {
+func (s *IntegrationTestSuite) createValidatorAccs(powers []uint64) ([]sdk.AccAddress, []sdk.ValAddress, []ed25519.PrivKey) {
 	ctx := s.Setup.Ctx
 	acctNum := len(powers)
 	base := new(big.Int).Exp(big.NewInt(10), big.NewInt(6), nil)
@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 		valMsg, err := stakingtypes.NewMsgCreateValidator(
 			valAddrs[i].String(),
 			pk.PubKey(),
-			sdk.NewInt64Coin(s.Setup.Denom, s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, powers[i]).Int64()),
+			sdk.NewInt64Coin(s.Setup.Denom, s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, int64(powers[i])).Int64()),
 			stakingtypes.Description{Moniker: strconv.Itoa(i)},
 			stakingtypes.CommissionRates{
 				Rate:          math.LegacyNewDecWithPrec(5, 1),
@@ -101,8 +101,8 @@ func (s *IntegrationTestSuite) createValidatorAccs(powers []int64) ([]sdk.AccAdd
 
 		val, err := s.Setup.Stakingkeeper.GetValidator(ctx, valAddrs[i])
 		s.NoError(err)
-		s.Setup.MintTokens(testAddrs[i], s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, powers[i]))
-		msg := stakingtypes.MsgDelegate{DelegatorAddress: testAddrs[i].String(), ValidatorAddress: val.OperatorAddress, Amount: sdk.NewCoin(s.Setup.Denom, s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, powers[i]))}
+		s.Setup.MintTokens(testAddrs[i], s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, int64(powers[i])))
+		msg := stakingtypes.MsgDelegate{DelegatorAddress: testAddrs[i].String(), ValidatorAddress: val.OperatorAddress, Amount: sdk.NewCoin(s.Setup.Denom, s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, int64(powers[i])))}
 		_, err = stakingServer.Delegate(s.Setup.Ctx, &msg)
 		s.NoError(err)
 	}

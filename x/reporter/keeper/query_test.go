@@ -94,7 +94,7 @@ func TestAllowedAmountExpiration(t *testing.T) {
 
 	res, err := querier.AllowedAmountExpiration(ctx, &types.QueryAllowedAmountExpirationRequest{})
 	require.NoError(t, err)
-	require.Equal(t, res.Expiration, ctx.BlockTime().Add(1).UnixMilli())
+	require.Equal(t, res.Expiration, uint64(ctx.BlockTime().Add(1).UnixMilli()))
 }
 
 func TestAvailableTips(t *testing.T) {

@@ -103,7 +103,7 @@ func request_Query_GetValidatorCheckpointParams_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -130,7 +130,7 @@ func local_request_Query_GetValidatorCheckpointParams_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -157,7 +157,7 @@ func request_Query_GetValidatorTimestampByIndex_0(ctx context.Context, marshaler
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "index")
 	}
 
-	protoReq.Index, err = runtime.Int64(val)
+	protoReq.Index, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "index", err)
@@ -184,7 +184,7 @@ func local_request_Query_GetValidatorTimestampByIndex_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "index")
 	}
 
-	protoReq.Index, err = runtime.Int64(val)
+	protoReq.Index, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "index", err)
@@ -211,7 +211,7 @@ func request_Query_GetValsetSigs_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -238,7 +238,7 @@ func local_request_Query_GetValsetSigs_0(ctx context.Context, marshaler runtime.
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -319,7 +319,7 @@ func request_Query_GetValsetByTimestamp_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -346,7 +346,7 @@ func local_request_Query_GetValsetByTimestamp_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -557,7 +557,7 @@ func request_Query_GetValidatorSetIndexByTimestamp_0(ctx context.Context, marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
@@ -584,7 +584,7 @@ func local_request_Query_GetValidatorSetIndexByTimestamp_0(ctx context.Context, 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
 	}
 
-	protoReq.Timestamp, err = runtime.Int64(val)
+	protoReq.Timestamp, err = runtime.Uint64(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)

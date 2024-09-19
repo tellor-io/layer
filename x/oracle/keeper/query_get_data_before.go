@@ -20,7 +20,7 @@ func (k Querier) GetDataBefore(ctx context.Context, req *types.QueryGetDataBefor
 		return nil, status.Error(codes.InvalidArgument, "invalid queryId")
 	}
 
-	aggregate, timestamp, err := k.keeper.GetAggregateBefore(ctx, qIdBz, time.UnixMilli(req.Timestamp))
+	aggregate, timestamp, err := k.keeper.GetAggregateBefore(ctx, qIdBz, time.UnixMilli(int64(req.Timestamp))) // TODO: check if this is correct
 	if err != nil {
 		return nil, err
 	}

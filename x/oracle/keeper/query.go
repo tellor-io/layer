@@ -72,7 +72,7 @@ func (k Querier) GetAggregateBeforeByReporter(ctx context.Context, req *types.Qu
 		return nil, status.Error(codes.InvalidArgument, "invalid query id")
 	}
 	reporterAddr := sdk.MustAccAddressFromBech32(req.Reporter)
-	aggregate, err := k.keeper.GetAggregateBeforeByReporter(ctx, queryId, time.UnixMilli(req.Timestamp), reporterAddr)
+	aggregate, err := k.keeper.GetAggregateBeforeByReporter(ctx, queryId, time.UnixMilli(int64(req.Timestamp)), reporterAddr)
 	if err != nil {
 		return nil, err
 	}

@@ -18,5 +18,5 @@ func (q Querier) GetCurrentValidatorSetTimestamp(ctx context.Context, req *types
 		return nil, status.Error(codes.Internal, "failed to get validator checkpoint")
 	}
 
-	return &types.QueryGetCurrentValidatorSetTimestampResponse{Timestamp: int64(timestamp)}, nil
+	return &types.QueryGetCurrentValidatorSetTimestampResponse{Timestamp: timestamp}, nil
 }

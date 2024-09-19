@@ -7,7 +7,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
@@ -24,8 +23,6 @@ import (
 	"cosmossdk.io/api/tendermint/abci"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -37,7 +34,7 @@ type OperatorAndEVM struct {
 
 type ValsetSignatures struct {
 	OperatorAddresses []string `json:"operator_addresses"`
-	Timestamps        []int64  `json:"timestamps"`
+	Timestamps        []uint64 `json:"timestamps"`
 	Signatures        []string `json:"signatures"`
 }
 
@@ -82,43 +79,6 @@ func CreateTestContext(t *testing.T) sdk.Context {
 	testCtx.Ctx = testCtx.Ctx.WithChainID("layer")
 
 	return testCtx.Ctx
-}
-
-func CreateKeyringAccounts(t *testing.T, kr keyring.Keyring, num int) []TestAccount {
-	t.Helper()
-	require := require.New(t)
-
-	accounts := make([]TestAccount, num)
-	for i := range accounts {
-		record, _, err := kr.NewMnemonic(
-			fmt.Sprintf("key-%d", i),
-			keyring.English,
-			sdk.FullFundraiserPath,
-			keyring.DefaultBIP39Passphrase,
-			hd.Secp256k1)
-		require.NoError(err)
-
-		addr, err := record.GetAddress()
-		require.NoError(err)
-		err = kr.Delete(fmt.Sprintf("key-%d", i))
-		require.NoError(err)
-
-		accounts[i] = TestAccount{Name: record.Name, Address: addr}
-	}
-
-	return accounts
-}
-
-func ClearKeyring(t *testing.T, kr keyring.Keyring) {
-	t.Helper()
-
-	records, err := kr.List()
-	require.NoError(t, err)
-
-	for _, record := range records {
-		err = kr.Delete(record.Name)
-		require.NoError(t, err)
-	}
 }
 
 func GenerateSignatures(t *testing.T) (sigA, sigB []byte, evmAddr common.Address) {
@@ -219,39 +179,6 @@ func GenerateProposer(t *testing.T) (pubKey ed25519.PublicKey, privKey ed25519.P
 	consAddr = sdk.ConsAddress(pubKey)
 
 	return pubKey, privKey, consAddr, accAddr
-}
-
-func GenerateVoteExtBz(t *testing.T, voteExt VoteExtTx, consAddr sdk.ConsAddress) ([]byte, OperatorAndEVM, ValsetSignatures, OracleAttestations, error) {
-	t.Helper()
-
-	sigA, sigB, evmAddr := GenerateSignatures(t)
-
-	operatorAndEvm := OperatorAndEVM{
-		OperatorAddresses: []string{consAddr.String()},
-		EVMAddresses:      []string{evmAddr.String()},
-	}
-	voteExt.OpAndEVMAddrs = operatorAndEvm
-
-	valsetSigs := ValsetSignatures{
-		OperatorAddresses: []string{consAddr.String()},
-		Timestamps:        []int64{1},
-		Signatures:        []string{string(sigA), string(sigB)},
-	}
-	voteExt.ValsetSigs = valsetSigs
-
-	oracleAttestations := OracleAttestations{
-		OperatorAddresses: []string{consAddr.String()},
-		Attestations:      [][]byte{[]byte("attestation1")},
-		Snapshots:         [][]byte{[]byte("snapshot1")},
-	}
-	voteExt.OracleAttestations = oracleAttestations
-
-	bz, err := json.Marshal(voteExt)
-	if err != nil {
-		return nil, operatorAndEvm, valsetSigs, oracleAttestations, err
-	}
-
-	return bz, operatorAndEvm, valsetSigs, oracleAttestations, nil
 }
 
 func SignCVE(veBz []byte, height, round int64, privKey ed25519.PrivateKey) (cmtproto.CanonicalVoteExtension, []byte, []byte, error) {

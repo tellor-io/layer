@@ -18,11 +18,11 @@ func (s *KeeperTestSuite) TestVote() {
 	// mock dependency modules
 	s.bankKeeper.On("GetBalance", s.ctx, addr, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
 	s.bankKeeper.On("GetSupply", s.ctx, layer.BondDenom).Return(sdk.NewCoin(layer.BondDenom, math.NewInt(1)))
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, s.ctx.BlockHeight(), addr).Return(math.NewInt(1), nil)
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, uint64(s.ctx.BlockHeight()), addr).Return(math.NewInt(1), nil)
 	s.reporterKeeper.On("Delegation", s.ctx, addr).Return(reportertypes.Selection{
 		Reporter: addr.Bytes(),
 	}, nil)
-	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), s.ctx.BlockHeight()).Return(math.NewInt(1), nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(1), nil)
 
 	voteMsg := types.MsgVote{
 		Voter: addr.String(),

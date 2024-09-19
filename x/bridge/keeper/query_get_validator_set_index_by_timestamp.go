@@ -13,10 +13,10 @@ func (q Querier) GetValidatorSetIndexByTimestamp(ctx context.Context, req *types
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	index, err := q.k.GetValidatorSetIndexByTimestamp(ctx, uint64(req.Timestamp))
+	index, err := q.k.GetValidatorSetIndexByTimestamp(ctx, req.Timestamp)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get validator checkpoint")
 	}
 
-	return &types.QueryGetValidatorSetIndexByTimestampResponse{Index: int64(index)}, nil
+	return &types.QueryGetValidatorSetIndexByTimestampResponse{Index: index}, nil
 }

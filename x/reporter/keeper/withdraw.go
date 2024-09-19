@@ -150,13 +150,13 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 	return nil
 }
 
-func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height int64, amt math.Int, hashId []byte) error {
+func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, hashId []byte) error {
 	report, err := k.Report.Get(ctx, collections.Join(reporterAddr.Bytes(), height))
 	if err != nil {
 		return err
 	}
 
-	totalTokens := layertypes.PowerReduction.MulRaw(power)
+	totalTokens := layertypes.PowerReduction.MulRaw(int64(power))
 	disputeTokens := make([]*types.TokenOriginInfo, 0)
 	leftover := amt
 	for i, del := range report.TokenOrigins {

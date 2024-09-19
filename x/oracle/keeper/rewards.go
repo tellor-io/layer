@@ -14,9 +14,9 @@ import (
 )
 
 type ReportersReportCount struct {
-	Power   int64
-	Reports int
-	Height  int64
+	Power   uint64
+	Reports uint64
+	Height  uint64
 }
 
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
@@ -27,7 +27,7 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 		return nil
 	}
 	// Initialize totalPower to keep track of the total power of all reporters.
-	totalPower := int64(0)
+	totalPower := uint64(0)
 	// reportCounts maps reporter's address to their ValidatorReportCount.
 	_reporters := make(map[string]ReportersReportCount)
 
@@ -48,7 +48,7 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 	i := len(_reporters)
 	totaldist := math.LegacyZeroDec()
 	for r, c := range _reporters {
-		amount := CalculateRewardAmount(c.Power, int64(c.Reports), totalPower, reward)
+		amount := CalculateRewardAmount(c.Power, c.Reports, totalPower, reward)
 		totaldist = totaldist.Add(amount)
 		reporterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
@@ -77,12 +77,12 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower int64, reward math.Int) math.LegacyDec {
-	power := math.LegacyNewDec(reporterPower * reportsCount)
-	amount := power.Quo(math.LegacyNewDec(totalPower)).Mul(math.LegacyNewDecFromInt(reward))
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
+	power := math.LegacyNewDec(int64(reporterPower) * int64(reportsCount))
+	amount := power.Quo(math.LegacyNewDec(int64(totalPower))).Mul(math.LegacyNewDecFromInt(reward))
 	return amount
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec, height int64) error {
+func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec, height uint64) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, height)
 }

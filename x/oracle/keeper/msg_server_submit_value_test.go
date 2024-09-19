@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 		Value:           value,
 		Timestamp:       s.ctx.BlockTime(),
 		Cyclelist:       true,
-		BlockNumber:     s.ctx.BlockHeight(),
+		BlockNumber:     uint64(s.ctx.BlockHeight()),
 	}
 	expectedReport := types.QueryMicroReportsResponse{
 		MicroReports: []types.MicroReport{microReport},
@@ -250,9 +250,9 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	require.NoError(err)
 	require.NotNil(microReport)
 	require.Equal(microReport.AggregateMethod, "weighted-median")
-	require.Equal(microReport.BlockNumber, int64(0))
+	require.Equal(microReport.BlockNumber, uint64(0))
 	require.Equal(microReport.Cyclelist, true)
-	require.Equal(microReport.Power, sdk.TokensToConsensusPower(minStakeAmt.Add(math.NewInt(1*1e6)), layertypes.PowerReduction))
+	require.Equal(microReport.Power, uint64(sdk.TokensToConsensusPower(minStakeAmt.Add(math.NewInt(1*1e6)), layertypes.PowerReduction)))
 	require.Equal(microReport.QueryId, queryId)
 	require.Equal(microReport.Reporter, reporter.String())
 	require.Equal(microReport.Timestamp, ctx.BlockTime())
@@ -282,7 +282,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 		QueryType:             "SpotPrice",
 	}
 	reporter := sample.AccAddressBytes()
-	votingPower := sdk.TokensToConsensusPower(math.NewInt(1_000_000), layertypes.PowerReduction)
+	votingPower := uint64(sdk.TokensToConsensusPower(math.NewInt(1_000_000), layertypes.PowerReduction))
 	isBridgeDeposit := true
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, !isBridgeDeposit)
@@ -298,7 +298,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	require.NoError(err)
 	require.NotNil(microReport)
 	require.Equal(microReport.AggregateMethod, "weighted-median")
-	require.Equal(microReport.BlockNumber, int64(0))
+	require.Equal(microReport.BlockNumber, uint64(0))
 	require.Equal(microReport.Cyclelist, true)
 	require.Equal(microReport.QueryId, queryId)
 	require.Equal(microReport.Reporter, reporter.String())
@@ -324,7 +324,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	require.NoError(err)
 	require.NotNil(microReport)
 	require.Equal(microReport.AggregateMethod, "weighted-median")
-	require.Equal(microReport.BlockNumber, int64(0))
+	require.Equal(microReport.BlockNumber, uint64(0))
 	require.Equal(microReport.Cyclelist, true)
 	require.Equal(microReport.QueryId, queryId)
 	require.Equal(microReport.Reporter, reporter.String())

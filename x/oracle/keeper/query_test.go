@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.Nil(res)
 
 	// set Aggregates collection
-	require.NoError(k.Aggregates.Set(s.ctx, collections.Join(qId, int64(0)), types.Aggregate{
+	require.NoError(k.Aggregates.Set(s.ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 		QueryId:           qId,
 		AggregateValue:    "100",
 		AggregateReporter: "reporter",
@@ -62,7 +62,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.Equal(res.Aggregate.QueryId, qId)
 	require.Equal(res.Aggregate.AggregateValue, "100")
 	require.Equal(res.Aggregate.AggregateReporter, "reporter")
-	require.Equal(res.Aggregate.ReporterPower, int64(100))
+	require.Equal(res.Aggregate.ReporterPower, uint64(100))
 }
 
 func TestGetCurrentAggregateReport(t *testing.T) {
@@ -97,17 +97,17 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 		QueryId:              []byte(queryId),
 		AggregateValue:       "10_000",
 		AggregateReporter:    "reporter1",
-		ReporterPower:        int64(100),
+		ReporterPower:        100,
 		StandardDeviation:    "0",
 		Reporters:            []*types.AggregateReporter{{}},
 		Flagged:              false,
 		Index:                uint64(0),
-		AggregateReportIndex: int64(0),
-		Height:               int64(0),
-		MicroHeight:          int64(0),
+		AggregateReportIndex: 0,
+		Height:               0,
+		MicroHeight:          0,
 	}
 
-	require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qIdBz, timestamp.UnixMilli()), *agg))
+	require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qIdBz, uint64(timestamp.UnixMilli())), *agg))
 	getCurrentAggResponse, err = keeper.NewQuerier(k).GetCurrentAggregateReport(ctx, &types.QueryGetCurrentAggregateReportRequest{
 		QueryId: queryId,
 	})
@@ -155,7 +155,7 @@ func TestRetreiveData(t *testing.T) {
 			setupFunc: func() {
 				qId, err := utils.QueryBytesFromString("1234abcd")
 				require.NoError(t, err)
-				require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qId, int64(0)), types.Aggregate{
+				require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 					QueryId:           qId,
 					AggregateValue:    "100",
 					AggregateReporter: "reporter",

@@ -18,11 +18,11 @@ type ReporterKeeper struct {
 }
 
 // DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward, height
-func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.LegacyDec, height int64) error {
+func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.LegacyDec, height uint64) error {
 	ret := _m.Called(ctx, reporterAddr, reward, height)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.LegacyDec, int64) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.LegacyDec, uint64) error); ok {
 		r0 = rf(ctx, reporterAddr, reward, height)
 	} else {
 		r0 = ret.Error(0)

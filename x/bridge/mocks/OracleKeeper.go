@@ -94,9 +94,7 @@ func (_m *OracleKeeper) GetAggregateByTimestamp(ctx context.Context, queryId []b
 	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) types.Aggregate); ok {
 		r0 = rf(ctx, queryId, timestamp)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(types.Aggregate)
-		}
+		r0 = ret.Get(0).(types.Aggregate)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context, []byte, time.Time) error); ok {
@@ -109,11 +107,11 @@ func (_m *OracleKeeper) GetAggregateByTimestamp(ctx context.Context, queryId []b
 }
 
 // GetAggregatedReportsByHeight provides a mock function with given fields: ctx, height
-func (_m *OracleKeeper) GetAggregatedReportsByHeight(ctx context.Context, height int64) []types.Aggregate {
+func (_m *OracleKeeper) GetAggregatedReportsByHeight(ctx context.Context, height uint64) []types.Aggregate {
 	ret := _m.Called(ctx, height)
 
 	var r0 []types.Aggregate
-	if rf, ok := ret.Get(0).(func(context.Context, int64) []types.Aggregate); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) []types.Aggregate); ok {
 		r0 = rf(ctx, height)
 	} else {
 		if ret.Get(0) != nil {
@@ -122,32 +120,6 @@ func (_m *OracleKeeper) GetAggregatedReportsByHeight(ctx context.Context, height
 	}
 
 	return r0
-}
-
-// GetCurrentAggregateReport provides a mock function with given fields: ctx, queryId
-func (_m *OracleKeeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (*types.Aggregate, time.Time) {
-	ret := _m.Called(ctx, queryId)
-
-	var r0 *types.Aggregate
-	var r1 time.Time
-	if rf, ok := ret.Get(0).(func(context.Context, []byte) (*types.Aggregate, time.Time)); ok {
-		return rf(ctx, queryId)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte) *types.Aggregate); ok {
-		r0 = rf(ctx, queryId)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Aggregate)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, []byte) time.Time); ok {
-		r1 = rf(ctx, queryId)
-	} else {
-		r1 = ret.Get(1).(time.Time)
-	}
-
-	return r0, r1
 }
 
 // GetTimestampAfter provides a mock function with given fields: ctx, queryId, timestamp

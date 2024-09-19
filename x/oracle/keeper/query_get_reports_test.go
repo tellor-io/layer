@@ -23,7 +23,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 		Value:           value,
 		Timestamp:       s.ctx.BlockTime(),
 		Cyclelist:       true,
-		BlockNumber:     s.ctx.BlockHeight(),
+		BlockNumber:     uint64(s.ctx.BlockHeight()),
 	}
 	expectedReports := []types.MicroReport{MicroReport}
 

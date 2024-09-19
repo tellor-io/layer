@@ -34,21 +34,21 @@ func (_m *OracleKeeper) FlagAggregateReport(ctx context.Context, report types.Mi
 }
 
 // GetTipsAtBlockForTipper provides a mock function with given fields: ctx, blockNumber, tipper
-func (_m *OracleKeeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, tipper cosmos_sdktypes.AccAddress) (math.Int, error) {
+func (_m *OracleKeeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber uint64, tipper cosmos_sdktypes.AccAddress) (math.Int, error) {
 	ret := _m.Called(ctx, blockNumber, tipper)
 
 	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64, cosmos_sdktypes.AccAddress) (math.Int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, cosmos_sdktypes.AccAddress) (math.Int, error)); ok {
 		return rf(ctx, blockNumber, tipper)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64, cosmos_sdktypes.AccAddress) math.Int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, cosmos_sdktypes.AccAddress) math.Int); ok {
 		r0 = rf(ctx, blockNumber, tipper)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64, cosmos_sdktypes.AccAddress) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, cosmos_sdktypes.AccAddress) error); ok {
 		r1 = rf(ctx, blockNumber, tipper)
 	} else {
 		r1 = ret.Error(1)
@@ -82,21 +82,21 @@ func (_m *OracleKeeper) GetTotalTips(ctx context.Context) (math.Int, error) {
 }
 
 // GetTotalTipsAtBlock provides a mock function with given fields: ctx, blockNumber
-func (_m *OracleKeeper) GetTotalTipsAtBlock(ctx context.Context, blockNumber int64) (math.Int, error) {
+func (_m *OracleKeeper) GetTotalTipsAtBlock(ctx context.Context, blockNumber uint64) (math.Int, error) {
 	ret := _m.Called(ctx, blockNumber)
 
 	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, int64) (math.Int, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (math.Int, error)); ok {
 		return rf(ctx, blockNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, int64) math.Int); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) math.Int); ok {
 		r0 = rf(ctx, blockNumber)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
 		r1 = rf(ctx, blockNumber)
 	} else {
 		r1 = ret.Error(1)

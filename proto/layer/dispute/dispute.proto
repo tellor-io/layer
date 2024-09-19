@@ -36,7 +36,7 @@ message Dispute {
     (gogoproto.stdtime) = true
   ];
   // height of the block that started the dispute
-  int64 dispute_start_block = 8;
+  uint64 dispute_start_block = 8;
   // current dispute round
   uint64 dispute_round = 9;
   // reporter's slashed amount
@@ -63,7 +63,7 @@ message Dispute {
   // list of dispute ids that preceded before this current round began
   repeated uint64 prev_dispute_ids = 14;
   // block number when this specific dispute was created
-  int64 block_number = 15;
+  uint64 block_number = 15;
   bool open = 16;
 }
 

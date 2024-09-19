@@ -5,7 +5,7 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
 message QueryIdTimestampPair {
 	bytes query_id = 1;
-	int64 timestamp = 2;
+	uint64 timestamp = 2;
 }
 
 message QueryIdTimestampPairsArray {

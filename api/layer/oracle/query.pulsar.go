@@ -4707,8 +4707,8 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Range(f func(protoreflect.Fie
 			return
 		}
 	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetDataBeforeRequest_timestamp, value) {
 			return
 		}
@@ -4731,7 +4731,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Has(fd protoreflect.FieldDesc
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
 		return x.QueryId != ""
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetDataBeforeRequest"))
@@ -4751,7 +4751,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Clear(fd protoreflect.FieldDe
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
 		x.QueryId = ""
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetDataBeforeRequest"))
@@ -4773,7 +4773,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Get(descriptor protoreflect.F
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetDataBeforeRequest"))
@@ -4797,7 +4797,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) Set(fd protoreflect.FieldDesc
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
 		x.QueryId = value.Interface().(string)
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetDataBeforeRequest"))
@@ -4838,7 +4838,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) NewField(fd protoreflect.Fiel
 	case "layer.oracle.QueryGetDataBeforeRequest.query_id":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.QueryGetDataBeforeRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryGetDataBeforeRequest"))
@@ -5051,7 +5051,7 @@ func (x *fastReflection_QueryGetDataBeforeRequest) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -8159,8 +8159,8 @@ func (x *fastReflection_QueryRetrieveDataRequest) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryRetrieveDataRequest_timestamp, value) {
 			return
 		}
@@ -8183,7 +8183,7 @@ func (x *fastReflection_QueryRetrieveDataRequest) Has(fd protoreflect.FieldDescr
 	case "layer.oracle.QueryRetrieveDataRequest.query_id":
 		return x.QueryId != ""
 	case "layer.oracle.QueryRetrieveDataRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryRetrieveDataRequest"))
@@ -8203,7 +8203,7 @@ func (x *fastReflection_QueryRetrieveDataRequest) Clear(fd protoreflect.FieldDes
 	case "layer.oracle.QueryRetrieveDataRequest.query_id":
 		x.QueryId = ""
 	case "layer.oracle.QueryRetrieveDataRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryRetrieveDataRequest"))
@@ -8225,7 +8225,7 @@ func (x *fastReflection_QueryRetrieveDataRequest) Get(descriptor protoreflect.Fi
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.QueryRetrieveDataRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryRetrieveDataRequest"))
@@ -8249,7 +8249,7 @@ func (x *fastReflection_QueryRetrieveDataRequest) Set(fd protoreflect.FieldDescr
 	case "layer.oracle.QueryRetrieveDataRequest.query_id":
 		x.QueryId = value.Interface().(string)
 	case "layer.oracle.QueryRetrieveDataRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryRetrieveDataRequest"))
@@ -8290,7 +8290,7 @@ func (x *fastReflection_QueryRetrieveDataRequest) NewField(fd protoreflect.Field
 	case "layer.oracle.QueryRetrieveDataRequest.query_id":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.QueryRetrieveDataRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryRetrieveDataRequest"))
@@ -8503,7 +8503,7 @@ func (x *fastReflection_QueryRetrieveDataRequest) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9967,8 +9967,8 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) Range(f func(p
 			return
 		}
 	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetAggregateBeforeByReporterRequest_timestamp, value) {
 			return
 		}
@@ -9997,7 +9997,7 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) Has(fd protore
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.query_id":
 		return x.QueryId != ""
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.reporter":
 		return x.Reporter != ""
 	default:
@@ -10019,7 +10019,7 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) Clear(fd proto
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.query_id":
 		x.QueryId = ""
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.reporter":
 		x.Reporter = ""
 	default:
@@ -10043,7 +10043,7 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) Get(descriptor
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.reporter":
 		value := x.Reporter
 		return protoreflect.ValueOfString(value)
@@ -10070,7 +10070,7 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) Set(fd protore
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.query_id":
 		x.QueryId = value.Interface().(string)
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.reporter":
 		x.Reporter = value.Interface().(string)
 	default:
@@ -10115,7 +10115,7 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) NewField(fd pr
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.query_id":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.QueryGetAggregateBeforeByReporterRequest.reporter":
 		return protoreflect.ValueOfString("")
 	default:
@@ -10341,7 +10341,7 @@ func (x *fastReflection_QueryGetAggregateBeforeByReporterRequest) ProtoMethods()
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -14208,7 +14208,7 @@ type QueryGetDataBeforeRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	QueryId   string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetDataBeforeRequest) Reset() {
@@ -14238,7 +14238,7 @@ func (x *QueryGetDataBeforeRequest) GetQueryId() string {
 	return ""
 }
 
-func (x *QueryGetDataBeforeRequest) GetTimestamp() int64 {
+func (x *QueryGetDataBeforeRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -14493,7 +14493,7 @@ type QueryRetrieveDataRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	QueryId   string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryRetrieveDataRequest) Reset() {
@@ -14523,7 +14523,7 @@ func (x *QueryRetrieveDataRequest) GetQueryId() string {
 	return ""
 }
 
-func (x *QueryRetrieveDataRequest) GetTimestamp() int64 {
+func (x *QueryRetrieveDataRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -14657,7 +14657,7 @@ type QueryGetAggregateBeforeByReporterRequest struct {
 	// query_id defines the query id hex string.
 	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	// timestamp defines the timestamp of the aggregate report.
-	Timestamp int64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// reporter defines the reporter address.
 	Reporter string `protobuf:"bytes,3,opt,name=reporter,proto3" json:"reporter,omitempty"`
 }
@@ -14689,7 +14689,7 @@ func (x *QueryGetAggregateBeforeByReporterRequest) GetQueryId() string {
 	return ""
 }
 
-func (x *QueryGetAggregateBeforeByReporterRequest) GetTimestamp() int64 {
+func (x *QueryGetAggregateBeforeByReporterRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -15087,7 +15087,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08,
 	0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07,
 	0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
 	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x71, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
 	0x74, 0x44, 0x61, 0x74, 0x61, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
@@ -15131,7 +15131,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c,
 	0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x52, 0x0a, 0x19,
+	0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x52, 0x0a, 0x19,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x52, 0x65, 0x74, 0x72, 0x69, 0x65, 0x76, 0x65, 0x44, 0x61, 0x74,
 	0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x09, 0x61, 0x67, 0x67,
 	0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c,
@@ -15154,7 +15154,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
 	0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74,
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f,
 	0x72, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f,
 	0x72, 0x74, 0x65, 0x72, 0x22, 0x62, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74,

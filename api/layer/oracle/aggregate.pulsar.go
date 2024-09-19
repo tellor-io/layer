@@ -181,8 +181,8 @@ func (x *fastReflection_Aggregate) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.ReporterPower != int64(0) {
-		value := protoreflect.ValueOfInt64(x.ReporterPower)
+	if x.ReporterPower != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ReporterPower)
 		if !f(fd_Aggregate_reporter_power, value) {
 			return
 		}
@@ -211,20 +211,20 @@ func (x *fastReflection_Aggregate) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if x.AggregateReportIndex != int64(0) {
-		value := protoreflect.ValueOfInt64(x.AggregateReportIndex)
+	if x.AggregateReportIndex != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.AggregateReportIndex)
 		if !f(fd_Aggregate_aggregate_report_index, value) {
 			return
 		}
 	}
-	if x.Height != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Height)
+	if x.Height != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Height)
 		if !f(fd_Aggregate_height, value) {
 			return
 		}
 	}
-	if x.MicroHeight != int64(0) {
-		value := protoreflect.ValueOfInt64(x.MicroHeight)
+	if x.MicroHeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.MicroHeight)
 		if !f(fd_Aggregate_micro_height, value) {
 			return
 		}
@@ -257,7 +257,7 @@ func (x *fastReflection_Aggregate) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.oracle.Aggregate.aggregate_reporter":
 		return x.AggregateReporter != ""
 	case "layer.oracle.Aggregate.reporter_power":
-		return x.ReporterPower != int64(0)
+		return x.ReporterPower != uint64(0)
 	case "layer.oracle.Aggregate.standard_deviation":
 		return x.StandardDeviation != ""
 	case "layer.oracle.Aggregate.reporters":
@@ -267,11 +267,11 @@ func (x *fastReflection_Aggregate) Has(fd protoreflect.FieldDescriptor) bool {
 	case "layer.oracle.Aggregate.index":
 		return x.Index != uint64(0)
 	case "layer.oracle.Aggregate.aggregate_report_index":
-		return x.AggregateReportIndex != int64(0)
+		return x.AggregateReportIndex != uint64(0)
 	case "layer.oracle.Aggregate.height":
-		return x.Height != int64(0)
+		return x.Height != uint64(0)
 	case "layer.oracle.Aggregate.micro_height":
-		return x.MicroHeight != int64(0)
+		return x.MicroHeight != uint64(0)
 	case "layer.oracle.Aggregate.meta_id":
 		return x.MetaId != uint64(0)
 	default:
@@ -297,7 +297,7 @@ func (x *fastReflection_Aggregate) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.Aggregate.aggregate_reporter":
 		x.AggregateReporter = ""
 	case "layer.oracle.Aggregate.reporter_power":
-		x.ReporterPower = int64(0)
+		x.ReporterPower = uint64(0)
 	case "layer.oracle.Aggregate.standard_deviation":
 		x.StandardDeviation = ""
 	case "layer.oracle.Aggregate.reporters":
@@ -307,11 +307,11 @@ func (x *fastReflection_Aggregate) Clear(fd protoreflect.FieldDescriptor) {
 	case "layer.oracle.Aggregate.index":
 		x.Index = uint64(0)
 	case "layer.oracle.Aggregate.aggregate_report_index":
-		x.AggregateReportIndex = int64(0)
+		x.AggregateReportIndex = uint64(0)
 	case "layer.oracle.Aggregate.height":
-		x.Height = int64(0)
+		x.Height = uint64(0)
 	case "layer.oracle.Aggregate.micro_height":
-		x.MicroHeight = int64(0)
+		x.MicroHeight = uint64(0)
 	case "layer.oracle.Aggregate.meta_id":
 		x.MetaId = uint64(0)
 	default:
@@ -341,7 +341,7 @@ func (x *fastReflection_Aggregate) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.Aggregate.reporter_power":
 		value := x.ReporterPower
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.Aggregate.standard_deviation":
 		value := x.StandardDeviation
 		return protoreflect.ValueOfString(value)
@@ -359,13 +359,13 @@ func (x *fastReflection_Aggregate) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.Aggregate.aggregate_report_index":
 		value := x.AggregateReportIndex
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.Aggregate.height":
 		value := x.Height
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.Aggregate.micro_height":
 		value := x.MicroHeight
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.oracle.Aggregate.meta_id":
 		value := x.MetaId
 		return protoreflect.ValueOfUint64(value)
@@ -396,7 +396,7 @@ func (x *fastReflection_Aggregate) Set(fd protoreflect.FieldDescriptor, value pr
 	case "layer.oracle.Aggregate.aggregate_reporter":
 		x.AggregateReporter = value.Interface().(string)
 	case "layer.oracle.Aggregate.reporter_power":
-		x.ReporterPower = value.Int()
+		x.ReporterPower = value.Uint()
 	case "layer.oracle.Aggregate.standard_deviation":
 		x.StandardDeviation = value.Interface().(string)
 	case "layer.oracle.Aggregate.reporters":
@@ -408,11 +408,11 @@ func (x *fastReflection_Aggregate) Set(fd protoreflect.FieldDescriptor, value pr
 	case "layer.oracle.Aggregate.index":
 		x.Index = value.Uint()
 	case "layer.oracle.Aggregate.aggregate_report_index":
-		x.AggregateReportIndex = value.Int()
+		x.AggregateReportIndex = value.Uint()
 	case "layer.oracle.Aggregate.height":
-		x.Height = value.Int()
+		x.Height = value.Uint()
 	case "layer.oracle.Aggregate.micro_height":
-		x.MicroHeight = value.Int()
+		x.MicroHeight = value.Uint()
 	case "layer.oracle.Aggregate.meta_id":
 		x.MetaId = value.Uint()
 	default:
@@ -483,7 +483,7 @@ func (x *fastReflection_Aggregate) NewField(fd protoreflect.FieldDescriptor) pro
 	case "layer.oracle.Aggregate.aggregate_reporter":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.Aggregate.reporter_power":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.Aggregate.standard_deviation":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.Aggregate.reporters":
@@ -494,11 +494,11 @@ func (x *fastReflection_Aggregate) NewField(fd protoreflect.FieldDescriptor) pro
 	case "layer.oracle.Aggregate.index":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.Aggregate.aggregate_report_index":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.Aggregate.height":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.Aggregate.micro_height":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.Aggregate.meta_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
@@ -887,7 +887,7 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.ReporterPower |= int64(b&0x7F) << shift
+					x.ReporterPower |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1011,7 +1011,7 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.AggregateReportIndex |= int64(b&0x7F) << shift
+					x.AggregateReportIndex |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1030,7 +1030,7 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Height |= int64(b&0x7F) << shift
+					x.Height |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1049,7 +1049,7 @@ func (x *fastReflection_Aggregate) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.MicroHeight |= int64(b&0x7F) << shift
+					x.MicroHeight |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -1628,7 +1628,7 @@ type Aggregate struct {
 	// aggregate_reporter is the address of the reporter
 	AggregateReporter string `protobuf:"bytes,3,opt,name=aggregate_reporter,json=aggregateReporter,proto3" json:"aggregate_reporter,omitempty"`
 	// reporter_power is the power of the reporter
-	ReporterPower int64 `protobuf:"varint,4,opt,name=reporter_power,json=reporterPower,proto3" json:"reporter_power,omitempty"`
+	ReporterPower uint64 `protobuf:"varint,4,opt,name=reporter_power,json=reporterPower,proto3" json:"reporter_power,omitempty"`
 	// standard_deviation is the standard deviation of the reports that were aggregated
 	StandardDeviation string `protobuf:"bytes,5,opt,name=standard_deviation,json=standardDeviation,proto3" json:"standard_deviation,omitempty"`
 	// list of reporters that were included in the aggregate
@@ -1638,11 +1638,11 @@ type Aggregate struct {
 	// index is the index of the aggregate
 	Index uint64 `protobuf:"varint,8,opt,name=index,proto3" json:"index,omitempty"`
 	// aggregate_report_index is the index of the aggregate report in the micro reports
-	AggregateReportIndex int64 `protobuf:"varint,9,opt,name=aggregate_report_index,json=aggregateReportIndex,proto3" json:"aggregate_report_index,omitempty"`
+	AggregateReportIndex uint64 `protobuf:"varint,9,opt,name=aggregate_report_index,json=aggregateReportIndex,proto3" json:"aggregate_report_index,omitempty"`
 	// height of the aggregate report
-	Height int64 `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
+	Height uint64 `protobuf:"varint,10,opt,name=height,proto3" json:"height,omitempty"`
 	// height of the micro report
-	MicroHeight int64 `protobuf:"varint,11,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
+	MicroHeight uint64 `protobuf:"varint,11,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
 	// meta_id is the id of the querymeta iterator
 	MetaId uint64 `protobuf:"varint,12,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
 }
@@ -1688,7 +1688,7 @@ func (x *Aggregate) GetAggregateReporter() string {
 	return ""
 }
 
-func (x *Aggregate) GetReporterPower() int64 {
+func (x *Aggregate) GetReporterPower() uint64 {
 	if x != nil {
 		return x.ReporterPower
 	}
@@ -1723,21 +1723,21 @@ func (x *Aggregate) GetIndex() uint64 {
 	return 0
 }
 
-func (x *Aggregate) GetAggregateReportIndex() int64 {
+func (x *Aggregate) GetAggregateReportIndex() uint64 {
 	if x != nil {
 		return x.AggregateReportIndex
 	}
 	return 0
 }
 
-func (x *Aggregate) GetHeight() int64 {
+func (x *Aggregate) GetHeight() uint64 {
 	if x != nil {
 		return x.Height
 	}
 	return 0
 }
 
-func (x *Aggregate) GetMicroHeight() int64 {
+func (x *Aggregate) GetMicroHeight() uint64 {
 	if x != nil {
 		return x.MicroHeight
 	}
@@ -1807,7 +1807,7 @@ var file_layer_oracle_aggregate_proto_rawDesc = []byte{
 	0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67,
 	0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x25, 0x0a, 0x0e, 0x72,
 	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f, 0x77,
+	0x01, 0x28, 0x04, 0x52, 0x0d, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x6f, 0x77,
 	0x65, 0x72, 0x12, 0x2d, 0x0a, 0x12, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x5f, 0x64,
 	0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11,
 	0x73, 0x74, 0x61, 0x6e, 0x64, 0x61, 0x72, 0x64, 0x44, 0x65, 0x76, 0x69, 0x61, 0x74, 0x69, 0x6f,
@@ -1819,10 +1819,10 @@ var file_layer_oracle_aggregate_proto_rawDesc = []byte{
 	0x08, 0x52, 0x07, 0x66, 0x6c, 0x61, 0x67, 0x67, 0x65, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e,
 	0x64, 0x65, 0x78, 0x18, 0x08, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78,
 	0x12, 0x34, 0x0a, 0x16, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03,
+	0x70, 0x6f, 0x72, 0x74, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04,
 	0x52, 0x14, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72,
 	0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74,
-	0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x21,
+	0x18, 0x0a, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x21,
 	0x0a, 0x0c, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x0b,
 	0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x48, 0x65, 0x69, 0x67, 0x68,
 	0x74, 0x12, 0x17, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x61, 0x5f, 0x69, 0x64, 0x18, 0x0c, 0x20, 0x01,

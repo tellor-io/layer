@@ -149,12 +149,12 @@ func (s *E2ETestSuite) TestDisputes() {
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(int64(4000), result.Aggregate.ReporterPower)
-	require.Equal(int64(1), result.Aggregate.Height)
+	require.Equal(uint64(4000), result.Aggregate.ReporterPower)
+	require.Equal(uint64(1), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------
 	// Height 2 - create a dispute
@@ -178,11 +178,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
-		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
-		BlockNumber: revealBlock,
+		BlockNumber: uint64(revealBlock),
 	}
 
 	// create msg for propose dispute tx
@@ -292,12 +292,12 @@ func (s *E2ETestSuite) TestDisputes() {
 	// aggregated report is stored correctly
 	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(int64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Int64(), result.Aggregate.ReporterPower)
-	require.Equal(int64(4), result.Aggregate.Height)
+	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.ReporterPower)
+	require.Equal(uint64(4), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -317,11 +317,11 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	report = oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
-		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
-		BlockNumber: revealBlock,
+		BlockNumber: uint64(revealBlock),
 	}
 
 	// create msg for propose dispute tx
@@ -463,11 +463,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	// check that aggregated report is stored correctly
 	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(int64(7), result.Aggregate.Height)
+	require.Equal(uint64(7), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -490,11 +490,11 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	report = oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
-		Power:       oneHundredPercent.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       oneHundredPercent.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     queryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
-		BlockNumber: revealBlock,
+		BlockNumber: uint64(revealBlock),
 	}
 	// create msg for propose dispute tx
 
@@ -510,7 +510,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
 	disputeStartTime = s.Setup.Ctx.BlockTime()
-	disputeStartHeight := s.Setup.Ctx.BlockHeight()
+	disputeStartHeight := uint64(s.Setup.Ctx.BlockHeight())
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)

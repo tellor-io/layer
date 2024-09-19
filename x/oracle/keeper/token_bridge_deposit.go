@@ -161,7 +161,7 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 	querydata []byte,
 	reporterAcc sdk.AccAddress,
 	value string,
-	voterPower int64,
+	voterPower uint64,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()

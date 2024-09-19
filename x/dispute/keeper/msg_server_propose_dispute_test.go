@@ -37,10 +37,10 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 		PayFromBond:     false,
 	}
 
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, int64(1), int64(0), math.NewInt(10_000), mock.Anything).Return(nil)
+	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, uint64(1), uint64(0), math.NewInt(10_000), mock.Anything).Return(nil)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
-	s.reporterKeeper.On("JailReporter", s.ctx, addr, int64(0)).Return(nil)
+	s.reporterKeeper.On("JailReporter", s.ctx, addr, uint64(0)).Return(nil)
 
 	s.bankKeeper.On("HasBalance", s.ctx, addr, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, addr, mock.Anything, sdk.NewCoins(fee)).Return(nil)

@@ -41,7 +41,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
 	}
 
-	votingPower := reporterStake.Quo(layertypes.PowerReduction).Int64()
+	votingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
 	// decode query data hex string to bytes
 
 	queryId := utils.QueryIDFromData(msg.QueryData)
@@ -111,7 +111,7 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	qDataBytes []byte,
 	value string,
 	reporterAddr sdk.AccAddress,
-	votingPower int64,
+	votingPower uint64,
 	bridgeDeposit bool,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

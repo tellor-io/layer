@@ -4449,14 +4449,14 @@ func (x *fastReflection_BridgeValidatorSetParams) Range(f func(protoreflect.Fiel
 			return
 		}
 	}
-	if x.ValidatorTimestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.ValidatorTimestamp)
+	if x.ValidatorTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValidatorTimestamp)
 		if !f(fd_BridgeValidatorSetParams_validator_timestamp, value) {
 			return
 		}
 	}
-	if x.ValidatorPowerThreshold != int64(0) {
-		value := protoreflect.ValueOfInt64(x.ValidatorPowerThreshold)
+	if x.ValidatorPowerThreshold != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValidatorPowerThreshold)
 		if !f(fd_BridgeValidatorSetParams_validator_power_threshold, value) {
 			return
 		}
@@ -4491,9 +4491,9 @@ func (x *fastReflection_BridgeValidatorSetParams) Has(fd protoreflect.FieldDescr
 	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		return x.BridgeValidatorSet != nil
 	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
-		return x.ValidatorTimestamp != int64(0)
+		return x.ValidatorTimestamp != uint64(0)
 	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
-		return x.ValidatorPowerThreshold != int64(0)
+		return x.ValidatorPowerThreshold != uint64(0)
 	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		return len(x.ValidatorSetHash) != 0
 	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
@@ -4517,9 +4517,9 @@ func (x *fastReflection_BridgeValidatorSetParams) Clear(fd protoreflect.FieldDes
 	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		x.BridgeValidatorSet = nil
 	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
-		x.ValidatorTimestamp = int64(0)
+		x.ValidatorTimestamp = uint64(0)
 	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
-		x.ValidatorPowerThreshold = int64(0)
+		x.ValidatorPowerThreshold = uint64(0)
 	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		x.ValidatorSetHash = nil
 	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
@@ -4545,10 +4545,10 @@ func (x *fastReflection_BridgeValidatorSetParams) Get(descriptor protoreflect.Fi
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
 		value := x.ValidatorTimestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
 		value := x.ValidatorPowerThreshold
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		value := x.ValidatorSetHash
 		return protoreflect.ValueOfBytes(value)
@@ -4578,9 +4578,9 @@ func (x *fastReflection_BridgeValidatorSetParams) Set(fd protoreflect.FieldDescr
 	case "layer.bridge.BridgeValidatorSetParams.bridge_validator_set":
 		x.BridgeValidatorSet = value.Message().Interface().(*BridgeValidatorSet)
 	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
-		x.ValidatorTimestamp = value.Int()
+		x.ValidatorTimestamp = value.Uint()
 	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
-		x.ValidatorPowerThreshold = value.Int()
+		x.ValidatorPowerThreshold = value.Uint()
 	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		x.ValidatorSetHash = value.Bytes()
 	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
@@ -4635,9 +4635,9 @@ func (x *fastReflection_BridgeValidatorSetParams) NewField(fd protoreflect.Field
 		m := new(BridgeValidatorSet)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.bridge.BridgeValidatorSetParams.validator_timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.BridgeValidatorSetParams.validator_power_threshold":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.BridgeValidatorSetParams.validator_set_hash":
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.bridge.BridgeValidatorSetParams.validator_checkpoint":
@@ -4895,7 +4895,7 @@ func (x *fastReflection_BridgeValidatorSetParams) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.ValidatorTimestamp |= int64(b&0x7F) << shift
+					x.ValidatorTimestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -4914,7 +4914,7 @@ func (x *fastReflection_BridgeValidatorSetParams) ProtoMethods() *protoiface.Met
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.ValidatorPowerThreshold |= int64(b&0x7F) << shift
+					x.ValidatorPowerThreshold |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5102,14 +5102,14 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Interface() protoref
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.ValidatorTimestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.ValidatorTimestamp)
+	if x.ValidatorTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValidatorTimestamp)
 		if !f(fd_BridgeValidatorSetCheckpointParams_validator_timestamp, value) {
 			return
 		}
 	}
-	if x.ValidatorPowerThreshold != int64(0) {
-		value := protoreflect.ValueOfInt64(x.ValidatorPowerThreshold)
+	if x.ValidatorPowerThreshold != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValidatorPowerThreshold)
 		if !f(fd_BridgeValidatorSetCheckpointParams_validator_power_threshold, value) {
 			return
 		}
@@ -5136,9 +5136,9 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Range(f func(protore
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
-		return x.ValidatorTimestamp != int64(0)
+		return x.ValidatorTimestamp != uint64(0)
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
-		return x.ValidatorPowerThreshold != int64(0)
+		return x.ValidatorPowerThreshold != uint64(0)
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		return len(x.ValidatorSetHash) != 0
 	default:
@@ -5158,9 +5158,9 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Has(fd protoreflect.
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
-		x.ValidatorTimestamp = int64(0)
+		x.ValidatorTimestamp = uint64(0)
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
-		x.ValidatorPowerThreshold = int64(0)
+		x.ValidatorPowerThreshold = uint64(0)
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		x.ValidatorSetHash = nil
 	default:
@@ -5181,10 +5181,10 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Get(descriptor proto
 	switch descriptor.FullName() {
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
 		value := x.ValidatorTimestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
 		value := x.ValidatorPowerThreshold
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		value := x.ValidatorSetHash
 		return protoreflect.ValueOfBytes(value)
@@ -5209,9 +5209,9 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Get(descriptor proto
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
-		x.ValidatorTimestamp = value.Int()
+		x.ValidatorTimestamp = value.Uint()
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
-		x.ValidatorPowerThreshold = value.Int()
+		x.ValidatorPowerThreshold = value.Uint()
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		x.ValidatorSetHash = value.Bytes()
 	default:
@@ -5254,9 +5254,9 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) Mutable(fd protorefl
 func (x *fastReflection_BridgeValidatorSetCheckpointParams) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_power_threshold":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.BridgeValidatorSetCheckpointParams.validator_set_hash":
 		return protoreflect.ValueOfBytes(nil)
 	default:
@@ -5447,7 +5447,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) ProtoMethods() *prot
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.ValidatorTimestamp |= int64(b&0x7F) << shift
+					x.ValidatorTimestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -5466,7 +5466,7 @@ func (x *fastReflection_BridgeValidatorSetCheckpointParams) ProtoMethods() *prot
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.ValidatorPowerThreshold |= int64(b&0x7F) << shift
+					x.ValidatorPowerThreshold |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6038,8 +6038,8 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Interface() pr
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetValidatorCheckpointParamsRequest_timestamp, value) {
 			return
 		}
@@ -6060,7 +6060,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Range(f func(p
 func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
@@ -6078,7 +6078,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Has(fd protore
 func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
@@ -6097,7 +6097,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Get(descriptor
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
@@ -6119,7 +6119,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Get(descriptor
 func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
@@ -6156,7 +6156,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) Mutable(fd pro
 func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorCheckpointParamsRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsRequest"))
@@ -6326,7 +6326,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsRequest) ProtoMethods()
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6460,14 +6460,14 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Range(f func(
 			return
 		}
 	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetValidatorCheckpointParamsResponse_timestamp, value) {
 			return
 		}
 	}
-	if x.PowerThreshold != int64(0) {
-		value := protoreflect.ValueOfInt64(x.PowerThreshold)
+	if x.PowerThreshold != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.PowerThreshold)
 		if !f(fd_QueryGetValidatorCheckpointParamsResponse_power_threshold, value) {
 			return
 		}
@@ -6492,9 +6492,9 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Has(fd protor
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		return x.ValsetHash != ""
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
-		return x.PowerThreshold != int64(0)
+		return x.PowerThreshold != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
@@ -6516,9 +6516,9 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Clear(fd prot
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		x.ValsetHash = ""
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
-		x.PowerThreshold = int64(0)
+		x.PowerThreshold = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
@@ -6543,10 +6543,10 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Get(descripto
 		return protoreflect.ValueOfString(value)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
 		value := x.PowerThreshold
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
@@ -6572,9 +6572,9 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) Set(fd protor
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		x.ValsetHash = value.Interface().(string)
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
-		x.PowerThreshold = value.Int()
+		x.PowerThreshold = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
@@ -6621,9 +6621,9 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) NewField(fd p
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.valset_hash":
 		return protoreflect.ValueOfString("")
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.QueryGetValidatorCheckpointParamsResponse.power_threshold":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorCheckpointParamsResponse"))
@@ -6887,7 +6887,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) ProtoMethods(
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -6906,7 +6906,7 @@ func (x *fastReflection_QueryGetValidatorCheckpointParamsResponse) ProtoMethods(
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.PowerThreshold |= int64(b&0x7F) << shift
+					x.PowerThreshold |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7022,8 +7022,8 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Interface() pr
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Index != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Index)
+	if x.Index != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Index)
 		if !f(fd_QueryGetValidatorTimestampByIndexRequest_index, value) {
 			return
 		}
@@ -7044,7 +7044,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Range(f func(p
 func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
-		return x.Index != int64(0)
+		return x.Index != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
@@ -7062,7 +7062,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Has(fd protore
 func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
-		x.Index = int64(0)
+		x.Index = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
@@ -7081,7 +7081,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Get(descriptor
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
 		value := x.Index
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
@@ -7103,7 +7103,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Get(descriptor
 func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
-		x.Index = value.Int()
+		x.Index = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
@@ -7140,7 +7140,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) Mutable(fd pro
 func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexRequest.index":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexRequest"))
@@ -7310,7 +7310,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexRequest) ProtoMethods()
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Index |= int64(b&0x7F) << shift
+					x.Index |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7426,8 +7426,8 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Interface() p
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetValidatorTimestampByIndexResponse_timestamp, value) {
 			return
 		}
@@ -7448,7 +7448,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Range(f func(
 func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
@@ -7466,7 +7466,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Has(fd protor
 func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
@@ -7485,7 +7485,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Get(descripto
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
@@ -7507,7 +7507,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Get(descripto
 func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
@@ -7544,7 +7544,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) Mutable(fd pr
 func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorTimestampByIndexResponse.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorTimestampByIndexResponse"))
@@ -7714,7 +7714,7 @@ func (x *fastReflection_QueryGetValidatorTimestampByIndexResponse) ProtoMethods(
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7830,8 +7830,8 @@ func (x *fastReflection_QueryGetValsetSigsRequest) Interface() protoreflect.Prot
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValsetSigsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetValsetSigsRequest_timestamp, value) {
 			return
 		}
@@ -7852,7 +7852,7 @@ func (x *fastReflection_QueryGetValsetSigsRequest) Range(f func(protoreflect.Fie
 func (x *fastReflection_QueryGetValsetSigsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetSigsRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetSigsRequest"))
@@ -7870,7 +7870,7 @@ func (x *fastReflection_QueryGetValsetSigsRequest) Has(fd protoreflect.FieldDesc
 func (x *fastReflection_QueryGetValsetSigsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetSigsRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetSigsRequest"))
@@ -7889,7 +7889,7 @@ func (x *fastReflection_QueryGetValsetSigsRequest) Get(descriptor protoreflect.F
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValsetSigsRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetSigsRequest"))
@@ -7911,7 +7911,7 @@ func (x *fastReflection_QueryGetValsetSigsRequest) Get(descriptor protoreflect.F
 func (x *fastReflection_QueryGetValsetSigsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetSigsRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetSigsRequest"))
@@ -7948,7 +7948,7 @@ func (x *fastReflection_QueryGetValsetSigsRequest) Mutable(fd protoreflect.Field
 func (x *fastReflection_QueryGetValsetSigsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetSigsRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetSigsRequest"))
@@ -8118,7 +8118,7 @@ func (x *fastReflection_QueryGetValsetSigsRequest) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -9554,8 +9554,8 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) Interface() protorefle
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValsetByTimestampRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetValsetByTimestampRequest_timestamp, value) {
 			return
 		}
@@ -9576,7 +9576,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) Range(f func(protorefl
 func (x *fastReflection_QueryGetValsetByTimestampRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetByTimestampRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetByTimestampRequest"))
@@ -9594,7 +9594,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) Has(fd protoreflect.Fi
 func (x *fastReflection_QueryGetValsetByTimestampRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetByTimestampRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetByTimestampRequest"))
@@ -9613,7 +9613,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) Get(descriptor protore
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValsetByTimestampRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetByTimestampRequest"))
@@ -9635,7 +9635,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) Get(descriptor protore
 func (x *fastReflection_QueryGetValsetByTimestampRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetByTimestampRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetByTimestampRequest"))
@@ -9672,7 +9672,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) Mutable(fd protoreflec
 func (x *fastReflection_QueryGetValsetByTimestampRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValsetByTimestampRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValsetByTimestampRequest"))
@@ -9842,7 +9842,7 @@ func (x *fastReflection_QueryGetValsetByTimestampRequest) ProtoMethods() *protoi
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -13604,8 +13604,8 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Interface()
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetValidatorSetIndexByTimestampRequest_timestamp, value) {
 			return
 		}
@@ -13626,7 +13626,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Range(f fun
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampRequest.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampRequest"))
@@ -13644,7 +13644,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Has(fd prot
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampRequest.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampRequest"))
@@ -13663,7 +13663,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Get(descrip
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampRequest.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampRequest"))
@@ -13685,7 +13685,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Get(descrip
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampRequest.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampRequest"))
@@ -13722,7 +13722,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) Mutable(fd 
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampRequest.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampRequest"))
@@ -13892,7 +13892,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampRequest) ProtoMethod
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -14008,8 +14008,8 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Interface(
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Index != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Index)
+	if x.Index != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Index)
 		if !f(fd_QueryGetValidatorSetIndexByTimestampResponse_index, value) {
 			return
 		}
@@ -14030,7 +14030,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Range(f fu
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampResponse.index":
-		return x.Index != int64(0)
+		return x.Index != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampResponse"))
@@ -14048,7 +14048,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Has(fd pro
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampResponse.index":
-		x.Index = int64(0)
+		x.Index = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampResponse"))
@@ -14067,7 +14067,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Get(descri
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampResponse.index":
 		value := x.Index
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampResponse"))
@@ -14089,7 +14089,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Get(descri
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampResponse.index":
-		x.Index = value.Int()
+		x.Index = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampResponse"))
@@ -14126,7 +14126,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) Mutable(fd
 func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetValidatorSetIndexByTimestampResponse.index":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetValidatorSetIndexByTimestampResponse"))
@@ -14296,7 +14296,7 @@ func (x *fastReflection_QueryGetValidatorSetIndexByTimestampResponse) ProtoMetho
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Index |= int64(b&0x7F) << shift
+					x.Index |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -14768,8 +14768,8 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Interface(
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryGetCurrentValidatorSetTimestampResponse_timestamp, value) {
 			return
 		}
@@ -14790,7 +14790,7 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Range(f fu
 func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentValidatorSetTimestampResponse.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentValidatorSetTimestampResponse"))
@@ -14808,7 +14808,7 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Has(fd pro
 func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentValidatorSetTimestampResponse.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentValidatorSetTimestampResponse"))
@@ -14827,7 +14827,7 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Get(descri
 	switch descriptor.FullName() {
 	case "layer.bridge.QueryGetCurrentValidatorSetTimestampResponse.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentValidatorSetTimestampResponse"))
@@ -14849,7 +14849,7 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Get(descri
 func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentValidatorSetTimestampResponse.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentValidatorSetTimestampResponse"))
@@ -14886,7 +14886,7 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) Mutable(fd
 func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.bridge.QueryGetCurrentValidatorSetTimestampResponse.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.QueryGetCurrentValidatorSetTimestampResponse"))
@@ -15056,7 +15056,7 @@ func (x *fastReflection_QueryGetCurrentValidatorSetTimestampResponse) ProtoMetho
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -15457,8 +15457,8 @@ type BridgeValidatorSetParams struct {
 	unknownFields protoimpl.UnknownFields
 
 	BridgeValidatorSet      *BridgeValidatorSet `protobuf:"bytes,1,opt,name=bridge_validator_set,json=bridgeValidatorSet,proto3" json:"bridge_validator_set,omitempty"`
-	ValidatorTimestamp      int64               `protobuf:"varint,2,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
-	ValidatorPowerThreshold int64               `protobuf:"varint,3,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
+	ValidatorTimestamp      uint64              `protobuf:"varint,2,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
+	ValidatorPowerThreshold uint64              `protobuf:"varint,3,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
 	ValidatorSetHash        []byte              `protobuf:"bytes,4,opt,name=validator_set_hash,json=validatorSetHash,proto3" json:"validator_set_hash,omitempty"`
 	ValidatorCheckpoint     []byte              `protobuf:"bytes,5,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
 }
@@ -15490,14 +15490,14 @@ func (x *BridgeValidatorSetParams) GetBridgeValidatorSet() *BridgeValidatorSet {
 	return nil
 }
 
-func (x *BridgeValidatorSetParams) GetValidatorTimestamp() int64 {
+func (x *BridgeValidatorSetParams) GetValidatorTimestamp() uint64 {
 	if x != nil {
 		return x.ValidatorTimestamp
 	}
 	return 0
 }
 
-func (x *BridgeValidatorSetParams) GetValidatorPowerThreshold() int64 {
+func (x *BridgeValidatorSetParams) GetValidatorPowerThreshold() uint64 {
 	if x != nil {
 		return x.ValidatorPowerThreshold
 	}
@@ -15523,8 +15523,8 @@ type BridgeValidatorSetCheckpointParams struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ValidatorTimestamp      int64  `protobuf:"varint,1,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
-	ValidatorPowerThreshold int64  `protobuf:"varint,2,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
+	ValidatorTimestamp      uint64 `protobuf:"varint,1,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
+	ValidatorPowerThreshold uint64 `protobuf:"varint,2,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
 	ValidatorSetHash        []byte `protobuf:"bytes,3,opt,name=validator_set_hash,json=validatorSetHash,proto3" json:"validator_set_hash,omitempty"`
 }
 
@@ -15548,14 +15548,14 @@ func (*BridgeValidatorSetCheckpointParams) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *BridgeValidatorSetCheckpointParams) GetValidatorTimestamp() int64 {
+func (x *BridgeValidatorSetCheckpointParams) GetValidatorTimestamp() uint64 {
 	if x != nil {
 		return x.ValidatorTimestamp
 	}
 	return 0
 }
 
-func (x *BridgeValidatorSetCheckpointParams) GetValidatorPowerThreshold() int64 {
+func (x *BridgeValidatorSetCheckpointParams) GetValidatorPowerThreshold() uint64 {
 	if x != nil {
 		return x.ValidatorPowerThreshold
 	}
@@ -15609,7 +15609,7 @@ type QueryGetValidatorCheckpointParamsRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetValidatorCheckpointParamsRequest) Reset() {
@@ -15632,7 +15632,7 @@ func (*QueryGetValidatorCheckpointParamsRequest) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *QueryGetValidatorCheckpointParamsRequest) GetTimestamp() int64 {
+func (x *QueryGetValidatorCheckpointParamsRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -15646,8 +15646,8 @@ type QueryGetValidatorCheckpointParamsResponse struct {
 
 	Checkpoint     string `protobuf:"bytes,1,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
 	ValsetHash     string `protobuf:"bytes,2,opt,name=valset_hash,json=valsetHash,proto3" json:"valset_hash,omitempty"`
-	Timestamp      int64  `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	PowerThreshold int64  `protobuf:"varint,4,opt,name=power_threshold,json=powerThreshold,proto3" json:"power_threshold,omitempty"`
+	Timestamp      uint64 `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	PowerThreshold uint64 `protobuf:"varint,4,opt,name=power_threshold,json=powerThreshold,proto3" json:"power_threshold,omitempty"`
 }
 
 func (x *QueryGetValidatorCheckpointParamsResponse) Reset() {
@@ -15684,14 +15684,14 @@ func (x *QueryGetValidatorCheckpointParamsResponse) GetValsetHash() string {
 	return ""
 }
 
-func (x *QueryGetValidatorCheckpointParamsResponse) GetTimestamp() int64 {
+func (x *QueryGetValidatorCheckpointParamsResponse) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
 	return 0
 }
 
-func (x *QueryGetValidatorCheckpointParamsResponse) GetPowerThreshold() int64 {
+func (x *QueryGetValidatorCheckpointParamsResponse) GetPowerThreshold() uint64 {
 	if x != nil {
 		return x.PowerThreshold
 	}
@@ -15703,7 +15703,7 @@ type QueryGetValidatorTimestampByIndexRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Index int64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Index uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 }
 
 func (x *QueryGetValidatorTimestampByIndexRequest) Reset() {
@@ -15726,7 +15726,7 @@ func (*QueryGetValidatorTimestampByIndexRequest) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *QueryGetValidatorTimestampByIndexRequest) GetIndex() int64 {
+func (x *QueryGetValidatorTimestampByIndexRequest) GetIndex() uint64 {
 	if x != nil {
 		return x.Index
 	}
@@ -15738,7 +15738,7 @@ type QueryGetValidatorTimestampByIndexResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetValidatorTimestampByIndexResponse) Reset() {
@@ -15761,7 +15761,7 @@ func (*QueryGetValidatorTimestampByIndexResponse) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{16}
 }
 
-func (x *QueryGetValidatorTimestampByIndexResponse) GetTimestamp() int64 {
+func (x *QueryGetValidatorTimestampByIndexResponse) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -15773,7 +15773,7 @@ type QueryGetValsetSigsRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetValsetSigsRequest) Reset() {
@@ -15796,7 +15796,7 @@ func (*QueryGetValsetSigsRequest) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *QueryGetValsetSigsRequest) GetTimestamp() int64 {
+func (x *QueryGetValsetSigsRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -15913,7 +15913,7 @@ type QueryGetValsetByTimestampRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetValsetByTimestampRequest) Reset() {
@@ -15936,7 +15936,7 @@ func (*QueryGetValsetByTimestampRequest) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *QueryGetValsetByTimestampRequest) GetTimestamp() int64 {
+func (x *QueryGetValsetByTimestampRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -16257,7 +16257,7 @@ type QueryGetValidatorSetIndexByTimestampRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetValidatorSetIndexByTimestampRequest) Reset() {
@@ -16280,7 +16280,7 @@ func (*QueryGetValidatorSetIndexByTimestampRequest) Descriptor() ([]byte, []int)
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *QueryGetValidatorSetIndexByTimestampRequest) GetTimestamp() int64 {
+func (x *QueryGetValidatorSetIndexByTimestampRequest) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -16292,7 +16292,7 @@ type QueryGetValidatorSetIndexByTimestampResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Index int64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Index uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
 }
 
 func (x *QueryGetValidatorSetIndexByTimestampResponse) Reset() {
@@ -16315,7 +16315,7 @@ func (*QueryGetValidatorSetIndexByTimestampResponse) Descriptor() ([]byte, []int
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *QueryGetValidatorSetIndexByTimestampResponse) GetIndex() int64 {
+func (x *QueryGetValidatorSetIndexByTimestampResponse) GetIndex() uint64 {
 	if x != nil {
 		return x.Index
 	}
@@ -16353,7 +16353,7 @@ type QueryGetCurrentValidatorSetTimestampResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Timestamp int64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryGetCurrentValidatorSetTimestampResponse) Reset() {
@@ -16376,7 +16376,7 @@ func (*QueryGetCurrentValidatorSetTimestampResponse) Descriptor() ([]byte, []int
 	return file_layer_bridge_query_proto_rawDescGZIP(), []int{32}
 }
 
-func (x *QueryGetCurrentValidatorSetTimestampResponse) GetTimestamp() int64 {
+func (x *QueryGetCurrentValidatorSetTimestampResponse) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -16454,11 +16454,11 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x52, 0x12, 0x62, 0x72, 0x69, 0x64, 0x67,
 	0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x12, 0x2f, 0x0a,
 	0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69,
 	0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a,
 	0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65,
 	0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65,
+	0x04, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65,
 	0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x76, 0x61,
 	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68,
 	0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
@@ -16469,11 +16469,11 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53,
 	0x65, 0x74, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61,
 	0x6d, 0x73, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
 	0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
 	0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
 	0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
 	0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12,
 	0x2c, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74,
 	0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c,
@@ -16486,7 +16486,7 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x22, 0x48, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
 	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50,
 	0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
 	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0xb3, 0x01, 0x0a, 0x29, 0x51,
 	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
 	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
@@ -16495,22 +16495,22 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x6c, 0x73,
 	0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76,
 	0x61, 0x6c, 0x73, 0x65, 0x74, 0x48, 0x61, 0x73, 0x68, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69,
 	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x27, 0x0a, 0x0f, 0x70, 0x6f, 0x77, 0x65, 0x72,
-	0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03,
+	0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04,
 	0x52, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64,
 	0x22, 0x40, 0x0a, 0x28, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69,
 	0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x79,
 	0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05,
-	0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64,
+	0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64,
 	0x65, 0x78, 0x22, 0x49, 0x0a, 0x29, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61,
 	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
 	0x42, 0x79, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
 	0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x39, 0x0a,
+	0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x39, 0x0a,
 	0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53,
 	0x69, 0x67, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74,
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x3c, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74,
@@ -16529,7 +16529,7 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x65, 0x73, 0x73, 0x22, 0x40, 0x0a, 0x20, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x56,
 	0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
-	0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
 	0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x79, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
 	0x74, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
 	0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x54, 0x0a, 0x14, 0x62, 0x72,
@@ -16589,19 +16589,19 @@ var file_layer_bridge_query_proto_rawDesc = []byte{
 	0x72, 0x79, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65,
 	0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
 	0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x74, 0x69, 0x6d,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d,
 	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x44, 0x0a, 0x2c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
 	0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x49, 0x6e,
 	0x64, 0x65, 0x78, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x2d, 0x0a, 0x2b,
+	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x2d, 0x0a, 0x2b,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x56,
 	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73,
 	0x74, 0x61, 0x6d, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x4c, 0x0a, 0x2c, 0x51,
 	0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x56, 0x61,
 	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
 	0x61, 0x6d, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09,
 	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x32, 0xb1, 0x13, 0x0a, 0x05, 0x51, 0x75,
 	0x65, 0x72, 0x79, 0x12, 0x6b, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x20, 0x2e,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x51, 0x75, 0x65,

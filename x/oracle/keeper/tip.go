@@ -38,7 +38,7 @@ func (k Keeper) GetQueryTip(ctx context.Context, queryId []byte) (math.Int, erro
 }
 
 func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) (math.Int, error) {
-	tip, err := k.GetTipsAtBlockForTipper(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight(), tipper)
+	tip, err := k.GetTipsAtBlockForTipper(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()), tipper)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -46,10 +46,10 @@ func (k Keeper) GetUserTips(ctx context.Context, tipper sdk.AccAddress) (math.In
 }
 
 // get tips at block
-func (k Keeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, tipper sdk.AccAddress) (math.Int, error) {
+func (k Keeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber uint64, tipper sdk.AccAddress) (math.Int, error) {
 	totalTips := math.ZeroInt()
-	rng := collections.NewPrefixedPairRange[[]byte, int64](tipper).EndInclusive(blockNumber).Descending()
-	err := k.TipperTotal.Walk(ctx, rng, func(k collections.Pair[[]byte, int64], v math.Int) (stop bool, err error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](tipper).EndInclusive(blockNumber).Descending()
+	err := k.TipperTotal.Walk(ctx, rng, func(k collections.Pair[[]byte, uint64], v math.Int) (stop bool, err error) {
 		totalTips = v
 		return true, nil
 	})
@@ -60,10 +60,10 @@ func (k Keeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber int64, 
 	return totalTips, nil
 }
 
-func (k Keeper) GetTotalTipsAtBlock(ctx context.Context, blockNumber int64) (math.Int, error) {
+func (k Keeper) GetTotalTipsAtBlock(ctx context.Context, blockNumber uint64) (math.Int, error) {
 	totalTips := math.ZeroInt()
-	rng := new(collections.Range[int64]).EndInclusive(blockNumber).Descending()
-	err := k.TotalTips.Walk(ctx, rng, func(_ int64, total math.Int) (stop bool, err error) {
+	rng := new(collections.Range[uint64]).EndInclusive(blockNumber).Descending()
+	err := k.TotalTips.Walk(ctx, rng, func(_ uint64, total math.Int) (stop bool, err error) {
 		totalTips = total
 		return true, nil
 	})
@@ -79,11 +79,11 @@ func (k Keeper) AddtoTotalTips(ctx context.Context, amt math.Int) error {
 		return err
 	}
 	totalTips = totalTips.Add(amt)
-	return k.TotalTips.Set(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight(), totalTips)
+	return k.TotalTips.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()), totalTips)
 }
 
 func (k Keeper) GetTotalTips(ctx context.Context) (math.Int, error) {
-	totalTips, err := k.GetTotalTipsAtBlock(ctx, sdk.UnwrapSDKContext(ctx).BlockHeight())
+	totalTips, err := k.GetTotalTipsAtBlock(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -96,5 +96,5 @@ func (k Keeper) AddToTipperTotal(ctx context.Context, tipper sdk.AccAddress, amt
 		return err
 	}
 	totalTips = totalTips.Add(amt)
-	return k.TipperTotal.Set(ctx, collections.Join(tipper.Bytes(), sdk.UnwrapSDKContext(ctx).BlockHeight()), totalTips)
+	return k.TipperTotal.Set(ctx, collections.Join(tipper.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())), totalTips)
 }

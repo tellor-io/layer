@@ -87,7 +87,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 	aggReport := oracletypes.Aggregate{
 		QueryId:           queryId,
 		AggregateValue:    "10",
-		ReporterPower:     int64(10),
+		ReporterPower:     uint64(10),
 		AggregateReporter: creatorAddr.String(),
 	}
 	ok.On("GetAggregateByTimestamp", ctx, queryId, timestampTime).Return(aggReport, nil)

@@ -21,9 +21,9 @@ func TestCalculateRewardAmount(t *testing.T) {
 	testCases := []struct {
 		name           string
 		reporter       []keeper.ReportersReportCount
-		reporterPowers []int64
-		totalPower     int64
-		reportsCount   int64
+		reporterPowers []uint64
+		totalPower     uint64
+		reportsCount   uint64
 		expectedAmount []math.LegacyDec
 	}{
 		{
@@ -80,7 +80,7 @@ func TestCalculateRewardAmount(t *testing.T) {
 		totaldist := math.LegacyZeroDec()
 		t.Run(tc.name, func(t *testing.T) {
 			for i, r := range tc.reporter {
-				amount := keeper.CalculateRewardAmount(r.Power, int64(r.Reports), tc.totalPower, reward)
+				amount := keeper.CalculateRewardAmount(r.Power, r.Reports, tc.totalPower, reward)
 				totaldist = totaldist.Add(amount)
 				require.Equal(t, amount, tc.expectedAmount[i])
 				if i == len(tc.reporter)-1 {
@@ -126,8 +126,8 @@ func (s *KeeperTestSuite) TestAllocateRewards() {
 	require.NoError(err)
 	rep2Addr, err := sdk.AccAddressFromBech32(rep2)
 	require.NoError(err)
-	rk.On("DivvyingTips", ctx, rep1Addr, math.LegacyNewDec(50), int64(0)).Return(nil).Once()
-	rk.On("DivvyingTips", ctx, rep2Addr, math.LegacyNewDec(50), int64(0)).Return(nil).Once()
+	rk.On("DivvyingTips", ctx, rep1Addr, math.LegacyNewDec(50), uint64(0)).Return(nil).Once()
+	rk.On("DivvyingTips", ctx, rep2Addr, math.LegacyNewDec(50), uint64(0)).Return(nil).Once()
 	bk.On("SendCoinsFromModuleToModule", ctx, "oracle", "tips_escrow_pool", sdk.NewCoins(sdk.NewCoin("loya", reward))).Return(nil)
 	require.NoError(k.AllocateRewards(ctx, reporters, reward, types.ModuleName))
 }
@@ -178,6 +178,6 @@ func (s *KeeperTestSuite) TestAllocateTips() {
 
 	addr := sample.AccAddressBytes()
 	amount := math.LegacyNewDec(100)
-	rk.On("DivvyingTips", ctx, addr, amount, ctx.BlockHeight()).Return(nil).Once()
-	require.NoError(k.AllocateTip(ctx, addr, amount, ctx.BlockHeight()))
+	rk.On("DivvyingTips", ctx, addr, amount, uint64(ctx.BlockHeight())).Return(nil).Once()
+	require.NoError(k.AllocateTip(ctx, addr, amount, uint64(ctx.BlockHeight())))
 }

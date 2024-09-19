@@ -19,7 +19,7 @@ import (
 func (s *IntegrationTestSuite) TestCreatingReporter() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	valAccs, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 
 	newDelegator := sample.AccAddressBytes()
 	s.Setup.MintTokens(newDelegator, math.NewInt(1000*1e6))
@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) TestCreatingReporter() {
 func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	valAccs, valAddrs, _ := s.createValidatorAccs([]int64{100, 200})
+	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
 
 	newDelegator := sample.AccAddressBytes()
 	s.Setup.MintTokens(newDelegator, math.NewInt(1000*1e6))
@@ -191,7 +191,7 @@ func (s *IntegrationTestSuite) TestDelegatorCount() {
 	s.NoError(err)
 	del, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, delegatorAddr.Bytes())
 	s.NoError(err)
-	s.Equal(int64(5), del.DelegationsCount)
+	s.Equal(uint64(5), del.DelegationsCount)
 }
 
 // add 100 delegators to a reporter and check if the delegator count is 100
@@ -374,8 +374,8 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake() {
 	s.NoError(err)
 
 	err = rk.EscrowReporterStake(
-		ctx, reporterAddr, sdk.TokensToConsensusPower(math.NewIntWithDecimal(3000, 6), sdk.DefaultPowerReduction),
-		blockHeightAtFullPower, math.NewIntWithDecimal(1500, 6), []byte("hashId"))
+		ctx, reporterAddr, uint64(sdk.TokensToConsensusPower(math.NewIntWithDecimal(3000, 6), sdk.DefaultPowerReduction)),
+		uint64(blockHeightAtFullPower), math.NewIntWithDecimal(1500, 6), []byte("hashId"))
 	s.NoError(err)
 	// tokens are moved to dispute module
 	disputeBal = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)

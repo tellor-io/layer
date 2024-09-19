@@ -145,7 +145,7 @@ message QueryGetUserTipTotalResponse {
 
 message QueryGetDataBeforeRequest {
   string query_id = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
 }
 
 message QueryGetDataBeforeResponse {
@@ -179,7 +179,7 @@ message QueryNextCyclelistQueryResponse {
 
 message QueryRetrieveDataRequest {
   string query_id = 1;
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
 }
 
 message QueryRetrieveDataResponse {
@@ -205,7 +205,7 @@ message QueryGetAggregateBeforeByReporterRequest {
   // query_id defines the query id hex string.
   string query_id = 1;
   // timestamp defines the timestamp of the aggregate report.
-  int64 timestamp = 2;
+  uint64 timestamp = 2;
   // reporter defines the reporter address.
   string reporter = 3;
 }

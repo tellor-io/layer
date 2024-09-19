@@ -7,7 +7,6 @@ import (
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,7 +16,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power int64, incycle bool) error {
+func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
@@ -44,7 +43,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		AggregateMethod: dataSpec.AggregationMethod,
 		Timestamp:       sdkCtx.BlockTime(),
 		Cyclelist:       incycle,
-		BlockNumber:     sdkCtx.BlockHeight(),
+		BlockNumber:     uint64(sdkCtx.BlockHeight()),
 	}
 
 	query.HasRevealedReports = true
@@ -66,13 +65,6 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		),
 	})
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
-}
-
-func (k Keeper) VerifyCommit(ctx context.Context, reporter, value, salt, hash string) bool {
-	// calculate commitment
-	calculatedCommit := oracleutils.CalculateCommitment(value, salt)
-	// compare calculated commitment with the one stored
-	return calculatedCommit == hash
 }
 
 func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.DataSpec, error) {

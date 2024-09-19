@@ -11,7 +11,7 @@ message MicroReport {
   // reporter is the address of the reporter
   string reporter = 1;
   // the power of the reporter based on total tokens normalized
-  int64 power = 2;
+  uint64 power = 2;
   // string identifier of the data spec
   string query_type = 3;
   // hash of the query data
@@ -28,5 +28,5 @@ message MicroReport {
   // indicates if the report's query id is in the cyclelist
   bool cyclelist = 8;
   // block number of when the report was created
-  int64 block_number = 9;
+  uint64 block_number = 9;
 }

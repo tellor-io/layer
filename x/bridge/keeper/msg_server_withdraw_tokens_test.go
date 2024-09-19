@@ -57,14 +57,14 @@ func TestMsgWithdrawTokens(t *testing.T) {
 		QueryId:              []byte("withdrawTokens"),
 		AggregateValue:       "10 * 1e6",
 		AggregateReporter:    "reporter1",
-		ReporterPower:        int64(100),
+		ReporterPower:        uint64(100),
 		StandardDeviation:    "0",
 		Reporters:            []*oracletypes.AggregateReporter{},
 		Flagged:              false,
 		Index:                uint64(0),
-		AggregateReportIndex: int64(0),
-		Height:               int64(10_000),
-		MicroHeight:          int64(0),
+		AggregateReportIndex: uint64(0),
+		Height:               uint64(10_000),
+		MicroHeight:          uint64(0),
 	}
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
 	// ok.On("SetAggregate", ctx, &aggregate).Return(nil)

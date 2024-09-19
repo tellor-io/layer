@@ -41,3 +41,5 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	}
 	return &types.MsgProposeDisputeResponse{}, nil
 }
+
+// can i use my delegated tokens to start a dispute

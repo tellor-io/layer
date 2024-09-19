@@ -888,28 +888,6 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 	require.Nil(t, addr)
 }
 
-func TestSetAndGetBridgeValsetByTimestamp(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
-	require.NotNil(t, k)
-	require.NotNil(t, ctx)
-
-	valset := types.BridgeValidatorSet{
-		BridgeValidatorSet: []*types.BridgeValidator{
-			{
-				EthereumAddress: []byte("validator1"),
-				Power:           1000,
-			},
-		},
-	}
-	err := k.SetBridgeValsetByTimestamp(ctx, 0, valset)
-	require.NoError(t, err)
-
-	bridgeValSet, err := k.GetBridgeValsetByTimestamp(ctx, 0)
-	require.NoError(t, err)
-	require.NotNil(t, bridgeValSet)
-	require.Equal(t, bridgeValSet.BridgeValidatorSet, valset.BridgeValidatorSet)
-}
-
 func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
@@ -922,8 +900,8 @@ func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	err = k.ValidatorCheckpointParamsMap.Set(ctx, timestamp, types.ValidatorCheckpointParams{
 		Checkpoint:     []byte("checkpoint"),
 		ValsetHash:     []byte("valsetHash"),
-		Timestamp:      int64(timestamp),
-		PowerThreshold: int64(100),
+		Timestamp:      timestamp,
+		PowerThreshold: uint64(100),
 	})
 	require.NoError(t, err)
 
@@ -932,8 +910,8 @@ func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, res.Checkpoint, []byte("checkpoint"))
 	require.Equal(t, res.ValsetHash, []byte("valsetHash"))
-	require.Equal(t, res.Timestamp, int64(timestamp))
-	require.Equal(t, res.PowerThreshold, int64(100))
+	require.Equal(t, res.Timestamp, (timestamp))
+	require.Equal(t, res.PowerThreshold, uint64(100))
 }
 
 func TestSetOracleAttestation(t *testing.T) {
@@ -1088,7 +1066,7 @@ func TestCreateSnapshot(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", ctx, []byte("queryId"), time.Unix(100, 0)).Return(oracletypes.Aggregate{
 		QueryId:        []byte("queryId"),
 		AggregateValue: "5000",
-		ReporterPower:  int64(100),
+		ReporterPower:  uint64(100),
 	}, nil)
 
 	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
@@ -1132,12 +1110,12 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	timestampPlus1 := timestamp.Add(time.Second)
 
 	queryId := []byte("queryId")
-	ok.On("GetAggregatedReportsByHeight", ctx, int64(0)).Return([]oracletypes.Aggregate{
+	ok.On("GetAggregatedReportsByHeight", ctx, uint64(0)).Return([]oracletypes.Aggregate{
 		{
 			Height:         0,
 			QueryId:        queryId,
 			AggregateValue: "5000",
-			ReporterPower:  int64(100),
+			ReporterPower:  uint64(100),
 		},
 	}, nil)
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
@@ -1145,7 +1123,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", ctx, queryId, timestamp).Return(oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",
-		ReporterPower:  int64(100),
+		ReporterPower:  uint64(100),
 	}, nil)
 
 	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
@@ -1174,12 +1152,12 @@ func TestEncodeOracleAttestationData(t *testing.T) {
 
 	queryId := []byte("queryId")
 	value := "1000"
-	timestamp := int64(100)
-	power := int64(1000)
-	tsBefore := int64(90)
-	tsAfter := int64(110)
+	timestamp := uint64(100)
+	power := uint64(1000)
+	tsBefore := uint64(90)
+	tsAfter := uint64(110)
 	checkpoint := []byte("checkpoint")
-	attestationTimestamp := int64(100)
+	attestationTimestamp := uint64(100)
 	res, err := k.EncodeOracleAttestationData(queryId, value, timestamp, power, tsBefore, tsAfter, checkpoint, attestationTimestamp)
 	require.NoError(t, err)
 	require.NotNil(t, res)

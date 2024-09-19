@@ -47,14 +47,14 @@ func (s *KeeperTestSuite) TestSetValue() {
 	require.Equal(report.QueryId, queryId)
 	require.Equal(report.Reporter, reporter.String())
 	require.Equal(report.QueryType, "SpotPrice")
-	require.Equal(report.Power, int64(1))
-	require.Equal(report.BlockNumber, ctx.BlockHeight())
+	require.Equal(report.Power, uint64(1))
+	require.Equal(report.BlockNumber, uint64(ctx.BlockHeight()))
 }
 
 func (s *KeeperTestSuite) TestVerifyCommit() {
 	require := s.Require()
 	ctx := s.ctx
-	k := s.oracleKeeper
+	// k := s.oracleKeeper
 
 	// good hash
 	reporter := sample.AccAddress()
@@ -62,35 +62,35 @@ func (s *KeeperTestSuite) TestVerifyCommit() {
 	require.NoError(err)
 	value := "0x0000000000000000000000000000000000000000000000000000000000000009"
 	hash := oracleutils.CalculateCommitment(value, salt)
-	res := k.VerifyCommit(ctx, reporter, value, salt, hash)
+	res := s.VerifyCommit(ctx, reporter, value, salt, hash)
 	require.True(res)
 
 	// bad hash
-	res = k.VerifyCommit(ctx, reporter, value, salt, "0x0000000000000000000000000000000000000000000000000000000000000000")
+	res = s.VerifyCommit(ctx, reporter, value, salt, "0x0000000000000000000000000000000000000000000000000000000000000000")
 	require.False(res)
 
 	// empty hash
-	res = k.VerifyCommit(ctx, reporter, value, salt, "")
+	res = s.VerifyCommit(ctx, reporter, value, salt, "")
 	require.False(res)
 
 	// bad value
-	res = k.VerifyCommit(ctx, reporter, "0x0000000000000000000000000000000000000000000000000000000000000000", salt, hash)
+	res = s.VerifyCommit(ctx, reporter, "0x0000000000000000000000000000000000000000000000000000000000000000", salt, hash)
 	require.False(res)
 
 	// empty value
-	res = k.VerifyCommit(ctx, reporter, "", salt, hash)
+	res = s.VerifyCommit(ctx, reporter, "", salt, hash)
 	require.False(res)
 
 	// bad salt
-	res = k.VerifyCommit(ctx, reporter, value, "0x0000000000000000000000000000000000000000000000000000000000000000", hash)
+	res = s.VerifyCommit(ctx, reporter, value, "0x0000000000000000000000000000000000000000000000000000000000000000", hash)
 	require.False(res)
 
 	// empty salt
-	res = k.VerifyCommit(ctx, reporter, value, "", hash)
+	res = s.VerifyCommit(ctx, reporter, value, "", hash)
 	require.False(res)
 
 	// empty entries
-	res = k.VerifyCommit(ctx, "", "", "", "")
+	res = s.VerifyCommit(ctx, "", "", "", "")
 	require.False(res)
 }
 

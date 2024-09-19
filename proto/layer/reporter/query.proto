@@ -115,7 +115,7 @@ message QueryAllowedAmountResponse {
 message QueryAllowedAmountExpirationRequest {}
 
 message QueryAllowedAmountExpirationResponse {
-  int64 expiration = 1;
+  uint64 expiration = 1;
 }
 
 // QueryNumOfSelectorsByReporterRequest is the request type for the
