@@ -11,7 +11,7 @@ import (
 )
 
 // send a reporter to jail
-func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration int64) error {
+func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration uint64) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 		sdk.NewEvent(
 			"jailed_reporter",
 			sdk.NewAttribute("reporter", reporterAddr.String()),
-			sdk.NewAttribute("duration", strconv.FormatInt(jailDuration, 10)),
+			sdk.NewAttribute("duration", strconv.FormatUint(jailDuration, 10)),
 		),
 	})
 	return nil

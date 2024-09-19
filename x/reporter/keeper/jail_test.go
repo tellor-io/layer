@@ -21,7 +21,7 @@ func TestJailReporter(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 10))
-	jailedDuration := int64(100)
+	jailedDuration := uint64(100)
 
 	err = k.JailReporter(ctx, addr, jailedDuration)
 	require.NoError(t, err)

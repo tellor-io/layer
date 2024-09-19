@@ -28,8 +28,8 @@ func (s *KeeperTestSuite) TestQueryGetUserTipTotal() {
 	require.Equal(res.TotalTips, math.ZeroInt())
 
 	// query after tip is set
-	require.NoError(k.TipperTotal.Set(ctx, collections.Join(tipper.Bytes(), ctx.BlockHeight()), math.NewInt(1)))
-	total, err := k.TipperTotal.Get(ctx, collections.Join(tipper.Bytes(), ctx.BlockHeight()))
+	require.NoError(k.TipperTotal.Set(ctx, collections.Join(tipper.Bytes(), uint64(ctx.BlockHeight())), math.NewInt(1)))
+	total, err := k.TipperTotal.Get(ctx, collections.Join(tipper.Bytes(), uint64(ctx.BlockHeight())))
 	require.NoError(err)
 	require.Equal(total, math.NewInt(1))
 

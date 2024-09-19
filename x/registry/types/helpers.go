@@ -26,9 +26,3 @@ func ConvertToJSON(slice []interface{}) (string, error) {
 
 	return string(jsonResult), nil
 }
-
-// check queryId is valid ie 32 bytes
-func IsQueryId64chars(queryId string) bool {
-	queryId = Remove0xPrefix(queryId)
-	return len(queryId) == 64
-}

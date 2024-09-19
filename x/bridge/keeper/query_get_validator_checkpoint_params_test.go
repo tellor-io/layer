@@ -37,6 +37,6 @@ func TestGetValidatorCheckpointParams(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, getCheckpointParamsResponse.Checkpoint, hex.EncodeToString([]byte("checkpoint")))
 	require.Equal(t, getCheckpointParamsResponse.ValsetHash, hex.EncodeToString([]byte("valsetHash")))
-	require.Equal(t, getCheckpointParamsResponse.Timestamp, int64(0))
-	require.Equal(t, getCheckpointParamsResponse.PowerThreshold, int64(10))
+	require.Equal(t, getCheckpointParamsResponse.Timestamp, uint64(0))
+	require.Equal(t, getCheckpointParamsResponse.PowerThreshold, uint64(10))
 }

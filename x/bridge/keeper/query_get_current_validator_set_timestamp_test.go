@@ -19,7 +19,7 @@ func TestQuery_GetCurrentValidatorSetTimestamp(t *testing.T) {
 		name              string
 		setup             func()
 		req               *types.QueryGetCurrentValidatorSetTimestampRequest
-		expectedTimestamp int64
+		expectedTimestamp uint64
 		err               bool
 	}{
 		{

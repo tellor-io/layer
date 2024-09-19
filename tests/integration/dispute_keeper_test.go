@@ -23,7 +23,7 @@ import (
 
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
 	valBond, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
@@ -41,7 +41,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		}
 		total = total.Add(srcs[i].Amount)
 	}
-	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), s.Setup.Ctx.BlockHeight()), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
+	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight())), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
 	s.NoError(err)
 	// assemble report with reporter to dispute
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -120,7 +120,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
@@ -142,7 +142,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	}
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
-	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), s.Setup.Ctx.BlockHeight()), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
+	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight())), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
 	s.NoError(err)
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
@@ -151,7 +151,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
@@ -182,7 +182,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
 	disputer := s.newKeysWithTokens()
 	delegators := repAccs
@@ -204,10 +204,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		}
 		total = total.Add(srcs[i].Amount)
 	}
-	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), s.Setup.Ctx.BlockHeight()), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
+	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight())), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
 	s.NoError(err)
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, int64(len(dels)))))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, uint64(len(dels)))))
 
 	repTokens, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
 	s.NoError(err)
@@ -218,7 +218,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
@@ -318,7 +318,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 
 	disputer := s.newKeysWithTokens()
 	s.Setup.MintTokens(disputer, math.NewInt(20_000_000))
@@ -333,7 +333,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:  repAddr.String(),
-		Power:     stake.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
@@ -366,7 +366,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	err = s.Setup.Disputekeeper.TallyVote(ctx, 1)
 	s.NoError(err)
 
-	bond := sdk.DefaultPowerReduction.MulRaw(report.Power)
+	bond := sdk.DefaultPowerReduction.MulRaw(int64(report.Power))
 	// execute vote
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(ctx, 1))
 
@@ -382,7 +382,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
 	disputer := s.newKeysWithTokens()
@@ -413,7 +413,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:  repAddr.String(),
-		Power:     stake.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
@@ -516,7 +516,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]int64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
 	disputer := s.newKeysWithTokens()
@@ -544,7 +544,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:  repAddr.String(),
-		Power:     stake.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
@@ -640,7 +640,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
-	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
 	reporter2Acc := repAccs[1]
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
@@ -652,11 +652,11 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:    reporter1Acc.String(),
-		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
@@ -739,7 +739,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
 	reporter2Acc := repAccs[1]
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
@@ -751,11 +751,11 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:    reporter1Acc.String(),
-		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
@@ -789,7 +789,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	reporter1Acc := repAccs[0]
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
@@ -800,11 +800,11 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:    reporter1Acc.String(),
-		Power:       reporterStakeBefore.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       reporterStakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
@@ -834,7 +834,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	// three micro reports
 	// setAggregate
 	// then dispute report to check if its flagged
-	valAccs, _, _ := s.createValidatorAccs([]int64{100, 200, 300})
+	valAccs, _, _ := s.createValidatorAccs([]uint64{100, 200, 300})
 	reporter1 := valAccs[0]
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1, reportertypes.NewSelection(reporter1, 1)))
@@ -859,36 +859,36 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 
 	report1 := oracletypes.MicroReport{
 		Reporter:        reporter1.String(),
-		Power:           sdk.TokensToConsensusPower(stake1, sdk.DefaultPowerReduction),
+		Power:           uint64(sdk.TokensToConsensusPower(stake1, sdk.DefaultPowerReduction)),
 		QueryId:         queryid,
 		QueryType:       "SpotPrice",
 		AggregateMethod: aggmethod,
 		Value:           testutil.EncodeValue(1.00),
 		Timestamp:       s.Setup.Ctx.BlockTime(),
 		Cyclelist:       true,
-		BlockNumber:     s.Setup.Ctx.BlockHeight(),
+		BlockNumber:     uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	report2 := oracletypes.MicroReport{
 		Reporter:        reporter2.String(),
-		Power:           sdk.TokensToConsensusPower(stake2, sdk.DefaultPowerReduction),
+		Power:           uint64(sdk.TokensToConsensusPower(stake2, sdk.DefaultPowerReduction)),
 		QueryId:         queryid,
 		QueryType:       "SpotPrice",
 		AggregateMethod: aggmethod,
 		Value:           testutil.EncodeValue(2.00),
 		Timestamp:       s.Setup.Ctx.BlockTime(),
 		Cyclelist:       true,
-		BlockNumber:     s.Setup.Ctx.BlockHeight(),
+		BlockNumber:     uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	report3 := oracletypes.MicroReport{
 		Reporter:        reporter3.String(),
-		Power:           sdk.TokensToConsensusPower(stake3, sdk.DefaultPowerReduction),
+		Power:           uint64(sdk.TokensToConsensusPower(stake3, sdk.DefaultPowerReduction)),
 		QueryId:         queryid,
 		QueryType:       "SpotPrice",
 		AggregateMethod: aggmethod,
 		Value:           testutil.EncodeValue(3.00),
 		Timestamp:       s.Setup.Ctx.BlockTime(),
 		Cyclelist:       true,
-		BlockNumber:     s.Setup.Ctx.BlockHeight(),
+		BlockNumber:     uint64(s.Setup.Ctx.BlockHeight()),
 	}
 
 	// forward time
@@ -909,7 +909,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// get aggregate
-	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().UnixMilli()))
+	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, uint64(s.Setup.Ctx.BlockTime().UnixMilli())))
 	s.NoError(err)
 	s.Equal(agg.AggregateReporter, reporter2.String())
 	s.False(agg.Flagged)
@@ -932,14 +932,14 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	// check if aggregate is flagged
-	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, s.Setup.Ctx.BlockTime().UnixMilli()))
+	agg, err = s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryid, uint64(s.Setup.Ctx.BlockTime().UnixMilli())))
 	s.NoError(err)
 	s.True(agg.Flagged)
 }
 
 func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	reporter1Acc := repAccs[0]
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
@@ -949,11 +949,11 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:    reporter1Acc.String(),
-		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
@@ -996,7 +996,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 
 func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]int64{100, 200})
+	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
@@ -1006,11 +1006,11 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:    reporter1Acc.String(),
-		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Int64(),
+		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
-		BlockNumber: s.Setup.Ctx.BlockHeight(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)

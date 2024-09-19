@@ -17,11 +17,11 @@ type OracleKeeper struct {
 }
 
 // GetAggregatedReportsByHeight provides a mock function with given fields: ctx, height
-func (_m *OracleKeeper) GetAggregatedReportsByHeight(ctx context.Context, height int64) []types.Aggregate {
+func (_m *OracleKeeper) GetAggregatedReportsByHeight(ctx context.Context, height uint64) []types.Aggregate {
 	ret := _m.Called(ctx, height)
 
 	var r0 []types.Aggregate
-	if rf, ok := ret.Get(0).(func(context.Context, int64) []types.Aggregate); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) []types.Aggregate); ok {
 		r0 = rf(ctx, height)
 	} else {
 		if ret.Get(0) != nil {

@@ -11,7 +11,7 @@ func NewReporter(commission math.LegacyDec, minTokensRequired math.Int) OracleRe
 	}
 }
 
-func NewSelection(reporter []byte, delegationCount int64) Selection {
+func NewSelection(reporter []byte, delegationCount uint64) Selection {
 	return Selection{
 		Reporter:         reporter,
 		DelegationsCount: delegationCount,

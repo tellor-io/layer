@@ -192,7 +192,7 @@ func TestSwitchReporter(t *testing.T) {
 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin}
 
 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: math.NewInt(1000 * 1e6)}
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), ctx.BlockHeight()), delegationAmounts))
+	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), delegationAmounts))
 
 	rk.On("MaxReportBufferWindow", ctx).Return(time.Hour, nil)
 	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})

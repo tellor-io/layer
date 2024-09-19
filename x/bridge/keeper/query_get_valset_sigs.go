@@ -14,7 +14,7 @@ func (q Querier) GetValsetSigs(ctx context.Context, req *types.QueryGetValsetSig
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	sigs, err := q.k.GetValidatorSetSignaturesFromStorage(ctx, uint64(req.Timestamp))
+	sigs, err := q.k.GetValidatorSetSignaturesFromStorage(ctx, req.Timestamp)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to get validator signatures")
 	}

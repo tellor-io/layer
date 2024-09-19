@@ -96,8 +96,8 @@ func (x *fastReflection_QueryIdTimestampPair) Range(f func(protoreflect.FieldDes
 			return
 		}
 	}
-	if x.Timestamp != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Timestamp)
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
 		if !f(fd_QueryIdTimestampPair_timestamp, value) {
 			return
 		}
@@ -120,7 +120,7 @@ func (x *fastReflection_QueryIdTimestampPair) Has(fd protoreflect.FieldDescripto
 	case "layer.oracle.QueryIdTimestampPair.query_id":
 		return len(x.QueryId) != 0
 	case "layer.oracle.QueryIdTimestampPair.timestamp":
-		return x.Timestamp != int64(0)
+		return x.Timestamp != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryIdTimestampPair"))
@@ -140,7 +140,7 @@ func (x *fastReflection_QueryIdTimestampPair) Clear(fd protoreflect.FieldDescrip
 	case "layer.oracle.QueryIdTimestampPair.query_id":
 		x.QueryId = nil
 	case "layer.oracle.QueryIdTimestampPair.timestamp":
-		x.Timestamp = int64(0)
+		x.Timestamp = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryIdTimestampPair"))
@@ -162,7 +162,7 @@ func (x *fastReflection_QueryIdTimestampPair) Get(descriptor protoreflect.FieldD
 		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.QueryIdTimestampPair.timestamp":
 		value := x.Timestamp
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryIdTimestampPair"))
@@ -186,7 +186,7 @@ func (x *fastReflection_QueryIdTimestampPair) Set(fd protoreflect.FieldDescripto
 	case "layer.oracle.QueryIdTimestampPair.query_id":
 		x.QueryId = value.Bytes()
 	case "layer.oracle.QueryIdTimestampPair.timestamp":
-		x.Timestamp = value.Int()
+		x.Timestamp = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryIdTimestampPair"))
@@ -227,7 +227,7 @@ func (x *fastReflection_QueryIdTimestampPair) NewField(fd protoreflect.FieldDesc
 	case "layer.oracle.QueryIdTimestampPair.query_id":
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.QueryIdTimestampPair.timestamp":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryIdTimestampPair"))
@@ -442,7 +442,7 @@ func (x *fastReflection_QueryIdTimestampPair) ProtoMethods() *protoiface.Methods
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Timestamp |= int64(b&0x7F) << shift
+					x.Timestamp |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -995,7 +995,7 @@ type QueryIdTimestampPair struct {
 	unknownFields protoimpl.UnknownFields
 
 	QueryId   []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	Timestamp int64  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 func (x *QueryIdTimestampPair) Reset() {
@@ -1025,7 +1025,7 @@ func (x *QueryIdTimestampPair) GetQueryId() []byte {
 	return nil
 }
 
-func (x *QueryIdTimestampPair) GetTimestamp() int64 {
+func (x *QueryIdTimestampPair) GetTimestamp() uint64 {
 	if x != nil {
 		return x.Timestamp
 	}
@@ -1077,7 +1077,7 @@ var file_layer_oracle_query_id_timestamp_pair_proto_rawDesc = []byte{
 	0x65, 0x72, 0x79, 0x49, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x50, 0x61,
 	0x69, 0x72, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x0c, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x1c, 0x0a,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
 	0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x56, 0x0a, 0x1a, 0x51,
 	0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x50,
 	0x61, 0x69, 0x72, 0x73, 0x41, 0x72, 0x72, 0x61, 0x79, 0x12, 0x38, 0x0a, 0x05, 0x70, 0x61, 0x69,

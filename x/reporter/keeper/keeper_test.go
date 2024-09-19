@@ -62,9 +62,9 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 		Amount:           math.NewIntWithDecimal(1000, 6),
 	}
 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin1, tokenOrigin2}
-	require.NoError(t, k.Report.Set(ctx, collections.Join(delAddr.Bytes(), ctx.BlockHeight()), types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: tokenOrigin1.Amount.Add(tokenOrigin2.Amount)}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join(delAddr.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: tokenOrigin1.Amount.Add(tokenOrigin2.Amount)}))
 
-	tokens, err := k.GetDelegatorTokensAtBlock(ctx, delAddr, ctx.BlockHeight())
+	tokens, err := k.GetDelegatorTokensAtBlock(ctx, delAddr, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, math.NewIntWithDecimal(2000, 6), tokens)
 }
@@ -72,17 +72,17 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 func TestGetReporterTokensAtBlock(t *testing.T) {
 	k, _, _, _, ctx, _ := setupKeeper(t)
 	reporter := sample.AccAddressBytes()
-	tokens, err := k.GetReporterTokensAtBlock(ctx, reporter, ctx.BlockHeight())
+	tokens, err := k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, math.ZeroInt(), tokens)
 
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), ctx.BlockHeight()), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{Total: math.OneInt()}))
 
-	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, ctx.BlockHeight())
+	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, math.OneInt(), tokens)
 
-	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, ctx.BlockHeight()+10)
+	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()+10))
 	require.NoError(t, err)
 	require.Equal(t, math.OneInt(), tokens)
 }

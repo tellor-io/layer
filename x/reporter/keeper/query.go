@@ -102,7 +102,7 @@ func (k Querier) AllowedAmountExpiration(ctx context.Context, req *types.QueryAl
 		return nil, err
 	}
 	timeMilli := tracker.Expiration.UnixMilli()
-	return &types.QueryAllowedAmountExpirationResponse{Expiration: timeMilli}, nil
+	return &types.QueryAllowedAmountExpirationResponse{Expiration: uint64(timeMilli)}, nil
 }
 
 // query for num of selectors in reporter

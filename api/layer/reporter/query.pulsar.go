@@ -4428,8 +4428,8 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) Interface() protor
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryAllowedAmountExpirationResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Expiration != int64(0) {
-		value := protoreflect.ValueOfInt64(x.Expiration)
+	if x.Expiration != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Expiration)
 		if !f(fd_QueryAllowedAmountExpirationResponse_expiration, value) {
 			return
 		}
@@ -4450,7 +4450,7 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) Range(f func(proto
 func (x *fastReflection_QueryAllowedAmountExpirationResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.reporter.QueryAllowedAmountExpirationResponse.expiration":
-		return x.Expiration != int64(0)
+		return x.Expiration != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.QueryAllowedAmountExpirationResponse"))
@@ -4468,7 +4468,7 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) Has(fd protoreflec
 func (x *fastReflection_QueryAllowedAmountExpirationResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.reporter.QueryAllowedAmountExpirationResponse.expiration":
-		x.Expiration = int64(0)
+		x.Expiration = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.QueryAllowedAmountExpirationResponse"))
@@ -4487,7 +4487,7 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) Get(descriptor pro
 	switch descriptor.FullName() {
 	case "layer.reporter.QueryAllowedAmountExpirationResponse.expiration":
 		value := x.Expiration
-		return protoreflect.ValueOfInt64(value)
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.QueryAllowedAmountExpirationResponse"))
@@ -4509,7 +4509,7 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) Get(descriptor pro
 func (x *fastReflection_QueryAllowedAmountExpirationResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.reporter.QueryAllowedAmountExpirationResponse.expiration":
-		x.Expiration = value.Int()
+		x.Expiration = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.QueryAllowedAmountExpirationResponse"))
@@ -4546,7 +4546,7 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) Mutable(fd protore
 func (x *fastReflection_QueryAllowedAmountExpirationResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.reporter.QueryAllowedAmountExpirationResponse.expiration":
-		return protoreflect.ValueOfInt64(int64(0))
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.QueryAllowedAmountExpirationResponse"))
@@ -4716,7 +4716,7 @@ func (x *fastReflection_QueryAllowedAmountExpirationResponse) ProtoMethods() *pr
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Expiration |= int64(b&0x7F) << shift
+					x.Expiration |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -7624,7 +7624,7 @@ type QueryAllowedAmountExpirationResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Expiration int64 `protobuf:"varint,1,opt,name=expiration,proto3" json:"expiration,omitempty"`
+	Expiration uint64 `protobuf:"varint,1,opt,name=expiration,proto3" json:"expiration,omitempty"`
 }
 
 func (x *QueryAllowedAmountExpirationResponse) Reset() {
@@ -7647,7 +7647,7 @@ func (*QueryAllowedAmountExpirationResponse) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_query_proto_rawDescGZIP(), []int{10}
 }
 
-func (x *QueryAllowedAmountExpirationResponse) GetExpiration() int64 {
+func (x *QueryAllowedAmountExpirationResponse) GetExpiration() uint64 {
 	if x != nil {
 		return x.Expiration
 	}
@@ -7961,7 +7961,7 @@ var file_layer_reporter_query_proto_rawDesc = []byte{
 	0x65, 0x73, 0x74, 0x22, 0x46, 0x0a, 0x24, 0x51, 0x75, 0x65, 0x72, 0x79, 0x41, 0x6c, 0x6c, 0x6f,
 	0x77, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x45, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74,
 	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x65,
-	0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
 	0x0a, 0x65, 0x78, 0x70, 0x69, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x75, 0x0a, 0x24, 0x51,
 	0x75, 0x65, 0x72, 0x79, 0x4e, 0x75, 0x6d, 0x4f, 0x66, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f,
 	0x72, 0x73, 0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75,

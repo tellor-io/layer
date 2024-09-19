@@ -26,7 +26,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(s.Setup.Bankkeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, math.NewInt(1000000000)))))
 	s.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(ctx, "mint", tipper, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, math.NewInt(1000000000)))))
 	// setup reporter
-	repAccs, valAddrs, _ := s.createValidatorAccs([]int64{100, 200})
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
 	for _, val := range valAddrs {
 		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
 		s.NoError(err)

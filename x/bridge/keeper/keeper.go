@@ -339,8 +339,8 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	checkpointParams := types.ValidatorCheckpointParams{
 		Checkpoint:     checkpoint,
 		ValsetHash:     validatorSetHash,
-		Timestamp:      int64(validatorTimestamp),
-		PowerThreshold: int64(powerThreshold),
+		Timestamp:      validatorTimestamp,
+		PowerThreshold: powerThreshold,
 	}
 	err = k.ValidatorCheckpointParamsMap.Set(ctx, validatorTimestamp, checkpointParams)
 	if err != nil {
@@ -698,15 +698,6 @@ func (k Keeper) GetEVMAddressByOperator(ctx context.Context, operatorAddress str
 	return ethAddress.EVMAddress, nil
 }
 
-func (k Keeper) SetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
-	err := k.BridgeValsetByTimestampMap.Set(ctx, timestamp, bridgeValset)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
-		return err
-	}
-	return nil
-}
-
 func (k Keeper) GetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64) (*types.BridgeValidatorSet, error) {
 	bridgeValset, err := k.BridgeValsetByTimestampMap.Get(ctx, timestamp)
 	if err != nil {
@@ -778,7 +769,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
 
-	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, blockHeight)
+	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, uint64(blockHeight))
 	for _, report := range reports {
 		queryId := report.QueryId
 		timeNow := sdkCtx.BlockTime().Add(time.Second)
@@ -825,12 +816,12 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	snapshotBytes, err := k.EncodeOracleAttestationData(
 		queryId,
 		aggReport.AggregateValue,
-		timestamp.UnixMilli(),
+		uint64(timestamp.UnixMilli()),
 		aggReport.ReporterPower,
-		tsBefore.UnixMilli(),
-		tsAfter.UnixMilli(),
+		uint64(tsBefore.UnixMilli()),
+		uint64(tsAfter.UnixMilli()),
 		validatorCheckpoint.Checkpoint,
-		attestationTimestamp.UnixMilli(),
+		uint64(attestationTimestamp.UnixMilli()),
 	)
 	if err != nil {
 		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
@@ -869,11 +860,11 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	// set snapshot to snapshot data map
 	snapshotData := types.AttestationSnapshotData{
 		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
-		AttestationTimestamp: attestationTimestamp.UnixMilli(),
-		PrevReportTimestamp:  tsBefore.UnixMilli(),
-		NextReportTimestamp:  tsAfter.UnixMilli(),
+		AttestationTimestamp: uint64(attestationTimestamp.UnixMilli()),
+		PrevReportTimestamp:  uint64(tsBefore.UnixMilli()),
+		NextReportTimestamp:  uint64(tsAfter.UnixMilli()),
 		QueryId:              queryId,
-		Timestamp:            timestamp.UnixMilli(),
+		Timestamp:            uint64(timestamp.UnixMilli()),
 	}
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshotBytes, snapshotData)
 	if err != nil {
@@ -928,12 +919,12 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 func (k Keeper) EncodeOracleAttestationData(
 	queryId []byte,
 	value string,
-	timestamp int64,
-	aggregatePower int64,
-	previousTimestamp int64,
-	nextTimestamp int64,
+	timestamp uint64,
+	aggregatePower uint64,
+	previousTimestamp uint64,
+	nextTimestamp uint64,
 	valsetCheckpoint []byte,
-	attestationTimestamp int64,
+	attestationTimestamp uint64,
 ) ([]byte, error) {
 	// domainSeparator is bytes "tellorNewReport"
 	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
@@ -957,19 +948,19 @@ func (k Keeper) EncodeOracleAttestationData(
 
 	// Convert timestamp to uint64
 	timestampUint64 := new(big.Int)
-	timestampUint64.SetInt64(timestamp)
+	timestampUint64.SetUint64(timestamp)
 
 	// Convert aggregatePower to uint64
 	aggregatePowerUint64 := new(big.Int)
-	aggregatePowerUint64.SetInt64(aggregatePower)
+	aggregatePowerUint64.SetUint64(aggregatePower)
 
 	// Convert previousTimestamp to uint64
 	previousTimestampUint64 := new(big.Int)
-	previousTimestampUint64.SetInt64(previousTimestamp)
+	previousTimestampUint64.SetUint64(previousTimestamp)
 
 	// Convert nextTimestamp to uint64
 	nextTimestampUint64 := new(big.Int)
-	nextTimestampUint64.SetInt64(nextTimestamp)
+	nextTimestampUint64.SetUint64(nextTimestamp)
 
 	// Convert valsetCheckpoint to bytes32
 	var valsetCheckpointBytes32 [32]byte
@@ -977,7 +968,7 @@ func (k Keeper) EncodeOracleAttestationData(
 
 	// Convert attestationTimestamp to uint64
 	attestationTimestampUint64 := new(big.Int)
-	attestationTimestampUint64.SetInt64(attestationTimestamp)
+	attestationTimestampUint64.SetUint64(attestationTimestamp)
 
 	// Prepare Encoding
 	Bytes32Type, err := abi.NewType("bytes32", "", nil)

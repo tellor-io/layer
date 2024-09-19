@@ -23,8 +23,8 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	s.ErrorContains(err, "invalid queryId")
 	s.Nil(getDataBeforeResponse)
 
-	timestampBefore := int64(1)
-	timestamp := time.UnixMilli(timestampBefore)
+	timestampBefore := uint64(1)
+	timestamp := time.UnixMilli(int64(timestampBefore))
 
 	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   "1234abcd",
@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	qIdBz, err := utils.QueryBytesFromString(queryId)
 	s.NoError(err)
 	agg := types.Aggregate{QueryId: qIdBz}
-	s.NoError(s.oracleKeeper.Aggregates.Set(s.ctx, collections.Join(qIdBz, timestamp.UnixMilli()), agg))
+	s.NoError(s.oracleKeeper.Aggregates.Set(s.ctx, collections.Join(qIdBz, uint64(timestamp.UnixMilli())), agg))
 	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   queryId,
 		Timestamp: timestampBefore + 1,

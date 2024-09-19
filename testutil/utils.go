@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func GenerateReports(reporters []sdk.AccAddress, values []string, powers []int64, queryId []byte) []oracletypes.MicroReport {
+func GenerateReports(reporters []sdk.AccAddress, values []string, powers []uint64, queryId []byte) []oracletypes.MicroReport {
 	var reports []oracletypes.MicroReport
 
 	for i, reporter := range reporters {
