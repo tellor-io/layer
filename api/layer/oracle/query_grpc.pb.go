@@ -41,6 +41,7 @@ type QueryClient interface {
 	GetAggregateBeforeByReporter(ctx context.Context, in *QueryGetAggregateBeforeByReporterRequest, opts ...grpc.CallOption) (*QueryGetAggregateBeforeByReporterResponse, error)
 	GetQuery(ctx context.Context, in *QueryGetQueryRequest, opts ...grpc.CallOption) (*QueryGetQueryResponse, error)
 	TippedQueries(ctx context.Context, in *QueryTippedQueriesRequest, opts ...grpc.CallOption) (*QueryTippedQueriesResponse, error)
+	GetReportsByAggregate(ctx context.Context, in *QueryGetReportsByAggregateRequest, opts ...grpc.CallOption) (*QueryGetReportsByAggregateResponse, error)
 }
 
 type queryClient struct {
@@ -186,6 +187,15 @@ func (c *queryClient) TippedQueries(ctx context.Context, in *QueryTippedQueriesR
 	return out, nil
 }
 
+func (c *queryClient) GetReportsByAggregate(ctx context.Context, in *QueryGetReportsByAggregateRequest, opts ...grpc.CallOption) (*QueryGetReportsByAggregateResponse, error) {
+	out := new(QueryGetReportsByAggregateResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetReportsByAggregate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -213,6 +223,7 @@ type QueryServer interface {
 	GetAggregateBeforeByReporter(context.Context, *QueryGetAggregateBeforeByReporterRequest) (*QueryGetAggregateBeforeByReporterResponse, error)
 	GetQuery(context.Context, *QueryGetQueryRequest) (*QueryGetQueryResponse, error)
 	TippedQueries(context.Context, *QueryTippedQueriesRequest) (*QueryTippedQueriesResponse, error)
+	GetReportsByAggregate(context.Context, *QueryGetReportsByAggregateRequest) (*QueryGetReportsByAggregateResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -264,6 +275,9 @@ func (UnimplementedQueryServer) GetQuery(context.Context, *QueryGetQueryRequest)
 }
 func (UnimplementedQueryServer) TippedQueries(context.Context, *QueryTippedQueriesRequest) (*QueryTippedQueriesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TippedQueries not implemented")
+}
+func (UnimplementedQueryServer) GetReportsByAggregate(context.Context, *QueryGetReportsByAggregateRequest) (*QueryGetReportsByAggregateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReportsByAggregate not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -548,6 +562,24 @@ func _Query_TippedQueries_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetReportsByAggregate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetReportsByAggregateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetReportsByAggregate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetReportsByAggregate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetReportsByAggregate(ctx, req.(*QueryGetReportsByAggregateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -614,6 +646,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TippedQueries",
 			Handler:    _Query_TippedQueries_Handler,
+		},
+		{
+			MethodName: "GetReportsByAggregate",
+			Handler:    _Query_GetReportsByAggregate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

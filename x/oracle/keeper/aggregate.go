@@ -32,7 +32,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
 
-	var aggrFunc func(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error)
+	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
 
 	defer idsIterator.Close()
@@ -46,6 +46,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 		if query.Expiration.Add(offset).Before(blockTime) {
+
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
 			if err != nil {
 				return err
@@ -65,7 +66,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 				aggrFunc = k.WeightedMode
 			}
 
-			report, err := aggrFunc(ctx, reports)
+			report, err := aggrFunc(ctx, reports, query.Id)
 			if err != nil {
 				return err
 			}

@@ -23,7 +23,7 @@ message Aggregate {
   repeated AggregateReporter reporters = 6;
   // flagged is true if the aggregate was flagged by a dispute
   bool flagged = 7;
-  // nonce is the nonce of the aggregate
+  // index is the index of the aggregate
   uint64 index = 8;
   // aggregate_report_index is the index of the aggregate report in the micro reports
   int64 aggregate_report_index = 9;
@@ -31,6 +31,8 @@ message Aggregate {
   int64 height = 10;
   // height of the micro report
   int64 micro_height = 11;
+  // meta_id is the id of the querymeta iterator
+  uint64 meta_id = 12;
 }
 
 message AvailableTimestamps {

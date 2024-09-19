@@ -11,7 +11,7 @@ import (
 	cosmomath "cosmossdk.io/math"
 )
 
-func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error) {
+func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error) {
 	var medianReport types.Aggregate
 	values := make(map[string]cosmomath.LegacyDec)
 
@@ -49,6 +49,7 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport)
 			medianReport.AggregateReportIndex = int64(i)
 			medianReport.MicroHeight = s.BlockNumber
 			medianReport.StandardDeviation = "0"
+			medianReport.MetaId = metaId
 			break
 		}
 	}
