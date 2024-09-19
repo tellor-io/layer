@@ -698,15 +698,6 @@ func (k Keeper) GetEVMAddressByOperator(ctx context.Context, operatorAddress str
 	return ethAddress.EVMAddress, nil
 }
 
-func (k Keeper) SetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64, bridgeValset types.BridgeValidatorSet) error {
-	err := k.BridgeValsetByTimestampMap.Set(ctx, timestamp, bridgeValset)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting bridge valset by timestamp", "error", err)
-		return err
-	}
-	return nil
-}
-
 func (k Keeper) GetBridgeValsetByTimestamp(ctx context.Context, timestamp uint64) (*types.BridgeValidatorSet, error) {
 	bridgeValset, err := k.BridgeValsetByTimestampMap.Get(ctx, timestamp)
 	if err != nil {

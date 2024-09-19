@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/mocks"
 	"github.com/tellor-io/layer/x/oracle/types"
+	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
@@ -61,6 +63,13 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func (s *KeeperTestSuite) VerifyCommit(ctx context.Context, reporter, value, salt, hash string) bool {
+	// calculate commitment
+	calculatedCommit := oracleutils.CalculateCommitment(value, salt)
+	// compare calculated commitment with the one stored
+	return calculatedCommit == hash
 }
 
 func (s *KeeperTestSuite) TestNewKeeper() {

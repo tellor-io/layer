@@ -888,28 +888,6 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 	require.Nil(t, addr)
 }
 
-func TestSetAndGetBridgeValsetByTimestamp(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
-	require.NotNil(t, k)
-	require.NotNil(t, ctx)
-
-	valset := types.BridgeValidatorSet{
-		BridgeValidatorSet: []*types.BridgeValidator{
-			{
-				EthereumAddress: []byte("validator1"),
-				Power:           1000,
-			},
-		},
-	}
-	err := k.SetBridgeValsetByTimestamp(ctx, 0, valset)
-	require.NoError(t, err)
-
-	bridgeValSet, err := k.GetBridgeValsetByTimestamp(ctx, 0)
-	require.NoError(t, err)
-	require.NotNil(t, bridgeValSet)
-	require.Equal(t, bridgeValSet.BridgeValidatorSet, valset.BridgeValidatorSet)
-}
-
 func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 	k, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)

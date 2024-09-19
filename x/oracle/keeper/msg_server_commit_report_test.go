@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestCommitValue() (sdk.AccAddress, string, []byte, uin
 	s.NotNil(query)
 	commitValue, err := s.oracleKeeper.Commits.Get(s.ctx, collections.Join(addr.Bytes(), query.Id))
 	s.Nil(err)
-	s.Equal(true, s.oracleKeeper.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
+	s.Equal(true, s.VerifyCommit(s.ctx, addr.String(), value, salt, hash))
 	s.Equal(commitValue.Reporter, addr.String())
 	return addr, salt, queryData, resp.CommitId
 }

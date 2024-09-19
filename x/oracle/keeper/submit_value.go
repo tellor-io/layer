@@ -7,7 +7,6 @@ import (
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -66,13 +65,6 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		),
 	})
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
-}
-
-func (k Keeper) VerifyCommit(ctx context.Context, reporter, value, salt, hash string) bool {
-	// calculate commitment
-	calculatedCommit := oracleutils.CalculateCommitment(value, salt)
-	// compare calculated commitment with the one stored
-	return calculatedCommit == hash
 }
 
 func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.DataSpec, error) {
