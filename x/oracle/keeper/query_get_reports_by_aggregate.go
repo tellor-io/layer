@@ -22,7 +22,7 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 	if err != nil {
 		return nil, err
 	}
-	agg, err := k.keeper.Aggregates.Get(ctx, collections.Join(queryId, int64(req.Timestamp)))
+	agg, err := k.keeper.Aggregates.Get(ctx, collections.Join(queryId, req.Timestamp))
 	if err != nil {
 		return nil, err
 	}

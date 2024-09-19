@@ -58,12 +58,8 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, "aaa", "aggregate value is not correct")
-<<<<<<< HEAD
-	s.Equal(res.Aggregate.ReporterPower, int64(44), "aggregate reporter power is not correct")
-	s.Equal(res.Aggregate.MetaId, uint64(1), "report meta id is not correct")
-=======
 	s.Equal(res.Aggregate.ReporterPower, uint64(44), "aggregate reporter power is not correct")
->>>>>>> f85883384431ff270acba66f0135ed355b7688df
+	s.Equal(res.Aggregate.MetaId, uint64(1), "report meta id is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Aggregate.Reporters[0].Reporter, reporters[0].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[1].Reporter, reporters[1].String(), "reporter is not correct")
@@ -115,12 +111,8 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Aggregate.QueryId, qId2, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, "ccc", "aggregate value is not correct")
-<<<<<<< HEAD
 	s.Equal(res.Aggregate.ReporterPower, int64(11), "aggregate reporter power is not correct")
 	s.Equal(res.Aggregate.MetaId, uint64(2), "report meta id is not correct")
-=======
-	s.Equal(res.Aggregate.ReporterPower, uint64(11), "aggregate reporter power is not correct")
->>>>>>> f85883384431ff270acba66f0135ed355b7688df
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Aggregate.Reporters[0].Reporter, reporters[5].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[1].Reporter, expectedReporter, "reporter is not correct")

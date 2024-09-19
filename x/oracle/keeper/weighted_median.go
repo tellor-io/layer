@@ -54,31 +54,7 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport,
 		}
 	}
 
-<<<<<<< HEAD
 	err := k.SetAggregate(ctx, &medianReport)
-=======
-	// Calculate the weighted standard deviation
-	sumWeightedSquaredDiffs := cosmomath.LegacyZeroDec()
-	weightedMeanDec := weightedSum.Quo(totalReporterPower)
-
-	for _, r := range reports {
-		diffDec := values[r.Reporter].Sub(weightedMeanDec)
-		diffDecSquared := diffDec.Mul(diffDec)
-		weightedSquaredDiffDec := diffDecSquared.Mul(cosmomath.LegacyNewDec(int64(r.Power)))
-		sumWeightedSquaredDiffs = sumWeightedSquaredDiffs.Add(weightedSquaredDiffDec)
-	}
-
-	weightedVariance := sumWeightedSquaredDiffs.Quo(totalReporterPower)
-	wstdDeviation, err := weightedVariance.ApproxSqrt()
-	if err != nil {
-		k.Logger(ctx).Error("WeightedMedian", "error", "failed to calculate weighted standard deviation")
-		medianReport.StandardDeviation = "0"
-	} else {
-		medianReport.StandardDeviation = wstdDeviation.String()
-	}
-
-	err = k.SetAggregate(ctx, &medianReport)
->>>>>>> f85883384431ff270acba66f0135ed355b7688df
 	if err != nil {
 		return nil, err
 	}

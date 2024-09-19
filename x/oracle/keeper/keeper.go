@@ -88,11 +88,7 @@ func NewKeeper(
 		),
 		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
 		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
-<<<<<<< HEAD
-		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Int64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
-=======
 		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
->>>>>>> f85883384431ff270acba66f0135ed355b7688df
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",
