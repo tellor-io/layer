@@ -25,5 +25,6 @@ build/*
 secrets.yaml
 .env
 prod-sim
+*-validator_keys.txt
 
 dist/
