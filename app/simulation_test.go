@@ -2,6 +2,7 @@ package app_test
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
@@ -39,6 +40,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+const chainID = "layer-simapp"
+
+var FlagEnableStreamingValue bool
+
 type storeKeysPrefixes struct {
 	A        storetypes.StoreKey
 	B        storetypes.StoreKey
@@ -48,6 +53,7 @@ type storeKeysPrefixes struct {
 // Get flags every time the simulator is run
 func init() {
 	simcli.GetSimulatorFlags()
+	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
 }
 
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
@@ -68,7 +74,8 @@ func BenchmarkSimulation(b *testing.B) {
 	simcli.FlagEnabledValue = true
 
 	config := simcli.NewConfigFromFlags()
-	config.ChainID = "mars-simapp"
+	config.ChainID = chainID
+
 	db, dir, logger, _, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-bApp-sim",
@@ -97,6 +104,13 @@ func BenchmarkSimulation(b *testing.B) {
 	)
 	require.Equal(b, app.Name, bApp.Name())
 
+	genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
+	require.NoError(b, err)
+
+	var genesisMap map[string]json.RawMessage
+    err = json.Unmarshal(genesisJSON, &genesisMap)
+    require.NoError(b, err)
+
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
@@ -105,7 +119,7 @@ func BenchmarkSimulation(b *testing.B) {
 		simtestutil.AppStateFn(
 			bApp.AppCodec(),
 			bApp.SimulationManager(),
-			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
+			genesisMap,
 		),
 		simulationtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
