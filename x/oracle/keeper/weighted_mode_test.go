@@ -50,7 +50,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 			QueryId:  qId,
 		},
 	}
-	aggregates, err := s.oracleKeeper.WeightedMode(s.ctx, reports)
+	aggregates, err := s.oracleKeeper.WeightedMode(s.ctx, reports, 1)
 	s.Nil(err)
 	s.NotNil(aggregates)
 	res, err := s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
@@ -59,6 +59,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, "aaa", "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, uint64(44), "aggregate reporter power is not correct")
+	s.Equal(res.Aggregate.MetaId, uint64(1), "report meta id is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Aggregate.Reporters[0].Reporter, reporters[0].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[1].Reporter, reporters[1].String(), "reporter is not correct")
@@ -103,7 +104,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 		},
 	}
 
-	_, err = s.oracleKeeper.WeightedMode(s.ctx, reports)
+	_, err = s.oracleKeeper.WeightedMode(s.ctx, reports, 2)
 	s.NoError(err)
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId2)})
 	s.Nil(err)
@@ -111,6 +112,7 @@ func (s *KeeperTestSuite) TestWeightedMode() {
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, "ccc", "aggregate value is not correct")
 	s.Equal(res.Aggregate.ReporterPower, uint64(11), "aggregate reporter power is not correct")
+	s.Equal(res.Aggregate.MetaId, uint64(2), "report meta id is not correct")
 	//  check list of reporters in the aggregate report
 	s.Equal(res.Aggregate.Reporters[0].Reporter, reporters[5].String(), "reporter is not correct")
 	s.Equal(res.Aggregate.Reporters[1].Reporter, expectedReporter, "reporter is not correct")

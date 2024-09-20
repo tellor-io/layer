@@ -81,6 +81,9 @@ service Query {
   rpc TippedQueries(QueryTippedQueriesRequest) returns (QueryTippedQueriesResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/tipped_queries";
   }
+  rpc GetReportsByAggregate(QueryGetReportsByAggregateRequest) returns (QueryGetReportsByAggregateResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -236,4 +239,15 @@ message QueryTippedQueriesRequest {
 message QueryTippedQueriesResponse {
   // queries defines the tipped queries.
   repeated QueryMeta queries = 1;
+}
+
+message QueryGetReportsByAggregateRequest {
+  string query_id = 1;
+  uint64 timestamp = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryGetReportsByAggregateResponse {
+  repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

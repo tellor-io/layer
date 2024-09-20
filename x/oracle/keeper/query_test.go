@@ -98,7 +98,6 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 		AggregateValue:       "10_000",
 		AggregateReporter:    "reporter1",
 		ReporterPower:        100,
-		StandardDeviation:    "0",
 		Reporters:            []*types.AggregateReporter{{}},
 		Flagged:              false,
 		Index:                uint64(0),
@@ -117,7 +116,6 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateValue, agg.AggregateValue)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
 	require.Equal(t, getCurrentAggResponse.Aggregate.ReporterPower, agg.ReporterPower)
-	require.Equal(t, getCurrentAggResponse.Aggregate.StandardDeviation, agg.StandardDeviation)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Flagged, agg.Flagged)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Index, agg.Index)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReportIndex, agg.AggregateReportIndex)

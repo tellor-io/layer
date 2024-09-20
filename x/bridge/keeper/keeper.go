@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	gomath "math"
 	"math/big"
 	"sort"
 	"strconv"
@@ -188,7 +187,7 @@ func (k Keeper) CompareAndSetBridgeValidators(ctx context.Context) (bool, error)
 	}
 	if bytes.Equal(k.cdc.MustMarshal(&lastSavedBridgeValidators), k.cdc.MustMarshal(currentValidatorSetEVMCompatible)) && !stale {
 		return false, nil
-	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 0.05 && !stale {
+	} else if k.PowerDiff(ctx, lastSavedBridgeValidators, *currentValidatorSetEVMCompatible) < 5e4 && !stale {
 		return false, nil
 	} else {
 		err := k.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
@@ -501,7 +500,9 @@ func (k Keeper) EncodeAndHashValidatorSet(ctx context.Context, validatorSet *typ
 	return finalEncoded, valSetHash, nil
 }
 
-func (k Keeper) PowerDiff(ctx context.Context, b, c types.BridgeValidatorSet) float64 {
+func (k Keeper) PowerDiff(ctx context.Context, b, c types.BridgeValidatorSet) int64 {
+	const precision = 1e6
+
 	powers := map[string]int64{}
 	var totalPower int64
 	for _, bv := range b.BridgeValidatorSet {
@@ -518,17 +519,24 @@ func (k Keeper) PowerDiff(ctx context.Context, b, c types.BridgeValidatorSet) fl
 		}
 	}
 
-	var delta float64
+	var delta int64
 	for _, v := range powers {
-		delta += gomath.Abs(float64(v))
+		delta += absInt64(v)
 	}
 
 	if totalPower == 0 {
 		return 0
 	}
 
-	relativeDiff := delta / float64(totalPower)
+	relativeDiff := (delta * precision) / totalPower
 	return relativeDiff
+}
+
+func absInt64(x int64) int64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
 
 func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte) (common.Address, error) {

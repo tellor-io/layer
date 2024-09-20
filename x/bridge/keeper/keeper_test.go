@@ -540,7 +540,7 @@ func TestPowerDiff(t *testing.T) {
 	}
 
 	relativeDiff := k.PowerDiff(ctx, bridgeValSetEmpty, bridgeValSet0)
-	require.Equal(t, relativeDiff, float64(0))
+	require.Equal(t, relativeDiff, int64(0))
 
 	// 0 to 100, returns 0 if valset b is 0
 	bridgeValSet100 := types.BridgeValidatorSet{
@@ -552,7 +552,7 @@ func TestPowerDiff(t *testing.T) {
 		},
 	}
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet0, bridgeValSet100)
-	require.Equal(t, relativeDiff, float64(0))
+	require.Equal(t, relativeDiff, int64(0))
 
 	// 100 to 104 (increase just under 5%)
 	bridgeValSet104 := types.BridgeValidatorSet{
@@ -568,7 +568,7 @@ func TestPowerDiff(t *testing.T) {
 		},
 	}
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet100, bridgeValSet104)
-	require.Equal(t, relativeDiff, float64(0.04))
+	require.Equal(t, relativeDiff, int64(4e4))
 
 	// 104 to 110 (increase just over 5%)
 	bridgeValSet110 := types.BridgeValidatorSet{
@@ -584,18 +584,18 @@ func TestPowerDiff(t *testing.T) {
 		},
 	}
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet104, bridgeValSet110)
-	require.Greater(t, relativeDiff, float64(0.05))
-	require.Less(t, relativeDiff, float64(0.06))
+	require.Greater(t, relativeDiff, int64(5e4))
+	require.Less(t, relativeDiff, int64(6e4))
 
 	// 110 to 104 (decrease just over 5%)
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet110, bridgeValSet104)
-	require.Greater(t, relativeDiff, float64(0.05))
-	require.Less(t, relativeDiff, float64(0.06))
+	require.Greater(t, relativeDiff, int64(5e4))
+	require.Less(t, relativeDiff, int64(6e4))
 
 	// 104 to 100 (decrease just under 5%)
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet104, bridgeValSet100)
-	require.Less(t, relativeDiff, float64(0.05))
-	require.Greater(t, relativeDiff, float64(0.03))
+	require.Less(t, relativeDiff, int64(5e4))
+	require.Greater(t, relativeDiff, int64(3e4))
 
 	// 100 to 100,000 (big increase)
 	bridgeValSet100_000 := types.BridgeValidatorSet{
@@ -607,11 +607,11 @@ func TestPowerDiff(t *testing.T) {
 		},
 	}
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet100, bridgeValSet100_000)
-	require.Equal(t, relativeDiff, float64(999))
+	require.Equal(t, relativeDiff, int64(999e6))
 
 	// 100,000 to 100 (big decrease)
 	relativeDiff = k.PowerDiff(ctx, bridgeValSet100_000, bridgeValSet100)
-	require.Equal(t, relativeDiff, float64(0.999))
+	require.Equal(t, relativeDiff, int64(999e3))
 }
 
 func TestEVMAddressFromSignatures(t *testing.T) {

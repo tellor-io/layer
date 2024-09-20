@@ -36,6 +36,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}, {ProtoField: "query_id"}},
 				},
 				{
+					RpcMethod:      "GetReportsByAggregate",
+					Use:            "get-reports-by-aggregate [query_id] [timestamp]",
+					Short:          "Query reports by aggregate",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}},
+				},
+				{
 					RpcMethod:      "GetCurrentTip",
 					Use:            "get-current-tip [query_data]",
 					Short:          "Query current tip for a query",

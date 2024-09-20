@@ -17,13 +17,11 @@ message Aggregate {
   string aggregate_reporter = 3;
   // reporter_power is the power of the reporter
   uint64 reporter_power = 4;
-  // standard_deviation is the standard deviation of the reports that were aggregated
-  string standard_deviation = 5;
   // list of reporters that were included in the aggregate
   repeated AggregateReporter reporters = 6;
   // flagged is true if the aggregate was flagged by a dispute
   bool flagged = 7;
-  // nonce is the nonce of the aggregate
+  // index is the index of the aggregate
   uint64 index = 8;
   // aggregate_report_index is the index of the aggregate report in the micro reports
   uint64 aggregate_report_index = 9;
@@ -31,6 +29,8 @@ message Aggregate {
   uint64 height = 10;
   // height of the micro report
   uint64 micro_height = 11;
+  // meta_id is the id of the querymeta iterator
+  uint64 meta_id = 12;
 }
 
 message AvailableTimestamps {
