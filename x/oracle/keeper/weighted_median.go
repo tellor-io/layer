@@ -48,7 +48,6 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport,
 			medianReport.QueryId = s.QueryId
 			medianReport.AggregateReportIndex = uint64(i)
 			medianReport.MicroHeight = s.BlockNumber
-			medianReport.StandardDeviation = "0"
 			medianReport.MetaId = metaId
 			break
 		}

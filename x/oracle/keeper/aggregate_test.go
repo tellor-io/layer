@@ -67,7 +67,6 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: rep1.String(),
 		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
-		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: rep1.String(), Power: 100000000}, {Reporter: rep2.String(), Power: 100000000}},
 		Flagged:           false,
 		Height:            10,
@@ -174,7 +173,6 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: reporter.String(),
 		ReporterPower:     100000000,
-		StandardDeviation: "0.3",
 		Reporters:         []*types.AggregateReporter{{Reporter: reporter.String(), Power: 100000000}},
 		Flagged:           false,
 	}
