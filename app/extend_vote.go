@@ -228,7 +228,6 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
-	h.logger.Info("VerifyVoteExtensionHandler: vote extension verified", "voteExt", voteExt)
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
