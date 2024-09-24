@@ -51,6 +51,9 @@ echo "charlie..."
 echo "Adding genesis account for faucet..."
 ./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000loya --home ~/.layer/alice
 
+echo "Add team address to genesis..."
+./layerd genesis add-team-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 --home ~/.layer/alice
+
 # echo "Faucet..."
 # ./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 10000000000000loya --home ~/.layer/alice
 
