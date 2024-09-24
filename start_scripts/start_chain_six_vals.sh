@@ -57,8 +57,8 @@ for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     sed -i '' 's/^snapshot-interval = 0/snapshot-interval = 2000/g' ~/.layer/$name/config/app.toml
     sed -i '' 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' ~/.layer/$name/config/app.toml
 
-    echo "turn on seed mode"
-    sed -i '' 's/^seed_mode = false/seed_mode = true/g' ~/.layer/$name/config/config.toml
+    # echo "turn on seed mode"
+    # sed -i '' 's/^seed_mode = false/seed_mode = true/g' ~/.layer/$name/config/config.toml
 
     echo "set chain id in genesis file to layer..."
     sed -i '' 's/"chain_id": .*"/"chain_id": '\"layertest-2\"'/g' ~/.layer/$name/config/genesis.json
@@ -114,7 +114,7 @@ echo "Add team address to genesis..."
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     echo "Creating gentx for $name....."
     ADDRESS=$(./layerd keys show $name -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name)
-    ./layerd genesis gentx $name 1000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name --chain-id layertest-2
+    ./layerd genesis gentx $name 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name --chain-id layertest-2
 done
 
 for name in yoda obi_wan darth_vader palpatine darth_maul; do
@@ -185,3 +185,5 @@ sed -i '' "s/^persistent_peers = \"\"/persistent_peers = \"$DARTH_MAUL_PEERS\"/g
 
 #echo "Starting chain for alice..."
 # ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
+
+"04e0614ecc8a5af659b965dfbe1fdb4685c2898d@54.183.89.163:26656,a48b5f8033595d06c25e563b1b5503b5fab04827@13.229.211.244:26656,1221b0d05a9892601ddee0afd35ad86c9b0cad01@18.222.23.49:26757,4875a47d320cc3246673ecd13b65607be60b8c9a@3.147.56.107:26757,98b4074f55d3ec0d51aa11b01c8c8ed9990cb0fe@76.151.112.17:26757"
