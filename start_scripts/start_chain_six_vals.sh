@@ -108,6 +108,9 @@ done
 echo "Adding genesis account for faucet..."
 ./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000loya --home ~/.layer/luke
 
+echo "Add team address to genesis..."
+./layerd genesis add-team-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 --home ~/.layer/luke
+
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     echo "Creating gentx for $name....."
     ADDRESS=$(./layerd keys show $name -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name)
