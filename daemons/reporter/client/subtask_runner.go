@@ -25,40 +25,45 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 
 	bg.Add(3)
 
-	go func() {
-		err := daemonClient.CyclelistMessages(ctx, eth, &bg)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		err := daemonClient.CyclelistMessages(ctx, eth)
 		if err != nil {
 			daemonClient.logger.Error("Generating eth messages", "error", err)
 		}
-	}()
-	go func() {
-		err := daemonClient.CyclelistMessages(ctx, btc, &bg)
+	}(&bg)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		err := daemonClient.CyclelistMessages(ctx, btc)
 		if err != nil {
 			daemonClient.logger.Error("Generating btc messages", "error", err)
 		}
-	}()
-	go func() {
-		err := daemonClient.CyclelistMessages(ctx, trb, &bg)
+	}(&bg)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		err := daemonClient.CyclelistMessages(ctx, trb)
 		if err != nil {
 			daemonClient.logger.Error("Generating trb messages", "error", err)
 		}
-	}()
+	}(&bg)
 
 	bg.Add(1)
-	go func() {
-		err := daemonClient.generateDepositmessages(ctx, &bg)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		err := daemonClient.generateDepositmessages(ctx)
 		if err != nil {
 			daemonClient.logger.Error("Generating deposit messages", "error", err)
 		}
-	}()
+	}(&bg)
 
 	bg.Add(1)
-	go func() {
-		err := daemonClient.generateExternalMessages(ctx, "unsignedtx.json", &bg)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		err := daemonClient.generateExternalMessages(ctx, "unsignedtx.json")
 		if err != nil {
 			daemonClient.logger.Error("Generating external messages", "error", err)
 		}
-	}()
+	}(&bg)
 
 	bg.Wait()
 

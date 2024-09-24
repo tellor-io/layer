@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/tellor-io/layer/utils"
@@ -28,8 +27,7 @@ var (
 	trb, _ = utils.QueryBytesFromString(trbQueryData)
 )
 
-func (c *Client) generateDepositmessages(ctx context.Context, bg *sync.WaitGroup) error {
-	defer bg.Done()
+func (c *Client) generateDepositmessages(ctx context.Context) error {
 	depositQuerydata, value, err := c.deposits()
 	if err != nil {
 		return fmt.Errorf("error getting deposits: %w", err)
@@ -79,8 +77,7 @@ func (c *Client) generateDepositmessages(ctx context.Context, bg *sync.WaitGroup
 	return nil
 }
 
-func (c *Client) generateExternalMessages(ctx context.Context, filepath string, bg *sync.WaitGroup) error {
-	defer bg.Done()
+func (c *Client) generateExternalMessages(ctx context.Context, filepath string) error {
 	jsonFile, err := os.ReadFile(filepath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -106,15 +103,14 @@ func (c *Client) generateExternalMessages(ctx context.Context, filepath string, 
 	return nil
 }
 
-func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.WaitGroup) error {
-	defer bg.Done()
+func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 	querydata, querymeta, err := c.CurrentQuery(ctx)
 	if err != nil {
 		// log error
 		c.logger.Error("getting current query", "error", err)
 	}
 	for !bytes.Equal(querydata, qd) || commitedIds[querymeta.Id] {
-		time.Sleep(time.Millisecond * 500)
+		time.Sleep(time.Millisecond * 200)
 		querydata, querymeta, err = c.CurrentQuery(ctx)
 		if err != nil {
 			// log error
@@ -145,7 +141,7 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.Wait
 		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
 	}
 	fmt.Println("response after commit message", resp.TxResult.Code)
-	time.Sleep(querymeta.RegistrySpecTimeframe)
+	time.Sleep(querymeta.RegistrySpecTimeframe / 2)
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: querydata,
