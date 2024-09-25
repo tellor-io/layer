@@ -114,7 +114,7 @@ func (c *Client) Start(
 	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
 	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
 
-	ticker := time.NewTicker(time.Millisecond * 500)
+	ticker := time.NewTicker(time.Millisecond * 250)
 	stop := make(chan bool)
 
 	// get account
