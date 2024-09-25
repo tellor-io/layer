@@ -109,10 +109,8 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 		// log error
 		c.logger.Error("getting current query", "error", err)
 	}
-	for !bytes.Equal(querydata, qd) {
-		return nil
-	}
-	for commitedIds[querymeta.Id] {
+
+	for !bytes.Equal(querydata, qd) || commitedIds[querymeta.Id] {
 		time.Sleep(time.Millisecond * 200)
 		querydata, querymeta, err = c.CurrentQuery(ctx)
 		if err != nil {
@@ -144,8 +142,6 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
 	}
 	fmt.Println("response after commit message", resp.TxResult.Code)
-	fmt.Println("Half of RegistryTimeFrame: ", (querymeta.RegistrySpecTimeframe / 2).String())
-	fmt.Println("RegistryTimeFrame: ", (querymeta.RegistrySpecTimeframe).String())
 	time.Sleep(querymeta.RegistrySpecTimeframe / 2)
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
