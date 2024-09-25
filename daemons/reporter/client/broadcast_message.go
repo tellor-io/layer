@@ -141,8 +141,9 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 	if resp.TxResult.Code != 0 {
 		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
 	}
-	fmt.Println("response after commit message", resp.TxResult.Code)
-	time.Sleep(querymeta.RegistrySpecTimeframe / 4)
+	fmt.Println("TxResult from commit message: ", resp.TxResult)
+	fmt.Println("response code after commit message", resp.TxResult.Code)
+	time.Sleep(querymeta.RegistrySpecTimeframe / 6)
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: querydata,
@@ -156,7 +157,7 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 		return fmt.Errorf("error sending tx for SubmitValue: %w", err)
 	}
 	fmt.Println("TxResult from submit message: ", resp.TxResult)
-	fmt.Println("response after submit message", resp.TxResult.Code)
+	fmt.Println("response code after submit message", resp.TxResult.Code)
 	commitedIds[querymeta.Id] = true
 
 	return nil

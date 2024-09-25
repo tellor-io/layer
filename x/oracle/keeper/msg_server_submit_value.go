@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -91,6 +92,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.keeper.Logger(ctx).Info(fmt.Sprintf("Block Height: %v, Expiration + offset: %v, block time: %v", sdkCtx.BlockHeight(), query.Expiration.Add(offset).String(), sdkCtx.BlockTime()))
 	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
 		return nil, types.ErrSubmissionWindowExpired
 	}
