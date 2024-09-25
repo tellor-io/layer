@@ -78,7 +78,7 @@ func (k msgServer) CommitReport(ctx context.Context, msg *types.MsgCommitReport)
 		}
 		return &types.MsgCommitReportResponse{CommitId: query.Id}, nil
 	}
-	fmt.Printf("Query expiration: %s, BlockTime: %s", query.Expiration.String(), blockTime.String())
+	k.keeper.Logger(ctx).Info(fmt.Sprintf("Query expiration: %s, BlockTime: %s", query.Expiration.String(), blockTime.String()))
 	if query.Expiration.Before(blockTime) {
 		return nil, types.ErrCommitWindowExpired
 	}
