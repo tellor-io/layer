@@ -31,6 +31,7 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 		if err != nil {
 			daemonClient.logger.Error("Generating eth messages", "error", err)
 		}
+		daemonClient.logger.Info("CyclelistMessages", "info", "Done with go routine for eth")
 	}(&bg)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
@@ -38,6 +39,7 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 		if err != nil {
 			daemonClient.logger.Error("Generating btc messages", "error", err)
 		}
+		daemonClient.logger.Info("CyclelistMessages", "info", "Done with go routine for btc")
 	}(&bg)
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
@@ -45,6 +47,7 @@ func (s *SubTaskRunnerImpl) RunReporterDaemonTaskLoop(
 		if err != nil {
 			daemonClient.logger.Error("Generating trb messages", "error", err)
 		}
+		daemonClient.logger.Info("CyclelistMessages", "info", "Done with go routine for trb")
 	}(&bg)
 
 	bg.Add(1)

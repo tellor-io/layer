@@ -109,7 +109,10 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 		// log error
 		c.logger.Error("getting current query", "error", err)
 	}
-	for !bytes.Equal(querydata, qd) || commitedIds[querymeta.Id] {
+	for !bytes.Equal(querydata, qd) {
+		return nil
+	}
+	for commitedIds[querymeta.Id] {
 		time.Sleep(time.Millisecond * 200)
 		querydata, querymeta, err = c.CurrentQuery(ctx)
 		if err != nil {
@@ -135,7 +138,7 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 
 	resp, err := c.sendTx(ctx, commitmsg)
 	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
+		return fmt.Errorf("error sending tx for CommitReport: %w", err)
 	}
 	if resp.TxResult.Code != 0 {
 		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
@@ -152,8 +155,9 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte) error {
 
 	resp, err = c.sendTx(ctx, msg)
 	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
+		return fmt.Errorf("error sending tx for SubmitValue: %w", err)
 	}
+	fmt.Println("TxResult from submit message: ", resp.TxResult)
 	fmt.Println("response after submit message", resp.TxResult.Code)
 	commitedIds[querymeta.Id] = true
 
