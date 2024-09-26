@@ -144,7 +144,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 
@@ -284,7 +284,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 		})
 	}
 	// advance time to expire query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypass time to expire query so it can be aggregated
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypass time to expire query so it can be aggregated
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.Nil(err)
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -672,7 +672,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	_, _ = app.EndBlocker(ctx)
 
 	// time plus offset
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 11)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
@@ -699,7 +699,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*4)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*11)})
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
@@ -790,7 +790,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	_, _ = app.EndBlocker(ctx)
 
 	// time plus offset
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 4)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 11)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
@@ -808,7 +808,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*4)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*11)})
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
@@ -907,7 +907,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.Nil(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryId, query.Id), query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 
@@ -987,7 +987,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.Nil(err)
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[1].Bytes(), query.Id), reports[1])
 	s.Nil(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 7)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 

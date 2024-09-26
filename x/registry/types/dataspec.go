@@ -27,7 +27,7 @@ func GenesisDataSpec() DataSpec {
 		},
 		AggregationMethod:  "weighted-median",
 		Registrar:          "genesis",
-		ReportBufferWindow: time.Second * 2,
+		ReportBufferWindow: time.Second * 10,
 	}
 }
 

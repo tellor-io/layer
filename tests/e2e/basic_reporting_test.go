@@ -188,7 +188,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(revealResponse1)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(21 * time.Second))
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
@@ -241,8 +241,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 
 	// check that 8 sec of tbr has been minted
 	tbrModuleAccountBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)
-	expectedBlockProvision = int64(146940000 * (8 * time.Second) / (24 * 60 * 60 * 1000))
-	expectedTbr = sdk.NewCoin(s.Setup.Denom, math.NewInt((expectedBlockProvision)).MulRaw(75).QuoRaw(100).Quo(sdk.DefaultPowerReduction))
+	expectedBlockProvision = int64(146940000 * (22 * time.Second) / (24 * 60 * 60 * 1000))
+	expectedTbr = sdk.NewCoin(s.Setup.Denom, (math.NewInt((expectedBlockProvision)).MulRaw(75).QuoRaw(100).Quo(sdk.DefaultPowerReduction)).Add(math.NewInt(1)))
 
 	require.Equal(expectedTbr, tbrModuleAccountBalance)
 
@@ -264,7 +264,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(revealResponse2)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(21 * time.Second))
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
@@ -382,7 +382,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NotNil(revealResponse1)
 
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(21 * time.Second))
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 
@@ -417,7 +417,8 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check that reporter now has more bonded tokens
 	deleAfter, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
-	require.Equal(deleBeforeReport.GetShares().Add(math.LegacyNewDec(98+8928)), deleAfter.GetShares())
+	tipPlusTbr := math.NewInt(98 + 26786)
+	require.Equal(deleBeforeReport.GetShares().Add(math.LegacyNewDecFromInt(tipPlusTbr)), deleAfter.GetShares())
 
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
@@ -433,7 +434,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check reporter starting shares
 	deleBeforeReport2, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
-	tipPlusTbr := math.NewInt(98 + 8928)
+
 	twoPercentTip := sdk.NewCoin(s.Setup.Denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	twoPercentTipPlusTbr := sdk.NewCoin(s.Setup.Denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(tipPlusTbr.Int64())))
 	expectedShares := math.LegacyNewDecFromInt(deleBeforeReport.GetShares().TruncateInt().Add(tipPlusTbr)) // 8928 is the tbr that was earned
@@ -464,7 +465,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	require.NoError(err)
 	require.NotNil(revealTrb)
 	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(21 * time.Second))
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 	// create get aggregated report query
