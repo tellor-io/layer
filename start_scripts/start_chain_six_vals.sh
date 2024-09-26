@@ -8,12 +8,12 @@ clear
 
 KEYRING_BACKEND="test"
 PASSWORD="password"
-export LUKE_NETWORK_ADDRESS="54.209.172.1" #us east
-export YODA_NETWORK_ADDRESS="54.183.89.163" #us west
-export OBI_WAN_NETWORK_ADDRESS="13.229.211.244" #singapore
-export DARTH_VADER_NETWORK_ADDRESS="18.222.23.49"
-export PALPATINE_NETWORK_ADDRESS="3.147.56.107"
-export DARTH_MAUL_NETWORK_ADDRESS="76.151.112.17"
+export LUKE_NETWORK_ADDRESS="" #us east
+export YODA_NETWORK_ADDRESS="" #us west
+export OBI_WAN_NETWORK_ADDRESS="" #singapore
+export DARTH_VADER_NETWORK_ADDRESS=""
+export PALPATINE_NETWORK_ADDRESS=""
+export DARTH_MAUL_NETWORK_ADDRESS=""
 
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     export LAYERD_NODE_HOME_$name="$HOME/.layer/$name"
