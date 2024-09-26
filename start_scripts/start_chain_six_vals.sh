@@ -8,12 +8,12 @@ clear
 
 KEYRING_BACKEND="test"
 PASSWORD="password"
-export LUKE_NETWORK_ADDRESS="54.209.172.1" #us east
-export YODA_NETWORK_ADDRESS="54.183.89.163" #us west
-export OBI_WAN_NETWORK_ADDRESS="13.229.211.244" #singapore
-export DARTH_VADER_NETWORK_ADDRESS="18.222.23.49"
-export PALPATINE_NETWORK_ADDRESS="3.147.56.107"
-export DARTH_MAUL_NETWORK_ADDRESS="76.151.112.17"
+export LUKE_NETWORK_ADDRESS="" #us east
+export YODA_NETWORK_ADDRESS="" #us west
+export OBI_WAN_NETWORK_ADDRESS="" #singapore
+export DARTH_VADER_NETWORK_ADDRESS=""
+export PALPATINE_NETWORK_ADDRESS=""
+export DARTH_MAUL_NETWORK_ADDRESS=""
 
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     export LAYERD_NODE_HOME_$name="$HOME/.layer/$name"
@@ -57,9 +57,6 @@ for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     sed -i '' 's/^snapshot-interval = 0/snapshot-interval = 2000/g' ~/.layer/$name/config/app.toml
     sed -i '' 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' ~/.layer/$name/config/app.toml
 
-    echo "turn on seed mode"
-    sed -i '' 's/^seed_mode = false/seed_mode = true/g' ~/.layer/$name/config/config.toml
-
     echo "set chain id in genesis file to layer..."
     sed -i '' 's/"chain_id": .*"/"chain_id": '\"layertest-2\"'/g' ~/.layer/$name/config/genesis.json
 
@@ -70,7 +67,6 @@ for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     echo "Updating signed_blocks_window in genesis.json for $name..."
     jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/$name/config/genesis.json > temp.json && mv temp.json ~/.layer/$name/config/genesis.json
     jq '.app_state.globalfee.params.minimum_gas_prices[0].amount = "0.000025000000000000"' ~/.layer/$name/config/genesis.json > temp.json && mv temp.json ~/.layer/$name/config/genesis.json
-
 
     echo "Modifying timeout_commit in config.toml for $name..."
     sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/$name/config/config.toml
@@ -114,7 +110,7 @@ echo "Add team address to genesis..."
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     echo "Creating gentx for $name....."
     ADDRESS=$(./layerd keys show $name -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name)
-    ./layerd genesis gentx $name 1000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name --chain-id layertest-2
+    ./layerd genesis gentx $name 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name --chain-id layertest-2
 done
 
 for name in yoda obi_wan darth_vader palpatine darth_maul; do
@@ -183,5 +179,5 @@ sed -i '' "s/^persistent_peers = \"\"/persistent_peers = \"$PALPATINE_PEERS\"/g"
 sed -i '' "s/^persistent_peers = \"\"/persistent_peers = \"$DARTH_MAUL_PEERS\"/g" ~/.layer/darth_maul/config/config.toml
 
 
-#echo "Starting chain for alice..."
+# Below is the start command we use when wanting to start the node with the reporter daemon turned on
 # ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
