@@ -63,16 +63,16 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// get query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
-	s.Equal(math.NewInt(980_000), query.Amount) // 2% burn
-	s.True(query.Expiration.After(ctx.BlockTime()))
+	s.Equal(math.NewInt(980_000), query.Amount)     // 2% burn
+	s.True(query.Expiration.After(ctx.BlockTime())) // not expired
 	s.Equal(expiration, query.Expiration)
+
 	// ----------------
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Second+1) // eth query data
+	ctx, err = simtestutil.NextBlock(app, ctx, ((time.Second * 10) + 1)) // eth query data
 	s.NoError(err)
 	// assert height is 3
 	s.Equal(int64(3), ctx.BlockHeight())
-
 	// check query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
@@ -97,5 +97,5 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
 	s.Equal(math.NewInt(980_000), query.Amount)      // 2% burn
-	s.True(query.Expiration.Before(ctx.BlockTime())) // expired commit time window but still has 3 seconds left in reveal time window
+	s.True(query.Expiration.Before(ctx.BlockTime())) // expired commit time window
 }
