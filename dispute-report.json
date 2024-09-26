@@ -1,0 +1,11 @@
+{
+    "reporter": "tellor1vtnsvy0rfazt3yd3wrvhfenldyamd2tde0srde",
+    "power": 100000,
+    "query_type": "SpotPrice",
+    "query_id": "0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0",
+    "aggregation_method": "WeightedMedian",
+    "value": "0x0000000000000000000000000000000000000000000000000000000004a5ba50",
+    "timestamp": "2024-09-25T21:33:11.806684425Z",
+    "cyclelist": true,
+    "block_number": 49211
+}
