@@ -40,6 +40,8 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 			return err
 		}
 
+		// reporterMeta.Jailed = false add this ?
+
 		reporters = append(reporters, &types.Reporter{
 			Address:  sdk.AccAddress(repAddr).String(),
 			Metadata: &reporterMeta,

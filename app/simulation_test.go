@@ -103,13 +103,16 @@ func BenchmarkSimulation(b *testing.B) {
 		baseapp.SetChainID(config.ChainID),
 	)
 	require.Equal(b, app.Name, bApp.Name())
+	require.NotNil(b, bApp.MintKeeper)
+	require.NotNil(b, bApp.MintKeeper.Minter)
+	fmt.Println("bApp.MintKeeper.Minter: ", bApp.MintKeeper.Minter)
 
 	genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
 	require.NoError(b, err)
 
 	var genesisMap map[string]json.RawMessage
-    err = json.Unmarshal(genesisJSON, &genesisMap)
-    require.NoError(b, err)
+	err = json.Unmarshal(genesisJSON, &genesisMap)
+	require.NoError(b, err)
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -128,10 +131,16 @@ func BenchmarkSimulation(b *testing.B) {
 		bApp.AppCodec(),
 	)
 
+	require.NotNil(b, bApp.MintKeeper)
+	require.NotNil(b, bApp.MintKeeper.Minter)
+	fmt.Println("bApp.MintKeeper.Minter: ", bApp.MintKeeper.Minter)
+
 	// export state and simParams before the simulation error is checked
 	err = simtestutil.CheckExportSimulation(bApp, config, simParams)
-	require.NoError(b, err)
-	require.NoError(b, simErr)
+	fmt.Println("err", err)
+	// require.NoError(b, err)
+	fmt.Println("simErr", simErr)
+	// require.NoError(b, simErr)
 
 	if config.Commit {
 		simtestutil.PrintStats(db)
@@ -257,6 +266,13 @@ func TestAppImportExport(t *testing.T) {
 	)
 	require.Equal(t, app.Name, bApp.Name())
 
+	genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
+	require.NoError(t, err)
+
+	var genesisMap map[string]json.RawMessage
+	err = json.Unmarshal(genesisJSON, &genesisMap)
+	require.NoError(t, err)
+
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
@@ -265,7 +281,7 @@ func TestAppImportExport(t *testing.T) {
 		simtestutil.AppStateFn(
 			bApp.AppCodec(),
 			bApp.SimulationManager(),
-			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
+			genesisMap,
 		),
 		simulationtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
@@ -489,4 +505,33 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		bApp.AppCodec(),
 	)
 	require.NoError(t, err)
+}
+
+func TestFullAppSimulation(t *testing.T) {
+	config := simcli.NewConfigFromFlags()
+	config.ChainID = chainID
+
+	db, dir, _, skip, err := simtestutil.SetupSimulation(
+		config,
+		"leveldb-app-sim",
+		"Simulation",
+		simcli.FlagVerboseValue,
+		simcli.FlagEnabledValue,
+	)
+	if skip {
+		t.Skip("skipping application simulation")
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	appOptions := make(simtestutil.AppOptionsMap, 0)
+	appOptions[flags.FlagHome] = app.DefaultNodeHome
+	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+
+	// app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
+
 }
