@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var offset = time.Second * 3
+var offset = time.Second * 6
 
 type (
 	Keeper struct {
