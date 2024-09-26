@@ -418,7 +418,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	deleAfter, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
 	tipPlusTbr := math.NewInt(98 + 26786)
-	require.Equal(deleBeforeReport.GetShares().Add(math.LegacyDec(tipPlusTbr)), deleAfter.GetShares())
+	require.Equal(deleBeforeReport.GetShares().Add(math.LegacyNewDecFromInt(tipPlusTbr)), deleAfter.GetShares())
 
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
@@ -434,7 +434,7 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// check reporter starting shares
 	deleBeforeReport2, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, reporterAccount.Bytes(), valBz)
 	require.NoError(err)
-	
+
 	twoPercentTip := sdk.NewCoin(s.Setup.Denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	twoPercentTipPlusTbr := sdk.NewCoin(s.Setup.Denom, tipAmount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(tipPlusTbr.Int64())))
 	expectedShares := math.LegacyNewDecFromInt(deleBeforeReport.GetShares().TruncateInt().Add(tipPlusTbr)) // 8928 is the tbr that was earned
