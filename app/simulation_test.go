@@ -233,7 +233,8 @@ func TestAppStateDeterminism(t *testing.T) {
 
 func TestAppImportExport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
-	config.ChainID = "mars-simapp-import"
+	config.ChainID = "layertest-1"
+	config.GenesisFile = "./testutils/sim-genesis.json"
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(
 		config,
