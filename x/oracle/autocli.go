@@ -101,6 +101,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query to get all available tipped queries",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "GetCurrentQueryByQueryId",
+					Use:            "get-current-query-by-query-id [query_id]",
+					Short:          "Query current query by query id",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
