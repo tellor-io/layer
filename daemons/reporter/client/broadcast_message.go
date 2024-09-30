@@ -145,7 +145,12 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.Wait
 		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
 	}
 	fmt.Println("response after commit message", resp.TxResult.Code)
-	time.Sleep(querymeta.RegistrySpecTimeframe)
+	currentTime := time.Now()
+	if currentTime.Before(querymeta.GetExpiration()) {
+		c.logger.Info(fmt.Sprintf("Sleeping for %s before revealing value", querymeta.GetExpiration().Sub(currentTime).String()))
+		time.Sleep(querymeta.Expiration.Sub(currentTime))
+	}
+
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: querydata,
