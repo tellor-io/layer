@@ -89,6 +89,11 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
+
+	offset, err := k.keeper.GetReportOffsetParam(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
@@ -123,6 +128,11 @@ func (k Keeper) DirectReveal(ctx context.Context,
 
 	if query.Amount.IsZero() && !query.CycleList {
 		return types.ErrNoTipsNotInCycle
+	}
+
+	offset, err := k.GetReportOffsetParam(ctx)
+	if err != nil {
+		return err
 	}
 
 	if query.Expiration.Add(offset).Before(blockTime) {

@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -16,6 +17,9 @@ var (
 	KeyMinStakeAmount = []byte("MinStakeAmount")
 	// TODO: Determine the default value
 	DefaultMinStakeAmount = math.NewInt(1_000_000) // one TRB
+
+	KeyOffset     = []byte("Offset")
+	DefaultOffset = 6 * time.Second
 )
 
 // ParamKeyTable the param key table for launch module
@@ -24,21 +28,23 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(minStakeAmount math.Int) Params {
+func NewParams(minStakeAmount math.Int, offset time.Duration) Params {
 	return Params{
 		MinStakeAmount: minStakeAmount,
+		Offset:         offset,
 	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams(DefaultMinStakeAmount)
+	return NewParams(DefaultMinStakeAmount, DefaultOffset)
 }
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMinStakeAmount, &p.MinStakeAmount, validateMinStakeAmount),
+		paramtypes.NewParamSetPair(KeyOffset, &p.Offset, validateOffset),
 	}
 }
 
@@ -56,6 +62,15 @@ func (p Params) String() string {
 // validateMinStakeAmount validates the MinStakeAmount param
 func validateMinStakeAmount(v interface{}) error {
 	_, ok := v.(math.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateOffset(v interface{}) error {
+	_, ok := v.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}
