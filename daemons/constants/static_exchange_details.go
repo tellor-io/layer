@@ -14,7 +14,6 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/okx"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/test_fixed_price_exchange"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/test_volatile_exchange"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/testexchange"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 )
 
@@ -34,7 +33,7 @@ var StaticExchangeDetails = map[types.ExchangeId]types.ExchangeQueryDetails{
 	exchange_common.EXCHANGE_ID_OKX:        okx.OkxDetails,
 	exchange_common.EXCHANGE_ID_MEXC:       mexc.MexcDetails,
 	//exchange_common.EXCHANGE_ID_COINBASE_PRO:              coinbase_pro.CoinbaseProDetails,
-	exchange_common.EXCHANGE_ID_TEST_EXCHANGE:             testexchange.TestExchangeDetails,
+	//exchange_common.EXCHANGE_ID_TEST_EXCHANGE:             testexchange.TestExchangeDetails,
 	exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE:    test_volatile_exchange.TestVolatileExchangeDetails,
 	exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE: test_fixed_price_exchange.TestFixedPriceExchangeDetails,
 }

@@ -17,8 +17,8 @@ const (
 	EXCHANGE_ID_GATE types.ExchangeId = "Gate"
 	// EXCHANGE_ID_BITSTAMP is the id for Bitstamp exchange
 	EXCHANGE_ID_BITSTAMP types.ExchangeId = "Bitstamp"
-	// EXCHANGE_ID_BYBIT is the id for Bybit exchange
-	EXCHANGE_ID_BYBIT types.ExchangeId = "Bybit"
+	// // EXCHANGE_ID_BYBIT is the id for Bybit exchange
+	// EXCHANGE_ID_BYBIT types.ExchangeId = "Bybit"
 	// EXCHANGE_ID_CRYPTO_COM is the id for CryptoCom exchange.
 	EXCHANGE_ID_CRYPTO_COM types.ExchangeId = "CryptoCom"
 	// EXCHANGE_ID_HUOBI is the id for Huobi exchange.
@@ -29,8 +29,8 @@ const (
 	EXCHANGE_ID_OKX types.ExchangeId = "Okx"
 	// EXCHANGE_ID_MEXC is the id for Mexc exchange.
 	EXCHANGE_ID_MEXC types.ExchangeId = "Mexc"
-	// EXCHANGE_ID_COINBASE_PRO is the id for CoinbasePro exchange.
-	EXCHANGE_ID_COINBASE_PRO types.ExchangeId = "CoinbasePro"
+	// // EXCHANGE_ID_COINBASE_PRO is the id for CoinbasePro exchange.
+	// EXCHANGE_ID_COINBASE_PRO types.ExchangeId = "CoinbasePro"
 	// EXCHANGE_ID_TEST_EXCHANGE is the id for test exchange.
 	EXCHANGE_ID_TEST_EXCHANGE types.ExchangeId = "TestExchange"
 	// EXCHANGE_ID_TEST_VOLATILE_EXCHANGE is the id for test volatile exchange.

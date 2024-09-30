@@ -9,8 +9,6 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/binance"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitfinex"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitstamp"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bybit"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/coinbase_pro"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/crypto_com"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/gate"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/huobi"
@@ -18,7 +16,6 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/kucoin"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/mexc"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/okx"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/testexchange"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 )
 
@@ -61,11 +58,11 @@ func TestStaticExchangeDetailsCache(t *testing.T) {
 			expectedValue: bitstamp.BitstampDetails,
 			expectedFound: true,
 		},
-		"Get Bybit exchangeDetails": {
-			exchangeId:    exchange_common.EXCHANGE_ID_BYBIT,
-			expectedValue: bybit.BybitDetails,
-			expectedFound: true,
-		},
+		// "Get Bybit exchangeDetails": {
+		// 	exchangeId:    exchange_common.EXCHANGE_ID_BYBIT,
+		// 	expectedValue: bybit.BybitDetails,
+		// 	expectedFound: true,
+		// },
 		"Get CryptoCom exchangeDetails": {
 			exchangeId:    exchange_common.EXCHANGE_ID_CRYPTO_COM,
 			expectedValue: crypto_com.CryptoComDetails,
@@ -91,16 +88,16 @@ func TestStaticExchangeDetailsCache(t *testing.T) {
 			expectedValue: mexc.MexcDetails,
 			expectedFound: true,
 		},
-		"Get CoinbasePro exchangeDetails": {
-			exchangeId:    exchange_common.EXCHANGE_ID_COINBASE_PRO,
-			expectedValue: coinbase_pro.CoinbaseProDetails,
-			expectedFound: true,
-		},
-		"Get test exchange exchangeDetails": {
-			exchangeId:    exchange_common.EXCHANGE_ID_TEST_EXCHANGE,
-			expectedValue: testexchange.TestExchangeDetails,
-			expectedFound: true,
-		},
+		// "Get CoinbasePro exchangeDetails": {
+		// 	exchangeId:    exchange_common.EXCHANGE_ID_COINBASE_PRO,
+		// 	expectedValue: coinbase_pro.CoinbaseProDetails,
+		// 	expectedFound: true,
+		// },
+		// "Get test exchange exchangeDetails": {
+		// 	exchangeId:    exchange_common.EXCHANGE_ID_TEST_EXCHANGE,
+		// 	expectedValue: testexchange.TestExchangeDetails,
+		// 	expectedFound: true,
+		// },
 		"Get unknown exchangeDetails": {
 			exchangeId:    "unknown",
 			expectedFound: false,
