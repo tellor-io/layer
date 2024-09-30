@@ -1,8 +1,10 @@
 syntax = "proto3";
 package layer.oracle;
 
+import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto"; 
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -15,5 +17,11 @@ message Params {
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
+  ];
+
+  google.protobuf.Duration offset = 2 [
+    (gogoproto.stdduration) = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
   ];
 }

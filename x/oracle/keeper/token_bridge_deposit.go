@@ -121,6 +121,11 @@ func (k Keeper) HandleBridgeDepositCommit(ctx context.Context, queryId []byte, q
 		}
 	}
 
+	offset, err := k.GetReportOffsetParam(ctx)
+	if err != nil {
+		return err
+	}
+
 	// if there is tip but window expired, only bridgeDeposit(bd) query can extend the window when its a bd query, otherwise requires tip vi msgTip tx
 	// if tip amount is greater than zero and query timeframe plus offset is expired, it means that the query didn't have any revealed reports
 	// and the tip is still there and so the time can be extended only if the query is a bridge deposit or via a tip transaction
@@ -165,6 +170,11 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime()
+
+	offset, err := k.GetReportOffsetParam(ctx)
+	if err != nil {
+		return err
+	}
 
 	if query.Amount.IsZero() && query.Expiration.Add(offset).Before(blockTime) {
 		nextId, err := k.QuerySequencer.Next(ctx)

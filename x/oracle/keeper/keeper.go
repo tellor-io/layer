@@ -21,7 +21,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var offset = time.Second * 6
+// var offset = time.Second * 6
 
 type (
 	Keeper struct {
@@ -219,4 +219,13 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 	}
 
 	return nil
+}
+
+func (k Keeper) GetReportOffsetParam(ctx context.Context) (time.Duration, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return time.Duration(0), err
+	}
+
+	return params.Offset, nil
 }
