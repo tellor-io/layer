@@ -9,7 +9,7 @@ set -e
 KEYRING_BACKEND="test"
 PASSWORD="password"
 KEY_NAME="alice"
-CHAIN_ID="layertest-1"
+CHAIN_ID="layertest-2"
 
 
 export LAYERD_NODE_HOME_1="$HOME/.layer/$KEY_NAME"

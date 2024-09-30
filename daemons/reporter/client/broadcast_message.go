@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
@@ -32,6 +31,9 @@ func (c *Client) generateDepositmessages(ctx context.Context, bg *sync.WaitGroup
 	defer bg.Done()
 	depositQuerydata, value, err := c.deposits()
 	if err != nil {
+		if err.Error() == "no pending deposits" {
+			return nil
+		}
 		return fmt.Errorf("error getting deposits: %w", err)
 	}
 	queryId := hex.EncodeToString(utils.QueryIDFromData(depositQuerydata))
@@ -108,20 +110,20 @@ func (c *Client) generateExternalMessages(ctx context.Context, filepath string, 
 
 func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.WaitGroup) error {
 	defer bg.Done()
-	querydata, querymeta, err := c.CurrentQuery(ctx)
+	queryId := hex.EncodeToString(utils.QueryIDFromData(qd))
+	querymeta, err := c.CurrentQueryByQueryId(ctx, queryId)
 	if err != nil {
-		// log error
-		c.logger.Error("getting current query", "error", err)
+		return fmt.Errorf("error getting current query by query id: %w", err)
 	}
-	for !bytes.Equal(querydata, qd) || commitedIds[querymeta.Id] {
+	for querymeta.Expiration.Before(time.Now()) || commitedIds[querymeta.Id] {
 		time.Sleep(time.Millisecond * 500)
-		querydata, querymeta, err = c.CurrentQuery(ctx)
+		querymeta, err = c.CurrentQueryByQueryId(ctx, queryId)
 		if err != nil {
 			// log error
 			c.logger.Error("getting current query on recursion", "error", err)
 		}
 	}
-	value, err := c.median(querydata)
+	value, err := c.median(querymeta.QueryData)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
 	}
@@ -133,7 +135,7 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.Wait
 	hash := oracleutils.CalculateCommitment(value, salt)
 	commitmsg := &oracletypes.MsgCommitReport{
 		Creator:   c.accAddr.String(),
-		QueryData: querydata,
+		QueryData: querymeta.QueryData,
 		Hash:      hash,
 	}
 
@@ -147,13 +149,13 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.Wait
 	fmt.Println("response after commit message", resp.TxResult.Code)
 	currentTime := time.Now()
 	if currentTime.Before(querymeta.GetExpiration()) {
-		c.logger.Info(fmt.Sprintf("Sleeping for %s before revealing value", querymeta.GetExpiration().Sub(currentTime).String()))
+		fmt.Printf("Sleeping for %s before revealing value\n", querymeta.GetExpiration().Sub(currentTime).String())
 		time.Sleep(querymeta.Expiration.Sub(currentTime))
 	}
 
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
-		QueryData: querydata,
+		QueryData: querymeta.QueryData,
 		Value:     value,
 		Salt:      salt,
 		CommitId:  querymeta.Id,

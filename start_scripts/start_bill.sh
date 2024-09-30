@@ -7,7 +7,7 @@ clear
 set -e
 
 KEYRING_BACKEND="test"
-CHAIN_ID="layertest-1"
+CHAIN_ID="layertest-2"
 # Define paths to the node directories
 echo "Defining paths..."
 NODE1_HOME_DIR="$HOME/.layer/alice"
