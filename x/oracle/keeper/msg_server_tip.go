@@ -51,6 +51,10 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	prevAmt := query.Amount
 	query.Amount = query.Amount.Add(tip.Amount)
 
+	offset, err := k.keeper.GetReportOffsetParam(ctx)
+	if err != nil {
+		return nil, err
+	}
 	// expired submission window
 	if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
 		// query expired, create new expiration time

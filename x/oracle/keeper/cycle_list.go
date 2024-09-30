@@ -68,6 +68,10 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// if query has a tip don't generate a new query but extend if revealing time is expired
 	if !querymeta.Amount.IsZero() {
 		querymeta.CycleList = true
+		offset, err := k.GetReportOffsetParam(ctx)
+		if err != nil {
+			return err
+		}
 		if querymeta.Expiration.Add(offset).Before(blockTime) {
 			querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
 		}
@@ -87,6 +91,10 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
+	offset, err := k.GetReportOffsetParam(ctx)
+	if err != nil {
+		return err
+	}
 	return k.Query.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (stop bool, err error) {
 		if value.Expiration.Add(offset).Before(sdk.UnwrapSDKContext(ctx).BlockTime()) && !value.HasRevealedReports && value.Amount.IsZero() {
 			err := k.Query.Remove(ctx, key)
