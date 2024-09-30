@@ -45,6 +45,10 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
+		offset, err := k.GetReportOffsetParam(ctx)
+		if err != nil {
+			return err
+		}
 		if query.Expiration.Add(offset).Before(blockTime) {
 
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
