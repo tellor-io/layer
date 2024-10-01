@@ -127,41 +127,41 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, bg *sync.Wait
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
 	}
-	salt, err := oracleutils.Salt(32)
-	if err != nil {
-		return fmt.Errorf("error generating salt: %w", err)
-	}
+	// salt, err := oracleutils.Salt(32)
+	// if err != nil {
+	// 	return fmt.Errorf("error generating salt: %w", err)
+	// }
 
-	hash := oracleutils.CalculateCommitment(value, salt)
-	commitmsg := &oracletypes.MsgCommitReport{
-		Creator:   c.accAddr.String(),
-		QueryData: querymeta.QueryData,
-		Hash:      hash,
-	}
+	// hash := oracleutils.CalculateCommitment(value, salt)
+	// commitmsg := &oracletypes.MsgCommitReport{
+	// 	Creator:   c.accAddr.String(),
+	// 	QueryData: querymeta.QueryData,
+	// 	Hash:      hash,
+	// }
 
-	resp, err := c.sendTx(ctx, commitmsg)
-	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
-	}
-	if resp.TxResult.Code != 0 {
-		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
-	}
-	fmt.Println("response after commit message", resp.TxResult.Code)
-	currentTime := time.Now()
-	if currentTime.Before(querymeta.GetExpiration()) {
-		fmt.Printf("Sleeping for %s before revealing value\n", querymeta.GetExpiration().Sub(currentTime).String())
-		time.Sleep(querymeta.Expiration.Sub(currentTime))
-	}
+	// resp, err := c.sendTx(ctx, commitmsg)
+	// if err != nil {
+	// 	return fmt.Errorf("error sending tx: %w", err)
+	// }
+	// if resp.TxResult.Code != 0 {
+	// 	return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
+	// }
+	// fmt.Println("response after commit message", resp.TxResult.Code)
+	// currentTime := time.Now()
+	// if currentTime.Before(querymeta.GetExpiration()) {
+	// 	fmt.Printf("Sleeping for %s before revealing value\n", querymeta.GetExpiration().Sub(currentTime).String())
+	// 	time.Sleep(querymeta.Expiration.Sub(currentTime))
+	// }
 
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: querymeta.QueryData,
 		Value:     value,
-		Salt:      salt,
-		CommitId:  querymeta.Id,
+		Salt:      "",
+		CommitId:  0,
 	}
 
-	resp, err = c.sendTx(ctx, msg)
+	resp, err := c.sendTx(ctx, msg)
 	if err != nil {
 		return fmt.Errorf("error sending tx: %w", err)
 	}
