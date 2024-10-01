@@ -22,6 +22,39 @@ func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
 
 // rotation of the cycle list
 func (k Keeper) RotateQueries(ctx context.Context) error {
+	// only rotate if current query is expired
+	// get current query
+	// if current query is not expired, return
+	// if current query is expired, rotate the cycle list
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime()
+	offset, err := k.GetReportOffsetParam(ctx)
+	if err != nil {
+		return err
+	}
+	querydata, err := k.GetCurrentQueryInCycleList(ctx)
+	if err != nil {
+		return err
+	}
+	queryId := utils.QueryIDFromData(querydata)
+	query, err := k.CurrentQuery(ctx, queryId)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		querymeta, err := k.InitializeQuery(ctx, querydata)
+		if err != nil {
+			return err
+		}
+		querymeta.CycleList = true
+		querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+
+	}
+	if query.Expiration.Add(offset).After(blockTime) {
+		return nil
+	}
+
 	q, err := k.GetCyclelist(ctx)
 	if err != nil {
 		return err
@@ -32,8 +65,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	}
 
 	max := len(q)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+
 	switch {
 	case n >= uint64(max-1): // n could be gt if the cycle list is updated, otherwise n == max-1
 		err := k.CyclelistSequencer.Set(ctx, 0)
@@ -44,7 +76,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	default:
 		n += 1
 	}
-	queryId := utils.QueryIDFromData(q[n])
+	queryId = utils.QueryIDFromData(q[n])
 	// queries that are without tip (ie cycle list queries) could linger in the store
 	// if there are no reports to be aggregated (where queries removed) since you each query cycle we generate a new query
 	err = k.ClearOldqueries(ctx, queryId)
@@ -68,10 +100,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// if query has a tip don't generate a new query but extend if revealing time is expired
 	if !querymeta.Amount.IsZero() {
 		querymeta.CycleList = true
-		offset, err := k.GetReportOffsetParam(ctx)
-		if err != nil {
-			return err
-		}
+
 		if querymeta.Expiration.Add(offset).Before(blockTime) {
 			querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
 		}
