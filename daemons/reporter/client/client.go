@@ -114,7 +114,7 @@ func (c *Client) Start(
 	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
 	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
 
-	ticker := time.NewTicker(time.Millisecond * 500)
+	ticker := time.NewTicker(time.Millisecond * 200)
 	stop := make(chan bool)
 
 	// get account
@@ -142,7 +142,6 @@ func (c *Client) Start(
 	StartReporterDaemonTaskLoop(
 		c,
 		ctx,
-		&SubTaskRunnerImpl{},
 		flags,
 		ticker,
 		stop,
@@ -155,7 +154,6 @@ func (c *Client) Start(
 func StartReporterDaemonTaskLoop(
 	client *Client,
 	ctx context.Context,
-	s SubTaskRunner,
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -180,21 +178,10 @@ func StartReporterDaemonTaskLoop(
 	if err != nil {
 		client.logger.Error("Waiting for next block", "error", err)
 	}
-	for {
-		select {
-		case <-ticker.C:
-			if err := s.RunReporterDaemonTaskLoop(
-				ctx,
-				client,
-			); err != nil {
-				client.logger.Error("Reporter daemon returned error", "error", err)
-			} else {
-				client.logger.Info("Reporter daemon task completed successfully")
-			}
-		case <-stop:
-			return
-		}
-	}
+
+	go client.MonitorCyclelistQuery(ctx)
+
+	go client.MonitorTokenBridgeReports(ctx)
 }
 
 func (c *Client) checkReporter(ctx context.Context) bool {
