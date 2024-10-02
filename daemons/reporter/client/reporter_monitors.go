@@ -10,7 +10,8 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (c *Client) MonitorCyclelistQuery(ctx context.Context) {
+func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	prevQueryData := []byte{}
 	queryRes, err := c.OracleQueryClient.Params(ctx, &oracletypes.QueryParamsRequest{})
 	if err != nil {
@@ -41,18 +42,20 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context) {
 	}
 }
 
-func (c *Client) MonitorTokenBridgeReports(ctx context.Context) {
-	var wg sync.WaitGroup
+func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	var localWG sync.WaitGroup
 	for {
-		wg.Add(1)
+		localWG.Add(1)
 		go func() {
-			defer wg.Done()
+			defer localWG.Done()
 			err := c.generateDepositmessages(context.Background())
 			if err != nil {
 				c.logger.Error("Error generating deposit messages: ", err)
 			}
 		}()
+		localWG.Wait()
 
-		time.Sleep(5 * time.Minute)
+		time.Sleep(4 * time.Minute)
 	}
 }

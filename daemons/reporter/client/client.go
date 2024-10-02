@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -174,14 +175,21 @@ func StartReporterDaemonTaskLoop(
 		}
 	}
 
+	time.Sleep(10 * time.Second)
 	err := client.WaitForNextBlock(ctx)
 	if err != nil {
 		client.logger.Error("Waiting for next block", "error", err)
 	}
 
-	go client.MonitorCyclelistQuery(ctx)
+	var wg sync.WaitGroup
 
-	go client.MonitorTokenBridgeReports(ctx)
+	wg.Add(1)
+	go client.MonitorCyclelistQuery(ctx, &wg)
+
+	wg.Add(1)
+	go client.MonitorTokenBridgeReports(ctx, &wg)
+
+	wg.Wait()
 }
 
 func (c *Client) checkReporter(ctx context.Context) bool {
