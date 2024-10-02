@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -40,7 +41,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const chainID = "layer-simapp"
+const chainID = "layertest-1"
+const genesisFile = "./testutils/sim-genesis.json"
 
 var FlagEnableStreamingValue bool
 
@@ -75,7 +77,8 @@ func BenchmarkSimulation(b *testing.B) {
 
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = chainID
-
+	config.GenesisFile = genesisFile
+	
 	db, dir, logger, _, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-bApp-sim",
@@ -103,9 +106,6 @@ func BenchmarkSimulation(b *testing.B) {
 		baseapp.SetChainID(config.ChainID),
 	)
 	require.Equal(b, app.Name, bApp.Name())
-	require.NotNil(b, bApp.MintKeeper)
-	require.NotNil(b, bApp.MintKeeper.Minter)
-	fmt.Println("bApp.MintKeeper.Minter: ", bApp.MintKeeper.Minter)
 
 	genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
 	require.NoError(b, err)
@@ -113,6 +113,23 @@ func BenchmarkSimulation(b *testing.B) {
 	var genesisMap map[string]json.RawMessage
 	err = json.Unmarshal(genesisJSON, &genesisMap)
 	require.NoError(b, err)
+
+	// valSet, err := simtestutil.CreateRandomValidatorSet()
+	// require.NoError(b, err)
+	// fmt.Println("valSet:", valSet)
+
+	// appState, _, err := simtestutil.AppStateFromGenesisFileFn(
+	// 	rand.New(rand.NewSource(simcli.FlagSeedValue)),
+	// 	bApp.AppCodec(),
+	// 	"./testutils/sim-genesis.json",
+	// )
+	// fmt.Println("appState:", appState)
+	// require.NoError(b, err)
+
+	randomAccounts := simulationtypes.RandomAccounts
+	fmt.Println("\nrandomAccounts:", randomAccounts(rand.New(rand.NewSource(simcli.FlagSeedValue)), b.N))
+	fmt.Println("\nb.N:", b.N)
+	fmt.Println("\nsimcli.FlagSeedValue: ", simcli.FlagSeedValue)
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -157,6 +174,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ExportParamsPath = ""
 	config.OnOperation = true
 	config.AllInvariants = true
+	config.GenesisFile = genesisFile
 
 	var (
 		r                    = rand.New(rand.NewSource(time.Now().Unix()))
@@ -197,14 +215,21 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
+			genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
+			require.NoError(t, err)
+
+			var genesisMap map[string]json.RawMessage
+			err = json.Unmarshal(genesisJSON, &genesisMap)
+			require.NoError(t, err)
+
+			_, _, err = simulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				bApp.BaseApp,
 				simtestutil.AppStateFn(
 					bApp.AppCodec(),
 					bApp.SimulationManager(),
-					bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
+					genesisMap,
 				),
 				simulationtypes.RandomAccounts,
 				simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
@@ -234,7 +259,7 @@ func TestAppStateDeterminism(t *testing.T) {
 func TestAppImportExport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = "layertest-1"
-	config.GenesisFile = "./testutils/sim-genesis.json"
+	config.GenesisFile = genesisFile
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(
 		config,
@@ -266,6 +291,12 @@ func TestAppImportExport(t *testing.T) {
 		baseapp.SetChainID(config.ChainID),
 	)
 	require.Equal(t, app.Name, bApp.Name())
+	anteHandler := bApp.BaseApp.AnteHandler()
+	fmt.Println("\nanteHandler:", anteHandler)
+	simManager := bApp.SimulationManager()
+	fmt.Println("\nsimManager:", simManager)
+	weightedOps := simManager.WeightedOperations(module.SimulationState{})
+	fmt.Println("\nweightedOps:", weightedOps)
 
 	genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
 	require.NoError(t, err)
@@ -273,6 +304,12 @@ func TestAppImportExport(t *testing.T) {
 	var genesisMap map[string]json.RawMessage
 	err = json.Unmarshal(genesisJSON, &genesisMap)
 	require.NoError(t, err)
+
+	valSet, err := simtestutil.CreateRandomValidatorSet()
+	require.NoError(t, err)
+	fmt.Println("valSet:", valSet)
+
+	// simtestutil.SetupWithConfiguration()
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
