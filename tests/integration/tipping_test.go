@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
@@ -15,6 +16,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// cycle list order is eth, btc, trb
 
 // Test adding tip to a query that is already in cycle and not expired
 func (s *IntegrationTestSuite) TestTipQueryInCycle() {
@@ -39,15 +42,28 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// assert height is 0
 	s.Equal(int64(0), currentHeight)
 	// start block at 1
+	fmt.Println("before WithBlockHeight 1")
 	ctx = ctx.WithBlockHeight(1)
+	fmt.Println("after WithBlockHeight 1")
 	// assert height is 1
 	s.Equal(int64(1), ctx.BlockHeight())
 
-	ctx, err := simtestutil.NextBlock(app, ctx, time.Second)
+	fmt.Println("before block 2")
+	blockTime := ctx.BlockTime()
+	fmt.Println("blockTime before next block", blockTime)
+	ctx, err := simtestutil.NextBlock(app, ctx, time.Second*15) // endblock1/beginblock2
 	s.NoError(err)
+	blockTime = ctx.BlockTime()
+	fmt.Println("blockTime after next block", blockTime)
 
 	// assert height is 2
 	s.Equal(int64(2), ctx.BlockHeight())
+
+	// block 3
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*1)
+	s.NoError(err)
+	// assert height is 3
+	s.Equal(int64(3), ctx.BlockHeight())
 
 	// get query
 	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
@@ -69,26 +85,35 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 
 	// ----------------
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, ((time.Second * 10) + 1)) // eth query data
+	ctx, err = simtestutil.NextBlock(app, ctx, ((time.Second * 15) + 1))
 	s.NoError(err)
-	// assert height is 3
-	s.Equal(int64(3), ctx.BlockHeight())
+	// assert height is 4
+	s.Equal(int64(4), ctx.BlockHeight())
+
+	// next block
+	ctx, err = simtestutil.NextBlock(app, ctx, ((time.Second * 15) + 1)) // trb query data
+	s.NoError(err)
+	// assert height is 5
+	s.Equal(int64(5), ctx.BlockHeight())
 	// check query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
 	s.Equal(math.NewInt(980_000), query.Amount)      // 2% burn
 	s.True(query.Expiration.Before(ctx.BlockTime())) // expired
+	currentCycleListQuery, err := okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
 
 	// next block
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Second+1) // trb query data
+	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 15)) // trb query data
 	s.NoError(err)
-	// assert height is 4
-	s.Equal(int64(4), ctx.BlockHeight())
-	// ----------------
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Second+1) // btc query data
+	// assert height is 6
+	s.Equal(int64(6), ctx.BlockHeight())
+	// // ----------------
+	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 1)) // btc query data
 	s.NoError(err)
-	// assert height is 5
-	s.Equal(int64(5), ctx.BlockHeight())
+	// assert height is 7
+	s.Equal(int64(7), ctx.BlockHeight())
 
 	current, err := okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
@@ -96,6 +121,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// check query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
-	s.Equal(math.NewInt(980_000), query.Amount)      // 2% burn
-	s.True(query.Expiration.Before(ctx.BlockTime())) // expired commit time window
+	s.Equal(math.NewInt(980_000), query.Amount)     // 2% burn
+	s.True(query.Expiration.After(ctx.BlockTime())) // non-expired commit time window
 }

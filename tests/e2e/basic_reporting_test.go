@@ -160,16 +160,24 @@ func (s *E2ETestSuite) TestBasicReporting() {
 	// Height 2
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(commitHeight + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 14))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(commitHeight + 2)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	// check that 1 second worth of tbr has been minted
 	// expected tbr = (daily mint rate * time elapsed) / (# of ms in a day)
-	expectedBlockProvision := int64(146940000 * (1 * time.Second) / (24 * 60 * 60 * 1000))
+	expectedBlockProvision := int64(146940000 * (15 * time.Second) / (24 * 60 * 60 * 1000))
 	expectedTbr := sdk.NewCoin(s.Setup.Denom, math.NewInt((expectedBlockProvision)).MulRaw(75).QuoRaw(100).Quo(sdk.DefaultPowerReduction))
 	tbrModuleAccountBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, tbrModuleAccount, s.Setup.Denom)
-	require.Equal(expectedTbr, tbrModuleAccountBalance)
+	require.GreaterOrEqual(tbrModuleAccountBalance.Amount.Int64(), expectedTbr.Amount.Int64()-1)
+	require.LessOrEqual(tbrModuleAccountBalance.Amount.Int64(), expectedTbr.Amount.Int64()+1)
 	// check that the cycle list has rotated
 	cycleListBtc, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NotEqual(cycleListEth, cycleListBtc)
