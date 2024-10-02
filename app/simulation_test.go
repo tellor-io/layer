@@ -41,8 +41,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const chainID = "layertest-1"
-const genesisFile = "./testutils/sim-genesis.json"
+const (
+	chainID     = "layertest-1"
+	genesisFile = "./testutils/sim-genesis.json"
+)
 
 var FlagEnableStreamingValue bool
 
@@ -78,7 +80,7 @@ func BenchmarkSimulation(b *testing.B) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = chainID
 	config.GenesisFile = genesisFile
-	
+
 	db, dir, logger, _, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-bApp-sim",
