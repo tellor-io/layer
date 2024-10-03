@@ -51,19 +51,19 @@ func TestMsgRegisterSpec_NewMsgRegisterSpec(t *testing.T) {
 		{Name: "currency", FieldType: "string"},
 	}
 	msg := NewMsgRegisterSpec(registrar, queryType, &DataSpec{
-		DocumentHash:       "document_hash",
-		ResponseValueType:  "uint256",
-		AggregationMethod:  "weighted-median",
-		Registrar:          registrar,
-		ReportBufferWindow: 10,
-		AbiComponents:      abiComponents,
+		DocumentHash:      "document_hash",
+		ResponseValueType: "uint256",
+		AggregationMethod: "weighted-median",
+		Registrar:         registrar,
+		ReportBlockWindow: 10,
+		AbiComponents:     abiComponents,
 	})
 	require.Equal(msg.Spec.AbiComponents, abiComponents)
 	require.Equal(msg.Spec.DocumentHash, "document_hash")
 	require.Equal(msg.Spec.ResponseValueType, "uint256")
 	require.Equal(msg.Spec.AggregationMethod, "weighted-median")
 	require.Equal(msg.Spec.Registrar, registrar)
-	require.Equal(msg.Spec.ReportBufferWindow, time.Duration(10))
+	require.Equal(msg.Spec.ReportBlockWindow, time.Duration(10))
 	require.Equal(msg.Registrar, registrar)
 	require.Equal(msg.QueryType, queryType)
 }

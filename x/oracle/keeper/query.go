@@ -108,7 +108,7 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 		if err != nil {
 			return err
 		}
-		if queryMeta.Expiration.Add(offset).After(sdk.UnwrapSDKContext(ctx).BlockTime()) && queryMeta.Amount.GT(math.ZeroInt()) {
+		if queryMeta.Expiration+offset > uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
 			queries = append(queries, &queryMeta)
 		}
 

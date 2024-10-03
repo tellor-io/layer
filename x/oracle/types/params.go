@@ -19,7 +19,7 @@ var (
 	DefaultMinStakeAmount = math.NewInt(1_000_000) // one TRB
 
 	KeyOffset     = []byte("Offset")
-	DefaultOffset = 6 * time.Second
+	DefaultOffset = uint64(3)
 )
 
 // ParamKeyTable the param key table for launch module
@@ -28,7 +28,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(minStakeAmount math.Int, offset time.Duration) Params {
+func NewParams(minStakeAmount math.Int, offset uint64) Params {
 	return Params{
 		MinStakeAmount: minStakeAmount,
 		Offset:         offset,

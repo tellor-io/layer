@@ -8,7 +8,6 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -46,65 +45,28 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
-	if msg.CommitId == 0 {
-		query, err := k.keeper.CurrentQuery(ctx, queryId)
-		if err != nil {
-			if !errors.Is(err, collections.ErrNotFound) {
-				return nil, err
-			}
-			query, err = k.keeper.TokenBridgeDepositCheck(ctx, msg.QueryData)
-			if err != nil {
-				return nil, err
-			}
-
-			err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
-			if err != nil {
-				return nil, err
-			}
-			err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, votingPower)
-			if err != nil {
-				return nil, err
-			}
-			return &types.MsgSubmitValueResponse{}, nil
+	query, err := k.keeper.CurrentQuery(ctx, queryId)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
 		}
-		isBridgeDeposit := strings.EqualFold(query.QueryType, TRBBridgeQueryType)
-		err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, isBridgeDeposit)
+		query, err = k.keeper.TokenBridgeDepositCheck(ctx, msg.QueryData)
+		if err != nil {
+			return nil, err
+		}
+
+		err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
+		if err != nil {
+			return nil, err
+		}
+		err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, votingPower)
 		if err != nil {
 			return nil, err
 		}
 		return &types.MsgSubmitValueResponse{}, nil
 	}
-
-	commit, err := k.keeper.Commits.Get(ctx, collections.Join(reporterAddr.Bytes(), msg.CommitId))
-	if err != nil {
-		return nil, err
-	}
-	// remove commit from store
-	err = k.keeper.Commits.Remove(ctx, collections.Join(reporterAddr.Bytes(), msg.CommitId))
-	if err != nil {
-		return nil, err
-	}
-
-	query, err := k.keeper.Query.Get(ctx, collections.Join(commit.QueryId, msg.CommitId))
-	if err != nil {
-		return nil, err
-	}
-
-	offset, err := k.keeper.GetReportOffsetParam(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
-		return nil, types.ErrSubmissionWindowExpired
-	}
-	genHash := oracleutils.CalculateCommitment(msg.Value, msg.Salt)
-	if genHash != commit.Hash {
-		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
-	}
-
-	err = k.keeper.SetValue(ctx, reporterAddr, query, msg.Value, msg.QueryData, votingPower, query.CycleList)
+	isBridgeDeposit := strings.EqualFold(query.QueryType, TRBBridgeQueryType)
+	err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, isBridgeDeposit)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +82,7 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	bridgeDeposit bool,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockHeight := sdkCtx.BlockHeight()
 
 	if bridgeDeposit {
 		return k.HandleBridgeDepositDirectReveal(ctx, query, qDataBytes, reporterAddr, value, votingPower)
@@ -135,7 +97,7 @@ func (k Keeper) DirectReveal(ctx context.Context,
 		return err
 	}
 
-	if query.Expiration.Add(offset).Before(blockTime) {
+	if query.Expiration+offset <= uint64(blockHeight) {
 		return types.ErrSubmissionWindowExpired
 	}
 

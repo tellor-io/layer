@@ -81,10 +81,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 			weightMsgCommitReport = defaultWeightMsgCommitReport
 		},
 	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgCommitReport,
-		oraclesimulation.SimulateMsgCommitReport(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
 
 	var weightMsgTip int
 	simState.AppParams.GetOrGenerate(opWeightMsgTip, &weightMsgTip, nil,
@@ -110,14 +106,6 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgSubmitValue,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				oraclesimulation.SimulateMsgSubmitValue(am.accountKeeper, am.bankKeeper, am.keeper)
-				return nil
-			},
-		),
-		simulation.NewWeightedProposalMsg(
-			opWeightMsgCommitReport,
-			defaultWeightMsgCommitReport,
-			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				oraclesimulation.SimulateMsgCommitReport(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

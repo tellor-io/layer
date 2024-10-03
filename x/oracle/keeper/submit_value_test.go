@@ -111,7 +111,7 @@ func (s *KeeperTestSuite) TestGetDataSpec() {
 	require.Equal(spec.DocumentHash, "")
 	require.Equal(spec.AggregationMethod, "weighted-median")
 	require.Equal(spec.Registrar, "genesis")
-	require.Equal(spec.ReportBufferWindow, time.Second*10)
+	require.Equal(spec.ReportBlockWindow, time.Second*10)
 	require.Equal(spec.ResponseValueType, "uint256")
 
 	regK.On("GetSpec", ctx, "BadQueryType").Return(regtypes.GenesisDataSpec(), errors.New("not found")).Once()

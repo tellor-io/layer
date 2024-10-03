@@ -30,7 +30,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockHeight := uint64(sdkCtx.BlockHeight())
 
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
@@ -49,7 +49,8 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		if query.Expiration.Add(offset).Before(blockTime) {
+
+		if query.Expiration+offset <= blockHeight {
 
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
 			if err != nil {

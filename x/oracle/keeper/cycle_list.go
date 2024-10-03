@@ -30,7 +30,6 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// if current query is not expired, return
 	// if current query is expired, rotate the cycle list
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
 	blockHeight := sdkCtx.BlockHeight()
 	fmt.Println("blockHeight", blockHeight)
 	offset, err := k.GetReportOffsetParam(ctx)
@@ -49,7 +48,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	}
 	fmt.Println("nPeek", nPeek)
 	queryMeta, err := k.CurrentQuery(ctx, queryId)
-	if err == nil && queryMeta.Expiration.Add(offset).After(blockTime) {
+	if err == nil && queryMeta.Expiration+offset > uint64(blockHeight) {
 		return nil
 	}
 
@@ -93,7 +92,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 			return err
 		}
 		querymeta.CycleList = true
-		querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
 	}
@@ -101,8 +100,8 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if !querymeta.Amount.IsZero() {
 		querymeta.CycleList = true
 
-		if querymeta.Expiration.Add(offset).Before(blockTime) { // wrong, shouldn't use same query if expired
-			querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+		if querymeta.Expiration+offset <= uint64(blockHeight) { // wrong, shouldn't use same query if expired
+			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		}
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
@@ -112,7 +111,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		return err
 	}
 	querymeta.Id = nextId
-	querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 	querymeta.HasRevealedReports = false
 	querymeta.CycleList = true
 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
@@ -125,7 +124,7 @@ func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
 		return err
 	}
 	return k.Query.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (stop bool, err error) {
-		if value.Expiration.Add(offset).Before(sdk.UnwrapSDKContext(ctx).BlockTime()) && !value.HasRevealedReports && value.Amount.IsZero() {
+		if value.Expiration+offset < (uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())) && !value.HasRevealedReports && value.Amount.IsZero() {
 			err := k.Query.Remove(ctx, key)
 			if err != nil {
 				return false, err

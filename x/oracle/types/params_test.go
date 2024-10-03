@@ -15,7 +15,7 @@ import (
 func TestParams_NewParams(t *testing.T) {
 	require := require.New(t)
 
-	params := NewParams(math.NewInt(10*1e6), 10*time.Second)
+	params := NewParams(math.NewInt(10*1e6), 10)
 	require.NoError(params.Validate())
 	require.Equal(params.MinStakeAmount, math.NewInt(10*1e6))
 	require.Equal(params.Offset, 10*time.Second)
@@ -55,11 +55,11 @@ func TestParams_Validate(t *testing.T) {
 	params := DefaultParams()
 	require.NoError(validateMinStakeAmount(params.MinStakeAmount))
 
-	params = NewParams(math.NewInt(0), 3*time.Second)
+	params = NewParams(math.NewInt(0), 3)
 	require.NoError(validateMinStakeAmount(math.ZeroInt()))
 	require.NoError(validateOffset(params.Offset))
 
-	params = NewParams(math.NewInt(100*1e6), 10*time.Second)
+	params = NewParams(math.NewInt(100*1e6), 3)
 	require.NoError(validateMinStakeAmount(math.NewInt(100 * 1e6)))
 	require.NoError(validateOffset(params.Offset))
 }

@@ -1,8 +1,6 @@
 package types
 
 import (
-	time "time"
-
 	"gopkg.in/yaml.v2"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -11,7 +9,7 @@ import (
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 // default max report buffer window
-const DefaultMaxReportWindow = time.Hour * (24 * 21)
+const DefaultMaxReportWindow = 900_000
 
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {

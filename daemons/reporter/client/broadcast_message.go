@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -109,15 +110,39 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, querymeta *or
 		return fmt.Errorf("error getting median from median client': %w", err)
 	}
 
+	salt, err := oracleutils.Salt(32)
+	if err != nil {
+		return fmt.Errorf("error generating salt: %w", err)
+	}
+
+	hash := oracleutils.CalculateCommitment(value, salt)
+	commitmsg := &oracletypes.MsgCommitReport{
+		Creator:   c.accAddr.String(),
+		QueryData: qd,
+		Hash:      hash,
+	}
+
+	resp, err := c.sendTx(ctx, commitmsg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	if resp.TxResult.Code != 0 {
+		return fmt.Errorf("commit transaction failed with code %d", resp.TxResult.Code)
+	}
+	fmt.Println("response after commit message", resp.TxResult.Code)
+
+	currentTime := time.Now()
+	time.Sleep(querymeta.Expiration.Sub(currentTime))
+
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: qd,
 		Value:     value,
-		Salt:      "",
-		CommitId:  0,
+		Salt:      salt,
+		CommitId:  querymeta.Id,
 	}
 
-	resp, err := c.sendTx(ctx, msg)
+	resp, err = c.sendTx(ctx, msg)
 	if err != nil {
 		return fmt.Errorf("error sending tx: %w", err)
 	}
