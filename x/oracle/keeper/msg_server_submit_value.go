@@ -90,15 +90,6 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	offset, err := k.keeper.GetReportOffsetParam(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// if there is a commit then check if its expired and verify commit, and add in cycle from commit.incycle
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if query.Expiration.Add(offset).Before(sdkCtx.BlockTime()) {
-		return nil, types.ErrSubmissionWindowExpired
-	}
 	genHash := oracleutils.CalculateCommitment(msg.Value, msg.Salt)
 	if genHash != commit.Hash {
 		return nil, errors.New("submitted value doesn't match commitment, are you a cheater?")
@@ -130,12 +121,7 @@ func (k Keeper) DirectReveal(ctx context.Context,
 		return types.ErrNoTipsNotInCycle
 	}
 
-	offset, err := k.GetReportOffsetParam(ctx)
-	if err != nil {
-		return err
-	}
-
-	if query.Expiration.Add(offset).Before(blockTime) {
+	if query.Expiration.Before(blockTime) {
 		return types.ErrSubmissionWindowExpired
 	}
 
