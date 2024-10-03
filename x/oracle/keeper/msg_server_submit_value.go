@@ -92,12 +92,7 @@ func (k Keeper) DirectReveal(ctx context.Context,
 		return types.ErrNoTipsNotInCycle
 	}
 
-	offset, err := k.GetReportOffsetParam(ctx)
-	if err != nil {
-		return err
-	}
-
-	if query.Expiration+offset <= uint64(blockHeight) {
+	if query.Expiration < uint64(blockHeight) {
 		return types.ErrSubmissionWindowExpired
 	}
 

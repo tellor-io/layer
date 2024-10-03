@@ -219,12 +219,3 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 
 	return nil
 }
-
-func (k Keeper) GetReportOffsetParam(ctx context.Context) (uint64, error) {
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	return params.Offset, nil
-}

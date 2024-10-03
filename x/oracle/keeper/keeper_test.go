@@ -199,13 +199,3 @@ func (s *KeeperTestSuite) TestFlagAggregateReport() {
 	require.NoError(err)
 	require.True(aggregate.Flagged)
 }
-
-func (s *KeeperTestSuite) TestGetReportOffsetParam() {
-	require := s.Require()
-	k := s.oracleKeeper
-	ctx := s.ctx
-
-	offset, err := k.GetReportOffsetParam(ctx)
-	require.NoError(err)
-	require.Equal(offset, types.DefaultOffset)
-}

@@ -108,12 +108,7 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
 
-	offset, err := k.GetReportOffsetParam(ctx)
-	if err != nil {
-		return err
-	}
-
-	if query.Amount.IsZero() && query.Expiration+offset <= uint64(blockHeight) {
+	if query.Amount.IsZero() && query.Expiration <= uint64(blockHeight) {
 		nextId, err := k.QuerySequencer.Next(ctx)
 		if err != nil {
 			return err
@@ -121,11 +116,11 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 		query.Id = nextId
 		query.Expiration = uint64(blockHeight) + query.RegistrySpecBlockWindow
 	}
-	if query.Amount.GT(math.ZeroInt()) && query.Expiration+offset <= uint64(blockHeight) {
+	if query.Amount.GT(math.ZeroInt()) && query.Expiration <= uint64(blockHeight) {
 		query.Expiration = uint64(blockHeight) + query.RegistrySpecBlockWindow
 	}
 
-	if query.Expiration+offset < uint64(blockHeight) {
+	if query.Expiration < uint64(blockHeight) {
 		return types.ErrSubmissionWindowExpired.Wrapf("query for bridge deposit is expired")
 	}
 	return k.SetValue(ctx, reporterAcc, query, value, querydata, voterPower, true)

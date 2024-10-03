@@ -32,10 +32,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
 	fmt.Println("blockHeight", blockHeight)
-	offset, err := k.GetReportOffsetParam(ctx)
-	if err != nil {
-		return err
-	}
+
 	querydata, err := k.GetCurrentQueryInCycleList(ctx)
 	if err != nil {
 		return err
@@ -48,7 +45,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	}
 	fmt.Println("nPeek", nPeek)
 	queryMeta, err := k.CurrentQuery(ctx, queryId)
-	if err == nil && queryMeta.Expiration+offset > uint64(blockHeight) {
+	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
 		return nil
 	}
 
@@ -100,7 +97,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if !querymeta.Amount.IsZero() {
 		querymeta.CycleList = true
 
-		if querymeta.Expiration+offset <= uint64(blockHeight) { // wrong, shouldn't use same query if expired
+		if querymeta.Expiration >= uint64(blockHeight) { // wrong, shouldn't use same query if expired
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		}
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
@@ -119,12 +116,9 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
-	offset, err := k.GetReportOffsetParam(ctx)
-	if err != nil {
-		return err
-	}
+
 	return k.Query.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (stop bool, err error) {
-		if value.Expiration+offset < (uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())) && !value.HasRevealedReports && value.Amount.IsZero() {
+		if value.Expiration < (uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())) && !value.HasRevealedReports && value.Amount.IsZero() {
 			err := k.Query.Remove(ctx, key)
 			if err != nil {
 				return false, err
