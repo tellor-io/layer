@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"time"
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -108,12 +107,6 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, querymeta *or
 	value, err := c.median(qd)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
-	}
-
-	currentTime := time.Now()
-	if currentTime.Before(querymeta.GetExpiration()) {
-		c.logger.Info(fmt.Sprintf("Sleeping for %s before revealing value", querymeta.GetExpiration().Sub(currentTime).String()))
-		time.Sleep(querymeta.Expiration.Sub(currentTime))
 	}
 
 	msg := &oracletypes.MsgSubmitValue{
