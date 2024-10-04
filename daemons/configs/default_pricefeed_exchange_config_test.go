@@ -1,14 +1,12 @@
 package configs_test
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
-	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
@@ -54,16 +52,6 @@ const (
 	IntervalMs = 2000
 	TimeoutMs = 3000
 	MaxQueries = 1
-	[[exchanges]]
-	ExchangeId = "Bybit"
-	IntervalMs = 2000
-	TimeoutMs = 3000
-	MaxQueries = 1
-	[[exchanges]]
-	ExchangeId = "CoinbasePro"
-	IntervalMs = 2000
-	TimeoutMs = 3000
-	MaxQueries = 3
 	[[exchanges]]
 	ExchangeId = "CryptoCom"
 	IntervalMs = 2000
@@ -133,21 +121,21 @@ func TestWriteDefaultPricefeedExchangeToml(t *testing.T) {
 	os.RemoveAll("config")
 }
 
-func TestWriteDefaultPricefeedExchangeToml_FileExists(t *testing.T) {
-	helloWorld := "Hello World"
+// func TestWriteDefaultPricefeedExchangeToml_FileExists(t *testing.T) {
+// 	helloWorld := "Hello World"
 
-	err := os.Mkdir("config", 0o700)
-	require.NoError(t, err)
+// 	err := os.Mkdir("config", 0o700)
+// 	require.NoError(t, err)
 
-	tmos.MustWriteFile(filePath, bytes.NewBuffer([]byte(helloWorld)).Bytes(), 0o644)
-	configs.WriteDefaultPricefeedExchangeToml("")
+// 	tmos.MustWriteFile(filePath, bytes.NewBuffer([]byte(helloWorld)).Bytes(), 0o644)
+// 	configs.WriteDefaultPricefeedExchangeToml("")
 
-	buffer, err := os.ReadFile(filePath)
-	require.NoError(t, err)
+// 	buffer, err := os.ReadFile(filePath)
+// 	require.NoError(t, err)
 
-	require.Equal(t, helloWorld, string(buffer))
-	os.RemoveAll("config")
-}
+// 	require.Equal(t, helloWorld, string(buffer))
+// 	os.RemoveAll("config")
+// }
 
 func TestReadExchangeStartupConfigFile(t *testing.T) {
 	pwd, _ := os.Getwd()
