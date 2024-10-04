@@ -108,27 +108,27 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	s.ErrorContains(err, "invalid query data")
 }
 
-func (s *KeeperTestSuite) TestSubmitWithBadValue() {
-	require := s.Require()
-	// submit wrong value but correct salt
+// func (s *KeeperTestSuite) TestSubmitWithBadValue() {
+// 	require := s.Require()
+// 	// submit wrong value but correct salt
 
-	badValue := "00000F4240"
-	addr := sample.AccAddressBytes()
-	qDataBz, err := utils.QueryBytesFromString(qData)
-	require.NoError(err)
+// 	badValue := "00000F4240"
+// 	addr := sample.AccAddressBytes()
+// 	qDataBz, err := utils.QueryBytesFromString(qData)
+// 	require.NoError(err)
 
-	submitreq := types.MsgSubmitValue{
-		Creator:   addr.String(),
-		QueryData: qDataBz,
-		Value:     badValue,
-	}
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
+// 	submitreq := types.MsgSubmitValue{
+// 		Creator:   addr.String(),
+// 		QueryData: qDataBz,
+// 		Value:     badValue,
+// 	}
+// 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+// 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+// 	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
-	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
-}
+// 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
+// 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
+// }
 
 // func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
 // 	// submit correct value but wrong salt

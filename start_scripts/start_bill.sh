@@ -15,7 +15,7 @@ NODE2_HOME_DIR="$HOME/.layer/bill"
 NODE1_CONFIG_DIR=$NODE1_HOME_DIR"/config"
 NODE2_CONFIG_DIR=$NODE2_HOME_DIR"/config"
 # AMOUNT_IN_LOYA="45000000000loya"
-AMOUNT_IN_LOYA="1000000000000loya"
+AMOUNT_IN_LOYA="100000000loya"
 
 # Define bill's node home dir to be read by reporter daemon
 export LAYERD_NODE_HOME_BILL=$NODE2_HOME_DIR
@@ -96,7 +96,7 @@ echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 
 # Stake Bill as a validator
 echo "Staking bill as a validator..."
-./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id $CHAIN_ID --home ~/.layer/bill --gas 300000 --fees 1000loya
+./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id $CHAIN_ID --fees 600loya --yes
 
 # Modify keyring-backend in client.toml for bill
 echo "Modifying keyring-backend in client.toml for bill..."
@@ -104,5 +104,5 @@ sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~
 
 # Start the second node
 echo "Starting the second node..."
-./layerd start --home $NODE2_HOME_DIR --api.enable --keyring-backend $KEYRING_BACKEND --key-name bill
+./layerd start --home $NODE2_HOME_DIR --api.enable --keyring-backend $KEYRING_BACKEND --key-name bill 
 

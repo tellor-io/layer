@@ -31,8 +31,7 @@ type (
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
-		Schema         collections.Schema
-		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                             // key: reporter, queryid
+		Schema         collections.Schema                                                                          // key: reporter, queryid
 		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]        // key: queryId, tipper
 		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
 		// total tips given over time
@@ -77,7 +76,6 @@ func NewKeeper(
 
 		authority: authority,
 
-		Commits: collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Commit](cdc)),
 		Tips: collections.NewIndexedMap(sb,
 			types.TipsPrefix,
 			"tips",

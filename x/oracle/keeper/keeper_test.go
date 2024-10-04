@@ -153,7 +153,7 @@ func (s *KeeperTestSuite) TestUpdateQuery() {
 	queries, err := indexes.CollectValues(ctx, k.Query, iter)
 	require.NoError(err)
 	require.Equal(queries[0].QueryType, queryType)
-	require.Equal(queries[0].RegistrySpecBlockWindow, 1000)
+	require.Equal(queries[0].RegistrySpecBlockWindow, uint64(1000))
 }
 
 func (s *KeeperTestSuite) TestFlagAggregateReport() {

@@ -28,10 +28,6 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgSubmitValue int = 100
 
-	opWeightMsgCommitReport = "op_weight_msg_commit_report"
-	// TODO: Determine the simulation weight value
-	defaultWeightMsgCommitReport int = 100
-
 	opWeightMsgTip = "op_weight_msg_tip"
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgTip int = 100
@@ -74,13 +70,6 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		weightMsgSubmitValue,
 		oraclesimulation.SimulateMsgSubmitValue(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
-
-	var weightMsgCommitReport int
-	simState.AppParams.GetOrGenerate(opWeightMsgCommitReport, &weightMsgCommitReport, nil,
-		func(_ *rand.Rand) {
-			weightMsgCommitReport = defaultWeightMsgCommitReport
-		},
-	)
 
 	var weightMsgTip int
 	simState.AppParams.GetOrGenerate(opWeightMsgTip, &weightMsgTip, nil,
