@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
@@ -54,11 +53,12 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	require.NoError(err)
 
 	res, err = k.TokenBridgeDepositCheck(ctx, queryDataEncoded)
+
 	require.NoError(err)
 	require.Equal(res.QueryType, "TRBBridge")
 	require.Equal(res.Amount, math.NewInt(0))
-	require.Equal(res.Expiration, ctx.BlockTime().Add(time.Hour))
-	require.Equal(res.RegistrySpecBlockWindow, time.Hour)
+	require.Equal(res.Expiration, uint64(2000))
+	require.Equal(res.RegistrySpecBlockWindow, uint64(2000))
 
 	// try TRBBridge but toLayer is false
 	toLayerBool = false
