@@ -127,7 +127,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	permissions := []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}
 	testModuleAccount := authtypes.NewModuleAccount(baseAccount, "time_based_rewards", permissions...)
 
-	ctx = ctx.WithBlockHeight(4)
+	ctx = ctx.WithBlockHeight(3)
 	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
 	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
@@ -135,7 +135,6 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	ctx = ctx.WithBlockHeight(3)
 	err = s.oracleKeeper.SetAggregatedReport(ctx)
 	s.NoError(err)
 
@@ -153,7 +152,6 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.True(reporter_four_balance.Amount.GTE(div4_totalTip))
 
 	res_query, err := s.oracleKeeper.Query.Get(ctx, collections.Join(queryId, queryData.Id))
-	fmt.Println("err", err)
 	s.ErrorIs(err, collections.ErrNotFound)
 	s.Equal(types.QueryMeta{}, res_query)
 
