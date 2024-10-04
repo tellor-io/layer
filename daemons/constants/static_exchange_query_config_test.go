@@ -78,16 +78,6 @@ func TestStaticExchangeQueryConfigCache(t *testing.T) {
 			},
 			expectedFound: true,
 		},
-		"Get Bybit exchangeDetails": {
-			exchangeId: exchange_common.EXCHANGE_ID_BYBIT,
-			expectedValue: &types.ExchangeQueryConfig{
-				ExchangeId: exchange_common.EXCHANGE_ID_BYBIT,
-				IntervalMs: 2_000,
-				TimeoutMs:  3_000,
-				MaxQueries: 1,
-			},
-			expectedFound: true,
-		},
 		"Get CryptoCom exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_CRYPTO_COM,
 			expectedValue: &types.ExchangeQueryConfig{
@@ -138,16 +128,6 @@ func TestStaticExchangeQueryConfigCache(t *testing.T) {
 			},
 			expectedFound: true,
 		},
-		"Get CoinbasePro exchangeDetails": {
-			exchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
-			expectedValue: &types.ExchangeQueryConfig{
-				ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
-				IntervalMs: 2_000,
-				TimeoutMs:  3_000,
-				MaxQueries: 3,
-			},
-			expectedFound: true,
-		},
 		"Get unknown exchangeDetails": {
 			exchangeId:    "unknown",
 			expectedFound: false,
@@ -164,5 +144,5 @@ func TestStaticExchangeQueryConfigCache(t *testing.T) {
 }
 
 func TestStaticExchangeQueryConfigCacheLength(t *testing.T) {
-	require.Len(t, constants.StaticExchangeQueryConfig, 15)
+	require.Len(t, constants.StaticExchangeQueryConfig, 13)
 }

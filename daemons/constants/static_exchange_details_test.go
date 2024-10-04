@@ -9,8 +9,6 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/binance"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitfinex"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitstamp"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bybit"
-	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/coinbase_pro"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/crypto_com"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/gate"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/huobi"
@@ -61,11 +59,6 @@ func TestStaticExchangeDetailsCache(t *testing.T) {
 			expectedValue: bitstamp.BitstampDetails,
 			expectedFound: true,
 		},
-		"Get Bybit exchangeDetails": {
-			exchangeId:    exchange_common.EXCHANGE_ID_BYBIT,
-			expectedValue: bybit.BybitDetails,
-			expectedFound: true,
-		},
 		"Get CryptoCom exchangeDetails": {
 			exchangeId:    exchange_common.EXCHANGE_ID_CRYPTO_COM,
 			expectedValue: crypto_com.CryptoComDetails,
@@ -89,11 +82,6 @@ func TestStaticExchangeDetailsCache(t *testing.T) {
 		"Get Mexc exchangeDetails": {
 			exchangeId:    exchange_common.EXCHANGE_ID_MEXC,
 			expectedValue: mexc.MexcDetails,
-			expectedFound: true,
-		},
-		"Get CoinbasePro exchangeDetails": {
-			exchangeId:    exchange_common.EXCHANGE_ID_COINBASE_PRO,
-			expectedValue: coinbase_pro.CoinbaseProDetails,
 			expectedFound: true,
 		},
 		"Get test exchange exchangeDetails": {
