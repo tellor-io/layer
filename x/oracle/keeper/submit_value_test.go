@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"errors"
-	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
@@ -26,13 +25,13 @@ func (s *KeeperTestSuite) TestSetValue() {
 	querydatabytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
 	query := types.QueryMeta{
-		Id:                    1,
-		Amount:                math.NewInt(1_000_000),
-		Expiration:            ctx.BlockTime().Add(time.Hour),
-		RegistrySpecTimeframe: time.Hour,
-		HasRevealedReports:    false,
-		QueryData:             querydatabytes,
-		QueryType:             "SpotPrice",
+		Id:                      1,
+		Amount:                  math.NewInt(1_000_000),
+		Expiration:              1000,
+		RegistrySpecBlockWindow: 500,
+		HasRevealedReports:      false,
+		QueryData:               querydatabytes,
+		QueryType:               "SpotPrice",
 	}
 
 	queryBytes, err := utils.QueryBytesFromString(queryData)
@@ -111,7 +110,7 @@ func (s *KeeperTestSuite) TestGetDataSpec() {
 	require.Equal(spec.DocumentHash, "")
 	require.Equal(spec.AggregationMethod, "weighted-median")
 	require.Equal(spec.Registrar, "genesis")
-	require.Equal(spec.ReportBlockWindow, time.Second*10)
+	require.Equal(spec.ReportBlockWindow, uint64(3))
 	require.Equal(spec.ResponseValueType, "uint256")
 
 	regK.On("GetSpec", ctx, "BadQueryType").Return(regtypes.GenesisDataSpec(), errors.New("not found")).Once()
