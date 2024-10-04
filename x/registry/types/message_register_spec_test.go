@@ -2,7 +2,6 @@ package types
 
 import (
 	"testing"
-	time "time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
@@ -63,7 +62,7 @@ func TestMsgRegisterSpec_NewMsgRegisterSpec(t *testing.T) {
 	require.Equal(msg.Spec.ResponseValueType, "uint256")
 	require.Equal(msg.Spec.AggregationMethod, "weighted-median")
 	require.Equal(msg.Spec.Registrar, registrar)
-	require.Equal(msg.Spec.ReportBlockWindow, time.Duration(10))
+	require.Equal(msg.Spec.ReportBlockWindow, uint64(10))
 	require.Equal(msg.Registrar, registrar)
 	require.Equal(msg.QueryType, queryType)
 }

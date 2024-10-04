@@ -135,6 +135,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
+	ctx = ctx.WithBlockHeight(3)
 	err = s.oracleKeeper.SetAggregatedReport(ctx)
 	s.NoError(err)
 

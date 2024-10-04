@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/suite"
@@ -127,7 +126,7 @@ func (s *KeeperTestSuite) TestInitializeQuery() {
 	require.Equal(queryMeta.Id, uint64(0))
 	expectedId := querydataBytes
 	require.Equal(queryMeta.QueryData, expectedId)
-	require.Equal(queryMeta.RegistrySpecBlockWindow, time.Duration(1000))
+	require.Equal(queryMeta.RegistrySpecBlockWindow, uint64(1000))
 }
 
 func (s *KeeperTestSuite) TestUpdateQuery() {
