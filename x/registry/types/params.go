@@ -9,7 +9,7 @@ import (
 var _ paramtypes.ParamSet = (*Params)(nil)
 
 // default max report buffer window
-const DefaultMaxReportWindow = 900_000
+const DefaultMaxReportWindow = 700_000
 
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {

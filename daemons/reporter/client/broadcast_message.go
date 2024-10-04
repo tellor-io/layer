@@ -7,7 +7,6 @@ import (
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 )
 
 // cycle list
@@ -31,48 +30,23 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 		}
 		return fmt.Errorf("error getting deposits: %w", err)
 	}
+
 	queryId := hex.EncodeToString(utils.QueryIDFromData(depositQuerydata))
-	if !depositCommitMap[queryId] {
-		salt, err := oracleutils.Salt(32)
-		if err != nil {
-			return fmt.Errorf("error generating salt: %w", err)
-		}
-		hash := oracleutils.CalculateCommitment(value, salt)
-		msgCommit := &oracletypes.MsgCommitReport{
-			Creator:   c.accAddr.String(),
-			QueryData: depositQuerydata,
-			Hash:      hash,
-		}
-		resp, err := c.sendTx(ctx, msgCommit)
-		if err != nil {
-			return fmt.Errorf("error sending tx: %w", err)
-		}
-		fmt.Println("response after deposit commit message", resp.TxResult.Code)
-		fmt.Println("deposit commit transaction hash", resp.Hash.String())
-		commitId, err := getcommitId(resp.TxResult.Events)
-		if err != nil {
-			return fmt.Errorf("error getting commit id from response: %w", err)
-		}
-		fmt.Println("commit id", commitId)
-		depositCommitMap[queryId] = true
-		commit := Commit{
-			querydata: depositQuerydata,
-			value:     value,
-			salt:      salt,
-			Id:        commitId,
-		}
-		queryresp, err := c.OracleQueryClient.GetQuery(ctx, &oracletypes.QueryGetQueryRequest{QueryId: queryId, Id: commitId})
-		if err != nil {
-			return fmt.Errorf("error getting query meta: %w", err)
-		}
-		block, err := c.cosmosCtx.Client.Block(ctx, nil)
-		if err != nil {
-			return fmt.Errorf("error getting block: %w", err)
-		}
-		expiry := queryresp.Query.Expiration.Sub(block.Block.Time)
-		// add error handling
-		c.SubMgr.AddDepositCommit(ctx, queryId, commit, expiry)
+	if depositReportMap[queryId] {
+		return fmt.Errorf("already reported for this bridge deposit tx")
 	}
+	msg := oracletypes.MsgSubmitValue{
+		Creator:   c.accAddr.String(),
+		QueryData: depositQuerydata,
+		Value:     value,
+	}
+	resp, err := c.sendTx(ctx, &msg)
+	if err != nil {
+		c.logger.Error("sending submit deposit transaction", "error", err)
+	}
+	c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
+	depositReportMap[queryId] = true
+
 	return nil
 }
 

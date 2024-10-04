@@ -27,17 +27,9 @@ import (
 
 const defaultGas = uint64(300000)
 
-type Commit struct {
-	querydata []byte
-	value     string
-	salt      string
-	Id        uint64
-}
-
 var (
 	commitedIds      = make(map[uint64]bool)
-	depositCommitMap = make(map[string]bool)
-	depositMeta      = make(map[string]Commit)
+	depositReportMap = make(map[string]bool)
 )
 
 type Client struct {
@@ -59,8 +51,6 @@ type Client struct {
 	minGasFee string
 	// logger is the logger for the daemon.
 	logger log.Logger
-
-	SubMgr *SubmissionMgr
 }
 
 func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {
@@ -137,8 +127,6 @@ func (c *Client) Start(
 	}
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
-
-	c.SubMgr = NewSubmissionManager(c)
 
 	StartReporterDaemonTaskLoop(
 		c,

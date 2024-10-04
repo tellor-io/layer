@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -13,12 +12,7 @@ import (
 func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	prevQueryData := []byte{}
-	queryRes, err := c.OracleQueryClient.Params(ctx, &oracletypes.QueryParamsRequest{})
-	if err != nil {
-		c.logger.Error(fmt.Sprintf("ERROR get offset param: %v", err))
-		return
-	}
-	offset := queryRes.Params.Offset
+
 	for {
 		querydata, querymeta, err := c.CurrentQuery(ctx)
 		if err != nil {
@@ -37,8 +31,10 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 			}
 		}(ctx, querydata, querymeta)
 
-		currentTime := time.Now()
-		time.Sleep(querymeta.Expiration.Add(offset).Sub(currentTime))
+		err = c.WaitForBlockHeight(ctx, int64(querymeta.Expiration))
+		if err != nil {
+			c.logger.Error("Error waiting for block height", "error", err)
+		}
 	}
 }
 
