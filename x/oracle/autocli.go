@@ -122,7 +122,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "SubmitValue",
 					Use:            "submit-value [creator] [qdata] [value] [salt]",
 					Short:          "Execute the SubmitValue RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}, {ProtoField: "salt"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}},
 				},
 				{
 					RpcMethod:      "Tip",
