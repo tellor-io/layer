@@ -137,10 +137,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.Nil(err)
 	value := testutil.EncodeValue(29266)
 	hash := oracleutils.CalculateCommitment(value, salt)
-	commit, reveal := report(repAccs[0].String(), value, salt, hash, ethQueryData)
-	resp, err := msgServer.CommitReport(s.Setup.Ctx, &commit)
-	s.Nil(err)
-	reveal.CommitId = resp.CommitId
+	reveal := report(repAccs[0].String(), value, salt, hash, ethQueryData)
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
@@ -275,10 +272,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			s.Nil(err)
 			hash := oracleutils.CalculateCommitment(r.value, salt)
 			s.Nil(err)
-			commit, reveal := report(repAccs[i].String(), r.value, salt, hash, ethQueryData)
-			resp, err := msgServer.CommitReport(s.Setup.Ctx, &commit)
-			s.Nil(err)
-			reveal.CommitId = resp.CommitId
+			reveal := report(repAccs[i].String(), r.value, salt, hash, ethQueryData)
 			_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 			s.Nil(err)
 		})
@@ -299,19 +293,13 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Aggregate.AggregateValue)
 }
 
-func report(creator, value, salt, hash string, qdata []byte) (types.MsgCommitReport, types.MsgSubmitValue) {
-	commit := types.MsgCommitReport{
-		Creator:   creator,
-		QueryData: qdata,
-		Hash:      hash,
-	}
+func report(creator, value, salt, hash string, qdata []byte) types.MsgSubmitValue {
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
 		QueryData: qdata,
 		Value:     value,
-		Salt:      salt,
 	}
-	return commit, reveal
+	return reveal
 }
 
 func (s *IntegrationTestSuite) TestGetCylceListQueries() {
@@ -575,25 +563,15 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 
 	reporter1, reporter2, reporter3, reporter4, reporter5 := repAccs[0], repAccs[1], repAccs[2], repAccs[3], repAccs[4]
 	value := "000000000000000000000000000000000000000000000058528649cf80ee0000"
-	salt, err := oracleutils.Salt(32)
-	s.NoError(err)
-	hash := oracleutils.CalculateCommitment(value, salt)
+
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
-	msgCommitReport := types.MsgCommitReport{
-		Creator:   reporter1.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-	resp, err := msgServer.CommitReport(ctx, &msgCommitReport)
-	s.NoError(err)
+
 	msgSubmitValue := types.MsgSubmitValue{
 		Creator:   reporter1.String(),
 		QueryData: querydata,
 		Value:     value,
-		Salt:      salt,
-		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -603,19 +581,11 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
-	msgCommitReport = types.MsgCommitReport{
-		Creator:   reporter2.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
-	s.NoError(err)
+
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter2.String(),
 		QueryData: querydata,
 		Value:     value,
-		Salt:      salt,
-		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -625,19 +595,11 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
-	msgCommitReport = types.MsgCommitReport{
-		Creator:   reporter3.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
-	s.NoError(err)
+
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter3.String(),
 		QueryData: querydata,
 		Value:     value,
-		Salt:      salt,
-		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -653,19 +615,10 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.Error(err)
 	s.Nil(agg)
 
-	msgCommitReport = types.MsgCommitReport{
-		Creator:   reporter4.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
-	s.NoError(err)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter4.String(),
 		QueryData: querydata,
 		Value:     value,
-		Salt:      salt,
-		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -681,19 +634,10 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.Equal(len(agg.Reporters), 4)
 
 	// new report that starts a new cycle
-	msgCommitReport = types.MsgCommitReport{
-		Creator:   reporter5.String(),
-		QueryData: querydata,
-		Hash:      hash,
-	}
-	resp, err = msgServer.CommitReport(ctx, &msgCommitReport)
-	s.NoError(err)
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter5.String(),
 		QueryData: querydata,
 		Value:     value,
-		Salt:      salt,
-		CommitId:  resp.CommitId,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -819,51 +763,51 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.Equal(len(agg.Reporters), 1)
 }
 
-func (s *IntegrationTestSuite) TestCommitQueryMixed() {
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
-	s.NoError(s.Setup.Oraclekeeper.RotateQueries(s.Setup.Ctx))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-	_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
-	s.NoError(err)
-	queryData1, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
-	s.Nil(err)
+// func (s *IntegrationTestSuite) TestCommitQueryMixed() {
+// 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+// 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
+// 	s.NoError(s.Setup.Oraclekeeper.RotateQueries(s.Setup.Ctx))
+// 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+// 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
+// 	_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
+// 	s.NoError(err)
+// 	queryData1, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
+// 	s.Nil(err)
 
-	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-	queryData3, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+// 	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+// 	queryData3, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
 
-	tipper := s.newKeysWithTokens()
-	msg := types.MsgTip{
-		Tipper:    tipper.String(),
-		QueryData: queryData2,
-		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1000)),
-	}
-	_, err = msgServer.Tip(s.Setup.Ctx, &msg)
-	s.Nil(err)
+// 	tipper := s.newKeysWithTokens()
+// 	msg := types.MsgTip{
+// 		Tipper:    tipper.String(),
+// 		QueryData: queryData2,
+// 		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1000)),
+// 	}
+// 	_, err = msgServer.Tip(s.Setup.Ctx, &msg)
+// 	s.Nil(err)
 
-	userTips, err := s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, tipper)
-	s.Nil(err)
-	// tip should be 1000 minus 2% burned
-	s.Equal(userTips, math.NewInt(980))
-	value := "000000000000000000000000000000000000000000000058528649cf0ee0000"
-	salt, err := oracleutils.Salt(32)
-	s.Nil(err)
-	hash := oracleutils.CalculateCommitment(value, salt)
-	s.Nil(err)
-	// commit report with query data in cycle list
-	commit, _ := report(repAccs[0].String(), value, salt, hash, queryData1)
-	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-	s.Nil(err)
-	// commit report with query data not in cycle list but has a tip
-	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData2)
-	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-	s.Nil(err)
-	// commit report with query data not in cycle list and has no tip
-	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData3)
-	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-	s.ErrorContains(err, "query doesn't exist plus not a bridge deposit: not a token deposit")
-}
+// 	userTips, err := s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, tipper)
+// 	s.Nil(err)
+// 	// tip should be 1000 minus 2% burned
+// 	s.Equal(userTips, math.NewInt(980))
+// 	value := "000000000000000000000000000000000000000000000058528649cf0ee0000"
+// 	salt, err := oracleutils.Salt(32)
+// 	s.Nil(err)
+// 	hash := oracleutils.CalculateCommitment(value, salt)
+// 	s.Nil(err)
+// 	// commit report with query data in cycle list
+// 	commit, _ := report(repAccs[0].String(), value, salt, hash, queryData1)
+// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
+// 	s.Nil(err)
+// 	// commit report with query data not in cycle list but has a tip
+// 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData2)
+// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
+// 	s.Nil(err)
+// 	// commit report with query data not in cycle list and has no tip
+// 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData3)
+// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
+// 	s.ErrorContains(err, "query doesn't exist plus not a bridge deposit: not a token deposit")
+// }
 
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {

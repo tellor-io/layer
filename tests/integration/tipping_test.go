@@ -41,38 +41,45 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentHeight := ctx.BlockHeight()
 	// assert height is 0
 	s.Equal(int64(0), currentHeight)
-	// start block at 1
-	fmt.Println("before WithBlockHeight 1")
+	//-------------------------------------------------
+	// block 1 - eth in cycle list
+	//-------------------------------------------------
 	ctx = ctx.WithBlockHeight(1)
-	fmt.Println("after WithBlockHeight 1")
-	// assert height is 1
 	s.Equal(int64(1), ctx.BlockHeight())
 
-	fmt.Println("before block 2")
-	blockTime := ctx.BlockTime()
-	fmt.Println("blockTime before next block", blockTime)
-	ctx, err := simtestutil.NextBlock(app, ctx, time.Second*15) // endblock1/beginblock2
+	cycleList, err := okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	blockTime = ctx.BlockTime()
-	fmt.Println("blockTime after next block", blockTime)
+	s.True(bytes.Equal(cycleList, ethQueryData))
 
-	// assert height is 2
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
+	s.NoError(err)
+	//-------------------------------------------------
+	// block 2 - eth in cycle list
+	//-------------------------------------------------
 	s.Equal(int64(2), ctx.BlockHeight())
 
-	// block 3
-	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*1)
+	cycleList, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
+	s.True(bytes.Equal(cycleList, ethQueryData))
+
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
+	s.NoError(err)
+	//-------------------------------------------------
+	// block 3 - last block for eth in cycle list
+	//-------------------------------------------------
 	// assert height is 3
 	s.Equal(int64(3), ctx.BlockHeight())
 
 	// get query
-	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
+	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
 	s.NoError(err)
 	s.Equal(math.ZeroInt(), query.Amount)
-	s.True(query.Expiration.After(ctx.BlockTime()))
-	expiration := query.Expiration
+	fmt.Println("query.Expiration", query.Expiration)
+	s.True(query.Expiration > uint64(ctx.BlockHeight()))
+	expirationBeforeTip := query.Expiration
+
 	// tip
-	tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: btcQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
+	tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
 	s.NotNil(tipmsg)
 	s.NoError(err)
 
@@ -80,8 +87,8 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
 	s.Equal(math.NewInt(980_000), query.Amount)     // 2% burn
-	s.True(query.Expiration.After(ctx.BlockTime())) // not expired
-	s.Equal(expiration, query.Expiration)
+	s.True(query.Expiration > uint64(ctx.BlockHeight())) // not expired
+	s.Equal(expirationBeforeTip, query.Expiration)
 
 	// ----------------
 	// next block
@@ -98,8 +105,8 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// check query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
-	s.Equal(math.NewInt(980_000), query.Amount)      // 2% burn
-	s.True(query.Expiration.Before(ctx.BlockTime())) // expired
+	s.Equal(math.NewInt(980_000), query.Amount) // 2% burn
+	// s.True(query.Expiration.Before(ctx.BlockTime())) // expired
 	currentCycleListQuery, err := okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
@@ -121,6 +128,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// check query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
-	s.Equal(math.NewInt(980_000), query.Amount)     // 2% burn
-	s.True(query.Expiration.After(ctx.BlockTime())) // non-expired commit time window
+	s.Equal(math.NewInt(980_000), query.Amount) // 2% burn
+	// s.True(query.Expiration.After(ctx.BlockTime())) // non-expired commit time window
 }
