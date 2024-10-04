@@ -86,7 +86,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// get query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
 	s.NoError(err)
-	s.Equal(math.NewInt(980_000), query.Amount)     // 2% burn
+	s.Equal(math.NewInt(980_000), query.Amount)          // 2% burn
 	s.True(query.Expiration > uint64(ctx.BlockHeight())) // not expired
 	s.Equal(expirationBeforeTip, query.Expiration)
 
