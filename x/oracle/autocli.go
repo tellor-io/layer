@@ -125,12 +125,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}, {ProtoField: "salt"}},
 				},
 				{
-					RpcMethod:      "CommitReport",
-					Use:            "commit-report [creator] [query_data] [hash]",
-					Short:          "Execute the CommitReport RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "hash"}},
-				},
-				{
 					RpcMethod:      "Tip",
 					Use:            "tip [tipper] [query_data] [amount]",
 					Short:          "Execute the Tip RPC method",
