@@ -134,10 +134,36 @@ func (s *E2ETestSuite) TestDisputes() {
 	revealBlock := s.Setup.Ctx.BlockHeight()
 	require.NoError(err)
 	require.NotNil(revealResponse)
-	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(21 * time.Second))
+	// advance block height to expire the query and aggregate report
+
+	//---------------------------------------------------------------------------
+	// Height 2  - advance block to expire query
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	//---------------------------------------------------------------------------
+	// Height 3 - advance block to expire query
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+	//---------------------------------------------------------------------------
+	// Height 4 - check on aggregate
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
 	// get queryId for GetAggregatedReportRequest
 	queryId := utils.QueryIDFromData(cycleListQuery)
 	s.NoError(err)
@@ -154,10 +180,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
 	require.Equal(uint64(4000), result.Aggregate.ReporterPower)
-	require.Equal(uint64(1), result.Aggregate.Height)
+	require.Equal(uint64(3), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------
-	// Height 2 - create a dispute
+	// Height 5 - create a dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -218,7 +244,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 3 - unjail reporter
+	// Height 6 - unjail reporter
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -254,7 +280,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// todo: more balance checks at each step
 
 	//---------------------------------------------------------------------------
-	// Height 4 - direct reveal for cycle list again
+	// Height 7 - direct reveal for cycle list again
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -278,8 +304,28 @@ func (s *E2ETestSuite) TestDisputes() {
 	revealResponse, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &reveal)
 	require.NoError(err)
 	require.NotNil(revealResponse)
-	// advance time and block height to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(21 * time.Second))
+	// advance block height to expire the query and aggregate report
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 8  - advance block to expire query
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+	//---------------------------------------------------------------------------
+	// Height 9 - advance block to expire query
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// get queryId for GetAggregatedReportRequest
@@ -297,13 +343,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
 	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.ReporterPower)
-	require.Equal(uint64(4), result.Aggregate.Height)
+	require.Equal(uint64(7), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 5 - open minor dispute
+	// Height 10 - open minor dispute
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -342,7 +388,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 6 - vote on minor dispute
+	// Height 11 - vote on minor dispute
 	// ---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -407,7 +453,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 7 - minor dispute ends and another direct reveal for cycle list
+	// Height 12 - minor dispute ends and another direct reveal for cycle list
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -433,7 +479,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.NotNil(disputes)
 
-	// get new cycle list query data
 	cycleListQuery, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
 	// create reveal message
@@ -473,7 +518,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 8 - open major dispute for report
+	// Height 13 - open major dispute for report
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))

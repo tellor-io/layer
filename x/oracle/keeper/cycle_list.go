@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -31,19 +30,15 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// if current query is expired, rotate the cycle list
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
-	fmt.Println("blockHeight", blockHeight)
 
 	querydata, err := k.GetCurrentQueryInCycleList(ctx)
 	if err != nil {
 		return err
 	}
 	queryId := utils.QueryIDFromData(querydata)
-	fmt.Println("current queryId", hex.EncodeToString(queryId))
-	nPeek, err := k.CyclelistSequencer.Peek(ctx)
 	if err != nil {
 		return err
 	}
-	fmt.Println("nPeek", nPeek)
 	queryMeta, err := k.CurrentQuery(ctx, queryId)
 	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
 		return nil
@@ -57,7 +52,6 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("n", n)
 	max := len(q)
 
 	switch {
@@ -70,9 +64,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	default:
 		n += 1
 	}
-	fmt.Println("n after", n)
 	queryId = utils.QueryIDFromData(q[n])
-	fmt.Println("queryId", hex.EncodeToString(queryId))
 	// queries that are without tip (ie cycle list queries) could linger in the store
 	// if there are no reports to be aggregated (where queries removed) since you each query cycle we generate a new query
 	err = k.ClearOldqueries(ctx, queryId)

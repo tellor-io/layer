@@ -696,9 +696,20 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 5 - Rob direct reveals for cycle list at height 5
+	// Height 5 - only one block left in this cycle list query, pretend empty block
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(5)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 2))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 6 - Rob direct reveals for cycle list at height 6
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 2))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -719,9 +730,9 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 6 - Roman direct reveals for the same cycle list at height 6
+	// Height 7 - Roman and Ricky direct reveal for the same cycle list at height 7
 	//---------------------------------------------------------------------------
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(7)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 2))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
@@ -732,17 +743,6 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 		Value:     testutil.EncodeValue(100_000),
 	}
 	_, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &msgSubmitValue)
-	require.NoError(err)
-
-	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
-	require.NoError(err)
-
-	//---------------------------------------------------------------------------
-	// Height 7 - Ricky direct reveals for the same cycle list at height 7
-	//---------------------------------------------------------------------------
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(7)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 2))
-	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
 	msgSubmitValue = oracletypes.MsgSubmitValue{
@@ -757,7 +757,7 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 8 - Commit window expires, report should get aggregated in this endblock
+	// Height 7 - Commit window expires, report gets aggregated in endblock
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(8)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 2))
@@ -776,7 +776,7 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	require.Equal(aggregate.Height, uint64(7))
 	require.Equal(aggregate.ReporterPower, uint64(850))
 	require.Equal(aggregate.QueryId, queryId)
-	require.Equal(aggregate.MetaId, uint64(1))
+	require.Equal(aggregate.MetaId, uint64(2))
 
 	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryId, uint64(time.UnixMilli())))
 	require.NoError(err)
