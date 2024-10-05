@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // cycle list order is eth, btc, trb
@@ -33,7 +37,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
-	// oserver := keeper.NewMsgServerImpl(okpr)
+	oserver := keeper.NewMsgServerImpl(okpr)
 	currentHeight := ctx.BlockHeight()
 	// assert height is 0
 	s.Equal(int64(0), currentHeight)
@@ -73,9 +77,9 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// expirationBeforeTip := query.Expiration
 
 	// tip
-	// tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
-	// s.NotNil(tipmsg)
-	// s.NoError(err)
+	tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
+	s.NotNil(tipmsg)
+	s.NoError(err)
 
 	// // get query, tipping while still active does not extend expiration
 	// query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
