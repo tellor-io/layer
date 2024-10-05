@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -23,7 +22,6 @@ func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
 
 // rotation of the cycle list
 func (k Keeper) RotateQueries(ctx context.Context) error {
-	fmt.Println("RotateQueries")
 	// only rotate if current query is expired
 	// get current query
 	// if current query is not expired, return

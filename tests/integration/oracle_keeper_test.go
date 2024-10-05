@@ -141,7 +141,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 3) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 
@@ -278,10 +278,10 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 		})
 	}
 	// advance time to expire query and aggregate report
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypass time to expire query so it can be aggregated
-	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	s.Nil(err)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 3) // bypass time to expire query so it can be aggregated
+
 	_, _ = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
 	// check median
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
@@ -577,7 +577,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Minute * 20)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 3, Time: ctx.BlockTime().Add(time.Minute * 20)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
@@ -629,6 +629,8 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 4)
@@ -851,7 +853,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.Nil(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryId, query.Id), query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 3) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 
@@ -931,7 +933,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.Nil(err)
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[1].Bytes(), query.Id), reports[1])
 	s.Nil(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second * 17)) // bypassing offset that expires time to commit/reveal
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 3) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
 

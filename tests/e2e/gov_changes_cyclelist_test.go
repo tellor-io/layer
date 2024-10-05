@@ -173,6 +173,10 @@ func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
 	require.NoError(err)
 
 	cycleList, err := s.Setup.Oraclekeeper.GetCyclelist(s.Setup.Ctx)
+	require.Equal(len(cycleList), 4)
+	require.Contains(cycleList, proposalCycleList[0])
+	require.Contains(cycleList, proposalCycleList[1])
+	require.Contains(cycleList, proposalCycleList[2])
+	require.Contains(cycleList, proposalCycleList[3])
 	require.NoError(err)
-	require.Equal(cycleList, proposalCycleList)
 }
