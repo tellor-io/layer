@@ -37,11 +37,6 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	queryId := utils.QueryIDFromData(querydata)
 
 	queryMeta, err := k.CurrentQuery(ctx, queryId)
-	if err != nil {
-		return err
-	}
-	fmt.Println("queryMeta.Expiration:", queryMeta.Expiration)
-	fmt.Println("blockHeight:", blockHeight)
 	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
 		fmt.Println("query is not expired, skipping rotation")
 		return nil

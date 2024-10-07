@@ -181,8 +181,8 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// check eth query
 	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
 	s.NoError(err)
-	s.Zero(query.Amount)                                   // amount should be zero
-	s.Equal(query.Expiration, uint64(ctx.BlockHeight()+1)) // should expire next block
+	s.Equal(query.Amount, math.NewInt(0))                // amount should be zero
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight())) // should expire next block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
