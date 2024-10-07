@@ -12,7 +12,6 @@ import (
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -133,11 +132,8 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
 
-	salt, err := oracleutils.Salt(32)
-	s.Nil(err)
 	value := testutil.EncodeValue(29266)
-	hash := oracleutils.CalculateCommitment(value, salt)
-	reveal := report(repAccs[0].String(), value, salt, hash, ethQueryData)
+	reveal := report(repAccs[0].String(), value, ethQueryData)
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
@@ -268,11 +264,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 		s.T().Run(r.name, func(t *testing.T) {
 			// create reporter
 			addr[r.reporterIndex] = repAccs[i]
-			salt, err := oracleutils.Salt(32)
-			s.Nil(err)
-			hash := oracleutils.CalculateCommitment(r.value, salt)
-			s.Nil(err)
-			reveal := report(repAccs[i].String(), r.value, salt, hash, ethQueryData)
+			reveal := report(repAccs[i].String(), r.value, ethQueryData)
 			_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 			s.Nil(err)
 		})
@@ -293,7 +285,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Aggregate.AggregateValue)
 }
 
-func report(creator, value, salt, hash string, qdata []byte) types.MsgSubmitValue {
+func report(creator, value string, qdata []byte) types.MsgSubmitValue {
 	reveal := types.MsgSubmitValue{
 		Creator:   creator,
 		QueryData: qdata,
