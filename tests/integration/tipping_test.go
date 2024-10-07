@@ -272,5 +272,4 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// s.NoError(err)
 	// // s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
 	// // queryId = utils.QueryIDFromData(currentCycleListQuery)
-
 }
