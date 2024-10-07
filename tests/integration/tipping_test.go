@@ -49,7 +49,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err := okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	_ = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
@@ -61,50 +60,33 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
-
-	// get query
-	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
-	s.NoError(err)
-	s.Equal(math.ZeroInt(), query.Amount)
-	// fmt.Println("query.Expiration", query.Expiration)
-	s.True(query.Expiration > uint64(ctx.BlockHeight()))
-	// expirationBeforeTip := query.Expiration
-
-	// // get query, tipping while still active does not extend expiration
-	// query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
-	// s.NoError(err)
-	// s.Equal(math.NewInt(980_000), query.Amount)    // 2% burn
-	// s.Equal(expirationBeforeTip, query.Expiration) //  expired
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 3 - eth still in cycle list
+	// block 3 - eth final block in cycle list
 	//-------------------------------------------------
 	// assert height is 3
 	s.Equal(int64(3), ctx.BlockHeight())
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 4 - first block for btc, rotate at end of 6
+	// block 4 - first block for btc
 	//-------------------------------------------------
 	s.Equal(int64(4), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // trb query data
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 5 - final block for btc
+	// block 5 - final block for btc, tip
 	//-------------------------------------------------
 	// assert height is 5
 	s.Equal(int64(5), ctx.BlockHeight())
@@ -112,14 +94,26 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+
+	// get query before tipping
+	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
+	s.NoError(err)
+	s.Equal(math.ZeroInt(), query.Amount)
+	s.True(query.Expiration == uint64(ctx.BlockHeight()))
+	expirationBeforeTip := query.Expiration
 
 	// tip
 	tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: btcQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
 	s.NotNil(tipmsg)
 	s.NoError(err)
 
-	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
+	// get query after tipping, tipping while still in cycle list does not extend expiration
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
+	s.NoError(err)
+	s.Equal(math.NewInt(980_000), query.Amount)    // 2% burn
+	s.Equal(expirationBeforeTip, query.Expiration) // expirations should stay the same
+
+	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2))
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 6 - first block for trb
@@ -128,9 +122,14 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
-	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
+	// check trb query
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(trbQueryData))
+	s.NoError(err)
+	s.Equal(math.ZeroInt(), query.Amount)                  // amount should be zero
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight()+1)) // should expire next block
+
+	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2))
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 7 - final block for trb
@@ -140,19 +139,29 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+
+	// check trb query
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(trbQueryData))
+	s.NoError(err)
+	s.Zero(query.Amount)                                 // amount should be zero
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight())) // last block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 8 - back to eth
+	// block 8 - first block for eth
 	//-------------------------------------------------
 	s.Equal(int64(8), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+
+	// check eth query
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
+	s.NoError(err)
+	s.Zero(query.Amount)                                   // amount should be zero
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight()+1)) // should expire next block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
@@ -163,21 +172,30 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
 
-	// s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
+	// check eth query
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
+	s.NoError(err)
+	s.Zero(query.Amount)                                 // amount should be zero
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight())) // last block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // btc query data
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 10 - first block for btc
+	// block 10 - first block for btc, should still have the tip
 	//-------------------------------------------------
 	s.Equal(int64(10), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+	s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
+
+	// check btc query
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
+	s.NoError(err)
+	s.Equal(math.NewInt(980_000), query.Amount)            // amount should still be tip
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight()+1)) // should expire next block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // btc query data
 	s.NoError(err)
@@ -188,55 +206,55 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+	s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
+
+	// check btc query
+	query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(btcQueryData))
+	s.NoError(err)
+	s.Equal(math.NewInt(980_000), query.Amount)          // amount should be tip
+	s.Equal(query.Expiration, uint64(ctx.BlockHeight())) // should expire this block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 12 - final block for btc
+	// block 12 - first block for trb
 	//-------------------------------------------------
 	s.Equal(int64(12), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 11 - final block for btc
+	// block 13 - final block for trb
 	//-------------------------------------------------
 	s.Equal(int64(13), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 11 - final block for btc
+	// block 14 - first block for eth
 	//-------------------------------------------------
 	s.Equal(int64(14), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
 	//-------------------------------------------------
-	// block 11 - final block for btc
+	// block 15 - final block for eth
 	//-------------------------------------------------
 	s.Equal(int64(15), ctx.BlockHeight())
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	// queryId = utils.QueryIDFromData(currentCycleListQuery)
-
+	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
 }

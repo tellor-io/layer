@@ -42,6 +42,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	fmt.Println("queryMeta.Expiration:", queryMeta.Expiration)
 	fmt.Println("blockHeight:", blockHeight)
 	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
+		fmt.Println("query is not expired, skipping rotation")
 		return nil
 	}
 
@@ -87,12 +88,15 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 	}
 	// if query has a tip don't generate a new query but extend if revealing time is expired
+	fmt.Println("querymeta.Amount:", querymeta.Amount)
 	if !querymeta.Amount.IsZero() {
+		fmt.Println("inside tipped part of rotate queries")
 		querymeta.CycleList = true
 
+		fmt.Println("querymeta.Expiration:", querymeta.Expiration)
+		fmt.Println("blockHeight:", blockHeight)
 		if querymeta.Expiration >= uint64(blockHeight) { // wrong, shouldn't use same query if expired
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
-
 		}
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
