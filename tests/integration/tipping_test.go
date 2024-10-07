@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
@@ -50,9 +49,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err := okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	queryId := utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	fmt.Println("queryId", queryId)
+	_ = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
@@ -64,9 +61,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	// get query
 	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
@@ -75,11 +70,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	// fmt.Println("query.Expiration", query.Expiration)
 	s.True(query.Expiration > uint64(ctx.BlockHeight()))
 	// expirationBeforeTip := query.Expiration
-
-	// tip
-	tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
-	s.NotNil(tipmsg)
-	s.NoError(err)
 
 	// // get query, tipping while still active does not extend expiration
 	// query, err = okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
@@ -97,9 +87,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
 	s.NoError(err)
@@ -111,9 +99,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // trb query data
 	s.NoError(err)
@@ -126,9 +112,12 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+
+	// tip
+	tipmsg, err := oserver.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: btcQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000))})
+	s.NotNil(tipmsg)
+	s.NoError(err)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
@@ -139,9 +128,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
@@ -153,9 +140,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, trbQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
@@ -167,9 +152,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
@@ -180,9 +163,8 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+
 	// s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // btc query data
@@ -195,9 +177,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // btc query data
 	s.NoError(err)
@@ -209,9 +189,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
@@ -223,9 +201,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
@@ -237,9 +213,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
@@ -251,9 +225,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
 	s.NoError(err)
@@ -265,7 +237,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	currentCycleListQuery, err = okpr.GetCurrentQueryInCycleList(ctx)
 	s.NoError(err)
 	// s.True(bytes.Equal(currentCycleListQuery, btcQueryData))
-	fmt.Println("currentHeight", ctx.BlockHeight())
-	queryId = utils.QueryIDFromData(currentCycleListQuery)
-	fmt.Println("queryId", queryId)
+	// queryId = utils.QueryIDFromData(currentCycleListQuery)
+
 }

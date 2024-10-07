@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -38,6 +39,8 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		return err
 	}
 	queryMeta, err := k.CurrentQuery(ctx, queryId)
+	fmt.Println("queryMeta.Expiration:", queryMeta.Expiration)
+	fmt.Println("blockHeight:", blockHeight)
 	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
 		return nil
 	}
@@ -89,6 +92,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 		if querymeta.Expiration >= uint64(blockHeight) { // wrong, shouldn't use same query if expired
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+
 		}
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
