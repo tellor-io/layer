@@ -109,7 +109,7 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[1].String()})
 	s.NoError(err)
 	// forward time to bypass the lock time that the delegator has
-	//maxbuffer, err := s.Setup.Registrykeeper.MaxReportBufferWindow(s.Setup.Ctx)
+
 	s.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(1814400 * time.Second).Add(1))
 	// check validator reporting tokens after delegator has moved

@@ -617,7 +617,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	_, _ = app.EndBlocker(ctx)
 
 	// time plus offset
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 11)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 2000, Time: ctx.BlockTime().Add(time.Second * 11)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
@@ -637,7 +637,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*11)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 2000, Time: ctx.BlockTime().Add(time.Hour + time.Second*11)})
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
@@ -714,6 +714,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
+
 	agg, _, err := ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.Error(err)
 	s.Nil(agg)
@@ -728,7 +729,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	_, _ = app.EndBlocker(ctx)
 
 	// time plus offset
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Second * 11)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 2000, Time: ctx.BlockTime().Add(time.Second * 11)})
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
@@ -746,7 +747,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.NoError(err)
 	_, _ = app.EndBlocker(ctx)
 
-	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 1, Time: ctx.BlockTime().Add(time.Hour + time.Second*11)})
+	ctx = ctx.WithBlockHeader(cmtproto.Header{Height: ctx.BlockHeight() + 2000, Time: ctx.BlockTime().Add(time.Hour + time.Second*11)})
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
