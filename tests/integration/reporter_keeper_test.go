@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"fmt"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/tellor-io/layer/testutil/sample"
@@ -69,16 +70,20 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
 	)
 
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	_, err := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegate)
 	s.NoError(err)
 	val1, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
 	s.NoError(err)
+
 	// register reporter
 	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
 	s.NoError(err)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
 	// add selector to the reporter
 	_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
 	s.NoError(err)
+
 	// check validator reporting status
 	validatorReporter1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0])
 	s.NoError(err)
@@ -99,12 +104,14 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	s.True(validatorReporter1.GT(validatorReporter2))
 
 	// change reporter
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[1].String()})
 	s.NoError(err)
 	// forward time to bypass the lock time that the delegator has
-	maxbuffer, err := s.Setup.Registrykeeper.MaxReportBufferWindow(s.Setup.Ctx)
+
 	s.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(maxbuffer))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(1814400 * time.Second).Add(1))
 	// check validator reporting tokens after delegator has moved
 	validatorReporter1, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0])
 	s.NoError(err)

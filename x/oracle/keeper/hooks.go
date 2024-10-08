@@ -20,5 +20,5 @@ func (k Keeper) Hooks() Hooks {
 }
 
 func (h Hooks) AfterDataSpecUpdated(ctx context.Context, querytype string, dataspec rtypes.DataSpec) error {
-	return h.k.UpdateQuery(ctx, querytype, dataspec.ReportBufferWindow)
+	return h.k.UpdateQuery(ctx, querytype, dataspec.ReportBlockWindow)
 }

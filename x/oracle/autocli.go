@@ -101,6 +101,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query to get all available tipped queries",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "GetCurrentQueryByQueryId",
+					Use:            "get-current-query-by-query-id [query_id]",
+					Short:          "Query current query by query id",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -116,13 +122,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "SubmitValue",
 					Use:            "submit-value [creator] [qdata] [value] [salt]",
 					Short:          "Execute the SubmitValue RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}, {ProtoField: "salt"}},
-				},
-				{
-					RpcMethod:      "CommitReport",
-					Use:            "commit-report [creator] [query_data] [hash]",
-					Short:          "Execute the CommitReport RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "hash"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}},
 				},
 				{
 					RpcMethod:      "Tip",

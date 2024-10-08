@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strconv"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -22,6 +24,25 @@ func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
 
 // rotation of the cycle list
 func (k Keeper) RotateQueries(ctx context.Context) error {
+	// only rotate if current query is expired
+	// get current query
+	// if current query is not expired, return
+	// if current query is expired, rotate the cycle list
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockHeight := sdkCtx.BlockHeight()
+
+	querydata, err := k.GetCurrentQueryInCycleList(ctx)
+	if err != nil {
+		return err
+	}
+	queryId := utils.QueryIDFromData(querydata)
+
+	queryMeta, err := k.CurrentQuery(ctx, queryId)
+	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
+		fmt.Println("query is not expired, skipping rotation")
+		return nil
+	}
+
 	q, err := k.GetCyclelist(ctx)
 	if err != nil {
 		return err
@@ -30,10 +51,8 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
 	max := len(q)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+
 	switch {
 	case n >= uint64(max-1): // n could be gt if the cycle list is updated, otherwise n == max-1
 		err := k.CyclelistSequencer.Set(ctx, 0)
@@ -44,7 +63,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	default:
 		n += 1
 	}
-	queryId := utils.QueryIDFromData(q[n])
+	queryId = utils.QueryIDFromData(q[n])
 	// queries that are without tip (ie cycle list queries) could linger in the store
 	// if there are no reports to be aggregated (where queries removed) since you each query cycle we generate a new query
 	err = k.ClearOldqueries(ctx, queryId)
@@ -61,20 +80,20 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 			return err
 		}
 		querymeta.CycleList = true
-		querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
 	}
 	// if query has a tip don't generate a new query but extend if revealing time is expired
+	fmt.Println("querymeta.Amount:", querymeta.Amount)
 	if !querymeta.Amount.IsZero() {
+		fmt.Println("inside tipped part of rotate queries")
 		querymeta.CycleList = true
-		offset, err := k.GetReportOffsetParam(ctx)
-		if err != nil {
-			return err
+
+		if querymeta.Expiration <= uint64(blockHeight) && !querymeta.HasRevealedReports { // wrong, shouldn't use same query if expired
+			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		}
-		if querymeta.Expiration.Add(offset).Before(blockTime) {
-			querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
-		}
+
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
 	// if query has no tip generate a new query window
@@ -82,21 +101,27 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"rotating-cyclelist-with-existing-nontipped-query",
+			sdk.NewAttribute("query_id", string(queryId)),
+			sdk.NewAttribute("Old QueryMeta Id", strconv.Itoa(int(querymeta.Id))),
+			sdk.NewAttribute("New QueryMeta Id", strconv.Itoa(int(nextId))),
+		),
+	})
 	querymeta.Id = nextId
-	querymeta.Expiration = blockTime.Add(querymeta.RegistrySpecTimeframe)
+	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 	querymeta.HasRevealedReports = false
 	querymeta.CycleList = true
+
 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 }
 
 func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
-	offset, err := k.GetReportOffsetParam(ctx)
-	if err != nil {
-		return err
-	}
+
 	return k.Query.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (stop bool, err error) {
-		if value.Expiration.Add(offset).Before(sdk.UnwrapSDKContext(ctx).BlockTime()) && !value.HasRevealedReports && value.Amount.IsZero() {
+		if value.Expiration < (uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())) && !value.HasRevealedReports && value.Amount.IsZero() {
 			err := k.Query.Remove(ctx, key)
 			if err != nil {
 				return false, err

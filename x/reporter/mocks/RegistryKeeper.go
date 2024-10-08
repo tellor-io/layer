@@ -4,7 +4,6 @@ package mocks
 
 import (
 	context "context"
-	time "time"
 
 	mock "github.com/stretchr/testify/mock"
 )
@@ -15,18 +14,18 @@ type RegistryKeeper struct {
 }
 
 // MaxReportBufferWindow provides a mock function with given fields: ctx
-func (_m *RegistryKeeper) MaxReportBufferWindow(ctx context.Context) (time.Duration, error) {
+func (_m *RegistryKeeper) MaxReportBufferWindow(ctx context.Context) (uint64, error) {
 	ret := _m.Called(ctx)
 
-	var r0 time.Duration
+	var r0 uint64
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) (time.Duration, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) time.Duration); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
 		r0 = rf(ctx)
 	} else {
-		r0 = ret.Get(0).(time.Duration)
+		r0 = ret.Get(0).(uint64)
 	}
 
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {

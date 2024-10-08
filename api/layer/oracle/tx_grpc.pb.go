@@ -22,7 +22,6 @@ type MsgClient interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	SubmitValue(ctx context.Context, in *MsgSubmitValue, opts ...grpc.CallOption) (*MsgSubmitValueResponse, error)
-	CommitReport(ctx context.Context, in *MsgCommitReport, opts ...grpc.CallOption) (*MsgCommitReportResponse, error)
 	Tip(ctx context.Context, in *MsgTip, opts ...grpc.CallOption) (*MsgTipResponse, error)
 	UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist, opts ...grpc.CallOption) (*MsgUpdateCyclelistResponse, error)
 }
@@ -47,15 +46,6 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 func (c *msgClient) SubmitValue(ctx context.Context, in *MsgSubmitValue, opts ...grpc.CallOption) (*MsgSubmitValueResponse, error) {
 	out := new(MsgSubmitValueResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/SubmitValue", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) CommitReport(ctx context.Context, in *MsgCommitReport, opts ...grpc.CallOption) (*MsgCommitReportResponse, error) {
-	out := new(MsgCommitReportResponse)
-	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/CommitReport", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +78,6 @@ type MsgServer interface {
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	SubmitValue(context.Context, *MsgSubmitValue) (*MsgSubmitValueResponse, error)
-	CommitReport(context.Context, *MsgCommitReport) (*MsgCommitReportResponse, error)
 	Tip(context.Context, *MsgTip) (*MsgTipResponse, error)
 	UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error)
 	mustEmbedUnimplementedMsgServer()
@@ -103,9 +92,6 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*
 }
 func (UnimplementedMsgServer) SubmitValue(context.Context, *MsgSubmitValue) (*MsgSubmitValueResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitValue not implemented")
-}
-func (UnimplementedMsgServer) CommitReport(context.Context, *MsgCommitReport) (*MsgCommitReportResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CommitReport not implemented")
 }
 func (UnimplementedMsgServer) Tip(context.Context, *MsgTip) (*MsgTipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Tip not implemented")
@@ -162,24 +148,6 @@ func _Msg_SubmitValue_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CommitReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCommitReport)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).CommitReport(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.oracle.Msg/CommitReport",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CommitReport(ctx, req.(*MsgCommitReport))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_Tip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgTip)
 	if err := dec(in); err != nil {
@@ -230,10 +198,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SubmitValue",
 			Handler:    _Msg_SubmitValue_Handler,
-		},
-		{
-			MethodName: "CommitReport",
-			Handler:    _Msg_CommitReport_Handler,
 		},
 		{
 			MethodName: "Tip",

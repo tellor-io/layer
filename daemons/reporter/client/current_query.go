@@ -22,3 +22,11 @@ func (c *Client) CurrentQuery(ctx context.Context) ([]byte, *oracletypes.QueryMe
 	c.logger.Info("ReporterDaemon", "current query id in cycle list", hex.EncodeToString(utils.QueryIDFromData(querydata)))
 	return querydata, response.QueryMeta, nil
 }
+
+func (c *Client) CurrentQueryByQueryId(ctx context.Context, queryId string) (*oracletypes.QueryMeta, error) {
+	response, err := c.OracleQueryClient.GetCurrentQueryByQueryId(ctx, &oracletypes.QueryGetCurrentQueryByQueryIdRequest{QueryId: queryId})
+	if err != nil {
+		return nil, fmt.Errorf("error calling 'GetCurrentQueryByQueryId': %w", err)
+	}
+	return response.Query, nil
+}
