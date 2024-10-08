@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	gomath "math"
-	"time"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -32,8 +31,7 @@ type (
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
-		Schema         collections.Schema
-		Commits        collections.Map[collections.Pair[[]byte, uint64], types.Commit]                             // key: reporter, queryid
+		Schema         collections.Schema                                                                          // key: reporter, queryid
 		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]        // key: queryId, tipper
 		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
 		// total tips given over time
@@ -78,7 +76,6 @@ func NewKeeper(
 
 		authority: authority,
 
-		Commits: collections.NewMap(sb, types.CommitsPrefix, "commits", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Commit](cdc)),
 		Tips: collections.NewIndexedMap(sb,
 			types.TipsPrefix,
 			"tips",
@@ -152,9 +149,9 @@ func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.Qu
 		return types.QueryMeta{}, err
 	}
 	query := types.QueryMeta{
-		Id:                    id,
-		RegistrySpecTimeframe: dataSpec.ReportBufferWindow,
-		QueryData:             querydata,
+		Id:                      id,
+		RegistrySpecBlockWindow: dataSpec.ReportBlockWindow,
+		QueryData:               querydata,
 	}
 	return query, nil
 }
@@ -173,7 +170,7 @@ func (k Keeper) CurrentQuery(ctx context.Context, queryId []byte) (query types.Q
 	return query, nil
 }
 
-func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe time.Duration) error {
+func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newBlockWindow uint64) error {
 	iter, err := k.Query.Indexes.QueryType.MatchExact(ctx, queryType)
 	if err != nil {
 		return err
@@ -184,7 +181,7 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newTimeframe 
 		return err
 	}
 	for _, query := range queries {
-		query.RegistrySpecTimeframe = newTimeframe
+		query.RegistrySpecBlockWindow = newBlockWindow
 		queryId := utils.QueryIDFromData(query.QueryData)
 		err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 		if err != nil {
@@ -219,13 +216,4 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 	}
 
 	return nil
-}
-
-func (k Keeper) GetReportOffsetParam(ctx context.Context) (time.Duration, error) {
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return time.Duration(0), err
-	}
-
-	return params.Offset, nil
 }
