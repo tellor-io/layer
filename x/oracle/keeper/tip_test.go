@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"time"
-
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
 
@@ -25,13 +23,13 @@ var (
 
 func ReturnTestQueryMeta(tip math.Int) types.QueryMeta {
 	return types.QueryMeta{
-		Id:                    1,
-		Amount:                tip,
-		Expiration:            time.Now().Add(1 * time.Minute),
-		RegistrySpecTimeframe: 1 * time.Minute,
-		HasRevealedReports:    false,
-		QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
-		QueryType:             "SpotPrice",
+		Id:                      1,
+		Amount:                  tip,
+		Expiration:              10,
+		RegistrySpecBlockWindow: 2,
+		HasRevealedReports:      false,
+		QueryData:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryType:               "SpotPrice",
 	}
 }
 

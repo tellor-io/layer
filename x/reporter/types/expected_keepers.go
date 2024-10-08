@@ -13,6 +13,7 @@ import (
 
 // StakingKeeper defines the expected interface for the Staking module.
 type StakingKeeper interface {
+	UnbondingTime(ctx context.Context) (time.Duration, error)
 	GetValidator(ctx context.Context, addr sdk.ValAddress) (validator stakingtypes.Validator, err error)
 	Delegate(
 		ctx context.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus,
@@ -65,5 +66,5 @@ type StakingHooks interface {
 }
 
 type RegistryKeeper interface {
-	MaxReportBufferWindow(ctx context.Context) (time.Duration, error)
+	MaxReportBufferWindow(ctx context.Context) (uint64, error)
 }

@@ -1,10 +1,8 @@
 syntax = "proto3";
 package layer.registry;
 
-import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/duration.proto";
 
 option go_package = "github.com/tellor-io/layer/x/registry/types";
 
@@ -36,9 +34,5 @@ message DataSpec {
   // pertinent reports are aggregated together before arriving at a final value. This defaults
   // to 0s if not specified.
   // extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-  google.protobuf.Duration report_buffer_window = 6 [
-    (gogoproto.stdduration) = true,
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
-  ];
+  uint64 report_block_window = 6;
 }

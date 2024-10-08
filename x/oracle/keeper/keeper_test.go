@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/suite"
@@ -112,14 +111,14 @@ func (s *KeeperTestSuite) TestInitializeQuery() {
 	querydataBytes := hexutil.MustDecode(queryData)
 	queryType := "AmpleforthCustomSpotPrice"
 	rk.On("GetSpec", ctx, queryType).Return(regtypes.DataSpec{
-		ReportBufferWindow: 1000,
+		ReportBlockWindow: 1000,
 	}, errors.New("bad")).Once()
 	queryMeta, err = k.InitializeQuery(ctx, querydataBytes)
 	require.NotNil(queryMeta)
 	require.Error(err)
 
 	rk.On("GetSpec", ctx, queryType).Return(regtypes.DataSpec{
-		ReportBufferWindow: 1000,
+		ReportBlockWindow: 1000,
 	}, nil).Once()
 	queryMeta, err = k.InitializeQuery(ctx, querydataBytes)
 	require.NotNil(queryMeta)
@@ -127,7 +126,7 @@ func (s *KeeperTestSuite) TestInitializeQuery() {
 	require.Equal(queryMeta.Id, uint64(0))
 	expectedId := querydataBytes
 	require.Equal(queryMeta.QueryData, expectedId)
-	require.Equal(queryMeta.RegistrySpecTimeframe, time.Duration(1000))
+	require.Equal(queryMeta.RegistrySpecBlockWindow, uint64(1000))
 }
 
 func (s *KeeperTestSuite) TestUpdateQuery() {
@@ -139,13 +138,13 @@ func (s *KeeperTestSuite) TestUpdateQuery() {
 	queryType := "SpotPrice"
 	queryId := utils.QueryIDFromData([]byte("SpotPrice"))
 	require.NoError(k.Query.Set(ctx, collections.Join(queryId, uint64(1)), types.QueryMeta{
-		QueryType:             queryType,
-		RegistrySpecTimeframe: 500,
-		QueryData:             []byte("SpotPrice"),
+		QueryType:               queryType,
+		RegistrySpecBlockWindow: 500,
+		QueryData:               []byte("SpotPrice"),
 	}))
 
 	// update spotprice type to 1000 ns
-	err := k.UpdateQuery(ctx, queryType, time.Duration(1000))
+	err := k.UpdateQuery(ctx, queryType, 1000)
 	require.NoError(err)
 
 	// check on a spotprice query
@@ -154,7 +153,7 @@ func (s *KeeperTestSuite) TestUpdateQuery() {
 	queries, err := indexes.CollectValues(ctx, k.Query, iter)
 	require.NoError(err)
 	require.Equal(queries[0].QueryType, queryType)
-	require.Equal(queries[0].RegistrySpecTimeframe, time.Duration(1000))
+	require.Equal(queries[0].RegistrySpecBlockWindow, uint64(1000))
 }
 
 func (s *KeeperTestSuite) TestFlagAggregateReport() {
@@ -198,14 +197,4 @@ func (s *KeeperTestSuite) TestFlagAggregateReport() {
 	aggregate, err := k.Aggregates.Get(ctx, collections.Join(queryId, uint64(ctx.BlockTime().UnixMilli())))
 	require.NoError(err)
 	require.True(aggregate.Flagged)
-}
-
-func (s *KeeperTestSuite) TestGetReportOffsetParam() {
-	require := s.Require()
-	k := s.oracleKeeper
-	ctx := s.ctx
-
-	offset, err := k.GetReportOffsetParam(ctx)
-	require.NoError(err)
-	require.Equal(offset, types.DefaultOffset)
 }

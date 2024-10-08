@@ -85,6 +85,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	timestamp := time.Now()
 	ctx := s.ctx.WithBlockTime(timestamp)
+	ctx = ctx.WithBlockHeight(1)
 
 	// setup
 	rep1 := sample.AccAddressBytes()
@@ -92,16 +93,14 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	rep3 := sample.AccAddressBytes()
 	rep4 := sample.AccAddressBytes()
 
-	expiration := timestamp.Unix() - 20
-
 	queryData := types.QueryMeta{
-		Id:                    1,
-		Amount:                math.NewInt(1 * 1e6),
-		Expiration:            time.Unix(expiration, 0),
-		RegistrySpecTimeframe: 0,
-		HasRevealedReports:    true,
-		QueryData:             []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
-		QueryType:             "SpotPrice",
+		Id:                      1,
+		Amount:                  math.NewInt(1 * 1e6),
+		Expiration:              3,
+		RegistrySpecBlockWindow: 2,
+		HasRevealedReports:      true,
+		QueryData:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryType:               "SpotPrice",
 	}
 	queryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
 	err := s.oracleKeeper.Query.Set(ctx, collections.Join(queryId, queryData.Id), queryData)
@@ -128,6 +127,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	permissions := []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}
 	testModuleAccount := authtypes.NewModuleAccount(baseAccount, "time_based_rewards", permissions...)
 
+	ctx = ctx.WithBlockHeight(3)
 	// set up mock of the getTimeBasedRewards function as the account does not exist yet. We will make it return 1*1e6 loya
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
 	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})

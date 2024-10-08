@@ -18,5 +18,5 @@ func TestParams_NewParams(t *testing.T) {
 
 	params := NewParams()
 	require.NotNil(params)
-	require.Equal(params.MaxReportBufferWindow, DefaultMaxReportWindow)
+	require.Equal(params.MaxReportBufferWindow, uint64(DefaultMaxReportWindow))
 }
