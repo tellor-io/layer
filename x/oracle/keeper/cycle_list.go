@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -100,10 +101,19 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"rotating-cyclelist-with-existing-nontipped-query",
+			sdk.NewAttribute("query_id", string(queryId)),
+			sdk.NewAttribute("Old QueryMeta Id", strconv.Itoa(int(querymeta.Id))),
+			sdk.NewAttribute("New QueryMeta Id", strconv.Itoa(int(nextId))),
+		),
+	})
 	querymeta.Id = nextId
 	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 	querymeta.HasRevealedReports = false
 	querymeta.CycleList = true
+
 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 }
 

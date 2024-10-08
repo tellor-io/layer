@@ -163,7 +163,7 @@ func StartReporterDaemonTaskLoop(
 		}
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	err := client.WaitForNextBlock(ctx)
 	if err != nil {
 		client.logger.Error("Waiting for next block", "error", err)
