@@ -46,19 +46,15 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		}
 
 		query.Amount = math.ZeroInt()
-		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
+		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
 	}
 	prevAmt := query.Amount
 	query.Amount = query.Amount.Add(tip.Amount)
 
-	offset, err := k.keeper.GetReportOffsetParam(ctx)
-	if err != nil {
-		return nil, err
-	}
 	// expired submission window
-	if query.Expiration.Add(offset).Before(ctx.BlockTime()) {
+	if query.Expiration < uint64(ctx.BlockHeight()) {
 		// query expired, create new expiration time
-		query.Expiration = ctx.BlockTime().Add(query.RegistrySpecTimeframe)
+		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
 		query.CycleList = false
 		// when report is expired and aggregated the query struct is removed
 		// so when is this condition true?
@@ -107,5 +103,6 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			sdk.NewAttribute("amount", tip.Amount.String()),
 		),
 	})
+	fmt.Println("tip added")
 	return &types.MsgTipResponse{}, nil
 }

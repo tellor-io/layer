@@ -194,7 +194,8 @@ func TestSwitchReporter(t *testing.T) {
 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: math.NewInt(1000 * 1e6)}
 	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), delegationAmounts))
 
-	rk.On("MaxReportBufferWindow", ctx).Return(time.Hour, nil)
+	rk.On("MaxReportBufferWindow", ctx).Return(700_000, nil)
+	sk.On("UnbondingTime", ctx).Return(1814400*time.Second, nil)
 	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
 	require.NoError(t, err)
 
@@ -202,7 +203,7 @@ func TestSwitchReporter(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(reporter2.Bytes(), selection.Reporter))
 	require.False(t, selection.LockedUntilTime.IsZero())
-	require.Equal(t, selection.LockedUntilTime, ctx.BlockTime().Add(time.Hour))
+	require.Equal(t, selection.LockedUntilTime, ctx.BlockTime().Add(1814400*time.Second))
 }
 
 func TestRemoveSelector(t *testing.T) {

@@ -12,6 +12,8 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	time "time"
+
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -255,6 +257,30 @@ func (_m *StakingKeeper) Unbond(ctx context.Context, delAddr types.AccAddress, v
 
 	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress, types.ValAddress, math.LegacyDec) error); ok {
 		r1 = rf(ctx, delAddr, valAddr, shares)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UnbondingTime provides a mock function with given fields: ctx
+func (_m *StakingKeeper) UnbondingTime(ctx context.Context) (time.Duration, error) {
+	ret := _m.Called(ctx)
+
+	var r0 time.Duration
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (time.Duration, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) time.Duration); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(time.Duration)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
