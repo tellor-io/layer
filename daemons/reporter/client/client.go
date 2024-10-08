@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/spf13/viper"
@@ -26,17 +27,9 @@ import (
 
 const defaultGas = uint64(300000)
 
-type Commit struct {
-	querydata []byte
-	value     string
-	salt      string
-	Id        uint64
-}
-
 var (
 	commitedIds      = make(map[uint64]bool)
-	depositCommitMap = make(map[string]bool)
-	depositMeta      = make(map[string]Commit)
+	depositReportMap = make(map[string]bool)
 )
 
 type Client struct {
@@ -58,8 +51,6 @@ type Client struct {
 	minGasFee string
 	// logger is the logger for the daemon.
 	logger log.Logger
-
-	SubMgr *SubmissionMgr
 }
 
 func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {
@@ -114,7 +105,7 @@ func (c *Client) Start(
 	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
 	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
 
-	ticker := time.NewTicker(time.Millisecond * 500)
+	ticker := time.NewTicker(time.Millisecond * 200)
 	stop := make(chan bool)
 
 	// get account
@@ -137,12 +128,9 @@ func (c *Client) Start(
 	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
 
-	c.SubMgr = NewSubmissionManager(c)
-
 	StartReporterDaemonTaskLoop(
 		c,
 		ctx,
-		&SubTaskRunnerImpl{},
 		flags,
 		ticker,
 		stop,
@@ -155,7 +143,6 @@ func (c *Client) Start(
 func StartReporterDaemonTaskLoop(
 	client *Client,
 	ctx context.Context,
-	s SubTaskRunner,
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -176,25 +163,21 @@ func StartReporterDaemonTaskLoop(
 		}
 	}
 
+	time.Sleep(5 * time.Second)
 	err := client.WaitForNextBlock(ctx)
 	if err != nil {
 		client.logger.Error("Waiting for next block", "error", err)
 	}
-	for {
-		select {
-		case <-ticker.C:
-			if err := s.RunReporterDaemonTaskLoop(
-				ctx,
-				client,
-			); err != nil {
-				client.logger.Error("Reporter daemon returned error", "error", err)
-			} else {
-				client.logger.Info("Reporter daemon task completed successfully")
-			}
-		case <-stop:
-			return
-		}
-	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go client.MonitorCyclelistQuery(ctx, &wg)
+
+	wg.Add(1)
+	go client.MonitorTokenBridgeReports(ctx, &wg)
+
+	wg.Wait()
 }
 
 func (c *Client) checkReporter(ctx context.Context) bool {

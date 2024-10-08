@@ -23,7 +23,6 @@ func NewMsgSubmitValue(creator, queryData, value, salt string) *MsgSubmitValue {
 		Creator:   creator,
 		QueryData: queryDataBz,
 		Value:     value,
-		Salt:      salt,
 	}
 }
 

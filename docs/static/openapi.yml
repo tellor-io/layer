@@ -4670,8 +4670,6 @@ definitions:
             format: int64
             title: height of the micro report
         title: aggregate struct to represent meta data of an aggregate report
-  layer.oracle.MsgCommitReportResponse:
-    type: object
   layer.oracle.MsgSubmitValueResponse:
     type: object
   layer.oracle.MsgTipResponse:

@@ -16,7 +16,6 @@ This module enables reporting of data to the network. Reporters can commit and t
 
 ## Transactions
 
-- `CommitReport`
 - `SubmitValue`
 - `Tip`
 - `UpdateCycleList`

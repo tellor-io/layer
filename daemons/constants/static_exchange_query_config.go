@@ -64,14 +64,14 @@ var StaticExchangeQueryConfig = map[types.ExchangeId]*types.ExchangeQueryConfig{
 		TimeoutMs:  defaultTimeoutMs,
 		MaxQueries: defaultMultiMarketMaxQueries,
 	},
-	// Bybit has a limit of 120 requests per second for 5 consecutive seconds.
-	// https://bybit-exchange.github.io/docs/v5/rate-limit
-	exchange_common.EXCHANGE_ID_BYBIT: {
-		ExchangeId: exchange_common.EXCHANGE_ID_BYBIT,
-		IntervalMs: defaultIntervalMs,
-		TimeoutMs:  defaultTimeoutMs,
-		MaxQueries: defaultMultiMarketMaxQueries,
-	},
+	// // Bybit has a limit of 120 requests per second for 5 consecutive seconds.
+	// // https://bybit-exchange.github.io/docs/v5/rate-limit
+	// exchange_common.EXCHANGE_ID_BYBIT: {
+	// 	ExchangeId: exchange_common.EXCHANGE_ID_BYBIT,
+	// 	IntervalMs: defaultIntervalMs,
+	// 	TimeoutMs:  defaultTimeoutMs,
+	// 	MaxQueries: defaultMultiMarketMaxQueries,
+	// },
 	// Crypto.com has a limit of 100 requests per second.
 	// https://exchange-docs.crypto.com/derivatives/index.html#rate-limits
 	exchange_common.EXCHANGE_ID_CRYPTO_COM: {
@@ -112,14 +112,14 @@ var StaticExchangeQueryConfig = map[types.ExchangeId]*types.ExchangeQueryConfig{
 		TimeoutMs:  defaultTimeoutMs,
 		MaxQueries: defaultMultiMarketMaxQueries,
 	},
-	// CoinbasePro has a limit of 10 requests per second.
-	// https://docs.cloud.coinbase.com/exchange/docs/rest-rate-limits
-	exchange_common.EXCHANGE_ID_COINBASE_PRO: {
-		ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
-		IntervalMs: defaultIntervalMs,
-		TimeoutMs:  defaultTimeoutMs,
-		MaxQueries: defaultMaxQueries,
-	},
+	// // CoinbasePro has a limit of 10 requests per second.
+	// // https://docs.cloud.coinbase.com/exchange/docs/rest-rate-limits
+	// exchange_common.EXCHANGE_ID_COINBASE_PRO: {
+	// 	ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
+	// 	IntervalMs: defaultIntervalMs,
+	// 	TimeoutMs:  defaultTimeoutMs,
+	// 	MaxQueries: defaultMaxQueries,
+	// },
 	exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE: {
 		ExchangeId: exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE,
 		IntervalMs: defaultIntervalMs,
