@@ -12,6 +12,7 @@
 - 2024-04-05: clarity
 - 2024-08-03: clean up
 - 2024-10-07: change to blocks
+- 2024-10-07: commit/reveal considered
 
 ## Context
 
@@ -38,6 +39,10 @@ We also discussed to possibility of allowing new tips to start a new *time frame
 ### Refund tip if no report
 
 Refunds were discussed if no data was received. However, the argument against this is that the reason for no one reporting is that the tip was too low or again the data spec is not clear.  It would also be easy to spam the chain with small tips or for unsupported queryId's if a malicious actor knows that they'll get the tokens back.  Additionally, user voting power is based on tips, and more tracking would need to be put in place to avoid voting power mining. 
+
+## Commit / reveal process
+
+A data commit/reveal process was considered to avoid data mirroring (when reporters copy and report other reporters’ data instead of pulling the data and doing the aggregation themselves). The official value is the aggregate of all reports submitted on-chain and mirroring can influence the official value. Implementing this process significantly increased the time needed to finalize the official value.  For now, mirroring will be monitored for, and disputes and the social layer can be used if suspected.
 
 ## Issues / Notes on Implementation
 
