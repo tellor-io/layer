@@ -50,7 +50,7 @@ for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
 
     echo "Set pruning to custom..."
     sed -i '' 's/^pruning = "default"/pruning = "custom"/g' ~/.layer/$name/config/app.toml
-    sed -i '' 's/^pruning-keep-recent = "0"/pruning-keep-recent = "1814400"/g' ~/.layer/$name/config/app.toml
+    sed -i '' 's/^pruning-keep-recent = "0"/pruning-keep-recent = "1209600"/g' ~/.layer/$name/config/app.toml
     sed -i '' 's/^pruning-interval = "0"/pruning-interval = "10"/g' ~/.layer/$name/config/app.toml
 
     echo "Turn on snapshot service for node"
