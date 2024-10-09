@@ -376,6 +376,7 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 	lastCheckpointIdx, err = k.LatestCheckpointIdx.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, lastCheckpointIdx.Index, uint64(2))
+
 }
 
 func TestGetValidatorCheckpointFromStorage(t *testing.T) {
@@ -452,6 +453,16 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, res.Timestamp, validatorTimestamp)
+
+	// test max
+	maxUint := ^uint64(0)
+	require.NoError(t, k.ValidatorCheckpointIdxMap.Set(ctx, maxUint, types.CheckpointTimestamp{
+		Timestamp: maxUint,
+	}))
+	res, err = k.GetValidatorTimestampByIdxFromStorage(ctx, maxUint)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, res.Timestamp, maxUint)
 }
 
 func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
@@ -482,6 +493,19 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 	res, err = k.GetValidatorSetSignaturesFromStorage(ctx, timestamp.Timestamp)
 	require.NoError(t, err)
 	require.NotNil(t, res)
+
+	// test max
+	maxUint := ^uint64(0)
+	require.NoError(t, k.BridgeValsetSignaturesMap.Set(ctx, maxUint, types.BridgeValsetSignatures{
+		Signatures: [][]byte{
+			[]byte("signature1"),
+			[]byte("signature2"),
+		},
+	}))
+	res, err = k.GetValidatorSetSignaturesFromStorage(ctx, maxUint)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, len(res.Signatures), 2)
 }
 
 func TestEncodeAndHashValidatorSet(t *testing.T) {
@@ -847,6 +871,18 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 	require.NotNil(t, sigMap)
 	require.Equal(t, sigMap.Signatures, [][]byte{
 		[]byte("abcd1234"),
+	})
+
+	// test max
+	maxUint := ^uint64(0)
+	err = k.SetBridgeValsetSignature(ctx, "operatorAddrMax", maxUint, "abcde12345")
+	require.NoError(t, err)
+
+	sigMap, err = k.BridgeValsetSignaturesMap.Get(ctx, maxUint)
+	require.NoError(t, err)
+	require.NotNil(t, sigMap)
+	require.Equal(t, sigMap.Signatures, [][]byte{
+		[]byte("abcde12345"),
 	})
 }
 
@@ -1227,6 +1263,7 @@ func TestGetValidatorSetIndexByTimestamp(t *testing.T) {
 	testCases := []struct {
 		name          string
 		setup         func()
+		timestamp     uint64
 		expectedIndex uint64
 		err           bool
 	}{
@@ -1235,7 +1272,8 @@ func TestGetValidatorSetIndexByTimestamp(t *testing.T) {
 			err:  true,
 		},
 		{
-			name: "all good",
+			name:      "all good",
+			timestamp: 100,
 			setup: func() {
 				err := k.ValsetTimestampToIdxMap.Set(ctx, 100, types.CheckpointIdx{
 					Index: 1,
@@ -1244,13 +1282,25 @@ func TestGetValidatorSetIndexByTimestamp(t *testing.T) {
 			},
 			expectedIndex: 1,
 		},
+		{
+			name:      "max uint64",
+			timestamp: ^uint64(0),
+			setup: func() {
+				maxUint := ^uint64(0)
+				err := k.ValsetTimestampToIdxMap.Set(ctx, maxUint, types.CheckpointIdx{
+					Index: 2,
+				})
+				require.NoError(t, err)
+			},
+			expectedIndex: 2,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.setup != nil {
 				tc.setup()
 			}
-			index, err := k.GetValidatorSetIndexByTimestamp(ctx, 100)
+			index, err := k.GetValidatorSetIndexByTimestamp(ctx, tc.timestamp)
 			if tc.err {
 				require.Error(t, err)
 			} else {
