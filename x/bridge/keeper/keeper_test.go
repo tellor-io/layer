@@ -376,7 +376,6 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 	lastCheckpointIdx, err = k.LatestCheckpointIdx.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, lastCheckpointIdx.Index, uint64(2))
-
 }
 
 func TestGetValidatorCheckpointFromStorage(t *testing.T) {
