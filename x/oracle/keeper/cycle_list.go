@@ -44,6 +44,12 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	default:
 		n += 1
 	}
+
+	// TODO: figure out why the cycle list is empty
+	if len(q) == 0 {
+		return nil
+	}
+
 	queryId := utils.QueryIDFromData(q[n])
 	// queries that are without tip (ie cycle list queries) could linger in the store
 	// if there are no reports to be aggregated (where queries removed) since you each query cycle we generate a new query

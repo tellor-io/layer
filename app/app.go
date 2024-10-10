@@ -164,7 +164,7 @@ var (
 	DefaultNodeHome string
 
 	// module account permissions
-	maccPerms = map[string][]string{
+	MaccPerms = map[string][]string{
 		authtypes.FeeCollectorName:         nil,
 		distrtypes.ModuleName:              nil,
 		icatypes.ModuleName:                nil,
@@ -364,7 +364,7 @@ func New(
 		appCodec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
-		maccPerms,
+		MaccPerms,
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -1088,7 +1088,7 @@ func (app *App) LoadHeight(height int64) error {
 // ModuleAccountAddrs returns all the app's module account addresses.
 func (app *App) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
-	for acc := range maccPerms {
+	for acc := range MaccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
 	}
 
@@ -1218,4 +1218,9 @@ func (app *App) RegisterDaemonWithHealthMonitor(
 		)
 		panic(err)
 	}
+}
+
+// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
+func (a *App) DefaultGenesis() map[string]json.RawMessage {
+	return a.BasicModuleManager.DefaultGenesis(a.appCodec)
 }

@@ -14,11 +14,14 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/app"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 
@@ -42,8 +45,9 @@ import (
 )
 
 const (
-	chainID     = "layertest-1"
-	genesisFile = "./testutils/sim-genesis.json"
+	chainID       = "layertest-1"
+	genesisFile   = "./testutils/sim-genesis.json"
+	SimAppChainID = "simulation-app"
 )
 
 var FlagEnableStreamingValue bool
@@ -167,16 +171,16 @@ func BenchmarkSimulation(b *testing.B) {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
-	if !simcli.FlagEnabledValue {
-		t.Skip("skipping application simulation")
-	}
+	// if !simcli.FlagEnabledValue {
+	// 	t.Skip("skipping application simulation")
+	// }
 
 	config := simcli.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = true
 	config.AllInvariants = true
-	config.GenesisFile = genesisFile
+	// config.GenesisFile = genesisFile
 
 	var (
 		r                    = rand.New(rand.NewSource(time.Now().Unix()))
@@ -219,7 +223,6 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
 			require.NoError(t, err)
-
 			var genesisMap map[string]json.RawMessage
 			err = json.Unmarshal(genesisJSON, &genesisMap)
 			require.NoError(t, err)
@@ -573,4 +576,128 @@ func TestFullAppSimulation(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	// app := NewSimApp(logger, db, nil, true, appOptions, fauxMerkleModeOpt, baseapp.SetChainID(config.ChainID))
+}
+
+func TestAppStateDeterminism2(t *testing.T) {
+	if !simcli.FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
+
+	config := simcli.NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = SimAppChainID
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 3 // This used to be set to 5, but we've temporarily reduced it to 3 for the sake of faster CI.
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	// We will be overriding the random seed and just run a single simulation on the provided seed value
+	if config.Seed != simcli.DefaultSeedValue {
+		numSeeds = 1
+	}
+
+	appOptions := viper.New()
+	if FlagEnableStreamingValue {
+		m := make(map[string]interface{})
+		m["streaming.abci.keys"] = []string{"*"}
+		m["streaming.abci.plugin"] = "abci_v1"
+		m["streaming.abci.stop-node-on-err"] = true
+		for key, value := range m {
+			appOptions.SetDefault(key, value)
+		}
+	}
+	// appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
+	appOptions.SetDefault(server.FlagInvCheckPeriod, simcli.FlagPeriodValue)
+	if simcli.FlagVerboseValue {
+		appOptions.SetDefault(flags.FlagLogLevel, "debug")
+	}
+
+	for i := 0; i < numSeeds; i++ {
+		if config.Seed == simcli.DefaultSeedValue {
+			config.Seed = rand.Int63()
+		}
+
+		fmt.Println("config.Seed: ", config.Seed)
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if simcli.FlagVerboseValue {
+				logger = log.NewTestLogger(t)
+			} else {
+				logger = log.NewNopLogger()
+			}
+
+			db := dbm.NewMemDB()
+			app := app.New(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
+			if !simcli.FlagSigverifyTxValue {
+				app.SetNotSigverifyTx()
+			}
+
+			fmt.Printf(
+				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				BlockedAddresses(),
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
+			if config.Commit {
+				simtestutil.PrintStats(db)
+			}
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
+		}
+	}
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
+}
+
+// BlockedAddresses returns all the app's blocked account addresses.
+func BlockedAddresses() map[string]bool {
+	modAccAddrs := make(map[string]bool)
+	for acc := range GetMaccPerms() {
+		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
+	}
+
+	// allow the following addresses to receive funds
+	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	return modAccAddrs
+}
+
+// GetMaccPerms returns a copy of the module account permissions
+//
+// NOTE: This is solely to be used for testing purposes.
+func GetMaccPerms() map[string][]string {
+	dup := make(map[string][]string)
+	for acc, perms := range app.MaccPerms {
+		dup[acc] = perms
+	}
+
+	return dup
 }
