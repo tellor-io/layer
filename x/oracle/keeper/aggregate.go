@@ -13,6 +13,9 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
+	metrics "github.com/tellor-io/layer/lib/metrics"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -88,6 +91,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
+			telemetry.SetGaugeWithLabels([]string{"num_of_reports_in_aggregate"}, float32(len(reports)), []gometrics.Label{metrics.GetLabelForStringValue("query_id", string(key.K1()))})
 		}
 	}
 	if len(reportersToPay) == 0 {
@@ -124,6 +128,8 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),
 	})
+	telemetry.SetGaugeWithLabels([]string{"total_reporter_power_in_aggregate"}, float32(report.ReporterPower), []gometrics.Label{metrics.GetLabelForStringValue("query_id", string(report.GetQueryId()))})
+	telemetry.SetGaugeWithLabels([]string{"time_of_aggregate_creation"}, float32(time.Now().Unix()), []gometrics.Label{metrics.GetLabelForStringValue("query_id", string(report.GetQueryId()))})
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 

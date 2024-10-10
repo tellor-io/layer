@@ -11,6 +11,9 @@ import (
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
+	metrics "github.com/tellor-io/layer/lib/metrics"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -70,6 +73,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
+	defer telemetry.IncrCounterWithLabels([]string{"SubmitValue", "query_id"}, 1, []gometrics.Label{metrics.GetLabelForStringValue("query_id", string(queryId)), metrics.GetLabelForStringValue("reporter", reporterAddr.String())})
 	return &types.MsgSubmitValueResponse{}, nil
 }
 
