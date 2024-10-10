@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"sort"
 
@@ -28,9 +29,8 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport,
 		return values[reports[i].Reporter].BigInt().Cmp(values[reports[j].Reporter].BigInt()) < 0
 	})
 
-	totalReporterPower, weightedSum := cosmomath.LegacyZeroDec(), cosmomath.LegacyZeroDec()
+	totalReporterPower := cosmomath.LegacyZeroDec()
 	for _, r := range reports {
-		weightedSum = weightedSum.Add(values[r.Reporter].Mul(cosmomath.LegacyNewDec(int64(r.Power))))
 		totalReporterPower = totalReporterPower.Add(cosmomath.LegacyNewDec(int64(r.Power)))
 		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 	}

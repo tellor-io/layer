@@ -2,6 +2,9 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
+	"math"
+	"time"
 
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
@@ -145,4 +148,272 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
+}
+
+func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
+	require := s.Require()
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = s.ctx.WithBlockHeight(1)
+	reporters := make([]sdk.AccAddress, 18)
+	for i := 0; i < 18; i++ {
+		reporters[i] = sample.AccAddressBytes()
+	}
+
+	testCases := []struct {
+		name                    string
+		expectedError           bool
+		numReports              int
+		reporters               []sdk.AccAddress
+		powers                  []uint64
+		queryType               string
+		queryId                 []byte
+		aggregateMethod         string
+		values                  []int
+		timestamp               time.Time
+		cyclelist               bool
+		blocknumber             uint64
+		expectedAggregateReport *types.Aggregate
+	}{
+		{
+			name:            "normal cycle list report",
+			numReports:      5,
+			reporters:       reporters[:5],
+			powers:          []uint64{10, 10, 10, 10, 10},
+			queryType:       "SpotPrice",
+			queryId:         qId,
+			aggregateMethod: "weightedMedian",
+			values:          []int{10, 11, 12, 13, 14},
+			timestamp:       time.Now(),
+			cyclelist:       true,
+			blocknumber:     1,
+			expectedAggregateReport: &types.Aggregate{
+				Reporters: []*types.AggregateReporter{
+					{
+						Reporter:    reporters[0].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[1].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[2].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[3].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[4].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+				},
+				QueryId:              qId,
+				AggregateReporter:    reporters[2].String(),
+				AggregateValue:       testutil.IntToHex([]int{12})[0],
+				ReporterPower:        50,
+				AggregateReportIndex: 2,
+				MetaId:               1,
+				Flagged:              false,
+				Index:                1,
+				Height:               1,
+				MicroHeight:          1,
+			},
+		},
+		{
+			name:            "max int64 test",
+			numReports:      5,
+			reporters:       reporters[:5],
+			powers:          []uint64{10, 10, 10, 10, 10},
+			queryType:       "SpotPrice",
+			queryId:         qId,
+			aggregateMethod: "weightedMedian",
+			values:          []int{1 * 1e18, 2 * 1e18, 3 * 1e18, 4 * 1e18, math.MaxInt64},
+			timestamp:       time.Now(),
+			cyclelist:       true,
+			blocknumber:     1,
+			expectedAggregateReport: &types.Aggregate{
+				Reporters: []*types.AggregateReporter{
+					{
+						Reporter:    reporters[0].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[1].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[2].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[3].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[4].String(),
+						Power:       10,
+						BlockNumber: 1,
+					},
+				},
+				QueryId:              qId,
+				AggregateReporter:    reporters[2].String(),
+				AggregateValue:       testutil.IntToHex([]int{3 * 1e18})[0],
+				ReporterPower:        50,
+				AggregateReportIndex: 2,
+				MetaId:               2,
+				Flagged:              false,
+				Index:                2,
+				Height:               1,
+				MicroHeight:          1,
+			},
+		},
+	}
+	metaId := uint64(0)
+	for _, tc := range testCases {
+		metaId++
+		var reports []types.MicroReport
+		s.Run(tc.name, func() {
+			fmt.Println("\nmetaId", metaId)
+			valuesInt := testutil.IntToHex(tc.values)
+			fmt.Println("valuesInt", valuesInt)
+			for i := 0; i < tc.numReports; i++ {
+				report := types.MicroReport{
+					Reporter:        tc.reporters[i].String(),
+					Power:           tc.powers[i],
+					QueryType:       tc.queryType,
+					QueryId:         tc.queryId,
+					AggregateMethod: tc.aggregateMethod,
+					Value:           valuesInt[i],
+					Timestamp:       tc.timestamp,
+					Cyclelist:       tc.cyclelist,
+					BlockNumber:     tc.blocknumber,
+				}
+				reports = append(reports, report)
+			}
+			weightedMedian, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, metaId)
+			fmt.Println("weightedMedian", weightedMedian)
+			require.Equal(tc.expectedAggregateReport, weightedMedian)
+			if tc.expectedError {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
+
+	// test max uint64, large powers
+	uintCases := []struct {
+		name                    string
+		expectedError           bool
+		numReports              int
+		reporters               []sdk.AccAddress
+		powers                  []uint64
+		queryType               string
+		queryId                 []byte
+		aggregateMethod         string
+		values                  []uint64
+		timestamp               time.Time
+		cyclelist               bool
+		blocknumber             uint64
+		expectedAggregateReport *types.Aggregate
+	}{
+		{
+			name:            "max uint64 test",
+			numReports:      5,
+			reporters:       reporters[:5],
+			powers:          []uint64{1 * 1e17, 1 * 1e17, 1 * 1e17, 1 * 1e17, 1 * 1e17},
+			queryType:       "SpotPrice",
+			queryId:         qId,
+			aggregateMethod: "weightedMedian",
+			values:          []uint64{1 * 1e18, 2 * 1e18, 3 * 1e18, 4 * 1e18, math.MaxUint64},
+			timestamp:       time.Now(),
+			cyclelist:       true,
+			blocknumber:     1,
+			expectedAggregateReport: &types.Aggregate{
+				Reporters: []*types.AggregateReporter{
+					{
+						Reporter:    reporters[0].String(),
+						Power:       1 * 1e17,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[1].String(),
+						Power:       1 * 1e17,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[2].String(),
+						Power:       1 * 1e17,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[3].String(),
+						Power:       1 * 1e17,
+						BlockNumber: 1,
+					},
+					{
+						Reporter:    reporters[4].String(),
+						Power:       1 * 1e17,
+						BlockNumber: 1,
+					},
+				},
+				QueryId:              qId,
+				AggregateReporter:    reporters[2].String(),
+				AggregateValue:       "29a2241af62c0000",
+				ReporterPower:        5 * 1e17,
+				AggregateReportIndex: 2,
+				MetaId:               3,
+				Flagged:              false,
+				Index:                3,
+				Height:               1,
+				MicroHeight:          1,
+			},
+		},
+	}
+	for _, tc := range uintCases {
+		metaId++
+		var reports []types.MicroReport
+		s.Run(tc.name, func() {
+			fmt.Println("\nmetaId", metaId)
+			var hexValues []string
+			for _, value := range tc.values {
+				hexValues = append(hexValues, fmt.Sprintf("%x", value))
+			}
+			fmt.Println("hexValues", hexValues)
+			for i := 0; i < tc.numReports; i++ {
+				report := types.MicroReport{
+					Reporter:        tc.reporters[i].String(),
+					Power:           tc.powers[i],
+					QueryType:       tc.queryType,
+					QueryId:         tc.queryId,
+					AggregateMethod: tc.aggregateMethod,
+					Value:           hexValues[i],
+					Timestamp:       tc.timestamp,
+					Cyclelist:       tc.cyclelist,
+					BlockNumber:     tc.blocknumber,
+				}
+				reports = append(reports, report)
+			}
+			weightedMedian, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, metaId)
+			fmt.Println("weightedMedian", weightedMedian)
+			require.Equal(tc.expectedAggregateReport, weightedMedian)
+			if tc.expectedError {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+			}
+		})
+	}
 }
