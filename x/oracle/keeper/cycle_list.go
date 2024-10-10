@@ -45,7 +45,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		n += 1
 	}
 
-	// TODO: figure out why the cycle list is empty
+	// TODO: figure out why the cycle list is empty in simulations
 	if len(q) == 0 {
 		return nil
 	}

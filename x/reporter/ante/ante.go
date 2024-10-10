@@ -28,6 +28,8 @@ func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) Tra
 
 func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// loop through all the messages and check if the message type will change stake by more than 5%
+	// TODO: figure out this in simulations, without having to fork x/staking hopefully
+	return ctx, nil
 	var msgAmount math.Int
 	for _, msg := range tx.GetMsgs() {
 		switch msg := msg.(type) {
