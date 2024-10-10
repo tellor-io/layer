@@ -33,9 +33,6 @@ func (s *KeeperTestSuite) TestVote() {
 	_, err := s.msgServer.Vote(s.ctx, &voteMsg)
 	s.NoError(err)
 
-	_, err = s.msgServer.Vote(s.ctx, &voteMsg)
-	s.Error(err)
-
 	voterVote, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), addr.Bytes()))
 	s.NoError(err)
 

@@ -74,6 +74,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	// slash amount
 	disputeFee, err := k.GetDisputeFee(ctx, *msg.Report, msg.DisputeCategory)
 	if err != nil {
+		k.Logger(ctx).Error("ERROR in GetDisputeFee: ", err)
 		return err
 	}
 
@@ -103,26 +104,31 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		Amount:   msg.Fee.Amount,
 		FromBond: msg.PayFromBond,
 	}); err != nil {
+		k.Logger(ctx).Error("ERROR setting the dispute fee payer: ", err)
 		return err
 	}
 	// Pay the dispute fee
 	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
+		k.Logger(ctx).Error("Error paying dispute fee: ", err)
 		return err
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
 		if err := k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
+			k.Logger(ctx).Error("ERROR slashing and jailing reporter: ", err)
 			return err
 		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
 		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
 		if err := k.SetStartVote(ctx, dispute.DisputeId); err != nil { // starting voting immediately
+			k.Logger(ctx).Error("ERROR starting dispute vote: ", err)
 			return err
 		}
 	}
 	err = k.SetBlockInfo(ctx, dispute.HashId)
 	if err != nil {
+		k.Logger(ctx).Error("ERROR in setBlockInfo: ", err)
 		return err
 	}
 	ctx.EventManager().EmitEvents(sdk.Events{

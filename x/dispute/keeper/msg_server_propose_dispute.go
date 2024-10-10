@@ -16,6 +16,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sender, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
+		k.Logger(goCtx).Error("Erroring out in AccAddressFromBech32: ", err)
 		return nil, err
 	}
 	if msg.Fee.Denom != layer.BondDenom {
@@ -29,14 +30,17 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			if err := k.Keeper.SetNewDispute(ctx, sender, *msg); err != nil {
+				k.Logger(goCtx).Error("ERROR setting new dispute: ", err)
 				return nil, err
 			}
 			return &types.MsgProposeDisputeResponse{}, nil
 		}
+		k.Logger(goCtx).Error("Returning from error in GetDisputeByReporter: ", err)
 		return nil, err
 	}
 	// Add round to Existing Dispute
 	if err := k.Keeper.AddDisputeRound(ctx, sender, dispute, *msg); err != nil {
+		k.Logger(goCtx).Error("Error in AddDisputeRound: ", err)
 		return nil, err
 	}
 	return &types.MsgProposeDisputeResponse{}, nil
