@@ -55,25 +55,25 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	k.Logger(goCtx).Info("Team power in dispute vote: ", teampower)
+	k.Logger(goCtx).Info("Team power in dispute vote: ", teampower.String())
 	upower, err := k.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
 	upower = CalculateVotingPower(upower, bI.TotalUserTips)
-	k.Logger(goCtx).Info("Voting power from tips: ", upower)
+	k.Logger(goCtx).Info("Voting power from tips: ", upower.String())
 	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
 	repP = CalculateVotingPower(repP, bI.TotalReporterPower)
-	k.Logger(goCtx).Info("Voting power from reporter stake: ", repP)
+	k.Logger(goCtx).Info("Voting power from reporter stake: ", repP.String())
 	acctBal, err := k.GetAccountBalance(ctx, voterAcc)
 	if err != nil {
 		return nil, err
 	}
 	totalSupply := k.GetTotalSupply(ctx)
-	k.Logger(goCtx).Info("Voting power from account balance: ", CalculateVotingPower(acctBal, totalSupply))
+	k.Logger(goCtx).Info("Voting power from account balance: ", CalculateVotingPower(acctBal, totalSupply).String())
 	voterPower := teampower.Add(upower).Add(repP).Add(CalculateVotingPower(acctBal, totalSupply))
 	if voterPower.IsZero() {
 		return nil, errors.New("voter power is zero")
