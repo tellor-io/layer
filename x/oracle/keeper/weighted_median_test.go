@@ -285,9 +285,7 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 		metaId++
 		var reports []types.MicroReport
 		s.Run(tc.name, func() {
-			fmt.Println("\nmetaId", metaId)
 			valuesInt := testutil.IntToHex(tc.values)
-			fmt.Println("valuesInt", valuesInt)
 			for i := 0; i < tc.numReports; i++ {
 				report := types.MicroReport{
 					Reporter:        tc.reporters[i].String(),
@@ -303,7 +301,6 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 				reports = append(reports, report)
 			}
 			weightedMedian, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, metaId)
-			fmt.Println("weightedMedian", weightedMedian)
 			require.Equal(tc.expectedAggregateReport, weightedMedian)
 			if tc.expectedError {
 				require.Error(err)
@@ -386,12 +383,10 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 		metaId++
 		var reports []types.MicroReport
 		s.Run(tc.name, func() {
-			fmt.Println("\nmetaId", metaId)
 			var hexValues []string
 			for _, value := range tc.values {
 				hexValues = append(hexValues, fmt.Sprintf("%x", value))
 			}
-			fmt.Println("hexValues", hexValues)
 			for i := 0; i < tc.numReports; i++ {
 				report := types.MicroReport{
 					Reporter:        tc.reporters[i].String(),
@@ -407,7 +402,6 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 				reports = append(reports, report)
 			}
 			weightedMedian, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, metaId)
-			fmt.Println("weightedMedian", weightedMedian)
 			require.Equal(tc.expectedAggregateReport, weightedMedian)
 			if tc.expectedError {
 				require.Error(err)
