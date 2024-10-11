@@ -50,9 +50,9 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	k.oracleKeeper.On("FlagAggregateReport", k.ctx, mock.Anything).Return(nil)
 	k.bankKeeper.On("HasBalance", k.ctx, creator, fee).Return(true)
 	k.bankKeeper.On("SendCoinsFromAccountToModule", k.ctx, creator, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
-	k.reporterKeeper.On("EscrowReporterStake", k.ctx, sdk.MustAccAddressFromBech32(dispute.ReportEvidence.Reporter), dispute.ReportEvidence.Power, uint64(1), dispute.SlashAmount, dispute.HashId).Return(nil)
+	k.reporterKeeper.On("EscrowReporterStake", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), dispute.InitialEvidence.Power, uint64(1), dispute.SlashAmount, dispute.HashId).Return(nil)
 	// jail duration is 0
-	k.reporterKeeper.On("JailReporter", k.ctx, sdk.MustAccAddressFromBech32(dispute.ReportEvidence.Reporter), uint64(0)).Return(nil)
+	k.reporterKeeper.On("JailReporter", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), uint64(0)).Return(nil)
 
 	res, err = k.msgServer.AddFeeToDispute(k.ctx, &msg)
 	k.NoError(err)

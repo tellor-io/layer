@@ -51,7 +51,7 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 					DisputeRound:     1,
 					SlashAmount:      math.NewInt(1000000),
 					BurnAmount:       math.NewInt(100),
-					ReportEvidence: oracletypes.MicroReport{
+					InitialEvidence: oracletypes.MicroReport{
 						Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
 						Timestamp: time.Now(),
 					},
@@ -112,7 +112,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 		DisputeRound:     1,
 		SlashAmount:      math.NewInt(1000000),
 		BurnAmount:       math.NewInt(100),
-		ReportEvidence: oracletypes.MicroReport{
+		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
 			Timestamp: time.Now(),
 		},
@@ -136,7 +136,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 		DisputeRound:     1,
 		SlashAmount:      math.NewInt(1000000),
 		BurnAmount:       math.NewInt(100),
-		ReportEvidence: oracletypes.MicroReport{
+		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
 			Timestamp: time.Now(),
 		},
@@ -160,7 +160,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 		DisputeRound:     1,
 		SlashAmount:      math.NewInt(1000000),
 		BurnAmount:       math.NewInt(100),
-		ReportEvidence: oracletypes.MicroReport{
+		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
 			Timestamp: time.Now().Add(-time.Hour * 24),
 		},

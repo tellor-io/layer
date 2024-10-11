@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -19,6 +18,12 @@ import (
 // iterate through those reports, see if it affects median, dispute those reports
 // geter for if bridge depots have been claimed, bridge deposit id as input
 // getter for a bunch of dispute info
+
+// want to catch bad median values / add evidence that this guy is bad
+// add evidence function
+// if already open dispute of that trype on the same reporter, just adde wvidence
+// loop through evidence reports, can flag additional reports made by the same reporter
+// if signifigane player is emdian, submits bad value, can flag all of his reports without putting up all of tyhe capital
 
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -36,37 +41,17 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	dispute, err := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
+			// event gets emitted in SetNewDispute
 			if err := k.Keeper.SetNewDispute(ctx, sender, *msg); err != nil {
 				return nil, err
 			}
-			// event for new dispute
-			sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
-				sdk.NewEvent(
-					"new_dispute",
-					sdk.NewAttribute("dispute_id", fmt.Sprintf("%d", dispute.DisputeId)),
-					sdk.NewAttribute("creator", msg.Creator),
-					sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
-					sdk.NewAttribute("fee", msg.Fee.String()),
-					sdk.NewAttribute("report", msg.Report.String()),
-				),
-			})
 			return &types.MsgProposeDisputeResponse{}, nil
 		}
 		return nil, err
 	}
-	// Add round to Existing Dispute
+	// Add round to Existing Dispute - emits event
 	if err := k.Keeper.AddDisputeRound(ctx, sender, dispute, *msg); err != nil {
 		return nil, err
 	}
-	// event for new dispute round
-	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent("dispute_round_added",
-			sdk.NewAttribute("dispute_id", fmt.Sprintf("%d", dispute.DisputeId)),
-			sdk.NewAttribute("creator", msg.Creator),
-			sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
-			sdk.NewAttribute("fee", msg.Fee.String()),
-			sdk.NewAttribute("report", msg.Report.String()),
-		),
-	})
 	return &types.MsgProposeDisputeResponse{}, nil
 }
