@@ -74,5 +74,4 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 	require.NoError(err)
 	require.Equal(len(dispute.AdditionalEvidence), 3) // first + 2 additional
 	// TODO: check that aggregate is flagged in integration/e2e suite
-
 }
