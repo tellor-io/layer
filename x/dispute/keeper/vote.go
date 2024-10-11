@@ -109,12 +109,14 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			if err != nil {
 				return math.Int{}, err
 			}
+			k.Logger(ctx).Info(fmt.Sprintf("Reporter tokens at block for new vote: %v", reporterTokens.Int64()))
 			return reporterTokens, k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), reporterTokens)
 		}
 		amt, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, reporter, blockNumber)
 		if err != nil {
 			return math.Int{}, err
 		}
+		k.Logger(ctx).Info(fmt.Sprintf("Delegator tokens at block for new voter: ", amt.Int64()))
 		exists, err := k.ReportersGroup.Has(ctx, collections.Join(id, reporter.Bytes()))
 		if err != nil {
 			return math.Int{}, err
@@ -148,6 +150,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	// if reporter delegators have voted before reporter, then if voter is reporter get reporter tokens at block and reduce the amount that has voted already
 	if bytes.Equal(reporter, voter) {
 		reporterTokens, err := k.reporterKeeper.GetReporterTokensAtBlock(ctx, reporter, blockNumber)
+		k.Logger(ctx).Info(fmt.Sprintf("Num of reporter tokens returned for reporter == voter: %v", reporterTokens.Int64()))
 		if err != nil {
 			return math.Int{}, err
 		}
@@ -157,6 +160,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		if err != nil {
 			return math.Int{}, err
 		}
+		k.Logger(ctx).Info(fmt.Sprintf("Delegator tokens at block: %v", amt.Int64()))
 		if err := k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), reporterTokensVoted.Add(amt)); err != nil {
 			return math.Int{}, err
 		}

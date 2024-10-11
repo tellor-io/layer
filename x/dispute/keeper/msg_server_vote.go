@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -55,24 +56,27 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	k.Logger(goCtx).Info("Team power in dispute vote: ", teampower.String())
+	k.Logger(goCtx).Info(fmt.Sprintf("Team power in dispute vote: %v", teampower.Int64()))
 	upower, err := k.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
+	k.Logger(goCtx).Info(fmt.Sprintf("voter tips passed in: %v, total tips passed in: %v", upower, bI.TotalUserTips))
 	upower = CalculateVotingPower(upower, bI.TotalUserTips)
-	k.Logger(goCtx).Info("Voting power from tips: ", upower.String())
+	k.Logger(goCtx).Info(fmt.Sprintf("Voting power from tips: %v", upower.Int64()))
 	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
+	k.Logger(goCtx).Info(fmt.Sprintf("Reporter stake power: %v, Total Reporter power: %v", repP, bI.TotalReporterPower))
 	repP = CalculateVotingPower(repP, bI.TotalReporterPower)
-	k.Logger(goCtx).Info("Voting power from reporter stake: ", repP.String())
+	k.Logger(goCtx).Info(fmt.Sprintf("Voting power from reporter stake: %v", repP.Int64()))
 	acctBal, err := k.GetAccountBalance(ctx, voterAcc)
 	if err != nil {
 		return nil, err
 	}
 	totalSupply := k.GetTotalSupply(ctx)
+	k.Logger(goCtx).Info(fmt.Sprintf("Account balance passed in: %v, Total supply passed in: %v", acctBal, totalSupply))
 	k.Logger(goCtx).Info("Voting power from account balance: ", CalculateVotingPower(acctBal, totalSupply).String())
 	voterPower := teampower.Add(upower).Add(repP).Add(CalculateVotingPower(acctBal, totalSupply))
 	if voterPower.IsZero() {
