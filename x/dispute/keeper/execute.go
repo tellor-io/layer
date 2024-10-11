@@ -50,6 +50,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 
 	var voters []VoterInfo
 	totalVoterPower := math.ZeroInt()
+	// all the iterations below could cause out of gas errors, need to refactor
 	for _, id := range dispute.PrevDisputeIds {
 		iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
 		if err != nil {
@@ -85,6 +86,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		// non voters get nothing
 		voterReward = math.ZeroInt()
 	}
+	// why are we repeating logic in the switch statement?
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 		// distribute the voterRewardunt equally among the voters and transfer it to their accounts

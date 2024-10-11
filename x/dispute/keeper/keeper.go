@@ -42,6 +42,7 @@ type (
 		BlockInfo                          collections.Map[[]byte, types.BlockInfo]
 		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]
 		Dust                               collections.Item[math.LegacyDec]
+		DisputePowerTotalsByGroup          collections.Map[uint64, types.DisputePowerTotals]
 	}
 )
 
@@ -72,6 +73,7 @@ func NewKeeper(
 		BlockInfo:                          collections.NewMap(sb, types.BlockInfoPrefix, "block_info", collections.BytesKey, codec.CollValue[types.BlockInfo](cdc)),
 		DisputeFeePayer:                    collections.NewMap(sb, types.DisputeFeePayerPrefix, "dispute_fee_payer", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.PayerInfo](cdc)),
 		Dust:                               collections.NewItem(sb, types.DustKeyPrefix, "dust", types.LegacyDecValue),
+		DisputePowerTotalsByGroup:          collections.NewMap(sb, types.DisputePowerTotalsByGroupPrefix, "dispute_power_totals_by_group", collections.Uint64Key, codec.CollValue[types.DisputePowerTotals](cdc)),
 	}
 }
 

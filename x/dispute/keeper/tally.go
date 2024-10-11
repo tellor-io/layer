@@ -51,10 +51,16 @@ func Ratio(total, part math.Int) math.LegacyDec {
 
 // CalculateVotingPower calculates the voting power of a given number (n) divided by another number (d).
 func CalculateVotingPower(n, d math.Int) math.Int {
+	fmt.Println("CalculateVotingPower")
+	fmt.Println("n", n)
+	fmt.Println("d", d)
 	if n.IsZero() || d.IsZero() {
 		return math.ZeroInt()
 	}
 	scalingFactor := math.NewInt(1_000_000)
+	result := n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
+	fmt.Println("result", result)
+	// shouldn't this just be n.MulRaw(25_000_000).Quo(d) ?
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
@@ -80,6 +86,8 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
+
+	votePowerTotals := types.DisputePowerTotals{}
 
 	totalRatio := math.LegacyZeroDec()
 	// init tallies
@@ -120,6 +128,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	// get user group
 	userVoteSum := math.ZeroInt()
 	userRng := collections.NewPrefixedPairRange[uint64, []byte](id)
+	// all the iterations below could cause out of gas errors, need to refactor
 	err = k.UsersGroup.Walk(ctx, userRng, func(key collections.Pair[uint64, []byte], value math.Int) (stop bool, err error) {
 		vote, err := k.Voter.Get(ctx, key)
 		if err != nil {
@@ -139,6 +148,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
+	votePowerTotals.Users = userVoteSum.Uint64()
 
 	if userVoteSum.GT(math.ZeroInt()) {
 		totalRatio = totalRatio.Add(Ratio(info.TotalUserTips, userVoteSum))

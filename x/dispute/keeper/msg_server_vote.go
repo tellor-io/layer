@@ -47,10 +47,10 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if vote.VoteEnd.Before(ctx.BlockTime()) {
 		return nil, types.ErrVotingPeriodEnded
 	}
-	bI, err := k.BlockInfo.Get(ctx, dispute.HashId)
-	if err != nil {
-		return nil, err
-	}
+	// bI, err := k.BlockInfo.Get(ctx, dispute.HashId)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	teampower, err := k.SetTeamVote(ctx, msg.Id, voterAcc)
 	if err != nil {
 		return nil, err
@@ -59,18 +59,18 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	upower = CalculateVotingPower(upower, bI.TotalUserTips)
+	// upower = CalculateVotingPower(upower, bI.TotalUserTips)
 	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
-	repP = CalculateVotingPower(repP, bI.TotalReporterPower)
+	// repP = CalculateVotingPower(repP, bI.TotalReporterPower)
 	acctBal, err := k.GetAccountBalance(ctx, voterAcc)
 	if err != nil {
 		return nil, err
 	}
-	totalSupply := k.GetTotalSupply(ctx)
-	voterPower := teampower.Add(upower).Add(repP).Add(CalculateVotingPower(acctBal, totalSupply))
+	// totalSupply := k.GetTotalSupply(ctx)
+	voterPower := teampower.Add(upower).Add(repP).Add(acctBal)
 	if voterPower.IsZero() {
 		return nil, errors.New("voter power is zero")
 	}

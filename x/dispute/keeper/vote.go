@@ -89,6 +89,7 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 }
 
 func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64) (math.Int, error) {
+	// get delegation
 	delegation, err := k.reporterKeeper.Delegation(ctx, voter)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -105,13 +106,16 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			return math.Int{}, err
 		}
 		if bytes.Equal(reporter, voter) {
+			// voter is reporter, get reporter tokens
 			reporterTokens, err := k.reporterKeeper.GetReporterTokensAtBlock(ctx, reporter, blockNumber)
 			if err != nil {
 				return math.Int{}, err
 			}
 			return reporterTokens, k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), reporterTokens)
 		}
-		amt, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, reporter, blockNumber)
+		// voter is not reporter
+		// shouldn't this be reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)?
+		amt, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
 		if err != nil {
 			return math.Int{}, err
 		}
@@ -120,8 +124,8 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			return math.Int{}, err
 		}
 		fmt.Println("exists: ", exists)
+		// if reporter has voted before, get reporter tokens and reduce the amount
 		if exists {
-			// get reporter tokens and reduce the amount
 			reporterTokens, err := k.ReportersGroup.Get(ctx, collections.Join(id, reporter.Bytes()))
 			if err != nil {
 				return math.Int{}, err
@@ -131,6 +135,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			if err != nil {
 				return math.Int{}, err
 			}
+			// isn't this wrong? we're subtracting a delegator's token amount from voterPower (x% * 25,000,000)
 			voterV.VoterPower = voterV.VoterPower.Sub(amt)
 			if err := k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), voterV); err != nil {
 				return math.Int{}, err
@@ -140,6 +145,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			}
 			return amt, k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), amt)
 		}
+		// if reporter has not voted before, set reporter tokens and reporter delegation amount
 		if err := k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), amt); err != nil {
 			return math.Int{}, err
 		}
