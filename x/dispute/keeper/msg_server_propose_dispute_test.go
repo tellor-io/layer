@@ -15,6 +15,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// propose a single dispute on an array of reports
+//
+// extra field eveidence that is list of other reports
+// iterate through those reports, see if it affects median, dispute those reports 
+// geter for if bridge depots have been claimed, bridge deposit id as input
+// getter for a bunch of dispute info 
+
 func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 	addr := sample.AccAddressBytes()
 	s.ctx = s.ctx.WithBlockTime(time.Now())
