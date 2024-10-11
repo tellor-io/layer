@@ -98,6 +98,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		FeeTotal:       msg.Fee.Amount,
 		PrevDisputeIds: []uint64{disputeId},
 		Open:           true,
+		BlockNumber:    uint64(ctx.BlockHeight()),
 	}
 	if err := k.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
 		Amount:   msg.Fee.Amount,
