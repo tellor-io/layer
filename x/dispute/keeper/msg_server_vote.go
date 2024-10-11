@@ -61,14 +61,14 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	k.Logger(goCtx).Info(fmt.Sprintf("voter tips passed in: %v, total tips passed in: %v", upower, bI.TotalUserTips))
+	k.Logger(goCtx).Info(fmt.Sprintf("voter tips passed in: %v, total tips passed in: %v, Height passed into function: %d", upower, bI.TotalUserTips, dispute.BlockNumber))
 	upower = CalculateVotingPower(upower, bI.TotalUserTips)
 	k.Logger(goCtx).Info(fmt.Sprintf("Voting power from tips: %v", upower.Int64()))
 	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
 	if err != nil {
 		return nil, err
 	}
-	k.Logger(goCtx).Info(fmt.Sprintf("Reporter stake power: %v, Total Reporter power: %v", repP, bI.TotalReporterPower))
+	k.Logger(goCtx).Info(fmt.Sprintf("Reporter stake power: %v, Total Reporter power: %v, height passed into function: %d", repP, bI.TotalReporterPower, dispute.BlockNumber))
 	repP = CalculateVotingPower(repP, bI.TotalReporterPower)
 	k.Logger(goCtx).Info(fmt.Sprintf("Voting power from reporter stake: %v", repP.Int64()))
 	acctBal, err := k.GetAccountBalance(ctx, voterAcc)

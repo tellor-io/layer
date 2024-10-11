@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"context"
 	"encoding/hex"
 	"time"
 
@@ -790,4 +791,8 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	})
 	require.NoError(err)
 	require.Equal(3, len(microreports.MicroReports))
+
+	rickyTokens, err := s.Setup.Reporterkeeper.GetReporterTokensAtBlock(context.Background(), rickyAccAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight()))
+	require.NoError(err)
+	require.Equal(rickyTokens, math.NewInt(300*1e6))
 }
