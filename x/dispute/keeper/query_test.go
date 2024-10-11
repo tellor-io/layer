@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/math"
 )
 
 func (s *KeeperTestSuite) TestOpenDisputes() {

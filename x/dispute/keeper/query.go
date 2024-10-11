@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/binary"
 
-	"cosmossdk.io/store/prefix"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/tellor-io/layer/x/dispute/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/store/prefix"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var _ types.QueryServer = Querier{}
@@ -41,7 +43,6 @@ func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) 
 			Metadata:  &dispute,
 		})
 		return nil
-
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())

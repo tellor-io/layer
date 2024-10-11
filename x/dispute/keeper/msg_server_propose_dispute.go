@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -31,6 +32,17 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 			if err := k.Keeper.SetNewDispute(ctx, sender, *msg); err != nil {
 				return nil, err
 			}
+			// event for new dispute
+			sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					"new_dispute",
+					sdk.NewAttribute("dispute_id", fmt.Sprintf("%d", dispute.DisputeId)),
+					sdk.NewAttribute("creator", msg.Creator),
+					sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
+					sdk.NewAttribute("fee", msg.Fee.String()),
+					sdk.NewAttribute("report", msg.Report.String()),
+				),
+			})
 			return &types.MsgProposeDisputeResponse{}, nil
 		}
 		return nil, err
@@ -39,7 +51,15 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	if err := k.Keeper.AddDisputeRound(ctx, sender, dispute, *msg); err != nil {
 		return nil, err
 	}
+	// event for new dispute round
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent("dispute_round_added",
+			sdk.NewAttribute("dispute_id", fmt.Sprintf("%d", dispute.DisputeId)),
+			sdk.NewAttribute("creator", msg.Creator),
+			sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
+			sdk.NewAttribute("fee", msg.Fee.String()),
+			sdk.NewAttribute("report", msg.Report.String()),
+		),
+	})
 	return &types.MsgProposeDisputeResponse{}, nil
 }
-
-// can i use my delegated tokens to start a dispute

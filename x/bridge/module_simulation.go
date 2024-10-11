@@ -12,7 +12,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
-//TODO: create weighted operations 
+
+// TODO: create weighted operations
 // avoid unused import issue
 var (
 	_ = sample.AccAddress
