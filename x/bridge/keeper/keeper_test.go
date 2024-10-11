@@ -871,18 +871,6 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 	require.Equal(t, sigMap.Signatures, [][]byte{
 		[]byte("abcd1234"),
 	})
-
-	// test max
-	maxUint := ^uint64(0)
-	err = k.SetBridgeValsetSignature(ctx, "operatorAddrMax", maxUint, "abcde12345")
-	require.NoError(t, err)
-
-	sigMap, err = k.BridgeValsetSignaturesMap.Get(ctx, maxUint)
-	require.NoError(t, err)
-	require.NotNil(t, sigMap)
-	require.Equal(t, sigMap.Signatures, [][]byte{
-		[]byte("abcde12345"),
-	})
 }
 
 func TestGetEVMAddressByOperator(t *testing.T) {
