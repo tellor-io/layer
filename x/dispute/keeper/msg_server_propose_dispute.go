@@ -13,6 +13,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// propose a single dispute on an array of reports
+//
+// extra field evidence that is list of other reports
+// iterate through those reports, see if it affects median, dispute those reports
+// geter for if bridge depots have been claimed, bridge deposit id as input
+// getter for a bunch of dispute info
+
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sender, err := sdk.AccAddressFromBech32(msg.Creator)

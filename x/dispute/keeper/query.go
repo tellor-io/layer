@@ -50,3 +50,16 @@ func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) 
 
 	return &types.QueryDisputesResponse{Disputes: disputes, Pagination: pageRes}, nil
 }
+
+func (k Querier) OpenDisputes(ctx context.Context, req *types.QueryOpenDisputesRequest) (*types.QueryOpenDisputesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	openDisputes, err := k.Keeper.GetOpenDisputes(ctx)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	var openDisputesArray types.OpenDisputes
+	openDisputesArray.Ids = openDisputes
+	return &types.QueryOpenDisputesResponse{OpenDisputes: &openDisputesArray}, nil
+}

@@ -22,6 +22,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Reporters queries all the staked reporters.
 	Disputes(ctx context.Context, in *QueryDisputesRequest, opts ...grpc.CallOption) (*QueryDisputesResponse, error)
+	// OpenDisputes queries all the open disputes.
+	OpenDisputes(ctx context.Context, in *QueryOpenDisputesRequest, opts ...grpc.CallOption) (*QueryOpenDisputesResponse, error)
 }
 
 type queryClient struct {
@@ -50,6 +52,15 @@ func (c *queryClient) Disputes(ctx context.Context, in *QueryDisputesRequest, op
 	return out, nil
 }
 
+func (c *queryClient) OpenDisputes(ctx context.Context, in *QueryOpenDisputesRequest, opts ...grpc.CallOption) (*QueryOpenDisputesResponse, error) {
+	out := new(QueryOpenDisputesResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/OpenDisputes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -58,6 +69,8 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Reporters queries all the staked reporters.
 	Disputes(context.Context, *QueryDisputesRequest) (*QueryDisputesResponse, error)
+	// OpenDisputes queries all the open disputes.
+	OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -70,6 +83,9 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 }
 func (UnimplementedQueryServer) Disputes(context.Context, *QueryDisputesRequest) (*QueryDisputesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Disputes not implemented")
+}
+func (UnimplementedQueryServer) OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method OpenDisputes not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -120,6 +136,24 @@ func _Query_Disputes_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_OpenDisputes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryOpenDisputesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).OpenDisputes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/OpenDisputes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).OpenDisputes(ctx, req.(*QueryOpenDisputesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +168,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Disputes",
 			Handler:    _Query_Disputes_Handler,
+		},
+		{
+			MethodName: "OpenDisputes",
+			Handler:    _Query_OpenDisputes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

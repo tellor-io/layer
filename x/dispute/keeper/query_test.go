@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/math"
 )
 
-func (s *KeeperTestSuite) TestOpenDisputes() {
+func (s *KeeperTestSuite) TestDisputesQuery() {
 	require := s.Require()
 	k := s.disputeKeeper
 	q := keeper.NewQuerier(k)
@@ -80,4 +80,94 @@ func (s *KeeperTestSuite) TestOpenDisputes() {
 			fmt.Println(resp)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestOpenDisputesQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+
+	// nil
+	ctx := s.ctx
+	resp, err := q.OpenDisputes(ctx, nil)
+	require.Error(err)
+	require.Nil(resp)
+
+	// empty request
+	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
+	require.NoError(err)
+	require.NotNil(resp)
+
+	// one open dispute
+	require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
+		HashId:           []byte{1},
+		DisputeId:        1,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.NewInt(1000000),
+		DisputeStatus:    types.Voting,
+		DisputeStartTime: time.Now(),
+		DisputeEndTime:   time.Now().Add(time.Hour * 24),
+		Open:             true,
+		DisputeRound:     1,
+		SlashAmount:      math.NewInt(1000000),
+		BurnAmount:       math.NewInt(100),
+		ReportEvidence: oracletypes.MicroReport{
+			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			Timestamp: time.Now(),
+		},
+	}))
+	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
+	require.NoError(err)
+	require.NotNil(resp)
+	fmt.Println(resp)
+	require.Equal(1, len(resp.OpenDisputes.Ids))
+
+	// two open disputes
+	require.NoError(k.Disputes.Set(ctx, 2, types.Dispute{
+		HashId:           []byte{1},
+		DisputeId:        2,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.NewInt(1000000),
+		DisputeStatus:    types.Voting,
+		DisputeStartTime: time.Now(),
+		DisputeEndTime:   time.Now().Add(time.Hour * 24),
+		Open:             true,
+		DisputeRound:     1,
+		SlashAmount:      math.NewInt(1000000),
+		BurnAmount:       math.NewInt(100),
+		ReportEvidence: oracletypes.MicroReport{
+			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			Timestamp: time.Now(),
+		},
+	}))
+	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
+	require.NoError(err)
+	require.NotNil(resp)
+	fmt.Println(resp)
+	require.Equal(2, len(resp.OpenDisputes.Ids))
+
+	// two open and one closed dispute
+	require.NoError(k.Disputes.Set(ctx, 3, types.Dispute{
+		HashId:           []byte{1},
+		DisputeId:        3,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.NewInt(1000000),
+		DisputeStatus:    types.Resolved,
+		DisputeStartTime: time.Now().Add(-time.Hour * 24),
+		DisputeEndTime:   time.Now().Add(-time.Hour),
+		Open:             false,
+		DisputeRound:     1,
+		SlashAmount:      math.NewInt(1000000),
+		BurnAmount:       math.NewInt(100),
+		ReportEvidence: oracletypes.MicroReport{
+			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			Timestamp: time.Now().Add(-time.Hour * 24),
+		},
+	}))
+	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
+	require.NoError(err)
+	require.NotNil(resp)
+	fmt.Println(resp)
+	require.Equal(2, len(resp.OpenDisputes.Ids))
 }
