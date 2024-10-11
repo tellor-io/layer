@@ -78,7 +78,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	totalSupply := k.GetTotalSupply(ctx)
 	accP := CalculateVotingPower(acctBal, totalSupply)
 	k.Logger(goCtx).Info(fmt.Sprintf("Account balance passed in: %v, Total supply passed in: %v", acctBal, totalSupply))
-	k.Logger(goCtx).Info("Voting power from account balance: ", accP.Int64())
+	k.Logger(goCtx).Info(fmt.Sprintf("Voting power from account balance: %v", accP.Int64()))
 	voterPower := teampower.Add(upower).Add(repP).Add(accP)
 	if voterPower.IsZero() {
 		return nil, errors.New("voter power is zero")
