@@ -116,7 +116,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		if err != nil {
 			return math.Int{}, err
 		}
-		k.Logger(ctx).Info(fmt.Sprintf("Delegator tokens at block for new voter: ", amt.Int64()))
+		k.Logger(ctx).Info(fmt.Sprintf("Delegator tokens at block for new voter: %v", amt.Int64()))
 		exists, err := k.ReportersGroup.Has(ctx, collections.Join(id, reporter.Bytes()))
 		if err != nil {
 			return math.Int{}, err

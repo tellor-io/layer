@@ -121,6 +121,7 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](reporter).EndInclusive(blockNumber).Descending()
 	total := math.ZeroInt()
 	err := k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (bool, error) {
+		k.logger.Info(fmt.Sprintf("Value in walk of report delegation amounts: %v", value))
 		total = value.Total
 		return true, nil
 	})
