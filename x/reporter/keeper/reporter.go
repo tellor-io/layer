@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -130,6 +131,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 			return math.Int{}, iterError
 		}
 	}
+	k.logger.Info(fmt.Sprintf("Total Tokens for reporter in SubmitValue: %v", totalTokens))
 	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
 		return math.Int{}, err

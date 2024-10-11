@@ -76,13 +76,16 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, math.ZeroInt(), tokens)
 
+	ctx = ctx.WithBlockHeight(1)
 	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{Total: math.OneInt()}))
 
 	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, math.OneInt(), tokens)
 
-	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()+10))
+	ctx = ctx.WithBlockHeight(10000000)
+
+	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, math.OneInt(), tokens)
 }
