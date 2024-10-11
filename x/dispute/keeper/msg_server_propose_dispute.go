@@ -12,19 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// propose a single dispute on an array of reports
-//
-// extra field evidence that is list of other reports
-// iterate through those reports, see if it affects median, dispute those reports
-// geter for if bridge depots have been claimed, bridge deposit id as input
-// getter for a bunch of dispute info
-
-// want to catch bad median values / add evidence that this guy is bad
-// add evidence function
-// if already open dispute of that trype on the same reporter, just adde wvidence
-// loop through evidence reports, can flag additional reports made by the same reporter
-// if signifigane player is emdian, submits bad value, can flag all of his reports without putting up all of tyhe capital
-
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	sender, err := sdk.AccAddressFromBech32(msg.Creator)

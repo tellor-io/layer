@@ -7,9 +7,9 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 	require.NotNil(s.msgServer)
 
 	testCases := []struct {
-		name string
-		msg  *types.MsgAddEvidence
-		err  bool
+		name  string
+		msg   *types.MsgAddEvidence
+		err   bool
 		setup func()
 	}{
 		{
@@ -31,5 +31,4 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 			}
 		})
 	}
-
 }

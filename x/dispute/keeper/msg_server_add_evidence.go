@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // AddEvidence adds evidence to an existing dispute. If any of the evidence reports are an aggregate, flag them
