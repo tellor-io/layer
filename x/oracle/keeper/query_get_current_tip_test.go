@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"time"
-
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
@@ -44,7 +42,7 @@ func (s *KeeperTestSuite) TestGetCurrentTip() {
 	require.NoError(k.Query.Set(ctx, collections.Join(queryID, uint64(1)), types.QueryMeta{
 		Amount:             math.NewInt(10),
 		Id:                 1,
-		Expiration:         ctx.BlockTime().Add(time.Hour),
+		Expiration:         uint64(ctx.BlockHeight()) + 10,
 		HasRevealedReports: false,
 		QueryType:          "SpotPrice",
 		QueryData:          querydatabytes,

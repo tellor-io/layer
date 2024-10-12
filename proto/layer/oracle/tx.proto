@@ -18,7 +18,6 @@ service Msg {
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
   rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
-  rpc CommitReport(MsgCommitReport) returns (MsgCommitReportResponse);
   rpc Tip(MsgTip) returns (MsgTipResponse);
   rpc UpdateCyclelist(MsgUpdateCyclelist) returns (MsgUpdateCyclelistResponse);
 }
@@ -45,22 +44,9 @@ message MsgSubmitValue {
   string creator = 1;
   bytes query_data = 2;
   string value = 3;
-  string salt = 4; // hex encoded 32 bytes salt
-  uint64 commit_id = 5;
 }
 
 message MsgSubmitValueResponse {}
-
-message MsgCommitReport {
-  option (cosmos.msg.v1.signer) = "creator";
-  string creator = 1;
-  bytes query_data = 2;
-  string hash = 3; // hex encoded sha256 of "salt:value"
-}
-
-message MsgCommitReportResponse {
-  uint64 commit_id = 1;
-}
 
 message MsgTip {
   option (cosmos.msg.v1.signer) = "tipper";

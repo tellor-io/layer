@@ -98,7 +98,6 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 		AggregateValue:       "10_000",
 		AggregateReporter:    "reporter1",
 		ReporterPower:        100,
-		StandardDeviation:    "0",
 		Reporters:            []*types.AggregateReporter{{}},
 		Flagged:              false,
 		Index:                uint64(0),
@@ -117,7 +116,6 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateValue, agg.AggregateValue)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
 	require.Equal(t, getCurrentAggResponse.Aggregate.ReporterPower, agg.ReporterPower)
-	require.Equal(t, getCurrentAggResponse.Aggregate.StandardDeviation, agg.StandardDeviation)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Flagged, agg.Flagged)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Index, agg.Index)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReportIndex, agg.AggregateReportIndex)
@@ -376,13 +374,13 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
 				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(2)), queryMeta))
 				secondQueryMeta := types.QueryMeta{
-					Id:                    1,
-					Amount:                math.NewInt(100),
-					Expiration:            time.Now().Add(1 * time.Minute),
-					RegistrySpecTimeframe: 1 * time.Minute,
-					HasRevealedReports:    false,
-					QueryData:             []byte("0x4c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067dec0"),
-					QueryType:             "SpotPrice",
+					Id:                      1,
+					Amount:                  math.NewInt(100),
+					Expiration:              10,
+					RegistrySpecBlockWindow: 3,
+					HasRevealedReports:      false,
+					QueryData:               []byte("0x4c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067dec0"),
+					QueryType:               "SpotPrice",
 				}
 				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryData, uint64(3)), secondQueryMeta))
 				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryData, uint64(4)), secondQueryMeta))

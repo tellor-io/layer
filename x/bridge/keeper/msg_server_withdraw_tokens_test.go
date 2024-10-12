@@ -58,7 +58,6 @@ func TestMsgWithdrawTokens(t *testing.T) {
 		AggregateValue:       "10 * 1e6",
 		AggregateReporter:    "reporter1",
 		ReporterPower:        uint64(100),
-		StandardDeviation:    "0",
 		Reporters:            []*oracletypes.AggregateReporter{},
 		Flagged:              false,
 		Index:                uint64(0),

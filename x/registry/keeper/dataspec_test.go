@@ -76,11 +76,11 @@ func TestSetDataSpec(t *testing.T) {
 			name:      "dataspec buffer window < max buffer window, no err",
 			queryType: "SPOTPRICE",
 			dataspec: types.DataSpec{
-				DocumentHash:       "hash1",
-				ResponseValueType:  "uint256",
-				AggregationMethod:  "weighted-median",
-				Registrar:          "creator1",
-				ReportBufferWindow: time.Duration(20) * 24 * time.Hour, // 20 days
+				DocumentHash:      "hash1",
+				ResponseValueType: "uint256",
+				AggregationMethod: "weighted-median",
+				Registrar:         "creator1",
+				ReportBlockWindow: 500_000, // 20 days
 			},
 			expectError: false,
 		},
@@ -88,11 +88,11 @@ func TestSetDataSpec(t *testing.T) {
 			name:      "dataspec buffer window > max buffer window, err",
 			queryType: "SPOTPRICE",
 			dataspec: types.DataSpec{
-				DocumentHash:       "hash2",
-				ResponseValueType:  "uint256",
-				AggregationMethod:  "weighted-median",
-				Registrar:          "creator1",
-				ReportBufferWindow: time.Duration(22) * 24 * time.Hour, // 22 days
+				DocumentHash:      "hash2",
+				ResponseValueType: "uint256",
+				AggregationMethod: "weighted-median",
+				Registrar:         "creator1",
+				ReportBlockWindow: 1_000_000, // 22 days
 			},
 			expectError: true,
 		},
@@ -100,11 +100,11 @@ func TestSetDataSpec(t *testing.T) {
 			name:      "dataspec buffer window = max buffer window, no err",
 			queryType: "SPOTPRICE",
 			dataspec: types.DataSpec{
-				DocumentHash:       "hash3",
-				ResponseValueType:  "uint256",
-				AggregationMethod:  "weighted-median",
-				Registrar:          "creator1",
-				ReportBufferWindow: time.Duration(21) * 24 * time.Hour, // 21 days
+				DocumentHash:      "hash3",
+				ResponseValueType: "uint256",
+				AggregationMethod: "weighted-median",
+				Registrar:         "creator1",
+				ReportBlockWindow: 700_000, // 21 days
 			},
 			expectError: false,
 		},
@@ -158,63 +158,63 @@ func TestMaxReportBufferWindow(t *testing.T) {
 	require.NotNil(t, k)
 	params, err := k.GetParams(sdk.UnwrapSDKContext(ctx))
 	require.NoError(t, err)
-	require.Equal(t, params.MaxReportBufferWindow, time.Duration(21)*time.Hour*24) // default is 21 days
+	require.Equal(t, params.MaxReportBufferWindow, uint64(700_000)) // default is 21 days
 
 	// Test cases
 	testCases := []struct {
 		name           string
 		bufferWindow   time.Duration
-		expectedWindow time.Duration
+		expectedWindow uint64
 		expectError    bool
 		setup          func()
 	}{
 		{
 			name:           "Set and get 1 hr buffer window",
 			bufferWindow:   time.Duration(3600) * time.Second,
-			expectedWindow: time.Duration(3600) * time.Second,
+			expectedWindow: uint64(2000),
 			expectError:    false,
 			setup: func() {
-				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: time.Duration(3600) * time.Second})
+				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: uint64(2000)})
 				require.NoError(t, err)
 			},
 		},
 		{
 			name:           "Set and get zero buffer window",
 			bufferWindow:   time.Duration(0) * time.Second,
-			expectedWindow: time.Duration(0) * time.Second,
+			expectedWindow: uint64(0),
 			expectError:    false,
 			setup: func() {
-				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: time.Duration(0) * time.Second})
+				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: uint64(0)})
 				require.NoError(t, err)
 			},
 		},
 		{
 			name:           "Update existing buffer window to 2 hrs",
 			bufferWindow:   time.Duration(7200) * time.Second,
-			expectedWindow: time.Duration(7200) * time.Second,
+			expectedWindow: uint64(4000),
 			expectError:    false,
 			setup: func() {
-				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: time.Duration(7200) * time.Second})
+				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: uint64(4000)})
 				require.NoError(t, err)
 			},
 		},
 		{
 			name:           "Set to 21 days",
 			bufferWindow:   time.Duration(21) * 24 * time.Hour,
-			expectedWindow: time.Duration(21) * 24 * time.Hour,
+			expectedWindow: uint64(900_000),
 			expectError:    false,
 			setup: func() {
-				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: time.Duration(21) * 24 * time.Hour})
+				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: uint64(900_000)})
 				require.NoError(t, err)
 			},
 		},
 		{
 			name:           "Set to 63 days",
 			bufferWindow:   time.Duration(63) * 24 * time.Hour,
-			expectedWindow: time.Duration(63) * 24 * time.Hour,
+			expectedWindow: uint64(2_000_000),
 			expectError:    false,
 			setup: func() {
-				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: time.Duration(63) * 24 * time.Hour})
+				err := k.SetParams(sdk.UnwrapSDKContext(ctx), types.Params{MaxReportBufferWindow: uint64(2_000_000)})
 				require.NoError(t, err)
 			},
 		},

@@ -95,6 +95,7 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+
 	store := runtime.KVStoreAdapter(k.keeper.storeService.OpenKVStore(ctx))
 	queryStore := prefix.NewStore(store, types.QueryTipPrefix)
 	queries := make([]*types.QueryMeta, 0)
@@ -104,7 +105,7 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 		if err != nil {
 			return err
 		}
-		if queryMeta.Expiration.Add(offset).After(sdk.UnwrapSDKContext(ctx).BlockTime()) && queryMeta.Amount.GT(math.ZeroInt()) {
+		if queryMeta.Expiration > uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
 			queries = append(queries, &queryMeta)
 		}
 

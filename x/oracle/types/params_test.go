@@ -45,7 +45,7 @@ func TestParams_ParamsSetPairs(t *testing.T) {
 	}
 }
 
-func TestParams_ValidateMinStakeAmount(t *testing.T) {
+func TestParams_Validate(t *testing.T) {
 	require := require.New(t)
 
 	params := DefaultParams()

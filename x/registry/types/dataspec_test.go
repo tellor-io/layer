@@ -331,3 +331,16 @@ func TestMakeAruments(t *testing.T) {
 	args := MakeArguments(val)
 	require.Equal(t, args[0].Name, "asset")
 }
+
+func TestValidateMultiValue(t *testing.T) {
+	dataspec := DataSpec{
+		ResponseValueType: "uint256, string, uint256",
+		AbiComponents: []*ABIComponent{
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+		},
+		AggregationMethod: "weighted-median",
+	}
+	err := dataspec.ValidateValue("0x000000000000000000000000000000000000000000000000000000000000007b000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000001c8000000000000000000000000000000000000000000000000000000000000000a74657374696e6731323300000000000000000000000000000000000000000000")
+	require.NoError(t, err)
+}

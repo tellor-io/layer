@@ -1,8 +1,6 @@
 package registry
 
 import (
-	"time"
-
 	"github.com/tellor-io/layer/x/registry/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
 
@@ -41,9 +39,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				NestedComponent: []*types.ABIComponent{},
 			},
 		},
-		AggregationMethod:  "weighted-mode",
-		Registrar:          "genesis",
-		ReportBufferWindow: time.Hour * 1,
+		AggregationMethod: "weighted-mode",
+		Registrar:         "genesis",
+		ReportBlockWindow: 2000,
 	}
 
 	if err := k.SetDataSpec(ctx, genQueryTypeBridgeDeposit, bridgeSpec); err != nil {

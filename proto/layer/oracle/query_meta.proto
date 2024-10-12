@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package layer.oracle;
 
-import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
@@ -21,16 +20,9 @@ message QueryMeta {
     (gogoproto.nullable) = false
   ];
   // expiration time of the query
-  google.protobuf.Timestamp expiration = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.stdtime) = true
-  ];
+  uint64 expiration = 3;
   // timeframe of the query according to the data spec
-  google.protobuf.Duration registry_spec_timeframe = 4 [
-    (gogoproto.stdduration) = true,
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
-  ];
+  uint64 registry_spec_block_window = 4;
   // indicates whether query has revealed reports
   bool has_revealed_reports = 5;
   // query_data: decodable bytes to field of the data spec

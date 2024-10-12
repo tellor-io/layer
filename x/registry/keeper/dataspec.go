@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/tellor-io/layer/x/registry/types"
 
@@ -19,7 +18,7 @@ func (k Keeper) SetDataSpec(ctx sdk.Context, querytype string, dataspec types.Da
 	if err != nil {
 		return err
 	}
-	if dataspec.ReportBufferWindow > params.MaxReportBufferWindow {
+	if dataspec.ReportBlockWindow > params.MaxReportBufferWindow {
 		return errors.New("report buffer window exceeds max allowed value")
 	}
 	return k.SpecRegistry.Set(ctx, querytype, dataspec)
@@ -44,10 +43,10 @@ func (k Keeper) HasSpec(ctx context.Context, querytype string) (bool, error) {
 }
 
 // get max report buffer window
-func (k Keeper) MaxReportBufferWindow(ctx context.Context) (time.Duration, error) {
+func (k Keeper) MaxReportBufferWindow(ctx context.Context) (uint64, error) {
 	params, err := k.GetParams(sdk.UnwrapSDKContext(ctx))
 	if err != nil {
-		return time.Duration(0), err
+		return 0, err
 	}
 	return params.MaxReportBufferWindow, nil
 }

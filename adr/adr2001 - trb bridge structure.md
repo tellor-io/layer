@@ -11,8 +11,8 @@
 - 2024-04-01: revised for more discussion and align with data spec
 - 2024-08-12: spelling
 - 2024-08-20: added the claim deposit tip
-
 - 2024-08-29: add separate withdraw and deposit limits and minimum deposit amount
+- 2024-10-07: changing pieces for removing commit/reveal setup
 ## Context
 
 Tellor Tributes (TRB) is the tellor token. It exists on Ethereum and cannot be changed. It mints ~4k to the team each month and ~4k to the oracle contract for time based inflationary rewards (tbr). When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer. Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 1 hour window (this is allowed so that reporters are able to wait a certain amount of blocks before reporting so that the state of Ethereum has reached a high level of finality) and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specified deposit ID.  
@@ -58,7 +58,7 @@ We considered allowing the claimDeposit function to be free but we didn't want t
 
 ## Issues / Notes on Implementation
 
-Note that governance can change the queryId *time frame* and it should be monitored to make sure that commit times are enough notice on a given tip. 
+Note that governance can change the queryId *time frame* and it should be monitored to make sure that the reporting time frame for bridge deposits either remains fixed or is long enough to ensure a broad set of reporters for evaluating finality on the chains. 
 
 In the case of a broken validator set (a completely compromised layer chain (>2/3 malicious)), a social fork will be necessary to save layer. Users will be aware of this and will be able to handle a failure, however in this case the bridge is the "user" of layer with regards to releasing tokens. We had looked into adding some sort of pause or schelling game to fork the bridge contract, however these solutions seem more like attack vectors than options. Ultimately, the TRB token will be used on layer. The only reason it will be on Ethereum is for legacy trading and CEX integrations (once legacy users are moved to layer). This is fine (these users and CEX contracts should never be forced to upgrade to cosmos if possible), however there is no real "break" of the system.  Ultimately if you take over our validator set, you will get forked out and lose the tokens. The trading venues and exchanges will need to monitor and freeze the trading should this occur. Although extreme, this is preferable to introducing an attack or censorship vector (e.g. a multisig to freeze the contracts) that would require a fork anyway, but would also not require the attacker to actually buy up tokens to hit 2/3 of the layer validator set. Ultimately, limiting the token withdrawals to a certain percentage per day is the best option to give trading venues time to halt in the case of an attack.  
 

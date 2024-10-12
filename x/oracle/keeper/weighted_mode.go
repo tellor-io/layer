@@ -6,7 +6,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
-func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error) {
+func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error) {
 	if len(reports) == 0 {
 		return nil, types.ErrNoReportsToAggregate.Wrapf("can't aggregate empty reports")
 	}
@@ -57,6 +57,7 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport) (
 		Reporters:            modeReporters,
 		AggregateReportIndex: modeReportIndex,
 		MicroHeight:          modeReport.BlockNumber,
+		MetaId:               metaId,
 	}
 
 	err := k.SetAggregate(ctx, &aggregateReport)

@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 
@@ -206,19 +204,19 @@ func gasprice(local, global sdk.DecCoins) sdk.DecCoin {
 	}
 }
 
-func getcommitId(events []abcitypes.Event) (uint64, error) {
-	for _, event := range events {
-		if event.Type == "new_commit" {
-			for _, attr := range event.Attributes {
-				if attr.Key == "commit_id" {
-					value, err := strconv.Atoi(attr.Value)
-					if err != nil {
-						return 0, err
-					}
-					return uint64(value), nil
-				}
-			}
-		}
-	}
-	return 0, fmt.Errorf("commit_id not found")
-}
+// func getcommitId(events []abcitypes.Event) (uint64, error) {
+// 	for _, event := range events {
+// 		if event.Type == "new_commit" {
+// 			for _, attr := range event.Attributes {
+// 				if attr.Key == "commit_id" {
+// 					value, err := strconv.Atoi(attr.Value)
+// 					if err != nil {
+// 						return 0, err
+// 					}
+// 					return uint64(value), nil
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return 0, fmt.Errorf("commit_id not found")
+// }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/tellor-io/layer/x/registry/types"
@@ -41,7 +42,7 @@ func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDat
 			sdk.NewAttribute("document_hash_id", req.Spec.DocumentHash),
 			sdk.NewAttribute("aggregate_method", req.Spec.AggregationMethod),
 			sdk.NewAttribute("response_value_type", req.Spec.ResponseValueType),
-			sdk.NewAttribute("report_buffer_window", req.Spec.ReportBufferWindow.String()),
+			sdk.NewAttribute("report_buffer_window", fmt.Sprintf("%d", req.Spec.ReportBlockWindow)),
 		),
 	})
 	return &types.MsgUpdateDataSpecResponse{}, nil

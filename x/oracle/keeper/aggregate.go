@@ -30,9 +30,9 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime()
+	blockHeight := uint64(sdkCtx.BlockHeight())
 
-	var aggrFunc func(ctx context.Context, reports []types.MicroReport) (*types.Aggregate, error)
+	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
 
 	defer idsIterator.Close()
@@ -45,7 +45,9 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		if query.Expiration.Add(offset).Before(blockTime) {
+
+		if query.Expiration <= blockHeight {
+
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
 			if err != nil {
 				return err
@@ -65,7 +67,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 				aggrFunc = k.WeightedMode
 			}
 
-			report, err := aggrFunc(ctx, reports)
+			report, err := aggrFunc(ctx, reports, query.Id)
 			if err != nil {
 				return err
 			}
@@ -118,7 +120,6 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 			"aggregate_report",
 			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
 			sdk.NewAttribute("value", report.AggregateValue),
-			sdk.NewAttribute("standard_deviation", report.StandardDeviation),
 			sdk.NewAttribute("number_of_reporters", fmt.Sprintf("%d", len(report.Reporters))),
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),

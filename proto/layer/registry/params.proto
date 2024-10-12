@@ -11,9 +11,5 @@ option go_package = "github.com/tellor-io/layer/x/registry/types";
 message Params {
   option (gogoproto.goproto_stringer) = false;
   // max report buffer window
-  google.protobuf.Duration max_report_buffer_window = 1 [
-    (gogoproto.stdduration) = true,
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
-  ];
+  uint64 max_report_buffer_window = 1;
 }

@@ -68,6 +68,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 		AggregationMethod: "weighted-median",
 		Registrar:         valAccAddrs[0].String(),
 		AbiComponents:     abiComponents,
+		ReportBlockWindow: 1,
 	}
 	_, err = registryMsgServer.RegisterSpec(s.Setup.Ctx, &registrytypes.MsgRegisterSpec{
 		Registrar: valAccAddrs[0].String(),
@@ -128,7 +129,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	}
 	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)

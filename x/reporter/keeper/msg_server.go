@@ -183,12 +183,12 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	}
 
 	if !prevReportedPower.IsNil() {
-		// max report buffer
-		maxReportBuffer, err := k.Keeper.registryKeeper.MaxReportBufferWindow(goCtx)
+		unbondingTime, err := k.stakingKeeper.UnbondingTime(goCtx)
 		if err != nil {
 			return nil, err
 		}
-		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(maxReportBuffer)
+
+		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(unbondingTime)
 	}
 	selector.Reporter = reporterAddr.Bytes()
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selector); err != nil {
