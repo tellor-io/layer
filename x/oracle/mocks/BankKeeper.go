@@ -71,6 +71,22 @@ func (_m *BankKeeper) SendCoinsFromModuleToModule(ctx context.Context, senderMod
 	return r0
 }
 
+// SpendableCoins provides a mock function with given fields: ctx, addr
+func (_m *BankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
+	ret := _m.Called(ctx, addr)
+
+	var r0 types.Coins
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) types.Coins); ok {
+		r0 = rf(ctx, addr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.Coins)
+		}
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewBankKeeper interface {
 	mock.TestingT
 	Cleanup(func())

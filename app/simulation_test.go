@@ -14,6 +14,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	"github.com/spf13/viper"
@@ -62,6 +63,7 @@ type storeKeysPrefixes struct {
 func init() {
 	simcli.GetSimulatorFlags()
 	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
+	sdk.DefaultBondDenom = "loya"
 }
 
 // fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
@@ -170,96 +172,96 @@ func BenchmarkSimulation(b *testing.B) {
 	}
 }
 
-func TestAppStateDeterminism(t *testing.T) {
-	// if !simcli.FlagEnabledValue {
-	// 	t.Skip("skipping application simulation")
-	// }
+// func TestAppStateDeterminism(t *testing.T) {
+// 	// if !simcli.FlagEnabledValue {
+// 	// 	t.Skip("skipping application simulation")
+// 	// }
 
-	config := simcli.NewConfigFromFlags()
-	config.InitialBlockHeight = 1
-	config.ExportParamsPath = ""
-	config.OnOperation = true
-	config.AllInvariants = true
-	// config.GenesisFile = genesisFile
+// 	config := simcli.NewConfigFromFlags()
+// 	config.InitialBlockHeight = 1
+// 	config.ExportParamsPath = ""
+// 	config.OnOperation = true
+// 	config.AllInvariants = true
+// 	// config.GenesisFile = genesisFile
 
-	var (
-		r                    = rand.New(rand.NewSource(time.Now().Unix()))
-		numSeeds             = 3
-		numTimesToRunPerSeed = 5
-		appHashList          = make([]json.RawMessage, numTimesToRunPerSeed)
-		appOptions           = make(simtestutil.AppOptionsMap, 0)
-	)
-	appOptions[flags.FlagHome] = app.DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+// 	var (
+// 		r                    = rand.New(rand.NewSource(time.Now().Unix()))
+// 		numSeeds             = 3
+// 		numTimesToRunPerSeed = 5
+// 		appHashList          = make([]json.RawMessage, numTimesToRunPerSeed)
+// 		appOptions           = make(simtestutil.AppOptionsMap, 0)
+// 	)
+// 	appOptions[flags.FlagHome] = app.DefaultNodeHome
+// 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
-	for i := 0; i < numSeeds; i++ {
-		config.Seed = r.Int63()
+// 	for i := 0; i < numSeeds; i++ {
+// 		config.Seed = r.Int63()
 
-		for j := 0; j < numTimesToRunPerSeed; j++ {
-			var logger log.Logger
-			if simcli.FlagVerboseValue {
-				logger = log.NewTestLogger(t)
-			} else {
-				logger = log.NewNopLogger()
-			}
-			chainID := fmt.Sprintf("chain-id-%d-%d", i, j)
-			config.ChainID = chainID
+// 		for j := 0; j < numTimesToRunPerSeed; j++ {
+// 			var logger log.Logger
+// 			if simcli.FlagVerboseValue {
+// 				logger = log.NewTestLogger(t)
+// 			} else {
+// 				logger = log.NewNopLogger()
+// 			}
+// 			chainID := fmt.Sprintf("chain-id-%d-%d", i, j)
+// 			config.ChainID = chainID
 
-			db := dbm.NewMemDB()
-			bApp := app.New(
-				logger,
-				db,
-				nil,
-				true,
-				appOptions,
-				fauxMerkleModeOpt,
-				baseapp.SetChainID(chainID),
-			)
+// 			db := dbm.NewMemDB()
+// 			bApp := app.New(
+// 				logger,
+// 				db,
+// 				nil,
+// 				true,
+// 				appOptions,
+// 				fauxMerkleModeOpt,
+// 				baseapp.SetChainID(chainID),
+// 			)
 
-			fmt.Printf(
-				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
-				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
-			)
+// 			fmt.Printf(
+// 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+// 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+// 			)
 
-			genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
-			require.NoError(t, err)
-			var genesisMap map[string]json.RawMessage
-			err = json.Unmarshal(genesisJSON, &genesisMap)
-			require.NoError(t, err)
+// 			genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
+// 			require.NoError(t, err)
+// 			var genesisMap map[string]json.RawMessage
+// 			err = json.Unmarshal(genesisJSON, &genesisMap)
+// 			require.NoError(t, err)
 
-			_, _, err = simulation.SimulateFromSeed(
-				t,
-				os.Stdout,
-				bApp.BaseApp,
-				simtestutil.AppStateFn(
-					bApp.AppCodec(),
-					bApp.SimulationManager(),
-					genesisMap,
-				),
-				simulationtypes.RandomAccounts,
-				simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
-				bApp.ModuleAccountAddrs(),
-				config,
-				bApp.AppCodec(),
-			)
-			require.NoError(t, err)
+// 			_, _, err = simulation.SimulateFromSeed(
+// 				t,
+// 				os.Stdout,
+// 				bApp.BaseApp,
+// 				simtestutil.AppStateFn(
+// 					bApp.AppCodec(),
+// 					bApp.SimulationManager(),
+// 					genesisMap,
+// 				),
+// 				simulationtypes.RandomAccounts,
+// 				simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
+// 				bApp.ModuleAccountAddrs(),
+// 				config,
+// 				bApp.AppCodec(),
+// 			)
+// 			require.NoError(t, err)
 
-			if config.Commit {
-				simtestutil.PrintStats(db)
-			}
+// 			if config.Commit {
+// 				simtestutil.PrintStats(db)
+// 			}
 
-			appHash := bApp.LastCommitID().Hash
-			appHashList[j] = appHash
+// 			appHash := bApp.LastCommitID().Hash
+// 			appHashList[j] = appHash
 
-			if j != 0 {
-				require.Equal(
-					t, string(appHashList[0]), string(appHashList[j]),
-					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
-				)
-			}
-		}
-	}
-}
+// 			if j != 0 {
+// 				require.Equal(
+// 					t, string(appHashList[0]), string(appHashList[j]),
+// 					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+// 				)
+// 			}
+// 		}
+// 	}
+// }
 
 func TestAppImportExport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()

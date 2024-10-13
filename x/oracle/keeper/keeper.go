@@ -31,9 +31,9 @@ type (
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
-		Schema         collections.Schema                                                                          // key: reporter, queryid
-		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]        // key: queryId, tipper
-		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
+		Schema         collections.Schema                                                                   // key: reporter, queryid
+		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex] // key: queryId, tipper
+		TipperTotal    collections.Map[collections.Pair[[]byte, uint64], math.Int]                          // key: tipperAcc, blockNumber
 		// total tips given over time
 		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber, value: total tips                                  // key: queryId, timestamp
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
@@ -104,12 +104,11 @@ func NewKeeper(
 		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
 		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
 
-		TipperTotal: collections.NewIndexedMap(sb,
+		TipperTotal: collections.NewMap(sb,
 			types.TipperTotalPrefix,
 			"tipper_total",
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			sdk.IntValue,
-			types.NewTippersIndex(sb),
 		),
 	}
 

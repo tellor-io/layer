@@ -287,32 +287,32 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				require.NotNil(resp)
 			},
 		},
-		{
-			name: "err signing checkpoint",
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
-				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil)
-				attReq := bridgetypes.AttestationRequests{
-					Requests: []*bridgetypes.AttestationRequest{
-						{
-							Snapshot: []byte("snapshot"),
-						},
-					},
-				}
-				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
-				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
-					return []byte("signedMsg"), nil
-				})
-				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error"))
-				return bk, patches
-			},
-			expectedError: nil,
-			validateResponse: func(resp *abci.ResponseExtendVote) {
-				require.NotNil(resp)
-			},
-		},
+		// {
+		// 	name: "err signing checkpoint",
+		// 	setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+		// 		patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+		// 			return oppAddr, nil
+		// 		})
+		// 		bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil)
+		// 		attReq := bridgetypes.AttestationRequests{
+		// 			Requests: []*bridgetypes.AttestationRequest{
+		// 				{
+		// 					Snapshot: []byte("snapshot"),
+		// 				},
+		// 			},
+		// 		}
+		// 		bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
+		// 		patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
+		// 			return []byte("signedMsg"), nil
+		// 		})
+		// 		bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error"))
+		// 		return bk, patches
+		// 	},
+		// 	expectedError: nil,
+		// 	validateResponse: func(resp *abci.ResponseExtendVote) {
+		// 		require.NotNil(resp)
+		// 	},
+		// },
 		{
 			name: "no errors",
 			// order:

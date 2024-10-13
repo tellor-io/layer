@@ -42,7 +42,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 		accs[i] = acc.Address.String()
 	}
 	oracleGenesis := types.GenesisState{
-		Params: types.DefaultParams(),
+		Params:    types.DefaultParams(),
+		Cyclelist: types.InitialCycleList(),
 		// this line is used by starport scaffolding # simapp/module/genesisState
 	}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&oracleGenesis)
@@ -79,7 +80,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgTip,
-		oraclesimulation.SimulateMsgTip(am.accountKeeper, am.bankKeeper, am.keeper),
+		oraclesimulation.SimulateMsgTip(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
@@ -102,7 +103,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgTip,
 			defaultWeightMsgTip,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				oraclesimulation.SimulateMsgTip(am.accountKeeper, am.bankKeeper, am.keeper)
+				oraclesimulation.SimulateMsgTip(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

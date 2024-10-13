@@ -77,20 +77,3 @@ func TestNewQueryIndex(t *testing.T) {
 	im := types.NewQueryIndex(schema)
 	require.NotNil(t, im)
 }
-
-func TestIndexesList_Tippers(t *testing.T) {
-	storeService, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(storeService)
-
-	im := types.NewTippersIndex(schema)
-	index := im.IndexesList()
-	require.NotNil(t, index)
-}
-
-func TestNewTippersIndex(t *testing.T) {
-	storeService, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(storeService)
-
-	im := types.NewTippersIndex(schema)
-	require.NotNil(t, im)
-}

@@ -71,7 +71,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCreateReporter,
-		reportersimulation.SimulateMsgCreateReporter(am.accountKeeper, am.bankKeeper, am.keeper),
+		reportersimulation.SimulateMsgCreateReporter(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgSelectReporter int
@@ -108,7 +108,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgCreateReporter,
 			defaultWeightMsgCreateReporter,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				reportersimulation.SimulateMsgCreateReporter(am.accountKeeper, am.bankKeeper, am.keeper)
+				reportersimulation.SimulateMsgCreateReporter(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),
