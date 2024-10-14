@@ -3,16 +3,17 @@ package simulation
 import (
 	"math/rand"
 
-	"cosmossdk.io/math"
+	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/tellor-io/layer/testutil"
 )
 
 func SimulateMsgSubmitValue(

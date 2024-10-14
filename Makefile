@@ -189,4 +189,13 @@ mock-gen:
 	$(MAKE) mock-gen-registry
 	$(MAKE) mock-gen-reporter
 
+
+###############################################################################
+###                                Simulations                              ###
+###############################################################################
+test-sim-nondeterminism:
+	@echo "Running non-determinism test..."
+	@cd $(shell pwd)/app && go test -mod=readonly -run TestAppStateDeterminism2 -Enabled=true \
+		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon

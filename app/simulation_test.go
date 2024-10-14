@@ -14,8 +14,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
@@ -30,8 +28,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -134,7 +133,7 @@ func BenchmarkSimulation(b *testing.B) {
 	// fmt.Println("appState:", appState)
 	// require.NoError(b, err)
 
-	randomAccounts := simulationtypes.RandomAccounts
+	randomAccounts := simtypes.RandomAccounts
 	fmt.Println("\nrandomAccounts:", randomAccounts(rand.New(rand.NewSource(simcli.FlagSeedValue)), b.N))
 	fmt.Println("\nb.N:", b.N)
 	fmt.Println("\nsimcli.FlagSeedValue: ", simcli.FlagSeedValue)
@@ -149,7 +148,7 @@ func BenchmarkSimulation(b *testing.B) {
 			bApp.SimulationManager(),
 			genesisMap,
 		),
-		simulationtypes.RandomAccounts,
+		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
 		bApp.ModuleAccountAddrs(),
 		config,
@@ -238,7 +237,7 @@ func BenchmarkSimulation(b *testing.B) {
 // 					bApp.SimulationManager(),
 // 					genesisMap,
 // 				),
-// 				simulationtypes.RandomAccounts,
+// 				simtypes.RandomAccounts,
 // 				simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
 // 				bApp.ModuleAccountAddrs(),
 // 				config,
@@ -328,7 +327,7 @@ func TestAppImportExport(t *testing.T) {
 			bApp.SimulationManager(),
 			genesisMap,
 		),
-		simulationtypes.RandomAccounts,
+		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
 		bApp.BlockedModuleAccountAddrs(),
 		config,
@@ -476,7 +475,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			bApp.SimulationManager(),
 			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 		),
-		simulationtypes.RandomAccounts,
+		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(bApp, bApp.AppCodec(), config),
 		bApp.BlockedModuleAccountAddrs(),
 		config,
@@ -543,7 +542,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 			bApp.SimulationManager(),
 			bApp.BasicModuleManager.DefaultGenesis(bApp.AppCodec()),
 		),
-		simulationtypes.RandomAccounts,
+		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
 		newApp.BlockedModuleAccountAddrs(),
 		config,

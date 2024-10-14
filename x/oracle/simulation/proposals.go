@@ -4,27 +4,27 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/tellor-io/layer/x/oracle/types"
+	regtypes "github.com/tellor-io/layer/x/registry/types"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/tellor-io/layer/x/oracle/types"
-	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
-var (
-	assets = []string{
-		`["eth","usd"]`,
-		`["btc","eth"]`,
-		`["trb","btc"]`,
-		`["ltc","usd"]`,
-		`["bch","usd"]`,
-		`["eos","eth"]`,
-		`["bnb","usd"]`,
-		`["usdt","usd"]`,
-		`["xlm","usdt"]`,
-	}
-)
+var assets = []string{
+	`["eth","usd"]`,
+	`["btc","eth"]`,
+	`["trb","btc"]`,
+	`["ltc","usd"]`,
+	`["bch","usd"]`,
+	`["eos","eth"]`,
+	`["bnb","usd"]`,
+	`["usdt","usd"]`,
+	`["xlm","usdt"]`,
+}
 
 // SimulateMsgUpdateCyclelist returns a random MsgUpdateCyclelist
 func SimulateMsgUpdateCyclelist(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
