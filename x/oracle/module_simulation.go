@@ -26,7 +26,7 @@ var (
 const (
 	opWeightMsgSubmitValue = "op_weight_msg_submit_value"
 	// TODO: Determine the simulation weight value
-	defaultWeightMsgSubmitValue int = 100
+	defaultWeightMsgSubmitValue int = 1000
 
 	opWeightMsgTip = "op_weight_msg_tip"
 	// TODO: Determine the simulation weight value
@@ -69,7 +69,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgSubmitValue,
-		oraclesimulation.SimulateMsgSubmitValue(am.accountKeeper, am.bankKeeper, am.keeper),
+		oraclesimulation.SimulateMsgSubmitValue(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	var weightMsgTip int
@@ -95,7 +95,7 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgSubmitValue,
 			defaultWeightMsgSubmitValue,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				oraclesimulation.SimulateMsgSubmitValue(am.accountKeeper, am.bankKeeper, am.keeper)
+				oraclesimulation.SimulateMsgSubmitValue(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

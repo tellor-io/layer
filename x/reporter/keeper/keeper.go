@@ -151,3 +151,15 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	maxStake.Amount = total
 	return k.Tracker.Set(ctx, maxStake)
 }
+
+func (k Keeper) AllReporters(ctx context.Context) ([]types.Reporter, error) {
+	reporters := make([]types.Reporter, 0)
+	err := k.Reporters.Walk(ctx, nil, func(key []byte, value types.OracleReporter) (bool, error) {
+		reporters = append(reporters, types.Reporter{
+			Address:  sdk.AccAddress(key).String(),
+			Metadata: &value,
+		})
+		return false, nil
+	})
+	return reporters, err
+}

@@ -9,6 +9,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -215,4 +216,8 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 	}
 
 	return nil
+}
+
+func (k Keeper) AllReporters(ctx context.Context) ([]reportertypes.Reporter, error) {
+	return k.reporterKeeper.AllReporters(ctx)
 }
