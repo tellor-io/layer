@@ -36,6 +36,9 @@ const (
 
 	opWeightMsgUpdateCyclelist = "op_weight_msg_update_cyclelist"
 
+	defaultWeightMsgUpdateParams int = 100
+
+	opWeightMsgUpdateParams = "op_weight_msg_update_params"
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -115,6 +118,11 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgUpdateCyclelist,
 			defaultWeightMsgUpdateCyclelist,
 			oraclesimulation.SimulateMsgUpdateCyclelist,
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgUpdateParams,
+			defaultWeightMsgUpdateParams,
+			oraclesimulation.SimulateMsgUpdateParams,
 		),
 		// this line is used by starport scaffolding # simapp/module/OpMsg
 	}

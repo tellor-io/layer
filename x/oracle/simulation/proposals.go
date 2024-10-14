@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -47,5 +48,19 @@ func SimulateMsgUpdateCyclelist(r *rand.Rand, _ sdk.Context, _ []simtypes.Accoun
 	return &types.MsgUpdateCyclelist{
 		Authority: authority.String(),
 		Cyclelist: cyclelist,
+	}
+}
+
+// SimulateMsgUpdateParams returns a random MsgUpdateParams
+func SimulateMsgUpdateParams(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+	// use the default gov module account address as authority
+	var authority sdk.AccAddress = address.Module("gov")
+
+	params := types.DefaultParams()
+	params.MinStakeAmount = simtypes.RandomAmount(r, math.NewInt(1000000000))
+
+	return &types.MsgUpdateParams{
+		Authority: authority.String(),
+		Params:    params,
 	}
 }
