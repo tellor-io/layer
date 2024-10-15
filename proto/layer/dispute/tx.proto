@@ -21,7 +21,17 @@ service Msg {
   rpc TallyVote(MsgTallyVote) returns (MsgTallyVoteResponse);
   rpc ExecuteDispute(MsgExecuteDispute) returns (MsgExecuteDisputeResponse);
   rpc WithdrawFeeRefund(MsgWithdrawFeeRefund) returns (MsgWithdrawFeeRefundResponse);
+  rpc AddEvidence(MsgAddEvidence) returns (MsgAddEvidenceResponse);
 }
+
+message MsgAddEvidence {
+  option (cosmos.msg.v1.signer) = "caller_address";
+  string caller_address = 1;
+  uint64 dispute_id = 2;
+  repeated layer.oracle.MicroReport reports = 3;
+}
+
+message MsgAddEvidenceResponse {}
 
 message MsgWithdrawFeeRefund {
   option (cosmos.msg.v1.signer) = "caller_address";

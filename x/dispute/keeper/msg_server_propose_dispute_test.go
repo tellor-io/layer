@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 	s.NoError(err)
 	s.NotNil(disputeRes)
 	s.Equal(disputeRes.DisputeCategory, types.Warning)
-	s.Equal(disputeRes.ReportEvidence.Reporter, addr.String())
+	s.Equal(disputeRes.InitialEvidence.Reporter, addr.String())
 	s.Equal(disputeRes.DisputeStatus, types.Voting)
 	return addr
 }

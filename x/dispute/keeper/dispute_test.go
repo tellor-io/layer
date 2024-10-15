@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) dispute() types.Dispute {
 		DisputeId:       1,
 		DisputeCategory: types.Warning,
 		DisputeFee:      math.ZeroInt(),
-		ReportEvidence:  report,
+		InitialEvidence: report,
 		Open:            true,
 		SlashAmount:     math.NewInt(10000),
 	}
@@ -77,14 +77,14 @@ func (s *KeeperTestSuite) TestGetDisputeByReporter() {
 	dispute := s.dispute()
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 
-	disputeByReporter, err := s.disputeKeeper.GetDisputeByReporter(s.ctx, dispute.ReportEvidence, types.Warning)
+	disputeByReporter, err := s.disputeKeeper.GetDisputeByReporter(s.ctx, dispute.InitialEvidence, types.Warning)
 	s.NoError(err)
 	s.Equal(dispute.DisputeId, disputeByReporter.DisputeId)
 
 	dispute.DisputeId = 2
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 
-	disputeByReporter, err = s.disputeKeeper.GetDisputeByReporter(s.ctx, dispute.ReportEvidence, types.Warning)
+	disputeByReporter, err = s.disputeKeeper.GetDisputeByReporter(s.ctx, dispute.InitialEvidence, types.Warning)
 	s.NoError(err)
 	s.Equal(uint64(2), disputeByReporter.DisputeId)
 }

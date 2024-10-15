@@ -92,13 +92,13 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		DisputeRound:      1,
 		SlashAmount:       disputeFee,
 		// burn amount is calculated as 5% of dispute fee
-		BurnAmount:     fivePercent,
-		DisputeFee:     disputeFee.Sub(fivePercent),
-		ReportEvidence: *msg.Report,
-		FeeTotal:       msg.Fee.Amount,
-		PrevDisputeIds: []uint64{disputeId},
-		Open:           true,
-		BlockNumber:    uint64(ctx.BlockHeight()),
+		BurnAmount:      fivePercent,
+		DisputeFee:      disputeFee.Sub(fivePercent),
+		InitialEvidence: *msg.Report,
+		FeeTotal:        msg.Fee.Amount,
+		PrevDisputeIds:  []uint64{disputeId},
+		Open:            true,
+		BlockNumber:     uint64(ctx.BlockHeight()),
 	}
 	if err := k.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
 		Amount:   msg.Fee.Amount,
@@ -112,7 +112,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	}
 	// if the paid fee is equal to the slash amount, then slash validator and jail
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
+		if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return err
 		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
