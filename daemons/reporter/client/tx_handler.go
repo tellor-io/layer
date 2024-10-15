@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -162,6 +163,7 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	}
 	c.logger.Info("TxResult", "result", txnResponse.TxResult)
 	fmt.Println("transaction hash ", res.TxHash)
+	defer telemetry.SetGauge(float32(txnResponse.TxResult.GasUsed), "gas_price_for_report_tx")
 
 	return txnResponse, nil
 }
