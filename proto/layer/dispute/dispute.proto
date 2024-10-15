@@ -51,8 +51,8 @@ message Dispute {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
-  // single report evidence
-  layer.oracle.MicroReport report_evidence = 12 [(gogoproto.nullable) = false];
+  // initial single report evidence to be disputed
+  layer.oracle.MicroReport initial_evidence = 12 [(gogoproto.nullable) = false];
   // fee payers that were involved in paying the dispute fee in order to start the dispute
   // total fee paid tracked to know if dispute fee is fully paid to start dispute
   string fee_total = 13 [
@@ -65,6 +65,7 @@ message Dispute {
   // block number when this specific dispute was created
   uint64 block_number = 15;
   bool open = 16;
+  repeated layer.oracle.MicroReport additional_evidence = 17;
 }
 
 // DisputeCategory defines the severity of a dispute.
