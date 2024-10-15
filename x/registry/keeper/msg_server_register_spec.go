@@ -33,6 +33,7 @@ func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpe
 	if err := k.Keeper.SetDataSpec(ctx, msg.QueryType, msg.Spec); err != nil {
 		return nil, err
 	}
+	fmt.Println("DataSpec set: " + msg.QueryType)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

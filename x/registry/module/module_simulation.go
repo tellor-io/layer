@@ -24,9 +24,11 @@ var (
 )
 
 const (
-	opWeightMsgRegisterSpec = "op_weight_msg_register_spec"
-	// TODO: Determine the simulation weight value
+	opWeightMsgRegisterSpec          = "op_weight_msg_register_spec"
 	defaultWeightMsgRegisterSpec int = 100
+
+	opWeightMsgUpdateSpec          = "op_weight_msg_update_spec"
+	defaultWeightMsgUpdateSpec int = 100
 
 	// this line is used by starport scaffolding # simapp/module/const
 )
@@ -57,6 +59,7 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	operations := make([]simtypes.WeightedOperation, 0)
 
+	// MsgRegisterSpec
 	var weightMsgRegisterSpec int
 	simState.AppParams.GetOrGenerate(opWeightMsgRegisterSpec, &weightMsgRegisterSpec, nil,
 		func(_ *rand.Rand) {
@@ -65,7 +68,19 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgRegisterSpec,
-		registrysimulation.SimulateMsgRegisterSpec(am.accountKeeper, am.bankKeeper, am.keeper),
+		registrysimulation.SimulateMsgRegisterSpec(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	// MsgUpdateSpec
+	var weightMsgUpdateSpec int
+	simState.AppParams.GetOrGenerate(opWeightMsgUpdateSpec, &weightMsgUpdateSpec, nil,
+		func(_ *rand.Rand) {
+			weightMsgUpdateSpec = defaultWeightMsgUpdateSpec
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgUpdateSpec,
+		registrysimulation.SimulateMsgUpdateSpec(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
@@ -80,7 +95,15 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			opWeightMsgRegisterSpec,
 			defaultWeightMsgRegisterSpec,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
-				registrysimulation.SimulateMsgRegisterSpec(am.accountKeeper, am.bankKeeper, am.keeper)
+				registrysimulation.SimulateMsgRegisterSpec(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgUpdateSpec,
+			defaultWeightMsgUpdateSpec,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				registrysimulation.SimulateMsgRegisterSpec(simState.TxConfig, am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

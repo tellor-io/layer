@@ -29,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -133,13 +132,13 @@ func BenchmarkSimulation(b *testing.B) {
 	// fmt.Println("appState:", appState)
 	// require.NoError(b, err)
 
-	randomAccounts := simtypes.RandomAccounts
-	fmt.Println("\nrandomAccounts:", randomAccounts(rand.New(rand.NewSource(simcli.FlagSeedValue)), b.N))
-	fmt.Println("\nb.N:", b.N)
-	fmt.Println("\nsimcli.FlagSeedValue: ", simcli.FlagSeedValue)
+	// randomAccounts := simtypes.RandomAccounts
+	// fmt.Println("\nrandomAccounts:", randomAccounts(rand.New(rand.NewSource(simcli.FlagSeedValue)), b.N))
+	// fmt.Println("\nb.N:", b.N)
+	// fmt.Println("\nsimcli.FlagSeedValue: ", simcli.FlagSeedValue)
 
 	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, simParams, _ := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		bApp.BaseApp,
@@ -157,13 +156,13 @@ func BenchmarkSimulation(b *testing.B) {
 
 	require.NotNil(b, bApp.MintKeeper)
 	require.NotNil(b, bApp.MintKeeper.Minter)
-	fmt.Println("bApp.MintKeeper.Minter: ", bApp.MintKeeper.Minter)
+	// fmt.Println("bApp.MintKeeper.Minter: ", bApp.MintKeeper.Minter)
 
 	// export state and simParams before the simulation error is checked
 	err = simtestutil.CheckExportSimulation(bApp, config, simParams)
-	fmt.Println("err", err)
-	// require.NoError(b, err)
-	fmt.Println("simErr", simErr)
+	// fmt.Println("err", err)
+	// // require.NoError(b, err)
+	// fmt.Println("simErr", simErr)
 	// require.NoError(b, simErr)
 
 	if config.Commit {
@@ -297,12 +296,12 @@ func TestAppImportExport(t *testing.T) {
 		baseapp.SetChainID(config.ChainID),
 	)
 	require.Equal(t, app.Name, bApp.Name())
-	anteHandler := bApp.BaseApp.AnteHandler()
-	fmt.Println("\nanteHandler:", anteHandler)
-	simManager := bApp.SimulationManager()
-	fmt.Println("\nsimManager:", simManager)
-	weightedOps := simManager.WeightedOperations(module.SimulationState{})
-	fmt.Println("\nweightedOps:", weightedOps)
+	// anteHandler := bApp.BaseApp.AnteHandler()
+	// fmt.Println("\nanteHandler:", anteHandler)
+	// simManager := bApp.SimulationManager()
+	// fmt.Println("\nsimManager:", simManager)
+	// weightedOps := simManager.WeightedOperations(module.SimulationState{})
+	// // fmt.Println("\nweightedOps:", weightedOps)
 
 	genesisJSON, err := os.ReadFile("./testutils/sim-genesis.json")
 	require.NoError(t, err)
@@ -311,9 +310,9 @@ func TestAppImportExport(t *testing.T) {
 	err = json.Unmarshal(genesisJSON, &genesisMap)
 	require.NoError(t, err)
 
-	valSet, err := simtestutil.CreateRandomValidatorSet()
-	require.NoError(t, err)
-	fmt.Println("valSet:", valSet)
+	// valSet, err := simtestutil.CreateRandomValidatorSet()
+	// require.NoError(t, err)
+	// fmt.Println("valSet:", valSet)
 
 	// simtestutil.SetupWithConfiguration()
 

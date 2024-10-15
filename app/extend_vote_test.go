@@ -3,7 +3,6 @@ package app_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -391,7 +390,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			}
 			tc.validateResponse(resp)
 			bk.AssertExpectations(s.T())
-			fmt.Println(tc.name, " finished!!")
 		})
 	}
 }

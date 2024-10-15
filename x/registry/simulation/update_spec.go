@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math/rand"
 
 	"cosmossdk.io/math"
@@ -10,11 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
-func SimulateMsgRegisterSpec(
+func SimulateMsgUpdateSpec(
 	txConfig client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -24,7 +26,13 @@ func SimulateMsgRegisterSpec(
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 
-		// create data spec
+		// use the default gov module account address as authority
+		var authority sdk.AccAddress = address.Module("gov")
+
+		queryTypeOptions := []string{"TWAP", "Mimicry", "EVMCall"}
+		randomIndex := r.Intn(len(queryTypeOptions))
+		queryType := queryTypeOptions[randomIndex]
+
 		spec := types.DataSpec{
 			DocumentHash:      "ipfs://bafkreig5war63asrzl6vygpqj3gca7nqcntxzoy4lxvu2wqtmwwxlqwzau",
 			ResponseValueType: "string",
@@ -36,24 +44,30 @@ func SimulateMsgRegisterSpec(
 			Registrar:         string(simAccount.Address),
 			ReportBlockWindow: 4,
 		}
-		// randomly pick one of these three query types to try to register
-		// all of them get the same DataSpec for simplicity
-		queryTypeOptions := []string{"TWAP", "Mimicry", "EVMCall"}
-		randomIndex := r.Intn(len(queryTypeOptions))
-		queryType := queryTypeOptions[randomIndex]
 
-		// create Msg
-		msg := &types.MsgRegisterSpec{
-			Registrar: simAccount.Address.String(),
+		msg := &types.MsgUpdateDataSpec{
 			QueryType: queryType,
 			Spec:      spec,
 		}
 
+		// Pick a random number between 0 and 99
+		// Half the time the authority will be wrong and tx should fail
+		randomNum := r.Intn(100)
+		if randomNum < 50 {
+			fmt.Println("good authority")
+			msg.Authority = authority.String()
+		} else {
+			msg.Authority = simAccount.Address.String()
+			fmt.Println("bad authority")
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRegisterSpec{}), "authority is not gov"), nil, nil
+		}
+
 		// Check if the spec exists
-		// If spec already exists, expect tx to fail
+		// If spec does not exist, expect tx to fail
 		specExists, _ := k.HasSpec(ctx, msg.QueryType)
-		if specExists {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRegisterSpec{}), "spec already registered"), nil, nil
+		if !specExists {
+			fmt.Println("spec does not exist yet")
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRegisterSpec{}), "spec not registered yet"), nil, nil
 		}
 
 		// build full tx
