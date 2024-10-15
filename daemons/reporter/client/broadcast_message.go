@@ -93,7 +93,9 @@ func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, querymeta *or
 	if err != nil {
 		return fmt.Errorf("error sending tx: %w", err)
 	}
-	fmt.Println("response after submit message", resp.TxResult.Code)
+
+	queryId := utils.QueryIDFromData(qd)
+	fmt.Printf("Tx Response code for QueryId %s: %d", string(queryId), resp.TxResult.Code)
 	commitedIds[querymeta.Id] = true
 
 	return nil
