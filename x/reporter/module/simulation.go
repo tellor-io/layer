@@ -35,6 +35,21 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgWithdrawTip int = 100
 
+	opWeightMsgSwitchReporter = "op_weight_msg_switch_reporter"
+
+	defaultWeightMsgSwitchReporter int = 100
+
+	opWeightMsgRemoveSelector = "op_weight_msg_remove_selector"
+
+	defaultWeightMsgRemoveSelector int = 100
+
+	opWeightMsgUnjailReporter = "op_weight_msg_unjail_reporter"
+
+	defaultWeightMsgUnjailReporter int = 100
+
+	defaultWeightMsgUpdateParams int = 100
+
+	opWeightMsgUpdateParams = "op_weight_msg_update_params"
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -85,15 +100,35 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		reportersimulation.SimulateMsgSelectReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
-	var weightMsgWithdrawTip int
-	simState.AppParams.GetOrGenerate(opWeightMsgWithdrawTip, &weightMsgWithdrawTip, nil,
+	var weightMsgSwitchReporter int
+	simState.AppParams.GetOrGenerate(opWeightMsgWithdrawTip, &weightMsgSwitchReporter, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawTip = defaultWeightMsgWithdrawTip
+			weightMsgSwitchReporter = defaultWeightMsgSwitchReporter
 		},
 	)
 	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgWithdrawTip,
-		reportersimulation.SimulateMsgWithdrawTip(am.accountKeeper, am.bankKeeper, am.keeper),
+		weightMsgSwitchReporter,
+		reportersimulation.SimulateMsgSwitchReporter(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+	var weightMsgRemoveSelector int
+	simState.AppParams.GetOrGenerate(opWeightMsgWithdrawTip, &weightMsgRemoveSelector, nil,
+		func(_ *rand.Rand) {
+			weightMsgRemoveSelector = defaultWeightMsgRemoveSelector
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgRemoveSelector,
+		reportersimulation.SimulateMsgRemoveSelector(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+	var weightMsgUnjailReporter int
+	simState.AppParams.GetOrGenerate(opWeightMsgWithdrawTip, &weightMsgUnjailReporter, nil,
+		func(_ *rand.Rand) {
+			weightMsgUnjailReporter = defaultWeightMsgUnjailReporter
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgUnjailReporter,
+		reportersimulation.SimulateMsgUnjailReporter(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation
@@ -127,6 +162,35 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 				reportersimulation.SimulateMsgWithdrawTip(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgSwitchReporter,
+			defaultWeightMsgSwitchReporter,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				reportersimulation.SimulateMsgSwitchReporter(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgRemoveSelector,
+			defaultWeightMsgRemoveSelector,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				reportersimulation.SimulateMsgRemoveSelector(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgUnjailReporter,
+			defaultWeightMsgUnjailReporter,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				reportersimulation.SimulateMsgUnjailReporter(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgUpdateParams,
+			defaultWeightMsgUpdateParams,
+			reportersimulation.SimulateMsgUpdateParams,
 		),
 		// this line is used by starport scaffolding # simapp/module/OpMsg
 	}
