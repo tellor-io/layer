@@ -24,7 +24,7 @@ func NewDisputesIndex(sb *collections.SchemaBuilder) DisputesIndex {
 			sb, types.DisputesByReporterIndexPrefix, "dispute_by_reporter",
 			collections.BytesKey, collections.Uint64Key,
 			func(k uint64, dispute types.Dispute) ([]byte, error) {
-				reporterKey := fmt.Sprintf("%s:%x", dispute.ReportEvidence.Reporter, dispute.HashId)
+				reporterKey := fmt.Sprintf("%s:%x", dispute.InitialEvidence.Reporter, dispute.HashId)
 				return []byte(reporterKey), nil
 			},
 		),

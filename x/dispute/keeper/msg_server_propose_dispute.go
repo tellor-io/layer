@@ -28,6 +28,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	dispute, err := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
+			// event gets emitted in SetNewDispute
 			if err := k.Keeper.SetNewDispute(ctx, sender, *msg); err != nil {
 				return nil, err
 			}
@@ -35,11 +36,9 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 		}
 		return nil, err
 	}
-	// Add round to Existing Dispute
+	// Add round to Existing Dispute - emits event
 	if err := k.Keeper.AddDisputeRound(ctx, sender, dispute, *msg); err != nil {
 		return nil, err
 	}
 	return &types.MsgProposeDisputeResponse{}, nil
 }
-
-// can i use my delegated tokens to start a dispute
