@@ -160,7 +160,7 @@ func BenchmarkSimulation(b *testing.B) {
 
 	// export state and simParams before the simulation error is checked
 	err = simtestutil.CheckExportSimulation(bApp, config, simParams)
-	// fmt.Println("err", err)
+	fmt.Println("err", err)
 	// // require.NoError(b, err)
 	// fmt.Println("simErr", simErr)
 	// require.NoError(b, simErr)

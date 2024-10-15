@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/x/registry/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -58,7 +59,7 @@ func SimulateMsgUpdateSpec(
 			msg.Authority = authority.String()
 		} else {
 			msg.Authority = simAccount.Address.String()
-			fmt.Println("bad authority")
+			fmt.Println("Fail! bad authority")
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRegisterSpec{}), "authority is not gov"), nil, nil
 		}
 
@@ -66,7 +67,7 @@ func SimulateMsgUpdateSpec(
 		// If spec does not exist, expect tx to fail
 		specExists, _ := k.HasSpec(ctx, msg.QueryType)
 		if !specExists {
-			fmt.Println("spec does not exist yet")
+			fmt.Println("Fail! spec does not exist yet")
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRegisterSpec{}), "spec not registered yet"), nil, nil
 		}
 
