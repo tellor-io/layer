@@ -57,7 +57,7 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 		}
 		i--
 		if i == 0 {
-			amount = amount + (reward.Uint64() * 1e12) - totaldist
+			amount = amount + (reward.Uint64() * 1e6) - totaldist
 		}
 		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, c.Height)
 		if err != nil {
@@ -80,10 +80,8 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 
 func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) uint64 {
 	// convert numbers from loya which is 1e6 to be 1e18
-	power := (reporterPower * reportsCount * reward.Uint64()) * 1e12
-	normTotalPower := totalPower * 1e12
-	fmt.Printf("Power: %v, TotalPower: %v\r", power, normTotalPower)
-	amount := power / normTotalPower
+	power := (reporterPower * reportsCount)
+	amount := (power * reward.Uint64()) * 1e6 / totalPower
 	fmt.Println("Amount: ", amount)
 	return amount
 }

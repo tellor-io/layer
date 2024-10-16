@@ -16,7 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var reward = math.NewInt(1000)
+var reward = math.NewInt(100)
 
 func TestCalculateRewardAmount(t *testing.T) {
 	testCases := []struct {
@@ -30,26 +30,26 @@ func TestCalculateRewardAmount(t *testing.T) {
 		{
 			name:           "Test all reporters report",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 1}, {Power: 20, Reports: 1}, {Power: 30, Reports: 1}, {Power: 40, Reports: 1}},
-			expectedAmount: []uint64{10000000000000, 20000000000000, 30000000000000, 40000000000000},
+			expectedAmount: []uint64{10000000, 20000000, 30000000, 40000000},
 			totalPower:     100, // 40 + 30 + 20 + 10
 
 		},
 		{
 			name:           "only 1 reports",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 1}, {Power: 20, Reports: 0}, {Power: 30, Reports: 0}, {Power: 40, Reports: 0}},
-			expectedAmount: []uint64{100000000000000, 0, 0, 0},
+			expectedAmount: []uint64{100000000, 0, 0, 0},
 			totalPower:     10,
 		},
 		{
 			name:           "only 1 and 3 reports one report, a single queryId",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 1}, {Power: 20, Reports: 0}, {Power: 30, Reports: 1}, {Power: 40, Reports: 0}},
-			expectedAmount: []uint64{25000000000000, 0, 75000000000000, 0},
+			expectedAmount: []uint64{25000000, 0, 75000000, 0},
 			totalPower:     40, // 30 + 10
 		},
 		{
 			name:           "all reporters report, a two queryIds",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 2}, {Power: 30, Reports: 2}, {Power: 40, Reports: 2}},
-			expectedAmount: []uint64{10000000000000, 20000000000000, 30000000000000, 40000000000000},
+			expectedAmount: []uint64{10000000, 20000000, 30000000, 40000000},
 			totalPower:     200,
 		},
 		{
@@ -57,10 +57,10 @@ func TestCalculateRewardAmount(t *testing.T) {
 			reporter: []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 1}, {Power: 30, Reports: 1}, {Power: 40, Reports: 1}},
 			expectedAmount: []uint64{
 				// power*reports/totalPower*reward
-				((uint64(10*2) * 1e12) / (110 * 1e12)) * (100 * 1e12),
-				((uint64(20) * 1e12) / (110 * 1e12)) * (100 * 1e12),
-				((uint64(30) * 1e12) / (110 * 1e12)) * (100 * 1e12),
-				((uint64(40) * 1e12) / (110 * 1e12)) * (100 * 1e12),
+				(uint64(10*2) * 1e6) / 110 * (100 * 1e6),
+				(uint64(20) * 1e6) / 110 * (100 * 1e6),
+				(uint64(30) * 1e6) / 110 * (100 * 1e6),
+				(uint64(40) * 1e6) / 110 * (100 * 1e6),
 			},
 			totalPower: 110, // 40 + 30 + 20 + (10 * 2)
 		},
@@ -79,6 +79,7 @@ func TestCalculateRewardAmount(t *testing.T) {
 	for _, tc := range testCases {
 		totaldist := uint64(0)
 		expectedTotalReward := uint64(0)
+		fmt.Println("Reward: ", reward)
 		t.Run(tc.name, func(t *testing.T) {
 			for i, r := range tc.reporter {
 				amount := keeper.CalculateRewardAmount(r.Power, r.Reports, tc.totalPower, reward)
@@ -91,7 +92,7 @@ func TestCalculateRewardAmount(t *testing.T) {
 
 			}
 		})
-		fmt.Printf("ExpectedTotalREward: %d, Actual Reward: %d", expectedTotalReward, reward)
+		fmt.Printf("ExpectedTotalREward: %d, Actual Reward: %d", expectedTotalReward, reward.Uint64())
 		require.Equal(t, expectedTotalReward, reward.Uint64(), "reward amount should be within tolerance")
 	}
 }

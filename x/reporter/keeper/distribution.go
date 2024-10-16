@@ -32,8 +32,8 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	}
 
 	for _, del := range delAddrs.TokenOrigins {
-		// multiply by 1e12 to match the rewards precision of 1e18
-		delegatorShare := netReward * ((del.Amount.Uint64() * 1e12) / (delAddrs.Total.Uint64() * 1e12))
+		// multiply by 1e6 to match the rewards precision of 1e12
+		delegatorShare := netReward * ((del.Amount.Uint64() * 1e6) / (delAddrs.Total.Uint64() * 1e6))
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare + commission
 		}

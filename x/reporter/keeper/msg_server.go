@@ -300,7 +300,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 		return nil, errors.New("chosen validator must be bonded")
 	}
 
-	amtToDelegate := shares / 1e12
+	amtToDelegate := shares / 1e6
 	if amtToDelegate == 0 {
 		return nil, errors.New("no tips to withdraw")
 	}
@@ -309,7 +309,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 		return nil, err
 	}
 
-	remainder := shares - (amtToDelegate * 1e12)
+	remainder := shares - (amtToDelegate * 1e6)
 	if remainder == 0 {
 		err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
 		if err != nil {
