@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -95,6 +96,6 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	if query.Expiration < uint64(blockHeight) {
 		return types.ErrSubmissionWindowExpired
 	}
-
+	fmt.Println("Setting value")
 	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, query.CycleList)
 }

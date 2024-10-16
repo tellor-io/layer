@@ -24,19 +24,25 @@ import (
 // Rewards based on the source are then allocated to the reporters.
 func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
+	fmt.Println("SetAggregatedReport !!!!!!!!!!!!!!!!!!!")
 	idsIterator, err := k.Query.Indexes.HasReveals.MatchExact(ctx, true)
 	if err != nil {
 		return err
 	}
-
+	_ = k.Query.Walk(ctx, nil, func(key collections.Pair[[]byte, uint64], query types.QueryMeta) (bool, error) {
+		fmt.Println("query", query)
+		return false, nil
+	})
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := uint64(sdkCtx.BlockHeight())
-
+	fmt.Println("blockHeight", blockHeight)
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
 	reportersToPay := make([]*types.AggregateReporter, 0)
-
+	fmt.Println()
+	count := 0
 	defer idsIterator.Close()
 	for ; idsIterator.Valid(); idsIterator.Next() {
+		count++
 		key, err := idsIterator.PrimaryKey()
 		if err != nil {
 			return err
@@ -45,7 +51,8 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-
+		fmt.Println("boolean ", query.Expiration <= blockHeight)
+		fmt.Println("expiration and current", query.Expiration, blockHeight)
 		if query.Expiration <= blockHeight {
 
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
@@ -73,6 +80,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 
 			if !query.Amount.IsZero() {
+				fmt.Println("allocating rewards 1")
 				err = k.AllocateRewards(ctx, report.Reporters, query.Amount, types.ModuleName)
 				if err != nil {
 					return err
@@ -90,12 +98,14 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 		}
 	}
+	fmt.Println("count of iterator", count)
 	if len(reportersToPay) == 0 {
 		return nil
 	}
 	// Process time-based rewards for reporters.
 	tbr := k.GetTimeBasedRewards(ctx)
 	// Allocate time-based rewards to all eligible reporters.
+	fmt.Println("allocating rewards 2")
 	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }
 

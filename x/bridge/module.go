@@ -23,9 +23,10 @@ import (
 )
 
 var (
-	_ appmodule.AppModule     = AppModule{}
-	_ module.AppModuleBasic   = AppModuleBasic{}
-	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.AppModule       = AppModule{}
+	_ module.AppModuleBasic     = AppModuleBasic{}
+	_ appmodule.HasEndBlocker   = AppModule{}
+	_ appmodule.HasBeginBlocker = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -138,6 +139,18 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 
 // ConsensusVersion is a sequence number for state-breaking change of the module. It should be incremented on each consensus-breaking change introduced by the module. To avoid wrong/empty versions, the initial version should be set to 1
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// TODO: workaround for simulations
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	if sdkctx.ChainID() == "simulation-app" {
+		validators, _ := am.keeper.GetAllValidators(ctx)
+		for _, val := range validators {
+			am.keeper.SetEVMAddressByOperator(ctx, val.GetOperator(), val.ConsensusPubkey.Value)
+		}
+	}
+	return nil
+}
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {

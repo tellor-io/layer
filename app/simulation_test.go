@@ -589,6 +589,7 @@ func TestAppStateDeterminism2(t *testing.T) {
 	config.OnOperation = false
 	config.AllInvariants = false
 	config.ChainID = SimAppChainID
+	config.NumBlocks = 500
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 3 // This used to be set to 5, but we've temporarily reduced it to 3 for the sake of faster CI.

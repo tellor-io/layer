@@ -111,6 +111,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	})
 	querymeta.Id = nextId
 	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+	fmt.Println("setting querymeta.HasRevealedReports to false for id: ", querymeta.Id)
 	querymeta.HasRevealedReports = false
 	querymeta.CycleList = true
 

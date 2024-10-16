@@ -22,9 +22,9 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type (
@@ -104,7 +104,9 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
-
+func (k Keeper) GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error) {
+	return k.stakingKeeper.GetAllValidators(ctx)
+}
 func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types.BridgeValidator, error) {
 	validators, err := k.stakingKeeper.GetAllValidators(ctx)
 	if err != nil {
@@ -129,8 +131,6 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 	}
 
 	if len(bridgeValset) == 0 {
-		// TODO: fix this by somehow writing the validators' evm address in simulations
-		return nil, nil
 		return nil, errors.New("GetCurrentValidatorsEVMCompatible: no validators found")
 	}
 
