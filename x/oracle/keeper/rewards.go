@@ -80,13 +80,10 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 
 func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) uint64 {
 	// convert numbers from loya which is 1e6 to be 1e18
-	power := (reporterPower * reportsCount) * 1e12
-	normReward := reward.Uint64() * 1e12
+	power := (reporterPower * reportsCount * reward.Uint64()) * 1e12
 	normTotalPower := totalPower * 1e12
-	fmt.Printf("Power: %v, TotalPower: %v, Reward: %v\r", power, normTotalPower, normReward)
+	fmt.Printf("Power: %v, TotalPower: %v\r", power, normTotalPower)
 	amount := power / normTotalPower
-	fmt.Println("Power ratio: ", amount)
-	amount = amount * normReward
 	fmt.Println("Amount: ", amount)
 	return amount
 }
