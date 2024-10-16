@@ -25,7 +25,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 			"params_updated_by_authority",
 			sdk.NewAttribute("max_selectors", strconv.FormatUint(req.Params.MaxSelectors, 10)),
 			sdk.NewAttribute("min_trb", req.Params.MinTrb.String()),
-			sdk.NewAttribute("min_commission_rate", req.Params.MinCommissionRate.String()),
+			sdk.NewAttribute("min_commission_rate", strconv.Itoa(int(req.Params.MinCommissionRate))),
 		),
 	})
 	return &types.MsgUpdateParamsResponse{}, nil

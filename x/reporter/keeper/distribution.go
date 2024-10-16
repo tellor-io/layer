@@ -14,16 +14,17 @@ import (
 )
 
 // distributes tips paid in oracle module to delegators that were part of reporting the tip's report
-func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, height uint64) error {
+// reward value being passed in is normalized for 10^18 precision
+func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward uint64, height uint64) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
 	}
-	// Calculate commission
-	commission := reward.Mul(reporter.CommissionRate)
+	// Calculate commission.
+	commission := reward * (reporter.CommissionRate / 1000000) // a commission rate of 1000000 is a 100% commission rate
 
 	// Calculate net reward
-	netReward := reward.Sub(commission)
+	netReward := reward - commission
 
 	delAddrs, err := k.Report.Get(ctx, collections.Join(reporterAddr.Bytes(), height))
 	if err != nil {
@@ -31,20 +32,21 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	}
 
 	for _, del := range delAddrs.TokenOrigins {
-		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(delAddrs.Total))
+		// multiply by 1e12 to match the rewards precision of 1e18
+		delegatorShare := netReward * ((del.Amount.Uint64() * 1e12) / (delAddrs.Total.Uint64() * 1e12))
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
-			delegatorShare = delegatorShare.Add(commission)
+			delegatorShare = delegatorShare + commission
 		}
 		// get delegator's tips and add the new tip
 		oldTips, err := k.SelectorTips.Get(ctx, del.DelegatorAddress)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
-				oldTips = math.LegacyZeroDec()
+				oldTips = uint64(0)
 			} else {
 				return err
 			}
 		}
-		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare))
+		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, oldTips+delegatorShare)
 		if err != nil {
 			return err
 		}

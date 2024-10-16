@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var reward = math.NewInt(100)
+var reward = math.NewInt(1000)
 
 func TestCalculateRewardAmount(t *testing.T) {
 	testCases := []struct {
@@ -24,73 +25,74 @@ func TestCalculateRewardAmount(t *testing.T) {
 		reporterPowers []uint64
 		totalPower     uint64
 		reportsCount   uint64
-		expectedAmount []math.LegacyDec
+		expectedAmount []uint64
 	}{
 		{
 			name:           "Test all reporters report",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 1}, {Power: 20, Reports: 1}, {Power: 30, Reports: 1}, {Power: 40, Reports: 1}},
-			expectedAmount: []math.LegacyDec{math.LegacyNewDec(10), math.LegacyNewDec(20), math.LegacyNewDec(30), math.LegacyNewDec(40)},
+			expectedAmount: []uint64{10000000000000, 20000000000000, 30000000000000, 40000000000000},
 			totalPower:     100, // 40 + 30 + 20 + 10
 
 		},
 		{
 			name:           "only 1 reports",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 1}, {Power: 20, Reports: 0}, {Power: 30, Reports: 0}, {Power: 40, Reports: 0}},
-			expectedAmount: []math.LegacyDec{math.LegacyNewDec(100), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0)},
+			expectedAmount: []uint64{100000000000000, 0, 0, 0},
 			totalPower:     10,
 		},
 		{
 			name:           "only 1 and 3 reports one report, a single queryId",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 1}, {Power: 20, Reports: 0}, {Power: 30, Reports: 1}, {Power: 40, Reports: 0}},
-			expectedAmount: []math.LegacyDec{math.LegacyNewDec(25), math.LegacyNewDec(0), math.LegacyNewDec(75), math.LegacyNewDec(0)},
+			expectedAmount: []uint64{25000000000000, 0, 75000000000000, 0},
 			totalPower:     40, // 30 + 10
 		},
 		{
 			name:           "all reporters report, a two queryIds",
 			reporter:       []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 2}, {Power: 30, Reports: 2}, {Power: 40, Reports: 2}},
-			expectedAmount: []math.LegacyDec{math.LegacyNewDec(10), math.LegacyNewDec(20), math.LegacyNewDec(30), math.LegacyNewDec(40)},
+			expectedAmount: []uint64{10000000000000, 20000000000000, 30000000000000, 40000000000000},
 			totalPower:     200,
 		},
 		{
 			name:     "all reporters report single, and 1 reports two queryIds",
 			reporter: []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 1}, {Power: 30, Reports: 1}, {Power: 40, Reports: 1}},
-			expectedAmount: []math.LegacyDec{
+			expectedAmount: []uint64{
 				// power*reports/totalPower*reward
-				math.LegacyNewDec(10 * 2).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
-				math.LegacyNewDec(20).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
-				math.LegacyNewDec(30).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
-				math.LegacyNewDec(40).Quo(math.LegacyNewDec(110)).Mul(math.LegacyNewDec(100)),
+				((uint64(10*2) * 1e12) / (110 * 1e12)) * (100 * 1e12),
+				((uint64(20) * 1e12) / (110 * 1e12)) * (100 * 1e12),
+				((uint64(30) * 1e12) / (110 * 1e12)) * (100 * 1e12),
+				((uint64(40) * 1e12) / (110 * 1e12)) * (100 * 1e12),
 			},
 			totalPower: 110, // 40 + 30 + 20 + (10 * 2)
 		},
 		{
 			name:     "all reporters report single, 1 and 3 report a second queryId",
 			reporter: []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 1}, {Power: 30, Reports: 2}, {Power: 40, Reports: 1}},
-			expectedAmount: []math.LegacyDec{
-				math.LegacyMustNewDecFromStr("14.285714285714285700"),
-				math.LegacyMustNewDecFromStr("14.285714285714285700"),
-				math.LegacyMustNewDecFromStr("42.857142857142857100"),
-				math.LegacyMustNewDecFromStr("28.571428571428571400"),
+			expectedAmount: []uint64{
+				14285714285714,
+				14285714285714,
+				42857142857142,
+				28571428571428,
 			},
 			totalPower: 140, // 40 + (30 * 2) + 20 + (10 * 2)
 		},
 	}
 	for _, tc := range testCases {
-		expectedTotalReward := math.LegacyZeroDec()
-		totaldist := math.LegacyZeroDec()
+		totaldist := uint64(0)
+		expectedTotalReward := uint64(0)
 		t.Run(tc.name, func(t *testing.T) {
 			for i, r := range tc.reporter {
 				amount := keeper.CalculateRewardAmount(r.Power, r.Reports, tc.totalPower, reward)
-				totaldist = totaldist.Add(amount)
+				totaldist = totaldist + amount
 				require.Equal(t, amount, tc.expectedAmount[i])
 				if i == len(tc.reporter)-1 {
-					amount = amount.Add(math.LegacyNewDecFromInt(reward).Sub(totaldist))
+					amount = amount + reward.Uint64() - totaldist
 				}
-				expectedTotalReward = expectedTotalReward.Add(amount)
+				expectedTotalReward = expectedTotalReward + amount
 
 			}
 		})
-		require.True(t, expectedTotalReward.Equal(math.LegacyNewDecFromInt(reward)), "reward amount should be within tolerance")
+		fmt.Printf("ExpectedTotalREward: %d, Actual Reward: %d", expectedTotalReward, reward)
+		require.Equal(t, expectedTotalReward, reward.Uint64(), "reward amount should be within tolerance")
 	}
 }
 
@@ -177,7 +179,7 @@ func (s *KeeperTestSuite) TestAllocateTips() {
 	ctx := s.ctx
 
 	addr := sample.AccAddressBytes()
-	amount := math.LegacyNewDec(100)
+	amount := uint64(100 * 1e12)
 	rk.On("DivvyingTips", ctx, addr, amount, uint64(ctx.BlockHeight())).Return(nil).Once()
 	require.NoError(k.AllocateTip(ctx, addr, amount, uint64(ctx.BlockHeight())))
 }

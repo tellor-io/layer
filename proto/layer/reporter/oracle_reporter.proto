@@ -17,12 +17,7 @@ message OracleReporter {
     (gogoproto.nullable) = false
   ];
   // commission for the reporter
-  string commission_rate = 2 [
-    (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
-  ];
+  uint64 commission_rate = 2;
   // jailed is a bool whether the reporter is jailed or not
   bool jailed = 3;
   // jailed_until is the time the reporter is jailed until

@@ -13,7 +13,7 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 var (
 	KeyMinCommissionRate = []byte("MinCommissionRate")
 	// TODO: Determine the default value
-	DefaultMinCommissionRate = math.LegacyZeroDec()
+	DefaultMinCommissionRate = uint64(0)
 	DefaultMinTrb            = math.NewIntWithDecimal(1, 6)
 	DefaultMaxSelectors      = uint64(100)
 )
@@ -25,7 +25,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new Params instance
 func NewParams(
-	minCommissionRate math.LegacyDec,
+	minCommissionRate uint64,
 	minTrb math.Int,
 ) Params {
 	return Params{
@@ -61,7 +61,7 @@ func (p Params) Validate() error {
 
 // validateMinStakeAmount validates the MinStakeAmount param
 func validateMinCommissionRate(v interface{}) error {
-	_, ok := v.(math.LegacyDec)
+	_, ok := v.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
 	}

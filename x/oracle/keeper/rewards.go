@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
@@ -46,17 +47,17 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 		totalPower += r.Power
 	}
 	i := len(_reporters)
-	totaldist := math.LegacyZeroDec()
+	totaldist := uint64(0)
 	for r, c := range _reporters {
 		amount := CalculateRewardAmount(c.Power, c.Reports, totalPower, reward)
-		totaldist = totaldist.Add(amount)
+		totaldist = totaldist + amount
 		reporterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
 			return err
 		}
 		i--
 		if i == 0 {
-			amount = amount.Add(math.LegacyNewDecFromInt(reward).Sub(totaldist))
+			amount = amount + (reward.Uint64() * 1e12) - totaldist
 		}
 		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, c.Height)
 		if err != nil {
@@ -77,12 +78,19 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
-	power := math.LegacyNewDec(int64(reporterPower) * int64(reportsCount))
-	amount := power.Quo(math.LegacyNewDec(int64(totalPower))).Mul(math.LegacyNewDecFromInt(reward))
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) uint64 {
+	// convert numbers from loya which is 1e6 to be 1e18
+	power := (reporterPower * reportsCount) * 1e12
+	normReward := reward.Uint64() * 1e12
+	normTotalPower := totalPower * 1e12
+	fmt.Printf("Power: %v, TotalPower: %v, Reward: %v\r", power, normTotalPower, normReward)
+	amount := power / normTotalPower
+	fmt.Println("Power ratio: ", amount)
+	amount = amount * normReward
+	fmt.Println("Amount: ", amount)
 	return amount
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec, height uint64) error {
+func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount uint64, height uint64) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, height)
 }

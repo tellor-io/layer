@@ -66,7 +66,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		sdk.NewEvent(
 			"created_reporter",
 			sdk.NewAttribute("reporter", msg.ReporterAddress),
-			sdk.NewAttribute("commission", msg.CommissionRate.String()),
+			sdk.NewAttribute("commission", strconv.Itoa(int(msg.CommissionRate))),
 			sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
 		),
 	})
@@ -299,17 +299,18 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
-	amtToDelegate := shares.TruncateInt()
-	if amtToDelegate.IsZero() {
+
+	amtToDelegate := shares / 1e12
+	if amtToDelegate == 0 {
 		return nil, errors.New("no tips to withdraw")
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
+	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(int64(amtToDelegate)), val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}
 
-	remainder := shares.Sub(shares.TruncateDec())
-	if remainder.IsZero() {
+	remainder := shares - (amtToDelegate * 1e12)
+	if remainder == 0 {
 		err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
 		if err != nil {
 			return nil, err
@@ -322,7 +323,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	}
 
 	// send coins
-	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtToDelegate)))
+	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, math.NewInt(int64(amtToDelegate)))))
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +332,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 			"tip_withdrawn",
 			sdk.NewAttribute("selector", msg.SelectorAddress),
 			sdk.NewAttribute("validator", msg.ValidatorAddress),
-			sdk.NewAttribute("amount", amtToDelegate.String()),
+			sdk.NewAttribute("amount", strconv.Itoa(int(amtToDelegate))),
 		),
 	})
 	return &types.MsgWithdrawTipResponse{}, nil

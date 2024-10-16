@@ -292,12 +292,12 @@ func TestWithdrawTip(t *testing.T) {
 	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	require.NoError(t, k.SelectorTips.Set(ctx, selector, math.LegacyOneDec()))
+	require.NoError(t, k.SelectorTips.Set(ctx, selector, (1*1e18)))
 
 	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
-	sk.On("Delegate", ctx, selector, math.OneInt(), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
-	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.OneInt()))).Return(nil)
+	sk.On("Delegate", ctx, selector, math.NewInt(1*1e6), stakingtypes.Bonded, validator, false).Return(math.LegacyNewDecFromInt(math.NewInt(0)), nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
 	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.NoError(t, err)
 }
