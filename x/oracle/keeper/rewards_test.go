@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -68,7 +69,7 @@ func TestCalculateRewardAmount(t *testing.T) {
 			name:     "all reporters report single, 1 and 3 report a second queryId",
 			reporter: []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 1}, {Power: 30, Reports: 2}, {Power: 40, Reports: 1}},
 			expectedAmount: []reportertypes.BigUint{
-
+				{Value: math.NewUint(14285714)},
 				{Value: math.NewUint(14285714)}, // 285714285700
 				{Value: math.NewUint(42857142)}, // 857142857100
 				{Value: math.NewUint(28571428)}, // 571428571400
@@ -77,18 +78,21 @@ func TestCalculateRewardAmount(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
+		fmt.Println("Start of test case")
 		expectedTotalReward := math.ZeroUint()
 		totaldist := math.ZeroUint()
 		t.Run(tc.name, func(t *testing.T) {
 			for i, r := range tc.reporter {
 				amount := keeper.CalculateRewardAmount(r.Power, r.Reports, tc.totalPower, reward)
+				fmt.Println("Reward amount: ", amount.Value.String())
 				totaldist = totaldist.Add(amount.Value)
+				fmt.Println("TotalDist: ", totaldist.String())
 				require.Equal(t, amount, tc.expectedAmount[i])
 				if i == len(tc.reporter)-1 {
 					amount.Value = amount.Value.Add(math.NewUint(reward.Uint64() * 1e6)).Sub(totaldist)
 				}
 				expectedTotalReward = expectedTotalReward.Add(amount.Value)
-
+				fmt.Println("Expected total reward: ", expectedTotalReward.String())
 			}
 		})
 		require.True(t, expectedTotalReward.Equal(math.NewUint(reward.Uint64()*1e6)), "reward amount should be within tolerance")
