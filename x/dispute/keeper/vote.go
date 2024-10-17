@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -136,125 +135,6 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		return math.Int{}, err
 	}
 	reporter := sdk.AccAddress(delegation.Reporter)
-	// Check if reporter has voted. If not, store voter tokens either full if reporter or delegation amount
-	// this amount the amount to reduce from reporter so total amount of delegators that voted
-	delegatorTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		if bytes.Equal(reporter, voter) {
-			// if voter is reporter AND reporter votes before any selectors, we end up here
-			// voter is reporter, get reporter tokens
-			reporterTokens, err := k.reporterKeeper.GetReporterTokensAtBlock(ctx, reporter, blockNumber)
-			if err != nil {
-				return math.Int{}, err
-			}
-			err = k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice)
-			if err != nil {
-				return math.Int{}, err
-			}
-			return reporterTokens, k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), reporterTokens)
-		}
-		// if voter is not reporter AND voter votes before any of reporter's other selectors, we end up here
-		// shouldn't this be reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)?
-		voterDelegatedAmt, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
-		if err != nil {
-			return math.Int{}, err
-		}
-		exists, err := k.ReportersGroup.Has(ctx, collections.Join(id, reporter.Bytes()))
-		if err != nil {
-			return math.Int{}, err
-		}
-		fmt.Println("exists: ", exists)
-		// if reporter has voted before, get reporter tokens and reduce the amount
-		if exists {
-			reporterTokens, err := k.ReportersGroup.Get(ctx, collections.Join(id, reporter.Bytes()))
-			if err != nil {
-				return math.Int{}, err
-			}
-			reporterTokens = reporterTokens.Sub(voterDelegatedAmt)
-			reporterVote, err := k.Voter.Get(ctx, collections.Join(id, reporter.Bytes()))
-			if err != nil {
-				return math.Int{}, err
-			}
-			// isn't this wrong? we're subtracting a delegator's token amount from voterPower (x% * 25,000,000)
-			reporterVote.VoterPower = reporterVote.VoterPower.Sub(voterDelegatedAmt)
-			if err := k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote); err != nil {
-				return math.Int{}, err
-			}
-			if err := k.ReportersGroup.Set(ctx, collections.Join(id, reporter.Bytes()), reporterTokens); err != nil {
-				return math.Int{}, err
-			}
-
-			// adjust reporter's vote count by voter's delegated token amount
-			err = k.SubtractReporterVoteCount(ctx, id, voterDelegatedAmt.Uint64(), reporterVote.Vote)
-			if err != nil {
-				return math.Int{}, err
-			}
-			// add voter's delegated token amount to reporter's vote count
-			err = k.AddReporterVoteCount(ctx, id, voterDelegatedAmt.Uint64(), choice)
-			if err != nil {
-				return math.Int{}, err
-			}
-			return voterDelegatedAmt, k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), voterDelegatedAmt)
-		}
-		// if reporter has not voted before, set reporter tokens and reporter delegation amount
-		if err := k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), voterDelegatedAmt); err != nil {
-			return math.Int{}, err
-		}
-		err = k.AddReporterVoteCount(ctx, id, voterDelegatedAmt.Uint64(), choice)
-		if err != nil {
-			return math.Int{}, err
-		}
-		return voterDelegatedAmt, k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), voterDelegatedAmt)
-	}
-	// at least one non-reporter selector has voted before
-	// if voter is reporter, then get reporter tokens at block and reduce by amount that has voted already
-	if bytes.Equal(reporter, voter) {
-		reporterTokens, err := k.reporterKeeper.GetReporterTokensAtBlock(ctx, reporter, blockNumber)
-		if err != nil {
-			return math.Int{}, err
-		}
-		reporterVoteWeight := reporterTokens.Sub(delegatorTokensVoted)
-		err = k.AddReporterVoteCount(ctx, id, reporterVoteWeight.Uint64(), choice)
-		if err != nil {
-			return math.Int{}, err
-		}
-		return reporterTokens.Sub(delegatorTokensVoted), k.ReportersGroup.Set(ctx, collections.Join(id, voter.Bytes()), reporterTokens.Sub(delegatorTokensVoted))
-	} else {
-		// voter is not reporter
-		// shouldn't this be reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)?
-		amt, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
-		if err != nil {
-			return math.Int{}, err
-		}
-		if err := k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), delegatorTokensVoted.Add(amt)); err != nil {
-			return math.Int{}, err
-		}
-		// if this is the second selector to vote, and the reporter has already voted, shouldn't we subtract from the reporter's vote count here?
-		// check whether reporter has voted before
-		exists, err := k.Voter.Has(ctx, collections.Join(id, reporter.Bytes()))
-		if err != nil {
-			if !errors.Is(err, collections.ErrNotFound) {
-				return math.Int{}, err
-			}
-		}
-	}
-	// why return zero in case of (selector, selector)?
-	return math.ZeroInt(), nil
-}
-
-func (k Keeper) SetVoterReporterStakeREDO(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum) (math.Int, error) {
-	// get delegation
-	delegation, err := k.reporterKeeper.Delegation(ctx, voter)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return math.ZeroInt(), nil
-		}
-		return math.Int{}, err
-	}
-	reporter := sdk.AccAddress(delegation.Reporter)
 	voterIsReporter := bytes.Equal(voter, reporter)
 	reporterHasVoted, err := k.ReportersGroup.Has(ctx, collections.Join(id, reporter.Bytes()))
 	if err != nil {
@@ -290,6 +170,12 @@ func (k Keeper) SetVoterReporterStakeREDO(ctx context.Context, id uint64, voter 
 		if err != nil {
 			return math.Int{}, err
 		}
+		// update reporter's power record for reward calculation
+		reporterVote.ReporterPower = reporterVote.ReporterPower.Sub(selectorTokens)
+		err = k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote)
+		if err != nil {
+			return math.Int{}, err
+		}
 		return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice)
 	}
 	delegatorTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
@@ -305,6 +191,39 @@ func (k Keeper) SetVoterReporterStakeREDO(ctx context.Context, id uint64, voter 
 		return math.Int{}, err
 	}
 	return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice)
+}
+
+func (k Keeper) SetTokenholderVote(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum) (math.Int, error) {
+	// get token balance
+	tokenBalance, err := k.GetAccountBalance(ctx, voter)
+	if err != nil {
+		return math.Int{}, err
+	}
+	// get tokens delegated to a reporter
+	selectorTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
+		selectorTokens = math.ZeroInt()
+	}
+	tokenBalance = tokenBalance.Add(selectorTokens)
+
+	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
+		voteCounts = types.StakeholderVoteCounts{}
+	}
+	if choice == types.VoteEnum_VOTE_SUPPORT {
+		voteCounts.Tokenholders.Support += tokenBalance.Uint64()
+	} else if choice == types.VoteEnum_VOTE_AGAINST {
+		voteCounts.Tokenholders.Against += tokenBalance.Uint64()
+	} else {
+		voteCounts.Tokenholders.Invalid += tokenBalance.Uint64()
+	}
+	return tokenBalance, k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 }
 
 func (k Keeper) AddReporterVoteCount(ctx context.Context, id uint64, amount uint64, choice types.VoteEnum) error {
