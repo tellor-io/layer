@@ -144,6 +144,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	case types.VoteResult_NO_TALLY:
 		return errors.New("vote hasn't been tallied yet")
 	}
+	dispute.VoterReward = voterReward
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"dispute_executed",

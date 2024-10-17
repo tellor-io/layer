@@ -1,17 +1,15 @@
 package keeper
 
 import (
-	"context"
 	"errors"
 
-	layertypes "github.com/tellor-io/layer/types"
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Pay fee from account
@@ -28,6 +26,20 @@ func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) err
 
 	// TODO: check if caller already claimed
 
+	reward, err := k.CalculateReward(ctx, addr, id)
+	if err != nil {
+		return err
+	}
+	if reward.IsZero() {
+		return errors.New("reward is zero")
+	}
+
+	// send reward from this module to the address
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -36,6 +48,13 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err
+	}
+	disputeVote, err := k.Votes.Get(ctx, id)
+	if err != nil {
+		return math.Int{}, err
+	}
+	if !disputeVote.Executed {
+		return math.Int{}, errors.New("vote not executed")
 	}
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
@@ -90,58 +109,15 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 			Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Invalid))
 	}
 
-// 	- dispRewardByAddrONE_ROUND = totalReward * (userTokens*1e6/totalTokensVoted + usrRep*1e6/totalRepVoted + usrTips*1e6/totalTipsVoted) * 1/3
-// - dispRewards_TWO_ROUNDS = totalReward * [ (userTokens_r1 + userTokens_r2)*1e6 / (totalVoted_r1 + totalVoted_r2)*1e6 + / ... ) * 1/3 
-	userPower := addrUserPower.Mul(math.NewInt(1e6)).Div(globalUserPower)
-	reporterPower := addrReporterPower.Mul(math.NewInt(1e6)).Div(globalReporterPower)
-	tokenholderPower := addrTokenholderPower.Mul(math.NewInt(1e6)).Div(globalTokenholderPower)
+	// 	- dispRewardByAddrONE_ROUND = totalReward * (userTokens*1e6/totalTokensVoted + usrRep*1e6/totalRepVoted + usrTips*1e6/totalTipsVoted) * 1/3
+	// - dispRewards_TWO_ROUNDS = totalReward * [ (userTokens_r1 + userTokens_r2)*1e6 / (totalVoted_r1 + totalVoted_r2)*1e6 + / ... ) * 1/3
+	userPower := addrUserPower.Mul(math.NewInt(1e6)).Quo(globalUserPower)
+	reporterPower := addrReporterPower.Mul(math.NewInt(1e6)).Quo(globalReporterPower)
+	tokenholderPower := addrTokenholderPower.Mul(math.NewInt(1e6)).Quo(globalTokenholderPower)
 	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
-	totalAccPower.Quo(math.NewInt(3))
 
-	reward := 
+	rewardGlobal := dispute.VoterReward
+	rewardAcc := totalAccPower.Mul(rewardGlobal).Quo(math.NewInt(3))
 
-	return math.Int{}, nil
-}
-
-// Pay fee from validator's bond can only be called by the validator itself
-func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin, hashId []byte) error {
-	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount, hashId)
-}
-
-// Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.Coin, fromBond bool, hashId []byte) error {
-	if fromBond {
-		// pay fee from given validator
-		err := k.PayFromBond(ctx, proposer, fee, hashId)
-		if err != nil {
-			return err
-		}
-	} else {
-		err := k.PayFromAccount(ctx, proposer, fee)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// return slashed tokens when reporter either wins dispute or dispute is invalid
-func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
-	err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.SlashAmount, dispute.HashId)
-	if err != nil {
-		return err
-	}
-
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dispute.SlashAmount))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
-}
-
-func (k Keeper) ReturnFeetoStake(ctx context.Context, hashId []byte, remainingAmt math.Int) error {
-	err := k.reporterKeeper.FeeRefund(ctx, hashId, remainingAmt)
-	if err != nil {
-		return err
-	}
-
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, remainingAmt))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
+	return rewardAcc, nil
 }
