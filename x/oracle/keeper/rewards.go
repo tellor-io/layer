@@ -78,7 +78,7 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 }
 
 func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) reportertypes.BigUint {
-	normalizedPowerAndReward := math.NewUint((uint64(reporterPower) * uint64(reportsCount) * reward.Uint64()) * 1e6)
+	normalizedPowerAndReward := math.NewUint((reporterPower * reportsCount * reward.Uint64()) * 1e6)
 	amount := normalizedPowerAndReward.Quo(math.NewUint(totalPower))
 	return reportertypes.BigUint{Value: amount}
 }

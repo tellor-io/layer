@@ -6,12 +6,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tellor-io/layer/x/reporter/types"
 )
 
 // distributes tips paid in oracle module to delegators that were part of reporting the tip's report

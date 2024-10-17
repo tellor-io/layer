@@ -3,13 +3,14 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -67,8 +68,8 @@ func TestCalculateRewardAmount(t *testing.T) {
 			name:     "all reporters report single, 1 and 3 report a second queryId",
 			reporter: []keeper.ReportersReportCount{{Power: 10, Reports: 2}, {Power: 20, Reports: 1}, {Power: 30, Reports: 2}, {Power: 40, Reports: 1}},
 			expectedAmount: []reportertypes.BigUint{
-				{Value: math.NewUint(14285714)}, //285714285700
-				{Value: math.NewUint(14285714)}, //285714285700
+
+				{Value: math.NewUint(14285714)}, // 285714285700
 				{Value: math.NewUint(42857142)}, // 857142857100
 				{Value: math.NewUint(28571428)}, // 571428571400
 			},
