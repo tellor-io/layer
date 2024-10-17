@@ -46,17 +46,17 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 		totalPower += r.Power
 	}
 	i := len(_reporters)
-	totaldist := math.LegacyZeroDec()
+	totaldist := math.ZeroUint()
 	for r, c := range _reporters {
 		amount := CalculateRewardAmount(c.Power, c.Reports, totalPower, reward)
-		totaldist = totaldist.Add(amount)
+		totaldist = totaldist.Add(amount.Value)
 		reporterAddr, err := sdk.AccAddressFromBech32(r)
 		if err != nil {
 			return err
 		}
 		i--
 		if i == 0 {
-			amount = amount.Add(math.LegacyNewDecFromInt(reward).Sub(totaldist))
+			amount.Value = amount.Value.Add(math.NewUint(reward.Uint64() * 1e6).Sub(totaldist))
 		}
 		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, c.Height)
 		if err != nil {
@@ -77,12 +77,12 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
-	power := math.LegacyNewDec(int64(reporterPower) * int64(reportsCount))
-	amount := power.Quo(math.LegacyNewDec(int64(totalPower))).Mul(math.LegacyNewDecFromInt(reward))
-	return amount
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) reportertypes.BigUint {
+	normalizedPowerAndReward := math.NewUint((uint64(reporterPower) * uint64(reportsCount) * reward.Uint64()) * 1e6)
+	amount := normalizedPowerAndReward.Quo(math.NewUint(totalPower))
+	return reportertypes.BigUint{Value: amount}
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec, height uint64) error {
+func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount reportertypes.BigUint, height uint64) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, height)
 }
