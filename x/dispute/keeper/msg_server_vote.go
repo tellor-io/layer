@@ -75,6 +75,13 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
 	}
+	// try to tally the vote
+	err = k.Keeper.TallyVote(ctx, msg.Id)
+	if err != nil {
+		if !errors.Is(err, types.ErrNoQuorumStillVoting) {
+			return nil, err
+		}
+	}
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"voted_on_dispute",

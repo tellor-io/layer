@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -128,7 +127,7 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
 	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
 	feeMinusBurnDec := math.LegacyNewDecFromInt(feeMinusBurn)
-	amt := fee.Quo(totalFees).Mul(feeMinusBurnDec)
+	amt := fee.Mul(feeMinusBurnDec).Quo(totalFees)
 
 	remainder := amt.Sub(amt.TruncateDec())
 
@@ -145,51 +144,13 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
 
 	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
-	amt := fee.Quo(totalFees).Mul(bond)
+	amt := fee.Mul(bond).Quo(totalFees)
 
 	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amt.TruncateInt()); err != nil {
 		return math.LegacyDec{}, err
 	}
 	remainder := amt.Sub(amt.TruncateDec())
 	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt())))
-}
-
-func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount, totalVoterPower math.Int) (math.Int, error) {
-	if totalAmount.IsZero() {
-		return totalAmount, nil
-	}
-	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount, totalVoterPower)
-	totalAmount = totalAmount.Sub(burnedRemainder)
-	var outputs []banktypes.Output
-	for _, v := range tokenDistribution {
-		if v.Share.IsZero() {
-			continue
-		}
-		reward := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, v.Share))
-		outputs = append(outputs, banktypes.NewOutput(v.Voter, reward))
-	}
-	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, totalAmount)))
-	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
-}
-
-func (k Keeper) CalculateVoterShare(
-	ctx context.Context, voters []VoterInfo, totalTokens math.Int,
-	totalPower math.Int,
-) ([]VoterInfo, math.Int) {
-	scalingFactor := layer.PowerReduction
-	totalShare := math.ZeroInt()
-	for i, v := range voters {
-		share := v.Power.Mul(scalingFactor).Quo(totalPower)
-		tokens := share.Mul(totalTokens).Quo(scalingFactor)
-		voters[i].Share = tokens
-		totalShare = totalShare.Add(tokens)
-	}
-	burnedRemainder := math.ZeroInt()
-	if totalTokens.GT(totalShare) {
-		burnedRemainder = totalTokens.Sub(totalShare)
-	}
-	return voters, burnedRemainder
 }
 
 func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
@@ -203,7 +164,7 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 	sumTokenholders := uint64(0)
 	sumTeam := uint64(0)
 
-	// process vote counts
+	// process vote counts function
 	processVoteCounts := func(voteCounts types.StakeholderVoteCounts) {
 		sumUsers += voteCounts.Users.Support + voteCounts.Users.Against + voteCounts.Users.Invalid
 		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid

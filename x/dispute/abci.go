@@ -34,6 +34,17 @@ func CheckPrevoteDisputesForExpiration(ctx context.Context, k keeper.Keeper) err
 			if err := k.Disputes.Set(ctx, key, dispute); err != nil {
 				return err
 			}
+		} else if dispute.DisputeStatus == types.Voting {
+			// try to tally the vote
+			vote, err := k.Votes.Get(ctx, key)
+			if err != nil {
+				return err
+			}
+			if sdk.UnwrapSDKContext(ctx).BlockTime().After(vote.VoteEnd) && vote.VoteResult == types.VoteResult_NO_TALLY {
+				if err := k.TallyVote(ctx, key); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil

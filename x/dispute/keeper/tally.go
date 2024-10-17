@@ -64,7 +64,8 @@ func CalculateVotingPower(n, d math.Int) math.Int {
 	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
 }
 
-// CalculateVotingPower calculates the voting power of a given number (n) divided by another number (d).
+// TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
+// If so, it calculates the given dispute round's outcome.
 func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	numGroups := math.LegacyNewDec(4)
 	scaledSupport := math.LegacyZeroDec()
@@ -173,10 +174,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 
-	allvoters, err := k.GetVoters(ctx, id)
-	if err != nil {
-		return err
-	}
 	tokenSupply := k.GetTotalSupply(ctx)
 
 	// replace logic above with this
@@ -211,8 +208,11 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
 		}
+		allvoters, err := k.GetVoters(ctx, id)
+		if err != nil {
+			return err
+		}
 		if len(allvoters) == 0 {
-
 			if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 				return err
 			}
@@ -222,7 +222,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		}
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false)
 	} else {
-		return errors.New("vote period not ended and quorum not reached")
+		return errors.New(types.ErrNoQuorumStillVoting.Error())
 	}
 }
 
