@@ -21,47 +21,57 @@ service Query {
   rpc GetEvmValidators(QueryGetEvmValidatorsRequest) returns (QueryGetEvmValidatorsResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_validators";
   }
-
+  // Queries the latest validator checkpoint
   rpc GetValidatorCheckpoint(QueryGetValidatorCheckpointRequest) returns (QueryGetValidatorCheckpointResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_checkpoint";
   }
 
+  // Queries the validator checkpoint params for a given timestamp
   rpc GetValidatorCheckpointParams(QueryGetValidatorCheckpointParamsRequest) returns (QueryGetValidatorCheckpointParamsResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_checkpoint_params/{timestamp}";
   }
 
+  // Queries the validator timestamp by index
   rpc GetValidatorTimestampByIndex(QueryGetValidatorTimestampByIndexRequest) returns (QueryGetValidatorTimestampByIndexResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_timestamp_by_index/{index}";
   }
 
+  // Queries the validator set signatures for a given timestamp
   rpc GetValsetSigs(QueryGetValsetSigsRequest) returns (QueryGetValsetSigsResponse) {
     option (google.api.http).get = "/layer/bridge/get_valset_sigs/{timestamp}";
   }
 
+  // Queries the evm address by validator address
   rpc GetEvmAddressByValidatorAddress(QueryGetEvmAddressByValidatorAddressRequest) returns (QueryGetEvmAddressByValidatorAddressResponse) {
     option (google.api.http).get = "/layer/bridge/get_evm_address_by_validator_address/{validator_address}";
   }
 
+  // Queries the validator set by timestamp
   rpc GetValsetByTimestamp(QueryGetValsetByTimestampRequest) returns (QueryGetValsetByTimestampResponse) {
     option (google.api.http).get = "/layer/bridge/get_valset_by_timestamp/{timestamp}";
   }
 
+  // Queries a list of snapshots by report query id and timestamp
   rpc GetSnapshotsByReport(QueryGetSnapshotsByReportRequest) returns (QueryGetSnapshotsByReportResponse) {
     option (google.api.http).get = "/layer/bridge/get_snapshots_by_report/{query_id}/{timestamp}";
   }
 
+  // Queries attestation data by snapshot
   rpc GetAttestationDataBySnapshot(QueryGetAttestationDataBySnapshotRequest) returns (QueryGetAttestationDataBySnapshotResponse) {
     option (google.api.http).get = "/layer/bridge/get_attestation_data_by_snapshot/{snapshot}";
   }
 
+  // Queries the set of attestations by snapshot
   rpc GetAttestationsBySnapshot(QueryGetAttestationsBySnapshotRequest) returns (QueryGetAttestationsBySnapshotResponse) {
     option (google.api.http).get = "/layer/bridge/get_attestations_by_snapshot/{snapshot}";
   }
 
+  // Queries the validator set index by timestamp
   rpc GetValidatorSetIndexByTimestamp(QueryGetValidatorSetIndexByTimestampRequest) returns (QueryGetValidatorSetIndexByTimestampResponse) {
     option (google.api.http).get = "/layer/bridge/get_validator_set_index_by_timestamp/{timestamp}";
   }
 
+  // Queries the current validator set timestamp
   rpc GetCurrentValidatorSetTimestamp(QueryGetCurrentValidatorSetTimestampRequest) returns (QueryGetCurrentValidatorSetTimestampResponse) {
     option (google.api.http).get = "/layer/bridge/get_current_validator_set_timestamp";
   }

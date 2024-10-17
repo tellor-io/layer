@@ -22,6 +22,7 @@ service Msg {
   rpc ExecuteDispute(MsgExecuteDispute) returns (MsgExecuteDisputeResponse);
   rpc WithdrawFeeRefund(MsgWithdrawFeeRefund) returns (MsgWithdrawFeeRefundResponse);
   rpc AddEvidence(MsgAddEvidence) returns (MsgAddEvidenceResponse);
+  rpc ClaimReward(MsgClaimReward) returns (MsgClaimRewardResponse);
 }
 
 message MsgAddEvidence {
@@ -95,3 +96,11 @@ message MsgUpdateTeam {
 }
 
 message MsgUpdateTeamResponse {}
+
+message MsgClaimReward {
+  option (cosmos.msg.v1.signer) = "caller_address";
+  string caller_address = 1;
+  uint64 dispute_id = 2;
+}
+
+message MsgClaimRewardResponse {}

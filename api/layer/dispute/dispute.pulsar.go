@@ -133,6 +133,7 @@ var (
 	fd_Dispute_block_number        protoreflect.FieldDescriptor
 	fd_Dispute_open                protoreflect.FieldDescriptor
 	fd_Dispute_additional_evidence protoreflect.FieldDescriptor
+	fd_Dispute_voter_reward        protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -155,6 +156,7 @@ func init() {
 	fd_Dispute_block_number = md_Dispute.Fields().ByName("block_number")
 	fd_Dispute_open = md_Dispute.Fields().ByName("open")
 	fd_Dispute_additional_evidence = md_Dispute.Fields().ByName("additional_evidence")
+	fd_Dispute_voter_reward = md_Dispute.Fields().ByName("voter_reward")
 }
 
 var _ protoreflect.Message = (*fastReflection_Dispute)(nil)
@@ -324,6 +326,12 @@ func (x *fastReflection_Dispute) Range(f func(protoreflect.FieldDescriptor, prot
 			return
 		}
 	}
+	if x.VoterReward != "" {
+		value := protoreflect.ValueOfString(x.VoterReward)
+		if !f(fd_Dispute_voter_reward, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -373,6 +381,8 @@ func (x *fastReflection_Dispute) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.Open != false
 	case "layer.dispute.Dispute.additional_evidence":
 		return len(x.AdditionalEvidence) != 0
+	case "layer.dispute.Dispute.voter_reward":
+		return x.VoterReward != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -423,6 +433,8 @@ func (x *fastReflection_Dispute) Clear(fd protoreflect.FieldDescriptor) {
 		x.Open = false
 	case "layer.dispute.Dispute.additional_evidence":
 		x.AdditionalEvidence = nil
+	case "layer.dispute.Dispute.voter_reward":
+		x.VoterReward = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -496,6 +508,9 @@ func (x *fastReflection_Dispute) Get(descriptor protoreflect.FieldDescriptor) pr
 		}
 		listValue := &_Dispute_17_list{list: &x.AdditionalEvidence}
 		return protoreflect.ValueOfList(listValue)
+	case "layer.dispute.Dispute.voter_reward":
+		value := x.VoterReward
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -554,6 +569,8 @@ func (x *fastReflection_Dispute) Set(fd protoreflect.FieldDescriptor, value prot
 		lv := value.List()
 		clv := lv.(*_Dispute_17_list)
 		x.AdditionalEvidence = *clv.list
+	case "layer.dispute.Dispute.voter_reward":
+		x.VoterReward = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -625,6 +642,8 @@ func (x *fastReflection_Dispute) Mutable(fd protoreflect.FieldDescriptor) protor
 		panic(fmt.Errorf("field block_number of message layer.dispute.Dispute is not mutable"))
 	case "layer.dispute.Dispute.open":
 		panic(fmt.Errorf("field open of message layer.dispute.Dispute is not mutable"))
+	case "layer.dispute.Dispute.voter_reward":
+		panic(fmt.Errorf("field voter_reward of message layer.dispute.Dispute is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -677,6 +696,8 @@ func (x *fastReflection_Dispute) NewField(fd protoreflect.FieldDescriptor) proto
 	case "layer.dispute.Dispute.additional_evidence":
 		list := []*oracle.MicroReport{}
 		return protoreflect.ValueOfList(&_Dispute_17_list{list: &list})
+	case "layer.dispute.Dispute.voter_reward":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.Dispute"))
@@ -812,6 +833,10 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 				n += 2 + l + runtime.Sov(uint64(l))
 			}
 		}
+		l = len(x.VoterReward)
+		if l > 0 {
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -840,6 +865,15 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.VoterReward) > 0 {
+			i -= len(x.VoterReward)
+			copy(dAtA[i:], x.VoterReward)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VoterReward)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0x92
 		}
 		if len(x.AdditionalEvidence) > 0 {
 			for iNdEx := len(x.AdditionalEvidence) - 1; iNdEx >= 0; iNdEx-- {
@@ -1560,6 +1594,38 @@ func (x *fastReflection_Dispute) ProtoMethods() *protoiface.Methods {
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.AdditionalEvidence[len(x.AdditionalEvidence)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
+				iNdEx = postIndex
+			case 18:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VoterReward", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VoterReward = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2724,6 +2790,7 @@ type Dispute struct {
 	BlockNumber        uint64                `protobuf:"varint,15,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 	Open               bool                  `protobuf:"varint,16,opt,name=open,proto3" json:"open,omitempty"`
 	AdditionalEvidence []*oracle.MicroReport `protobuf:"bytes,17,rep,name=additional_evidence,json=additionalEvidence,proto3" json:"additional_evidence,omitempty"`
+	VoterReward        string                `protobuf:"bytes,18,opt,name=voter_reward,json=voterReward,proto3" json:"voter_reward,omitempty"`
 }
 
 func (x *Dispute) Reset() {
@@ -2865,6 +2932,13 @@ func (x *Dispute) GetAdditionalEvidence() []*oracle.MicroReport {
 	return nil
 }
 
+func (x *Dispute) GetVoterReward() string {
+	if x != nil {
+		return x.VoterReward
+	}
+	return ""
+}
+
 // PayerInfo defines the payer info of a dispute
 // fee payer's info that was involved in paying the dispute fee in order to start the dispute
 type PayerInfo struct {
@@ -2972,7 +3046,7 @@ var file_layer_dispute_dispute_proto_rawDesc = []byte{
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2f, 0x6d, 0x69, 0x63,
 	0x72, 0x6f, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0xf9, 0x07, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68,
+	0xc9, 0x08, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68,
 	0x61, 0x73, 0x68, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x68, 0x61,
 	0x73, 0x68, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f,
 	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
@@ -3035,7 +3109,12 @@ var file_layer_dispute_dispute_proto_rawDesc = []byte{
 	0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x18, 0x11, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c,
 	0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72,
 	0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x12, 0x61, 0x64, 0x64, 0x69, 0x74, 0x69, 0x6f,
-	0x6e, 0x61, 0x6c, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x22, 0x6d, 0x0a, 0x09, 0x50,
+	0x6e, 0x61, 0x6c, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x4e, 0x0a, 0x0c, 0x76,
+	0x6f, 0x74, 0x65, 0x72, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x18, 0x12, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
+	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x0b,
+	0x76, 0x6f, 0x74, 0x65, 0x72, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x22, 0x6d, 0x0a, 0x09, 0x50,
 	0x61, 0x79, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75,
 	0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde,
 	0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d,

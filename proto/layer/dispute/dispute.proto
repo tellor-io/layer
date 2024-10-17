@@ -66,6 +66,11 @@ message Dispute {
   uint64 block_number = 15;
   bool open = 16;
   repeated layer.oracle.MicroReport additional_evidence = 17;
+  string voter_reward = 18 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 // DisputeCategory defines the severity of a dispute.

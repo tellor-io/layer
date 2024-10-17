@@ -25,7 +25,6 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if dispute.DisputeStatus != types.Voting {
 		return nil, types.ErrDisputeNotInVotingState
 	}
-
 	vote, err := k.Keeper.Votes.Get(ctx, msg.Id)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -33,7 +32,6 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		}
 		return nil, err
 	}
-
 	voted, err := k.Voter.Has(ctx, collections.Join(msg.Id, voterAcc.Bytes()))
 	if err != nil {
 		return nil, err
@@ -47,39 +45,42 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if vote.VoteEnd.Before(ctx.BlockTime()) {
 		return nil, types.ErrVotingPeriodEnded
 	}
-	bI, err := k.BlockInfo.Get(ctx, dispute.HashId)
+	teampower, err := k.SetTeamVote(ctx, msg.Id, voterAcc, msg.Vote)
 	if err != nil {
 		return nil, err
 	}
-	teampower, err := k.SetTeamVote(ctx, msg.Id, voterAcc)
+	upower, err := k.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote)
 	if err != nil {
 		return nil, err
 	}
-	upower, err := k.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber)
+	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote)
 	if err != nil {
 		return nil, err
 	}
-	upower = CalculateVotingPower(upower, bI.TotalUserTips)
-	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber)
+	acctBal, err := k.SetTokenholderVote(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote)
 	if err != nil {
 		return nil, err
 	}
-	repP = CalculateVotingPower(repP, bI.TotalReporterPower)
-	acctBal, err := k.GetAccountBalance(ctx, voterAcc)
-	if err != nil {
-		return nil, err
-	}
-	totalSupply := k.GetTotalSupply(ctx)
-	voterPower := teampower.Add(upower).Add(repP).Add(CalculateVotingPower(acctBal, totalSupply))
+	// totalSupply := k.GetTotalSupply(ctx)
+	voterPower := teampower.Add(upower).Add(repP).Add(acctBal)
 	if voterPower.IsZero() {
 		return nil, errors.New("voter power is zero")
 	}
 	voterVote := types.Voter{
-		Vote:       msg.Vote,
-		VoterPower: voterPower,
+		Vote:             msg.Vote,
+		VoterPower:       voterPower,
+		ReporterPower:    repP,
+		TokenholderPower: acctBal,
 	}
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
+	}
+	// try to tally the vote
+	err = k.Keeper.TallyVote(ctx, msg.Id)
+	if err != nil {
+		if !errors.Is(err, types.ErrNoQuorumStillVoting) {
+			return nil, err
+		}
 	}
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

@@ -11,7 +11,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -47,54 +46,29 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	if vote.Executed {
 		return errors.New("vote already executed")
 	}
-
-	var voters []VoterInfo
-	totalVoterPower := math.ZeroInt()
-	for _, id := range dispute.PrevDisputeIds {
-		iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
-		if err != nil {
-			return err
-		}
-
-		defer iter.Close()
-		for ; iter.Valid(); iter.Next() {
-			voterKey, err := iter.PrimaryKey()
-			if err != nil {
-				return err
-			}
-			v, err := k.Voter.Get(ctx, voterKey)
-			if err != nil {
-				return err
-			}
-			voters = append(voters, VoterInfo{
-				Voter: voterKey.K2(),
-				Power: v.VoterPower,
-				Share: math.ZeroInt(), // initialize, share is calculated later
-			})
-			totalVoterPower = totalVoterPower.Add(v.VoterPower)
-		}
-	}
 	// amount of dispute fee to return to fee payers or give to reporter
 	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
 	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
 	halfBurnAmount := dispute.BurnAmount.QuoRaw(2)
 	voterReward := halfBurnAmount
-	if len(voters) == 0 {
+	totalVoterPower, err := k.GetSumOfAllGroupVotesAllRounds(ctx, id)
+	if err != nil {
+		return err
+	}
+	if totalVoterPower.IsZero() {
 		// if no voters, burn the entire burnAmount
 		halfBurnAmount = dispute.BurnAmount
 		// non voters get nothing
 		voterReward = math.ZeroInt()
 	}
+	// why are we repeating logic in the switch statement?
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// distribute the voterRewardunt equally among the voters and transfer it to their accounts
-		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward, totalVoterPower)
-		if err != nil {
-			return err
-		}
 		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
-			return err
+		if !halfBurnAmount.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount))); err != nil {
+				return err
+			}
 		}
 		// stake the slashed tokens back into the bonded pool for the reporter
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
@@ -105,14 +79,9 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward, totalVoterPower)
-		if err != nil {
-			return err
-		}
 		// burn half the burnAmount
-		toBurn := halfBurnAmount.Add(burnRemainder)
-		if !toBurn.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, toBurn))); err != nil {
+		if !halfBurnAmount.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount))); err != nil {
 				return err
 			}
 		}
@@ -122,13 +91,11 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
-		burnRemainder, err := k.RewardVoters(ctx, voters, voterReward, totalVoterPower)
-		if err != nil {
-			return err
-		}
 		// burn half the burnAmount
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount.Add(burnRemainder)))); err != nil {
-			return err
+		if !halfBurnAmount.IsZero() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount))); err != nil {
+				return err
+			}
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
 		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusBurn)
@@ -141,6 +108,10 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		}
 	case types.VoteResult_NO_TALLY:
 		return errors.New("vote hasn't been tallied yet")
+	}
+	dispute.VoterReward = voterReward
+	if err := k.Disputes.Set(ctx, id, dispute); err != nil {
+		return err
 	}
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -156,7 +127,7 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
 	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
 	feeMinusBurnDec := math.LegacyNewDecFromInt(feeMinusBurn)
-	amt := fee.Quo(totalFees).Mul(feeMinusBurnDec)
+	amt := fee.Mul(feeMinusBurnDec).Quo(totalFees)
 
 	remainder := amt.Sub(amt.TruncateDec())
 
@@ -173,7 +144,7 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
 
 	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
-	amt := fee.Quo(totalFees).Mul(bond)
+	amt := fee.Mul(bond).Quo(totalFees)
 
 	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amt.TruncateInt()); err != nil {
 		return math.LegacyDec{}, err
@@ -182,40 +153,45 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt())))
 }
 
-func (k Keeper) RewardVoters(ctx context.Context, voters []VoterInfo, totalAmount, totalVoterPower math.Int) (math.Int, error) {
-	if totalAmount.IsZero() {
-		return totalAmount, nil
+func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
+	dispute, err := k.Disputes.Get(ctx, id)
+	if err != nil {
+		return math.Int{}, err
 	}
-	tokenDistribution, burnedRemainder := k.CalculateVoterShare(ctx, voters, totalAmount, totalVoterPower)
-	totalAmount = totalAmount.Sub(burnedRemainder)
-	var outputs []banktypes.Output
-	for _, v := range tokenDistribution {
-		if v.Share.IsZero() {
-			continue
-		}
-		reward := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, v.Share))
-		outputs = append(outputs, banktypes.NewOutput(v.Voter, reward))
-	}
-	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, totalAmount)))
-	return burnedRemainder, k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
-}
 
-func (k Keeper) CalculateVoterShare(
-	ctx context.Context, voters []VoterInfo, totalTokens math.Int,
-	totalPower math.Int,
-) ([]VoterInfo, math.Int) {
-	scalingFactor := layer.PowerReduction
-	totalShare := math.ZeroInt()
-	for i, v := range voters {
-		share := v.Power.Mul(scalingFactor).Quo(totalPower)
-		tokens := share.Mul(totalTokens).Quo(scalingFactor)
-		voters[i].Share = tokens
-		totalShare = totalShare.Add(tokens)
+	sumUsers := uint64(0)
+	sumReporters := uint64(0)
+	sumTokenholders := uint64(0)
+	sumTeam := uint64(0)
+
+	// process vote counts function
+	processVoteCounts := func(voteCounts types.StakeholderVoteCounts) {
+		sumUsers += voteCounts.Users.Support + voteCounts.Users.Against + voteCounts.Users.Invalid
+		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid
+		sumTokenholders += voteCounts.Tokenholders.Support + voteCounts.Tokenholders.Against + voteCounts.Tokenholders.Invalid
+		sumTeam += voteCounts.Team.Support + voteCounts.Team.Against + voteCounts.Team.Invalid
 	}
-	burnedRemainder := math.ZeroInt()
-	if totalTokens.GT(totalShare) {
-		burnedRemainder = totalTokens.Sub(totalShare)
+
+	// process current dispute
+	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
+	if err != nil {
+		return math.Int{}, err
 	}
-	return voters, burnedRemainder
+	processVoteCounts(voteCounts)
+
+	// process previous disputes
+	for _, roundId := range dispute.PrevDisputeIds {
+		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
+		if err != nil {
+			return math.Int{}, err
+		}
+		processVoteCounts(voteCounts)
+	}
+
+	totalSum := math.NewInt(int64(sumUsers)).
+		Add(math.NewInt(int64(sumReporters))).
+		Add(math.NewInt(int64(sumTokenholders))).
+		Add(math.NewInt(int64(sumTeam)))
+
+	return totalSum, nil
 }

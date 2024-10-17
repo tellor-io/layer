@@ -63,6 +63,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateTeam",
 					Skip:      true, // skipped because team gated
 				},
+				{
+					RpcMethod:      "ClaimReward",
+					Use:            "claim-reward [id]",
+					Short:          "Execute the ClaimReward RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+				},
 			},
 		},
 	}

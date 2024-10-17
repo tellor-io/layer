@@ -26,6 +26,7 @@ type MsgClient interface {
 	ExecuteDispute(ctx context.Context, in *MsgExecuteDispute, opts ...grpc.CallOption) (*MsgExecuteDisputeResponse, error)
 	WithdrawFeeRefund(ctx context.Context, in *MsgWithdrawFeeRefund, opts ...grpc.CallOption) (*MsgWithdrawFeeRefundResponse, error)
 	AddEvidence(ctx context.Context, in *MsgAddEvidence, opts ...grpc.CallOption) (*MsgAddEvidenceResponse, error)
+	ClaimReward(ctx context.Context, in *MsgClaimReward, opts ...grpc.CallOption) (*MsgClaimRewardResponse, error)
 }
 
 type msgClient struct {
@@ -108,6 +109,15 @@ func (c *msgClient) AddEvidence(ctx context.Context, in *MsgAddEvidence, opts ..
 	return out, nil
 }
 
+func (c *msgClient) ClaimReward(ctx context.Context, in *MsgClaimReward, opts ...grpc.CallOption) (*MsgClaimRewardResponse, error) {
+	out := new(MsgClaimRewardResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Msg/ClaimReward", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -120,6 +130,7 @@ type MsgServer interface {
 	ExecuteDispute(context.Context, *MsgExecuteDispute) (*MsgExecuteDisputeResponse, error)
 	WithdrawFeeRefund(context.Context, *MsgWithdrawFeeRefund) (*MsgWithdrawFeeRefundResponse, error)
 	AddEvidence(context.Context, *MsgAddEvidence) (*MsgAddEvidenceResponse, error)
+	ClaimReward(context.Context, *MsgClaimReward) (*MsgClaimRewardResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -150,6 +161,9 @@ func (UnimplementedMsgServer) WithdrawFeeRefund(context.Context, *MsgWithdrawFee
 }
 func (UnimplementedMsgServer) AddEvidence(context.Context, *MsgAddEvidence) (*MsgAddEvidenceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddEvidence not implemented")
+}
+func (UnimplementedMsgServer) ClaimReward(context.Context, *MsgClaimReward) (*MsgClaimRewardResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimReward not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -308,6 +322,24 @@ func _Msg_AddEvidence_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ClaimReward_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaimReward)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ClaimReward(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Msg/ClaimReward",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ClaimReward(ctx, req.(*MsgClaimReward))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +378,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddEvidence",
 			Handler:    _Msg_AddEvidence_Handler,
+		},
+		{
+			MethodName: "ClaimReward",
+			Handler:    _Msg_ClaimReward_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
