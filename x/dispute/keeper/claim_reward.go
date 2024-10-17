@@ -24,7 +24,18 @@ func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) err
 		return errors.New("can't execute, dispute not resolved")
 	}
 
-	// TODO: check if caller already claimed
+	// check if caller already claimed
+	voterInfo, err := k.Voter.Get(ctx, collections.Join(id, addr.Bytes()))
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		// not found, so must not have been claimed
+	} else {
+		if voterInfo.RewardClaimed {
+			return errors.New("reward already claimed")
+		}
+	}
 
 	reward, err := k.CalculateReward(ctx, addr, id)
 	if err != nil {
@@ -34,9 +45,13 @@ func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) err
 		return errors.New("reward is zero")
 	}
 
+	voterInfo.RewardClaimed = true
+	if err := k.Voter.Set(ctx, collections.Join(id, addr.Bytes()), voterInfo); err != nil {
+		return err
+	}
+
 	// send reward from this module to the address
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
-	if err != nil {
+	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addr, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward))); err != nil {
 		return err
 	}
 
@@ -111,13 +126,13 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 
 	// 	- dispRewardByAddrONE_ROUND = totalReward * (userTokens*1e6/totalTokensVoted + usrRep*1e6/totalRepVoted + usrTips*1e6/totalTipsVoted) * 1/3
 	// - dispRewards_TWO_ROUNDS = totalReward * [ (userTokens_r1 + userTokens_r2)*1e6 / (totalVoted_r1 + totalVoted_r2)*1e6 + / ... ) * 1/3
-	userPower := addrUserPower.Mul(math.NewInt(1e6)).Quo(globalUserPower)
-	reporterPower := addrReporterPower.Mul(math.NewInt(1e6)).Quo(globalReporterPower)
-	tokenholderPower := addrTokenholderPower.Mul(math.NewInt(1e6)).Quo(globalTokenholderPower)
+	userPower := addrUserPower.Mul(layer.PowerReduction).Quo(globalUserPower)
+	reporterPower := addrReporterPower.Mul(layer.PowerReduction).Quo(globalReporterPower)
+	tokenholderPower := addrTokenholderPower.Mul(layer.PowerReduction).Quo(globalTokenholderPower)
 	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
 
 	rewardGlobal := dispute.VoterReward
-	rewardAcc := totalAccPower.Mul(rewardGlobal).Quo(math.NewInt(3))
+	rewardAcc := totalAccPower.Mul(rewardGlobal).Quo(math.NewInt(3).Mul(layer.PowerReduction))
 
 	return rewardAcc, nil
 }

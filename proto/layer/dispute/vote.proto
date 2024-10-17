@@ -55,4 +55,5 @@ message Voter {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+  bool reward_claimed = 5;
 }
