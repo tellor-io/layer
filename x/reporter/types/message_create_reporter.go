@@ -10,7 +10,7 @@ import (
 
 var _ sdk.Msg = &MsgCreateReporter{}
 
-func NewMsgCreateReporter(reporter string, commission math.LegacyDec) *MsgCreateReporter {
+func NewMsgCreateReporter(reporter string, commission math.Uint) *MsgCreateReporter {
 	return &MsgCreateReporter{
 		ReporterAddress: reporter,
 		CommissionRate:  commission,
