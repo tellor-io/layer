@@ -53,9 +53,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "ClaimReward",
-					Use:            "claim-reward [id]",
+					Use:            "claim-reward [dispute_id]",
 					Short:          "Execute the ClaimReward RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
 			},
 		},
