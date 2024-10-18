@@ -33,7 +33,7 @@ message OracleReporter {
 }
 
 message BigUint {
-  string value = 2 [
+  string value = 1 [
     (cosmos_proto.scalar) = "cosmos.Uint",
     (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false
