@@ -4,6 +4,7 @@ import (
 	context "context"
 
 	rktypes "github.com/tellor-io/layer/x/registry/types"
+	reptypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
@@ -34,7 +35,7 @@ type RegistryKeeper interface {
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
 	ReporterStake(ctx context.Context, repAddress sdk.AccAddress) (math.Int, error)
-	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, height uint64) error
+	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward reptypes.BigUint, height uint64) error
 }
 
 type RegistryHooks interface {

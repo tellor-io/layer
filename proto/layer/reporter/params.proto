@@ -16,10 +16,9 @@ message Params {
   // min_commission_rate, adopted from staking module, is the minimum commission rate a reporter can their delegators
   string min_commission_rate = 1 [
     (gogoproto.moretags) = "yaml:\"min_commission_rate\"",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
     (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true,
-    (cosmos_proto.scalar) = "cosmos.Dec"
+    (cosmos_proto.scalar) = "cosmos.Uint"
   ];
   // min_trb to be a reporter
   string min_trb = 2 [
