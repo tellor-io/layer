@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	layer "github.com/tellor-io/layer/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
@@ -77,13 +78,13 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		}
 	}
 
-	burnDust := remainder.TruncateInt()
+	burnDust := remainder.Quo(layertypes.PowerReduction)
 
 	if !burnDust.IsZero() {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, burnDust))); err != nil {
 			return nil, err
 		}
-		remainder = remainder.Sub(remainder.TruncateDec())
+		remainder = remainder.Mod(layertypes.PowerReduction)
 	}
 
 	if err := k.Dust.Set(ctx, remainder); err != nil {
