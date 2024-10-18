@@ -61,7 +61,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		// non voters get nothing
 		voterReward = math.ZeroInt()
 	}
-	// why are we repeating logic in the switch statement?
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 		// burn half the burnAmount
@@ -110,6 +109,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return errors.New("vote hasn't been tallied yet")
 	}
 	dispute.VoterReward = voterReward
+	dispute.PendingExecution = false
 	if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 		return err
 	}

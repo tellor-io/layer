@@ -124,15 +124,14 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 			Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Invalid))
 	}
 
-	// 	- dispRewardByAddrONE_ROUND = totalReward * (userTokens*1e6/totalTokensVoted + usrRep*1e6/totalRepVoted + usrTips*1e6/totalTipsVoted) * 1/3
-	// - dispRewards_TWO_ROUNDS = totalReward * [ (userTokens_r1 + userTokens_r2)*1e6 / (totalVoted_r1 + totalVoted_r2)*1e6 + / ... ) * 1/3
+	// 	- dispRewardByAddrONE_ROUND = totalReward * (userTokens*1e6/totalTokensVoted + usrRep*1e6/totalRepVoted + usrTips*1e6/totalTipsVoted) * 1/3e6
+	// - dispRewards_TWO_ROUNDS = totalReward * [ (userTokens_r1 + userTokens_r2)*1e6 / (totalVoted_r1 + totalVoted_r2)*1e6 + / ... ) * 1/3e6
 	userPower := addrUserPower.Mul(layer.PowerReduction).Quo(globalUserPower)
 	reporterPower := addrReporterPower.Mul(layer.PowerReduction).Quo(globalReporterPower)
 	tokenholderPower := addrTokenholderPower.Mul(layer.PowerReduction).Quo(globalTokenholderPower)
 	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
 
-	rewardGlobal := dispute.VoterReward
-	rewardAcc := totalAccPower.Mul(rewardGlobal).Quo(math.NewInt(3).Mul(layer.PowerReduction))
+	rewardAcc := totalAccPower.Mul(dispute.VoterReward).Quo(math.NewInt(3).Mul(layer.PowerReduction))
 
 	return rewardAcc, nil
 }

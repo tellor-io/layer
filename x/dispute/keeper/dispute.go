@@ -296,6 +296,7 @@ func (k Keeper) CloseDispute(ctx context.Context, id uint64) error {
 		return err
 	}
 	dispute.Open = false
+	dispute.PendingExecution = false
 	return k.Disputes.Set(ctx, id, dispute)
 }
 

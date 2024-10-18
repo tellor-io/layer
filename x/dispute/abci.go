@@ -10,10 +10,16 @@ import (
 )
 
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
-	return CheckPrevoteDisputesForExpiration(ctx, k)
+	err := CheckOpenDisputesForExpiration(ctx, k)
+	if err != nil {
+		return err
+	}
+	return CheckClosedDisputesForExecution(ctx, k)
 }
 
-func CheckPrevoteDisputesForExpiration(ctx context.Context, k keeper.Keeper) error {
+// Checks for expired prevote disputes and sets them to failed if expired.
+// Also checks whether any open disputes' vote periods have ended and tallies the vote if so.
+func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error {
 	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
 		return err
@@ -44,6 +50,30 @@ func CheckPrevoteDisputesForExpiration(ctx context.Context, k keeper.Keeper) err
 				if err := k.TallyVote(ctx, key); err != nil {
 					return err
 				}
+			}
+		}
+	}
+	return nil
+}
+
+func CheckClosedDisputesForExecution(ctx context.Context, k keeper.Keeper) error {
+	iter, err := k.Disputes.Indexes.PendingExecution.MatchExact(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		dispute, err := k.Disputes.Get(ctx, key)
+		if err != nil {
+			return err
+		}
+		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) {
+			if err := k.ExecuteVote(ctx, key); err != nil {
+				return err
 			}
 		}
 	}

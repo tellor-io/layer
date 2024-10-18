@@ -171,6 +171,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		fmt.Println("quorum reached")
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
+		dispute.PendingExecution = true
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 
@@ -196,6 +197,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if totalRatio.GTE(math.LegacyNewDec(51)) {
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
+		dispute.PendingExecution = true
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
@@ -207,6 +209,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
+			dispute.PendingExecution = true
 		}
 		allvoters, err := k.GetVoters(ctx, id)
 		if err != nil {

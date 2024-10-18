@@ -234,7 +234,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(err)
 	s.True(s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom).IsLT(disputerBalanceBefore))
 
-	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
+	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
 
 	votes := []types.MsgVote{
 		{
@@ -429,7 +429,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		DisputeCategory: types.Warning,
 	})
 	s.NoError(err)
-	s.NoError(dispute.CheckPrevoteDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
+	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
 
 	votersBalanceBefore := map[string]sdk.Coin{
 		repAddr.String():       s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, repAddr, s.Setup.Denom),
