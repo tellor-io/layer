@@ -323,6 +323,7 @@ func (k Keeper) MoveTokensFromValidator(ctx context.Context, validator stakingty
 }
 
 func (k Keeper) tokensToDispute(ctx context.Context, fromPool string, amount math.Int) error {
+	fmt.Println(amount.String())
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, disputetypes.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amount)))
 }
 

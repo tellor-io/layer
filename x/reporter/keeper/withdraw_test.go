@@ -178,7 +178,7 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 		DelegatorAddress: selector2.String(),
 		ValidatorAddress: sdk.ValAddress(valAddr1).String(),
 		Entries: []stakingtypes.UnbondingDelegationEntry{
-			{CreationHeight: ctx.BlockHeight(), InitialBalance: math.NewInt(500000001), Balance: math.NewInt(500000001)},
+			{CreationHeight: ctx.BlockHeight(), InitialBalance: math.NewInt(500000000), Balance: math.NewInt(500000000)},
 		},
 	}).Return(nil)
 
@@ -187,12 +187,12 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 
 	fmt.Println("Val 1: ", valAddr1)
 	fmt.Println("Reporter: ", reporterAddr)
-	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(valAddr1), delegation1.Shares.Quo(math.LegacyNewDec(2)).Sub(math.LegacyOneDec())).Return(stake.QuoRaw(2).SubRaw(1), nil)
-	sk.On("Unbond", ctx, selector3, sdk.ValAddress(valAddr2), math.LegacyNewDec(500000002)).Return(math.NewInt(500000002), nil)
+	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(valAddr1), delegation1.Shares.Quo(math.LegacyNewDec(2))).Return(stake.QuoRaw(2), nil)
+	sk.On("Unbond", ctx, selector3, sdk.ValAddress(valAddr2), math.LegacyNewDec(500000000)).Return(math.NewInt(500000000), nil)
 
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake.QuoRaw(2).SubRaw(1)))).Return(nil)
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.NotBondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake.QuoRaw(2).SubRaw(1)))).Return(nil)
-	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(500000002)))).Return(nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake.QuoRaw(2)))).Return(nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.NotBondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake.QuoRaw(2)))).Return(nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(500000000)))).Return(nil)
 
 	sk.On("GetRedelegationsFromSrcValidator", ctx, sdk.ValAddress(valAddr1)).Return([]stakingtypes.Redelegation{
 		{
