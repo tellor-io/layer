@@ -12,10 +12,11 @@ import (
 type DisputesIndex struct {
 	DisputeByReporter *indexes.Multi[[]byte, uint64, types.Dispute]
 	OpenDisputes      *indexes.Multi[bool, uint64, types.Dispute]
+	PendingExecution  *indexes.Multi[bool, uint64, types.Dispute] // New index for PendingExecution
 }
 
 func (a DisputesIndex) IndexesList() []collections.Index[uint64, types.Dispute] {
-	return []collections.Index[uint64, types.Dispute]{a.DisputeByReporter, a.OpenDisputes}
+	return []collections.Index[uint64, types.Dispute]{a.DisputeByReporter, a.OpenDisputes, a.PendingExecution}
 }
 
 func NewDisputesIndex(sb *collections.SchemaBuilder) DisputesIndex {
@@ -33,6 +34,13 @@ func NewDisputesIndex(sb *collections.SchemaBuilder) DisputesIndex {
 			collections.BoolKey, collections.Uint64Key,
 			func(k uint64, dispute types.Dispute) (bool, error) {
 				return dispute.Open, nil
+			},
+		),
+		PendingExecution: indexes.NewMulti(
+			sb, types.PendingExecutionIndexPrefix, "pending_execution",
+			collections.BoolKey, collections.Uint64Key,
+			func(k uint64, dispute types.Dispute) (bool, error) {
+				return dispute.PendingExecution, nil
 			},
 		),
 	}
