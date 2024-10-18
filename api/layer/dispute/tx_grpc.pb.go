@@ -22,8 +22,6 @@ type MsgClient interface {
 	AddFeeToDispute(ctx context.Context, in *MsgAddFeeToDispute, opts ...grpc.CallOption) (*MsgAddFeeToDisputeResponse, error)
 	Vote(ctx context.Context, in *MsgVote, opts ...grpc.CallOption) (*MsgVoteResponse, error)
 	UpdateTeam(ctx context.Context, in *MsgUpdateTeam, opts ...grpc.CallOption) (*MsgUpdateTeamResponse, error)
-	TallyVote(ctx context.Context, in *MsgTallyVote, opts ...grpc.CallOption) (*MsgTallyVoteResponse, error)
-	ExecuteDispute(ctx context.Context, in *MsgExecuteDispute, opts ...grpc.CallOption) (*MsgExecuteDisputeResponse, error)
 	WithdrawFeeRefund(ctx context.Context, in *MsgWithdrawFeeRefund, opts ...grpc.CallOption) (*MsgWithdrawFeeRefundResponse, error)
 	AddEvidence(ctx context.Context, in *MsgAddEvidence, opts ...grpc.CallOption) (*MsgAddEvidenceResponse, error)
 	ClaimReward(ctx context.Context, in *MsgClaimReward, opts ...grpc.CallOption) (*MsgClaimRewardResponse, error)
@@ -73,24 +71,6 @@ func (c *msgClient) UpdateTeam(ctx context.Context, in *MsgUpdateTeam, opts ...g
 	return out, nil
 }
 
-func (c *msgClient) TallyVote(ctx context.Context, in *MsgTallyVote, opts ...grpc.CallOption) (*MsgTallyVoteResponse, error) {
-	out := new(MsgTallyVoteResponse)
-	err := c.cc.Invoke(ctx, "/layer.dispute.Msg/TallyVote", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) ExecuteDispute(ctx context.Context, in *MsgExecuteDispute, opts ...grpc.CallOption) (*MsgExecuteDisputeResponse, error) {
-	out := new(MsgExecuteDisputeResponse)
-	err := c.cc.Invoke(ctx, "/layer.dispute.Msg/ExecuteDispute", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) WithdrawFeeRefund(ctx context.Context, in *MsgWithdrawFeeRefund, opts ...grpc.CallOption) (*MsgWithdrawFeeRefundResponse, error) {
 	out := new(MsgWithdrawFeeRefundResponse)
 	err := c.cc.Invoke(ctx, "/layer.dispute.Msg/WithdrawFeeRefund", in, out, opts...)
@@ -126,8 +106,6 @@ type MsgServer interface {
 	AddFeeToDispute(context.Context, *MsgAddFeeToDispute) (*MsgAddFeeToDisputeResponse, error)
 	Vote(context.Context, *MsgVote) (*MsgVoteResponse, error)
 	UpdateTeam(context.Context, *MsgUpdateTeam) (*MsgUpdateTeamResponse, error)
-	TallyVote(context.Context, *MsgTallyVote) (*MsgTallyVoteResponse, error)
-	ExecuteDispute(context.Context, *MsgExecuteDispute) (*MsgExecuteDisputeResponse, error)
 	WithdrawFeeRefund(context.Context, *MsgWithdrawFeeRefund) (*MsgWithdrawFeeRefundResponse, error)
 	AddEvidence(context.Context, *MsgAddEvidence) (*MsgAddEvidenceResponse, error)
 	ClaimReward(context.Context, *MsgClaimReward) (*MsgClaimRewardResponse, error)
@@ -149,12 +127,6 @@ func (UnimplementedMsgServer) Vote(context.Context, *MsgVote) (*MsgVoteResponse,
 }
 func (UnimplementedMsgServer) UpdateTeam(context.Context, *MsgUpdateTeam) (*MsgUpdateTeamResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTeam not implemented")
-}
-func (UnimplementedMsgServer) TallyVote(context.Context, *MsgTallyVote) (*MsgTallyVoteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method TallyVote not implemented")
-}
-func (UnimplementedMsgServer) ExecuteDispute(context.Context, *MsgExecuteDispute) (*MsgExecuteDisputeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExecuteDispute not implemented")
 }
 func (UnimplementedMsgServer) WithdrawFeeRefund(context.Context, *MsgWithdrawFeeRefund) (*MsgWithdrawFeeRefundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawFeeRefund not implemented")
@@ -250,42 +222,6 @@ func _Msg_UpdateTeam_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_TallyVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgTallyVote)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).TallyVote(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.dispute.Msg/TallyVote",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).TallyVote(ctx, req.(*MsgTallyVote))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_ExecuteDispute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExecuteDispute)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).ExecuteDispute(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.dispute.Msg/ExecuteDispute",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExecuteDispute(ctx, req.(*MsgExecuteDispute))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_WithdrawFeeRefund_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgWithdrawFeeRefund)
 	if err := dec(in); err != nil {
@@ -362,14 +298,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateTeam",
 			Handler:    _Msg_UpdateTeam_Handler,
-		},
-		{
-			MethodName: "TallyVote",
-			Handler:    _Msg_TallyVote_Handler,
-		},
-		{
-			MethodName: "ExecuteDispute",
-			Handler:    _Msg_ExecuteDispute_Handler,
 		},
 		{
 			MethodName: "WithdrawFeeRefund",

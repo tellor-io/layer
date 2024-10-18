@@ -18,8 +18,6 @@ service Msg {
   rpc AddFeeToDispute(MsgAddFeeToDispute) returns (MsgAddFeeToDisputeResponse);
   rpc Vote(MsgVote) returns (MsgVoteResponse);
   rpc UpdateTeam(MsgUpdateTeam) returns (MsgUpdateTeamResponse);
-  rpc TallyVote(MsgTallyVote) returns (MsgTallyVoteResponse);
-  rpc ExecuteDispute(MsgExecuteDispute) returns (MsgExecuteDisputeResponse);
   rpc WithdrawFeeRefund(MsgWithdrawFeeRefund) returns (MsgWithdrawFeeRefundResponse);
   rpc AddEvidence(MsgAddEvidence) returns (MsgAddEvidenceResponse);
   rpc ClaimReward(MsgClaimReward) returns (MsgClaimRewardResponse);
@@ -42,22 +40,6 @@ message MsgWithdrawFeeRefund {
 }
 
 message MsgWithdrawFeeRefundResponse {}
-
-message MsgExecuteDispute {
-  option (cosmos.msg.v1.signer) = "caller_address";
-  string caller_address = 1;
-  uint64 dispute_id = 2;
-}
-
-message MsgExecuteDisputeResponse {}
-
-message MsgTallyVote {
-  option (cosmos.msg.v1.signer) = "caller_address";
-  string caller_address = 1;
-  uint64 dispute_id = 2;
-}
-
-message MsgTallyVoteResponse {}
 
 message MsgProposeDispute {
   option (cosmos.msg.v1.signer) = "creator";

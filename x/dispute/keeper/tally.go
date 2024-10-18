@@ -49,21 +49,6 @@ func Ratio(total, part math.Int) math.LegacyDec {
 	return ratio.MulInt64(100)
 }
 
-// CalculateVotingPower calculates the voting power of a given number (n) divided by another number (d).
-func CalculateVotingPower(n, d math.Int) math.Int {
-	fmt.Println("CalculateVotingPower")
-	fmt.Println("n", n)
-	fmt.Println("d", d)
-	if n.IsZero() || d.IsZero() {
-		return math.ZeroInt()
-	}
-	scalingFactor := math.NewInt(1_000_000)
-	result := n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
-	fmt.Println("result", result)
-	// shouldn't this just be n.MulRaw(25_000_000).Quo(d) ?
-	return n.Mul(scalingFactor).Quo(d).MulRaw(25_000_000).Quo(scalingFactor)
-}
-
 // TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
 // If so, it calculates the given dispute round's outcome.
 func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
