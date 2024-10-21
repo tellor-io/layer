@@ -77,7 +77,7 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 // 	return nil
 // }
 
-func (c *Client) CyclelistMessages(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
+func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
 	value, err := c.median(qd)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)

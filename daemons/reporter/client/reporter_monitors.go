@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -26,7 +27,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		}
 
 		go func(ctx context.Context, qd []byte, qm *oracletypes.QueryMeta) {
-			err := c.CyclelistMessages(ctx, querydata, qm)
+			err := c.GenerateAndBroadcastSpotPriceReport(ctx, querydata, qm)
 			if err != nil {
 				c.logger.Error("Generating CycleList message", "error", err)
 			}
@@ -82,14 +83,14 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 		}
 		height := uint64(status.SyncInfo.LatestBlockHeight)
 		for i := 0; i < len(res.Queries); i++ {
-			if height > res.Queries[i].Expiration || commitedIds[res.Queries[i].Id] {
+			if height > res.Queries[i].Expiration || commitedIds[res.Queries[i].Id] || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
 				continue
 			}
 
 			localWG.Add(1)
 			go func(query *oracletypes.QueryMeta) {
 				defer localWG.Done()
-				err := c.CyclelistMessages(ctx, query.GetQueryData(), query)
+				err := c.GenerateAndBroadcastSpotPriceReport(ctx, query.GetQueryData(), query)
 				if err != nil {
 					c.logger.Error("Error generating report for tipped query: ", err)
 				}
