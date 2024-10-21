@@ -7,8 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) {
