@@ -1867,1654 +1867,6 @@ func (x *fastReflection_MsgWithdrawFeeRefundResponse) ProtoMethods() *protoiface
 }
 
 var (
-	md_MsgExecuteDispute                protoreflect.MessageDescriptor
-	fd_MsgExecuteDispute_caller_address protoreflect.FieldDescriptor
-	fd_MsgExecuteDispute_dispute_id     protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_dispute_tx_proto_init()
-	md_MsgExecuteDispute = File_layer_dispute_tx_proto.Messages().ByName("MsgExecuteDispute")
-	fd_MsgExecuteDispute_caller_address = md_MsgExecuteDispute.Fields().ByName("caller_address")
-	fd_MsgExecuteDispute_dispute_id = md_MsgExecuteDispute.Fields().ByName("dispute_id")
-}
-
-var _ protoreflect.Message = (*fastReflection_MsgExecuteDispute)(nil)
-
-type fastReflection_MsgExecuteDispute MsgExecuteDispute
-
-func (x *MsgExecuteDispute) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgExecuteDispute)(x)
-}
-
-func (x *MsgExecuteDispute) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[4]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MsgExecuteDispute_messageType fastReflection_MsgExecuteDispute_messageType
-var _ protoreflect.MessageType = fastReflection_MsgExecuteDispute_messageType{}
-
-type fastReflection_MsgExecuteDispute_messageType struct{}
-
-func (x fastReflection_MsgExecuteDispute_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgExecuteDispute)(nil)
-}
-func (x fastReflection_MsgExecuteDispute_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgExecuteDispute)
-}
-func (x fastReflection_MsgExecuteDispute_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExecuteDispute
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MsgExecuteDispute) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExecuteDispute
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgExecuteDispute) Type() protoreflect.MessageType {
-	return _fastReflection_MsgExecuteDispute_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgExecuteDispute) New() protoreflect.Message {
-	return new(fastReflection_MsgExecuteDispute)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgExecuteDispute) Interface() protoreflect.ProtoMessage {
-	return (*MsgExecuteDispute)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MsgExecuteDispute) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.CallerAddress != "" {
-		value := protoreflect.ValueOfString(x.CallerAddress)
-		if !f(fd_MsgExecuteDispute_caller_address, value) {
-			return
-		}
-	}
-	if x.DisputeId != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.DisputeId)
-		if !f(fd_MsgExecuteDispute_dispute_id, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgExecuteDispute) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.dispute.MsgExecuteDispute.caller_address":
-		return x.CallerAddress != ""
-	case "layer.dispute.MsgExecuteDispute.dispute_id":
-		return x.DisputeId != uint64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDispute"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDispute does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDispute) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.dispute.MsgExecuteDispute.caller_address":
-		x.CallerAddress = ""
-	case "layer.dispute.MsgExecuteDispute.dispute_id":
-		x.DisputeId = uint64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDispute"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDispute does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgExecuteDispute) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.dispute.MsgExecuteDispute.caller_address":
-		value := x.CallerAddress
-		return protoreflect.ValueOfString(value)
-	case "layer.dispute.MsgExecuteDispute.dispute_id":
-		value := x.DisputeId
-		return protoreflect.ValueOfUint64(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDispute"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDispute does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDispute) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.dispute.MsgExecuteDispute.caller_address":
-		x.CallerAddress = value.Interface().(string)
-	case "layer.dispute.MsgExecuteDispute.dispute_id":
-		x.DisputeId = value.Uint()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDispute"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDispute does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDispute) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.dispute.MsgExecuteDispute.caller_address":
-		panic(fmt.Errorf("field caller_address of message layer.dispute.MsgExecuteDispute is not mutable"))
-	case "layer.dispute.MsgExecuteDispute.dispute_id":
-		panic(fmt.Errorf("field dispute_id of message layer.dispute.MsgExecuteDispute is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDispute"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDispute does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgExecuteDispute) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.dispute.MsgExecuteDispute.caller_address":
-		return protoreflect.ValueOfString("")
-	case "layer.dispute.MsgExecuteDispute.dispute_id":
-		return protoreflect.ValueOfUint64(uint64(0))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDispute"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDispute does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgExecuteDispute) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.MsgExecuteDispute", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgExecuteDispute) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDispute) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MsgExecuteDispute) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgExecuteDispute) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgExecuteDispute)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.CallerAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.DisputeId != 0 {
-			n += 1 + runtime.Sov(uint64(x.DisputeId))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExecuteDispute)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.DisputeId != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.DisputeId))
-			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.CallerAddress) > 0 {
-			i -= len(x.CallerAddress)
-			copy(dAtA[i:], x.CallerAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CallerAddress)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExecuteDispute)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExecuteDispute: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExecuteDispute: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CallerAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.CallerAddress = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
-				}
-				x.DisputeId = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.DisputeId |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_MsgExecuteDisputeResponse protoreflect.MessageDescriptor
-)
-
-func init() {
-	file_layer_dispute_tx_proto_init()
-	md_MsgExecuteDisputeResponse = File_layer_dispute_tx_proto.Messages().ByName("MsgExecuteDisputeResponse")
-}
-
-var _ protoreflect.Message = (*fastReflection_MsgExecuteDisputeResponse)(nil)
-
-type fastReflection_MsgExecuteDisputeResponse MsgExecuteDisputeResponse
-
-func (x *MsgExecuteDisputeResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgExecuteDisputeResponse)(x)
-}
-
-func (x *MsgExecuteDisputeResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MsgExecuteDisputeResponse_messageType fastReflection_MsgExecuteDisputeResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgExecuteDisputeResponse_messageType{}
-
-type fastReflection_MsgExecuteDisputeResponse_messageType struct{}
-
-func (x fastReflection_MsgExecuteDisputeResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgExecuteDisputeResponse)(nil)
-}
-func (x fastReflection_MsgExecuteDisputeResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgExecuteDisputeResponse)
-}
-func (x fastReflection_MsgExecuteDisputeResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExecuteDisputeResponse
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MsgExecuteDisputeResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExecuteDisputeResponse
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgExecuteDisputeResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgExecuteDisputeResponse_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgExecuteDisputeResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgExecuteDisputeResponse)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgExecuteDisputeResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgExecuteDisputeResponse)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MsgExecuteDisputeResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgExecuteDisputeResponse) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDisputeResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDisputeResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDisputeResponse) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDisputeResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDisputeResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgExecuteDisputeResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDisputeResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDisputeResponse does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDisputeResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDisputeResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDisputeResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDisputeResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDisputeResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDisputeResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgExecuteDisputeResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgExecuteDisputeResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgExecuteDisputeResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgExecuteDisputeResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.MsgExecuteDisputeResponse", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgExecuteDisputeResponse) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExecuteDisputeResponse) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MsgExecuteDisputeResponse) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgExecuteDisputeResponse) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgExecuteDisputeResponse)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExecuteDisputeResponse)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExecuteDisputeResponse)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExecuteDisputeResponse: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExecuteDisputeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_MsgTallyVote                protoreflect.MessageDescriptor
-	fd_MsgTallyVote_caller_address protoreflect.FieldDescriptor
-	fd_MsgTallyVote_dispute_id     protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_dispute_tx_proto_init()
-	md_MsgTallyVote = File_layer_dispute_tx_proto.Messages().ByName("MsgTallyVote")
-	fd_MsgTallyVote_caller_address = md_MsgTallyVote.Fields().ByName("caller_address")
-	fd_MsgTallyVote_dispute_id = md_MsgTallyVote.Fields().ByName("dispute_id")
-}
-
-var _ protoreflect.Message = (*fastReflection_MsgTallyVote)(nil)
-
-type fastReflection_MsgTallyVote MsgTallyVote
-
-func (x *MsgTallyVote) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgTallyVote)(x)
-}
-
-func (x *MsgTallyVote) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MsgTallyVote_messageType fastReflection_MsgTallyVote_messageType
-var _ protoreflect.MessageType = fastReflection_MsgTallyVote_messageType{}
-
-type fastReflection_MsgTallyVote_messageType struct{}
-
-func (x fastReflection_MsgTallyVote_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgTallyVote)(nil)
-}
-func (x fastReflection_MsgTallyVote_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgTallyVote)
-}
-func (x fastReflection_MsgTallyVote_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTallyVote
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MsgTallyVote) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTallyVote
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgTallyVote) Type() protoreflect.MessageType {
-	return _fastReflection_MsgTallyVote_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgTallyVote) New() protoreflect.Message {
-	return new(fastReflection_MsgTallyVote)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgTallyVote) Interface() protoreflect.ProtoMessage {
-	return (*MsgTallyVote)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MsgTallyVote) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.CallerAddress != "" {
-		value := protoreflect.ValueOfString(x.CallerAddress)
-		if !f(fd_MsgTallyVote_caller_address, value) {
-			return
-		}
-	}
-	if x.DisputeId != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.DisputeId)
-		if !f(fd_MsgTallyVote_dispute_id, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgTallyVote) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.dispute.MsgTallyVote.caller_address":
-		return x.CallerAddress != ""
-	case "layer.dispute.MsgTallyVote.dispute_id":
-		return x.DisputeId != uint64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVote"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVote does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVote) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.dispute.MsgTallyVote.caller_address":
-		x.CallerAddress = ""
-	case "layer.dispute.MsgTallyVote.dispute_id":
-		x.DisputeId = uint64(0)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVote"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVote does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgTallyVote) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.dispute.MsgTallyVote.caller_address":
-		value := x.CallerAddress
-		return protoreflect.ValueOfString(value)
-	case "layer.dispute.MsgTallyVote.dispute_id":
-		value := x.DisputeId
-		return protoreflect.ValueOfUint64(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVote"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVote does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVote) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.dispute.MsgTallyVote.caller_address":
-		x.CallerAddress = value.Interface().(string)
-	case "layer.dispute.MsgTallyVote.dispute_id":
-		x.DisputeId = value.Uint()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVote"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVote does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVote) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.dispute.MsgTallyVote.caller_address":
-		panic(fmt.Errorf("field caller_address of message layer.dispute.MsgTallyVote is not mutable"))
-	case "layer.dispute.MsgTallyVote.dispute_id":
-		panic(fmt.Errorf("field dispute_id of message layer.dispute.MsgTallyVote is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVote"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVote does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgTallyVote) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.dispute.MsgTallyVote.caller_address":
-		return protoreflect.ValueOfString("")
-	case "layer.dispute.MsgTallyVote.dispute_id":
-		return protoreflect.ValueOfUint64(uint64(0))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVote"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVote does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgTallyVote) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.MsgTallyVote", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgTallyVote) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVote) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MsgTallyVote) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgTallyVote) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgTallyVote)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.CallerAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.DisputeId != 0 {
-			n += 1 + runtime.Sov(uint64(x.DisputeId))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTallyVote)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.DisputeId != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.DisputeId))
-			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.CallerAddress) > 0 {
-			i -= len(x.CallerAddress)
-			copy(dAtA[i:], x.CallerAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CallerAddress)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTallyVote)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTallyVote: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTallyVote: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CallerAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.CallerAddress = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
-				}
-				x.DisputeId = 0
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					x.DisputeId |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_MsgTallyVoteResponse protoreflect.MessageDescriptor
-)
-
-func init() {
-	file_layer_dispute_tx_proto_init()
-	md_MsgTallyVoteResponse = File_layer_dispute_tx_proto.Messages().ByName("MsgTallyVoteResponse")
-}
-
-var _ protoreflect.Message = (*fastReflection_MsgTallyVoteResponse)(nil)
-
-type fastReflection_MsgTallyVoteResponse MsgTallyVoteResponse
-
-func (x *MsgTallyVoteResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgTallyVoteResponse)(x)
-}
-
-func (x *MsgTallyVoteResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[7]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_MsgTallyVoteResponse_messageType fastReflection_MsgTallyVoteResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgTallyVoteResponse_messageType{}
-
-type fastReflection_MsgTallyVoteResponse_messageType struct{}
-
-func (x fastReflection_MsgTallyVoteResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgTallyVoteResponse)(nil)
-}
-func (x fastReflection_MsgTallyVoteResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgTallyVoteResponse)
-}
-func (x fastReflection_MsgTallyVoteResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTallyVoteResponse
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_MsgTallyVoteResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgTallyVoteResponse
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgTallyVoteResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgTallyVoteResponse_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgTallyVoteResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgTallyVoteResponse)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgTallyVoteResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgTallyVoteResponse)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_MsgTallyVoteResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgTallyVoteResponse) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVoteResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVoteResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVoteResponse) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVoteResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVoteResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgTallyVoteResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVoteResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVoteResponse does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVoteResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVoteResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVoteResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVoteResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVoteResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVoteResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgTallyVoteResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.MsgTallyVoteResponse"))
-		}
-		panic(fmt.Errorf("message layer.dispute.MsgTallyVoteResponse does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgTallyVoteResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.MsgTallyVoteResponse", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgTallyVoteResponse) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgTallyVoteResponse) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_MsgTallyVoteResponse) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgTallyVoteResponse) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgTallyVoteResponse)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTallyVoteResponse)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgTallyVoteResponse)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTallyVoteResponse: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgTallyVoteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
 	md_MsgProposeDispute                  protoreflect.MessageDescriptor
 	fd_MsgProposeDispute_creator          protoreflect.FieldDescriptor
 	fd_MsgProposeDispute_report           protoreflect.FieldDescriptor
@@ -3542,7 +1894,7 @@ func (x *MsgProposeDispute) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgProposeDispute) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[8]
+	mi := &file_layer_dispute_tx_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4212,7 +2564,7 @@ func (x *MsgProposeDisputeResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgProposeDisputeResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[9]
+	mi := &file_layer_dispute_tx_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4576,7 +2928,7 @@ func (x *MsgAddFeeToDispute) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgAddFeeToDispute) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[10]
+	mi := &file_layer_dispute_tx_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5169,7 +3521,7 @@ func (x *MsgAddFeeToDisputeResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgAddFeeToDisputeResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[11]
+	mi := &file_layer_dispute_tx_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5531,7 +3883,7 @@ func (x *MsgVote) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgVote) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[12]
+	mi := &file_layer_dispute_tx_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6041,7 +4393,7 @@ func (x *MsgVoteResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgVoteResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[13]
+	mi := &file_layer_dispute_tx_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6401,7 +4753,7 @@ func (x *MsgUpdateTeam) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateTeam) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[14]
+	mi := &file_layer_dispute_tx_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6881,7 +5233,7 @@ func (x *MsgUpdateTeamResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateTeamResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[15]
+	mi := &file_layer_dispute_tx_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7241,7 +5593,7 @@ func (x *MsgClaimReward) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgClaimReward) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[16]
+	mi := &file_layer_dispute_tx_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7705,7 +6057,7 @@ func (x *MsgClaimRewardResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgClaimRewardResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_tx_proto_msgTypes[17]
+	mi := &file_layer_dispute_tx_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8210,144 +6562,6 @@ func (*MsgWithdrawFeeRefundResponse) Descriptor() ([]byte, []int) {
 	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{3}
 }
 
-type MsgExecuteDispute struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	CallerAddress string `protobuf:"bytes,1,opt,name=caller_address,json=callerAddress,proto3" json:"caller_address,omitempty"`
-	DisputeId     uint64 `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
-}
-
-func (x *MsgExecuteDispute) Reset() {
-	*x = MsgExecuteDispute{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[4]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MsgExecuteDispute) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MsgExecuteDispute) ProtoMessage() {}
-
-// Deprecated: Use MsgExecuteDispute.ProtoReflect.Descriptor instead.
-func (*MsgExecuteDispute) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *MsgExecuteDispute) GetCallerAddress() string {
-	if x != nil {
-		return x.CallerAddress
-	}
-	return ""
-}
-
-func (x *MsgExecuteDispute) GetDisputeId() uint64 {
-	if x != nil {
-		return x.DisputeId
-	}
-	return 0
-}
-
-type MsgExecuteDisputeResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *MsgExecuteDisputeResponse) Reset() {
-	*x = MsgExecuteDisputeResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MsgExecuteDisputeResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MsgExecuteDisputeResponse) ProtoMessage() {}
-
-// Deprecated: Use MsgExecuteDisputeResponse.ProtoReflect.Descriptor instead.
-func (*MsgExecuteDisputeResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{5}
-}
-
-type MsgTallyVote struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	CallerAddress string `protobuf:"bytes,1,opt,name=caller_address,json=callerAddress,proto3" json:"caller_address,omitempty"`
-	DisputeId     uint64 `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
-}
-
-func (x *MsgTallyVote) Reset() {
-	*x = MsgTallyVote{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MsgTallyVote) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MsgTallyVote) ProtoMessage() {}
-
-// Deprecated: Use MsgTallyVote.ProtoReflect.Descriptor instead.
-func (*MsgTallyVote) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *MsgTallyVote) GetCallerAddress() string {
-	if x != nil {
-		return x.CallerAddress
-	}
-	return ""
-}
-
-func (x *MsgTallyVote) GetDisputeId() uint64 {
-	if x != nil {
-		return x.DisputeId
-	}
-	return 0
-}
-
-type MsgTallyVoteResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *MsgTallyVoteResponse) Reset() {
-	*x = MsgTallyVoteResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[7]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MsgTallyVoteResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MsgTallyVoteResponse) ProtoMessage() {}
-
-// Deprecated: Use MsgTallyVoteResponse.ProtoReflect.Descriptor instead.
-func (*MsgTallyVoteResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{7}
-}
-
 type MsgProposeDispute struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8363,7 +6577,7 @@ type MsgProposeDispute struct {
 func (x *MsgProposeDispute) Reset() {
 	*x = MsgProposeDispute{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[8]
+		mi := &file_layer_dispute_tx_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8377,7 +6591,7 @@ func (*MsgProposeDispute) ProtoMessage() {}
 
 // Deprecated: Use MsgProposeDispute.ProtoReflect.Descriptor instead.
 func (*MsgProposeDispute) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{8}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MsgProposeDispute) GetCreator() string {
@@ -8424,7 +6638,7 @@ type MsgProposeDisputeResponse struct {
 func (x *MsgProposeDisputeResponse) Reset() {
 	*x = MsgProposeDisputeResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[9]
+		mi := &file_layer_dispute_tx_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8438,7 +6652,7 @@ func (*MsgProposeDisputeResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgProposeDisputeResponse.ProtoReflect.Descriptor instead.
 func (*MsgProposeDisputeResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{9}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{5}
 }
 
 type MsgAddFeeToDispute struct {
@@ -8455,7 +6669,7 @@ type MsgAddFeeToDispute struct {
 func (x *MsgAddFeeToDispute) Reset() {
 	*x = MsgAddFeeToDispute{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[10]
+		mi := &file_layer_dispute_tx_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8469,7 +6683,7 @@ func (*MsgAddFeeToDispute) ProtoMessage() {}
 
 // Deprecated: Use MsgAddFeeToDispute.ProtoReflect.Descriptor instead.
 func (*MsgAddFeeToDispute) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{10}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MsgAddFeeToDispute) GetCreator() string {
@@ -8509,7 +6723,7 @@ type MsgAddFeeToDisputeResponse struct {
 func (x *MsgAddFeeToDisputeResponse) Reset() {
 	*x = MsgAddFeeToDisputeResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[11]
+		mi := &file_layer_dispute_tx_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8523,7 +6737,7 @@ func (*MsgAddFeeToDisputeResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgAddFeeToDisputeResponse.ProtoReflect.Descriptor instead.
 func (*MsgAddFeeToDisputeResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{11}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{7}
 }
 
 type MsgVote struct {
@@ -8539,7 +6753,7 @@ type MsgVote struct {
 func (x *MsgVote) Reset() {
 	*x = MsgVote{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[12]
+		mi := &file_layer_dispute_tx_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8553,7 +6767,7 @@ func (*MsgVote) ProtoMessage() {}
 
 // Deprecated: Use MsgVote.ProtoReflect.Descriptor instead.
 func (*MsgVote) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{12}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *MsgVote) GetVoter() string {
@@ -8586,7 +6800,7 @@ type MsgVoteResponse struct {
 func (x *MsgVoteResponse) Reset() {
 	*x = MsgVoteResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[13]
+		mi := &file_layer_dispute_tx_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8600,7 +6814,7 @@ func (*MsgVoteResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgVoteResponse.ProtoReflect.Descriptor instead.
 func (*MsgVoteResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{13}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{9}
 }
 
 type MsgUpdateTeam struct {
@@ -8615,7 +6829,7 @@ type MsgUpdateTeam struct {
 func (x *MsgUpdateTeam) Reset() {
 	*x = MsgUpdateTeam{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[14]
+		mi := &file_layer_dispute_tx_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8629,7 +6843,7 @@ func (*MsgUpdateTeam) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateTeam.ProtoReflect.Descriptor instead.
 func (*MsgUpdateTeam) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{14}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MsgUpdateTeam) GetCurrentTeamAddress() string {
@@ -8655,7 +6869,7 @@ type MsgUpdateTeamResponse struct {
 func (x *MsgUpdateTeamResponse) Reset() {
 	*x = MsgUpdateTeamResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[15]
+		mi := &file_layer_dispute_tx_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8669,7 +6883,7 @@ func (*MsgUpdateTeamResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateTeamResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateTeamResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{15}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{11}
 }
 
 type MsgClaimReward struct {
@@ -8684,7 +6898,7 @@ type MsgClaimReward struct {
 func (x *MsgClaimReward) Reset() {
 	*x = MsgClaimReward{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[16]
+		mi := &file_layer_dispute_tx_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8698,7 +6912,7 @@ func (*MsgClaimReward) ProtoMessage() {}
 
 // Deprecated: Use MsgClaimReward.ProtoReflect.Descriptor instead.
 func (*MsgClaimReward) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{16}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MsgClaimReward) GetCallerAddress() string {
@@ -8724,7 +6938,7 @@ type MsgClaimRewardResponse struct {
 func (x *MsgClaimRewardResponse) Reset() {
 	*x = MsgClaimRewardResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_tx_proto_msgTypes[17]
+		mi := &file_layer_dispute_tx_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -8738,7 +6952,7 @@ func (*MsgClaimRewardResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgClaimRewardResponse.ProtoReflect.Descriptor instead.
 func (*MsgClaimRewardResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{17}
+	return file_layer_dispute_tx_proto_rawDescGZIP(), []int{13}
 }
 
 var File_layer_dispute_tx_proto protoreflect.FileDescriptor
@@ -8779,23 +6993,6 @@ var file_layer_dispute_tx_proto_rawDesc = []byte{
 	0x3a, 0x13, 0x82, 0xe7, 0xb0, 0x2a, 0x0e, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x5f, 0x61, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x1e, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68,
 	0x64, 0x72, 0x61, 0x77, 0x46, 0x65, 0x65, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x6e, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63,
-	0x75, 0x74, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x63, 0x61,
-	0x6c, 0x6c, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x0d, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64,
-	0x3a, 0x13, 0x82, 0xe7, 0xb0, 0x2a, 0x0e, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x1b, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63,
-	0x75, 0x74, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x69, 0x0a, 0x0c, 0x4d, 0x73, 0x67, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x56, 0x6f,
-	0x74, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x63, 0x61, 0x6c, 0x6c,
-	0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64, 0x3a, 0x13, 0x82, 0xe7, 0xb0, 0x2a, 0x0e, 0x63,
-	0x61, 0x6c, 0x6c, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x16, 0x0a,
-	0x14, 0x4d, 0x73, 0x67, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73,
 	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x90, 0x02, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x50, 0x72, 0x6f,
 	0x70, 0x6f, 0x73, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63,
 	0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72,
@@ -8855,7 +7052,7 @@ var file_layer_dispute_tx_proto_rawDesc = []byte{
 	0x75, 0x74, 0x65, 0x49, 0x64, 0x3a, 0x13, 0x82, 0xe7, 0xb0, 0x2a, 0x0e, 0x63, 0x61, 0x6c, 0x6c,
 	0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x18, 0x0a, 0x16, 0x4d, 0x73,
 	0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x32, 0x9b, 0x06, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x5c, 0x0a, 0x0e,
+	0x6f, 0x6e, 0x73, 0x65, 0x32, 0xee, 0x04, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x5c, 0x0a, 0x0e,
 	0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x20,
 	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d,
 	0x73, 0x67, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
@@ -8876,46 +7073,35 @@ var file_layer_dispute_tx_proto_rawDesc = []byte{
 	0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
 	0x61, 0x74, 0x65, 0x54, 0x65, 0x61, 0x6d, 0x1a, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
 	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x54, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a,
-	0x09, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x1b, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x61,
-	0x6c, 0x6c, 0x79, 0x56, 0x6f, 0x74, 0x65, 0x1a, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x61, 0x6c, 0x6c, 0x79,
-	0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x0e,
-	0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x12, 0x20,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d,
-	0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x65, 0x63, 0x75, 0x74, 0x65, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x11, 0x57, 0x69,
-	0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x46, 0x65, 0x65, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x12,
-	0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e,
-	0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x46, 0x65, 0x65, 0x52, 0x65,
-	0x66, 0x75, 0x6e, 0x64, 0x1a, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77,
-	0x46, 0x65, 0x65, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x53, 0x0a, 0x0b, 0x41, 0x64, 0x64, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65,
-	0x12, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x2e, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x64, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x1a,
-	0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e,
-	0x4d, 0x73, 0x67, 0x41, 0x64, 0x64, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0b, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x52,
-	0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x52, 0x65,
-	0x77, 0x61, 0x72, 0x64, 0x1a, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x52, 0x65, 0x77,
-	0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0,
-	0x2a, 0x01, 0x42, 0x9f, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
-	0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
-	0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
-	0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x54, 0x65, 0x61, 0x6d, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a,
+	0x11, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x46, 0x65, 0x65, 0x52, 0x65, 0x66, 0x75,
+	0x6e, 0x64, 0x12, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x46, 0x65,
+	0x65, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x1a, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x46, 0x65, 0x65, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0b, 0x41, 0x64, 0x64, 0x45, 0x76, 0x69, 0x64, 0x65,
+	0x6e, 0x63, 0x65, 0x12, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x64, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x1a, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x64, 0x64, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0b, 0x43, 0x6c, 0x61,
+	0x69, 0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x1d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69,
+	0x6d, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x1a, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d,
+	0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
+	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x9f, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a,
+	0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -8930,58 +7116,50 @@ func file_layer_dispute_tx_proto_rawDescGZIP() []byte {
 	return file_layer_dispute_tx_proto_rawDescData
 }
 
-var file_layer_dispute_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_layer_dispute_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_layer_dispute_tx_proto_goTypes = []interface{}{
 	(*MsgAddEvidence)(nil),               // 0: layer.dispute.MsgAddEvidence
 	(*MsgAddEvidenceResponse)(nil),       // 1: layer.dispute.MsgAddEvidenceResponse
 	(*MsgWithdrawFeeRefund)(nil),         // 2: layer.dispute.MsgWithdrawFeeRefund
 	(*MsgWithdrawFeeRefundResponse)(nil), // 3: layer.dispute.MsgWithdrawFeeRefundResponse
-	(*MsgExecuteDispute)(nil),            // 4: layer.dispute.MsgExecuteDispute
-	(*MsgExecuteDisputeResponse)(nil),    // 5: layer.dispute.MsgExecuteDisputeResponse
-	(*MsgTallyVote)(nil),                 // 6: layer.dispute.MsgTallyVote
-	(*MsgTallyVoteResponse)(nil),         // 7: layer.dispute.MsgTallyVoteResponse
-	(*MsgProposeDispute)(nil),            // 8: layer.dispute.MsgProposeDispute
-	(*MsgProposeDisputeResponse)(nil),    // 9: layer.dispute.MsgProposeDisputeResponse
-	(*MsgAddFeeToDispute)(nil),           // 10: layer.dispute.MsgAddFeeToDispute
-	(*MsgAddFeeToDisputeResponse)(nil),   // 11: layer.dispute.MsgAddFeeToDisputeResponse
-	(*MsgVote)(nil),                      // 12: layer.dispute.MsgVote
-	(*MsgVoteResponse)(nil),              // 13: layer.dispute.MsgVoteResponse
-	(*MsgUpdateTeam)(nil),                // 14: layer.dispute.MsgUpdateTeam
-	(*MsgUpdateTeamResponse)(nil),        // 15: layer.dispute.MsgUpdateTeamResponse
-	(*MsgClaimReward)(nil),               // 16: layer.dispute.MsgClaimReward
-	(*MsgClaimRewardResponse)(nil),       // 17: layer.dispute.MsgClaimRewardResponse
-	(*oracle.MicroReport)(nil),           // 18: layer.oracle.MicroReport
-	(DisputeCategory)(0),                 // 19: layer.dispute.DisputeCategory
-	(*v1beta1.Coin)(nil),                 // 20: cosmos.base.v1beta1.Coin
-	(VoteEnum)(0),                        // 21: layer.dispute.VoteEnum
+	(*MsgProposeDispute)(nil),            // 4: layer.dispute.MsgProposeDispute
+	(*MsgProposeDisputeResponse)(nil),    // 5: layer.dispute.MsgProposeDisputeResponse
+	(*MsgAddFeeToDispute)(nil),           // 6: layer.dispute.MsgAddFeeToDispute
+	(*MsgAddFeeToDisputeResponse)(nil),   // 7: layer.dispute.MsgAddFeeToDisputeResponse
+	(*MsgVote)(nil),                      // 8: layer.dispute.MsgVote
+	(*MsgVoteResponse)(nil),              // 9: layer.dispute.MsgVoteResponse
+	(*MsgUpdateTeam)(nil),                // 10: layer.dispute.MsgUpdateTeam
+	(*MsgUpdateTeamResponse)(nil),        // 11: layer.dispute.MsgUpdateTeamResponse
+	(*MsgClaimReward)(nil),               // 12: layer.dispute.MsgClaimReward
+	(*MsgClaimRewardResponse)(nil),       // 13: layer.dispute.MsgClaimRewardResponse
+	(*oracle.MicroReport)(nil),           // 14: layer.oracle.MicroReport
+	(DisputeCategory)(0),                 // 15: layer.dispute.DisputeCategory
+	(*v1beta1.Coin)(nil),                 // 16: cosmos.base.v1beta1.Coin
+	(VoteEnum)(0),                        // 17: layer.dispute.VoteEnum
 }
 var file_layer_dispute_tx_proto_depIdxs = []int32{
-	18, // 0: layer.dispute.MsgAddEvidence.reports:type_name -> layer.oracle.MicroReport
-	18, // 1: layer.dispute.MsgProposeDispute.report:type_name -> layer.oracle.MicroReport
-	19, // 2: layer.dispute.MsgProposeDispute.dispute_category:type_name -> layer.dispute.DisputeCategory
-	20, // 3: layer.dispute.MsgProposeDispute.fee:type_name -> cosmos.base.v1beta1.Coin
-	20, // 4: layer.dispute.MsgAddFeeToDispute.amount:type_name -> cosmos.base.v1beta1.Coin
-	21, // 5: layer.dispute.MsgVote.vote:type_name -> layer.dispute.VoteEnum
-	8,  // 6: layer.dispute.Msg.ProposeDispute:input_type -> layer.dispute.MsgProposeDispute
-	10, // 7: layer.dispute.Msg.AddFeeToDispute:input_type -> layer.dispute.MsgAddFeeToDispute
-	12, // 8: layer.dispute.Msg.Vote:input_type -> layer.dispute.MsgVote
-	14, // 9: layer.dispute.Msg.UpdateTeam:input_type -> layer.dispute.MsgUpdateTeam
-	6,  // 10: layer.dispute.Msg.TallyVote:input_type -> layer.dispute.MsgTallyVote
-	4,  // 11: layer.dispute.Msg.ExecuteDispute:input_type -> layer.dispute.MsgExecuteDispute
-	2,  // 12: layer.dispute.Msg.WithdrawFeeRefund:input_type -> layer.dispute.MsgWithdrawFeeRefund
-	0,  // 13: layer.dispute.Msg.AddEvidence:input_type -> layer.dispute.MsgAddEvidence
-	16, // 14: layer.dispute.Msg.ClaimReward:input_type -> layer.dispute.MsgClaimReward
-	9,  // 15: layer.dispute.Msg.ProposeDispute:output_type -> layer.dispute.MsgProposeDisputeResponse
-	11, // 16: layer.dispute.Msg.AddFeeToDispute:output_type -> layer.dispute.MsgAddFeeToDisputeResponse
-	13, // 17: layer.dispute.Msg.Vote:output_type -> layer.dispute.MsgVoteResponse
-	15, // 18: layer.dispute.Msg.UpdateTeam:output_type -> layer.dispute.MsgUpdateTeamResponse
-	7,  // 19: layer.dispute.Msg.TallyVote:output_type -> layer.dispute.MsgTallyVoteResponse
-	5,  // 20: layer.dispute.Msg.ExecuteDispute:output_type -> layer.dispute.MsgExecuteDisputeResponse
-	3,  // 21: layer.dispute.Msg.WithdrawFeeRefund:output_type -> layer.dispute.MsgWithdrawFeeRefundResponse
-	1,  // 22: layer.dispute.Msg.AddEvidence:output_type -> layer.dispute.MsgAddEvidenceResponse
-	17, // 23: layer.dispute.Msg.ClaimReward:output_type -> layer.dispute.MsgClaimRewardResponse
-	15, // [15:24] is the sub-list for method output_type
-	6,  // [6:15] is the sub-list for method input_type
+	14, // 0: layer.dispute.MsgAddEvidence.reports:type_name -> layer.oracle.MicroReport
+	14, // 1: layer.dispute.MsgProposeDispute.report:type_name -> layer.oracle.MicroReport
+	15, // 2: layer.dispute.MsgProposeDispute.dispute_category:type_name -> layer.dispute.DisputeCategory
+	16, // 3: layer.dispute.MsgProposeDispute.fee:type_name -> cosmos.base.v1beta1.Coin
+	16, // 4: layer.dispute.MsgAddFeeToDispute.amount:type_name -> cosmos.base.v1beta1.Coin
+	17, // 5: layer.dispute.MsgVote.vote:type_name -> layer.dispute.VoteEnum
+	4,  // 6: layer.dispute.Msg.ProposeDispute:input_type -> layer.dispute.MsgProposeDispute
+	6,  // 7: layer.dispute.Msg.AddFeeToDispute:input_type -> layer.dispute.MsgAddFeeToDispute
+	8,  // 8: layer.dispute.Msg.Vote:input_type -> layer.dispute.MsgVote
+	10, // 9: layer.dispute.Msg.UpdateTeam:input_type -> layer.dispute.MsgUpdateTeam
+	2,  // 10: layer.dispute.Msg.WithdrawFeeRefund:input_type -> layer.dispute.MsgWithdrawFeeRefund
+	0,  // 11: layer.dispute.Msg.AddEvidence:input_type -> layer.dispute.MsgAddEvidence
+	12, // 12: layer.dispute.Msg.ClaimReward:input_type -> layer.dispute.MsgClaimReward
+	5,  // 13: layer.dispute.Msg.ProposeDispute:output_type -> layer.dispute.MsgProposeDisputeResponse
+	7,  // 14: layer.dispute.Msg.AddFeeToDispute:output_type -> layer.dispute.MsgAddFeeToDisputeResponse
+	9,  // 15: layer.dispute.Msg.Vote:output_type -> layer.dispute.MsgVoteResponse
+	11, // 16: layer.dispute.Msg.UpdateTeam:output_type -> layer.dispute.MsgUpdateTeamResponse
+	3,  // 17: layer.dispute.Msg.WithdrawFeeRefund:output_type -> layer.dispute.MsgWithdrawFeeRefundResponse
+	1,  // 18: layer.dispute.Msg.AddEvidence:output_type -> layer.dispute.MsgAddEvidenceResponse
+	13, // 19: layer.dispute.Msg.ClaimReward:output_type -> layer.dispute.MsgClaimRewardResponse
+	13, // [13:20] is the sub-list for method output_type
+	6,  // [6:13] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -9044,54 +7222,6 @@ func file_layer_dispute_tx_proto_init() {
 			}
 		}
 		file_layer_dispute_tx_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExecuteDispute); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_dispute_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExecuteDisputeResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_dispute_tx_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgTallyVote); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_dispute_tx_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgTallyVoteResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_dispute_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgProposeDispute); i {
 			case 0:
 				return &v.state
@@ -9103,7 +7233,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgProposeDisputeResponse); i {
 			case 0:
 				return &v.state
@@ -9115,7 +7245,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgAddFeeToDispute); i {
 			case 0:
 				return &v.state
@@ -9127,7 +7257,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgAddFeeToDisputeResponse); i {
 			case 0:
 				return &v.state
@@ -9139,7 +7269,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgVote); i {
 			case 0:
 				return &v.state
@@ -9151,7 +7281,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgVoteResponse); i {
 			case 0:
 				return &v.state
@@ -9163,7 +7293,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgUpdateTeam); i {
 			case 0:
 				return &v.state
@@ -9175,7 +7305,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgUpdateTeamResponse); i {
 			case 0:
 				return &v.state
@@ -9187,7 +7317,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgClaimReward); i {
 			case 0:
 				return &v.state
@@ -9199,7 +7329,7 @@ func file_layer_dispute_tx_proto_init() {
 				return nil
 			}
 		}
-		file_layer_dispute_tx_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_dispute_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgClaimRewardResponse); i {
 			case 0:
 				return &v.state
@@ -9218,7 +7348,7 @@ func file_layer_dispute_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_dispute_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -18,10 +18,9 @@ message OracleReporter {
   ];
   // commission for the reporter
   string commission_rate = 2 [
-    (cosmos_proto.scalar) = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable) = false,
-    (amino.dont_omitempty) = true
+    (cosmos_proto.scalar) = "cosmos.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
   ];
   // jailed is a bool whether the reporter is jailed or not
   bool jailed = 3;
@@ -30,5 +29,13 @@ message OracleReporter {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
+  ];
+}
+
+message BigUint {
+  string value = 1 [
+    (cosmos_proto.scalar) = "cosmos.Uint",
+    (gogoproto.customtype) = "cosmossdk.io/math.Uint",
+    (gogoproto.nullable) = false
   ];
 }

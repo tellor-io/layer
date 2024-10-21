@@ -59,7 +59,7 @@ func (s *TestSuite) TestCheckPrevoteDisputesForExpiration() {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(24 * time.Hour))
 
 	// check with no open disputes
-	err := dispute.CheckPrevoteDisputesForExpiration(ctx, k)
+	err := dispute.CheckOpenDisputesForExpiration(ctx, k)
 	require.NoError(err)
 
 	// check with open dispute
@@ -71,12 +71,12 @@ func (s *TestSuite) TestCheckPrevoteDisputesForExpiration() {
 		Open:             true,
 	}))
 
-	err = dispute.CheckPrevoteDisputesForExpiration(ctx, k)
+	err = dispute.CheckOpenDisputesForExpiration(ctx, k)
 	require.NoError(err)
 
 	// check again after endtime passes
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(2 * time.Hour))
-	err = dispute.CheckPrevoteDisputesForExpiration(ctx, k)
+	err = dispute.CheckOpenDisputesForExpiration(ctx, k)
 	require.NoError(err)
 	dispute, err := k.Disputes.Get(ctx, 1)
 	require.NoError(err)

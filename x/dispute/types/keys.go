@@ -35,6 +35,7 @@ var (
 	DisputeFeePayerPrefix                    = collections.NewPrefix(15)
 	DustKeyPrefix                            = collections.NewPrefix(16)
 	VoteCountsByGroupPrefix                  = collections.NewPrefix(17)
+	PendingExecutionIndexPrefix              = collections.NewPrefix(18)
 )
 
 func KeyPrefix(p string) []byte {

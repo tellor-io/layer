@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	layer "github.com/tellor-io/layer/types"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/math"
@@ -61,7 +62,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		// non voters get nothing
 		voterReward = math.ZeroInt()
 	}
-	// why are we repeating logic in the switch statement?
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 		// burn half the burnAmount
@@ -110,6 +110,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return errors.New("vote hasn't been tallied yet")
 	}
 	dispute.VoterReward = voterReward
+	dispute.PendingExecution = false
 	if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 		return err
 	}
@@ -123,34 +124,36 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, feeMinusBurn math.Int, hashId []byte) (math.LegacyDec, error) {
-	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
-	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
-	feeMinusBurnDec := math.LegacyNewDecFromInt(feeMinusBurn)
-	amt := fee.Mul(feeMinusBurnDec).Quo(totalFees)
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, feeMinusBurn math.Int, hashId []byte) (math.Int, error) {
+	fee := payerInfo.Amount
+	totalFees := totalFeesPaid
+	feeMinusBurnDec := feeMinusBurn
+	amtFixed12 := fee.Mul(feeMinusBurnDec).Mul(layertypes.PowerReduction).Quo(totalFees)
 
-	remainder := amt.Sub(amt.TruncateDec())
+	remainder := amtFixed12.Mod(layertypes.PowerReduction)
 
-	coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt()))
+	amtFixed6 := amtFixed12.Quo(layertypes.PowerReduction)
+	coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amtFixed6))
 	if !payerInfo.FromBond {
 		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
 
-	return remainder, k.ReturnFeetoStake(ctx, hashId, amt.TruncateInt())
+	return remainder, k.ReturnFeetoStake(ctx, hashId, amtFixed6)
 }
 
-func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.LegacyDec, error) {
-	bond := math.LegacyNewDecFromInt(reporterBond)
-	totalFees := math.LegacyNewDecFromInt(totalFeesPaid)
+func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.Int, error) {
+	bond := reporterBond
+	totalFees := totalFeesPaid
 
-	fee := math.LegacyNewDecFromInt(payerInfo.Amount)
-	amt := fee.Mul(bond).Quo(totalFees)
+	fee := payerInfo.Amount
+	amtFixed12 := fee.Mul(bond).Mul(layertypes.PowerReduction).Quo(totalFees)
 
-	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amt.TruncateInt()); err != nil {
-		return math.LegacyDec{}, err
+	amtFixed6 := amtFixed12.Quo(layertypes.PowerReduction)
+	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6); err != nil {
+		return math.Int{}, err
 	}
-	remainder := amt.Sub(amt.TruncateDec())
-	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amt.TruncateInt())))
+	remainder := amtFixed12.Mod(layertypes.PowerReduction)
+	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amtFixed6)))
 }
 
 func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {

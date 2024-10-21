@@ -41,8 +41,9 @@ type (
 		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]
 		BlockInfo                          collections.Map[[]byte, types.BlockInfo]
 		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]
-		Dust                               collections.Item[math.LegacyDec]
-		VoteCountsByGroup                  collections.Map[uint64, types.StakeholderVoteCounts]
+		// dust is extra tokens leftover after truncating decimals, stored as fixed256x12
+		Dust              collections.Item[math.Int]
+		VoteCountsByGroup collections.Map[uint64, types.StakeholderVoteCounts]
 	}
 )
 
@@ -72,7 +73,7 @@ func NewKeeper(
 		UsersGroup:                         collections.NewMap(sb, types.UsersGroupPrefix, "users_group", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), sdk.IntValue),
 		BlockInfo:                          collections.NewMap(sb, types.BlockInfoPrefix, "block_info", collections.BytesKey, codec.CollValue[types.BlockInfo](cdc)),
 		DisputeFeePayer:                    collections.NewMap(sb, types.DisputeFeePayerPrefix, "dispute_fee_payer", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.PayerInfo](cdc)),
-		Dust:                               collections.NewItem(sb, types.DustKeyPrefix, "dust", types.LegacyDecValue),
+		Dust:                               collections.NewItem(sb, types.DustKeyPrefix, "dust", sdk.IntValue),
 		VoteCountsByGroup:                  collections.NewMap(sb, types.VoteCountsByGroupPrefix, "vote_counts_by_group", collections.Uint64Key, codec.CollValue[types.StakeholderVoteCounts](cdc)),
 	}
 }
