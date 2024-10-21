@@ -37,6 +37,7 @@ func (s *KeeperTestSuite) dispute() types.Dispute {
 		InitialEvidence: report,
 		Open:            true,
 		SlashAmount:     math.NewInt(10000),
+		BurnAmount:      math.NewInt(500),
 	}
 }
 
@@ -198,7 +199,7 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 				s.Error(err, types.ErrInvalidDisputeCategory)
 			} else {
 				s.NoError(err)
-				s.Equal(tc.expectedSlashPercentage, slashAmount.MustFloat64())
+				s.Equal(tc.expectedSlashPercentage, slashAmount)
 				s.Equal(tc.expectedJailTime, jailTime)
 			}
 		})
