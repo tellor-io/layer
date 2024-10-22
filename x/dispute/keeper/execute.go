@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strconv"
 
-	layer "github.com/tellor-io/layer/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -66,7 +65,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 		// burn half the burnAmount
 		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount))); err != nil {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
 				return err
 			}
 		}
@@ -81,7 +80,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
 		// burn half the burnAmount
 		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount))); err != nil {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
 				return err
 			}
 		}
@@ -93,7 +92,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
 		// burn half the burnAmount
 		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, halfBurnAmount))); err != nil {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
 				return err
 			}
 		}
@@ -133,7 +132,7 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 	remainder := amtFixed12.Mod(layertypes.PowerReduction)
 
 	amtFixed6 := amtFixed12.Quo(layertypes.PowerReduction)
-	coins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amtFixed6))
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6))
 	if !payerInfo.FromBond {
 		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
@@ -153,7 +152,7 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 		return math.Int{}, err
 	}
 	remainder := amtFixed12.Mod(layertypes.PowerReduction)
-	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, amtFixed6)))
+	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6)))
 }
 
 func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {

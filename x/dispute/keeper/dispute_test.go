@@ -160,28 +160,28 @@ func (s *KeeperTestSuite) TestJailReporter() {
 
 func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 	testCases := []struct {
-		name                    string
-		cat                     types.DisputeCategory
-		expectedSlashPercentage float64
-		expectedJailTime        uint64
+		name                string
+		cat                 types.DisputeCategory
+		expectedSlashAmount math.Int
+		expectedJailTime    uint64
 	}{
 		{
-			name:                    "Warning",
-			cat:                     types.Warning,
-			expectedSlashPercentage: 0.01,
-			expectedJailTime:        0,
+			name:                "Warning",
+			cat:                 types.Warning,
+			expectedSlashAmount: math.NewInt(10000), // 10_000/1_000_000 = 0.01
+			expectedJailTime:    0,
 		},
 		{
-			name:                    "Minor",
-			cat:                     types.Minor,
-			expectedSlashPercentage: 0.05,
-			expectedJailTime:        600,
+			name:                "Minor",
+			cat:                 types.Minor,
+			expectedSlashAmount: math.NewInt(50000), // 50_000/1_000_000 = 0.05
+			expectedJailTime:    600,
 		},
 		{
-			name:                    "Major",
-			cat:                     types.Major,
-			expectedSlashPercentage: 1,
-			expectedJailTime:        gomath.MaxInt64,
+			name:                "Major",
+			cat:                 types.Major,
+			expectedSlashAmount: math.NewInt(1000000), // 1_000_000/1_000_000 = 1
+			expectedJailTime:    gomath.MaxInt64,
 		},
 		{
 			name: "Severe",
@@ -198,7 +198,8 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 				s.Error(err, types.ErrInvalidDisputeCategory)
 			} else {
 				s.NoError(err)
-				s.Equal(tc.expectedSlashPercentage, slashAmount.MustFloat64())
+				// mnove twice for decimal, six
+				s.Equal(tc.expectedSlashAmount, slashAmount)
 				s.Equal(tc.expectedJailTime, jailTime)
 			}
 		})

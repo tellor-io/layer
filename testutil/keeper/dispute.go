@@ -57,7 +57,7 @@ func DisputeKeeper(tb testing.TB) (
 	if err != nil {
 		panic(err)
 	}
-	err = k.Dust.Set(ctx, math.LegacyZeroDec())
+	err = k.Dust.Set(ctx, math.ZeroInt())
 	if err != nil {
 		panic(err)
 	}

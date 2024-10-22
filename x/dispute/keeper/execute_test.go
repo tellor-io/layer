@@ -2,15 +2,12 @@ package keeper_test
 
 import (
 	"github.com/tellor-io/layer/testutil/sample"
-	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (k *KeeperTestSuite) TestExecuteVote() {
@@ -80,12 +77,12 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(760)))).Return(nil)
 	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), disputeFeeMinusBurn, []byte("hash"))
 	k.NoError(err)
-	k.True(math.LegacyZeroDec().Equal(dust))
+	k.True(math.ZeroInt().Equal(dust))
 
 	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(190)))).Return(nil)
 	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), disputeFeeMinusBurn, []byte("hash"))
 	k.NoError(err)
-	k.True(math.LegacyZeroDec().Equal(dust))
+	k.True(math.ZeroInt().Equal(dust))
 }
 
 func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
@@ -101,12 +98,12 @@ func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(800)))).Return(nil)
 	dust, err := k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feepayer1, feePayers[0], reporterBond, reporterBond)
 	k.NoError(err)
-	k.True(math.LegacyZeroDec().Equal(dust))
+	k.True(math.ZeroInt().Equal(dust))
 	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer2, math.NewInt(200)).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(200)))).Return(nil)
 	dust, err = k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feepayer2, feePayers[1], reporterBond, reporterBond)
 	k.NoError(err)
-	k.True(math.LegacyZeroDec().Equal(dust))
+	k.True(math.ZeroInt().Equal(dust))
 
 	feePayers = []types.PayerInfo{
 		{Amount: math.NewInt(8), FromBond: true},
@@ -133,58 +130,4 @@ func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
 	dust, err = k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feepayer3, feePayers[2], totalFeesPaid, reporterBond)
 	k.NoError(err)
 	k.Equal(share.Sub(share.TruncateDec()), dust)
-}
-
-func (k *KeeperTestSuite) TestRewardVoters() {
-	remaining, err := k.disputeKeeper.RewardVoters(k.ctx, []keeper.VoterInfo{{Voter: sample.AccAddressBytes(), Power: math.OneInt(), Share: math.ZeroInt()}}, math.ZeroInt(), math.ZeroInt())
-	k.NoError(err)
-	k.Equal(math.ZeroInt(), remaining)
-
-	voters := []keeper.VoterInfo{
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(1), Share: math.ZeroInt()},
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(1), Share: math.ZeroInt()},
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(1), Share: math.ZeroInt()},
-	}
-	modulAddr := authtypes.NewModuleAddress(types.ModuleName)
-	k.accountKeeper.On("GetModuleAddress", types.ModuleName).Return(modulAddr, nil)
-	k.bankKeeper.On(
-		"InputOutputCoins", k.ctx,
-		banktypes.Input{Address: modulAddr.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(99)))},
-		[]banktypes.Output{
-			{Address: voters[0].Voter.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(33)))},
-			{Address: voters[1].Voter.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(33)))},
-			{Address: voters[2].Voter.String(), Coins: sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(33)))},
-		}).Return(nil, nil)
-	remaining, err = k.disputeKeeper.RewardVoters(k.ctx, voters, math.NewInt(100), math.NewInt(3))
-	k.NoError(err)
-	k.Equal(math.OneInt(), remaining)
-}
-
-func (k *KeeperTestSuite) TestCalculateVoterShare() {
-	totalPower := math.NewInt(3)
-	totalTokens := math.NewInt(100)
-	voters := []keeper.VoterInfo{
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(1), Share: math.ZeroInt()},
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(1), Share: math.ZeroInt()},
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(1), Share: math.ZeroInt()},
-	}
-	voters, remainder := k.disputeKeeper.CalculateVoterShare(k.ctx, voters, totalTokens, totalPower)
-	k.Equal(math.OneInt(), remainder)
-	k.Equal(math.NewInt(33), voters[0].Share)
-	k.Equal(math.NewInt(33), voters[1].Share)
-	k.Equal(math.NewInt(33), voters[2].Share)
-
-	totalPower = math.NewInt(5)
-	totalTokens = math.NewInt(190)
-	voters = []keeper.VoterInfo{
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(3), Share: math.ZeroInt()},
-		{Voter: sample.AccAddressBytes(), Power: math.NewInt(2), Share: math.ZeroInt()},
-	}
-
-	voters, remainder = k.disputeKeeper.CalculateVoterShare(k.ctx, voters, totalTokens, totalPower)
-	// 3/5 = 0.6 * 190 = 114
-	k.Equal(math.ZeroInt(), remainder)
-	k.Equal(math.NewInt(114), voters[0].Share)
-	// 2/5 = 0.4 * 190 = 76
-	k.Equal(math.NewInt(76), voters[1].Share)
 }

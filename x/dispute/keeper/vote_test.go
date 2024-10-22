@@ -298,25 +298,26 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{
 					Reporter: reporter,
 				}, nil).Once()
-				require.NoError(k.ReportersGroup.Set(ctx, collections.Join(disputeId, reporter.Bytes()), math.NewInt(100)))
+				require.NoError(k.ReportersGroup.Set(ctx, collections.Join(disputeId, reporter.Bytes()), math.NewInt(50)))
 				// selector has 100 selected to reporter
 				rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
+				// reporter has voted against with 150
 				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, reporter.Bytes()), types.Voter{
 					Vote:       types.VoteEnum_VOTE_AGAINST,
-					VoterPower: math.NewInt(50),
+					VoterPower: math.NewInt(150),
 				}))
 				require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
 					Reporters: types.VoteCounts{
-						Against: 50,
+						Against: 150,
 					},
 				}))
 				require.NoError(k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), disputeId), math.NewInt(50)))
 			},
 			expectedError:  false,
-			expectedTokens: math.NewInt(50),
+			expectedTokens: math.NewInt(100),
 			expectedVote: types.StakeholderVoteCounts{
 				Reporters: types.VoteCounts{
-					Support: 50,
+					Support: 100,
 					Against: 50,
 					Invalid: 0,
 				},
@@ -329,7 +330,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 	}
 	for _, tc := range testCases {
 		if tc.setup != nil {
-			tc.setup()
+			s.Run(tc.name, tc.setup)
 		}
 		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT)
 		if tc.expectedError {
@@ -337,15 +338,15 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 		} else {
 			require.NoError(err)
 		}
-		require.Equal(tokensVoted, tc.expectedTokens)
+		require.Equal(tc.expectedTokens, tokensVoted)
 		if tc.expectedVote != (types.StakeholderVoteCounts{}) {
 			votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)
 			fmt.Println("votesByGroup", votesByGroup)
-			require.Equal(votesByGroup, tc.expectedVote)
+			require.Equal(tc.expectedVote, votesByGroup)
 			require.NoError(err)
 		}
 		if tc.teardown != nil {
-			tc.teardown()
+			s.Run(tc.name, tc.teardown)
 		}
 	}
 }
@@ -516,138 +517,4 @@ func (s *KeeperTestSuite) TestAddAndSubtractReporterVoteCount() {
 	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
 	require.NoError(err)
 	require.Equal(votesByGroup.Reporters.Invalid, uint64(0))
-}
-
-func (s *KeeperTestSuite) TestUpdateDispute() {
-	k := s.disputeKeeper
-	ctx := s.ctx
-	require := s.Require()
-	require.NotNil(k)
-	require.NotNil(ctx)
-	id := uint64(1)
-	dispute := types.Dispute{
-		HashId:          []byte("hashId"),
-		DisputeId:       id,
-		DisputeCategory: types.Minor,
-	}
-
-	// quorum support
-	vote := types.Vote{
-		Id:         id,
-		VoteResult: types.VoteResult_SUPPORT,
-	}
-	scaledSupport := math.LegacyNewDec(100)
-	scaledAgainst := math.LegacyNewDec(0)
-	scaledInvalid := math.LegacyNewDec(0)
-
-	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
-	disputeRes, err := k.Disputes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
-	require.Equal(disputeRes.HashId, dispute.HashId)
-	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
-	voteRes, err := k.Votes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(voteRes.Id, vote.Id)
-	require.Equal(voteRes.VoteResult, vote.VoteResult)
-
-	// no quorum majority support
-	vote = types.Vote{
-		Id:         id,
-		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT,
-	}
-	scaledSupport = math.LegacyNewDec(50)
-	scaledAgainst = math.LegacyNewDec(0)
-	scaledInvalid = math.LegacyNewDec(0)
-
-	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
-	disputeRes, err = k.Disputes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
-	require.Equal(disputeRes.HashId, dispute.HashId)
-	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
-	voteRes, err = k.Votes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(voteRes.Id, vote.Id)
-	require.Equal(voteRes.VoteResult, vote.VoteResult)
-
-	// quorum against
-	vote = types.Vote{
-		Id:         id,
-		VoteResult: types.VoteResult_AGAINST,
-	}
-	scaledSupport = math.LegacyNewDec(0)
-	scaledAgainst = math.LegacyNewDec(100)
-	scaledInvalid = math.LegacyNewDec(0)
-
-	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
-	disputeRes, err = k.Disputes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
-	require.Equal(disputeRes.HashId, dispute.HashId)
-	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
-	voteRes, err = k.Votes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(voteRes.Id, vote.Id)
-	require.Equal(voteRes.VoteResult, vote.VoteResult)
-
-	// no quorum majority against
-	vote = types.Vote{
-		Id:         id,
-		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_AGAINST,
-	}
-	scaledSupport = math.LegacyNewDec(0)
-	scaledAgainst = math.LegacyNewDec(40)
-	scaledInvalid = math.LegacyNewDec(0)
-
-	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
-	disputeRes, err = k.Disputes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
-	require.Equal(disputeRes.HashId, dispute.HashId)
-	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
-	voteRes, err = k.Votes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(voteRes.Id, vote.Id)
-	require.Equal(voteRes.VoteResult, vote.VoteResult)
-
-	// quorum invalid
-	vote = types.Vote{
-		Id:         id,
-		VoteResult: types.VoteResult_INVALID,
-	}
-	scaledSupport = math.LegacyNewDec(0)
-	scaledAgainst = math.LegacyNewDec(0)
-	scaledInvalid = math.LegacyNewDec(51)
-
-	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
-	disputeRes, err = k.Disputes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
-	require.Equal(disputeRes.HashId, dispute.HashId)
-	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
-	voteRes, err = k.Votes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(voteRes.Id, vote.Id)
-	require.Equal(voteRes.VoteResult, vote.VoteResult)
-
-	// no quorum majority invalid
-	vote = types.Vote{
-		Id:         id,
-		VoteResult: types.VoteResult_NO_QUORUM_MAJORITY_INVALID,
-	}
-	scaledSupport = math.LegacyNewDec(0)
-	scaledAgainst = math.LegacyNewDec(0)
-	scaledInvalid = math.LegacyNewDec(49)
-
-	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
-	disputeRes, err = k.Disputes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(disputeRes.DisputeId, dispute.DisputeId)
-	require.Equal(disputeRes.HashId, dispute.HashId)
-	require.Equal(disputeRes.DisputeCategory, dispute.DisputeCategory)
-	voteRes, err = k.Votes.Get(ctx, id)
-	require.NoError(err)
-	require.Equal(voteRes.Id, vote.Id)
-	require.Equal(voteRes.VoteResult, vote.VoteResult)
 }
