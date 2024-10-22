@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"github.com/tellor-io/layer/testutil/sample"
+
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
@@ -27,6 +29,13 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 		VoteResult: types.VoteResult_NO_TALLY,
 		Executed:   true,
 	}
+	voteCounts := types.StakeholderVoteCounts{
+		Users:        types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		Reporters:    types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		Tokenholders: types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		Team:         types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+	}
+	k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, dispute.DisputeId, voteCounts))
 
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
@@ -45,6 +54,7 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
 
 	k.ctx = k.ctx.WithBlockTime(k.ctx.BlockTime().Add(1))
+	k.bankKeeper.On("BurnCoins", k.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("loya", dispute.BurnAmount.QuoRaw(2)))).Return(nil)
 	k.NoError(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId))
 
 	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feepayer1.Bytes()), feePayers[0]))
@@ -111,23 +121,90 @@ func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
 		{Amount: math.NewInt(3), FromBond: true},
 	}
 	totalFeesPaid := math.NewInt(13)
-	share := feePayers[0].Amount.ToLegacyDec().Quo(totalFeesPaid.ToLegacyDec()).Mul(reporterBond.ToLegacyDec())
-	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer1, share.TruncateInt()).Return(nil)
-	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(615)))).Return(nil)
+
+	shareFixed12 := feePayers[0].Amount.Mul(reporterBond).Mul(layertypes.PowerReduction).Quo(totalFeesPaid)
+	shareFixed6 := shareFixed12.Quo(layertypes.PowerReduction)
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer1, shareFixed6).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", shareFixed6))).Return(nil)
 	dust, err = k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feepayer1, feePayers[0], totalFeesPaid, reporterBond)
 	k.NoError(err)
-	k.Equal(share.Sub(share.TruncateDec()), dust)
-	share = feePayers[1].Amount.ToLegacyDec().Quo(totalFeesPaid.ToLegacyDec()).Mul(reporterBond.ToLegacyDec())
-	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer2, share.TruncateInt()).Return(nil)
-	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(153)))).Return(nil)
+	k.Equal(shareFixed12.Mod(layertypes.PowerReduction), dust)
+
+	shareFixed12 = feePayers[1].Amount.Mul(reporterBond).Mul(layertypes.PowerReduction).Quo(totalFeesPaid)
+	shareFixed6 = shareFixed12.Quo(layertypes.PowerReduction)
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer2, shareFixed6).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", shareFixed6))).Return(nil)
 	dust, err = k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feepayer2, feePayers[1], totalFeesPaid, reporterBond)
 	k.NoError(err)
-	k.Equal(share.Sub(share.TruncateDec()), dust)
-	share = feePayers[2].Amount.ToLegacyDec().Quo(totalFeesPaid.ToLegacyDec()).Mul(reporterBond.ToLegacyDec())
+	k.Equal(shareFixed12.Mod(layertypes.PowerReduction), dust)
 
-	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer3, share.TruncateInt()).Return(nil)
-	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(230)))).Return(nil)
+	shareFixed12 = feePayers[2].Amount.Mul(reporterBond).Mul(layertypes.PowerReduction).Quo(totalFeesPaid)
+	shareFixed6 = shareFixed12.Quo(layertypes.PowerReduction)
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer3, shareFixed6).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", shareFixed6))).Return(nil)
 	dust, err = k.disputeKeeper.RewardReporterBondToFeePayers(k.ctx, feepayer3, feePayers[2], totalFeesPaid, reporterBond)
 	k.NoError(err)
-	k.Equal(share.Sub(share.TruncateDec()), dust)
+	k.Equal(shareFixed12.Mod(layertypes.PowerReduction), dust)
+}
+
+func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
+	dispute := k.dispute()
+	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
+
+	// set vote counts for current dispute
+	currentVoteCounts := types.StakeholderVoteCounts{
+		Users:        types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
+		Reporters:    types.VoteCounts{Support: 8, Against: 3, Invalid: 1},  // 12
+		Tokenholders: types.VoteCounts{Support: 15, Against: 7, Invalid: 3}, // 25
+		Team:         types.VoteCounts{Support: 5, Against: 2, Invalid: 1},  // 8 total=62
+	}
+	k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, dispute.DisputeId, currentVoteCounts))
+
+	// test no previous disputes
+	expectedTotalSum := math.NewInt(62)
+	totalSum, err := k.disputeKeeper.GetSumOfAllGroupVotesAllRounds(k.ctx, dispute.DisputeId)
+	k.NoError(err)
+	k.True(expectedTotalSum.Equal(totalSum))
+
+	// test with 3 previous dispute rounds
+	prevDisputeIds := []uint64{2, 3, 4}
+	prevVoteCounts := []types.StakeholderVoteCounts{
+		{
+			Users:        types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
+			Reporters:    types.VoteCounts{Support: 4, Against: 2, Invalid: 0}, // 6
+			Tokenholders: types.VoteCounts{Support: 8, Against: 4, Invalid: 2}, // 14
+			Team:         types.VoteCounts{Support: 3, Against: 1, Invalid: 0}, // 4 total=33
+		},
+		{
+			Users:        types.VoteCounts{Support: 7, Against: 4, Invalid: 2},  // 13
+			Reporters:    types.VoteCounts{Support: 6, Against: 3, Invalid: 1},  // 10
+			Tokenholders: types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
+			Team:         types.VoteCounts{Support: 4, Against: 2, Invalid: 1},  // 7 total=47
+		},
+		{
+			Users:        types.VoteCounts{Support: 3, Against: 2, Invalid: 0}, // 5
+			Reporters:    types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3
+			Tokenholders: types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
+			Team:         types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3 total=20
+		},
+	}
+
+	dispute.PrevDisputeIds = prevDisputeIds
+	for i, id := range prevDisputeIds {
+		k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, id, prevVoteCounts[i]))
+	}
+
+	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
+
+	// Calculate the expected total sum
+	expectedTotalSum = math.NewInt(0).
+		Add(math.NewInt(int64(17 + 12 + 25 + 8))). // Current dispute
+		Add(math.NewInt(int64(9 + 6 + 14 + 4))).   // Previous dispute 1
+		Add(math.NewInt(int64(13 + 10 + 17 + 7))). // Previous dispute 2
+		Add(math.NewInt(int64(5 + 3 + 9 + 3)))     // Previous dispute 3
+
+	// Call the function and check the result
+	totalSum, err = k.disputeKeeper.GetSumOfAllGroupVotesAllRounds(k.ctx, dispute.DisputeId)
+	k.NoError(err)
+	k.True(expectedTotalSum.Equal(totalSum))
 }

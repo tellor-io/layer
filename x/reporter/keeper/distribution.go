@@ -98,7 +98,7 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		shareAmt := math.NewUint(source.Amount.Uint64())
 		if extra.IsPositive() {
 			// add extra tokens based on the share of the delegator
-			shareAmt = math.NewUint(source.Amount.Uint64()).Quo(math.NewUint(snapshot.Total.Uint64())).Mul(math.NewUint(amt.Uint64()))
+			shareAmt = math.NewUint(source.Amount.Uint64()).Mul(math.NewUint(amt.Uint64())).Quo(math.NewUint(snapshot.Total.Uint64()))
 		}
 		_, err = k.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(int64(shareAmt.Uint64())), tokenSrc, val, false)
 		if err != nil {
