@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
+// TODO: create weighted operations
 // avoid unused import issue
 var (
 	_ = sample.AccAddress

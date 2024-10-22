@@ -34,7 +34,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		return nil, err
 	}
 	// if disputed reporter wants to add to fee, they have to use free floating tokens
-	if sender.Equals(sdk.MustAccAddressFromBech32(dispute.ReportEvidence.Reporter)) && msg.PayFromBond {
+	if sender.Equals(sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter)) && msg.PayFromBond {
 		return nil, errors.New("disputed reporter can't add fee from bond")
 	}
 	// check if time to add fee has expired
@@ -70,7 +70,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.ReportEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
+		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return nil, err
 		}
 		// begin voting immediately
