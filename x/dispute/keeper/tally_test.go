@@ -254,7 +254,6 @@ func (s *KeeperTestSuite) TestTallyVote() {
 				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(25000000)}))
 				// mock for GetTotalSupply
 				bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(250 * 1e6)}, nil)
-
 			},
 			teardown:      func() {},
 			expectedError: nil,
