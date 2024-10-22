@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -14,7 +12,8 @@ import (
 )
 
 func (s *KeeperTestSuite) TestVote() {
-	// Add dispute
+	// k := s.disputeKeeper
+	// Create dispute
 	addr := s.TestMsgProposeDisputeFromAccount()
 
 	// mock dependency modules
@@ -53,11 +52,9 @@ func (s *KeeperTestSuite) TestVote() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	s.Equal(keys[0].K2(), addr.Bytes())
+	// vote calls tally, enough ppl have voted to reach quorum
 	s.Equal(vote.VoteResult, types.VoteResult_SUPPORT)
 	s.Equal(vote.Id, uint64(1))
-	voteCountsByGroup, err := s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, 1)
-	s.NoError(err)
-	fmt.Println(voteCountsByGroup)
 }
 
 // TODO: more tests
