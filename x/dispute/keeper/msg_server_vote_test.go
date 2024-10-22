@@ -60,4 +60,4 @@ func (s *KeeperTestSuite) TestVote() {
 	fmt.Println(voteCountsByGroup)
 }
 
-//TODO: more tests
+// TODO: more tests

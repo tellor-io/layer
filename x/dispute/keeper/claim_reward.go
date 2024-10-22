@@ -59,7 +59,6 @@ func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) err
 }
 
 func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) (math.Int, error) {
-
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err

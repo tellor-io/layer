@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"github.com/tellor-io/layer/testutil/sample"
-
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
