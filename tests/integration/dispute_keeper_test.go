@@ -40,7 +40,6 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		}
 		total = total.Add(srcs[i].Amount)
 	}
-	fmt.Printf("total delegated tokens: %s\n", total.String())
 	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight())), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
 	s.NoError(err)
 	// assemble report with reporter to dispute
@@ -139,43 +138,43 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		}
 		total = total.Add(srcs[i].Amount)
 	}
-	// s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-	// s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
-	// err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight())), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
-	// s.NoError(err)
-	// qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
-	// report := oracletypes.MicroReport{
-	// 	Reporter:    repAddr.String(),
-	// 	Power:       100,
-	// 	QueryId:     qId,
-	// 	Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-	// 	Timestamp:   time.Unix(1696516597, 0),
-	// 	BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
-	// }
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	// _, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-	// 	Creator:         repAddr.String(),
-	// 	Report:          &report,
-	// 	DisputeCategory: types.Warning,
-	// 	Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000)), // one percent dispute fee
-	// 	PayFromBond:     true,
-	// })
-	// s.NoError(err)
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
+	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight())), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
+	s.NoError(err)
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:    repAddr.String(),
+		Power:       100,
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.Unix(1696516597, 0),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
+	}
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
+		Creator:         repAddr.String(),
+		Report:          &report,
+		DisputeCategory: types.Warning,
+		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000)), // one percent dispute fee
+		PayFromBond:     true,
+	})
+	s.NoError(err)
 
-	// // check reporter was slashed/jailed after fee was added
-	// rep, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
-	// s.NoError(err)
-	// s.True(rep.Jailed)
+	// check reporter was slashed/jailed after fee was added
+	rep, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
+	s.NoError(err)
+	s.True(rep.Jailed)
 
-	// reporterServer := reporterKeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
-	// req := &reportertypes.MsgUnjailReporter{
-	// 	ReporterAddress: repAddr.String(),
-	// }
-	// _, err = reporterServer.UnjailReporter(s.Setup.Ctx, req)
-	// s.NoError(err)
-	// rep, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
-	// s.NoError(err)
-	// s.False(rep.Jailed)
+	reporterServer := reporterKeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	req := &reportertypes.MsgUnjailReporter{
+		ReporterAddress: repAddr.String(),
+	}
+	_, err = reporterServer.UnjailReporter(s.Setup.Ctx, req)
+	s.NoError(err)
+	rep, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
+	s.NoError(err)
+	s.False(rep.Jailed)
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
