@@ -371,7 +371,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 
 	tip, err := s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, repAccs[0].Bytes())
 	s.NoError(err)
-	s.Equal(tip.TruncateInt(), reward, "reporter should get the reward")
+	s.Equal(tip.Value, math.NewUint(reward.Uint64()*1e6), "reporter should get the reward")
 	// withdraw the reward
 	repServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = repServer.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: repAccs[0].String(), ValidatorAddress: valAddrs[0].String()})
@@ -416,14 +416,14 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			name:                 "reporter with 1 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).TruncateInt(),
+			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).Value.QuoUint64(1e6)),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 2 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).TruncateInt(),
+			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).Value.QuoUint64(1e6)),
 			delegator:            repAccs[1],
 		},
 	}
@@ -491,21 +491,21 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			name:                 "reporter with 100 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).Value.QuoUint64(1e6)),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 200 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).Value.QuoUint64(1e6)),
 			delegator:            repAccs[1],
 		},
 		{
 			name:                 "reporter with 300 voting power",
 			reporterIndex:        2,
 			beforeBalance:        reporterStake3,
-			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).Value.QuoUint64(1e6)),
 			delegator:            repAccs[2],
 		},
 	}

@@ -121,7 +121,7 @@ func TestAvailableTips(t *testing.T) {
 		setup    func()
 		req      *types.QueryAvailableTipsRequest
 		err      bool
-		expected math.LegacyDec
+		expected types.BigUint
 	}{
 		{
 			name: "nil request",
@@ -132,29 +132,29 @@ func TestAvailableTips(t *testing.T) {
 			name:     "no tips",
 			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
 			err:      true,
-			expected: math.LegacyDec(math.NewInt(0)),
+			expected: types.BigUint{Value: math.ZeroUint()},
 		},
 		{
 			name: "one tip",
 			setup: func() {
-				err := k.SelectorTips.Set(ctx, selectorAddr, math.LegacyDec(math.NewInt(100)))
+				err := k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(100)})
 				require.NoError(err)
 			},
 			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
 			err:      false,
-			expected: math.LegacyDec(math.NewInt(100)),
+			expected: types.BigUint{Value: math.NewUint(100)},
 		},
 		{
 			name: "amount changes",
 			setup: func() {
-				err := k.SelectorTips.Set(ctx, selectorAddr, math.LegacyDec(math.NewInt(100)))
+				err := k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(100)})
 				require.NoError(err)
-				err = k.SelectorTips.Set(ctx, selectorAddr, math.LegacyDec(math.NewInt(200)))
+				err = k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(200)})
 				require.NoError(err)
 			},
 			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
 			err:      false,
-			expected: math.LegacyDec(math.NewInt(200)),
+			expected: types.BigUint{Value: math.NewUint(200)},
 		},
 	}
 	for _, tc := range testCases {
@@ -169,7 +169,7 @@ func TestAvailableTips(t *testing.T) {
 				require.Error(err)
 			} else {
 				require.NoError(err)
-				require.Equal(tc.expected, res.AvailableTips)
+				require.Equal(tc.expected.Value, res.AvailableTips)
 			}
 		})
 	}

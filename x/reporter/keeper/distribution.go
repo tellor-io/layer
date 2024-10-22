@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
@@ -14,16 +16,16 @@ import (
 )
 
 // distributes tips paid in oracle module to delegators that were part of reporting the tip's report
-func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, height uint64) error {
+func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward types.BigUint, height uint64) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
 	}
 	// Calculate commission
-	commission := reward.Mul(reporter.CommissionRate)
+	commission := reward.Value.Mul(reporter.CommissionRate).QuoUint64(1000000)
 
 	// Calculate net reward
-	netReward := reward.Sub(commission)
+	netReward := reward.Value.Sub(commission)
 
 	delAddrs, err := k.Report.Get(ctx, collections.Join(reporterAddr.Bytes(), height))
 	if err != nil {
@@ -31,7 +33,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	}
 
 	for _, del := range delAddrs.TokenOrigins {
-		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(delAddrs.Total))
+		delegatorShare := netReward.Mul(math.NewUint(del.Amount.Uint64())).Quo(math.NewUint(delAddrs.Total.Uint64()))
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}
@@ -39,12 +41,13 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 		oldTips, err := k.SelectorTips.Get(ctx, del.DelegatorAddress)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
-				oldTips = math.LegacyZeroDec()
+				oldTips = types.BigUint{Value: math.ZeroUint()}
 			} else {
 				return err
 			}
 		}
-		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, oldTips.Add(delegatorShare))
+		newTips := types.BigUint{Value: oldTips.Value.Add(delegatorShare)}
+		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, newTips)
 		if err != nil {
 			return err
 		}
@@ -92,12 +95,12 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		} else {
 			tokenSrc = stakingtypes.Unbonded
 		}
-		shareAmt := math.LegacyNewDecFromInt(source.Amount)
+		shareAmt := math.NewUint(source.Amount.Uint64())
 		if extra.IsPositive() {
 			// add extra tokens based on the share of the delegator
-			shareAmt = math.LegacyNewDecFromInt(source.Amount).Quo(math.LegacyNewDecFromInt(snapshot.Total)).Mul(math.LegacyNewDecFromInt(amt))
+			shareAmt = math.NewUint(source.Amount.Uint64()).Quo(math.NewUint(snapshot.Total.Uint64())).Mul(math.NewUint(amt.Uint64()))
 		}
-		_, err = k.stakingKeeper.Delegate(ctx, delAddr, shareAmt.TruncateInt(), tokenSrc, val, false)
+		_, err = k.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(int64(shareAmt.Uint64())), tokenSrc, val, false)
 		if err != nil {
 			return err
 		}
