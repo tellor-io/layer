@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	layer "github.com/tellor-io/layer/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -43,7 +42,6 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		vote, err := k.Votes.Get(ctx, msg.Id)
 		if err != nil {
 			if errors.Is(err, collections.ErrNotFound) {
-
 				return nil, err
 			}
 			if !vote.Executed {
@@ -81,7 +79,7 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 	burnDust := remainder.Quo(layertypes.PowerReduction)
 
 	if !burnDust.IsZero() {
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, burnDust))); err != nil {
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burnDust))); err != nil {
 			return nil, err
 		}
 		remainder = remainder.Mod(layertypes.PowerReduction)

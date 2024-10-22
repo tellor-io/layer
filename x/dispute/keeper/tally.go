@@ -40,6 +40,7 @@ func (k Keeper) GetTotalSupply(ctx context.Context) math.Int {
 }
 
 // The `Ratio` function calculates the percentage ratio of `part` to `total`, scaled by a factor of 4 for the total before calculation. The result is expressed as a percentage.
+// Ratio gets called on each sector of voters after votes have been summed e.g Ratio(totalUserTips, userVoteSum)
 func Ratio(total, part math.Int) math.Int {
 	if total.IsZero() {
 		return math.ZeroInt()
