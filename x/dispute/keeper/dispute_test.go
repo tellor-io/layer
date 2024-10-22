@@ -163,25 +163,25 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 	testCases := []struct {
 		name                    string
 		cat                     types.DisputeCategory
-		expectedSlashPercentage float64
+		expectedSlashPercentage math.Int
 		expectedJailTime        uint64
 	}{
 		{
 			name:                    "Warning",
 			cat:                     types.Warning,
-			expectedSlashPercentage: 0.01,
+			expectedSlashPercentage: math.NewInt(10000),
 			expectedJailTime:        0,
 		},
 		{
 			name:                    "Minor",
 			cat:                     types.Minor,
-			expectedSlashPercentage: 0.05,
+			expectedSlashPercentage: math.NewInt(50000),
 			expectedJailTime:        600,
 		},
 		{
 			name:                    "Major",
 			cat:                     types.Major,
-			expectedSlashPercentage: 1,
+			expectedSlashPercentage: math.NewInt(1000000),
 			expectedJailTime:        gomath.MaxInt64,
 		},
 		{
