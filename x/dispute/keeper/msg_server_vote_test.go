@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -23,6 +25,7 @@ func (s *KeeperTestSuite) TestVote() {
 		Reporter: addr.Bytes(),
 	}, nil)
 	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(1), nil)
+	s.reporterKeeper.On("GetDelegatorTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(100), nil).Once()
 
 	voteMsg := types.MsgVote{
 		Voter: addr.String(),
@@ -50,6 +53,11 @@ func (s *KeeperTestSuite) TestVote() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	s.Equal(keys[0].K2(), addr.Bytes())
-	s.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
+	s.Equal(vote.VoteResult, types.VoteResult_SUPPORT)
 	s.Equal(vote.Id, uint64(1))
+	voteCountsByGroup, err := s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, 1)
+	s.NoError(err)
+	fmt.Println(voteCountsByGroup)
 }
+
+//TODO: more tests
