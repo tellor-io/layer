@@ -36,39 +36,44 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 	}
 	k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, dispute.DisputeId, voteCounts))
 
+	// vote and dispute set, dispute status not resolved
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
-
 	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "can't execute, dispute not resolved")
 
+	// dispute time ended but vote result not
 	dispute.DisputeEndTime = k.ctx.BlockTime()
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "can't execute, dispute not resolved")
 
+	// vote aleady executed
 	vote.VoteResult = types.VoteResult_SUPPORT
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
 	k.Error(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId), "vote already executed")
 
+	// actually execute vote
 	vote.Executed = false
 	k.NoError(k.disputeKeeper.Votes.Set(k.ctx, dispute.DisputeId, vote))
-
 	k.ctx = k.ctx.WithBlockTime(k.ctx.BlockTime().Add(1))
 	k.bankKeeper.On("BurnCoins", k.ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin("loya", dispute.BurnAmount.QuoRaw(2)))).Return(nil)
 	k.NoError(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId))
 
+	// withdraw fee refund for feepayer1
 	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feepayer1.Bytes()), feePayers[0]))
 	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feepayer2.Bytes()), feePayers[1]))
 	msg := &types.MsgWithdrawFeeRefund{CallerAddress: sample.AccAddressBytes().String(), Id: dispute.DisputeId, PayerAddress: feepayer1.String()}
-	k.reporterKeeper.On("FeeRefund", k.ctx, dispute.HashId, math.NewInt(8000)).Return(nil)
-	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(8000)))).Return(nil)
-	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer1, math.NewInt(8000)).Return(nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, dispute.HashId, math.NewInt(7600)).Return(nil).Once()
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(7600)))).Return(nil).Once()
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer1, math.NewInt(8000)).Return(nil).Once()
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(8000)))).Return(nil).Once()
 	_, err := k.msgServer.WithdrawFeeRefund(k.ctx, msg)
 	k.NoError(err)
 
+	// wqithdraw fee refund for feepayer2
 	msg = &types.MsgWithdrawFeeRefund{CallerAddress: sample.AccAddressBytes().String(), Id: dispute.DisputeId, PayerAddress: feepayer2.String()}
-	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(2000)))).Return(nil)
-	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer2, math.NewInt(2000)).Return(nil)
-	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(2000)))).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1900)))).Return(nil).Once()
+	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer2, math.NewInt(2000)).Return(nil).Once()
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(2000)))).Return(nil).Once()
 	_, err = k.msgServer.WithdrawFeeRefund(k.ctx, msg)
 	k.NoError(err)
 }
