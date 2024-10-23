@@ -42,18 +42,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "vote"}},
 				},
 				{
-					RpcMethod:      "TallyVote",
-					Use:            "tally-vote [dispute-id]",
-					Short:          "Execute the TallyVote RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
-				},
-				{
-					RpcMethod:      "ExecuteDispute",
-					Use:            "execute-dispute [dispute-id]",
-					Short:          "Execute the ExecuteDispute RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
-				},
-				{
 					RpcMethod:      "WithdrawFeeRefund",
 					Use:            "withdraw-fee-refund [payer-address] [id]",
 					Short:          "Execute the WithdrawFeeRefund RPC method",
@@ -62,6 +50,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateTeam",
 					Skip:      true, // skipped because team gated
+				},
+				{
+					RpcMethod:      "ClaimReward",
+					Use:            "claim-reward [dispute_id]",
+					Short:          "Execute the ClaimReward RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
 			},
 		},
