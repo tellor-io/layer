@@ -338,7 +338,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
-	repStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
+	repStake, _ := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
 	fmt.Println("\nrepStake", repStake)
 	valStakeBeforePropose, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	s.NoError(err)
@@ -439,7 +439,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 	fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
-	//twoPercentBurn := fivePercentBurn.QuoRaw(2)
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
 		Creator:         disputer.String(),
 		Report:          &report,
@@ -506,7 +505,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 			fmt.Printf("Reporter address: %s, currentAddr: %s\r", repAddr.String(), votes[i].Voter)
 			s.Equal(err.Error(), "reward is zero")
 		}
-		//s.NoError(err)
 	}
 
 	votersBalanceAfter := map[string]sdk.Coin{
