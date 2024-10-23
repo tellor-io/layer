@@ -96,7 +96,6 @@ func (k Keeper) GetUserTotalTips(ctx context.Context, voter sdk.AccAddress, bloc
 }
 
 func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum) (math.Int, error) {
-
 	tips, err := k.GetUserTotalTips(ctx, voter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
@@ -226,7 +225,7 @@ func (k Keeper) SetTokenholderVote(ctx context.Context, id uint64, voter sdk.Acc
 	return tokenBalance, k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 }
 
-func (k Keeper) AddReporterVoteCount(ctx context.Context, id uint64, amount uint64, choice types.VoteEnum) error {
+func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum) error {
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
@@ -244,7 +243,7 @@ func (k Keeper) AddReporterVoteCount(ctx context.Context, id uint64, amount uint
 	return k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 }
 
-func (k Keeper) SubtractReporterVoteCount(ctx context.Context, id uint64, amount uint64, choice types.VoteEnum) error {
+func (k Keeper) SubtractReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum) error {
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
 		return err
