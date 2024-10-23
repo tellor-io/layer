@@ -3,10 +3,13 @@ package client
 import (
 	"bytes"
 	"context"
+	"strings"
 	"sync"
 	"time"
 
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) {
@@ -25,7 +28,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		}
 
 		go func(ctx context.Context, qd []byte, qm *oracletypes.QueryMeta) {
-			err := c.CyclelistMessages(ctx, querydata, qm)
+			err := c.GenerateAndBroadcastSpotPriceReport(ctx, querydata, qm)
 			if err != nil {
 				c.logger.Error("Generating CycleList message", "error", err)
 			}
@@ -53,5 +56,49 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 		localWG.Wait()
 
 		time.Sleep(4 * time.Minute)
+	}
+}
+
+func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	var localWG sync.WaitGroup
+	for {
+		res, err := c.OracleQueryClient.TippedQueries(ctx, &oracletypes.QueryTippedQueriesRequest{
+			Pagination: &query.PageRequest{
+				Offset: 0,
+			},
+		})
+		if err != nil {
+			c.logger.Error("Error querying for TippedQueries: ", err)
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+		if len(res.Queries) == 0 {
+			c.logger.Info("No tipped queries returned")
+			time.Sleep(200 * time.Millisecond)
+			continue
+		}
+		status, err := c.cosmosCtx.Client.Status(ctx)
+		if err != nil {
+			c.logger.Info("Error getting status from client: ", err)
+		}
+		height := uint64(status.SyncInfo.LatestBlockHeight)
+		for i := 0; i < len(res.Queries); i++ {
+			if height > res.Queries[i].Expiration || commitedIds[res.Queries[i].Id] || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
+				continue
+			}
+
+			localWG.Add(1)
+			go func(query *oracletypes.QueryMeta) {
+				defer localWG.Done()
+				err := c.GenerateAndBroadcastSpotPriceReport(ctx, query.GetQueryData(), query)
+				if err != nil {
+					c.logger.Error("Error generating report for tipped query: ", err)
+				}
+			}(res.Queries[i])
+		}
+
+		wg.Wait()
+
 	}
 }

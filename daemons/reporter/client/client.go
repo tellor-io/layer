@@ -177,6 +177,9 @@ func StartReporterDaemonTaskLoop(
 	wg.Add(1)
 	go client.MonitorTokenBridgeReports(ctx, &wg)
 
+	wg.Add(1)
+	go client.MonitorForTippedQueries(ctx, &wg)
+
 	wg.Wait()
 }
 
