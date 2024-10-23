@@ -208,7 +208,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, uint64(len(dels)))))
 
-	repTokens, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
+	repTokensBeforePropose, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
 	s.NoError(err)
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
@@ -264,7 +264,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		}
 
 	}
-	repTknBeforeExecuteVote := repTokens
+	valTokensBeforeExecuteVote, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
+	s.NoError(err)
 	disputerBalanceBeforeExecuteVote := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
@@ -283,12 +284,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	}
 	_, err = reporterServer.UnjailReporter(s.Setup.Ctx, req)
 	s.NoError(err)
-	repTokens, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
+	repTokensAfterExecuteVote, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
 	s.NoError(err)
-	fmt.Printf("\nrepTokens: %s\n", repTokens)
-	fmt.Printf("\nrepTknBeforeExecuteVote: %s\n", repTknBeforeExecuteVote)
-	s.True(repTokens.GT(repTknBeforeExecuteVote))
-	// // dispute fee returned so balance should be the same as before paying fee
+	s.True(repTokensBeforePropose.Equal(repTokensAfterExecuteVote))
+	valTokensAfterExecuteVote, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
+	s.NoError(err)
+	s.True(valTokensAfterExecuteVote.Tokens.GT(valTokensBeforeExecuteVote.Tokens))
 	disputerBalanceAfterExecuteVote := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	iter, err := s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
 	s.NoError(err)
@@ -302,9 +303,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
 		totalVoterPower = totalVoterPower.Add(v.VoterPower)
 	}
-	// reward, _ := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
-	// // add dispute fee returned minus burn amount plus the voter reward
-	// disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(reward)
 	expectedDisputerBalAfterExecute := disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount))
 	s.Equal(expectedDisputerBalAfterExecute, disputerBalanceAfterExecuteVote.Amount)
 	disputerVoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
@@ -369,10 +367,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	})
 	s.NoError(err)
 
-	repStakeAfterPropose, _ := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
-	// s.NoError(err)
-	fmt.Println("\nrepStakeAfterPropose", repStakeAfterPropose)
-
 	vote := []types.MsgVote{
 		{
 			Voter: repAddr.String(),
@@ -397,8 +391,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	s.NoError(err)
-	fmt.Println("val.Tokens", val.Tokens)
-	fmt.Println("bond", bond)
 	s.True(val.Tokens.Equal(bond))
 }
 
