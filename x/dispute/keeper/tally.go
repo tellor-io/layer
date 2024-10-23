@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -67,12 +66,10 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	}
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
-		fmt.Println("Exiting place 1")
 		return err
 	}
 	info, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
-		fmt.Println("Exiting place 2")
 		return err
 	}
 
@@ -157,7 +154,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledSupport = scaledSupport.Quo(numGroups)
 		scaledAgainst = scaledAgainst.Quo(numGroups)
 		scaledInvalid = scaledInvalid.Quo(numGroups)
-		fmt.Println("quorum reached")
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
 		dispute.PendingExecution = true
@@ -190,7 +186,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
 	if vote.VoteEnd.Before(sdkctx.BlockTime()) {
-		fmt.Println("quorum not reached")
 		dispute.DisputeStatus = types.Unresolved
 		// check if rounds have been exhausted or dispute has expired in order to disperse funds
 		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {

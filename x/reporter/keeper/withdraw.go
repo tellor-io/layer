@@ -161,10 +161,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	leftover := math.NewUint(amt.Uint64() * 1e6)
 	for i, del := range report.TokenOrigins {
 		truncDelAmount := math.NewUint(del.Amount.Uint64()).QuoUint64(layertypes.PowerReduction.Uint64()).MulUint64(layertypes.PowerReduction.Uint64())
-		fmt.Printf("\npower: %d, height: %d, amt: %v, totalTokens: %v, delAmount: %v\r", power, height, amt, totalTokens, truncDelAmount)
-		// delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
 		delegatorShare := truncDelAmount.MulUint64(amt.Uint64()).MulUint64(1e6).Quo(math.NewUint(totalTokens.Uint64()))
-		fmt.Printf("\nLeftover: %v, delShare: %v\r", leftover, delegatorShare)
 		leftover = leftover.Sub(delegatorShare)
 
 		if i == len(report.TokenOrigins)-1 {

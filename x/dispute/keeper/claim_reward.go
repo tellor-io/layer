@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"errors"
-	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -15,7 +14,6 @@ import (
 
 // Pay fee from account
 func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) error {
-	fmt.Printf("ClaimReward\n")
 	// check if dispute exists
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {

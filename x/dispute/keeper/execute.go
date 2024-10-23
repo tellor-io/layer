@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -25,20 +24,17 @@ type VoterInfo struct {
 func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
-		fmt.Println("Exiting here in disputes get")
 		return err
 	}
 
 	vote, err := k.Votes.Get(ctx, id)
 	if err != nil {
-		fmt.Println("exiting here in votes get")
 		return err
 	}
 
 	if vote.VoteResult != types.VoteResult_NO_TALLY && dispute.DisputeEndTime.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		dispute.DisputeStatus = types.Resolved
 		if err := k.Disputes.Set(ctx, id, dispute); err != nil {
-			fmt.Println("Exiting here in dispute set")
 			return err
 		}
 	}
@@ -57,7 +53,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	voterReward := halfBurnAmount
 	totalVoterPower, err := k.GetSumOfAllGroupVotesAllRounds(ctx, id)
 	if err != nil {
-		fmt.Println("Exiting here in get sum")
 		return err
 	}
 	if totalVoterPower.IsZero() {
