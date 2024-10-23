@@ -160,10 +160,11 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	disputeTokens := make([]*types.TokenOriginInfo, 0)
 	leftover := math.NewUint(amt.Uint64() * 1e6)
 	for i, del := range report.TokenOrigins {
-
+		truncDelAmount := math.NewUint(del.Amount.Uint64()).QuoUint64(layertypes.PowerReduction.Uint64()).MulUint64(layertypes.PowerReduction.Uint64())
+		fmt.Printf("power: %d, height: %d, amt: %v, totalTokens: %v, delAmount: %v\r", power, height, amt, totalTokens, truncDelAmount)
 		// delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
-		delegatorShare := math.NewUint(del.Amount.Uint64()).Mul(math.NewUint(amt.Uint64())).MulUint64(1e6).Quo(math.NewUint(totalTokens.Uint64()))
-
+		delegatorShare := truncDelAmount.MulUint64(amt.Uint64()).MulUint64(1e6).Quo(math.NewUint(totalTokens.Uint64()))
+		fmt.Printf("Leftover: %v, delShare: %v\r", leftover, delegatorShare)
 		leftover = leftover.Sub(delegatorShare)
 
 		if i == len(report.TokenOrigins)-1 {
@@ -260,7 +261,7 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 	if err != nil {
 		return math.Uint{}, err
 	}
-	err = k.tokensToDispute(ctx, stakingtypes.NotBondedPoolName, math.NewIntFromUint64(removeAmt.QuoUint64(1e6).Uint64()))
+	err = k.tokensToDispute(ctx, stakingtypes.NotBondedPoolName, (math.NewInt(int64(removeAmt.Uint64())).QuoRaw(1e6)))
 	if err != nil {
 		return math.Uint{}, err
 	}
@@ -323,7 +324,6 @@ func (k Keeper) MoveTokensFromValidator(ctx context.Context, validator stakingty
 }
 
 func (k Keeper) tokensToDispute(ctx context.Context, fromPool string, amount math.Int) error {
-	fmt.Println(amount.String())
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, disputetypes.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amount)))
 }
 
