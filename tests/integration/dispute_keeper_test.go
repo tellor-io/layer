@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -395,139 +396,155 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.True(val.Tokens.Equal(bond))
 }
 
-// func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
-// 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-// 	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 
-// 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
-// 	disputer := s.newKeysWithTokens()
+	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
+	disputer := s.newKeysWithTokens()
 
-// 	delegators := repAccs
-// 	valAddr := valAddrs[0]
-// 	repAddr := sdk.AccAddress(valAddr)
-// 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-// 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
+	delegators := repAccs
+	valAddr := valAddrs[0]
+	repAddr := sdk.AccAddress(valAddr)
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
-// 	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
-// 	s.NoError(err)
-// 	disputerBefore, err := s.Setup.Stakingkeeper.GetAllDelegatorDelegations(s.Setup.Ctx, disputer)
-// 	s.NoError(err)
-// 	s.True(len(disputerBefore) == 0)
+	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
+	s.NoError(err)
+	disputerBefore, err := s.Setup.Stakingkeeper.GetAllDelegatorDelegations(s.Setup.Ctx, disputer)
+	s.NoError(err)
+	s.True(len(disputerBefore) == 0)
 
-// 	// mint tokens to voters
-// 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
-// 	oracleServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-// 	msg := oracletypes.MsgTip{
-// 		Tipper:    disputer.String(),
-// 		QueryData: ethQueryData,
-// 		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000)),
-// 	}
-// 	_, err = oracleServer.Tip(s.Setup.Ctx, &msg)
-// 	s.Nil(err)
+	// mint tokens to voters
+	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
+	oracleServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msg := oracletypes.MsgTip{
+		Tipper:    disputer.String(),
+		QueryData: ethQueryData,
+		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000)),
+	}
+	_, err = oracleServer.Tip(s.Setup.Ctx, &msg)
+	s.Nil(err)
 
-// 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
-// 	report := oracletypes.MicroReport{
-// 		Reporter:  repAddr.String(),
-// 		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
-// 		QueryId:   qId,
-// 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-// 		Timestamp: time.Unix(1696516597, 0),
-// 	}
-// 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
-// 	s.NoError(err)
-// 	fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
-// 	twoPercentBurn := fivePercentBurn.QuoRaw(2)
-// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-// 		Creator:         disputer.String(),
-// 		Report:          &report,
-// 		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-// 		DisputeCategory: types.Warning,
-// 	})
-// 	s.NoError(err)
-// 	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	report := oracletypes.MicroReport{
+		Reporter:  repAddr.String(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
+		QueryId:   qId,
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: time.Unix(1696516597, 0),
+	}
+	fmt.Println("Disputed report power: ", report.Power)
+	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
+	s.NoError(err)
+	fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
+	//twoPercentBurn := fivePercentBurn.QuoRaw(2)
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
+		Creator:         disputer.String(),
+		Report:          &report,
+		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory: types.Warning,
+	})
+	s.NoError(err)
+	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
 
-// 	votersBalanceBefore := map[string]sdk.Coin{
-// 		repAddr.String():       s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, repAddr, s.Setup.Denom),
-// 		disputer.String():      s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom),
-// 		delegators[1].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[1], s.Setup.Denom),
-// 		delegators[2].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[2], s.Setup.Denom),
-// 	}
-// 	votes := []types.MsgVote{
-// 		{
-// 			Voter: repAddr.String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_SUPPORT,
-// 		},
-// 		{
-// 			Voter: disputer.String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_SUPPORT,
-// 		},
-// 		{
-// 			Voter: delegators[1].String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_SUPPORT,
-// 		},
-// 		{
-// 			Voter: delegators[2].String(),
-// 			Id:    1,
-// 			Vote:  types.VoteEnum_VOTE_SUPPORT,
-// 		},
-// 	}
-// 	for i := range votes {
-// 		_, err = msgServer.Vote(s.Setup.Ctx, &votes[i])
-// 		if err != nil {
-// 			s.Error(err, "voter power is zero")
-// 		}
-// 	}
-// 	fmt.Println("rep", repAddr.String())
-// 	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
-// 	s.NoError(err)
-// 	// execute vote
-// 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
+	votersBalanceBefore := map[string]sdk.Coin{
+		repAddr.String():       s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, repAddr, s.Setup.Denom),
+		disputer.String():      s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom),
+		delegators[1].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[1], s.Setup.Denom),
+		delegators[2].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[2], s.Setup.Denom),
+	}
 
-// 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
-// 	s.NoError(err)
+	votes := []types.MsgVote{
+		{
+			Voter: repAddr.String(),
+			Id:    1,
+			Vote:  types.VoteEnum_VOTE_SUPPORT,
+		},
+		{
+			Voter: disputer.String(),
+			Id:    1,
+			Vote:  types.VoteEnum_VOTE_SUPPORT,
+		},
+		{
+			Voter: delegators[1].String(),
+			Id:    1,
+			Vote:  types.VoteEnum_VOTE_SUPPORT,
+		},
+		{
+			Voter: delegators[2].String(),
+			Id:    1,
+			Vote:  types.VoteEnum_VOTE_SUPPORT,
+		},
+	}
+	for i := range votes {
+		_, err = msgServer.Vote(s.Setup.Ctx, &votes[i])
+		if err != nil {
+			s.Error(err, "voter power is zero")
+		}
+	}
+	fmt.Println("rep", repAddr.String())
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
+	s.Equal(err.Error(), "vote already tallied")
+	// execute vote
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	s.NoError(err)
 
-// 	reporterAfter, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
-// 	s.NoError(err)
-// 	// should still be jailed
-// 	s.True(reporterAfter.Jailed)
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
+	s.NoError(err)
 
-// 	votersBalanceAfter := map[string]sdk.Coin{
-// 		repAddr.String():       s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, repAddr, s.Setup.Denom),
-// 		disputer.String():      s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom),
-// 		delegators[1].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[1], s.Setup.Denom),
-// 		delegators[2].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[2], s.Setup.Denom),
-// 	}
+	reporterAfter, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr)
+	s.NoError(err)
+	// should still be jailed
+	s.True(reporterAfter.Jailed)
 
-// 	iter, err := s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
-// 	s.NoError(err)
-// 	keys, err := iter.PrimaryKeys()
-// 	s.NoError(err)
-// 	voters := make([]keeper.VoterInfo, len(keys))
-// 	totalVoterPower := math.ZeroInt()
-// 	for i := range keys {
-// 		v, err := s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, keys[i])
-// 		s.NoError(err)
-// 		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
-// 		totalVoterPower = totalVoterPower.Add(v.VoterPower)
-// 	}
-// 	votersReward, _ := s.Setup.Disputekeeper.CalculateVoterShare(s.Setup.Ctx, voters, twoPercentBurn, totalVoterPower)
-// 	for i, v := range voters {
-// 		voterBal := votersBalanceBefore[v.Voter.String()].AddAmount(votersReward[i].Share)
-// 		if bytes.Equal(disputer, votersReward[i].Voter) {
-// 			// disputer gets the dispute fee they paid minus the 5% burn for a one rounder dispute
-// 			voterBal = voterBal.AddAmount(disputeFee.Sub(fivePercentBurn))
-// 		}
-// 		s.Equal(voterBal, votersBalanceAfter[v.Voter.String()])
-// 	}
-// 	disputerDelgation, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, disputer)
-// 	s.NoError(err)
-// 	fmt.Println(disputerDelgation)
-// 	s.True(disputerDelgation.Equal(math.NewInt(20_000_000)))
-// }
+	for i := range votes {
+		_, err = msgServer.ClaimReward(s.Setup.Ctx, &types.MsgClaimReward{CallerAddress: votes[i].Voter, DisputeId: 1})
+		if err != nil {
+			fmt.Printf("Reporter address: %s, currentAddr: %s\r", repAddr.String(), votes[i].Voter)
+			s.Equal(err.Error(), "reward is zero")
+		}
+		//s.NoError(err)
+	}
+
+	votersBalanceAfter := map[string]sdk.Coin{
+		repAddr.String():       s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, repAddr, s.Setup.Denom),
+		disputer.String():      s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom),
+		delegators[1].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[1], s.Setup.Denom),
+		delegators[2].String(): s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delegators[2], s.Setup.Denom),
+	}
+
+	iter, err := s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
+	s.NoError(err)
+	keys, err := iter.PrimaryKeys()
+	fmt.Println("Length of voters returned: ", len(keys))
+	s.NoError(err)
+	voters := make([]keeper.VoterInfo, len(keys))
+	totalVoterPower := math.ZeroInt()
+	for i := range keys {
+		v, err := s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, keys[i])
+		s.NoError(err)
+		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
+		totalVoterPower = totalVoterPower.Add(v.VoterPower)
+	}
+
+	for _, v := range voters {
+		votersReward, _ := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, v.Voter, 1)
+		voterBal := votersBalanceBefore[v.Voter.String()].AddAmount(votersReward)
+		if bytes.Equal(disputer, v.Voter) {
+			// disputer gets the dispute fee they paid minus the 5% burn for a one rounder dispute
+			voterBal = voterBal.AddAmount(disputeFee.Sub(fivePercentBurn))
+		}
+		fmt.Printf("Reporter: %s, VoterBalanceBefore: %v, VotersReward: %v, VotersBalanceAfter: %v, votersBal: %v\r", v.Voter.String(), votersBalanceBefore[v.Voter.String()].Amount.Uint64(), votersReward.Uint64(), votersBalanceAfter[v.Voter.String()].Amount.Uint64(), voterBal.Amount.Uint64())
+		s.Equal(voterBal, votersBalanceAfter[v.Voter.String()])
+	}
+	disputerDelgation, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, disputer)
+	s.NoError(err)
+	fmt.Println(disputerDelgation)
+	s.True(disputerDelgation.Equal(math.NewInt(20_000_000)))
+}
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
