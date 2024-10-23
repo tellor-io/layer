@@ -136,7 +136,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	}
 	reporter := sdk.AccAddress(delegation.Reporter)
 	voterIsReporter := bytes.Equal(voter, reporter)
-	reporterHasVoted, err := k.ReportersGroup.Has(ctx, collections.Join(id, reporter.Bytes()))
+	reporterHasVoted, err := k.Voter.Has(ctx, collections.Join(id, reporter.Bytes()))
 	if err != nil {
 		return math.Int{}, err
 	}

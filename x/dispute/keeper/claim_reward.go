@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -14,6 +15,7 @@ import (
 
 // Pay fee from account
 func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) error {
+	fmt.Printf("ClaimReward\n")
 	// check if dispute exists
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
@@ -59,7 +61,6 @@ func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) err
 }
 
 func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) (math.Int, error) {
-
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err
@@ -71,32 +72,14 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	if !disputeVote.Executed {
 		return math.Int{}, errors.New("vote not executed")
 	}
-	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
-	if err != nil {
-		return math.Int{}, err
-	}
+
 	addrReporterPower := math.ZeroInt()
 	addrTokenholderPower := math.ZeroInt()
 	addrUserPower := math.ZeroInt()
-	voterInfo, err := k.Voter.Get(ctx, collections.Join(id, addr.Bytes()))
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		// not found, but could exist in past dispute rounds
-	} else {
-		// found in current dispute
-		addrReporterPower = voterInfo.ReporterPower
-		addrTokenholderPower = voterInfo.TokenholderPower
-		addrUserPower, err = k.GetUserTotalTips(ctx, addr, dispute.BlockNumber)
-		if err != nil {
-			return math.Int{}, err
-		}
-	}
 
-	globalReporterPower := math.NewIntFromUint64(voteCounts.Reporters.Support).Add(math.NewIntFromUint64(voteCounts.Reporters.Against)).Add(math.NewIntFromUint64(voteCounts.Reporters.Invalid))
-	globalUserPower := math.NewIntFromUint64(voteCounts.Users.Support).Add(math.NewIntFromUint64(voteCounts.Users.Against)).Add(math.NewIntFromUint64(voteCounts.Users.Invalid))
-	globalTokenholderPower := math.NewIntFromUint64(voteCounts.Tokenholders.Support).Add(math.NewIntFromUint64(voteCounts.Tokenholders.Against)).Add(math.NewIntFromUint64(voteCounts.Tokenholders.Invalid))
+	globalReporterPower := math.ZeroInt()
+	globalUserPower := math.ZeroInt()
+	globalTokenholderPower := math.ZeroInt()
 
 	for _, pastId := range dispute.PrevDisputeIds {
 		pastVoterInfo, err := k.Voter.Get(ctx, collections.Join(pastId, addr.Bytes()))
@@ -124,14 +107,29 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 			Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Invalid))
 	}
 
-	// 	- dispRewardByAddrONE_ROUND = totalReward * (userTokens*1e6/totalTokensVoted + usrRep*1e6/totalRepVoted + usrTips*1e6/totalTipsVoted) * 1/3e6
-	// - dispRewards_TWO_ROUNDS = totalReward * [ (userTokens_r1 + userTokens_r2)*1e6 / (totalVoted_r1 + totalVoted_r2)*1e6 + / ... ) * 1/3e6
+	totalGroups := int64(3)
+	if globalReporterPower.IsZero() {
+		globalReporterPower = math.NewInt(1)
+		totalGroups = totalGroups - 1
+	}
+	if globalUserPower.IsZero() {
+		globalUserPower = math.NewInt(1)
+		totalGroups = totalGroups - 1
+	}
+	if globalTokenholderPower.IsZero() {
+		globalTokenholderPower = math.NewInt(1)
+		totalGroups = totalGroups - 1
+	}
+	if totalGroups == 0 {
+		return math.Int{}, errors.New("no votes found")
+	}
+
+	// normalize powers
 	userPower := addrUserPower.Mul(layer.PowerReduction).Quo(globalUserPower)
 	reporterPower := addrReporterPower.Mul(layer.PowerReduction).Quo(globalReporterPower)
 	tokenholderPower := addrTokenholderPower.Mul(layer.PowerReduction).Quo(globalTokenholderPower)
 	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
-
-	rewardAcc := totalAccPower.Mul(dispute.VoterReward).Quo(math.NewInt(3).Mul(layer.PowerReduction))
+	rewardAcc := totalAccPower.Mul(dispute.VoterReward).Quo(math.NewInt(totalGroups).Mul(layer.PowerReduction))
 
 	return rewardAcc, nil
 }

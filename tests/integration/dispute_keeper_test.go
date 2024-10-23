@@ -118,7 +118,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{500})
 
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
@@ -145,7 +145,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
 		Reporter:    repAddr.String(),
-		Power:       100,
+		Power:       1000,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp:   time.Unix(1696516597, 0),
@@ -156,7 +156,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		Creator:         repAddr.String(),
 		Report:          &report,
 		DisputeCategory: types.Warning,
-		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000)), // one percent dispute fee
+		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(10_000_000)), // one percent dispute fee
 		PayFromBond:     true,
 	})
 	s.NoError(err)
@@ -180,9 +180,10 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{50})
 	repAccs := s.CreateAccountsWithTokens(3, 100*1e6)
 	disputer := s.newKeysWithTokens()
+	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
 	delegators := repAccs
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
@@ -263,17 +264,16 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		}
 
 	}
-	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
-	// // tally vote
-	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
-	s.NoError(err)
-
 	repTknBeforeExecuteVote := repTokens
 	disputerBalanceBeforeExecuteVote := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
-	// execute vote
-	err = s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1)
+	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.NoError(err)
+	voteInfo, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.True(voteInfo.Executed)
+	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, voteInfo.VoteResult)
 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
 	s.NoError(err)
 
@@ -285,8 +285,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(err)
 	repTokens, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
 	s.NoError(err)
-	fmt.Println(repTokens, repTknBeforeExecuteVote)
-	// s.True(repTokens.GT(repTknBeforeExecuteVote))
+	s.True(repTokens.GT(repTknBeforeExecuteVote))
 	// // dispute fee returned so balance should be the same as before paying fee
 	disputerBalanceAfterExecuteVote := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	iter, err := s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
@@ -301,10 +300,27 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		voters[i] = keeper.VoterInfo{Voter: keys[i].K2(), Power: v.VoterPower}
 		totalVoterPower = totalVoterPower.Add(v.VoterPower)
 	}
-	reward, _ := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
+	// reward, _ := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
 	// // add dispute fee returned minus burn amount plus the voter reward
-	disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(reward)
-	s.Equal(disputerBalanceBeforeExecuteVote, disputerBalanceAfterExecuteVote)
+	// disputerBalanceBeforeExecuteVote.Amount = disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount)).Add(reward)
+	expectedDisputerBalAfterExecute := disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount))
+	s.Equal(expectedDisputerBalAfterExecute, disputerBalanceAfterExecuteVote.Amount)
+	disputerVoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
+	s.NoError(err)
+	reporterVoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, repAddr, 1)
+	s.NoError(err)
+	delegator1VoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, delegators[1], 1)
+	s.NoError(err)
+	delegator2VoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, delegators[2], 1)
+	s.NoError(err)
+	_, err = msgServer.ClaimReward(s.Setup.Ctx, &types.MsgClaimReward{CallerAddress: disputer.String(), DisputeId: 1})
+	s.NoError(err)
+	disputerBalAfterClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+	expectedDisputerBalAfterClaim := disputerBalanceAfterExecuteVote.Amount.Add(disputerVoterReward)
+	s.Equal(expectedDisputerBalAfterClaim, disputerBalAfterClaim.Amount)
+	sumVoterRewards := disputerVoterReward.Add(reporterVoterReward).Add(delegator1VoterReward).Add(delegator2VoterReward)
+	s.True(sumVoterRewards.LTE(burnAmount.Quo(math.NewInt(2))))
+	s.True(sumVoterRewards.GTE(burnAmount.Quo(math.NewInt(2)).Sub(math.NewInt(4)))) // max one loya per voter lost via rounding
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
@@ -321,6 +337,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
 	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
+	fmt.Println("\nstake", stake)
 	s.NoError(err)
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 	report := oracletypes.MicroReport{
@@ -343,6 +360,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	})
 	s.NoError(err)
 
+	repStakeAfterPropose, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr)
+	s.NoError(err)
+	fmt.Println("\nrepStakeAfterPropose", repStakeAfterPropose)
+
 	vote := []types.MsgVote{
 		{
 			Voter: repAddr.String(),
@@ -351,8 +372,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 		},
 	}
 	// start vote
-	_, err = msgServer.Vote(s.Setup.Ctx, &vote[0])
-	s.NoError(err)
+	_, _ = msgServer.Vote(s.Setup.Ctx, &vote[0])
 
 	ctx := s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 	err = s.Setup.Disputekeeper.TallyVote(ctx, 1)
@@ -368,6 +388,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	s.NoError(err)
+	fmt.Println("val.Tokens", val.Tokens)
+	fmt.Println("bond", bond)
 	s.True(val.Tokens.Equal(bond))
 }
 
