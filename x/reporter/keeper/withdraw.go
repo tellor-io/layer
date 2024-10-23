@@ -161,10 +161,10 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	leftover := math.NewUint(amt.Uint64() * 1e6)
 	for i, del := range report.TokenOrigins {
 		truncDelAmount := math.NewUint(del.Amount.Uint64()).QuoUint64(layertypes.PowerReduction.Uint64()).MulUint64(layertypes.PowerReduction.Uint64())
-		fmt.Printf("power: %d, height: %d, amt: %v, totalTokens: %v, delAmount: %v\r", power, height, amt, totalTokens, truncDelAmount)
+		fmt.Printf("\npower: %d, height: %d, amt: %v, totalTokens: %v, delAmount: %v\r", power, height, amt, totalTokens, truncDelAmount)
 		// delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
 		delegatorShare := truncDelAmount.MulUint64(amt.Uint64()).MulUint64(1e6).Quo(math.NewUint(totalTokens.Uint64()))
-		fmt.Printf("Leftover: %v, delShare: %v\r", leftover, delegatorShare)
+		fmt.Printf("\nLeftover: %v, delShare: %v\r", leftover, delegatorShare)
 		leftover = leftover.Sub(delegatorShare)
 
 		if i == len(report.TokenOrigins)-1 {
@@ -179,14 +179,16 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			return err
 		}
 		storedAmount := delegatorShare.Sub(math.NewUint(remaining.Uint64()))
+		storedAmountFixed6 := storedAmount.Quo(math.NewUint(1e6))
 		if !storedAmount.IsZero() {
 			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
 				DelegatorAddress: del.DelegatorAddress,
 				ValidatorAddress: del.ValidatorAddress,
-				Amount:           math.NewIntFromUint64(storedAmount.Uint64()),
+				Amount:           math.NewIntFromUint64(storedAmountFixed6.Uint64()),
 			})
 		}
 
+		remainingFixed6 := remaining.Quo(math.NewUint(1e6))
 		if !remaining.IsZero() {
 			dstVAl, err := k.getDstValidator(ctx, delAddr, valAddr)
 			if err != nil {
@@ -199,7 +201,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
 				DelegatorAddress: del.DelegatorAddress,
 				ValidatorAddress: dstVAl,
-				Amount:           math.NewIntFromUint64(remaining.Uint64()),
+				Amount:           math.NewIntFromUint64(remainingFixed6.Uint64()),
 			})
 		}
 	}
