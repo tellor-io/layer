@@ -110,15 +110,15 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	totalGroups := int64(3)
 	if globalReporterPower.IsZero() {
 		globalReporterPower = math.NewInt(1)
-		totalGroups = totalGroups - 1
+		totalGroups--
 	}
 	if globalUserPower.IsZero() {
 		globalUserPower = math.NewInt(1)
-		totalGroups = totalGroups - 1
+		totalGroups--
 	}
 	if globalTokenholderPower.IsZero() {
 		globalTokenholderPower = math.NewInt(1)
-		totalGroups = totalGroups - 1
+		totalGroups--
 	}
 	if totalGroups == 0 {
 		return math.Int{}, errors.New("no votes found")
