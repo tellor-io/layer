@@ -16,7 +16,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err != nil {
 		panic(err)
 	}
-	err = k.Dust.Set(ctx, math.LegacyZeroDec())
+	err = k.Dust.Set(ctx, math.ZeroInt())
 	if err != nil {
 		panic(err)
 	}

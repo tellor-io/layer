@@ -154,13 +154,13 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	}
 	reporterAddr := sdk.MustAccAddressFromBech32(report.Reporter)
 
-	slashFactor, jailDuration, err := GetSlashPercentageAndJailDuration(category)
+	slashPercentageFixed6, jailDuration, err := GetSlashPercentageAndJailDuration(category)
 	if err != nil {
 		return err
 	}
-	amount := math.NewInt(int64(report.Power)).Mul(layertypes.PowerReduction)
-	slashAmount := math.LegacyNewDecFromInt(amount).Mul(slashFactor)
-	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmount.TruncateInt(), hashId)
+	reportPowerFixed6 := math.NewInt(int64(report.Power)).Mul(layertypes.PowerReduction)
+	slashAmountFixed6 := reportPowerFixed6.Mul(slashPercentageFixed6).Quo(layertypes.PowerReduction)
+	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, hashId)
 	if err != nil {
 		return err
 	}
@@ -175,17 +175,17 @@ func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDu
 	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration)
 }
 
-// Get percentage of slash amount based on category
-func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.LegacyDec, uint64, error) {
+// Get percentage of slash amount based on category, returned as fixed6
+func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.Int, uint64, error) {
 	switch category {
 	case types.Warning:
-		return math.LegacyNewDecWithPrec(1, 2), 0, nil // 1%
+		return math.NewInt(layertypes.PowerReduction.Int64()).QuoRaw(100), 0, nil // 1%
 	case types.Minor:
-		return math.LegacyNewDecWithPrec(5, 2), 600, nil // 5%
+		return math.NewInt(layertypes.PowerReduction.Int64()).QuoRaw(20), 600, nil // 5%
 	case types.Major:
-		return math.LegacyNewDecWithPrec(1, 0), gomath.MaxInt64, nil // 100%
+		return layertypes.PowerReduction, gomath.MaxInt64, nil // 100%
 	default:
-		return math.LegacyDec{}, 0, types.ErrInvalidDisputeCategory
+		return math.Int{}, 0, types.ErrInvalidDisputeCategory
 	}
 }
 
@@ -272,6 +272,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	return k.SetStartVote(ctx, dispute.DisputeId) // starting voting immediately
 }
 
+// creates a snapshot of total reporter power and total tips
 func (k Keeper) SetBlockInfo(ctx context.Context, hashId []byte) error {
 	tp, err := k.reporterKeeper.TotalReporterPower(ctx)
 	if err != nil {
@@ -296,9 +297,11 @@ func (k Keeper) CloseDispute(ctx context.Context, id uint64) error {
 		return err
 	}
 	dispute.Open = false
+	dispute.PendingExecution = false
 	return k.Disputes.Set(ctx, id, dispute)
 }
 
+// gets all open disputes
 func (k Keeper) GetOpenDisputes(ctx context.Context) ([]uint64, error) {
 	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
