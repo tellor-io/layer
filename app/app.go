@@ -641,9 +641,6 @@ func New(
 			// Start server for handling gRPC messages from daemons.
 			go app.Server.Start()
 
-			configs.WriteDefaultPricefeedExchangeToml(homePath)
-			configs.WriteDefaultMarketParamsToml(homePath)
-
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
