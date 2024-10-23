@@ -1802,16 +1802,27 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of GetEvmValidators items.
 	GetEvmValidators(ctx context.Context, in *QueryGetEvmValidatorsRequest, opts ...grpc.CallOption) (*QueryGetEvmValidatorsResponse, error)
+	// Queries the latest validator checkpoint
 	GetValidatorCheckpoint(ctx context.Context, in *QueryGetValidatorCheckpointRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointResponse, error)
+	// Queries the validator checkpoint params for a given timestamp
 	GetValidatorCheckpointParams(ctx context.Context, in *QueryGetValidatorCheckpointParamsRequest, opts ...grpc.CallOption) (*QueryGetValidatorCheckpointParamsResponse, error)
+	// Queries the validator timestamp by index
 	GetValidatorTimestampByIndex(ctx context.Context, in *QueryGetValidatorTimestampByIndexRequest, opts ...grpc.CallOption) (*QueryGetValidatorTimestampByIndexResponse, error)
+	// Queries the validator set signatures for a given timestamp
 	GetValsetSigs(ctx context.Context, in *QueryGetValsetSigsRequest, opts ...grpc.CallOption) (*QueryGetValsetSigsResponse, error)
+	// Queries the evm address by validator address
 	GetEvmAddressByValidatorAddress(ctx context.Context, in *QueryGetEvmAddressByValidatorAddressRequest, opts ...grpc.CallOption) (*QueryGetEvmAddressByValidatorAddressResponse, error)
+	// Queries the validator set by timestamp
 	GetValsetByTimestamp(ctx context.Context, in *QueryGetValsetByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValsetByTimestampResponse, error)
+	// Queries a list of snapshots by report query id and timestamp
 	GetSnapshotsByReport(ctx context.Context, in *QueryGetSnapshotsByReportRequest, opts ...grpc.CallOption) (*QueryGetSnapshotsByReportResponse, error)
+	// Queries attestation data by snapshot
 	GetAttestationDataBySnapshot(ctx context.Context, in *QueryGetAttestationDataBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationDataBySnapshotResponse, error)
+	// Queries the set of attestations by snapshot
 	GetAttestationsBySnapshot(ctx context.Context, in *QueryGetAttestationsBySnapshotRequest, opts ...grpc.CallOption) (*QueryGetAttestationsBySnapshotResponse, error)
+	// Queries the validator set index by timestamp
 	GetValidatorSetIndexByTimestamp(ctx context.Context, in *QueryGetValidatorSetIndexByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValidatorSetIndexByTimestampResponse, error)
+	// Queries the current validator set timestamp
 	GetCurrentValidatorSetTimestamp(ctx context.Context, in *QueryGetCurrentValidatorSetTimestampRequest, opts ...grpc.CallOption) (*QueryGetCurrentValidatorSetTimestampResponse, error)
 }
 
@@ -1946,16 +1957,27 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of GetEvmValidators items.
 	GetEvmValidators(context.Context, *QueryGetEvmValidatorsRequest) (*QueryGetEvmValidatorsResponse, error)
+	// Queries the latest validator checkpoint
 	GetValidatorCheckpoint(context.Context, *QueryGetValidatorCheckpointRequest) (*QueryGetValidatorCheckpointResponse, error)
+	// Queries the validator checkpoint params for a given timestamp
 	GetValidatorCheckpointParams(context.Context, *QueryGetValidatorCheckpointParamsRequest) (*QueryGetValidatorCheckpointParamsResponse, error)
+	// Queries the validator timestamp by index
 	GetValidatorTimestampByIndex(context.Context, *QueryGetValidatorTimestampByIndexRequest) (*QueryGetValidatorTimestampByIndexResponse, error)
+	// Queries the validator set signatures for a given timestamp
 	GetValsetSigs(context.Context, *QueryGetValsetSigsRequest) (*QueryGetValsetSigsResponse, error)
+	// Queries the evm address by validator address
 	GetEvmAddressByValidatorAddress(context.Context, *QueryGetEvmAddressByValidatorAddressRequest) (*QueryGetEvmAddressByValidatorAddressResponse, error)
+	// Queries the validator set by timestamp
 	GetValsetByTimestamp(context.Context, *QueryGetValsetByTimestampRequest) (*QueryGetValsetByTimestampResponse, error)
+	// Queries a list of snapshots by report query id and timestamp
 	GetSnapshotsByReport(context.Context, *QueryGetSnapshotsByReportRequest) (*QueryGetSnapshotsByReportResponse, error)
+	// Queries attestation data by snapshot
 	GetAttestationDataBySnapshot(context.Context, *QueryGetAttestationDataBySnapshotRequest) (*QueryGetAttestationDataBySnapshotResponse, error)
+	// Queries the set of attestations by snapshot
 	GetAttestationsBySnapshot(context.Context, *QueryGetAttestationsBySnapshotRequest) (*QueryGetAttestationsBySnapshotResponse, error)
+	// Queries the validator set index by timestamp
 	GetValidatorSetIndexByTimestamp(context.Context, *QueryGetValidatorSetIndexByTimestampRequest) (*QueryGetValidatorSetIndexByTimestampResponse, error)
+	// Queries the current validator set timestamp
 	GetCurrentValidatorSetTimestamp(context.Context, *QueryGetCurrentValidatorSetTimestampRequest) (*QueryGetCurrentValidatorSetTimestampResponse, error)
 }
 

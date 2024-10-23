@@ -653,6 +653,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
+	fmt.Println("Dispute Id on rep[0] vote: ", dispute.DisputeId)
 	voteResponse, err := msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
@@ -663,6 +664,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
+
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
@@ -678,6 +680,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 
 	// vote from team
 	// fmt.Println(disputetypes.TeamAddress)
@@ -697,15 +701,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	totalReporterPower, err := s.Setup.Reporterkeeper.TotalReporterPower(s.Setup.Ctx)
 	require.NoError(err)
 	fmt.Println("total reporter power: ", totalReporterPower.Quo(sdk.DefaultPowerReduction))
-	reporter1Power, err := s.Setup.Disputekeeper.ReportersGroup.Get(s.Setup.Ctx, collections.Join(dispute.DisputeId, repsAccs[0].Bytes()))
-	require.NoError(err)
-	fmt.Println("reporter1 Power: ", reporter1Power)
-	reporter2Power, err := s.Setup.Disputekeeper.ReportersGroup.Get(s.Setup.Ctx, collections.Join(dispute.DisputeId, repsAccs[1].Bytes()))
-	require.NoError(err)
-	fmt.Println("reporter2 Power: ", reporter2Power)
-	reporter3Power, err := s.Setup.Disputekeeper.ReportersGroup.Get(s.Setup.Ctx, collections.Join(dispute.DisputeId, repsAccs[2].Bytes()))
-	require.NoError(err)
-	fmt.Println("reporter3 Power: ", reporter3Power)
 
 	totalFreeFloatingTokens := s.Setup.Disputekeeper.GetTotalSupply(s.Setup.Ctx)
 	fmt.Println("total Free Floating Tokens: ", totalFreeFloatingTokens)

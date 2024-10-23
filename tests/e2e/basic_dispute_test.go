@@ -228,6 +228,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	disputes, err := s.Setup.Disputekeeper.GetOpenDisputes(s.Setup.Ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
+	require.Equal(1, len(disputes))
 	// dispute is created correctly
 	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
 	require.NoError(err)
@@ -240,6 +241,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(feepayer.Amount, disputeFee.Amount)
 	require.Equal(feepayer.FromBond, false)
 	slashAmount := dispute.SlashAmount
+	firstDisputeVoteMsg := disputetypes.MsgVote{
+		Voter: reporterAccount.String(),
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
+	}
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -300,8 +306,10 @@ func (s *E2ETestSuite) TestDisputes() {
 		QueryData: cycleListQuery,
 		Value:     value,
 	}
+	secReportQueryId := utils.QueryIDFromData(cycleListQuery)
 	// send reveal message
 	revealResponse, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &reveal)
+	revealBlock = s.Setup.Ctx.BlockHeight()
 	require.NoError(err)
 	require.NotNil(revealResponse)
 	// advance block height to expire the query and aggregate report
@@ -357,6 +365,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	balBeforeDispute, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	fmt.Println("Balance before dispute: ", balBeforeDispute)
 	require.NoError(err)
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
 	disputeFee = sdk.NewCoin(s.Setup.Denom, fivePercent)
@@ -364,11 +373,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	report = oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
 		Power:       balBeforeDispute.Quo(sdk.DefaultPowerReduction).Uint64(),
-		QueryId:     queryId,
+		QueryId:     secReportQueryId,
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
 		BlockNumber: uint64(revealBlock),
 	}
+
+	fmt.Println("Report power: ", report.Power)
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
@@ -406,6 +417,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	// dispute is created correctly
 	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
 	dispute, err = s.Setup.Disputekeeper.GetDisputeByReporter(s.Setup.Ctx, report, disputetypes.Minor)
+	fmt.Printf("Dispute: %v,\r Report: %v\r", dispute, report)
 	require.NoError(err)
 	require.Equal(dispute.DisputeCategory, disputetypes.Minor)
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
@@ -415,13 +427,17 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(feepayer.Amount, disputeFee.Amount)
 	require.Equal(feepayer.FromBond, false)
 
+	firstVoteReponse, err := msgServerDispute.Vote(s.Setup.Ctx, &firstDisputeVoteMsg)
+	require.NoError(err)
+	require.NotNil(firstVoteReponse)
+
 	// create vote tx msg
 	msgVote := disputetypes.MsgVote{
 		Voter: reporterAccount.String(),
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
-	// send vote tx
+	// send vote tx for second dispute
 	voteResponse, err := msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)

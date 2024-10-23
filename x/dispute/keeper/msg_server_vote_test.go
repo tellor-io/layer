@@ -12,7 +12,8 @@ import (
 )
 
 func (s *KeeperTestSuite) TestVote() {
-	// Add dispute
+	// k := s.disputeKeeper
+	// Create dispute
 	addr := s.TestMsgProposeDisputeFromAccount()
 
 	// mock dependency modules
@@ -23,6 +24,7 @@ func (s *KeeperTestSuite) TestVote() {
 		Reporter: addr.Bytes(),
 	}, nil)
 	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(1), nil)
+	s.reporterKeeper.On("GetDelegatorTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(100), nil).Once()
 
 	voteMsg := types.MsgVote{
 		Voter: addr.String(),
@@ -50,6 +52,9 @@ func (s *KeeperTestSuite) TestVote() {
 	keys, err := iter.PrimaryKeys()
 	s.NoError(err)
 	s.Equal(keys[0].K2(), addr.Bytes())
-	s.Equal(vote.VoteResult, types.VoteResult_NO_TALLY)
+	// vote calls tally, enough ppl have voted to reach quorum
+	s.Equal(vote.VoteResult, types.VoteResult_SUPPORT)
 	s.Equal(vote.Id, uint64(1))
 }
+
+// TODO: more tests

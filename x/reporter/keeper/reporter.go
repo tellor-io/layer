@@ -116,7 +116,8 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 					return true
 				}
 				if val.IsBonded() {
-					delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
+					delTokensDec := val.TokensFromShares(delegation.Shares)
+					delTokens := delTokensDec.TruncateInt()
 					totalTokens = totalTokens.Add(delTokens)
 					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
 				}
