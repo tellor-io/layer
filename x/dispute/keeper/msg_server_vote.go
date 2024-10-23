@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -75,10 +76,11 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
 	}
+
 	// try to tally the vote
 	err = k.Keeper.TallyVote(ctx, msg.Id)
 	if err != nil {
-		if !errors.Is(err, types.ErrNoQuorumStillVoting) {
+		if !strings.EqualFold(err.Error(), types.ErrNoQuorumStillVoting.Error()) {
 			return nil, err
 		}
 	}

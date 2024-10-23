@@ -653,6 +653,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
+	fmt.Println("Dispute Id on rep[0] vote: ", dispute.DisputeId)
 	voteResponse, err := msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
@@ -663,6 +664,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
+
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
@@ -678,6 +680,8 @@ func (s *E2ETestSuite) TestDisputes2() {
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 
 	// vote from team
 	// fmt.Println(disputetypes.TeamAddress)

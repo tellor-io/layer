@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -116,7 +117,10 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 					return true
 				}
 				if val.IsBonded() {
-					delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
+					delTokensDec := val.TokensFromShares(delegation.Shares)
+					fmt.Println("Val tokens before trunc: ", delTokensDec.String())
+					delTokens := delTokensDec.TruncateInt()
+					fmt.Println("Val tokens after trunc: ", delTokens)
 					totalTokens = totalTokens.Add(delTokens)
 					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
 				}
@@ -134,6 +138,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 	if err != nil {
 		return math.Int{}, err
 	}
+	fmt.Println("Total tokens for Report: ", totalTokens)
 	return totalTokens, nil
 }
 
