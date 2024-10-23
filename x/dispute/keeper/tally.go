@@ -67,16 +67,23 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	}
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
+		fmt.Println("Exiting place 1")
 		return err
 	}
 	info, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
+		fmt.Println("Exiting place 2")
 		return err
 	}
 
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
-		return err
+		voteCounts = types.StakeholderVoteCounts{
+			Users:        types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			Reporters:    types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			Tokenholders: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			Team:         types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+		}
 	}
 
 	totalRatio := math.ZeroInt()
