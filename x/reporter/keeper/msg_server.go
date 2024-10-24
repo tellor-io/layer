@@ -55,6 +55,10 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if alreadyExists {
 		return nil, errors.New("address already exists")
 	}
+
+	if msg.CommissionRate.GT(math.NewUint(1e6)) {
+		return nil, errors.New("commission rate must be below 1000000 as that is a 100 percent commission rate")
+	}
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err
