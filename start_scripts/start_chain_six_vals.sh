@@ -102,10 +102,13 @@ done
 
 # Create a tx to give faucet loyas to have on hold to give to users
 echo "Adding genesis account for faucet..."
-./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000000000000000000loya --home ~/.layer/luke
+./layerd genesis add-genesis-account tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp 1000000000000loya --home ~/.layer/luke
 
 echo "Add team address to genesis..."
 ./layerd genesis add-team-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 --home ~/.layer/luke
+
+echo "add tokens to team account"
+./layerd genesis add-genesis-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 1000000000loya --home ~/.layer/luke
 
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     echo "Creating gentx for $name....."
@@ -178,6 +181,7 @@ sed -i '' "s/^persistent_peers = \"\"/persistent_peers = \"$DARTH_VADER_PEERS\"/
 sed -i '' "s/^persistent_peers = \"\"/persistent_peers = \"$PALPATINE_PEERS\"/g" ~/.layer/palpatine/config/config.toml
 sed -i '' "s/^persistent_peers = \"\"/persistent_peers = \"$DARTH_MAUL_PEERS\"/g" ~/.layer/darth_maul/config/config.toml
 
+echo "Luke Peers: $LUKE_PEERS"
 
 # Below is the start command we use when wanting to start the node with the reporter daemon turned on
 # ./layerd start --home $LAYERD_NODE_HOME --api.enable --api.swagger --panic-on-daemon-failure-enabled=false
