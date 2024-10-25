@@ -49,7 +49,9 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	// amount of dispute fee to return to fee payers or give to reporter
 	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
 	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
-	halfBurnAmount := dispute.BurnAmount.QuoRaw(2)
+	disputeBurnAmountDec := math.LegacyNewDecFromInt(dispute.BurnAmount)
+	halfBurnAmountDec := disputeBurnAmountDec.Quo(math.LegacyNewDec(2))
+	halfBurnAmount := halfBurnAmountDec.TruncateInt()
 	voterReward := halfBurnAmount
 	totalVoterPower, err := k.GetSumOfAllGroupVotesAllRounds(ctx, id)
 	if err != nil {
@@ -126,8 +128,14 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, feeMinusBurn math.Int, hashId []byte) (math.Int, error) {
 	fee := payerInfo.Amount
 	totalFees := totalFeesPaid
-	feeMinusBurnDec := feeMinusBurn
-	amtFixed12 := fee.Mul(feeMinusBurnDec).Mul(layertypes.PowerReduction).Quo(totalFees)
+
+	feeDec := math.LegacyNewDecFromInt(fee)
+	feeMinusBurnDec := math.LegacyNewDecFromInt(feeMinusBurn)
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	totalFeesDec := math.LegacyNewDecFromInt(totalFees)
+	amtFixed12Dec := feeDec.Mul(feeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeesDec)
+
+	amtFixed12 := amtFixed12Dec.TruncateInt()
 
 	remainder := amtFixed12.Mod(layertypes.PowerReduction)
 
@@ -145,9 +153,16 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	totalFees := totalFeesPaid
 
 	fee := payerInfo.Amount
-	amtFixed12 := fee.Mul(bond).Mul(layertypes.PowerReduction).Quo(totalFees)
+	feeDec := math.LegacyNewDecFromInt(fee)
+	bondDec := math.LegacyNewDecFromInt(bond)
+	totalFeesDec := math.LegacyNewDecFromInt(totalFees)
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	amtFixed12Dec := feeDec.Mul(bondDec).Mul(powerReductionDec).Quo(totalFeesDec)
 
-	amtFixed6 := amtFixed12.Quo(layertypes.PowerReduction)
+	amtFixed12 := amtFixed12Dec.TruncateInt()
+
+	amtFixed6Dec := amtFixed12Dec.Quo(powerReductionDec)
+	amtFixed6 := amtFixed6Dec.TruncateInt()
 	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6); err != nil {
 		return math.Int{}, err
 	}
