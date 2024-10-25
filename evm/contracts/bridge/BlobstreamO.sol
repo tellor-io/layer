@@ -45,6 +45,7 @@ contract BlobstreamO is ECDSA {
     uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
     address public deployer; /// Address that deployed the contract.
     bool public initialized; /// True if the contract is initialized.
+    bool public isTestnet = true; /// True if the contract is on testnet.
 
     /*Events*/
     event ValidatorSetUpdated(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
@@ -58,6 +59,7 @@ contract BlobstreamO is ECDSA {
     error NotConsensusValue();
     error NotDeployer();
     error NotGuardian();
+    error NotTestnet();
     error StaleValidatorSet();
     error SuppliedValidatorSetInvalid();
     error ValidatorSetNotStale();
@@ -116,6 +118,34 @@ contract BlobstreamO is ECDSA {
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
+    }
+
+    /// @notice This function is called by the guardian to reset the validator set
+    /// on testnet. Not to be used on mainnet.
+    /// @param _powerThreshold Amount of voting power needed to approve operations.
+    /// @param _validatorTimestamp The timestamp of the block where validator set is updated.
+    /// @param _validatorSetCheckpoint The hash of the validator set.
+    function guardianResetValidatorSetTestnet(
+        uint256 _powerThreshold,
+        uint256 _validatorTimestamp,
+        bytes32 _validatorSetCheckpoint
+    ) external {
+        if (msg.sender != guardian) {
+            revert NotGuardian();
+        }
+        if (!isTestnet) {
+            revert NotTestnet();
+        }
+        powerThreshold = _powerThreshold;
+        validatorTimestamp = _validatorTimestamp;
+        lastValidatorSetCheckpoint = _validatorSetCheckpoint;
+    }
+
+    function guardianThrowAwayReset() external {
+        if (msg.sender != guardian) {
+            revert NotGuardian();
+        }
+        isTestnet = false;
     }
 
     /// @notice This updates the validator set by checking that the validators
