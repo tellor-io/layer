@@ -260,7 +260,7 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 			u.Balance = uBalanceDec.TruncateInt()
 
 			uInitialBalanceDec := math.LegacyNewDecFromInt(u.InitialBalance)
-			uInitialBalanceDec = uInitialBalanceDec.Sub(tokensDec).Quo(powerReductionDec)
+			uInitialBalanceDec = uInitialBalanceDec.Sub(tokensDec.Quo(powerReductionDec))
 			u.InitialBalance = uInitialBalanceDec.TruncateInt()
 			ubd.Entries[i] = u
 			removeAmt = removeAmt.Add(tokens)
