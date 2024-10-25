@@ -642,3 +642,759 @@ func (s *E2ETestSuite) TestDisputes() {
 	// reporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
 	// require.NoError(err)
 }
+
+
+// Vicky the Validator just produces blocks, has 1000 trb staked
+// Rob the Reporter has 100 trb staked with Vicky so he can select himself as the reporter
+// Delwood the Delegator has 250 trb delegated to Rob
+// Rob stakes 10 more trb through a different reporter account to vicky and makes Rob2 a reporter
+// Rob creates a dispute for a good report from Rob2
+// The dispute settles to `No`, moving tokens from Delwood to Rob through proxy of Rob2 ?
+func (s *E2ETestSuite) TestDisputeSettlesToNo() {
+	// Setup msgServers
+	require := s.Require()
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	require.NotNil(msgServerOracle)
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	require.NotNil(msgServerReporter)
+	msgServerDispute := disputekeeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	require.NotNil(msgServerDispute)
+	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	require.NotNil(msgServerStaking)
+
+	//---------------------------------------------------------------------------
+	// Height 0 - vicky becomes a validator
+	//---------------------------------------------------------------------------
+	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+	vickyAccAddr := simtestutil.CreateIncrementalAccounts(1)
+	vickyInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(2000*1e6)) // give vicky extra to act as free floating token voting group
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(vickyInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, vickyAccAddr[0], sdk.NewCoins(vickyInitCoins)))
+	s.Setup.Accountkeeper.NewAccountWithAddress(s.Setup.Ctx, vickyAccAddr[0])
+
+	pubKey := simtestutil.CreateTestPubKeys(1)
+	vickyValAddr := simtestutil.ConvertAddrsToValAddrs(vickyAccAddr)
+	msgCreateValidator, err := stakingtypes.NewMsgCreateValidator(
+		vickyValAddr[0].String(),
+		pubKey[0],
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(1000*1e6)),
+		stakingtypes.Description{Moniker: "created validator"},
+		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1), math.LegacyNewDecWithPrec(1, 1)),
+		math.OneInt(),
+	)
+	require.NoError(err)
+
+	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidator)
+	require.NoError(err)
+
+	require.NoError(s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, vickyValAddr[0].String(), []byte("vickyEvmAddr")))
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 1 - Rob delegates to Vicky and selects himself to become a reporter
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// verify vicky is a bonded validator
+	vickyValidatorInfo, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, vickyValAddr[0])
+	require.NoError(err)
+	require.Equal(vickyValidatorInfo.Status, stakingtypes.Bonded)
+	require.Equal(vickyValidatorInfo.Tokens, math.NewInt(1000*1e6))
+
+	robPrivKey := secp256k1.GenPrivKey()
+	robAccAddr := sdk.AccAddress(robPrivKey.PubKey().Address())
+	robInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(100*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(robInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, robAccAddr, sdk.NewCoins(robInitCoins)))
+
+	// rob delegates to vicky
+	msgDelegate := stakingtypes.NewMsgDelegate(
+		robAccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(100*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	// rob becomes a reporter
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   robAccAddr.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewInt(1 * 1e6),
+	})
+	require.NoError(err)
+	robReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, robAccAddr)
+	require.NoError(err)
+	require.Equal(robReporterInfo.Jailed, false)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2 - Delwood delegates 250 trb to Vicky
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	delwoodPrivKey := secp256k1.GenPrivKey()
+	delwoodAccAddr := sdk.AccAddress(delwoodPrivKey.PubKey().Address())
+	delwoodInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(250*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(delwoodInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, delwoodAccAddr, sdk.NewCoins(delwoodInitCoins)))
+
+	msgDelegate = stakingtypes.NewMsgDelegate(
+		delwoodAccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(250*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 3 - Delwood selects 250 trb to Rob
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(3)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	_, err = msgServerReporter.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{
+		SelectorAddress: delwoodAccAddr.String(),
+		ReporterAddress: robAccAddr.String(),
+	})
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 4 - Rob creates a second reporter
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(4)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	rob2PrivKey := secp256k1.GenPrivKey()
+	rob2AccAddr := sdk.AccAddress(rob2PrivKey.PubKey().Address())
+	rob2InitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(50*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(rob2InitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, rob2AccAddr, sdk.NewCoins(rob2InitCoins)))
+
+	// rob delegates to vicky
+	msgDelegate = stakingtypes.NewMsgDelegate(
+		rob2AccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(50*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	// rob2 becomes a reporter
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   rob2AccAddr.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewInt(1 * 1e6),
+	})
+	require.NoError(err)
+	rob2ReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, rob2AccAddr)
+	require.NoError(err)
+	require.Equal(rob2ReporterInfo.Jailed, false)
+
+	// create third party ricky the reporter to vote from reporter group
+	rickyPrivKey := secp256k1.GenPrivKey()
+	rickyAccAddr := sdk.AccAddress(rickyPrivKey.PubKey().Address())
+	rickyInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(2000*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(rickyInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, rickyAccAddr, sdk.NewCoins(rickyInitCoins)))
+
+	// ricky delegates to vicky
+	msgDelegate = stakingtypes.NewMsgDelegate(
+		rickyAccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(1000*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	// ricky becomes a reporter
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   rickyAccAddr.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewInt(1 * 1e6),
+	})
+	require.NoError(err)
+	rickyReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, rickyAccAddr)
+	require.NoError(err)
+	require.Equal(rickyReporterInfo.Jailed, false)
+
+	// ricky tips for more voting power
+	queryData, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
+	require.NoError(err)
+	msgTip := oracletypes.MsgTip{
+		Tipper:    rickyAccAddr.String(),
+		QueryData: queryData,
+		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(10*1e6)),
+	}
+	_, err = msgServerOracle.Tip(s.Setup.Ctx, &msgTip)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 5 - Rob2 makes a fine report
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(5)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// balances before reporting/disputing
+	robReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, robAccAddr)
+	require.NoError(err)
+	require.Equal(robReporterStake, math.NewInt(350*1e6))
+
+	rob2ReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rob2AccAddr)
+	require.NoError(err)
+	require.Equal(rob2ReporterStake, math.NewInt(50*1e6))
+
+	delwoodSelectionStake, err := s.Setup.Reporterkeeper.GetDelegatorTokensAtBlock(s.Setup.Ctx, delwoodAccAddr, 5)
+	require.NoError(err)
+	require.Equal(delwoodSelectionStake, math.NewInt(250*1e6))
+
+	vickyValidatorStakedTokens, err := s.Setup.Stakingkeeper.GetLastValidatorPower(s.Setup.Ctx, vickyValAddr[0])
+	require.NoError(err)
+	require.Equal(vickyValidatorStakedTokens, int64(2400))
+
+	// rob2 makes a report
+	currentCycleList, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
+	require.NoError(err)
+	queryId := utils.QueryIDFromData(currentCycleList)
+	msgSubmitValue := oracletypes.MsgSubmitValue{
+		Creator:   rob2AccAddr.String(),
+		QueryData: currentCycleList,
+		Value:     testutil.EncodeValue(100_000),
+	}
+	_, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &msgSubmitValue)
+	require.NoError(err)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	getAggReportRequest := oracletypes.QueryGetCurrentAggregateReportRequest{
+		QueryId: hex.EncodeToString(queryId),
+	}
+	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
+	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
+	require.NoError(err)
+	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
+	require.Equal(rob2AccAddr.String(), result.Aggregate.AggregateReporter)
+	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(int64(50), result.Aggregate.ReporterPower)
+	require.Equal(int64(5), result.Aggregate.Height)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 6 - Rob disputes Rob2s report (minor - 5%)
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// double check balances
+	robReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, robAccAddr)
+	require.NoError(err)
+	require.Equal(robReporterStake, math.NewInt(350*1e6))
+
+	rob2ReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rob2AccAddr)
+	require.NoError(err)
+	require.Equal(rob2ReporterStake, math.NewInt(50*1e6))
+
+	delwoodSelectionStake, err = s.Setup.Reporterkeeper.GetDelegatorTokensAtBlock(s.Setup.Ctx, delwoodAccAddr, 6)
+	require.NoError(err)
+	require.Equal(delwoodSelectionStake, math.NewInt(250*1e6))
+
+	vickyValidatorStakedTokens, err = s.Setup.Stakingkeeper.GetLastValidatorPower(s.Setup.Ctx, vickyValAddr[0])
+	require.NoError(err)
+	require.Equal(vickyValidatorStakedTokens, int64(2400))
+
+	// rob proposes a minor dispute
+	report := oracletypes.MicroReport{
+		Reporter:    rob2AccAddr.String(),
+		Power:       rob2ReporterStake.Quo(layertypes.PowerReduction).Int64(),
+		QueryId:     queryId,
+		Value:       testutil.EncodeValue(100_000),
+		Timestamp:   s.Setup.Ctx.BlockTime(),
+		BlockNumber: int64(5),
+	}
+
+	// create msg for propose dispute tx
+	msgProposeDispute := disputetypes.MsgProposeDispute{
+		Creator:         robAccAddr.String(),
+		Report:          &report,
+		DisputeCategory: disputetypes.Minor,
+		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(2.5*1e6)),
+		PayFromBond:     true,
+	}
+
+	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
+	require.NoError(err)
+
+	disputes, err := s.Setup.Disputekeeper.GetOpenDisputes(s.Setup.Ctx)
+	require.NoError(err)
+	require.NotNil(disputes)
+	require.Equal(len(disputes), 1)
+
+	burnAmount := msgProposeDispute.Fee.Amount.MulRaw(1).QuoRaw(20)
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	require.NoError(err)
+	require.Equal(dispute.DisputeId, uint64(1))
+	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
+	require.Equal(dispute.DisputeCategory, disputetypes.Minor)
+	require.Equal(dispute.DisputeFee, msgProposeDispute.Fee.Amount.Sub(burnAmount))
+	// require.Equal(dispute.BlockNumber, int64(5))
+	require.Equal(dispute.DisputeStartBlock, int64(6))
+	feepayer, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(1), robAccAddr.Bytes()))
+	require.NoError(err)
+	require.Equal(feepayer.Amount, msgProposeDispute.Fee.Amount)
+	require.Equal(feepayer.FromBond, true)
+	slashAmount := dispute.SlashAmount
+	fmt.Println("slashAmount", slashAmount)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 7 - Everyone votes No on the dispute
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(7)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// rob2 unjails himself
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Hour))
+	msgUnjailReporter := reportertypes.MsgUnjailReporter{
+		ReporterAddress: rob2AccAddr.String(),
+	}
+	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjailReporter)
+	require.NoError(err)
+	rob2ReporterInfo, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, rob2AccAddr)
+	require.NoError(err)
+	require.Equal(rob2ReporterInfo.Jailed, false)
+
+	// check balances
+	vickyValidatorStakedTokens, err = s.Setup.Stakingkeeper.GetLastValidatorPower(s.Setup.Ctx, vickyValAddr[0])
+	require.NoError(err)
+	require.Equal(vickyValidatorStakedTokens, int64(2395)) // 2.5 trb gone from Rob, 2.5 trb gone from Rob2
+
+	robReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, robAccAddr)
+	require.NoError(err)
+	require.Equal(robReporterStake, math.NewInt(347.5*1e6)) // Paid 5% of 50 trb to open dispute
+
+	rob2ReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rob2AccAddr)
+	require.NoError(err)
+	require.Equal(rob2ReporterStake, math.NewInt(47.5*1e6)) // 5% slashed from 50 trb
+
+	delwoodSelectionStake, err = s.Setup.Reporterkeeper.GetDelegatorTokensAtBlock(s.Setup.Ctx, delwoodAccAddr, 7)
+	require.NoError(err)
+	delwoodsFee := ((250 * 2.5) / 350) * 1e6 // ((250/350) * 2.5) trb = ~1.785 trb
+	fmt.Println("delwoodsFee", delwoodsFee)
+	require.Equal(delwoodSelectionStake, math.NewInt(250*1e6).Sub(math.NewInt(int64(delwoodsFee)))) // ~1.785 of delwoods trb used towards dispute
+
+	// free floating token group votes no
+	fmt.Println("Vicky's Vote")
+	msgVoteVicky := disputetypes.MsgVote{
+		Voter: vickyAccAddr[0].String(),
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_AGAINST,
+	}
+	voteResponse, err := msgServerDispute.Vote(s.Setup.Ctx, &msgVoteVicky)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	// team votes no
+	fmt.Println("Team's Vote")
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	require.NoError(err)
+	msgVoteTeam := disputetypes.MsgVote{
+		Voter: teamAddr.String(),
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_AGAINST,
+	}
+	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVoteTeam)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	// // ricky votes no -- no voting power ?
+	fmt.Println("Ricky's Vote")
+	msgVoteRicky := disputetypes.MsgVote{
+		Voter: rickyAccAddr.String(),
+		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_AGAINST,
+	}
+	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVoteRicky)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// ---------------------------------------------------------------------------
+	// Height 8 - quorom reached, advance 3 days, tally votes
+	// ---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(8)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// check on dispute status
+	disputeByReporter, err := s.Setup.Disputekeeper.GetDisputeByReporter(s.Setup.Ctx, report, disputetypes.Minor)
+	require.NoError(err)
+	require.Equal(disputeByReporter.DisputeId, uint64(1))
+	require.Equal(disputeByReporter.DisputeStatus, disputetypes.Voting)
+	require.Equal(disputeByReporter.DisputeCategory, disputetypes.Minor)
+	require.Equal(disputeByReporter.DisputeFee, msgProposeDispute.Fee.Amount.Sub(burnAmount))
+	require.Equal(disputeByReporter.DisputeStartBlock, int64(6))
+
+	// fast forward 3 days
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(disputekeeper.THREE_DAYS))
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// tally votes
+	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
+	require.NoError(err)
+
+	// execute vote
+	msgExecuteDispute := disputetypes.MsgExecuteDispute{
+		CallerAddress: rob2AccAddr.String(),
+		DisputeId:     1,
+	}
+	_, err = msgServerDispute.ExecuteDispute(s.Setup.Ctx, &msgExecuteDispute)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// ---------------------------------------------------------------------------
+	// Height 9 - rob2 unjails himself, check balances
+	// ---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(9)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// check on dispute status
+	disputeByReporter, err = s.Setup.Disputekeeper.GetDisputeByReporter(s.Setup.Ctx, report, disputetypes.Minor)
+	require.NoError(err)
+	require.Equal(disputeByReporter.DisputeId, uint64(1))
+	require.Equal(disputeByReporter.DisputeStatus, disputetypes.Resolved)
+
+	// robReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, robAccAddr)
+	// require.NoError(err)
+	// require.Equal(robReporterStake, math.NewInt(350*1e6))
+
+	// rob2ReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rob2AccAddr)
+	// require.NoError(err)
+	// require.Equal(rob2ReporterStake, math.NewInt(50*1e6))
+
+	// delwoodSelectionStake, err = s.Setup.Reporterkeeper.GetDelegatorTokensAtBlock(s.Setup.Ctx, delwoodAccAddr, 6)
+	// require.NoError(err)
+	// require.Equal(delwoodSelectionStake, math.NewInt(250*1e6))
+
+	// vickyValidatorStakedTokens, err = s.Setup.Stakingkeeper.GetLastValidatorPower(s.Setup.Ctx, vickyValAddr[0])
+	// require.NoError(err)
+	// require.Equal(vickyValidatorStakedTokens, int64(2400))
+
+	// FINAL RESULTS:
+	vickyFreeFloating := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, vickyAccAddr[0], s.Setup.Denom)
+	vickyStaked, err := s.Setup.Stakingkeeper.GetLastValidatorPower(s.Setup.Ctx, vickyValAddr[0])
+	require.NoError(err)
+	fmt.Println("\nvicky before the dispute: ", 2400)
+	fmt.Println("vickyStaked: ", vickyStaked)
+	fmt.Println("vickyFreeFloating: ", vickyFreeFloating.Amount)
+	fmt.Println("vicky total after dispute: ", vickyStaked+vickyFreeFloating.Amount.Int64())
+
+	robFreeFloating := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, robAccAddr, s.Setup.Denom)
+	robReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, robAccAddr)
+	require.NoError(err)
+	fmt.Println("\nrob before the dispute: ", 350)
+	fmt.Println("robReporterStake", robReporterStake)
+	fmt.Println("robFreeFloating: ", robFreeFloating.Amount)
+	fmt.Println("rob total after dispute: ", robReporterStake.Int64()+robFreeFloating.Amount.Int64())
+
+	rob2FreeFloating := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, rob2AccAddr, s.Setup.Denom)
+	rob2ReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rob2AccAddr)
+	require.NoError(err)
+	fmt.Println("\nrob2 before the dispute: ", 50)
+	fmt.Println("rob2ReporterStake", rob2ReporterStake)
+	fmt.Println("rob2FreeFloating: ", rob2FreeFloating.Amount)
+	fmt.Println("rob2 total after dispute: ", rob2ReporterStake.Int64()+rob2FreeFloating.Amount.Int64())
+
+	delwoodFreeFloating := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, delwoodAccAddr, s.Setup.Denom)
+	delwoodSelectionStake, err = s.Setup.Reporterkeeper.GetDelegatorTokensAtBlock(s.Setup.Ctx, delwoodAccAddr, 9)
+	require.NoError(err)
+	fmt.Println("\ndelwood before the dispute: ", 250)
+	fmt.Println("delwoodSelectionStake", delwoodSelectionStake)
+	fmt.Println("delwoodFreeFloating: ", delwoodFreeFloating.Amount)
+	fmt.Println("delwood total after dispute: ", delwoodSelectionStake.Int64()+delwoodFreeFloating.Amount.Int64())
+
+	rickyFreeFloating := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, rickyAccAddr, s.Setup.Denom)
+	rickyReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rickyAccAddr)
+	require.NoError(err)
+	fmt.Println("\nricky before the dispute: ", 1999)
+	fmt.Println("rickyReporterStake", rickyReporterStake)
+	fmt.Println("rickyFreeFloating: ", rickyFreeFloating.Amount)
+	fmt.Println("ricky total after dispute: ", rickyReporterStake.Int64()+rickyFreeFloating.Amount.Int64())
+}
+
+// Vicky the Validator has 1000 trb staked
+// Rob the Reporter has 100 trb staked with Vicky, selects himself as a reporter
+// Ricky the Reporter has 100 trb staked with Vicky, selects himself as a reporter
+// Delwood the Delegator has 250 trb delegated to Rob
+// Delwood tries to dispute a report from Ricky to eliminate his competition
+// fails
+func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
+	// Setup msgServers
+	require := s.Require()
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	require.NotNil(msgServerOracle)
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	require.NotNil(msgServerReporter)
+	msgServerDispute := disputekeeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	require.NotNil(msgServerDispute)
+	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	require.NotNil(msgServerStaking)
+
+	//---------------------------------------------------------------------------
+	// Height 0 - vicky becomes a validator
+	//---------------------------------------------------------------------------
+	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+	vickyAccAddr := simtestutil.CreateIncrementalAccounts(1)
+	vickyInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(2000*1e6)) // give vicky extra to act as free floating token voting group
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(vickyInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, vickyAccAddr[0], sdk.NewCoins(vickyInitCoins)))
+	s.Setup.Accountkeeper.NewAccountWithAddress(s.Setup.Ctx, vickyAccAddr[0])
+
+	pubKey := simtestutil.CreateTestPubKeys(1)
+	vickyValAddr := simtestutil.ConvertAddrsToValAddrs(vickyAccAddr)
+	msgCreateValidator, err := stakingtypes.NewMsgCreateValidator(
+		vickyValAddr[0].String(),
+		pubKey[0],
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(1000*1e6)),
+		stakingtypes.Description{Moniker: "created validator"},
+		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1), math.LegacyNewDecWithPrec(1, 1)),
+		math.OneInt(),
+	)
+	require.NoError(err)
+
+	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidator)
+	require.NoError(err)
+
+	require.NoError(s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, vickyValAddr[0].String(), []byte("vickyEvmAddr")))
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 1 - Rob delegates to Vicky and selects himself to become a reporter
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// verify vicky is a bonded validator
+	vickyValidatorInfo, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, vickyValAddr[0])
+	require.NoError(err)
+	require.Equal(vickyValidatorInfo.Status, stakingtypes.Bonded)
+	require.Equal(vickyValidatorInfo.Tokens, math.NewInt(1000*1e6))
+
+	robPrivKey := secp256k1.GenPrivKey()
+	robAccAddr := sdk.AccAddress(robPrivKey.PubKey().Address())
+	robInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(100*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(robInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, robAccAddr, sdk.NewCoins(robInitCoins)))
+
+	// rob delegates to vicky
+	msgDelegate := stakingtypes.NewMsgDelegate(
+		robAccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(100*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	// rob becomes a reporter
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   robAccAddr.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewInt(1 * 1e6),
+	})
+	require.NoError(err)
+	robReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, robAccAddr)
+	require.NoError(err)
+	require.Equal(robReporterInfo.Jailed, false)
+
+	rickyPrivKey := secp256k1.GenPrivKey()
+	rickyAccAddr := sdk.AccAddress(rickyPrivKey.PubKey().Address())
+	rickyInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(2000*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(rickyInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, rickyAccAddr, sdk.NewCoins(rickyInitCoins)))
+
+	// ricky delegates to vicky
+	msgDelegate = stakingtypes.NewMsgDelegate(
+		rickyAccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(1000*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	// ricky becomes a reporter
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   rickyAccAddr.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewInt(1 * 1e6),
+	})
+	require.NoError(err)
+	rickyReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, rickyAccAddr)
+	require.NoError(err)
+	require.Equal(rickyReporterInfo.Jailed, false)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2 - Delwood delegates 250 trb to Vicky
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	delwoodPrivKey := secp256k1.GenPrivKey()
+	delwoodAccAddr := sdk.AccAddress(delwoodPrivKey.PubKey().Address())
+	delwoodInitCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(250*1e6))
+	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(delwoodInitCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, delwoodAccAddr, sdk.NewCoins(delwoodInitCoins)))
+
+	msgDelegate = stakingtypes.NewMsgDelegate(
+		delwoodAccAddr.String(),
+		vickyValAddr[0].String(),
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(250*1e6)),
+	)
+	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 3 - Delwood selects 250 trb to Rob
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(3)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	_, err = msgServerReporter.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{
+		SelectorAddress: delwoodAccAddr.String(),
+		ReporterAddress: robAccAddr.String(),
+	})
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 4 - Ricky reports for the cycle list
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(4)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	currentCycleList, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
+	require.NoError(err)
+	queryId := utils.QueryIDFromData(currentCycleList)
+	msgSubmitValue := oracletypes.MsgSubmitValue{
+		Creator:   rickyAccAddr.String(),
+		QueryData: currentCycleList,
+		Value:     testutil.EncodeValue(100_000),
+	}
+	_, err = msgServerOracle.SubmitValue(s.Setup.Ctx, &msgSubmitValue)
+	require.NoError(err)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	getAggReportRequest := oracletypes.QueryGetCurrentAggregateReportRequest{
+		QueryId: hex.EncodeToString(queryId),
+	}
+	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
+	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
+	require.NoError(err)
+	require.Equal(int64(0), result.Aggregate.AggregateReportIndex)
+	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
+	require.Equal(rickyAccAddr.String(), result.Aggregate.AggregateReporter)
+	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(int64(1000), result.Aggregate.ReporterPower)
+	require.Equal(int64(4), result.Aggregate.Height)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 5 - Delwood proposes a dispute from bond
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(5)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	rickyReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rickyAccAddr)
+	require.NoError(err)
+
+	report := oracletypes.MicroReport{
+		Reporter:    rickyAccAddr.String(),
+		Power:       rickyReporterStake.Quo(layertypes.PowerReduction).Int64(),
+		QueryId:     queryId,
+		Value:       testutil.EncodeValue(100_000),
+		Timestamp:   s.Setup.Ctx.BlockTime(),
+		BlockNumber: int64(4),
+	}
+
+	msgProposeDispute := disputetypes.MsgProposeDispute{
+		Creator:         delwoodAccAddr.String(),
+		Report:          &report,
+		DisputeCategory: disputetypes.Warning,
+		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(10*1e6)),
+		PayFromBond:     true,
+	}
+
+	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
+	require.Error(err)
+}
+
+// test precision loss throughout tip/report/dispute/claim process
+
