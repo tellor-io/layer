@@ -21,8 +21,15 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	if err != nil {
 		return err
 	}
-	// Calculate commission
-	commission := reward.Value.Mul(reporter.CommissionRate).QuoUint64(1000000)
+
+	// Convert arguments needed for calculations to legacy decimals
+	rewardDec := k.LegacyDecFromMathUint(reward.Value)
+	commissionRateDec := k.LegacyDecFromMathUint(reporter.CommissionRate)
+
+	// Calculate commission: commission = reward * commissionRate
+	commissionDec := rewardDec.Mul(commissionRateDec).Quo(math.LegacyNewDec(1000000))
+
+	commission := k.TruncateUint(commissionDec)
 
 	// Calculate net reward
 	netReward := reward.Value.Sub(commission)
@@ -33,7 +40,12 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	}
 
 	for _, del := range delAddrs.TokenOrigins {
-		delegatorShare := netReward.Mul(math.NewUint(del.Amount.Uint64())).Quo(math.NewUint(delAddrs.Total.Uint64()))
+		// convert args needed for calculations to legacy decimals
+		netRewardDec := k.LegacyDecFromMathUint(netReward)
+		delAmountDec := math.LegacyNewDecFromInt(del.Amount)
+		delTotalDec := math.LegacyNewDecFromInt(delAddrs.Total)
+		delegatorShareDec := netRewardDec.Mul(delAmountDec).Quo(delTotalDec)
+		delegatorShare := k.TruncateUint(delegatorShareDec)
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}
@@ -98,7 +110,12 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		shareAmt := math.NewUint(source.Amount.Uint64())
 		if extra.IsPositive() {
 			// add extra tokens based on the share of the delegator
-			shareAmt = math.NewUint(source.Amount.Uint64()).Mul(math.NewUint(amt.Uint64())).Quo(math.NewUint(snapshot.Total.Uint64()))
+			// convert args needed for calculations to legacy decimals
+			sourceAmountDec := math.LegacyNewDecFromInt(source.Amount)
+			amountDec := math.LegacyNewDecFromInt(amt)
+			snapshotTotalDec := math.LegacyNewDecFromInt(snapshot.Total)
+			shareAmtDec := sourceAmountDec.Mul(amountDec).Quo(snapshotTotalDec)
+			shareAmt = k.TruncateUint(shareAmtDec)
 		}
 		_, err = k.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(int64(shareAmt.Uint64())), tokenSrc, val, false)
 		if err != nil {
@@ -134,8 +151,13 @@ func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) erro
 			val = vals[0]
 		}
 		// since fee paid is returned minus the voter/burned amount, calculate by accordingly
-		shareAmt := math.LegacyNewDecFromInt(source.Amount).Quo(math.LegacyNewDecFromInt(trackedFees.Total)).Mul(math.LegacyNewDecFromInt(amt))
-		_, err = k.stakingKeeper.Delegate(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt.TruncateInt(), stakingtypes.Bonded, val, false)
+		// convert args needed for calculations to legacy decimals
+		sourceAmountDec := math.LegacyNewDecFromInt(source.Amount)
+		trackedFeesTotalDec := math.LegacyNewDecFromInt(trackedFees.Total)
+		amtDec := math.LegacyNewDecFromInt(amt)
+		shareAmtDec := sourceAmountDec.Mul(amtDec).Quo(trackedFeesTotalDec)
+		shareAmt := shareAmtDec.TruncateInt()
+		_, err = k.stakingKeeper.Delegate(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, stakingtypes.Bonded, val, false)
 		if err != nil {
 			return err
 		}
@@ -181,4 +203,14 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 		return err
 	}
 	return nil
+}
+
+// Converts a math.Uint to a legacy decimal
+func (k Keeper) LegacyDecFromMathUint(value math.Uint) math.LegacyDec {
+	return math.LegacyNewDecFromInt(math.NewIntFromUint64(value.Uint64()))
+}
+
+// Truncates a legacy decimal to a math.Uint
+func (k Keeper) TruncateUint(value math.LegacyDec) math.Uint {
+	return math.NewUint(value.TruncateInt().Uint64())
 }
