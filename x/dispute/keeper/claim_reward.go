@@ -123,11 +123,21 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	}
 
 	// normalize powers
-	userPower := addrUserPower.Mul(layer.PowerReduction).Quo(globalUserPower)
-	reporterPower := addrReporterPower.Mul(layer.PowerReduction).Quo(globalReporterPower)
-	tokenholderPower := addrTokenholderPower.Mul(layer.PowerReduction).Quo(globalTokenholderPower)
-	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
-	rewardAcc := totalAccPower.Mul(dispute.VoterReward).Quo(math.NewInt(totalGroups).Mul(layer.PowerReduction))
+	powerReductionDec := math.LegacyNewDecFromInt(layer.PowerReduction)
+	addrUserPowerDec := math.LegacyNewDecFromInt(addrUserPower)
+	addrReporterPowerDec := math.LegacyNewDecFromInt(addrReporterPower)
+	addrTokenholderPowerDec := math.LegacyNewDecFromInt(addrTokenholderPower)
+	globalUserPowerDec := math.LegacyNewDecFromInt(globalUserPower)
+	globalReporterPowerDec := math.LegacyNewDecFromInt(globalReporterPower)
+	globalTokenholderPowerDec := math.LegacyNewDecFromInt(globalTokenholderPower)
+	totalGroupsDec := math.LegacyNewDecFromInt(math.NewInt(totalGroups))
+	disputeVoterRewardDec := math.LegacyNewDecFromInt(dispute.VoterReward)
 
-	return rewardAcc, nil
+	userPower := addrUserPowerDec.Mul(powerReductionDec).Quo(globalUserPowerDec)
+	reporterPower := addrReporterPowerDec.Mul(powerReductionDec).Quo(globalReporterPowerDec)
+	tokenholderPower := addrTokenholderPowerDec.Mul(powerReductionDec).Quo(globalTokenholderPowerDec)
+	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
+	rewardAcc := totalAccPower.Mul(disputeVoterRewardDec).Quo(totalGroupsDec.Mul(powerReductionDec))
+
+	return rewardAcc.TruncateInt(), nil
 }

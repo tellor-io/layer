@@ -32,7 +32,9 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 	}
 	// handle failed underfunded dispute
 	if dispute.DisputeStatus == types.Failed {
-		feeMinusBurn := dispute.FeeTotal.Quo(math.NewInt(20))
+		disputeFeeTotalDec := math.LegacyNewDecFromInt(dispute.FeeTotal)
+		feeMinusBurnDec := disputeFeeTotalDec.Quo(math.LegacyNewDec(20))
+		feeMinusBurn := feeMinusBurnDec.TruncateInt()
 		fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
 		if err != nil {
 			return nil, err
@@ -77,7 +79,10 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 
 	}
 
-	burnDust := remainder.Quo(layertypes.PowerReduction)
+	remainderDec := math.LegacyNewDecFromInt(remainder)
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	burnDustDec := remainderDec.Quo(powerReductionDec)
+	burnDust := burnDustDec.TruncateInt()
 
 	if !burnDust.IsZero() {
 		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burnDust))); err != nil {
