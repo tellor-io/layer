@@ -161,7 +161,13 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	leftover := math.NewUint(amt.Uint64() * 1e6)
 	for i, del := range report.TokenOrigins {
 		truncDelAmount := math.NewUint(del.Amount.Uint64()).QuoUint64(layertypes.PowerReduction.Uint64()).MulUint64(layertypes.PowerReduction.Uint64())
-		delegatorShare := truncDelAmount.MulUint64(amt.Uint64()).MulUint64(1e6).Quo(math.NewUint(totalTokens.Uint64()))
+		// convert args needed for calculations to legacy decimals
+		truncDelAmountDec := k.LegacyDecFromMathUint(truncDelAmount)
+		amtDec := math.LegacyNewDecFromInt(amt)
+		powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+		totalTokensDec := math.LegacyNewDecFromInt(totalTokens)
+		delegatorShareDec := truncDelAmountDec.Mul(amtDec).Mul(powerReductionDec).Quo(totalTokensDec)
+		delegatorShare := k.TruncateUint(delegatorShareDec)
 		leftover = leftover.Sub(delegatorShare)
 
 		if i == len(report.TokenOrigins)-1 {
@@ -176,7 +182,9 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			return err
 		}
 		storedAmount := delegatorShare.Sub(math.NewUint(remaining.Uint64()))
-		storedAmountFixed6 := storedAmount.Quo(math.NewUint(1e6))
+		storedAmountDec := k.LegacyDecFromMathUint(storedAmount)
+		storedAmountFixed6Dec := storedAmountDec.Quo(powerReductionDec)
+		storedAmountFixed6 := k.TruncateUint(storedAmountFixed6Dec)
 		if !storedAmount.IsZero() {
 			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
 				DelegatorAddress: del.DelegatorAddress,
@@ -185,7 +193,9 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			})
 		}
 
-		remainingFixed6 := remaining.Quo(math.NewUint(1e6))
+		remainingDec := k.LegacyDecFromMathUint(remaining)
+		remainingFixed6Dec := remainingDec.Quo(powerReductionDec)
+		remainingFixed6 := k.TruncateUint(remainingFixed6Dec)
 		if !remaining.IsZero() {
 			dstVAl, err := k.getDstValidator(ctx, delAddr, valAddr)
 			if err != nil {
@@ -243,8 +253,15 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 			removeAmt = removeAmt.Add(normalizedBalance)
 			ubd.RemoveEntry(int64(i))
 		} else {
-			u.Balance = math.NewIntFromUint64(normalizedBalance.Sub(tokens).QuoUint64(1e6).Uint64())
-			u.InitialBalance = u.InitialBalance.Sub(math.NewIntFromUint64(tokens.QuoUint64(1e6).Uint64()))
+			normalizedBalanceDec := k.LegacyDecFromMathUint(normalizedBalance)
+			tokensDec := k.LegacyDecFromMathUint(tokens)
+			powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+			uBalanceDec := normalizedBalanceDec.Sub(tokensDec).Quo(powerReductionDec)
+			u.Balance = uBalanceDec.TruncateInt()
+
+			uInitialBalanceDec := math.LegacyNewDecFromInt(u.InitialBalance)
+			uInitialBalanceDec = uInitialBalanceDec.Sub(tokensDec.Quo(powerReductionDec))
+			u.InitialBalance = uInitialBalanceDec.TruncateInt()
 			ubd.Entries[i] = u
 			removeAmt = removeAmt.Add(tokens)
 			tokens = math.ZeroUint()
@@ -260,7 +277,11 @@ func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAd
 	if err != nil {
 		return math.Uint{}, err
 	}
-	err = k.tokensToDispute(ctx, stakingtypes.NotBondedPoolName, (math.NewInt(int64(removeAmt.Uint64())).QuoRaw(1e6)))
+	removeAmtDec := k.LegacyDecFromMathUint(removeAmt)
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	disputeAmtDec := removeAmtDec.Quo(powerReductionDec)
+	disputeAmt := disputeAmtDec.TruncateInt()
+	err = k.tokensToDispute(ctx, stakingtypes.NotBondedPoolName, disputeAmt)
 	if err != nil {
 		return math.Uint{}, err
 	}
@@ -286,7 +307,10 @@ func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress
 	tokensFromShare := math.NewUint(currentTokens.BigInt().Uint64() * 1e6) // normalize to match with the normalized delTokens
 	shares := del.Shares
 	if tokensFromShare.GTE(delTokens) {
-		shares, err = validator.SharesFromTokens(math.Int(delTokens.QuoUint64(1e6)))
+		delTokensDec := k.LegacyDecFromMathUint(delTokens)
+		powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+		tokensAmtDec := delTokensDec.Quo(powerReductionDec)
+		shares, err = validator.SharesFromTokens(tokensAmtDec.TruncateInt())
 		if err != nil {
 			return math.Uint{}, err
 		}

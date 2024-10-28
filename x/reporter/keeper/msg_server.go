@@ -303,7 +303,9 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
-	amtToDelegate := shares.Value.QuoUint64(1e6)
+	sharesDec := k.LegacyDecFromMathUint(shares.Value)
+	amtToDelegateDec := sharesDec.Quo(math.LegacyNewDec(1e6))
+	amtToDelegate := k.TruncateUint(amtToDelegateDec)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
