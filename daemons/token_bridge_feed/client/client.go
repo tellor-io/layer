@@ -145,7 +145,10 @@ func (c *Client) InitializeDeposits() error {
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x2b0bfeBCDFE2228cAbA56dfDE9F067643B357343")
+	contractAddress, err := c.getTokenBridgeContractAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get token bridge contract address: %w", err)
+	}
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
@@ -359,4 +362,19 @@ func (c *Client) getEthRpcUrl() (string, error) {
 		return "", fmt.Errorf("eth_rpc_url not set")
 	}
 	return ethRpcUrl, nil
+}
+
+func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
+	viper.SetConfigName("secrets")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %w", err))
+	}
+	tokenBridgeContractAddress := viper.GetString("token_bridge_contract")
+	if tokenBridgeContractAddress == "" {
+		return common.Address{}, fmt.Errorf("token_bridge_contract not set")
+	}
+	return common.HexToAddress(tokenBridgeContractAddress), nil
 }
