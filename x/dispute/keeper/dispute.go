@@ -80,7 +80,9 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	if msg.Fee.Amount.GT(disputeFee) {
 		msg.Fee.Amount = disputeFee
 	}
-	fivePercent := disputeFee.MulRaw(1).QuoRaw(20)
+	disputeFeeDec := math.LegacyNewDecFromInt(disputeFee)
+	fivePercentDec := disputeFeeDec.Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(20))
+	fivePercent := fivePercentDec.TruncateInt()
 	dispute := types.Dispute{
 		HashId:            hashId[:],
 		DisputeId:         disputeId,
@@ -159,7 +161,11 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 		return err
 	}
 	reportPowerFixed6 := math.NewInt(int64(report.Power)).Mul(layertypes.PowerReduction)
-	slashAmountFixed6 := reportPowerFixed6.Mul(slashPercentageFixed6).Quo(layertypes.PowerReduction)
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	reportPowerFixed6Dec := math.LegacyNewDecFromInt(reportPowerFixed6)
+	slashPercentageFixed6Dec := math.LegacyNewDecFromInt(slashPercentageFixed6)
+	slashAmountFixed6Dec := reportPowerFixed6Dec.Mul(slashPercentageFixed6Dec).Quo(powerReductionDec)
+	slashAmountFixed6 := slashAmountFixed6Dec.TruncateInt()
 	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, hashId)
 	if err != nil {
 		return err
@@ -195,10 +201,14 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, rep oracletypes.MicroReport, cate
 	switch category {
 	case types.Warning:
 		// calculate 1 percent of bond
-		return stake.MulRaw(1).QuoRaw(100), nil
+		stakeDec := math.LegacyNewDecFromInt(stake)
+		feeDec := stakeDec.Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(100))
+		return feeDec.TruncateInt(), nil
 	case types.Minor:
 		// calculate 5 percent of bond
-		return stake.MulRaw(5).QuoRaw(100), nil
+		stakeDec := math.LegacyNewDecFromInt(stake)
+		feeDec := stakeDec.Mul(math.LegacyNewDec(5)).Quo(math.LegacyNewDec(100))
+		return feeDec.TruncateInt(), nil
 	case types.Major:
 		// calculate 100 percent of bond
 		return stake, nil
@@ -225,7 +235,9 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		base := new(big.Int).Exp(big.NewInt(2), big.NewInt(round), nil)
 		return fivePercent.Mul(math.NewIntFromBigInt(base))
 	}
-	fivePercent := dispute.SlashAmount.MulRaw(1).QuoRaw(20)
+	disputeSlashAmountDec := math.LegacyNewDecFromInt(dispute.SlashAmount)
+	fivePercentDec := disputeSlashAmountDec.Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(20))
+	fivePercent := fivePercentDec.TruncateInt()
 	roundFee := fee(fivePercent, int64(dispute.DisputeRound))
 	if roundFee.GT(dispute.SlashAmount) {
 		roundFee = dispute.SlashAmount

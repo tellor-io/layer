@@ -45,8 +45,12 @@ func Ratio(total, part math.Int) math.Int {
 		return math.ZeroInt()
 	}
 	total = total.MulRaw(4)
-	ratio := part.Mul(layertypes.PowerReduction).Quo(total)
-	return ratio.MulRaw(100)
+	totalDec := math.LegacyNewDecFromInt(total)
+	partDec := math.LegacyNewDecFromInt(part)
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	ratioDec := partDec.Mul(powerReductionDec).Quo(totalDec).Mul(math.LegacyNewDec(100))
+
+	return ratioDec.TruncateInt()
 }
 
 // TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
@@ -56,6 +60,8 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	scaledSupport := math.ZeroInt()
 	scaledAgainst := math.ZeroInt()
 	scaledInvalid := math.ZeroInt()
+	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+
 	vote, err := k.Votes.Get(ctx, id)
 	if err != nil {
 		return err
@@ -125,12 +131,20 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	tallies.Invalid.Users = math.NewIntFromUint64(voteCounts.Users.Invalid)
 	userVoteSum := tallies.ForVotes.Users.Add(tallies.AgainstVotes.Users).Add(tallies.Invalid.Users)
 
+	scaledSupportDec := math.LegacyNewDecFromInt(scaledSupport)
+	scaledAgainstDec := math.LegacyNewDecFromInt(scaledAgainst)
+	scaledInvalidDec := math.LegacyNewDecFromInt(scaledInvalid)
 	if userVoteSum.GT(math.ZeroInt()) {
 		totalRatio = totalRatio.Add(Ratio(info.TotalUserTips, userVoteSum))
+		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
 
-		scaledSupport = scaledSupport.Add(tallies.ForVotes.Users.Mul(layertypes.PowerReduction).Quo(userVoteSum))
-		scaledAgainst = scaledAgainst.Add(tallies.AgainstVotes.Users.Mul(layertypes.PowerReduction).Quo(userVoteSum))
-		scaledInvalid = scaledInvalid.Add(tallies.Invalid.Users.Mul(layertypes.PowerReduction).Quo(userVoteSum))
+		usersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Users)
+		usersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Users)
+		usersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.Users)
+
+		scaledSupportDec = scaledSupportDec.Add(usersForVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
+		scaledAgainstDec = scaledAgainstDec.Add(usersAgainstVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
+		scaledInvalidDec = scaledInvalidDec.Add(usersInvalidVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
 	}
 
 	// replace logic above with this
@@ -142,18 +156,28 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	totalRatio = totalRatio.Add(reporterRatio)
 
 	if reporterVoteSum.GT(math.ZeroInt()) {
-		forReporters := tallies.ForVotes.Reporters.Mul(layertypes.PowerReduction).Quo(reporterVoteSum)
-		againstReporters := tallies.AgainstVotes.Reporters.Mul(layertypes.PowerReduction).Quo(reporterVoteSum)
-		invalidReporters := tallies.Invalid.Reporters.Mul(layertypes.PowerReduction).Quo(reporterVoteSum)
-		scaledSupport = scaledSupport.Add(forReporters)
-		scaledAgainst = scaledAgainst.Add(againstReporters)
-		scaledInvalid = scaledInvalid.Add(invalidReporters)
+		reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
+		reportersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters)
+		reportersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Reporters)
+		reportersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.Reporters)
+
+		forReportersDec := reportersForVotesDec.Mul(powerReductionDec).Quo(reporterVoteSumDec)
+		againstReportersDec := reportersAgainstVotesDec.Mul(powerReductionDec).Quo(reporterVoteSumDec)
+		invalidReportersDec := reportersInvalidVotesDec.Mul(powerReductionDec).Quo(reporterVoteSumDec)
+		scaledSupportDec = scaledSupportDec.Add(forReportersDec)
+		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
+		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
 
 	if totalRatio.GTE(math.NewInt(51).Mul(layertypes.PowerReduction)) {
-		scaledSupport = scaledSupport.Quo(numGroups)
-		scaledAgainst = scaledAgainst.Quo(numGroups)
-		scaledInvalid = scaledInvalid.Quo(numGroups)
+		numGroupsDec := math.LegacyNewDecFromInt(numGroups)
+		scaledSupportDec = scaledSupportDec.Quo(numGroupsDec)
+		scaledAgainstDec = scaledAgainstDec.Quo(numGroupsDec)
+		scaledInvalidDec = scaledInvalidDec.Quo(numGroupsDec)
+
+		scaledSupport = scaledSupportDec.TruncateInt()
+		scaledAgainst = scaledAgainstDec.TruncateInt()
+		scaledInvalid = scaledInvalidDec.TruncateInt()
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
 		dispute.PendingExecution = true
@@ -170,18 +194,23 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	totalRatio = totalRatio.Add(Ratio(tokenSupply, tokenHolderVoteSum))
 
 	if !tokenHolderVoteSum.IsZero() {
-		forTokenHolders := tallies.ForVotes.TokenHolders.Mul(layertypes.PowerReduction).Quo(tokenHolderVoteSum)
-		againstTokenHolders := tallies.AgainstVotes.TokenHolders.Mul(layertypes.PowerReduction).Quo(tokenHolderVoteSum)
-		invalidTokenHolders := tallies.Invalid.TokenHolders.Mul(layertypes.PowerReduction).Quo(tokenHolderVoteSum)
-		scaledSupport = scaledSupport.Add(forTokenHolders).Quo(numGroups)
-		scaledAgainst = scaledAgainst.Add(againstTokenHolders).Quo(numGroups)
-		scaledInvalid = scaledInvalid.Add(invalidTokenHolders).Quo(numGroups)
+		tokenHolderVoteSumDec := math.LegacyNewDecFromInt(tokenHolderVoteSum)
+		tokenHoldersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.TokenHolders)
+		tokenHoldersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.TokenHolders)
+		tokenHoldersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.TokenHolders)
+
+		forTokenHoldersDec := tokenHoldersForVotesDec.Mul(powerReductionDec).Quo(tokenHolderVoteSumDec)
+		againstTokenHoldersDec := tokenHoldersAgainstVotesDec.Mul(powerReductionDec).Quo(tokenHolderVoteSumDec)
+		invalidTokenHoldersDec := tokenHoldersInvalidVotesDec.Mul(powerReductionDec).Quo(tokenHolderVoteSumDec)
+		scaledSupportDec = scaledSupportDec.Add(forTokenHoldersDec)
+		scaledAgainstDec = scaledAgainstDec.Add(againstTokenHoldersDec)
+		scaledInvalidDec = scaledInvalidDec.Add(invalidTokenHoldersDec)
 	}
 	if totalRatio.GTE(math.NewInt(51).Mul(layertypes.PowerReduction)) {
 		dispute.DisputeStatus = types.Resolved
 		dispute.Open = false
 		dispute.PendingExecution = true
-		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupportDec.TruncateInt(), scaledAgainstDec.TruncateInt(), scaledInvalidDec.TruncateInt(), true)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
@@ -205,7 +234,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			vote.VoteEnd = sdkctx.BlockTime()
 			return k.Votes.Set(ctx, id, vote)
 		}
-		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false)
+		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupportDec.TruncateInt(), scaledAgainstDec.TruncateInt(), scaledInvalidDec.TruncateInt(), false)
 	} else {
 		return errors.New(types.ErrNoQuorumStillVoting.Error())
 	}
