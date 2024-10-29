@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"sort"
 
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
@@ -28,43 +29,77 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 	}
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := uint64(0)
-	// reportCounts maps reporter's address to their ValidatorReportCount.
-	_reporters := make(map[string]ReportersReportCount)
 
-	// Loop through each reporter to calculate total power and individual report counts.
+	// Use a struct to hold reporter info
+	type ReporterInfo struct {
+		address string
+		data    ReportersReportCount
+	}
+
+	// First pass: collect data in map
+	reportersMap := make(map[string]ReportersReportCount)
 	for _, r := range reporters {
-		reporter, found := _reporters[r.Reporter]
+		reporter, found := reportersMap[r.Reporter]
 		if found {
-			// If the reporter is already in the map, increment their report count.
 			reporter.Reports++
 		} else {
-			// If not found, add the reporter with their initial power and report count set to 1.
-			reporter = ReportersReportCount{Power: r.Power, Reports: 1, Height: r.BlockNumber}
+			reporter = ReportersReportCount{
+				Power:   r.Power,
+				Reports: 1,
+				Height:  r.BlockNumber,
+			}
 		}
-		_reporters[r.Reporter] = reporter
-		// Add the reporter's power to the total power.
+		reportersMap[r.Reporter] = reporter
 		totalPower += r.Power
 	}
-	i := len(_reporters)
+
+	// Convert to sorted slice for deterministic iteration
+	sortedReporters := make([]ReporterInfo, 0, len(reportersMap))
+	for addr, data := range reportersMap {
+		sortedReporters = append(sortedReporters, ReporterInfo{
+			address: addr,
+			data:    data,
+		})
+	}
+
+	// Sort by address for deterministic ordering
+	sort.Slice(sortedReporters, func(i, j int) bool {
+		return sortedReporters[i].address < sortedReporters[j].address
+	})
+
+	// Process rewards in deterministic order
 	totaldist := math.ZeroUint()
-	for r, c := range _reporters {
-		amount := CalculateRewardAmount(c.Power, c.Reports, totalPower, reward)
+	for i, reporter := range sortedReporters {
+		amount := CalculateRewardAmount(
+			reporter.data.Power,
+			reporter.data.Reports,
+			totalPower,
+			reward,
+		)
 		totaldist = totaldist.Add(amount.Value)
-		reporterAddr, err := sdk.AccAddressFromBech32(r)
+
+		reporterAddr, err := sdk.AccAddressFromBech32(reporter.address)
 		if err != nil {
 			return err
 		}
-		i--
-		if i == 0 {
+
+		// Handle final reporter
+		if i == len(sortedReporters)-1 {
 			amount.Value = amount.Value.Add(math.NewUint(reward.Uint64()).MulUint64(1e6)).Sub(totaldist)
 		}
-		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, c.Height)
+
+		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, reporter.data.Height)
 		if err != nil {
 			return err
 		}
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)))
+	return k.bankKeeper.SendCoinsFromModuleToModule(
+		ctx,
+		fromPool,
+		reportertypes.TipsEscrowPool,
+		sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)),
+	)
 }
 
 func (k Keeper) GetTimeBasedRewards(ctx context.Context) math.Int {

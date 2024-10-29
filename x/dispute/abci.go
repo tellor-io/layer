@@ -71,7 +71,7 @@ func CheckClosedDisputesForExecution(ctx context.Context, k keeper.Keeper) error
 		if err != nil {
 			return err
 		}
-		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) {
+		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) || dispute.DisputeStatus == types.Resolved {
 			if err := k.ExecuteVote(ctx, key); err != nil {
 				return err
 			}
