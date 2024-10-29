@@ -74,7 +74,6 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 			continue
 		}
 		if len(res.Queries) == 0 {
-			c.logger.Info("No tipped queries returned")
 			time.Sleep(200 * time.Millisecond)
 			continue
 		}
@@ -95,6 +94,7 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 				if err != nil {
 					c.logger.Error("Error generating report for tipped query: ", err)
 				}
+				c.logger.Info("Broadcasted report for tipped query")
 			}(res.Queries[i])
 		}
 
