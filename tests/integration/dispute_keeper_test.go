@@ -666,9 +666,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		s.Equal(newBal, votersBalanceAfter[v.Voter.String()].Amount)
 	}
 
-	// execute vote
-	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
-
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	voteInfo, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.True(voteInfo.Executed)
 	// Check voter rewards
 	disputerVoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
 	s.NoError(err)
