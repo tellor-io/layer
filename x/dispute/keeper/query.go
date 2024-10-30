@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/binary"
 
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -64,18 +67,6 @@ func (k Querier) OpenDisputes(ctx context.Context, req *types.QueryOpenDisputesR
 	return &types.QueryOpenDisputesResponse{OpenDisputes: &openDisputesArray}, nil
 }
 
-type DisputeTallyGroupResult struct {
-	VoteCount       types.VoteCounts
-	TotalPowerVoted uint64
-	TotalGroupPower uint64
-}
-
-type DisputeTallyResult struct {
-	Users        DisputeTallyGroupResult
-	Reporters    DisputeTallyGroupResult
-	Tokenholders DisputeTallyGroupResult
-}
-
 func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest) (*types.QueryDisputesTallyResponse, error) {
 	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
 	if err != nil {
@@ -99,6 +90,33 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 	sumOfTokenHoldersVotes := voteCounts.Tokenholders.Against + voteCounts.Tokenholders.Invalid + voteCounts.Tokenholders.Support
 	totalTokenHolderPower := k.Keeper.GetTotalSupply(ctx).Uint64()
 
+	teamAddr, err := k.Keeper.GetTeamAddress(ctx)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+
+	teamDidVote, err := k.Keeper.Voter.Has(ctx, collections.Join(req.DisputeId, teamAddr.Bytes()))
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+
+	teamVote := &types.VoteCounts{Support: 0, Against: 0, Invalid: 0}
+	if teamDidVote {
+		vote, err := k.Voter.Get(ctx, collections.Join(req.DisputeId, teamAddr.Bytes()))
+		if err != nil {
+			return &types.QueryDisputesTallyResponse{}, err
+		}
+
+		switch vote.Vote {
+		case types.VoteEnum_VOTE_SUPPORT:
+			teamVote.Support = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+		case types.VoteEnum_VOTE_AGAINST:
+			teamVote.Against = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+		case types.VoteEnum_VOTE_INVALID:
+			teamVote.Invalid = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+		}
+	}
+
 	res := &types.QueryDisputesTallyResponse{
 		Users: &types.GroupTally{
 			VoteCount:       &voteCounts.Users,
@@ -115,6 +133,7 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 			TotalPowerVoted: sumOfTokenHoldersVotes,
 			TotalGroupPower: totalTokenHolderPower,
 		},
+		Team: teamVote,
 	}
 
 	return res, nil

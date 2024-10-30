@@ -71,5 +71,6 @@ message QueryDisputesTallyResponse {
   GroupTally users = 1;
   GroupTally reporters = 2;
   GroupTally tokenholders = 3;
+  VoteCounts team = 4;
 }
 
