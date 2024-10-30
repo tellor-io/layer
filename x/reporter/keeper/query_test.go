@@ -137,7 +137,7 @@ func TestAvailableTips(t *testing.T) {
 		{
 			name: "one tip",
 			setup: func() {
-				err := k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(100)})
+				err := k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(100 * 1e6)})
 				require.NoError(err)
 			},
 			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
@@ -147,9 +147,9 @@ func TestAvailableTips(t *testing.T) {
 		{
 			name: "amount changes",
 			setup: func() {
-				err := k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(100)})
+				err := k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(100 * 1e6)})
 				require.NoError(err)
-				err = k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(200)})
+				err = k.SelectorTips.Set(ctx, selectorAddr, types.BigUint{Value: math.NewUint(200 * 1e6)})
 				require.NoError(err)
 			},
 			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
