@@ -29,7 +29,7 @@ var (
 
 // This test is meant to be used as a basic interchaintest tutorial.
 // Code snippets are broken down in ./docs/upAndRunning.md
-func LayerSpinup(t *testing.T) {
+func LayerSpinup(t *testing.T) (layer *cosmos.CosmosChain) {
 	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping in short mode")
@@ -45,7 +45,7 @@ func LayerSpinup(t *testing.T) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	layer := chains[0].(*cosmos.CosmosChain)
+	layer = chains[0].(*cosmos.CosmosChain)
 
 	ic := interchaintest.NewInterchain().
 		AddChain(layer)
@@ -62,6 +62,7 @@ func LayerSpinup(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
+	return
 }
 
 func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
@@ -72,20 +73,21 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 		NumValidators: &nv,
 		NumFullNodes:  &nf,
 		ChainConfig: ibc.ChainConfig{
-			Type:           "cosmos",
-			Name:           "layer",
-			ChainID:        chainId,
-			Bin:            "layerd",
-			Denom:          "loya",
-			Bech32Prefix:   "tellor",
-			CoinType:       "118",
-			GasPrices:      "0.000025loya",
-			GasAdjustment:  1.1,
-			TrustingPeriod: "504h",
-			NoHostMount:    false,
-			Images:         layerImageInfo,
-			EncodingConfig: LayerEncoding(),
-			ModifyGenesis:  cosmos.ModifyGenesis(modifyGenesis),
+			Type:                "cosmos",
+			Name:                "layer",
+			ChainID:             chainId,
+			Bin:                 "layerd",
+			Denom:               "loya",
+			Bech32Prefix:        "tellor",
+			CoinType:            "118",
+			GasPrices:           "0.000025loya",
+			GasAdjustment:       1.1,
+			TrustingPeriod:      "504h",
+			NoHostMount:         false,
+			Images:              layerImageInfo,
+			EncodingConfig:      LayerEncoding(),
+			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+			AdditionalStartArgs: []string{"--key-name", "validator"},
 		},
 	}
 }
