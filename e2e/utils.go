@@ -16,8 +16,8 @@ import (
 var (
 	layerImageInfo = []ibc.DockerImage{
 		{
-			Repository: "localhost:5001/my-image2",
-			Version:    "latest",
+			Repository: "layer",
+			Version:    "local",
 			UidGid:     "1000:1000",
 		},
 	}
