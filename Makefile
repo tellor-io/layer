@@ -189,4 +189,28 @@ mock-gen:
 	$(MAKE) mock-gen-registry
 	$(MAKE) mock-gen-reporter
 
+get-heighliner:
+	git clone https://github.com/strangelove-ventures/heighliner.git
+	cd heighliner && go install
+
+local-image:
+ifeq (,$(shell which heighliner))
+	echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+  	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
+endif
+###############################################################################
+###                              Building / Install                         ###
+###############################################################################
+
+install: go.sum
+	@echo "🤖 Installing layerd..."
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/layerd
+	@echo "✅ Completed install!"
+
+# build:
+# 	@echo "🤖 Building layerd..."
+# 	@go build -mod=readonly $(BUILD_FLAGS) -o "$(PWD)/build/" ./...
+# 	@echo "✅ Completed build!"
+
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon

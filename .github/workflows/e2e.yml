@@ -1,0 +1,88 @@
+name: End to End Tests
+
+on:
+  pull_request:
+
+env:
+  TAR_PATH: heighliner.tar
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Docker Image
+        uses: strangelove-ventures/heighliner-build-action@v1.0.3
+        with:
+          registry: "" # empty registry, image only shared for e2e testing
+          tag: local # emulate local environment for consistency in interchaintest cases
+          tar-export-path: ${{ env.TAR_PATH }} # export a tarball that can be uploaded as an artifact for the e2e jobs
+          platform: linux/amd64 # test runner architecture only
+          git-ref: ${{ github.head_ref }} # source code ref
+
+          # Heighliner chains.yaml config
+          chain: layer
+          dockerfile: cosmos
+          build-target: make install
+          binaries: |
+            - /go/bin/layerd
+
+      - name: Publish Tarball as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-docker-image
+          path: ${{ env.TAR_PATH }}
+
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Generate Matrix
+        id: set-matrix
+        run: |
+          # Run the command and convert its output to a JSON array
+          TESTS=$(cd e2e && go test -list . | grep -v "^ok " | jq -R -s -c 'split("\n")[:-1]')
+          echo "matrix=${TESTS}" >> $GITHUB_OUTPUT
+
+  test:
+    needs:
+      - build
+      - prepare
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # names of `make` commands to run tests
+        test: ${{fromJson(needs.prepare.outputs.matrix)}}
+      fail-fast: false
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Download Tarball Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: layer-docker-image
+
+      - name: Load Docker Image
+        run: docker image load -i ${{ env.TAR_PATH }}
+
+      - name: Run Tests
+        run: cd e2e && go test -race -v -timeout 30m -run ^${{ matrix.test }}$ .
