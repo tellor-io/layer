@@ -118,5 +118,4 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 	}
 
 	return res, nil
-
 }
