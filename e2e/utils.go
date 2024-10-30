@@ -18,7 +18,7 @@ var (
 		{
 			Repository: "layer",
 			Version:    "local",
-			UidGid:     "1000:1000",
+			UidGid:     "1025:1025",
 		},
 	}
 	numValsOne       = 2
@@ -39,7 +39,7 @@ func LayerSpinup(t *testing.T) {
 	cosmos.SetSDKConfig(baseBech32)
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		LayerChainSpec(numValsOne, numFullNodesZero, "layer"),
+		LayerChainSpec(numValsOne, numFullNodesZero, "layer-1"),
 	})
 
 	chains, err := cf.Chains(t.Name())

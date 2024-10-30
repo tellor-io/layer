@@ -5,7 +5,28 @@ GOPATH=$(shell go env GOPATH)
 COSMOS_VERSION=$(shell go list -m all | grep "github.com/cosmos/cosmos-sdk" | awk '{print $$NF}')
 HTTPS_GIT := https://github.com/tellor-io/layer.git
 DOCKER := $(shell which docker)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+COMMIT := $(shell git log -1 --format='%H')
 
+ifeq (,$(VERSION))
+  VERSION := $(shell git describe --exact-match 2>/dev/null)
+  ifeq (,$(VERSION))
+    ifeq ($(shell git status --porcelain),)
+    	VERSION := $(BRANCH)
+    else
+    	VERSION := $(BRANCH)-dirty
+    endif
+  endif
+endif
+
+ldflags := $(LDFLAGS)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.Name=Layer \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=layerd \
+	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+ldflags := $(strip $(ldflags))
+
+BUILD_FLAGS := -ldflags '$(ldflags)'
 build: mod
 	@cd ./cmd/layerd
 	@mkdir -p build/
@@ -197,7 +218,7 @@ local-image:
 ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
-  	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
+	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
 endif
 ###############################################################################
 ###                              Building / Install                         ###
