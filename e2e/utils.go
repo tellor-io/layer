@@ -39,7 +39,7 @@ func LayerSpinup(t *testing.T) {
 	cosmos.SetSDKConfig(baseBech32)
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		LayerChainSpec(numValsOne, numFullNodesZero, "layer-1"),
+		LayerChainSpec(numValsOne, numFullNodesZero, "layer"),
 	})
 
 	chains, err := cf.Chains(t.Name())

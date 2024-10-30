@@ -24,7 +24,7 @@ jobs:
           git-ref: ${{ github.head_ref }} # source code ref
 
           # Heighliner chains.yaml config
-          chain: layer-1
+          chain: layer
           dockerfile: cosmos
           build-target: make install
           binaries: |
