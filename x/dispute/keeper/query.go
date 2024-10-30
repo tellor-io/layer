@@ -63,3 +63,60 @@ func (k Querier) OpenDisputes(ctx context.Context, req *types.QueryOpenDisputesR
 	openDisputesArray.Ids = openDisputes
 	return &types.QueryOpenDisputesResponse{OpenDisputes: &openDisputesArray}, nil
 }
+
+type DisputeTallyGroupResult struct {
+	VoteCount       types.VoteCounts
+	TotalPowerVoted uint64
+	TotalGroupPower uint64
+}
+
+type DisputeTallyResult struct {
+	Users        DisputeTallyGroupResult
+	Reporters    DisputeTallyGroupResult
+	Tokenholders DisputeTallyGroupResult
+}
+
+func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest) (*types.QueryDisputesTallyResponse, error) {
+	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+	voteCounts, err := k.Keeper.VoteCountsByGroup.Get(ctx, req.DisputeId)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+	blockInfo, err := k.BlockInfo.Get(ctx, dispute.HashId)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+
+	sumOfReporterVotes := voteCounts.Reporters.Against + voteCounts.Reporters.Invalid + voteCounts.Reporters.Support
+	totalReporterPower := blockInfo.TotalReporterPower
+
+	sumOfUsersVotes := voteCounts.Users.Against + voteCounts.Users.Invalid + voteCounts.Users.Support
+	totalUserPower := blockInfo.TotalUserTips
+
+	sumOfTokenHoldersVotes := voteCounts.Tokenholders.Against + voteCounts.Tokenholders.Invalid + voteCounts.Tokenholders.Support
+	totalTokenHolderPower := k.Keeper.GetTotalSupply(ctx).Uint64()
+
+	res := &types.QueryDisputesTallyResponse{
+		Users: &types.GroupTally{
+			VoteCount:       &voteCounts.Users,
+			TotalPowerVoted: sumOfUsersVotes,
+			TotalGroupPower: totalUserPower.Uint64(),
+		},
+		Reporters: &types.GroupTally{
+			VoteCount:       &voteCounts.Reporters,
+			TotalPowerVoted: sumOfReporterVotes,
+			TotalGroupPower: totalReporterPower.Uint64(),
+		},
+		Tokenholders: &types.GroupTally{
+			VoteCount:       &voteCounts.Tokenholders,
+			TotalPowerVoted: sumOfTokenHoldersVotes,
+			TotalGroupPower: totalTokenHolderPower,
+		},
+	}
+
+	return res, nil
+
+}

@@ -11,3 +11,17 @@ message Tally {
   VoterClasses againstVotes = 2; 
   VoterClasses Invalid = 3;
 }
+
+message VoteCounts {
+  uint64 support = 1;
+  uint64 against = 2;
+  uint64 invalid = 3;
+}
+
+message GroupTally {
+  VoteCounts voteCount = 1;
+  uint64 totalPowerVoted = 2;
+  uint64 totalGroupPower = 3;
+}
+
+
