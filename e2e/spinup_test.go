@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	"github.com/tellor-io/layer/utils"
+
+	"cosmossdk.io/math"
 )
 
 const (
