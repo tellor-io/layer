@@ -2,11 +2,9 @@ package oracle
 
 import (
 	"context"
-	// "fmt"
 
 	// "github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {

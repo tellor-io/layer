@@ -22,6 +22,7 @@ import (
 	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	_ "github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	_ "github.com/tellor-io/layer/x/oracle"
@@ -415,8 +416,8 @@ func (s *SharedSetup) DelegateAndSelect(msgServerStaking stakingtypes.MsgServer,
 	numLoya math.Int,
 	delegatorAccAddr sdk.AccAddress,
 	valAddr sdk.ValAddress,
-	reporterAccAddr sdk.AccAddress) {
-
+	reporterAccAddr sdk.AccAddress,
+) {
 	msgDelegate := stakingtypes.MsgDelegate{
 		DelegatorAddress: delegatorAccAddr.String(),
 		ValidatorAddress: valAddr.String(),
@@ -446,8 +447,7 @@ func (s *SharedSetup) CreateFundedAccount(numTrb int64) (sdk.AccAddress, error) 
 	return addr, nil
 }
 
-func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccAddress, parameters string, amountLoya math.Int) *[]byte {
-
+func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccAddress, parameters string, amountLoya math.Int) []byte {
 	req := &registrytypes.QueryGenerateQuerydataRequest{
 		Querytype:  "SpotPrice",
 		Parameters: parameters,
@@ -468,11 +468,10 @@ func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccA
 		panic(err)
 	}
 
-	return &res.QueryData
+	return res.QueryData
 }
 
 func (s *SharedSetup) Report(ctx sdk.Context, reporterAccAddr sdk.AccAddress, queryData []byte, reportValue string) {
-
 	msgSubmitValue := oracletypes.MsgSubmitValue{
 		Creator:   reporterAccAddr.String(),
 		QueryData: queryData,
@@ -483,6 +482,23 @@ func (s *SharedSetup) Report(ctx sdk.Context, reporterAccAddr sdk.AccAddress, qu
 	_, err := oracleMsgServer.SubmitValue(ctx, &msgSubmitValue)
 	if err != nil {
 		fmt.Println("submit value fail")
+		panic(err)
+	}
+}
+
+func (s *SharedSetup) OpenDispute(ctx sdk.Context, disputerAccAddr sdk.AccAddress, report oracletypes.MicroReport, category disputetypes.DisputeCategory, fee math.Int, payFromBond bool) {
+	msgProposeDispute := disputetypes.MsgProposeDispute{
+		Creator:         disputerAccAddr.String(),
+		Report:          &report,
+		DisputeCategory: disputetypes.Warning,
+		Fee:             sdk.NewCoin(s.Denom, fee),
+		PayFromBond:     payFromBond,
+	}
+
+	msgServerDispute := disputekeeper.NewMsgServerImpl(s.Disputekeeper)
+	_, err := msgServerDispute.ProposeDispute(ctx, &msgProposeDispute)
+	if err != nil {
+		fmt.Println("propose dispute fail")
 		panic(err)
 	}
 }

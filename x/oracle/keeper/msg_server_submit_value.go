@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -47,7 +46,6 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	queryId := utils.QueryIDFromData(msg.QueryData)
 
 	query, err := k.keeper.CurrentQuery(ctx, queryId)
-	fmt.Println("query.QueryType from SubmitValue: ", query.QueryType)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err

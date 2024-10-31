@@ -19,7 +19,6 @@ import (
 func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
-	fmt.Println("queryType from SetValue: ", queryType)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
@@ -47,9 +46,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		BlockNumber:     uint64(sdkCtx.BlockHeight()),
 	}
 
-	fmt.Println("report.QueryType from SetValue: ", report.QueryType)
 	query.HasRevealedReports = true
-	fmt.Println("query.QueryType from SetValue: ", query.QueryType)
 	err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {
 		return err
