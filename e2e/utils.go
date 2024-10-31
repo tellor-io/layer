@@ -80,7 +80,7 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 			Denom:               "loya",
 			Bech32Prefix:        "tellor",
 			CoinType:            "118",
-			GasPrices:           "0.000025loya",
+			GasPrices:           "0.0025loya",
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "504h",
 			NoHostMount:         false,
