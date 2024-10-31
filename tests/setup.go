@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -21,14 +22,19 @@ import (
 	bridgekeeper "github.com/tellor-io/layer/x/bridge/keeper"
 	_ "github.com/tellor-io/layer/x/dispute"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	_ "github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
 	_ "github.com/tellor-io/layer/x/oracle"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
 	_ "github.com/tellor-io/layer/x/registry/module"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	_ "github.com/tellor-io/layer/x/reporter/module"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+	"golang.org/x/exp/rand"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -309,6 +315,65 @@ func (s *SharedSetup) CreateValidators(numValidators int) ([]sdk.AccAddress, []s
 	return accountsAddrs, validatorsAddrs, validators
 }
 
+func (s *SharedSetup) CreateValidatorsRandomStake(numValidators int) ([]sdk.AccAddress, []sdk.ValAddress, []stakingtypes.Validator, []int64) {
+	require := s.require
+
+	// create account that will become a validator
+	accountsAddrs := simtestutil.CreateIncrementalAccounts(numValidators)
+	// mint 250k trb for each validator
+	maxTrb := int64(250_000)
+	initCoins := sdk.NewCoin(s.Denom, math.NewInt(maxTrb*1e6))
+	for _, acc := range accountsAddrs {
+		// mint to module
+		require.NoError(s.Bankkeeper.MintCoins(s.Ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		// send from module to account
+		require.NoError(s.Bankkeeper.SendCoinsFromModuleToAccount(s.Ctx, authtypes.Minter, acc, sdk.NewCoins(initCoins)))
+		require.Equal(initCoins, s.Bankkeeper.GetBalance(s.Ctx, acc, s.Denom))
+	}
+
+	// get val address for each account
+	validatorsAddrs := simtestutil.ConvertAddrsToValAddrs(accountsAddrs)
+	// create pub keys for validators
+	pubKeys := simtestutil.CreateTestPubKeys(numValidators)
+	validators := make([]stakingtypes.Validator, numValidators)
+	stakingServer := stakingkeeper.NewMsgServerImpl(s.Stakingkeeper)
+	// set each account with proper keepers
+	stakes := make([]int64, numValidators)
+	for i, pubKey := range pubKeys {
+		s.Accountkeeper.NewAccountWithAddress(s.Ctx, accountsAddrs[i])
+		// pick random amount of trb between 1 and 200,000 to stake
+		rand := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
+		randAmt := (rand.Int63n(200_000 * 1e6))
+		stakes[i] = randAmt
+		randCoins := sdk.NewCoin(s.Denom, math.NewInt(randAmt))
+		// create msg for validator creation
+		valMsg, err := stakingtypes.NewMsgCreateValidator(
+			validatorsAddrs[i].String(),
+			pubKey,
+			randCoins,
+			stakingtypes.Description{Moniker: strconv.Itoa(i)},
+			stakingtypes.CommissionRates{
+				Rate:          math.LegacyNewDecWithPrec(5, 1),
+				MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+				MaxChangeRate: math.LegacyNewDec(0),
+			},
+			math.OneInt())
+		require.NoError(err)
+		// create validator
+		_, err = stakingServer.CreateValidator(s.Ctx, valMsg)
+		require.NoError(err)
+	}
+	_, err := s.Stakingkeeper.EndBlocker(s.Ctx)
+	require.NoError(err)
+
+	for _, val := range validatorsAddrs {
+		err := s.Bridgekeeper.SetEVMAddressByOperator(s.Ctx, val.String(), []byte("evmAddr"))
+		require.NoError(err)
+	}
+
+	return accountsAddrs, validatorsAddrs, validators, stakes
+}
+
 func (s *SharedSetup) MintTokens(addr sdk.AccAddress, amount math.Int) {
 	require := s.require
 	Ctx := s.Ctx
@@ -323,4 +388,117 @@ func (s *SharedSetup) ConvertToAccAddress(priv []ed25519.PrivKey) []sdk.AccAddre
 		testAddrs[i] = sdk.AccAddress(pk.PubKey().Address())
 	}
 	return testAddrs
+}
+
+func (s *SharedSetup) CreateReporter(ctx sdk.Context, accAddr sdk.AccAddress, commissionRate math.Uint, minTokensRequired math.Int) (reportertypes.OracleReporter, error) {
+	msgCreateReporter := reportertypes.MsgCreateReporter{
+		ReporterAddress:   accAddr.String(),
+		CommissionRate:    commissionRate,
+		MinTokensRequired: minTokensRequired,
+	}
+	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Reporterkeeper)
+	_, err := msgServerReporter.CreateReporter(ctx, &msgCreateReporter)
+	if err != nil {
+		fmt.Println("create reporter fail")
+		panic(err)
+	}
+
+	reporter, err := s.Reporterkeeper.Reporter(ctx, accAddr)
+	if err != nil {
+		fmt.Println("get reporter fail")
+		panic(err)
+	}
+	return reporter, nil
+}
+
+func (s *SharedSetup) DelegateAndSelect(msgServerStaking stakingtypes.MsgServer,
+	msgServerReporter reportertypes.MsgServer,
+	numLoya math.Int,
+	delegatorAccAddr sdk.AccAddress,
+	valAddr sdk.ValAddress,
+	reporterAccAddr sdk.AccAddress,
+) {
+	msgDelegate := stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAccAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Amount:           sdk.NewCoin(s.Denom, numLoya),
+	}
+	_, err := msgServerStaking.Delegate(s.Ctx, &msgDelegate)
+	if err != nil {
+		fmt.Println("delegate fail")
+		panic(err)
+	}
+
+	msgSelectReporter := reportertypes.MsgSelectReporter{
+		SelectorAddress: delegatorAccAddr.String(),
+		ReporterAddress: reporterAccAddr.String(),
+	}
+	_, err = msgServerReporter.SelectReporter(s.Ctx, &msgSelectReporter)
+	if err != nil {
+		fmt.Println("select reporter fail")
+		panic(err)
+	}
+}
+
+func (s *SharedSetup) CreateFundedAccount(numTrb int64) (sdk.AccAddress, error) {
+	priv := secp256k1.GenPrivKey()
+	addr := sdk.AccAddress(priv.PubKey().Address())
+	s.MintTokens(addr, math.NewInt(numTrb*1e6))
+	return addr, nil
+}
+
+func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccAddress, parameters string, amountLoya math.Int) []byte {
+	req := &registrytypes.QueryGenerateQuerydataRequest{
+		Querytype:  "SpotPrice",
+		Parameters: parameters,
+	}
+	res, err := s.Registrykeeper.GenerateQuerydata(ctx, req)
+	if err != nil {
+		panic(err)
+	}
+
+	msgTip := oracletypes.MsgTip{
+		Tipper:    tipperAccAddr.String(),
+		QueryData: res.QueryData,
+		Amount:    sdk.NewCoin(s.Denom, amountLoya),
+	}
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Oraclekeeper)
+	_, err = oracleMsgServer.Tip(ctx, &msgTip)
+	if err != nil {
+		panic(err)
+	}
+
+	return res.QueryData
+}
+
+func (s *SharedSetup) Report(ctx sdk.Context, reporterAccAddr sdk.AccAddress, queryData []byte, reportValue string) {
+	msgSubmitValue := oracletypes.MsgSubmitValue{
+		Creator:   reporterAccAddr.String(),
+		QueryData: queryData,
+		Value:     reportValue,
+	}
+
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Oraclekeeper)
+	_, err := oracleMsgServer.SubmitValue(ctx, &msgSubmitValue)
+	if err != nil {
+		fmt.Println("submit value fail")
+		panic(err)
+	}
+}
+
+func (s *SharedSetup) OpenDispute(ctx sdk.Context, disputerAccAddr sdk.AccAddress, report oracletypes.MicroReport, category disputetypes.DisputeCategory, fee math.Int, payFromBond bool) {
+	msgProposeDispute := disputetypes.MsgProposeDispute{
+		Creator:         disputerAccAddr.String(),
+		Report:          &report,
+		DisputeCategory: disputetypes.Warning,
+		Fee:             sdk.NewCoin(s.Denom, fee),
+		PayFromBond:     payFromBond,
+	}
+
+	msgServerDispute := disputekeeper.NewMsgServerImpl(s.Disputekeeper)
+	_, err := msgServerDispute.ProposeDispute(ctx, &msgProposeDispute)
+	if err != nil {
+		fmt.Println("propose dispute fail")
+		panic(err)
+	}
 }

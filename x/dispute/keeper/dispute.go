@@ -76,7 +76,6 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	if err != nil {
 		return err
 	}
-
 	if msg.Fee.Amount.GT(disputeFee) {
 		msg.Fee.Amount = disputeFee
 	}
@@ -112,6 +111,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
 		return err
 	}
+
 	// if the paid fee is equal to the slash amount, then slash validator and jail
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
 		if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
