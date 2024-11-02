@@ -2,23 +2,24 @@ package e2e_test
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"testing"
-	"time"
 
+	"cosmossdk.io/math"
 	"github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	"github.com/tellor-io/layer/utils"
-
-	"cosmossdk.io/math"
 )
 
 const (
-	qData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	qData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value = "000000000000000000000000000000000000000000000058528649cf80ee0000"
 )
 
@@ -55,17 +56,74 @@ type AggregateReport struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type Proposal struct {
+	Messages  []map[string]interface{} `json:"messages"`
+	Metadata  string                   `json:"metadata"`
+	Deposit   string                   `json:"deposit"`
+	Title     string                   `json:"title"`
+	Summary   string                   `json:"summary"`
+	Expedited bool                     `json:"expedited"`
+}
+
+func InitMintingProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
+	content, err := json.Marshal(prop)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(content)
+	proposalFilename := fmt.Sprintf("%x.json", hash)
+	err = tn.WriteFile(ctx, content, proposalFilename)
+	if err != nil {
+		return "", fmt.Errorf("writing param change proposal: %w", err)
+	}
+
+	proposalPath := filepath.Join(tn.HomeDir(), proposalFilename)
+
+	command := []string{
+		"gov", "submit-proposal",
+		proposalPath,
+	}
+
+	return tn.ExecTx(ctx, keyName, command...)
+}
 func TestLearn(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
+	ctx := context.Background()
 	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
 	validatorI := layer.Validators[0]
 
-	// ctx := context.Background()
 	valAddress, err := validatorI.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
+	// sample of how add a user and fund it
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user1", math.OneInt(), layer)[0]
 	fmt.Println("User address: ", user.FormattedAddress())
+
+	prop := Proposal{
+		Messages: []map[string]interface{}{
+			{
+				"@type":     "/layer.mint.MsgInit",
+				"authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+			},
+		},
+		Metadata:  "ipfs://CID",
+		Deposit:   "50000000loya",
+		Title:     "Init tbr minting",
+		Summary:   "Initialize inflationary rewards",
+		Expedited: false,
+	}
+	_, err = InitMintingProposal(ctx, "validator", prop, validatorI)
+	require.NoError(t, err)
+
+	for _, v := range layer.Validators {
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		require.NoError(t, err)
+	}
+	err = testutil.WaitForBlocks(ctx, 3, validatorI)
+	require.NoError(t, err)
+
+	result, err := layer.GovQueryProposal(ctx, 1)
+	require.NoError(t, err)
+	fmt.Println("Proposal result: ", result)
 	// create reporter
 	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 	require.NoError(t, err)
@@ -104,4 +162,28 @@ func TestLearn(t *testing.T) {
 	fmt.Println("Aggregate report: ", aggReport)
 
 	require.Equal(t, aggReport.Aggregate.AggregateReporter, valAddress)
+
+	// dispute report
+	bz, err := json.Marshal(microReports.MicroReports[0])
+	require.NoError(t, err)
+	txHash, err = validatorI.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "true", "--keyring-dir", "/var/cosmos-chain/layer-1", "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(t, err)
+	fmt.Println("Tx hash: ", txHash)
+	r, _, err := validatorI.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(t, err)
+	fmt.Println("Disputes: ", string(r))
+	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
+	require.NoError(t, err)
+
+	fmt.Println("Aggregate report: ", string(res2))
+	// reporter should be jailed
+	res3, _, err := validatorI.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(t, err)
+	fmt.Println("Reporter: ", string(res3))
+	// vote on dispute
+	for _, v := range layer.Validators {
+		_, err = v.ExecTx(ctx, "validator", "dispute", "vote", "1", "vote-support", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		require.NoError(t, err)
+	}
+
 }

@@ -68,6 +68,10 @@ func LayerSpinup(t *testing.T) (layer *cosmos.CosmosChain) {
 func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 	modifyGenesis := []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 	}
 	return &interchaintest.ChainSpec{
 		NumValidators: &nv,
