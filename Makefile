@@ -27,6 +27,17 @@ ldflags += -X github.com/cosmos/cosmos-sdk/version.Name=Layer \
 ldflags := $(strip $(ldflags))
 
 BUILD_FLAGS := -ldflags '$(ldflags)'
+
+###############################################################################
+###                              Building / Install                         ###
+###############################################################################
+
+install: go.sum
+	@echo "Installing layerd..."
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/layerd
+	@echo "Completed install!"
+.PHONY: install
+
 build: mod
 	@cd ./cmd/layerd
 	@mkdir -p build/
@@ -68,7 +79,7 @@ build-with-checksum: build-linux-with-checksum build-darwin-with-checksum
 ###                                Linting                                  ###
 ###############################################################################
 # Golangci-lint version
-golangci_version=v1.56.2
+golangci_version=v1.61.0
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -142,6 +153,16 @@ proto-update-deps:
 
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 
+###############################################################################
+###                                tests                                    ###
+###############################################################################
+test:
+	@go test -v ./... -short
+
+e2e:
+	@cd e2e && go test -v ./... -timeout 20m
+
+.PHONY: test e2e
 ###############################################################################
 ###                                MOCKS                                    ###
 ###############################################################################
@@ -220,18 +241,5 @@ ifeq (,$(shell which heighliner))
 else
 	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
 endif
-###############################################################################
-###                              Building / Install                         ###
-###############################################################################
-
-install: go.sum
-	@echo "🤖 Installing layerd..."
-	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/layerd
-	@echo "✅ Completed install!"
-
-# build:
-# 	@echo "🤖 Building layerd..."
-# 	@go build -mod=readonly $(BUILD_FLAGS) -o "$(PWD)/build/" ./...
-# 	@echo "✅ Completed build!"
 
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon

@@ -65,7 +65,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				MaxDaemonUnhealthySeconds:   5 * 60, // 5 minutes.
 			},
 			Price: PriceFlags{
-				Enabled:     false,
+				Enabled:     true,
 				LoopDelayMs: 3_000,
 			},
 			Reporter: ReporterFlags{

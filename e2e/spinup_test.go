@@ -9,13 +9,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	"github.com/tellor-io/layer/utils"
+
+	"cosmossdk.io/math"
 )
 
 const (
@@ -65,7 +66,7 @@ type Proposal struct {
 	Expedited bool                     `json:"expedited"`
 }
 
-func InitMintingProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
+func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
 	content, err := json.Marshal(prop)
 	if err != nil {
 		return "", err
@@ -87,6 +88,7 @@ func InitMintingProposal(ctx context.Context, keyName string, prop Proposal, tn 
 
 	return tn.ExecTx(ctx, keyName, command...)
 }
+
 func TestLearn(t *testing.T) {
 	ctx := context.Background()
 	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
@@ -111,7 +113,7 @@ func TestLearn(t *testing.T) {
 		Summary:   "Initialize inflationary rewards",
 		Expedited: false,
 	}
-	_, err = InitMintingProposal(ctx, "validator", prop, validatorI)
+	_, err = ExecProposal(ctx, "validator", prop, validatorI)
 	require.NoError(t, err)
 
 	for _, v := range layer.Validators {
@@ -169,8 +171,12 @@ func TestLearn(t *testing.T) {
 	txHash, err = validatorI.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "true", "--keyring-dir", "/var/cosmos-chain/layer-1", "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
+	var disputes e2e.Disputes
 	r, _, err := validatorI.ExecQuery(ctx, "dispute", "disputes")
 	require.NoError(t, err)
+	err = json.Unmarshal(r, &disputes)
+	require.NoError(t, err)
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // voting
 	fmt.Println("Disputes: ", string(r))
 	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
@@ -185,5 +191,16 @@ func TestLearn(t *testing.T) {
 		_, err = v.ExecTx(ctx, "validator", "dispute", "vote", "1", "vote-support", "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(t, err)
 	}
+	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", "/var/cosmos-chain/layer-1")
+	require.NoError(t, err)
 
+	res3, _, err = validatorI.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(t, err)
+	fmt.Println("Team address: ", string(res3))
+	r, _, err = validatorI.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(t, err)
+
+	err = json.Unmarshal(r, &disputes)
+	require.NoError(t, err)
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
 }

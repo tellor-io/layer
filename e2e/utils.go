@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v8"
@@ -10,6 +11,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
@@ -25,11 +29,11 @@ var (
 	numFullNodesZero = 0
 
 	baseBech32 = "tellor"
+
+	teamMnemonic = "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 )
 
-// This test is meant to be used as a basic interchaintest tutorial.
-// Code snippets are broken down in ./docs/upAndRunning.md
-func LayerSpinup(t *testing.T) (layer *cosmos.CosmosChain) {
+func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping in short mode")
@@ -45,7 +49,7 @@ func LayerSpinup(t *testing.T) (layer *cosmos.CosmosChain) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	layer = chains[0].(*cosmos.CosmosChain)
+	layer := chains[0].(*cosmos.CosmosChain)
 
 	ic := interchaintest.NewInterchain().
 		AddChain(layer)
@@ -62,11 +66,19 @@ func LayerSpinup(t *testing.T) (layer *cosmos.CosmosChain) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	return
+	require.NoError(t, layer.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(t, layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	return layer
 }
 
 func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
 		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
@@ -91,7 +103,8 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 			Images:              layerImageInfo,
 			EncodingConfig:      LayerEncoding(),
 			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-			AdditionalStartArgs: []string{"--key-name", "validator"},
+			AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+			PreGenesis:          pregenesis(),
 		},
 	}
 }
@@ -99,4 +112,65 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 func LayerEncoding() *testutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
 	return &cfg
+}
+
+// for adding the secrets file required for bridging
+func WriteSecretsFile(ctx context.Context, rpc, bridge string, tn *cosmos.ChainNode) error {
+	secrets := []byte(`{
+		"eth_rpc_url": "` + rpc + `",
+		"token_bridge_contract": "` + bridge + `",
+	}`)
+	fmt.Println("Writing secrets file")
+	return tn.WriteFile(ctx, secrets, "secrets.yaml")
+}
+
+func pregenesis() func(ibc.Chain) error {
+	return func(chain ibc.Chain) error {
+		layer := chain.(*cosmos.CosmosChain)
+		for _, node := range layer.Validators {
+			if err := WriteSecretsFile(context.Background(), "", "", node); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+// for unmarshalling the disputes response
+type Disputes struct {
+	Disputes []struct {
+		DisputeID string   `json:"disputeId"`
+		Metadata  Metadata `json:"metadata"`
+	} `json:"disputes"`
+}
+
+type Metadata struct {
+	HashID            string   `json:"hash_id"`
+	DisputeID         string   `json:"dispute_id"`
+	DisputeCategory   int      `json:"dispute_category"`
+	DisputeFee        string   `json:"dispute_fee"`
+	DisputeStatus     int      `json:"dispute_status"`
+	DisputeStartTime  string   `json:"dispute_start_time"`
+	DisputeEndTime    string   `json:"dispute_end_time"`
+	DisputeStartBlock string   `json:"dispute_start_block"`
+	DisputeRound      string   `json:"dispute_round"`
+	SlashAmount       string   `json:"slash_amount"`
+	BurnAmount        string   `json:"burn_amount"`
+	InitialEvidence   Evidence `json:"initial_evidence"`
+	FeeTotal          string   `json:"fee_total"`
+	PrevDisputeIDs    []string `json:"prev_dispute_ids"`
+	BlockNumber       string   `json:"block_number"`
+	VoterReward       string   `json:"voter_reward"`
+}
+
+type Evidence struct {
+	Reporter        string `json:"reporter"`
+	Power           string `json:"power"`
+	QueryType       string `json:"query_type"`
+	QueryID         string `json:"query_id"`
+	AggregateMethod string `json:"aggregate_method"`
+	Value           string `json:"value"`
+	Timestamp       string `json:"timestamp"`
+	BlockNumber     string `json:"block_number"`
 }
