@@ -837,10 +837,31 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 
 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
 	s.NoError(err)
-	// forward time to expire dispute
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
-	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
-	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
+	// forward time to expire dispute and tally vote
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	s.NoError(err)
+
+	voteInfo, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, voteInfo.VoteResult)
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Unresolved, dispute.DisputeStatus)
+	s.True(dispute.PendingExecution)
+	s.False(voteInfo.Executed)
+
+	// forward time to execute vote
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.ONE_DAY + 1))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	s.NoError(err)
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.False(dispute.PendingExecution)
+	voteInfo, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.True(voteInfo.Executed)
 }
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
