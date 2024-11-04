@@ -3,12 +3,15 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -89,4 +92,80 @@ func (k Querier) TeamAddress(ctx context.Context, req *types.QueryTeamAddressReq
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryTeamAddressResponse{TeamAddress: teamAddr.String()}, nil
+}
+func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest) (*types.QueryDisputesTallyResponse, error) {
+	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+	voteCounts, err := k.Keeper.VoteCountsByGroup.Get(ctx, req.DisputeId)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+	blockInfo, err := k.BlockInfo.Get(ctx, dispute.HashId)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			blockInfo.TotalReporterPower = math.ZeroInt()
+			blockInfo.TotalUserTips = math.ZeroInt()
+		} else {
+			return &types.QueryDisputesTallyResponse{}, err
+		}
+	}
+
+	sumOfReporterVotes := voteCounts.Reporters.Against + voteCounts.Reporters.Invalid + voteCounts.Reporters.Support
+	totalReporterPower := blockInfo.TotalReporterPower
+
+	sumOfUsersVotes := voteCounts.Users.Against + voteCounts.Users.Invalid + voteCounts.Users.Support
+	totalUserPower := blockInfo.TotalUserTips
+
+	sumOfTokenHoldersVotes := voteCounts.Tokenholders.Against + voteCounts.Tokenholders.Invalid + voteCounts.Tokenholders.Support
+	totalTokenHolderPower := k.Keeper.GetTotalSupply(ctx).Uint64()
+
+	teamAddr, err := k.Keeper.GetTeamAddress(ctx)
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+
+	teamDidVote, err := k.Keeper.Voter.Has(ctx, collections.Join(req.DisputeId, teamAddr.Bytes()))
+	if err != nil {
+		return &types.QueryDisputesTallyResponse{}, err
+	}
+
+	teamVote := &types.VoteCounts{Support: 0, Against: 0, Invalid: 0}
+	if teamDidVote {
+		vote, err := k.Voter.Get(ctx, collections.Join(req.DisputeId, teamAddr.Bytes()))
+		if err != nil {
+			return &types.QueryDisputesTallyResponse{}, err
+		}
+
+		switch vote.Vote {
+		case types.VoteEnum_VOTE_SUPPORT:
+			teamVote.Support = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+		case types.VoteEnum_VOTE_AGAINST:
+			teamVote.Against = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+		case types.VoteEnum_VOTE_INVALID:
+			teamVote.Invalid = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+		}
+	}
+
+	res := &types.QueryDisputesTallyResponse{
+		Users: &types.GroupTally{
+			VoteCount:       &voteCounts.Users,
+			TotalPowerVoted: sumOfUsersVotes,
+			TotalGroupPower: totalUserPower.Uint64(),
+		},
+		Reporters: &types.GroupTally{
+			VoteCount:       &voteCounts.Reporters,
+			TotalPowerVoted: sumOfReporterVotes,
+			TotalGroupPower: totalReporterPower.Uint64(),
+		},
+		Tokenholders: &types.GroupTally{
+			VoteCount:       &voteCounts.Tokenholders,
+			TotalPowerVoted: sumOfTokenHoldersVotes,
+			TotalGroupPower: totalTokenHolderPower,
+		},
+		Team: teamVote,
+	}
+
+	return res, nil
 }
