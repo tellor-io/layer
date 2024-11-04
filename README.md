@@ -19,33 +19,41 @@ For more in-depth information, checkout the [Tellor Layer tech paper](https://gi
 
 For docs on how to join our public testnet go here:  [https://docs.tellor.io/layer-docs](https://docs.tellor.io/layer-docs)
 
-## Starting a New Chain:
+## Starting a New Chain
 
 1) Select the start script that works for you
-  - `start_one_node.sh` is for those who want to run a chain with a single validator in a mac environment
-  - `start_one_node_aws.sh` is for those who want a chain with a single validator and the option to import a faucet account from a seed phrase to be used in a linux environment
-  - `start_two_chains.sh` (mac environment) sets up two nodes/validators and starts one of them from this script. Then to start the other validator you would run the `start_bill.sh` script 
+
+- `start_one_node.sh` is for those who want to run a chain with a single validator in a mac environment
+- `start_one_node_aws.sh` is for those who want a chain with a single validator and the option to import a faucet account from a seed phrase to be used in a linux environment
+- `start_two_chains.sh` (mac environment) sets up two nodes/validators and starts one of them from this script. Then to start the other validator you would run the `start_bill.sh` script
 
 2) Run the selected script from the base layer folder:
 `sh ./start_scripts/{selected_script}`
 
-## Joining a Running Chain:
+## Joining a Running Chain
 
 To find more information please go to the layer_scripts folder.
 
-Here you will find a detailed breakdown for how to join a chain as a node and how to create a new validator for the chain 
+Here you will find a detailed breakdown for how to join a chain as a node and how to create a new validator for the chain
 
 ## Tests
 
-To run all tests:
-`go test -v ./...`
+To run integration tests:
+
+`make test`
+
+To run e2e tests:
+
+`make e2e`
 
 ## Linting
 
 To lint per folder:
+
 `make lint-folder-fix FOLDER="x/mint"`
 
 To lint all files:
+
 `make lint`
 
 ## Maintainers<a name="maintainers"> </a>

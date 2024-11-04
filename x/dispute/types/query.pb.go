@@ -343,6 +343,181 @@ func (m *QueryOpenDisputesResponse) GetOpenDisputes() *OpenDisputes {
 	return nil
 }
 
+// QueryTeamVoteRequest is request type for the Query/TeamVote RPC method.
+type QueryTeamVoteRequest struct {
+	// disputeId defines the dispute id.
+	DisputeId uint64 `protobuf:"varint,1,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+}
+
+func (m *QueryTeamVoteRequest) Reset()         { *m = QueryTeamVoteRequest{} }
+func (m *QueryTeamVoteRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTeamVoteRequest) ProtoMessage()    {}
+func (*QueryTeamVoteRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{7}
+}
+func (m *QueryTeamVoteRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTeamVoteRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTeamVoteRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTeamVoteRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTeamVoteRequest.Merge(m, src)
+}
+func (m *QueryTeamVoteRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTeamVoteRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTeamVoteRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTeamVoteRequest proto.InternalMessageInfo
+
+func (m *QueryTeamVoteRequest) GetDisputeId() uint64 {
+	if m != nil {
+		return m.DisputeId
+	}
+	return 0
+}
+
+// QueryTeamVoteResponse is response type for the Query/TeamVote RPC method.
+type QueryTeamVoteResponse struct {
+	// teamVote holds the team voter info for a dispute.
+	TeamVote Voter `protobuf:"bytes,1,opt,name=team_vote,json=teamVote,proto3" json:"team_vote"`
+}
+
+func (m *QueryTeamVoteResponse) Reset()         { *m = QueryTeamVoteResponse{} }
+func (m *QueryTeamVoteResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTeamVoteResponse) ProtoMessage()    {}
+func (*QueryTeamVoteResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{8}
+}
+func (m *QueryTeamVoteResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTeamVoteResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTeamVoteResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTeamVoteResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTeamVoteResponse.Merge(m, src)
+}
+func (m *QueryTeamVoteResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTeamVoteResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTeamVoteResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTeamVoteResponse proto.InternalMessageInfo
+
+func (m *QueryTeamVoteResponse) GetTeamVote() Voter {
+	if m != nil {
+		return m.TeamVote
+	}
+	return Voter{}
+}
+
+// QueryTeamAddressRequest is request type for the Query/TeamAddress RPC method.
+type QueryTeamAddressRequest struct {
+}
+
+func (m *QueryTeamAddressRequest) Reset()         { *m = QueryTeamAddressRequest{} }
+func (m *QueryTeamAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryTeamAddressRequest) ProtoMessage()    {}
+func (*QueryTeamAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{9}
+}
+func (m *QueryTeamAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTeamAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTeamAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTeamAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTeamAddressRequest.Merge(m, src)
+}
+func (m *QueryTeamAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTeamAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTeamAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTeamAddressRequest proto.InternalMessageInfo
+
+// QueryTeamAddressResponse is response type for the Query/TeamAddress RPC method.
+type QueryTeamAddressResponse struct {
+	// teamAddress holds the team address.
+	TeamAddress string `protobuf:"bytes,1,opt,name=team_address,json=teamAddress,proto3" json:"team_address,omitempty"`
+}
+
+func (m *QueryTeamAddressResponse) Reset()         { *m = QueryTeamAddressResponse{} }
+func (m *QueryTeamAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryTeamAddressResponse) ProtoMessage()    {}
+func (*QueryTeamAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{10}
+}
+func (m *QueryTeamAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryTeamAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryTeamAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryTeamAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryTeamAddressResponse.Merge(m, src)
+}
+func (m *QueryTeamAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryTeamAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryTeamAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryTeamAddressResponse proto.InternalMessageInfo
+
+func (m *QueryTeamAddressResponse) GetTeamAddress() string {
+	if m != nil {
+		return m.TeamAddress
+	}
+	return ""
+}
+
 // Request the current vote count for a dispute
 type QueryDisputesTallyRequest struct {
 	DisputeId uint64 `protobuf:"varint,1,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
@@ -352,7 +527,7 @@ func (m *QueryDisputesTallyRequest) Reset()         { *m = QueryDisputesTallyReq
 func (m *QueryDisputesTallyRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryDisputesTallyRequest) ProtoMessage()    {}
 func (*QueryDisputesTallyRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_972b8e1a74396a43, []int{7}
+	return fileDescriptor_972b8e1a74396a43, []int{11}
 }
 func (m *QueryDisputesTallyRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -399,7 +574,7 @@ func (m *QueryDisputesTallyResponse) Reset()         { *m = QueryDisputesTallyRe
 func (m *QueryDisputesTallyResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryDisputesTallyResponse) ProtoMessage()    {}
 func (*QueryDisputesTallyResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_972b8e1a74396a43, []int{8}
+	return fileDescriptor_972b8e1a74396a43, []int{12}
 }
 func (m *QueryDisputesTallyResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -464,6 +639,10 @@ func init() {
 	proto.RegisterType((*QueryDisputesResponse)(nil), "layer.dispute.QueryDisputesResponse")
 	proto.RegisterType((*QueryOpenDisputesRequest)(nil), "layer.dispute.QueryOpenDisputesRequest")
 	proto.RegisterType((*QueryOpenDisputesResponse)(nil), "layer.dispute.QueryOpenDisputesResponse")
+	proto.RegisterType((*QueryTeamVoteRequest)(nil), "layer.dispute.QueryTeamVoteRequest")
+	proto.RegisterType((*QueryTeamVoteResponse)(nil), "layer.dispute.QueryTeamVoteResponse")
+	proto.RegisterType((*QueryTeamAddressRequest)(nil), "layer.dispute.QueryTeamAddressRequest")
+	proto.RegisterType((*QueryTeamAddressResponse)(nil), "layer.dispute.QueryTeamAddressResponse")
 	proto.RegisterType((*QueryDisputesTallyRequest)(nil), "layer.dispute.QueryDisputesTallyRequest")
 	proto.RegisterType((*QueryDisputesTallyResponse)(nil), "layer.dispute.QueryDisputesTallyResponse")
 }
@@ -471,49 +650,58 @@ func init() {
 func init() { proto.RegisterFile("layer/dispute/query.proto", fileDescriptor_972b8e1a74396a43) }
 
 var fileDescriptor_972b8e1a74396a43 = []byte{
-	// 672 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0xd1, 0x4e, 0xd4, 0x40,
-	0x14, 0x86, 0xb7, 0xcb, 0x42, 0xe0, 0x80, 0x37, 0x23, 0xe8, 0x52, 0xb0, 0xb0, 0xc5, 0xc0, 0x82,
-	0xd9, 0x36, 0xec, 0x5e, 0x98, 0x98, 0x18, 0x13, 0x24, 0x12, 0xbd, 0x11, 0x1b, 0xe3, 0x85, 0x21,
-	0x92, 0x59, 0x76, 0x52, 0x1a, 0xbb, 0x9d, 0xd2, 0x4e, 0x0d, 0xc4, 0x98, 0x18, 0x9f, 0x40, 0x63,
-	0x7c, 0x0b, 0x1f, 0x84, 0x4b, 0x12, 0x6f, 0xbc, 0x32, 0x06, 0x7c, 0x04, 0x1f, 0xc0, 0x74, 0x7a,
-	0xca, 0xb6, 0xa5, 0xec, 0x7a, 0x05, 0x3b, 0xe7, 0xff, 0xff, 0xf9, 0xe6, 0xcc, 0x99, 0xc2, 0xbc,
-	0x4b, 0x4f, 0x58, 0x60, 0xf6, 0x9c, 0xd0, 0x8f, 0x04, 0x33, 0x8f, 0x22, 0x16, 0x9c, 0x18, 0x7e,
-	0xc0, 0x05, 0x27, 0x37, 0x64, 0xc9, 0xc0, 0x92, 0x3a, 0x6b, 0x73, 0x9b, 0xcb, 0x8a, 0x19, 0xff,
-	0x97, 0x88, 0xd4, 0x45, 0x9b, 0x73, 0xdb, 0x65, 0x26, 0xf5, 0x1d, 0x93, 0x7a, 0x1e, 0x17, 0x54,
-	0x38, 0xdc, 0x0b, 0xb1, 0xba, 0x71, 0xc0, 0xc3, 0x3e, 0x0f, 0xcd, 0x2e, 0x0d, 0x31, 0xdb, 0x7c,
-	0xb7, 0xd9, 0x65, 0x82, 0x6e, 0x9a, 0x3e, 0xb5, 0x1d, 0x4f, 0x8a, 0x51, 0xab, 0xe6, 0x49, 0x7c,
-	0x1a, 0xd0, 0x7e, 0x9a, 0xb3, 0x90, 0xaf, 0xe1, 0x5f, 0x2c, 0x36, 0xf2, 0x45, 0xee, 0x33, 0x6f,
-	0x1f, 0x7f, 0xa4, 0xfe, 0xc2, 0x29, 0x05, 0x75, 0x5d, 0x3c, 0xa5, 0x3e, 0x0b, 0xe4, 0x45, 0x0c,
-	0xb6, 0x2b, 0xf7, 0xb3, 0xd8, 0x51, 0xc4, 0x42, 0xa1, 0x3f, 0x83, 0x9b, 0xb9, 0xd5, 0xd0, 0xe7,
-	0x5e, 0xc8, 0x48, 0x07, 0x26, 0x12, 0xae, 0xba, 0xb2, 0xac, 0x34, 0xa7, 0xdb, 0x73, 0x46, 0xae,
-	0x47, 0x46, 0x22, 0xdf, 0xaa, 0x9d, 0xfe, 0x5a, 0xaa, 0x58, 0x28, 0xd5, 0xdf, 0xc0, 0xac, 0xcc,
-	0xda, 0x46, 0x26, 0xdc, 0x83, 0x3c, 0x01, 0x18, 0x34, 0x01, 0x03, 0x57, 0x8d, 0xa4, 0x63, 0x46,
-	0xdc, 0x31, 0x23, 0xb9, 0x0d, 0xec, 0x98, 0xb1, 0x4b, 0x6d, 0x86, 0x5e, 0x2b, 0xe3, 0xd4, 0xf7,
-	0x60, 0x32, 0x8d, 0x26, 0x8b, 0x30, 0x85, 0x2c, 0x4f, 0x7b, 0x32, 0xb2, 0x66, 0x0d, 0x16, 0x48,
-	0x1b, 0x26, 0xfb, 0x4c, 0xd0, 0x1e, 0x15, 0xb4, 0x5e, 0x95, 0xfb, 0xdd, 0x2a, 0x1c, 0x00, 0x83,
-	0xac, 0x4b, 0x9d, 0xfe, 0x4d, 0x81, 0xb9, 0x02, 0x3e, 0x36, 0x63, 0xa7, 0x84, 0x7f, 0x6d, 0x24,
-	0x7f, 0x62, 0xce, 0x1e, 0x80, 0x74, 0x60, 0x32, 0xbd, 0xaf, 0x7a, 0x75, 0x79, 0xac, 0x39, 0xdd,
-	0xbe, 0x5d, 0x8e, 0x15, 0x5a, 0x97, 0x42, 0x5d, 0x85, 0xba, 0xc4, 0x7a, 0xee, 0x33, 0xaf, 0xd0,
-	0x59, 0x7d, 0x0f, 0xe6, 0x4b, 0x6a, 0x88, 0xfd, 0x08, 0x66, 0x78, 0x66, 0x1d, 0xc1, 0x17, 0x0a,
-	0x3b, 0xe6, 0xac, 0x39, 0x83, 0xfe, 0x00, 0xd3, 0xd3, 0x85, 0x97, 0xf1, 0x34, 0xa5, 0x97, 0x7a,
-	0x07, 0x00, 0x23, 0xf6, 0x9d, 0xab, 0x37, 0xa0, 0xff, 0x55, 0x40, 0x2d, 0x33, 0x23, 0x9b, 0x09,
-	0xe3, 0x51, 0xc8, 0x82, 0x14, 0x6a, 0xbe, 0x00, 0xb5, 0x13, 0xf0, 0xc8, 0x4f, 0x1c, 0x89, 0x8e,
-	0xdc, 0x87, 0xa9, 0x80, 0xf9, 0x3c, 0x10, 0xb1, 0xa9, 0x3a, 0xca, 0x34, 0xd0, 0x92, 0x87, 0x30,
-	0x23, 0xf8, 0x5b, 0xe6, 0x1d, 0x72, 0xb7, 0x17, 0x7b, 0xc7, 0x46, 0x79, 0x73, 0x72, 0xd2, 0x82,
-	0x9a, 0x60, 0xb4, 0x5f, 0xaf, 0x95, 0xda, 0x5e, 0x71, 0xc1, 0x1e, 0xf3, 0xc8, 0x13, 0xa1, 0x25,
-	0x65, 0xed, 0xef, 0x35, 0x18, 0x97, 0xc7, 0x26, 0xc7, 0x30, 0x91, 0x3c, 0x12, 0xd2, 0x28, 0x98,
-	0xae, 0xbe, 0x42, 0x55, 0x1f, 0x26, 0x49, 0x5a, 0xa6, 0xaf, 0x7d, 0xfa, 0xf1, 0xe7, 0x6b, 0xb5,
-	0x41, 0x96, 0x4c, 0xc1, 0x5c, 0x97, 0x07, 0x2d, 0x87, 0x9b, 0x65, 0x5f, 0x12, 0xf2, 0x51, 0xc9,
-	0xbc, 0x93, 0x95, 0xb2, 0xe4, 0xc2, 0x18, 0xa9, 0x77, 0x87, 0x8b, 0x10, 0x60, 0x5d, 0x02, 0xac,
-	0x90, 0xc6, 0xb5, 0x00, 0xe9, 0xcc, 0x92, 0x2f, 0x0a, 0xcc, 0x64, 0x07, 0x8b, 0xac, 0x95, 0xed,
-	0x50, 0x32, 0xd1, 0x6a, 0x73, 0xb4, 0x10, 0x71, 0x0c, 0x89, 0xd3, 0x24, 0xab, 0xd7, 0xe2, 0xc4,
-	0xc3, 0xdc, 0xca, 0x32, 0x8d, 0xcb, 0x1b, 0x26, 0xcd, 0x61, 0xc7, 0xcd, 0x0e, 0xb9, 0xba, 0xfe,
-	0x1f, 0x4a, 0xc4, 0xe9, 0x48, 0x9c, 0x16, 0xb9, 0x77, 0x2d, 0x8e, 0xfc, 0x18, 0x9b, 0xef, 0x07,
-	0xaf, 0xe6, 0xc3, 0xd6, 0xf6, 0xe9, 0xb9, 0xa6, 0x9c, 0x9d, 0x6b, 0xca, 0xef, 0x73, 0x4d, 0xf9,
-	0x7c, 0xa1, 0x55, 0xce, 0x2e, 0xb4, 0xca, 0xcf, 0x0b, 0xad, 0xf2, 0x7a, 0xc3, 0x76, 0xc4, 0x61,
-	0xd4, 0x35, 0x0e, 0x78, 0xff, 0x4a, 0xe0, 0xf1, 0x20, 0xf2, 0xc4, 0x67, 0x61, 0x77, 0x42, 0x7e,
-	0xe0, 0x3b, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0xd5, 0x9b, 0x50, 0x3a, 0xe3, 0x06, 0x00, 0x00,
+	// 813 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x55, 0x51, 0x4f, 0x13, 0x4d,
+	0x14, 0xed, 0x96, 0xd2, 0x94, 0x69, 0xbf, 0x97, 0xf9, 0x8a, 0xb4, 0x0b, 0x16, 0xba, 0x28, 0x2d,
+	0x98, 0xee, 0x86, 0x36, 0x86, 0xc4, 0x84, 0x18, 0x91, 0x48, 0xf4, 0x45, 0xdc, 0x10, 0x1f, 0x0c,
+	0x91, 0x4c, 0xe9, 0xa4, 0x34, 0xb6, 0x3b, 0xcb, 0xee, 0x94, 0x40, 0x8c, 0x89, 0xf1, 0x5d, 0xa3,
+	0x31, 0xfe, 0x27, 0x5e, 0x4c, 0x48, 0x7c, 0xf1, 0xc9, 0x18, 0xf0, 0x27, 0xf8, 0x03, 0xcc, 0xcc,
+	0xde, 0x6d, 0x77, 0x97, 0x6d, 0xcb, 0x13, 0xcb, 0xdc, 0x73, 0xee, 0x3d, 0xf7, 0xcc, 0xdc, 0x5b,
+	0x54, 0xec, 0x92, 0x33, 0xea, 0x18, 0xad, 0x8e, 0x6b, 0xf7, 0x39, 0x35, 0x8e, 0xfb, 0xd4, 0x39,
+	0xd3, 0x6d, 0x87, 0x71, 0x86, 0xff, 0x93, 0x21, 0x1d, 0x42, 0xea, 0xda, 0x21, 0x73, 0x7b, 0xcc,
+	0x35, 0x9a, 0xc4, 0x05, 0x9c, 0x71, 0xb2, 0xde, 0xa4, 0x9c, 0xac, 0x1b, 0x36, 0x69, 0x77, 0x2c,
+	0xc2, 0x3b, 0xcc, 0xf2, 0xa8, 0x6a, 0xbe, 0xcd, 0xda, 0x4c, 0x7e, 0x1a, 0xe2, 0x0b, 0x4e, 0x17,
+	0xda, 0x8c, 0xb5, 0xbb, 0xd4, 0x20, 0x76, 0xc7, 0x20, 0x96, 0xc5, 0xb8, 0xa4, 0xb8, 0x10, 0x9d,
+	0x0f, 0x2b, 0x81, 0xbf, 0x10, 0x2c, 0x87, 0x83, 0xcc, 0xa6, 0xd6, 0x01, 0xfc, 0xe3, 0xf3, 0xd5,
+	0x30, 0xc4, 0x26, 0x0e, 0xe9, 0xf9, 0xb1, 0x48, 0x97, 0x9c, 0x74, 0xbb, 0xd0, 0xa5, 0x5a, 0x08,
+	0x87, 0x4e, 0x98, 0x5f, 0x53, 0xcb, 0x23, 0xfc, 0x42, 0xb4, 0xb9, 0x2b, 0x33, 0x99, 0xf4, 0xb8,
+	0x4f, 0x5d, 0xae, 0x3d, 0x43, 0xff, 0x87, 0x4e, 0x5d, 0x9b, 0x59, 0x2e, 0xc5, 0x0d, 0x94, 0xf6,
+	0x2a, 0x16, 0x94, 0x25, 0xa5, 0x9a, 0xad, 0xcf, 0xea, 0x21, 0xf7, 0x74, 0x0f, 0xbe, 0x95, 0x3a,
+	0xff, 0xb5, 0x98, 0x30, 0x01, 0xaa, 0xbd, 0x46, 0x79, 0x99, 0x6b, 0x1b, 0x3a, 0x81, 0x1a, 0xf8,
+	0x09, 0x42, 0x43, 0x4b, 0x21, 0xe1, 0x8a, 0xee, 0xf9, 0xaf, 0x0b, 0xff, 0x75, 0xef, 0x9e, 0xc0,
+	0x7f, 0x7d, 0x97, 0xb4, 0x29, 0x70, 0xcd, 0x00, 0x53, 0xdb, 0x47, 0x19, 0x3f, 0x35, 0x5e, 0x40,
+	0x33, 0xa0, 0xe5, 0x69, 0x4b, 0xa6, 0x4c, 0x99, 0xc3, 0x03, 0x5c, 0x47, 0x99, 0x1e, 0xe5, 0xa4,
+	0x45, 0x38, 0x29, 0x24, 0x65, 0xbd, 0x5b, 0x91, 0x06, 0x20, 0x91, 0x39, 0xc0, 0x69, 0xdf, 0x14,
+	0x34, 0x1b, 0x91, 0x0f, 0x66, 0xec, 0xc4, 0xe8, 0xaf, 0x4c, 0xd4, 0xef, 0x91, 0x83, 0x0d, 0xe0,
+	0x06, 0xca, 0xf8, 0xb7, 0x5c, 0x48, 0x2e, 0x4d, 0x55, 0xb3, 0xf5, 0xb9, 0x78, 0x59, 0xae, 0x39,
+	0x00, 0x6a, 0x2a, 0x2a, 0x48, 0x59, 0xcf, 0x6d, 0x6a, 0x45, 0x9c, 0xd5, 0xf6, 0x51, 0x31, 0x26,
+	0x06, 0xb2, 0x1f, 0xa2, 0x1c, 0x0b, 0x9c, 0x83, 0xf0, 0xf9, 0x48, 0xc5, 0x10, 0x35, 0x44, 0xd0,
+	0xee, 0xc3, 0x7d, 0xee, 0x51, 0xd2, 0x7b, 0xc9, 0xb8, 0x7f, 0x27, 0xf8, 0x36, 0x42, 0xc0, 0x3e,
+	0xe8, 0x5c, 0x37, 0x5f, 0xdb, 0x05, 0x1f, 0x87, 0x34, 0x10, 0xb4, 0x81, 0x66, 0x38, 0x25, 0xbd,
+	0x03, 0xf1, 0x28, 0x41, 0x4d, 0x3e, 0xa2, 0x46, 0xe0, 0x1d, 0x78, 0x56, 0x19, 0x0e, 0x09, 0xb4,
+	0x22, 0x9a, 0x1b, 0x64, 0x7c, 0xd4, 0x6a, 0x39, 0xd4, 0x1d, 0x38, 0xb0, 0x09, 0xee, 0x84, 0x42,
+	0x50, 0xaf, 0x8c, 0x72, 0xb2, 0x1e, 0xf1, 0xce, 0x65, 0xc9, 0x19, 0x33, 0xcb, 0x87, 0x50, 0xed,
+	0x01, 0x18, 0xe8, 0xf7, 0xbc, 0x27, 0x46, 0xe9, 0x86, 0x7d, 0xfe, 0x55, 0x90, 0x1a, 0x47, 0x86,
+	0xea, 0x06, 0x9a, 0xee, 0xbb, 0xd4, 0xf1, 0x7d, 0x2f, 0x46, 0x3a, 0xdd, 0x71, 0x58, 0xdf, 0xf6,
+	0x18, 0x1e, 0x4e, 0xd8, 0xe3, 0x50, 0x9b, 0x39, 0x5c, 0x90, 0x92, 0x93, 0x48, 0x43, 0x2c, 0xde,
+	0x44, 0x39, 0xce, 0xde, 0x50, 0xeb, 0x88, 0x75, 0x5b, 0x82, 0x3b, 0x35, 0x89, 0x1b, 0x82, 0xe3,
+	0x1a, 0x4a, 0x09, 0x4b, 0x0a, 0xa9, 0x58, 0x9a, 0xb8, 0x80, 0xc7, 0xac, 0x6f, 0x71, 0xd7, 0x94,
+	0xb0, 0xfa, 0xf7, 0x34, 0x9a, 0x96, 0x6d, 0xe3, 0x53, 0x94, 0xf6, 0xf6, 0x00, 0x2e, 0x47, 0x48,
+	0xd7, 0x17, 0x8d, 0xaa, 0x8d, 0x83, 0x78, 0x96, 0x69, 0x95, 0x0f, 0x3f, 0xfe, 0x7c, 0x4d, 0x96,
+	0xf1, 0xa2, 0xc1, 0x69, 0xb7, 0xcb, 0x9c, 0x5a, 0x87, 0x19, 0x71, 0x6b, 0x10, 0xbf, 0x57, 0x02,
+	0xab, 0x60, 0x39, 0x2e, 0x73, 0x64, 0x52, 0xd4, 0x3b, 0xe3, 0x41, 0x20, 0x60, 0x55, 0x0a, 0x58,
+	0xc6, 0xe5, 0x91, 0x02, 0xfc, 0xb1, 0xc4, 0x5f, 0x14, 0x94, 0x0b, 0xce, 0x0e, 0xae, 0xc4, 0x55,
+	0x88, 0x19, 0x5a, 0xb5, 0x3a, 0x19, 0x08, 0x72, 0x74, 0x29, 0xa7, 0x8a, 0x57, 0x46, 0xca, 0x11,
+	0xf3, 0x5a, 0x1b, 0x68, 0xfa, 0xa4, 0xa0, 0x8c, 0x3f, 0x75, 0xf1, 0xb6, 0x44, 0x46, 0x39, 0xde,
+	0x96, 0xe8, 0xe0, 0x6a, 0x1b, 0x52, 0xc7, 0x3a, 0x36, 0x46, 0xea, 0x10, 0x2f, 0xa3, 0x26, 0xe6,
+	0xda, 0x78, 0x3b, 0x1c, 0x99, 0x77, 0xf8, 0xa3, 0x82, 0xb2, 0x81, 0xc9, 0xc4, 0x2b, 0xa3, 0xca,
+	0x85, 0xa7, 0x5a, 0xad, 0x4c, 0xc4, 0x81, 0xb2, 0x9a, 0x54, 0x56, 0xc1, 0x77, 0xc7, 0x2b, 0x83,
+	0x0d, 0x20, 0x2e, 0x6d, 0x5a, 0x8e, 0x00, 0xae, 0x8e, 0x7b, 0x0f, 0xc1, 0x2d, 0xa0, 0xae, 0xde,
+	0x00, 0x09, 0x6a, 0x1a, 0x52, 0x4d, 0x0d, 0xdf, 0x1b, 0xad, 0x46, 0xe0, 0x43, 0x1e, 0x6d, 0x6d,
+	0x9f, 0x5f, 0x96, 0x94, 0x8b, 0xcb, 0x92, 0xf2, 0xfb, 0xb2, 0xa4, 0x7c, 0xbe, 0x2a, 0x25, 0x2e,
+	0xae, 0x4a, 0x89, 0x9f, 0x57, 0xa5, 0xc4, 0xab, 0xb5, 0x76, 0x87, 0x1f, 0xf5, 0x9b, 0xfa, 0x21,
+	0xeb, 0x5d, 0x4b, 0x78, 0x3a, 0x4c, 0x79, 0x66, 0x53, 0xb7, 0x99, 0x96, 0x3f, 0xf2, 0x8d, 0x7f,
+	0x01, 0x00, 0x00, 0xff, 0xff, 0xf9, 0x4f, 0xcd, 0x5b, 0x01, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -534,6 +722,10 @@ type QueryClient interface {
 	Disputes(ctx context.Context, in *QueryDisputesRequest, opts ...grpc.CallOption) (*QueryDisputesResponse, error)
 	// OpenDisputes queries all the open disputes.
 	OpenDisputes(ctx context.Context, in *QueryOpenDisputesRequest, opts ...grpc.CallOption) (*QueryOpenDisputesResponse, error)
+	// team vote queries the team vote for a dispute.
+	TeamVote(ctx context.Context, in *QueryTeamVoteRequest, opts ...grpc.CallOption) (*QueryTeamVoteResponse, error)
+	// team address queries the team address.
+	TeamAddress(ctx context.Context, in *QueryTeamAddressRequest, opts ...grpc.CallOption) (*QueryTeamAddressResponse, error)
 	// Tally queries the vote count of a dispute
 	Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error)
 }
@@ -573,6 +765,24 @@ func (c *queryClient) OpenDisputes(ctx context.Context, in *QueryOpenDisputesReq
 	return out, nil
 }
 
+func (c *queryClient) TeamVote(ctx context.Context, in *QueryTeamVoteRequest, opts ...grpc.CallOption) (*QueryTeamVoteResponse, error) {
+	out := new(QueryTeamVoteResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/TeamVote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TeamAddress(ctx context.Context, in *QueryTeamAddressRequest, opts ...grpc.CallOption) (*QueryTeamAddressResponse, error) {
+	out := new(QueryTeamAddressResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/TeamAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error) {
 	out := new(QueryDisputesTallyResponse)
 	err := c.cc.Invoke(ctx, "/layer.dispute.Query/Tally", in, out, opts...)
@@ -590,6 +800,10 @@ type QueryServer interface {
 	Disputes(context.Context, *QueryDisputesRequest) (*QueryDisputesResponse, error)
 	// OpenDisputes queries all the open disputes.
 	OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error)
+	// team vote queries the team vote for a dispute.
+	TeamVote(context.Context, *QueryTeamVoteRequest) (*QueryTeamVoteResponse, error)
+	// team address queries the team address.
+	TeamAddress(context.Context, *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error)
 	// Tally queries the vote count of a dispute
 	Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error)
 }
@@ -606,6 +820,12 @@ func (*UnimplementedQueryServer) Disputes(ctx context.Context, req *QueryDispute
 }
 func (*UnimplementedQueryServer) OpenDisputes(ctx context.Context, req *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenDisputes not implemented")
+}
+func (*UnimplementedQueryServer) TeamVote(ctx context.Context, req *QueryTeamVoteRequest) (*QueryTeamVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TeamVote not implemented")
+}
+func (*UnimplementedQueryServer) TeamAddress(ctx context.Context, req *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TeamAddress not implemented")
 }
 func (*UnimplementedQueryServer) Tally(ctx context.Context, req *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Tally not implemented")
@@ -669,6 +889,42 @@ func _Query_OpenDisputes_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TeamVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTeamVoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TeamVote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/TeamVote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TeamVote(ctx, req.(*QueryTeamVoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TeamAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTeamAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TeamAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/TeamAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TeamAddress(ctx, req.(*QueryTeamAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Tally_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryDisputesTallyRequest)
 	if err := dec(in); err != nil {
@@ -702,6 +958,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OpenDisputes",
 			Handler:    _Query_OpenDisputes_Handler,
+		},
+		{
+			MethodName: "TeamVote",
+			Handler:    _Query_TeamVote_Handler,
+		},
+		{
+			MethodName: "TeamAddress",
+			Handler:    _Query_TeamAddress_Handler,
 		},
 		{
 			MethodName: "Tally",
@@ -950,6 +1214,120 @@ func (m *QueryOpenDisputesResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryTeamVoteRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTeamVoteRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTeamVoteRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DisputeId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DisputeId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTeamVoteResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTeamVoteResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTeamVoteResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.TeamVote.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTeamAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTeamAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTeamAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryTeamAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryTeamAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryTeamAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.TeamAddress) > 0 {
+		i -= len(m.TeamAddress)
+		copy(dAtA[i:], m.TeamAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.TeamAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *QueryDisputesTallyRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -1145,6 +1523,51 @@ func (m *QueryOpenDisputesResponse) Size() (n int) {
 	_ = l
 	if m.OpenDisputes != nil {
 		l = m.OpenDisputes.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryTeamVoteRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DisputeId != 0 {
+		n += 1 + sovQuery(uint64(m.DisputeId))
+	}
+	return n
+}
+
+func (m *QueryTeamVoteResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.TeamVote.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryTeamAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryTeamAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.TeamAddress)
+	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -1751,6 +2174,290 @@ func (m *QueryOpenDisputesResponse) Unmarshal(dAtA []byte) error {
 			if err := m.OpenDisputes.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTeamVoteRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTeamVoteRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTeamVoteRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
+			}
+			m.DisputeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DisputeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTeamVoteResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTeamVoteResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTeamVoteResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TeamVote", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TeamVote.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTeamAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTeamAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTeamAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryTeamAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryTeamAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryTeamAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TeamAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TeamAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

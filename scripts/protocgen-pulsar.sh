@@ -1,6 +1,6 @@
-!/usr/bin/env bash
+# !/usr/bin/env bash
 
-Directory containing proto files relative to the script's location
+# Directory containing proto files relative to the script's location
 PROTO_DIR="./proto"
 OUTPUT_DIR="."
 # Path to the buf template, assuming it's in the proto directory
@@ -16,5 +16,5 @@ find "${PROTO_DIR}" -name '*.proto' -print0 | while IFS= read -r -d '' proto_fil
     fi
 done
 
-cp -r layer/* ../api
+cp -r layer/* ./api
 rm -rf layer
