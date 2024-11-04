@@ -93,6 +93,7 @@ func (k Querier) TeamAddress(ctx context.Context, req *types.QueryTeamAddressReq
 	}
 	return &types.QueryTeamAddressResponse{TeamAddress: teamAddr.String()}, nil
 }
+
 func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest) (*types.QueryDisputesTallyResponse, error) {
 	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
 	if err != nil {
