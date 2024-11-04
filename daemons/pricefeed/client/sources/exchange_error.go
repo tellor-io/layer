@@ -36,6 +36,6 @@ func (e *ExchangeErrorImpl) GetExchangeId() types.ExchangeId {
 func NewExchangeError(exchangeId types.ExchangeId, msg string) ExchangeError {
 	return &ExchangeErrorImpl{
 		exchangeId: exchangeId,
-		err:        fmt.Errorf(msg),
+		err:        fmt.Errorf("%s", msg),
 	}
 }
