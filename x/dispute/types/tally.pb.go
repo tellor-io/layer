@@ -82,28 +82,157 @@ func (m *Tally) GetInvalid() *VoterClasses {
 	return nil
 }
 
+type VoteCounts struct {
+	Support uint64 `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against uint64 `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid uint64 `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+}
+
+func (m *VoteCounts) Reset()         { *m = VoteCounts{} }
+func (m *VoteCounts) String() string { return proto.CompactTextString(m) }
+func (*VoteCounts) ProtoMessage()    {}
+func (*VoteCounts) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d158d5fe40855c9d, []int{1}
+}
+func (m *VoteCounts) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *VoteCounts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_VoteCounts.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *VoteCounts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VoteCounts.Merge(m, src)
+}
+func (m *VoteCounts) XXX_Size() int {
+	return m.Size()
+}
+func (m *VoteCounts) XXX_DiscardUnknown() {
+	xxx_messageInfo_VoteCounts.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VoteCounts proto.InternalMessageInfo
+
+func (m *VoteCounts) GetSupport() uint64 {
+	if m != nil {
+		return m.Support
+	}
+	return 0
+}
+
+func (m *VoteCounts) GetAgainst() uint64 {
+	if m != nil {
+		return m.Against
+	}
+	return 0
+}
+
+func (m *VoteCounts) GetInvalid() uint64 {
+	if m != nil {
+		return m.Invalid
+	}
+	return 0
+}
+
+type GroupTally struct {
+	VoteCount       *VoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
+	TotalPowerVoted uint64      `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
+	TotalGroupPower uint64      `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
+}
+
+func (m *GroupTally) Reset()         { *m = GroupTally{} }
+func (m *GroupTally) String() string { return proto.CompactTextString(m) }
+func (*GroupTally) ProtoMessage()    {}
+func (*GroupTally) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d158d5fe40855c9d, []int{2}
+}
+func (m *GroupTally) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GroupTally) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GroupTally.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GroupTally) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GroupTally.Merge(m, src)
+}
+func (m *GroupTally) XXX_Size() int {
+	return m.Size()
+}
+func (m *GroupTally) XXX_DiscardUnknown() {
+	xxx_messageInfo_GroupTally.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GroupTally proto.InternalMessageInfo
+
+func (m *GroupTally) GetVoteCount() *VoteCounts {
+	if m != nil {
+		return m.VoteCount
+	}
+	return nil
+}
+
+func (m *GroupTally) GetTotalPowerVoted() uint64 {
+	if m != nil {
+		return m.TotalPowerVoted
+	}
+	return 0
+}
+
+func (m *GroupTally) GetTotalGroupPower() uint64 {
+	if m != nil {
+		return m.TotalGroupPower
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Tally)(nil), "layer.dispute.Tally")
+	proto.RegisterType((*VoteCounts)(nil), "layer.dispute.VoteCounts")
+	proto.RegisterType((*GroupTally)(nil), "layer.dispute.GroupTally")
 }
 
 func init() { proto.RegisterFile("layer/dispute/tally.proto", fileDescriptor_d158d5fe40855c9d) }
 
 var fileDescriptor_d158d5fe40855c9d = []byte{
-	// 220 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xcc, 0x49, 0xac, 0x4c,
-	0x2d, 0xd2, 0x4f, 0xc9, 0x2c, 0x2e, 0x28, 0x2d, 0x49, 0xd5, 0x2f, 0x49, 0xcc, 0xc9, 0xa9, 0xd4,
-	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x05, 0x4b, 0xe9, 0x41, 0xa5, 0xa4, 0x14, 0x51, 0x55,
-	0x96, 0xe5, 0x97, 0xa4, 0x16, 0xc5, 0x27, 0xe7, 0x24, 0x16, 0x17, 0xa7, 0x16, 0x43, 0x74, 0x28,
-	0xed, 0x60, 0xe4, 0x62, 0x0d, 0x01, 0x99, 0x20, 0x64, 0xce, 0xc5, 0x91, 0x96, 0x5f, 0x14, 0x96,
-	0x5f, 0x92, 0x5a, 0x2c, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xad, 0x87, 0x62, 0x9c, 0x1e,
-	0x48, 0xae, 0xc8, 0x19, 0xa2, 0x3d, 0x08, 0xae, 0x58, 0xc8, 0x9e, 0x8b, 0x27, 0x31, 0x3d, 0x31,
-	0x33, 0xaf, 0xb8, 0x04, 0xa2, 0x99, 0x89, 0xb0, 0x66, 0x14, 0x0d, 0x42, 0xa6, 0x5c, 0xec, 0x9e,
-	0x79, 0x65, 0x89, 0x39, 0x99, 0x29, 0x12, 0xcc, 0x84, 0xf5, 0xc2, 0xd4, 0x3a, 0xb9, 0x9c, 0x78,
-	0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c, 0x13, 0x1e, 0xcb, 0x31, 0x5c,
-	0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x56, 0x7a, 0x66, 0x49, 0x46, 0x69, 0x92,
-	0x5e, 0x72, 0x7e, 0xae, 0x7e, 0x49, 0x6a, 0x4e, 0x4e, 0x7e, 0x91, 0x6e, 0x66, 0xbe, 0x3e, 0x24,
-	0x30, 0x2a, 0x10, 0x01, 0x57, 0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x0e, 0x07, 0x63, 0x40, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x80, 0xc4, 0xca, 0xa4, 0x56, 0x01, 0x00, 0x00,
+	// 324 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x52, 0x41, 0x4b, 0x33, 0x31,
+	0x14, 0x6c, 0xbe, 0xaf, 0x5a, 0x8d, 0x8a, 0x90, 0x53, 0xab, 0x10, 0xb4, 0xa7, 0x22, 0xb8, 0x0b,
+	0x8a, 0x78, 0x14, 0xac, 0x20, 0xde, 0x64, 0x11, 0x0f, 0xbd, 0x48, 0xda, 0xc6, 0x1a, 0x88, 0x7d,
+	0x21, 0x79, 0x5b, 0xed, 0xbf, 0xf0, 0xea, 0x3f, 0xf1, 0x27, 0x78, 0xec, 0xd1, 0xa3, 0xb4, 0x7f,
+	0x44, 0x36, 0xbb, 0x69, 0xdd, 0x22, 0xf4, 0xf8, 0xde, 0xcc, 0x64, 0x86, 0xc9, 0xa3, 0x0d, 0x2d,
+	0xc6, 0xd2, 0xc6, 0x7d, 0xe5, 0x4c, 0x8a, 0x32, 0x46, 0xa1, 0xf5, 0x38, 0x32, 0x16, 0x10, 0xd8,
+	0x8e, 0x87, 0xa2, 0x02, 0xda, 0x3b, 0x2c, 0x33, 0x47, 0x80, 0xd2, 0x3e, 0xf4, 0xb4, 0x70, 0x4e,
+	0xba, 0x5c, 0xd1, 0xfc, 0x20, 0x74, 0xed, 0x2e, 0x7b, 0x81, 0x9d, 0xd3, 0x8d, 0x47, 0xb0, 0xf7,
+	0x80, 0xd2, 0xd5, 0xc9, 0x01, 0x69, 0x6d, 0x9d, 0xec, 0x47, 0xa5, 0xe7, 0xa2, 0x0c, 0xb3, 0xed,
+	0x5c, 0x9e, 0xcc, 0xc9, 0xec, 0x82, 0x6e, 0x8b, 0x81, 0x50, 0x43, 0x87, 0xb9, 0xf8, 0xdf, 0x6a,
+	0x71, 0x49, 0xc0, 0xce, 0x68, 0xed, 0x66, 0x38, 0x12, 0x5a, 0xf5, 0xeb, 0xff, 0x57, 0x6b, 0x03,
+	0xb7, 0xd9, 0xa1, 0x34, 0x03, 0xda, 0x90, 0x0e, 0xd1, 0xb1, 0x3a, 0xad, 0xb9, 0xd4, 0x18, 0xb0,
+	0xe8, 0xd3, 0x57, 0x93, 0x30, 0x66, 0x48, 0x61, 0xe7, 0xa3, 0x55, 0x93, 0x30, 0x66, 0x88, 0xfa,
+	0x65, 0x5c, 0x4d, 0xc2, 0xd8, 0x7c, 0x27, 0x94, 0x5e, 0x5b, 0x48, 0x4d, 0xe8, 0x66, 0x73, 0x14,
+	0xac, 0x8a, 0x72, 0x1a, 0x7f, 0x64, 0xcc, 0xa3, 0x24, 0x0b, 0x2e, 0x6b, 0xd1, 0x5d, 0x04, 0x14,
+	0xfa, 0x16, 0x5e, 0xa4, 0xaf, 0xab, 0x5f, 0x64, 0x58, 0x5e, 0xcf, 0x99, 0xde, 0xd5, 0xef, 0x8b,
+	0x4c, 0xcb, 0xeb, 0xcb, 0xab, 0xcf, 0x29, 0x27, 0x93, 0x29, 0x27, 0xdf, 0x53, 0x4e, 0xde, 0x66,
+	0xbc, 0x32, 0x99, 0xf1, 0xca, 0xd7, 0x8c, 0x57, 0x3a, 0x47, 0x03, 0x85, 0x4f, 0x69, 0x37, 0xea,
+	0xc1, 0x73, 0x8c, 0x52, 0x6b, 0xb0, 0xc7, 0x0a, 0xe2, 0xfc, 0x08, 0x5e, 0x17, 0x07, 0x33, 0x36,
+	0xd2, 0x75, 0xd7, 0xfd, 0xff, 0x9f, 0xfe, 0x04, 0x00, 0x00, 0xff, 0xff, 0x83, 0x82, 0xb5, 0x45,
+	0x4e, 0x02, 0x00, 0x00,
 }
 
 func (m *Tally) Marshal() (dAtA []byte, err error) {
@@ -165,6 +294,89 @@ func (m *Tally) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *VoteCounts) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VoteCounts) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *VoteCounts) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Invalid != 0 {
+		i = encodeVarintTally(dAtA, i, uint64(m.Invalid))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Against != 0 {
+		i = encodeVarintTally(dAtA, i, uint64(m.Against))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Support != 0 {
+		i = encodeVarintTally(dAtA, i, uint64(m.Support))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GroupTally) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GroupTally) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GroupTally) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.TotalGroupPower != 0 {
+		i = encodeVarintTally(dAtA, i, uint64(m.TotalGroupPower))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.TotalPowerVoted != 0 {
+		i = encodeVarintTally(dAtA, i, uint64(m.TotalPowerVoted))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.VoteCount != nil {
+		{
+			size, err := m.VoteCount.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintTally(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTally(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTally(v)
 	base := offset
@@ -193,6 +405,43 @@ func (m *Tally) Size() (n int) {
 	if m.Invalid != nil {
 		l = m.Invalid.Size()
 		n += 1 + l + sovTally(uint64(l))
+	}
+	return n
+}
+
+func (m *VoteCounts) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Support != 0 {
+		n += 1 + sovTally(uint64(m.Support))
+	}
+	if m.Against != 0 {
+		n += 1 + sovTally(uint64(m.Against))
+	}
+	if m.Invalid != 0 {
+		n += 1 + sovTally(uint64(m.Invalid))
+	}
+	return n
+}
+
+func (m *GroupTally) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.VoteCount != nil {
+		l = m.VoteCount.Size()
+		n += 1 + l + sovTally(uint64(l))
+	}
+	if m.TotalPowerVoted != 0 {
+		n += 1 + sovTally(uint64(m.TotalPowerVoted))
+	}
+	if m.TotalGroupPower != 0 {
+		n += 1 + sovTally(uint64(m.TotalGroupPower))
 	}
 	return n
 }
@@ -340,6 +589,237 @@ func (m *Tally) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTally(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTally
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VoteCounts) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTally
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VoteCounts: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VoteCounts: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Support", wireType)
+			}
+			m.Support = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTally
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Support |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Against", wireType)
+			}
+			m.Against = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTally
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Against |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Invalid", wireType)
+			}
+			m.Invalid = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTally
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Invalid |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTally(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTally
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GroupTally) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTally
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GroupTally: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GroupTally: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VoteCount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTally
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTally
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTally
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.VoteCount == nil {
+				m.VoteCount = &VoteCounts{}
+			}
+			if err := m.VoteCount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalPowerVoted", wireType)
+			}
+			m.TotalPowerVoted = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTally
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TotalPowerVoted |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalGroupPower", wireType)
+			}
+			m.TotalGroupPower = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTally
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TotalGroupPower |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTally(dAtA[iNdEx:])
