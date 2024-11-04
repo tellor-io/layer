@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -78,7 +79,12 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 	}
 	blockInfo, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
-		return &types.QueryDisputesTallyResponse{}, err
+		if errors.Is(err, collections.ErrNotFound) {
+			blockInfo.TotalReporterPower = math.ZeroInt()
+			blockInfo.TotalUserTips = math.ZeroInt()
+		} else {
+			return &types.QueryDisputesTallyResponse{}, err
+		}
 	}
 
 	sumOfReporterVotes := voteCounts.Reporters.Against + voteCounts.Reporters.Invalid + voteCounts.Reporters.Support
