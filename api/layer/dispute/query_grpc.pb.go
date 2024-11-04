@@ -24,6 +24,10 @@ type QueryClient interface {
 	Disputes(ctx context.Context, in *QueryDisputesRequest, opts ...grpc.CallOption) (*QueryDisputesResponse, error)
 	// OpenDisputes queries all the open disputes.
 	OpenDisputes(ctx context.Context, in *QueryOpenDisputesRequest, opts ...grpc.CallOption) (*QueryOpenDisputesResponse, error)
+	// team vote queries the team vote for a dispute.
+	TeamVote(ctx context.Context, in *QueryTeamVoteRequest, opts ...grpc.CallOption) (*QueryTeamVoteResponse, error)
+	// team address queries the team address.
+	TeamAddress(ctx context.Context, in *QueryTeamAddressRequest, opts ...grpc.CallOption) (*QueryTeamAddressResponse, error)
 	// Tally queries the vote count of a dispute
 	Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error)
 }
@@ -63,6 +67,24 @@ func (c *queryClient) OpenDisputes(ctx context.Context, in *QueryOpenDisputesReq
 	return out, nil
 }
 
+func (c *queryClient) TeamVote(ctx context.Context, in *QueryTeamVoteRequest, opts ...grpc.CallOption) (*QueryTeamVoteResponse, error) {
+	out := new(QueryTeamVoteResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/TeamVote", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) TeamAddress(ctx context.Context, in *QueryTeamAddressRequest, opts ...grpc.CallOption) (*QueryTeamAddressResponse, error) {
+	out := new(QueryTeamAddressResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/TeamAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error) {
 	out := new(QueryDisputesTallyResponse)
 	err := c.cc.Invoke(ctx, "/layer.dispute.Query/Tally", in, out, opts...)
@@ -82,6 +104,10 @@ type QueryServer interface {
 	Disputes(context.Context, *QueryDisputesRequest) (*QueryDisputesResponse, error)
 	// OpenDisputes queries all the open disputes.
 	OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error)
+	// team vote queries the team vote for a dispute.
+	TeamVote(context.Context, *QueryTeamVoteRequest) (*QueryTeamVoteResponse, error)
+	// team address queries the team address.
+	TeamAddress(context.Context, *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error)
 	// Tally queries the vote count of a dispute
 	Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error)
 	mustEmbedUnimplementedQueryServer()
@@ -99,6 +125,12 @@ func (UnimplementedQueryServer) Disputes(context.Context, *QueryDisputesRequest)
 }
 func (UnimplementedQueryServer) OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenDisputes not implemented")
+}
+func (UnimplementedQueryServer) TeamVote(context.Context, *QueryTeamVoteRequest) (*QueryTeamVoteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TeamVote not implemented")
+}
+func (UnimplementedQueryServer) TeamAddress(context.Context, *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TeamAddress not implemented")
 }
 func (UnimplementedQueryServer) Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Tally not implemented")
@@ -170,6 +202,42 @@ func _Query_OpenDisputes_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TeamVote_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTeamVoteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TeamVote(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/TeamVote",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TeamVote(ctx, req.(*QueryTeamVoteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_TeamAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTeamAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TeamAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/TeamAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TeamAddress(ctx, req.(*QueryTeamAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Tally_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryDisputesTallyRequest)
 	if err := dec(in); err != nil {
@@ -206,6 +274,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OpenDisputes",
 			Handler:    _Query_OpenDisputes_Handler,
+		},
+		{
+			MethodName: "TeamVote",
+			Handler:    _Query_TeamVote_Handler,
+		},
+		{
+			MethodName: "TeamAddress",
+			Handler:    _Query_TeamAddress_Handler,
 		},
 		{
 			MethodName: "Tally",

@@ -4,14 +4,7 @@ run:
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
-  skip-files:
-    - server/grpc/gogoreflection/fix_registration.go
-    - "fix_registration.go"
-    - ".*\\.pb\\.go$"
-    - ".*\\.pb\\.gw\\.go$"
-    - ".*\\.pulsar\\.go$"
-    - crypto/keys/secp256k1/internal/*
-    - types/coin_regex.go
+
 
 build-tags:
   - e2e
@@ -25,7 +18,7 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - exportloopref
+    - copyloopvar
     - gci
     - goconst
     - gocritic
@@ -46,6 +39,14 @@ linters:
     - unused
 
 issues:
+  exclude-files:
+      - server/grpc/gogoreflection/fix_registration.go
+      - "fix_registration.go"
+      - ".*\\.pb\\.go$"
+      - ".*\\.pb\\.gw\\.go$"
+      - ".*\\.pulsar\\.go$"
+      - crypto/keys/secp256k1/internal/*
+      # - types/coin_regex.go
   exclude-rules:
     - text: "Use of weak random number generator"
       linters:

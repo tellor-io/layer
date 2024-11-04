@@ -5,6 +5,38 @@ GOPATH=$(shell go env GOPATH)
 COSMOS_VERSION=$(shell go list -m all | grep "github.com/cosmos/cosmos-sdk" | awk '{print $$NF}')
 HTTPS_GIT := https://github.com/tellor-io/layer.git
 DOCKER := $(shell which docker)
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+COMMIT := $(shell git log -1 --format='%H')
+
+ifeq (,$(VERSION))
+  VERSION := $(shell git describe --exact-match 2>/dev/null)
+  ifeq (,$(VERSION))
+    ifeq ($(shell git status --porcelain),)
+    	VERSION := $(BRANCH)
+    else
+    	VERSION := $(BRANCH)-dirty
+    endif
+  endif
+endif
+
+ldflags := $(LDFLAGS)
+ldflags += -X github.com/cosmos/cosmos-sdk/version.Name=Layer \
+	-X github.com/cosmos/cosmos-sdk/version.AppName=layerd \
+	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
+	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT)
+ldflags := $(strip $(ldflags))
+
+BUILD_FLAGS := -ldflags '$(ldflags)'
+
+###############################################################################
+###                              Building / Install                         ###
+###############################################################################
+
+install: go.sum
+	@echo "Installing layerd..."
+	@go install -mod=readonly $(BUILD_FLAGS) ./cmd/layerd
+	@echo "Completed install!"
+.PHONY: install
 
 build: mod
 	@cd ./cmd/layerd
@@ -47,7 +79,7 @@ build-with-checksum: build-linux-with-checksum build-darwin-with-checksum
 ###                                Linting                                  ###
 ###############################################################################
 # Golangci-lint version
-golangci_version=v1.56.2
+golangci_version=v1.61.0
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -122,6 +154,16 @@ proto-update-deps:
 .PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 
 ###############################################################################
+###                                tests                                    ###
+###############################################################################
+test:
+	@go test -v ./... -short
+
+e2e:
+	@cd e2e && go test -v ./... -timeout 20m
+
+.PHONY: test e2e
+###############################################################################
 ###                                MOCKS                                    ###
 ###############################################################################
 mock-clean-all:
@@ -188,5 +230,16 @@ mock-gen:
 	$(MAKE) mock-gen-oracle
 	$(MAKE) mock-gen-registry
 	$(MAKE) mock-gen-reporter
+
+get-heighliner:
+	git clone https://github.com/strangelove-ventures/heighliner.git
+	cd heighliner && go install
+
+local-image:
+ifeq (,$(shell which heighliner))
+	echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
+endif
 
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon
