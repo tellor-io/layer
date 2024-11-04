@@ -103,6 +103,5 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			sdk.NewAttribute("amount", tip.Amount.String()),
 		),
 	})
-	fmt.Println("tip added")
 	return &types.MsgTipResponse{}, nil
 }
