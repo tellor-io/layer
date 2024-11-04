@@ -24,4 +24,5 @@ var (
 	ErrInvalidQueryData            = sdkerrors.Register(ModuleName, 1112, "invalid query data")
 	ErrCommitWindowExpired         = sdkerrors.Register(ModuleName, 1113, "commit window expired")
 	ErrSubmissionWindowExpired     = sdkerrors.Register(ModuleName, 1114, "submission window expired")
+	ErrInvalidVersion              = sdkerrors.Register(ModuleName, 1115, "invalid version")
 )

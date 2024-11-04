@@ -371,7 +371,7 @@
     },
     "registry": {
       "params": {
-        "max_report_buffer_window": "1814400s"
+        "max_report_buffer_window": "700000"
       },
       "dataspec": {
         "document_hash": "",
@@ -390,19 +390,19 @@
         ],
         "aggregation_method": "weighted-median",
         "registrar": "genesis",
-        "report_buffer_window": "2s"
+        "report_block_window": "2"
       }
     },
     "reporter": {
       "params": {
-        "min_commission_rate": "0.000000000000000000",
+        "min_commission_rate": "0",
         "min_trb": "1000000",
         "max_selectors": "100"
       }
     },
     "slashing": {
       "params": {
-        "signed_blocks_window": "1000",
+        "signed_blocks_window": "100",
         "min_signed_per_window": "0.500000000000000000",
         "downtime_jail_duration": "600s",
         "slash_fraction_double_sign": "0.050000000000000000",

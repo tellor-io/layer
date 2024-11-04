@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/collections"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 )
 
 const (
@@ -19,6 +20,11 @@ const (
 
 	// ParamsKey
 	ParamsKey = "oracle_params"
+
+	Version = icqtypes.Version
+
+	// PortID is the default port id that module binds to
+	PortID = "oracle"
 )
 
 var (
@@ -47,6 +53,9 @@ var (
 	TipsBlockIndexPrefix             = collections.NewPrefix(20)
 	TipperTotalPrefix                = collections.NewPrefix(21)
 	AggregatesMicroHeightIndexPrefix = collections.NewPrefix(22)
+	AggregateIbcResponsePrefix       = collections.NewPrefix(23)
+	LastPacketSequencePrefix         = collections.NewPrefix(24)
+	PortIDPrefix                     = collections.NewPrefix(25)
 )
 
 func KeyPrefix(p string) []byte {

@@ -129,7 +129,7 @@ func (k Keeper) GetCurrentValidatorsEVMCompatible(ctx context.Context) ([]*types
 	}
 
 	if len(bridgeValset) == 0 {
-		return nil, errors.New("no validators found")
+		return nil, nil
 	}
 
 	// Sort the validators

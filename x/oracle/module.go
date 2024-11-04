@@ -39,7 +39,7 @@ var (
 
 // AppModuleBasic implements the AppModuleBasic interface that defines the independent methods a Cosmos SDK module needs to implement.
 type AppModuleBasic struct {
-	cdc codec.BinaryCodec
+	cdc codec.Codec
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
@@ -47,10 +47,6 @@ func (AppModuleBasic) IsOnePerModuleType() {}
 
 // IsAppModule implements the appmodule.AppModule interface.
 func (AppModuleBasic) IsAppModule() {}
-
-func NewAppModuleBasic(cdc codec.BinaryCodec) AppModuleBasic {
-	return AppModuleBasic{cdc: cdc}
-}
 
 // Name returns the name of the module as a string
 func (AppModuleBasic) Name() string {
@@ -108,7 +104,7 @@ func NewAppModule(
 	bankKeeper types.BankKeeper,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(cdc),
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
@@ -172,7 +168,7 @@ type OracleInputs struct {
 	depinject.In
 
 	StoreService store.KVStoreService
-	Cdc          codec.Codec
+	Cdc          *codec.ProtoCodec
 	Config       *oraclemodulev1.Module
 
 	AccountKeeper types.AccountKeeper
@@ -195,6 +191,10 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 	k := keeper.NewKeeper(
+		nil,
+		nil,
+		nil,
+		nil,
 		in.Cdc,
 		in.StoreService,
 		in.AccountKeeper,

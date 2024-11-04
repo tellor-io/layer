@@ -18,13 +18,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 )
 
 // var offset = time.Second * 6
 
 type (
 	Keeper struct {
-		cdc            codec.BinaryCodec
+		ics4Wrapper    types.ICS4Wrapper
+		channelKeeper  types.ChannelKeeper
+		portKeeper     types.PortKeeper
+		scopedKeeper   types.ScopedKeeper
+		cdc            *codec.ProtoCodec
 		storeService   store.KVStoreService
 		Params         collections.Item[types.Params]
 		accountKeeper  types.AccountKeeper
@@ -46,11 +52,21 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
+
+		// ibc stuff on requesting chain
+		AggregateIbcRequest  collections.Map[uint64, types.Aggregate] // key: sequence
+		AggregateIbcResponse collections.Map[uint64, types.Aggregate] // key: sequence
+		LastPacketSequence   collections.Item[uint64]                 // key: last packet sequence
+		PortKey              collections.Item[string]
 	}
 )
 
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	ics4Wrapper types.ICS4Wrapper,
+	channelKeeper types.ChannelKeeper,
+	portKeeper types.PortKeeper,
+	scopedKeeper types.ScopedKeeper,
+	cdc *codec.ProtoCodec,
 	storeService store.KVStoreService,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
@@ -73,6 +89,10 @@ func NewKeeper(
 		bankKeeper:     bankKeeper,
 		registryKeeper: registryKeeper,
 		reporterKeeper: reporterKeeper,
+		ics4Wrapper:    ics4Wrapper,
+		channelKeeper:  channelKeeper,
+		portKeeper:     portKeeper,
+		scopedKeeper:   scopedKeeper,
 
 		authority: authority,
 
@@ -111,6 +131,9 @@ func NewKeeper(
 			sdk.IntValue,
 			types.NewTippersIndex(sb),
 		),
+		AggregateIbcResponse: collections.NewMap(sb, types.AggregateIbcResponsePrefix, "aggregate_ibc_response", collections.Uint64Key, codec.CollValue[types.Aggregate](cdc)),
+		LastPacketSequence:   collections.NewItem(sb, types.LastPacketSequencePrefix, "last_packet_sequence", collections.Uint64Value),
+		PortKey:              collections.NewItem(sb, types.PortIDPrefix, "port_key", collections.StringValue),
 	}
 
 	schema, err := sb.Build()
@@ -216,4 +239,45 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 	}
 
 	return nil
+}
+
+// ibc stuff
+// BindPort stores the provided portID and binds to it, returning the associated capability
+func (k Keeper) BindPort(ctx context.Context, portID string) error {
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	cap := k.portKeeper.BindPort(sdkctx, portID)
+	return k.ClaimCapability(ctx, cap, host.PortPath(portID))
+}
+
+// IsBound checks if the interchain query already bound to the desired port
+func (k Keeper) IsBound(ctx context.Context, portID string) bool {
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	_, ok := k.scopedKeeper.GetCapability(sdkctx, host.PortPath(portID))
+	return ok
+}
+
+// GetPort returns the portID for the transfer module. Used in ExportGenesis
+func (k Keeper) GetPort(ctx context.Context) string {
+	key, err := k.PortKey.Get(ctx)
+	if err != nil {
+		return ""
+	}
+	return key
+}
+
+// SetPort sets the portID for the transfer module. Used in InitGenesis
+func (k Keeper) SetPort(ctx context.Context, portID string) {
+	if err := k.PortKey.Set(ctx, portID); err != nil {
+		panic(err)
+	}
+}
+
+// AuthenticateCapability wraps the scopedKeeper's AuthenticateCapability function
+func (k Keeper) AuthenticateCapability(ctx context.Context, cap *capabilitytypes.Capability, name string) bool {
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	return k.scopedKeeper.AuthenticateCapability(sdkctx, cap, name)
+}
+func (k Keeper) ClaimCapability(ctx context.Context, cap *capabilitytypes.Capability, name string) error {
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	return k.scopedKeeper.ClaimCapability(sdkctx, cap, name)
 }

@@ -117,3 +117,20 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 
 	return &types.QueryTippedQueriesResponse{Queries: queries}, nil
 }
+
+// ibc stuff on requesting chain
+func (k Keeper) SetQueryResponse(ctx sdk.Context, packetSequence uint64, resp types.Aggregate) error {
+	err := k.AggregateIbcResponse.Set(ctx, packetSequence, resp)
+	if err != nil {
+		return err
+	}
+	return k.LastPacketSequence.Set(ctx, packetSequence)
+}
+
+func (k Querier) QueryState(ctx context.Context, req *types.QueryStateRequest) (*types.QueryStateResponse, error) {
+	report, err := k.keeper.AggregateIbcResponse.Get(ctx, req.Sequence)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryStateResponse{Aggregate: &report}, nil
+}

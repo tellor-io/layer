@@ -20,8 +20,19 @@ service Msg {
   rpc SubmitValue(MsgSubmitValue) returns (MsgSubmitValueResponse);
   rpc Tip(MsgTip) returns (MsgTipResponse);
   rpc UpdateCyclelist(MsgUpdateCyclelist) returns (MsgUpdateCyclelistResponse);
+  rpc SendQueryGetCurrentAggregatedReport(MsgSendQueryGetCurrentAggregatedReport) returns (MsgSendQueryetCurrentAggregatedReportResponse);
 }
 
+
+message MsgSendQueryGetCurrentAggregatedReport {
+  string creator = 1;
+  string channel_id = 2;
+  string query_id = 3;
+}
+
+message MsgSendQueryetCurrentAggregatedReportResponse {
+  uint64 sequence = 1;
+}
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";

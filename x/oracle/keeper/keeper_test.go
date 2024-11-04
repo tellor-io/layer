@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) TestNewKeeper() {
 
 	badAuthority := "bad_authority"
 	require.Panics(func() {
-		_ = keeper.NewKeeper(nil, nil, nil, nil, nil, nil, badAuthority)
+		_ = keeper.NewKeeper(nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, badAuthority)
 	})
 }
 

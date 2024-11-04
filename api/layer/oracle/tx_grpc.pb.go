@@ -24,6 +24,7 @@ type MsgClient interface {
 	SubmitValue(ctx context.Context, in *MsgSubmitValue, opts ...grpc.CallOption) (*MsgSubmitValueResponse, error)
 	Tip(ctx context.Context, in *MsgTip, opts ...grpc.CallOption) (*MsgTipResponse, error)
 	UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist, opts ...grpc.CallOption) (*MsgUpdateCyclelistResponse, error)
+	SendQueryGetCurrentAggregatedReport(ctx context.Context, in *MsgSendQueryGetCurrentAggregatedReport, opts ...grpc.CallOption) (*MsgSendQueryetCurrentAggregatedReportResponse, error)
 }
 
 type msgClient struct {
@@ -70,6 +71,15 @@ func (c *msgClient) UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist,
 	return out, nil
 }
 
+func (c *msgClient) SendQueryGetCurrentAggregatedReport(ctx context.Context, in *MsgSendQueryGetCurrentAggregatedReport, opts ...grpc.CallOption) (*MsgSendQueryetCurrentAggregatedReportResponse, error) {
+	out := new(MsgSendQueryetCurrentAggregatedReportResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/SendQueryGetCurrentAggregatedReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type MsgServer interface {
 	SubmitValue(context.Context, *MsgSubmitValue) (*MsgSubmitValueResponse, error)
 	Tip(context.Context, *MsgTip) (*MsgTipResponse, error)
 	UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error)
+	SendQueryGetCurrentAggregatedReport(context.Context, *MsgSendQueryGetCurrentAggregatedReport) (*MsgSendQueryetCurrentAggregatedReportResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -98,6 +109,9 @@ func (UnimplementedMsgServer) Tip(context.Context, *MsgTip) (*MsgTipResponse, er
 }
 func (UnimplementedMsgServer) UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCyclelist not implemented")
+}
+func (UnimplementedMsgServer) SendQueryGetCurrentAggregatedReport(context.Context, *MsgSendQueryGetCurrentAggregatedReport) (*MsgSendQueryetCurrentAggregatedReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendQueryGetCurrentAggregatedReport not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -184,6 +198,24 @@ func _Msg_UpdateCyclelist_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SendQueryGetCurrentAggregatedReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSendQueryGetCurrentAggregatedReport)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SendQueryGetCurrentAggregatedReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Msg/SendQueryGetCurrentAggregatedReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SendQueryGetCurrentAggregatedReport(ctx, req.(*MsgSendQueryGetCurrentAggregatedReport))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +238,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCyclelist",
 			Handler:    _Msg_UpdateCyclelist_Handler,
+		},
+		{
+			MethodName: "SendQueryGetCurrentAggregatedReport",
+			Handler:    _Msg_SendQueryGetCurrentAggregatedReport_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
