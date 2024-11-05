@@ -103,7 +103,7 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 					c.logger.Info("Broadcasted report for tipped query")
 				}
 			}(res.Queries[i])
-			localWG.Wait()
 		}
+		localWG.Wait()
 	}
 }
