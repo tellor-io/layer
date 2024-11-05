@@ -8,6 +8,7 @@ import (
 
 var COMMAND_PATH = "/Users/caleb/layer/layerd"
 var LAYER_PATH = "/Users/caleb/.layer"
+var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
 
 func main() {
 	cmd := exec.Command(COMMAND_PATH, "keys", "show", "faucet", "-a", "--keyring-backend", "test", "--home", LAYER_PATH)
@@ -39,8 +40,19 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 		}
 		fmt.Println(string(output))
 
-		//./layerd keys add $name --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name 2>&1 | tee $name-validator_keys.txt
+		FundNewReporterAccount(key_name, key_path)
+
 	}
+}
+
+func FundNewReporterAccount(key_name, key_path string) {
+	key_address := GetAddressFromKeyName(key_name)
+	cmd := exec.Command(COMMAND_PATH, "tx", "bank", "send", FAUCET_ADDRESS, key_address, "10000000loya", "--from", FAUCET_ADDRESS, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("sending loya to %s failed: %v", key_name, err)
+	}
+	fmt.Println(string(output))
 }
 
 func GetAddressFromKeyName(key_name string) string {
