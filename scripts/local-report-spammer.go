@@ -9,6 +9,7 @@ import (
 var COMMAND_PATH = "/Users/caleb/layer/layerd"
 var LAYER_PATH = "/Users/caleb/.layer"
 var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
+var VALIDATOR_ADDRESS = "tellorvaloper1q8rzwrj56ak0z6le84r9m79zn2jj3qdll0lpxz"
 
 func main() {
 	cmd := exec.Command(COMMAND_PATH, "keys", "show", "faucet", "-a", "--keyring-backend", "test", "--home", LAYER_PATH)
@@ -30,29 +31,49 @@ func main() {
 }
 
 func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, error) {
+	reporterMap := make(map[string]string, numOfReporters)
 	for i := 1; i <= numOfReporters; i++ {
 		key_name := fmt.Sprintf("test_reporter%d", i)
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, key_name)
+
+		// Create account for reporter
 		cmd := exec.Command(COMMAND_PATH, "add", key_name, "--keyring-backend", "test", "--home", key_path)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
-			log.Fatalf("creating key failed for %s: %v", key_name, err)
+			log.Fatalf("creating key failed for %s: %v\r", key_name, err)
 		}
 		fmt.Println(string(output))
 
-		FundNewReporterAccount(key_name, key_path)
+		// send tokens to reporter from faucet
+		key_address := GetAddressFromKeyName(key_name)
+		cmd = exec.Command(COMMAND_PATH, "tx", "bank", "send", FAUCET_ADDRESS, key_address, "200000000loya", "--from", FAUCET_ADDRESS, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Fatalf("sending loya to %s failed: %v\r", key_name, err)
+		}
+		fmt.Println(string(output))
+
+		// delegate to validator
+		cmd = exec.Command(COMMAND_PATH, "tx", "staking", "delegate", VALIDATOR_ADDRESS, "150000000loya", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Fatalf("error delegating to validator with %s: %v\r", key_name, err)
+		}
+		fmt.Println(string(output))
+
+		// create reporter
+		cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			log.Fatalf("error creating reporter for %s: %v\r", key_name, err)
+		}
+		fmt.Println(string(output))
+
+		// add to map
+		reporterMap[key_name] = key_address
 
 	}
-}
-
-func FundNewReporterAccount(key_name, key_path string) {
-	key_address := GetAddressFromKeyName(key_name)
-	cmd := exec.Command(COMMAND_PATH, "tx", "bank", "send", FAUCET_ADDRESS, key_address, "10000000loya", "--from", FAUCET_ADDRESS, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("sending loya to %s failed: %v", key_name, err)
-	}
-	fmt.Println(string(output))
+	return reporterMap, nil
 }
 
 func GetAddressFromKeyName(key_name string) string {
