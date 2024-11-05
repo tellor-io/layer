@@ -21,9 +21,10 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		if err != nil {
 			// log error
 			c.logger.Error("getting current query", "error", err)
+			time.Sleep(150 * time.Millisecond)
 		}
 		if bytes.Equal(querydata, prevQueryData) || commitedIds[querymeta.Id] {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(150 * time.Millisecond)
 			continue
 		}
 
@@ -33,11 +34,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				c.logger.Error("Generating CycleList message", "error", err)
 			}
 		}(ctx, querydata, querymeta)
-
-		err = c.WaitForBlockHeight(ctx, int64(querymeta.Expiration))
-		if err != nil {
-			c.logger.Error("Error waiting for block height", "error", err)
-		}
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
@@ -83,22 +80,30 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 		}
 		height := uint64(status.SyncInfo.LatestBlockHeight)
 		for i := 0; i < len(res.Queries); i++ {
-			if height > res.Queries[i].Expiration || commitedIds[res.Queries[i].Id] || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
+			if height > res.Queries[i].Expiration || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
+				if len(res.Queries) == 1 || i == (len(res.Queries)-1) {
+					time.Sleep(200 * time.Millisecond)
+				}
+				continue
+			}
+			if commitedIds[res.Queries[i].Id] {
+				if len(res.Queries) == 1 || i == (len(res.Queries)-1) {
+					time.Sleep(200 * time.Millisecond)
+				}
 				continue
 			}
 
 			localWG.Add(1)
 			go func(query *oracletypes.QueryMeta) {
 				defer localWG.Done()
-				err := c.GenerateAndBroadcastSpotPriceReport(ctx, query.GetQueryData(), query)
+				err := c.GenerateAndBroadcastSpotPriceReport(ctx, query.QueryData, query)
 				if err != nil {
 					c.logger.Error("Error generating report for tipped query: ", err)
+				} else {
+					c.logger.Info("Broadcasted report for tipped query")
 				}
-				c.logger.Info("Broadcasted report for tipped query")
 			}(res.Queries[i])
 		}
-
-		wg.Wait()
-
+		localWG.Wait()
 	}
 }
