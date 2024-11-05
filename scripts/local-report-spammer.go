@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"sync"
 )
 
 var COMMAND_PATH = "/Users/caleb/layer/layerd"
 var LAYER_PATH = "/Users/caleb/.layer"
 var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
 var VALIDATOR_ADDRESS = "tellorvaloper1q8rzwrj56ak0z6le84r9m79zn2jj3qdll0lpxz"
+
+var NUM_OF_REPORTERS = 50
 
 func main() {
 	cmd := exec.Command(COMMAND_PATH, "keys", "show", "faucet", "-a", "--keyring-backend", "test", "--home", LAYER_PATH)
@@ -28,6 +31,33 @@ func main() {
 	output, _ = cmd.CombinedOutput()
 	fmt.Println(string(output))
 
+}
+
+func SpamReportsWithReportersMap(reportersMap map[string]string, qd string) {
+	maxGoroutines := 40
+	ticket := make(chan struct{}, maxGoroutines)
+
+	value := "0000000000000000000000000000000000000000000000000000000004a5ba50"
+
+	var wg sync.WaitGroup
+
+	for reporter_name, addr := range reportersMap {
+		wg.Add(1)
+		ticket <- struct{}{} // would block if guard channel is already filled
+		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, reporter_name)
+		go func(addr, path string) {
+			defer wg.Done()
+			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", addr, qd, value, "--from", addr, "--chain-id", "layertest-2", "--fees", "15loya", "--keyring-backend", "test", "--keyring-dir", path, "--home", path, "--node", "http://54.209.172.1:26657", "--yes")
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				fmt.Println("ERROR submitting value: ", err)
+			}
+			fmt.Println(string(output))
+			<-ticket
+		}(addr, key_path)
+	}
+
+	wg.Wait()
 }
 
 func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, error) {
