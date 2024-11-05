@@ -387,6 +387,7 @@ func (c *Client) getEthRpcUrl() (string, error) {
 	}
 	return ethRpcUrl, nil
 }
+
 func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
 	tokenBridgeContractAddress := os.Getenv("TOKEN_BRIDGE_CONTRACT")
 	if tokenBridgeContractAddress == "" {
