@@ -28,13 +28,26 @@ For docs on how to join our public testnet go here:  [https://docs.tellor.io/lay
 - `start_two_chains.sh` (mac environment) sets up two nodes/validators and starts one of them from this script. Then to start the other validator you would run the `start_bill.sh` script
 
 2) Run the selected script from the base layer folder:
-`sh ./start_scripts/{selected_script}`
+
+```sh
+./start_scripts/{selected_script}
+```
 
 ## Joining a Running Chain
 
 To find more information please go to the layer_scripts folder.
 
 Here you will find a detailed breakdown for how to join a chain as a node and how to create a new validator for the chain
+
+## Start a local devnet
+
+Run the chain locally in a docker container, powered by [local-ic](https://github.com/strangelove-ventures/interchaintest/tree/main/local-interchain)
+
+```sh
+make local-devnet
+```
+
+To configure the chain (ie add more validators plus more) edit the json in local_devnet/chains/layer.json
 
 ## Tests
 
