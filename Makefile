@@ -243,3 +243,19 @@ else
 endif
 
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon
+
+get-localic:
+	git clone https://github.com/strangelove-ventures/interchaintest.git
+	cd interchaintest/local-interchain && make install
+	cd ../../ rm -rf interchaintest
+
+
+local-devnet:
+ifeq (,$(shell which local-ic))
+	echo 'local-ic' binary not found. Consider running `make get-localic`
+else
+	echo "Starting local interchain"
+	cd local_devnet && ICTEST_HOME=. local-ic start layer.json
+	ls
+	
+endif
