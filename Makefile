@@ -247,7 +247,7 @@ endif
 get-localic:
 	git clone https://github.com/strangelove-ventures/interchaintest.git
 	cd interchaintest/local-interchain && make install
-	cd ../../ rm -rf interchaintest
+	rm -rf interchaintest
 
 
 local-devnet:
