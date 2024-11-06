@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -21,10 +22,11 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		if err != nil {
 			// log error
 			c.logger.Error("getting current query", "error", err)
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
 		if bytes.Equal(querydata, prevQueryData) || commitedIds[querymeta.Id] {
-			time.Sleep(150 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
@@ -34,7 +36,10 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				c.logger.Error("Generating CycleList message", "error", err)
 			}
 		}(ctx, querydata, querymeta)
-		time.Sleep(250 * time.Millisecond)
+		err = c.WaitForBlockHeight(ctx, int64(querymeta.Expiration))
+		if err != nil {
+			c.logger.Error("Error waiting for block height", "error", err)
+		}
 	}
 }
 
@@ -57,6 +62,7 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 }
 
 func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup) {
+	fmt.Println("")
 	defer wg.Done()
 	var localWG sync.WaitGroup
 	for {
