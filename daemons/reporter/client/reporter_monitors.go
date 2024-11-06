@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -62,7 +61,6 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 }
 
 func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup) {
-	fmt.Println("")
 	defer wg.Done()
 	var localWG sync.WaitGroup
 	for {
