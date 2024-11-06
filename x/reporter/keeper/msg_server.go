@@ -55,6 +55,10 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if alreadyExists {
 		return nil, errors.New("address already exists")
 	}
+
+	if msg.CommissionRate.GT(math.NewUint(1e6)) {
+		return nil, errors.New("commission rate must be below 1000000 as that is a 100 percent commission rate")
+	}
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err
@@ -299,7 +303,9 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
-	amtToDelegate := shares.Value.QuoUint64(1e6)
+	sharesDec := k.LegacyDecFromMathUint(shares.Value)
+	amtToDelegateDec := sharesDec.Quo(math.LegacyNewDec(1e6))
+	amtToDelegate := k.TruncateUint(amtToDelegateDec)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}

@@ -1,12 +1,15 @@
 syntax = "proto3";
 package layer.dispute;
 
+import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
-import "layer/dispute/params.proto";
 import "layer/dispute/dispute.proto";
 import "layer/dispute/open_disputes.proto";
+import "layer/dispute/params.proto";
+import "layer/dispute/tally.proto";
+import "layer/dispute/vote.proto";
+
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
 // Query defines the gRPC querier service.
@@ -15,13 +18,25 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/params";
   }
-    // Reporters queries all the staked reporters.
+  // Reporters queries all the staked reporters.
   rpc Disputes(QueryDisputesRequest) returns (QueryDisputesResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/disputes";
   }
   // OpenDisputes queries all the open disputes.
   rpc OpenDisputes(QueryOpenDisputesRequest) returns (QueryOpenDisputesResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/open-disputes";
+  }
+  // team vote queries the team vote for a dispute.
+  rpc TeamVote(QueryTeamVoteRequest) returns (QueryTeamVoteResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/team-vote/{dispute_id}";
+  }
+  // team address queries the team address.
+  rpc TeamAddress(QueryTeamAddressRequest) returns (QueryTeamAddressResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/team-address";
+  }
+  // Tally queries the vote count of a dispute
+  rpc Tally(QueryDisputesTallyRequest) returns (QueryDisputesTallyResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/tally/{dispute_id}";
   }
 }
 
@@ -54,4 +69,37 @@ message QueryOpenDisputesRequest {}
 
 message QueryOpenDisputesResponse {
   OpenDisputes openDisputes = 1;
+}
+
+// QueryTeamVoteRequest is request type for the Query/TeamVote RPC method.
+message QueryTeamVoteRequest {
+  // disputeId defines the dispute id.
+  uint64 dispute_id = 1;
+}
+
+// QueryTeamVoteResponse is response type for the Query/TeamVote RPC method.
+message QueryTeamVoteResponse {
+  // teamVote holds the team voter info for a dispute.
+  Voter team_vote = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTeamAddressRequest is request type for the Query/TeamAddress RPC method.
+message QueryTeamAddressRequest {}
+
+// QueryTeamAddressResponse is response type for the Query/TeamAddress RPC method.
+message QueryTeamAddressResponse {
+  // teamAddress holds the team address.
+  string team_address = 1;
+}
+
+// Request the current vote count for a dispute
+message QueryDisputesTallyRequest {
+  uint64 dispute_id = 1;
+}
+
+message QueryDisputesTallyResponse {
+  GroupTally users = 1;
+  GroupTally reporters = 2;
+  GroupTally tokenholders = 3;
+  VoteCounts team = 4;
 }

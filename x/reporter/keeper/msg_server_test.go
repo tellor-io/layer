@@ -68,6 +68,9 @@ func TestCreateReporter(t *testing.T) {
 		}
 	})
 
+	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: math.NewUint(1e6 + 1), MinTokensRequired: types.DefaultMinTrb})
+	require.Equal(t, err.Error(), "commission rate must be below 1000000 as that is a 100 percent commission rate")
+
 	_, err = k.Reporters.Get(ctx, addr)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinTrb})

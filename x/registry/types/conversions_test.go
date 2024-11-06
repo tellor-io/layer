@@ -26,7 +26,7 @@ func TestConvertTypeToReflectType(t *testing.T) {
 		{"bytes", reflect.TypeOf([]byte{}), false},
 		{"address", reflect.TypeOf(common.Address{}), false},
 		{"uint1024", nil, true},
-		{"int[3]", reflect.ArrayOf(3, reflect.PtrTo(reflect.TypeOf(big.Int{}))), false},
+		{"int[3]", reflect.ArrayOf(3, reflect.PointerTo(reflect.TypeOf(big.Int{}))), false},
 		{"uint8[]", reflect.SliceOf(reflect.TypeOf(uint8(0))), false},
 	}
 

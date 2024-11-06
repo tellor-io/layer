@@ -667,9 +667,6 @@ func New(
 			// Start server for handling gRPC messages from daemons.
 			go app.Server.Start()
 
-			configs.WriteDefaultPricefeedExchangeToml(homePath)
-			configs.WriteDefaultMarketParamsToml(homePath)
-
 			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
@@ -1025,7 +1022,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v1.1.0-alpha1"
+	const UpgradeName = "v1.6.0"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,

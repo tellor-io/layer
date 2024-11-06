@@ -134,18 +134,34 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	ethRpcUrl, err := c.getEthRpcUrl()
-	if err != nil {
-		return fmt.Errorf("failed to get ETH RPC url: %w", err)
+	// Add retry logic for initial connection
+	var eclient *ethclient.Client
+	var err error
+	var ethRpcUrl string
+	for retries := 0; retries < 3; retries++ {
+		ethRpcUrl, err = c.getEthRpcUrl()
+		if err != nil {
+			return fmt.Errorf("failed to get ETH RPC url: %w", err)
+		}
+
+		eclient, err = ethclient.Dial(ethRpcUrl)
+		if err != nil {
+			c.logger.Error("Failed to connect to Ethereum client, retrying...", "attempt", retries+1, "error", err)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+		break
 	}
-	eclient, err := ethclient.Dial(ethRpcUrl)
 	if err != nil {
-		return fmt.Errorf("failed to connect to the Ethereum client: %w", err)
+		return fmt.Errorf("failed to connect to the Ethereum client after retries: %w", err)
 	}
 
 	c.ethClient = eclient
 
-	contractAddress := common.HexToAddress("0x2b0bfeBCDFE2228cAbA56dfDE9F067643B357343")
+	contractAddress, err := c.getTokenBridgeContractAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get token bridge contract address: %w", err)
+	}
 
 	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
 	if err != nil {
@@ -165,9 +181,27 @@ func (c *Client) InitializeDeposits() error {
 }
 
 func (c *Client) QueryTokenBridgeContract() error {
-	latestDepositId, err := c.QueryCurrentDepositId()
-	if err != nil {
-		return fmt.Errorf("failed to query the latest deposit ID: %w", err)
+	// Add retry logic for queries
+	var latestDepositId *big.Int
+	var err error
+
+	for retries := 0; retries < 3; retries++ {
+		latestDepositId, err = c.QueryCurrentDepositId()
+		if err != nil {
+			if retries < 2 {
+				c.logger.Error("Failed to query latest deposit ID, reconnecting...", "attempt", retries+1, "error", err)
+				// Attempt to reconnect
+				if err := c.reconnectEthClient(); err != nil {
+					c.logger.Error("Failed to reconnect", "error", err)
+					time.Sleep(time.Second * 5)
+					continue
+				}
+			} else {
+				return fmt.Errorf("failed to query the latest deposit ID: %w", err)
+			}
+		} else {
+			break
+		}
 	}
 
 	if c.lastReportedDepositId == nil {
@@ -359,4 +393,53 @@ func (c *Client) getEthRpcUrl() (string, error) {
 		return "", fmt.Errorf("eth_rpc_url not set")
 	}
 	return ethRpcUrl, nil
+}
+
+func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
+	viper.SetConfigName("secrets")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %w", err))
+	}
+	tokenBridgeContractAddress := viper.GetString("token_bridge_contract")
+	if tokenBridgeContractAddress == "" {
+		return common.Address{}, fmt.Errorf("token_bridge_contract not set")
+	}
+	return common.HexToAddress(tokenBridgeContractAddress), nil
+}
+
+// Add new helper function for reconnection
+func (c *Client) reconnectEthClient() error {
+	ethRpcUrl, err := c.getEthRpcUrl()
+	if err != nil {
+		return fmt.Errorf("failed to get ETH RPC url: %w", err)
+	}
+
+	eclient, err := ethclient.Dial(ethRpcUrl)
+	if err != nil {
+		return fmt.Errorf("failed to reconnect to the Ethereum client: %w", err)
+	}
+
+	// Close existing client if it exists
+	if c.ethClient != nil {
+		c.ethClient.Close()
+	}
+
+	c.ethClient = eclient
+
+	// Reinstantiate the bridge contract with new client
+	contractAddress, err := c.getTokenBridgeContractAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get token bridge contract address: %w", err)
+	}
+
+	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
+	if err != nil {
+		return fmt.Errorf("failed to reinstantiate TokenBridge contract: %w", err)
+	}
+
+	c.bridgeContract = bridgeContract
+	return nil
 }

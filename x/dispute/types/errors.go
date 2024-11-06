@@ -20,4 +20,5 @@ var (
 	ErrInvalidFeeDenom         = sdkerrors.Register(ModuleName, 11, "invalid fee denom")
 	ErrInvalidDisputeCategory  = sdkerrors.Register(ModuleName, 12, "invalid dispute category")
 	ErrInvalidSigner           = sdkerrors.Register(ModuleName, 13, "expected teamaccount as only signer for updateTeam message")
+	ErrNoQuorumStillVoting     = sdkerrors.Register(ModuleName, 14, "vote period not ended and quorum not reached")
 )
