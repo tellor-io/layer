@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"os/exec"
 	"sync"
+	"time"
 )
 
 var COMMAND_PATH = "/Users/caleb/layer/layerd"
@@ -15,21 +18,40 @@ var VALIDATOR_ADDRESS = "tellorvaloper1q8rzwrj56ak0z6le84r9m79zn2jj3qdll0lpxz"
 var NUM_OF_REPORTERS = 50
 
 func main() {
-	cmd := exec.Command(COMMAND_PATH, "keys", "show", "faucet", "-a", "--keyring-backend", "test", "--home", LAYER_PATH)
-	output, err := cmd.CombinedOutput()
+	reportersMap, err := CreateNewAccountsAndFundReporters(NUM_OF_REPORTERS)
 	if err != nil {
-		log.Fatalf("cmd.Run() failed: %v\n", err)
+		fmt.Println("Error creating accounts: ", err)
+		return
 	}
 
-	fmt.Println("here")
-	addr := string(output[:len(output)-1])
+	prevQueryData := []byte{}
+
+	for {
+		querydata, querymeta, err := c.CurrentQuery(ctx)
+		if err != nil {
+			// log error
+			c.logger.Error("getting current query", "error", err)
+		}
+		if bytes.Equal(querydata, prevQueryData) || commitedIds[querymeta.Id] {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+
+		go func(ctx context.Context, qd []byte, qm *oracletypes.QueryMeta) {
+			err := c.GenerateAndBroadcastSpotPriceReport(ctx, querydata, qm)
+			if err != nil {
+				c.logger.Error("Generating CycleList message", "error", err)
+			}
+		}(ctx, querydata, querymeta)
+
+		err = c.WaitForBlockHeight(ctx, int64(querymeta.Expiration))
+		if err != nil {
+			c.logger.Error("Error waiting for block height", "error", err)
+		}
+	}
 
 	qd := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004757364630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 	value := "0000000000000000000000000000000000000000000000000000000004a5ba50"
-
-	cmd = exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", addr, qd, value, "--from", addr, "--chain-id", "layertest-2", "--fees", "15loya", "--keyring-backend", "test", "--keyring-dir", LAYER_PATH, "--home", LAYER_PATH, "--node", "http://54.209.172.1:26657", "--yes")
-	output, _ = cmd.CombinedOutput()
-	fmt.Println(string(output))
 
 }
 
