@@ -77,6 +77,28 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 // 	return nil
 // }
 
+func (c *Client) GenerateAndBroadcastCyclelistReport(ctx context.Context, qd []byte, querymetaId uint64) error {
+	value, err := c.median(qd)
+	if err != nil {
+		return fmt.Errorf("error getting median from median client': %w", err)
+	}
+
+	msg := &oracletypes.MsgSubmitValue{
+		Creator:   c.accAddr.String(),
+		QueryData: qd,
+		Value:     value,
+	}
+
+	resp, err := c.sendTx(ctx, msg)
+	if err != nil {
+		return fmt.Errorf("error sending tx: %w", err)
+	}
+	fmt.Println("response after submit message", resp.TxResult.Code)
+	commitedIds[querymetaId] = true
+
+	return nil
+}
+
 func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
 	value, err := c.median(qd)
 	if err != nil {
