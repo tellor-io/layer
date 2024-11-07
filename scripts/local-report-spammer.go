@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
+
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 var COMMAND_PATH = "/Users/caleb/layer/layerd"
@@ -15,7 +16,7 @@ var LAYER_PATH = "/Users/caleb/.layer"
 var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
 var VALIDATOR_ADDRESS = "tellorvaloper1q8rzwrj56ak0z6le84r9m79zn2jj3qdll0lpxz"
 
-var NUM_OF_REPORTERS = 50
+var NUM_OF_REPORTERS = 1
 
 func main() {
 	reportersMap, err := CreateNewAccountsAndFundReporters(NUM_OF_REPORTERS)
@@ -24,35 +25,44 @@ func main() {
 		return
 	}
 
-	prevQueryData := []byte{}
+	prevQueryData := ""
 
 	for {
-		querydata, querymeta, err := c.CurrentQuery(ctx)
+
+		querydata, err := GetCurrentQueryInCyclelist()
 		if err != nil {
 			// log error
-			c.logger.Error("getting current query", "error", err)
+			fmt.Println("error getting current query: ", err)
+			return
 		}
-		if bytes.Equal(querydata, prevQueryData) || commitedIds[querymeta.Id] {
+		if strings.EqualFold(querydata, prevQueryData) {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-
-		go func(ctx context.Context, qd []byte, qm *oracletypes.QueryMeta) {
-			err := c.GenerateAndBroadcastSpotPriceReport(ctx, querydata, qm)
-			if err != nil {
-				c.logger.Error("Generating CycleList message", "error", err)
-			}
-		}(ctx, querydata, querymeta)
-
-		err = c.WaitForBlockHeight(ctx, int64(querymeta.Expiration))
-		if err != nil {
-			c.logger.Error("Error waiting for block height", "error", err)
-		}
+		// call spam function
+		go SpamReportsWithReportersMap(reportersMap, string(querydata))
 	}
 
-	qd := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004757364630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	value := "0000000000000000000000000000000000000000000000000000000004a5ba50"
+}
 
+type CyclelistQueryResponse struct {
+	Query_data []byte                `json:"query_data"`
+	Query_meta oracletypes.QueryMeta `json:"query_meta"`
+}
+
+func GetCurrentQueryInCyclelist() (string, error) {
+	cmd := exec.Command(COMMAND_PATH, "query", "oracle", "current-cyclelist-query", "--node", "http://54.209.172.1:26657")
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println("ERROR getting current cyclelist query: ", err)
+		return "", nil
+	}
+
+	queryDataField := strings.Split(string(output), "query_meta")[0]
+	query_data := strings.TrimPrefix(queryDataField, "query_data: ")
+	fmt.Println("Query Data: ", query_data)
+
+	return query_data, nil
 }
 
 func SpamReportsWithReportersMap(reportersMap map[string]string, qd string) {
@@ -89,37 +99,47 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, key_name)
 
 		// Create account for reporter
-		cmd := exec.Command(COMMAND_PATH, "add", key_name, "--keyring-backend", "test", "--home", key_path)
+		cmd := exec.Command(COMMAND_PATH, "keys", "add", key_name, "--keyring-backend", "test", "--home", key_path)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
+			fmt.Println(string(output))
 			log.Fatalf("creating key failed for %s: %v\r", key_name, err)
 		}
 		fmt.Println(string(output))
 
 		// send tokens to reporter from faucet
 		key_address := GetAddressFromKeyName(key_name)
-		cmd = exec.Command(COMMAND_PATH, "tx", "bank", "send", FAUCET_ADDRESS, key_address, "200000000loya", "--from", FAUCET_ADDRESS, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+		cmd = exec.Command(COMMAND_PATH, "tx", "bank", "send", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", key_address, "200000000loya", "--from", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", "--chain-id", "layertest-2", "--keyring-dir", "/Users/caleb/.layer", "--keyring-backend", "test", "--home", "/Users/caleb/.layer", "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
 		output, err = cmd.CombinedOutput()
 		if err != nil {
+			fmt.Println(string(output))
 			log.Fatalf("sending loya to %s failed: %v\r", key_name, err)
 		}
 		fmt.Println(string(output))
+		fmt.Printf("Val address: %s, Key address: %s, Key path: %s\r", VALIDATOR_ADDRESS, key_address, key_path)
+		time.Sleep(5 * time.Second)
 
 		// delegate to validator
-		cmd = exec.Command(COMMAND_PATH, "tx", "staking", "delegate", VALIDATOR_ADDRESS, "150000000loya", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+		//_ = GetSequenceNumberForAccount(key_address)
+
+		cmd = exec.Command(COMMAND_PATH, "tx", "staking", "delegate", VALIDATOR_ADDRESS, "150000000loya", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
 		output, err = cmd.CombinedOutput()
 		if err != nil {
+			fmt.Println(string(output))
 			log.Fatalf("error delegating to validator with %s: %v\r", key_name, err)
 		}
 		fmt.Println(string(output))
+		time.Sleep(2 * time.Second)
 
 		// create reporter
-		cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
+		cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--sequence", "1", "--node", "http://54.209.172.1:26657", "--yes")
 		output, err = cmd.CombinedOutput()
 		if err != nil {
+			fmt.Println(string(output))
 			log.Fatalf("error creating reporter for %s: %v\r", key_name, err)
 		}
 		fmt.Println(string(output))
+		time.Sleep(2 * time.Second)
 
 		// add to map
 		reporterMap[key_name] = key_address
@@ -129,7 +149,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 }
 
 func GetAddressFromKeyName(key_name string) string {
-	cmd := exec.Command(COMMAND_PATH, "keys", "show", "faucet", "-a", "--keyring-backend", "test", "--home", LAYER_PATH)
+	cmd := exec.Command(COMMAND_PATH, "keys", "show", key_name, "-a", "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("cmd.Run() failed: %v\n", err)
@@ -138,3 +158,17 @@ func GetAddressFromKeyName(key_name string) string {
 	fmt.Println("here")
 	return string(output[:len(output)-1])
 }
+
+// func GetSequenceNumberForAccount(address string) string {
+// 	cmd := exec.Command(COMMAND_PATH, "query", "auth", "account-info", address, "--node", "http://54.209.172.1:26657")
+// 	output, err := cmd.CombinedOutput()
+// 	if err != nil {
+// 		fmt.Println("Error getting account info: ", err)
+// 		panic(err)
+// 	}
+// 	response := string(output)
+// 	fmt.Println(response)
+// 	resArr := strings.Split(response, "sequence: ")
+// 	fmt.Println("Account number: ", resArr[1])
+// 	return resArr[1]
+// }
