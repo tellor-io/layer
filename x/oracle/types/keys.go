@@ -1,8 +1,9 @@
 package types
 
 import (
-	"cosmossdk.io/collections"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+
+	"cosmossdk.io/collections"
 )
 
 const (

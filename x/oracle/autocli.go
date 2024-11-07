@@ -131,6 +131,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "tipper"}, {ProtoField: "query_data"}, {ProtoField: "amount"}},
 				},
 				{
+					RpcMethod:      "SendQueryGetCurrentAggregatedReport",
+					Use:            "send-query-get-current-aggregated-report [channel-id] [query-id]",
+					Short:          "Execute the SendQueryGetCurrentAggregatedReport RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "channel_id"}, {ProtoField: "query_id"}},
+				},
+				{
 					RpcMethod: "UpdateCyclelist",
 					Skip:      true, // skipped because authority gated
 				},

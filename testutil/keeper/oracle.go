@@ -42,6 +42,10 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 	reporterKeeper := new(mocks.ReporterKeeper)
 
 	k := keeper.NewKeeper(
+		nil,
+		nil,
+		nil,
+		nil,
 		cdc,
 		runtime.NewKVStoreService(storeKey),
 		accountKeeper,

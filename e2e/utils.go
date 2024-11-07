@@ -84,6 +84,8 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		cosmos.NewGenesisKV("app_state.interchainquery.params.allow_queries", []string{"*"}),
 	}
 	return &interchaintest.ChainSpec{
 		NumValidators: &nv,
@@ -96,7 +98,7 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 			Denom:               "loya",
 			Bech32Prefix:        "tellor",
 			CoinType:            "118",
-			GasPrices:           "0.0025loya",
+			GasPrices:           "0.0loya",
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "504h",
 			NoHostMount:         false,

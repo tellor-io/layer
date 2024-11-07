@@ -23,8 +23,8 @@ service Msg {
   rpc SendQueryGetCurrentAggregatedReport(MsgSendQueryGetCurrentAggregatedReport) returns (MsgSendQueryetCurrentAggregatedReportResponse);
 }
 
-
 message MsgSendQueryGetCurrentAggregatedReport {
+  option (cosmos.msg.v1.signer) = "creator";
   string creator = 1;
   string channel_id = 2;
   string query_id = 3;
@@ -33,6 +33,7 @@ message MsgSendQueryGetCurrentAggregatedReport {
 message MsgSendQueryetCurrentAggregatedReportResponse {
   uint64 sequence = 1;
 }
+
 // MsgUpdateParams is the Msg/UpdateParams request type.
 message MsgUpdateParams {
   option (cosmos.msg.v1.signer) = "authority";
