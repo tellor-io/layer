@@ -36,7 +36,7 @@ services:
       - MONIKER=core1
       - LAYERD_NODE_HOME=/opt
       - AMOUNT=24000000loya
-      - COMMISSION_RATE=100000000000000000
+      - COMMISSION_RATE=20000
       - MIN_TOKENS_REQUIRED=1000000
     entrypoint: [ "/bin/bash" ]
     command: [ "/opt/start_node_and_create_validator.sh" ]
@@ -65,7 +65,7 @@ services:
       - MONIKER=core2
       - LAYERD_NODE_HOME=/opt
       - AMOUNT=10000000loya
-      - COMMISSION_RATE=100000000000000000
+      - COMMISSION_RATE=20000
       - MIN_TOKENS_REQUIRED=1000000
     entrypoint: [ "/bin/bash" ]
     command: [ "/opt/start_node_and_create_validator.sh" ]
@@ -94,7 +94,7 @@ services:
       - MONIKER=core3
       - LAYERD_NODE_HOME=/opt
       - AMOUNT=10000000loya
-      - COMMISSION_RATE=100000000000000000
+      - COMMISSION_RATE=20000
       - MIN_TOKENS_REQUIRED=1000000
     entrypoint: [ "/bin/bash" ]
     command: [ "/opt/start_node_and_create_validator.sh" ]

@@ -31,16 +31,6 @@
 	TimeoutMs = 3000
 	MaxQueries = 1
 	[[exchanges]]
-	ExchangeId = "Bybit"
-	IntervalMs = 2000
-	TimeoutMs = 3000
-	MaxQueries = 1
-	[[exchanges]]
-	ExchangeId = "CoinbasePro"
-	IntervalMs = 2000
-	TimeoutMs = 3000
-	MaxQueries = 3
-	[[exchanges]]
 	ExchangeId = "CryptoCom"
 	IntervalMs = 2000
 	TimeoutMs = 3000

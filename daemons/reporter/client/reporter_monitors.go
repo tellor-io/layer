@@ -34,9 +34,63 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 	client, _, err := websocket.DefaultDialer.Dial(url.String(), nil)
 	if err != nil {
 		c.logger.Error("dial:", err)
-		return
+		panic(err)
 	}
 	defer client.Close()
+
+	var localWG sync.WaitGroup
+	queryIdToQueryDataMap := CreateCyclelistQueryIdToQueryDataMap()
+	localWG.Add(1)
+	go func(wait *sync.WaitGroup) {
+		defer wait.Done()
+		for {
+			_, message, err := client.ReadMessage()
+			if err != nil {
+				c.logger.Error("read:", err)
+				panic(err)
+			}
+			c.logger.Info("Websocket message: ", string(message))
+			var event sdk.Event
+			err = json.Unmarshal(message, &event)
+			if err != nil {
+				c.logger.Error("Unable to unmarshal read message: ", err)
+				c.logger.Info("Response data: ", message)
+				panic(err)
+			}
+
+			if len(message) == 0 {
+				c.logger.Info("EMPTY MESSAGE RECEIVED")
+				continue
+			}
+
+			qidAttribute, ok := event.GetAttribute("query_id")
+			if !ok {
+				for i := 0; i < len(event.Attributes); i++ {
+					c.logger.Info("Attribute: ", event.Attributes)
+				}
+				c.logger.Error("No attribute found for query_id: ", event.Attributes)
+				return
+			}
+			query_id := qidAttribute.Value
+			qd := queryIdToQueryDataMap[query_id]
+
+			idAttribute, ok := event.GetAttribute("New QueryMeta Id")
+			if !ok {
+				c.logger.Error("no next id found in rotatequeries event")
+			}
+			nextId, err := strconv.Atoi(idAttribute.Value)
+			if err != nil {
+				c.logger.Error("error converting id attribute to int: ", err)
+				return
+			}
+			go func(query_data []byte, querymetaId uint64) {
+				err := c.GenerateAndBroadcastCyclelistReport(ctx, query_data, querymetaId)
+				if err != nil {
+					c.logger.Error("Error broadcasting cyclelist message: ", err)
+				}
+			}(qd, uint64(nextId))
+		}
+	}(&localWG)
 
 	subscribeReq := WebsocketSubscribeRequest{
 		Jsonrpc: "2.0",
@@ -47,54 +101,14 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 	req, err := json.Marshal(&subscribeReq)
 	if err != nil {
 		c.logger.Error("Error marshalling request message: ", err)
-		return
+		panic(err)
 	}
 	err = client.WriteMessage(websocket.TextMessage, req)
 	if err != nil {
 		c.logger.Error("write:", err)
 		return
 	}
-
-	queryIdToQueryDataMap := CreateCyclelistQueryIdToQueryDataMap()
-
-	for {
-		_, message, err := client.ReadMessage()
-		if err != nil {
-			c.logger.Error("read:", err)
-			return
-		}
-		var event sdk.Event
-		err = json.Unmarshal(message, &event)
-		if err != nil {
-			c.logger.Error("Unable to unmarshal read message: ", err)
-			c.logger.Info("Response data: ", message)
-			return
-		}
-
-		qidAttribute, ok := event.GetAttribute("query_id")
-		if !ok {
-			c.logger.Error("No attribute found for query_id")
-			return
-		}
-		query_id := qidAttribute.Value
-		qd := queryIdToQueryDataMap[query_id]
-
-		idAttribute, ok := event.GetAttribute("New QueryMeta Id")
-		if !ok {
-			c.logger.Error("no next id found in rotatequeries event")
-		}
-		nextId, err := strconv.Atoi(idAttribute.Value)
-		if err != nil {
-			c.logger.Error("error converting id attribute to int: ", err)
-			return
-		}
-		go func(query_data []byte, querymetaId uint64) {
-			err := c.GenerateAndBroadcastCyclelistReport(ctx, query_data, querymetaId)
-			if err != nil {
-				c.logger.Error("Error broadcasting cyclelist message: ", err)
-			}
-		}(qd, uint64(nextId))
-	}
+	localWG.Wait()
 }
 
 func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGroup) {

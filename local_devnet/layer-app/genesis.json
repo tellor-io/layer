@@ -145,11 +145,11 @@
     "capability": {
       "index": "1",
       "owners": []
-    },
+    },   
     "consensus": null,
     "dispute": {
       "params": {
-        "team_address": "+mmRVs069FJdX1vYIwz0VOW05BA="
+        "team_address": "O6TkDfI4WVzZbemYKBLBmtpPpW4="
       }
     },
     "distribution": {
@@ -174,7 +174,7 @@
     "evidence": {
       "evidence": []
     },
-    "feegrant": {
+    "feegrant": { 
       "allowances": []
     },
     "genutil": {
@@ -248,40 +248,40 @@
         "minimum_gas_prices": [
           {
             "denom": "loya",
-            "amount": "0.002500000000000000"
+            "amount": "0.000025000000000000"
           }
         ]
       }
     },
     "gov": {
       "starting_proposal_id": "1",
-      "deposits": [],
+      "deposits": [],   
       "votes": [],
       "proposals": [],
       "deposit_params": null,
       "voting_params": null,
       "tally_params": null,
       "params": {
-        "min_deposit": [
+        "min_deposit": [   
           {
             "denom": "loya",
-            "amount": "1"
+            "amount": "10000000"
           }
-        ],
+        ],  
         "max_deposit_period": "172800s",
-        "voting_period": "60s",
+        "voting_period": "172800s",
         "quorum": "0.334000000000000000",
         "threshold": "0.500000000000000000",
         "veto_threshold": "0.334000000000000000",
         "min_initial_deposit_ratio": "0.000000000000000000",
         "proposal_cancel_ratio": "0.500000000000000000",
         "proposal_cancel_dest": "",
-        "expedited_voting_period": "45s",
+        "expedited_voting_period": "86400s",
         "expedited_threshold": "0.667000000000000000",
         "expedited_min_deposit": [
           {
             "denom": "loya",
-            "amount": "1"
+            "amount": "50000000"
           }
         ],
         "burn_vote_quorum": false,
@@ -371,7 +371,7 @@
     },
     "registry": {
       "params": {
-        "max_report_buffer_window": "1814400s"
+        "max_report_buffer_window": "700000"
       },
       "dataspec": {
         "document_hash": "",
@@ -379,7 +379,7 @@
         "abi_components": [
           {
             "name": "asset",
-            "field_type": "string",
+            "field_type": "string",  
             "nested_component": []
           },
           {
@@ -390,12 +390,12 @@
         ],
         "aggregation_method": "weighted-median",
         "registrar": "genesis",
-        "report_buffer_window": "2s"
+        "report_block_window": "2"
       }
     },
     "reporter": {
       "params": {
-        "min_commission_rate": "0.000000000000000000",
+        "min_commission_rate": "0",
         "min_trb": "1000000",
         "max_selectors": "100"
       }
