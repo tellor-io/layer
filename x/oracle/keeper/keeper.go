@@ -6,6 +6,8 @@ import (
 	"fmt"
 	gomath "math"
 
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
@@ -18,8 +20,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	host "github.com/cosmos/ibc-go/v8/modules/core/24-host"
 )
 
 // var offset = time.Second * 6
@@ -277,6 +277,7 @@ func (k Keeper) AuthenticateCapability(ctx context.Context, cap *capabilitytypes
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	return k.scopedKeeper.AuthenticateCapability(sdkctx, cap, name)
 }
+
 func (k Keeper) ClaimCapability(ctx context.Context, cap *capabilitytypes.Capability, name string) error {
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	return k.scopedKeeper.ClaimCapability(sdkctx, cap, name)

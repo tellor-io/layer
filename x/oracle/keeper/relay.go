@@ -2,17 +2,16 @@ package keeper
 
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	cerrs "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 // SendQuery sends and records an icq
@@ -107,7 +106,7 @@ func (k Keeper) OnAcknowledgementPacket(
 		if err = k.cdc.Unmarshal(resps[0].Value, &r); err != nil {
 			return cerrs.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}
-		k.SetQueryResponse(ctx, modulePacket.Sequence, *r.Aggregate)
+		err = k.SetQueryResponse(ctx, modulePacket.Sequence, *r.Aggregate)
 
 		k.Logger(ctx).Info("interchain query ack response", "sequence", modulePacket.Sequence, "response", r)
 

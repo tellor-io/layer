@@ -605,7 +605,7 @@ func New(
 		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	oracleAppmodule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper)
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
@@ -744,7 +744,9 @@ func New(
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule).AddRoute(icqtypes.ModuleName, icqModule)
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+	ibcRouter.AddRoute(icqtypes.ModuleName, icqModule)
+	ibcRouter.AddRoute(oraclemoduletypes.ModuleName, oracleAppmodule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	/**** Module Hooks ****/
@@ -801,7 +803,7 @@ func New(
 
 		// Layer modules
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-		oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper),
+		oracleAppmodule,
 		registrymodule.NewAppModule(appCodec, app.RegistryKeeper, app.AccountKeeper, app.BankKeeper),
 		disputemodule.NewAppModule(appCodec, app.DisputeKeeper, app.AccountKeeper, app.BankKeeper),
 		bridgemodule.NewAppModule(appCodec, app.BridgeKeeper, app.AccountKeeper, app.BankKeeper),
