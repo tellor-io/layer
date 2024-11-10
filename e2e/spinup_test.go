@@ -2,15 +2,12 @@ package e2e_test
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v8"
-	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -20,74 +17,12 @@ import (
 )
 
 const (
-	qData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	value = "000000000000000000000000000000000000000000000058528649cf80ee0000"
+	bchusdQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bchusdValue = "000000000000000000000000000000000000000000000058528649cf80ee0000" //
+
+	ltcusdQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000036c7463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	ltcusdQId = "19585d912afb72378e3986a7a53f1eae1fbae792cd17e1d0df063681326823ae"
 )
-
-type MicroReport struct {
-	Reporter        string `json:"reporter"`
-	Power           string `json:"power"`
-	QueryType       string `json:"query_type"`
-	QueryID         string `json:"query_id"`
-	AggregateMethod string `json:"aggregate_method"`
-	Value           string `json:"value"`
-	Timestamp       string `json:"timestamp"`
-	BlockNumber     string `json:"block_number"`
-}
-
-type ReportsResponse struct {
-	MicroReports []MicroReport `json:"microReports"`
-}
-type AggregateReport struct {
-	Aggregate struct {
-		QueryID           string `json:"query_id"`
-		AggregateValue    string `json:"aggregate_value"`
-		AggregateReporter string `json:"aggregate_reporter"`
-		ReporterPower     string `json:"reporter_power"`
-		Reporters         []struct {
-			Reporter    string `json:"reporter"`
-			Power       string `json:"power"`
-			BlockNumber string `json:"block_number"`
-		} `json:"reporters"`
-		Index       string `json:"index"`
-		Height      string `json:"height"`
-		MicroHeight string `json:"micro_height"`
-		MetaID      string `json:"meta_id"`
-	} `json:"aggregate"`
-	Timestamp string `json:"timestamp"`
-}
-
-type Proposal struct {
-	Messages  []map[string]interface{} `json:"messages"`
-	Metadata  string                   `json:"metadata"`
-	Deposit   string                   `json:"deposit"`
-	Title     string                   `json:"title"`
-	Summary   string                   `json:"summary"`
-	Expedited bool                     `json:"expedited"`
-}
-
-func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
-	content, err := json.Marshal(prop)
-	if err != nil {
-		return "", err
-	}
-
-	hash := sha256.Sum256(content)
-	proposalFilename := fmt.Sprintf("%x.json", hash)
-	err = tn.WriteFile(ctx, content, proposalFilename)
-	if err != nil {
-		return "", fmt.Errorf("writing param change proposal: %w", err)
-	}
-
-	proposalPath := filepath.Join(tn.HomeDir(), proposalFilename)
-
-	command := []string{
-		"gov", "submit-proposal",
-		proposalPath,
-	}
-
-	return tn.ExecTx(ctx, keyName, command...)
-}
 
 func TestLearn(t *testing.T) {
 	ctx := context.Background()
@@ -100,7 +35,7 @@ func TestLearn(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user1", math.OneInt(), layer)[0]
 	fmt.Println("User address: ", user.FormattedAddress())
 
-	prop := Proposal{
+	prop := e2e.Proposal{
 		Messages: []map[string]interface{}{
 			{
 				"@type":     "/layer.mint.MsgInit",
@@ -113,7 +48,7 @@ func TestLearn(t *testing.T) {
 		Summary:   "Initialize inflationary rewards",
 		Expedited: false,
 	}
-	_, err = ExecProposal(ctx, "validator", prop, validatorI)
+	_, err = e2e.ExecProposal(ctx, "validator", prop, validatorI)
 	require.NoError(t, err)
 
 	for _, v := range layer.Validators {
@@ -131,32 +66,32 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
-	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1"), validatorI.Chain.Config().Env)
+	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, bchusdQData, "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1"), validatorI.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 
-	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", "/var/cosmos-chain/layer-1")
+	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, bchusdQData, bchusdValue, "--keyring-dir", "/var/cosmos-chain/layer-1")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
 	res1, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddress)
 	require.NoError(t, err)
 
-	var microReports ReportsResponse
+	var microReports e2e.ReportsResponse
 	err = json.Unmarshal(res1, &microReports)
 	require.NoError(t, err)
 	fmt.Println("Micro reports: ", microReports)
 	require.Equal(t, microReports.MicroReports[0].Reporter, valAddress)
 
 	// get aggreate report
-	qidbz, err := utils.QueryIDFromDataString(qData)
+	qidbz, err := utils.QueryIDFromDataString(bchusdQData)
 	require.NoError(t, err)
 
 	res2, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
 
-	var aggReport AggregateReport
+	var aggReport e2e.AggregateReport
 	fmt.Println("Aggregate report: ", string(res2))
 
 	err = json.Unmarshal(res2, &aggReport)

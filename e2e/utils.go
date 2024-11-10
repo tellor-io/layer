@@ -2,7 +2,10 @@ package e2e
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v8"
@@ -16,6 +19,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
+
+// HELPERS FOR BUILDING THE CHAIN
 
 var (
 	layerImageInfo = []ibc.DockerImage{
@@ -173,4 +178,111 @@ type Evidence struct {
 	Value           string `json:"value"`
 	Timestamp       string `json:"timestamp"`
 	BlockNumber     string `json:"block_number"`
+}
+
+type MicroReport struct {
+	Reporter        string `json:"reporter"`
+	Power           string `json:"power"`
+	QueryType       string `json:"query_type"`
+	QueryID         string `json:"query_id"`
+	AggregateMethod string `json:"aggregate_method"`
+	Value           string `json:"value"`
+	Timestamp       string `json:"timestamp"`
+	BlockNumber     string `json:"block_number"`
+}
+
+type ReportsResponse struct {
+	MicroReports []MicroReport `json:"microReports"`
+}
+
+type AggregateReport struct {
+	Aggregate struct {
+		QueryID           string `json:"query_id"`
+		AggregateValue    string `json:"aggregate_value"`
+		AggregateReporter string `json:"aggregate_reporter"`
+		ReporterPower     string `json:"reporter_power"`
+		Reporters         []struct {
+			Reporter    string `json:"reporter"`
+			Power       string `json:"power"`
+			BlockNumber string `json:"block_number"`
+		} `json:"reporters"`
+		Index       string `json:"index"`
+		Height      string `json:"height"`
+		MicroHeight string `json:"micro_height"`
+		MetaID      string `json:"meta_id"`
+	} `json:"aggregate"`
+	Timestamp string `json:"timestamp"`
+}
+
+type Proposal struct {
+	Messages  []map[string]interface{} `json:"messages"`
+	Metadata  string                   `json:"metadata"`
+	Deposit   string                   `json:"deposit"`
+	Title     string                   `json:"title"`
+	Summary   string                   `json:"summary"`
+	Expedited bool                     `json:"expedited"`
+}
+
+// HELPERS FOR TESTING AGAINST THE CHAIN
+
+func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
+	content, err := json.Marshal(prop)
+	if err != nil {
+		return "", err
+	}
+
+	hash := sha256.Sum256(content)
+	proposalFilename := fmt.Sprintf("%x.json", hash)
+	err = tn.WriteFile(ctx, content, proposalFilename)
+	if err != nil {
+		return "", fmt.Errorf("writing param change proposal: %w", err)
+	}
+
+	proposalPath := filepath.Join(tn.HomeDir(), proposalFilename)
+
+	command := []string{
+		"gov", "submit-proposal",
+		proposalPath,
+	}
+
+	return tn.ExecTx(ctx, keyName, command...)
+}
+
+func GetValIAddress(ctx context.Context, layer *cosmos.CosmosChain) (*cosmos.ChainNode, string, string, error) {
+	validatorI := layer.Validators[0]
+	valAccAddress, err := validatorI.AccountKeyBech32(ctx, "validator")
+	if err != nil {
+		return nil, "", "", err
+	}
+	valAddress := sdk.ValAddress(valAccAddress)
+	return validatorI, valAccAddress, valAddress.String(), nil
+}
+
+func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode) error {
+	prop := Proposal{
+		Messages: []map[string]interface{}{
+			{
+				"@type":     "/layer.mint.MsgInit",
+				"authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+			},
+		},
+		Metadata:  "ipfs://CID",
+		Deposit:   "50000000loya",
+		Title:     "Init tbr minting",
+		Summary:   "Initialize inflationary rewards",
+		Expedited: false,
+	}
+	_, err := ExecProposal(ctx, "validator", prop, validatorI)
+	if err != nil {
+		return err
+	}
+
+	for _, v := range layer.Validators {
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

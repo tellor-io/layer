@@ -103,5 +103,6 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			sdk.NewAttribute("amount", tip.Amount.String()),
 		),
 	})
+	k.keeper.Logger(ctx).Info("Tip added at height ", ctx.BlockHeight())
 	return &types.MsgTipResponse{}, nil
 }

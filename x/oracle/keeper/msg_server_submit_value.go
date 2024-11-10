@@ -16,6 +16,9 @@ import (
 )
 
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.keeper.Logger(ctx).Info("SubmitValue called at height ", sdkCtx.BlockHeight())
+	
 	reporterAddr, err := msg.GetSignerAndValidateMsg()
 	if err != nil {
 		return nil, err
