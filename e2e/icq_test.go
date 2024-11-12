@@ -83,7 +83,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 			ChainConfig: ibc.ChainConfig{
 				Type:           "cosmos",
 				Name:           "layer",
-				ChainID:        "layer-1",
+				ChainID:        "layer-receiver",
 				Bin:            "layerd",
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
