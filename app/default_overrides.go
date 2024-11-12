@@ -18,6 +18,8 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 )
 
 // bankModule defines a custom wrapper around the x/bank module's AppModuleBasic
@@ -100,6 +102,18 @@ type globalFeeModule struct {
 func (globalFeeModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := globalfeetypes.DefaultGenesisState()
 	genState.Params.MinimumGasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(BondDenom, math.LegacyNewDecWithPrec(25, 4)))
+
+	return cdc.MustMarshalJSON(genState)
+}
+
+type icqcustomModule struct {
+	icq.AppModule
+}
+
+// DefaultGenesis returns custom x/globalfee module genesis state.
+func (icqcustomModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	genState := icqtypes.DefaultGenesis()
+	genState.Params.AllowQueries = []string{"/layer.oracle.Query/GetCurrentAggregateReport"}
 
 	return cdc.MustMarshalJSON(genState)
 }
