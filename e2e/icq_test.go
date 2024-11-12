@@ -7,11 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tellor-io/layer/e2e"
-	"github.com/tellor-io/layer/utils"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
@@ -19,9 +14,13 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/testreporter"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/e2e"
+	"github.com/tellor-io/layer/utils"
 	"go.uber.org/zap/zaptest"
 
 	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -85,7 +84,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 			ChainConfig: ibc.ChainConfig{
 				Type:           "cosmos",
 				Name:           "layer",
-				ChainID:        "layer-receiver",
+				ChainID:        "layer-1",
 				Bin:            "layerd",
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
@@ -231,5 +230,4 @@ func TestIbcInterchainQuery(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Aggregate report: ", aggReport)
 	require.Equal(t, aggReport.Aggregate.AggregateReporter, valAddress)
-
 }

@@ -3,6 +3,8 @@ package app
 import (
 	"encoding/json"
 
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	"github.com/strangelove-ventures/globalfee/x/globalfee"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 
@@ -18,8 +20,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
-	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 )
 
 // bankModule defines a custom wrapper around the x/bank module's AppModuleBasic
