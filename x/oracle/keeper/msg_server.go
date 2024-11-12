@@ -11,7 +11,6 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	sdkerrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -38,7 +37,7 @@ func (k msgServer) SendQueryGetCurrentAggregatedReport(goCtx context.Context, ms
 	}
 	reqs := []abci.RequestQuery{
 		{
-			Path: "/tellor-io.layer.oracle.Query/GetCurrentAggregateReport",
+			Path: "/layer.oracle.Query/GetCurrentAggregateReport",
 			Data: k.keeper.cdc.MustMarshal(&q),
 		},
 	}

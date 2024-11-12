@@ -1,14 +1,16 @@
 package keeper
 
 import (
+	"strconv"
+
+	cerrs "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
+
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-
-	cerrs "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -90,7 +92,7 @@ func (k Keeper) OnAcknowledgementPacket(
 	switch resp := ack.Response.(type) {
 	case *channeltypes.Acknowledgement_Result:
 		var ackData icqtypes.InterchainQueryPacketAck
-		if err := k.cdc.Unmarshal(resp.Result, &ackData); err != nil {
+		if err := k.cdc.UnmarshalJSON(resp.Result, &ackData); err != nil {
 			return cerrs.Wrap(err, "failed to unmarshal interchain query packet ack")
 		}
 		resps, err := icqtypes.DeserializeCosmosResponse(ackData.Data)
@@ -106,27 +108,25 @@ func (k Keeper) OnAcknowledgementPacket(
 		if err = k.cdc.Unmarshal(resps[0].Value, &r); err != nil {
 			return cerrs.Wrapf(err, "failed to unmarshal interchain query response to type %T", resp)
 		}
-		err = k.SetQueryResponse(ctx, modulePacket.Sequence, *r.Aggregate)
 
-		k.Logger(ctx).Info("interchain query ack response", "sequence", modulePacket.Sequence, "response", r)
-
-		if err != nil {
-			k.Logger(ctx).Error("interchain query ack response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
-			return err
+		if err = k.SetQueryResponse(ctx, modulePacket.Sequence, *r.Aggregate); err != nil {
+			return cerrs.Wrap(err, "failed to set query response")
 		}
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeQueryResult,
+				sdk.NewAttribute(types.AttributeKeyAckSuccess, string(resp.Result)),
+			),
+		)
+		k.Logger(ctx).Info("interchain query ack response", "sequence", modulePacket.Sequence, "response", r)
 	case *channeltypes.Acknowledgement_Error:
-		// err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryError{
-		// 	SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
-		// 	Error:      resp.Error,
-		// 	Channel:    modulePacket.DestinationChannel,
-		// })
-
-		k.Logger(ctx).Error("interchain query ack error response", "sequence", modulePacket.Sequence, "error", resp.Error)
-
-		// if err != nil {
-		// 	k.Logger(ctx).Error("interchain query ack error response was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
-		// 	return err
-		// }
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeQueryResult,
+				sdk.NewAttribute(types.AttributeKeyAckError, resp.Error),
+			),
+		)
 	}
 	return nil
 }
@@ -136,17 +136,14 @@ func (k Keeper) OnTimeoutPacket(
 	ctx sdk.Context,
 	modulePacket channeltypes.Packet,
 ) error {
-	// err := ctx.EventManager().EmitTypedEvent(&types.EventOracleQueryTimeout{
-	// 	SequenceId: strconv.FormatUint(modulePacket.Sequence, 10),
-	// 	Channel:    modulePacket.DestinationChannel,
-	// })
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTimeout,
+			sdk.NewAttribute(types.AttributeKeySequence, strconv.FormatUint(modulePacket.Sequence, 10)),
+		),
+	)
 
 	k.Logger(ctx).Error("Packet timeout", "sequence", modulePacket.Sequence)
-
-	// if err != nil {
-	// 	k.Logger(ctx).Error("interchain query timeout was unable to emit event", "sequence", modulePacket.Sequence, "error", err)
-	// 	return err
-	// }
 
 	return nil
 }

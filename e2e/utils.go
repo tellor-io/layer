@@ -85,7 +85,7 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
-		cosmos.NewGenesisKV("app_state.interchainquery.params.allow_queries", []string{"*"}),
+		cosmos.NewGenesisKV("app_state.interchainquery.params.allow_queries", []string{"/layer.oracle.Query/GetCurrentAggregateReport"}),
 	}
 	return &interchaintest.ChainSpec{
 		NumValidators: &nv,
