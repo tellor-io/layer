@@ -29,7 +29,6 @@ func TestIbcInterchainQuery(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
 	rep := testreporter.NewNopReporter()

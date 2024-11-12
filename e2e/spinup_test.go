@@ -117,7 +117,7 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
 		require.NoError(t, err)
 	}
 	err = testutil.WaitForBlocks(ctx, 3, validatorI)
@@ -127,16 +127,16 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Proposal result: ", result)
 	// create reporter
-	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
+	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
-	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1"), validatorI.Chain.Config().Env)
+	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorI.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 
-	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", "/var/cosmos-chain/layer-1")
+	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
@@ -168,7 +168,7 @@ func TestLearn(t *testing.T) {
 	// dispute report
 	bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
-	txHash, err = validatorI.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "true", "--keyring-dir", "/var/cosmos-chain/layer-1", "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = validatorI.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "true", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 	var disputes e2e.Disputes
@@ -188,10 +188,10 @@ func TestLearn(t *testing.T) {
 	fmt.Println("Reporter: ", string(res3))
 	// vote on dispute
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "dispute", "vote", "1", "vote-support", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
 		require.NoError(t, err)
 	}
-	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", "/var/cosmos-chain/layer-1")
+	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 
 	res3, _, err = validatorI.ExecQuery(ctx, "dispute", "team-vote", "1")
