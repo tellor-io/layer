@@ -14,6 +14,9 @@ import (
 	tmos "github.com/cometbft/cometbft/libs/os"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
@@ -174,6 +177,7 @@ var (
 		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                {authtypes.Burner},
 		ibctransfertypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
+		icqtypes.ModuleName:                nil,
 		oraclemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		disputemoduletypes.ModuleName:      {authtypes.Minter, authtypes.Burner, authtypes.Staking},
 		bridgemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
@@ -227,6 +231,7 @@ type App struct {
 	GovKeeper             govkeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	IBCKeeper             *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
+	ICQKeeper             icqkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
@@ -238,6 +243,7 @@ type App struct {
 	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
+	ScopedICQKeeper      capabilitykeeper.ScopedKeeper
 
 	OracleKeeper oraclemodulekeeper.Keeper
 
@@ -319,6 +325,7 @@ func New(
 		bridgemoduletypes.StoreKey,
 		reportermoduletypes.StoreKey,
 		globalfeetypes.StoreKey,
+		icqtypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 	)
 
@@ -357,6 +364,7 @@ func New(
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedICQKeeper := app.CapabilityKeeper.ScopeToModule(icqtypes.ModuleName)
 	// this line is used by starport scaffolding # stargate/app/scopedKeeper
 
 	// add keepers
@@ -522,7 +530,18 @@ func New(
 	)
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
-
+	// ICQ Keeper
+	app.ICQKeeper = icqkeeper.NewKeeper(
+		appCodec,
+		app.keys[icqtypes.StoreKey],
+		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		scopedICQKeeper,
+		bApp.GRPCQueryRouter(),
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+	icqModule := icq.NewIBCModule(app.ICQKeeper)
 	// Create evidence Keeper for to register the IBC light client misbehavior evidence route
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
@@ -719,6 +738,7 @@ func New(
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+	ibcRouter.AddRoute(icqtypes.ModuleName, icqModule)
 	app.IBCKeeper.SetRouter(ibcRouter)
 
 	/**** Module Hooks ****/
@@ -789,6 +809,7 @@ func New(
 		ibc.NewAppModule(app.IBCKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
 		ica.NewAppModule(&icaControllerKeeper, &app.ICAHostKeeper),
+		icqcustomModule{icq.NewAppModule(app.ICQKeeper, nil)},
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
 
@@ -842,6 +863,7 @@ func New(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		icqtypes.ModuleName,
 		ibcexported.ModuleName,
 		icatypes.ModuleName,
 		capabilitytypes.ModuleName,
@@ -882,6 +904,7 @@ func New(
 		minttypes.ModuleName,
 		genutiltypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		icqtypes.ModuleName,
 		ibcexported.ModuleName,
 		icatypes.ModuleName,
 		evidencetypes.ModuleName,
@@ -946,6 +969,7 @@ func New(
 
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
+	app.ScopedICQKeeper = scopedICQKeeper
 	// this line is used by starport scaffolding # stargate/app/beforeInitReturn
 
 	return app
