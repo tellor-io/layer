@@ -117,41 +117,35 @@ lint-folder-fix:
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
+CURRENT_UID := $(shell id -u)
+CURRENT_GID := $(shell id -g)
 
 protoVer=0.14.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage="$(DOCKER)" run -e BUF_CACHE_DIR=/tmp/buf --rm -v "$(CURDIR)":/workspace:rw --user ${CURRENT_UID}:${CURRENT_GID} --workdir /workspace $(protoImageName)
 
-#? proto-all: Run make proto-format proto-lint proto-gen
-proto-all: proto-format proto-lint proto-gen
+proto-all: proto-format proto-lint proto-gen format
 
-#? proto-gen: Generate Protobuf files
 proto-gen:
+	@go install cosmossdk.io/orm/cmd/protoc-gen-go-cosmos-orm@v1.0.0-beta.3
+	@echo "Generating Protobuf files"
 	@$(protoImage) sh ./scripts/protocgen.sh
+	@go mod tidy
 
-#? proto-swagger-gen: Generate Protobuf Swagger
-proto-swagger-gen:
-	@echo "Generating Protobuf Swagger"
-	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
-
-#? proto-format: Format proto file
 proto-format:
+	@echo "Formatting Protobuf files"
 	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
-#? proto-lint: Lint proto file
+proto-swagger-gen:
+	@./scripts/protoc-swagger-gen.sh
+
 proto-lint:
 	@$(protoImage) buf lint --error-format=json
 
-#? proto-check-breaking: Check proto file is breaking
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-#? proto-update-deps: Update protobuf dependencies
-proto-update-deps:
-	@echo "Updating Protobuf dependencies"
-	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
-
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking
 
 ###############################################################################
 ###                                tests                                    ###
@@ -231,9 +225,13 @@ mock-gen:
 	$(MAKE) mock-gen-registry
 	$(MAKE) mock-gen-reporter
 
+.PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon
+
 get-heighliner:
-	git clone https://github.com/strangelove-ventures/heighliner.git
+	git clone --depth 1 https://github.com/strangelove-ventures/heighliner.git
 	cd heighliner && go install
+	@sleep 0.1
+	@echo ✅ heighliner installed to $(shell which heighliner)
 
 local-image:
 ifeq (,$(shell which heighliner))
@@ -242,12 +240,12 @@ else
 	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
 endif
 
-.PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon
-
 get-localic:
-	git clone https://github.com/strangelove-ventures/interchaintest.git
+	@echo "Installing local-interchain"
+	git clone --depth 1 https://github.com/strangelove-ventures/interchaintest.git
 	cd interchaintest/local-interchain && make install
-	rm -rf interchaintest
+	@sleep 0.1
+	@echo ✅ local-interchain installed $(shell which local-ic)
 
 
 local-devnet:
@@ -256,6 +254,6 @@ ifeq (,$(shell which local-ic))
 else
 	echo "Starting local interchain"
 	cd local_devnet && ICTEST_HOME=. local-ic start layer.json
-	ls
 	
 endif
+.PHONY: get-heighliner local-image get-localic local-devnet
