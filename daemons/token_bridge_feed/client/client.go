@@ -8,13 +8,13 @@ import (
 	"math/big"
 	"net/http"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/spf13/viper"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
 
@@ -381,31 +381,17 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error
 }
 
 func (c *Client) getEthRpcUrl() (string, error) {
-	viper.SetConfigName("secrets")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("fatal error config file: %w", err))
-	}
-	ethRpcUrl := viper.GetString("eth_rpc_url")
+	ethRpcUrl := os.Getenv("ETH_RPC_URL")
 	if ethRpcUrl == "" {
-		return "", fmt.Errorf("eth_rpc_url not set")
+		return "", fmt.Errorf("ETH_RPC_URL not set")
 	}
 	return ethRpcUrl, nil
 }
 
 func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
-	viper.SetConfigName("secrets")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("fatal error config file: %w", err))
-	}
-	tokenBridgeContractAddress := viper.GetString("token_bridge_contract")
+	tokenBridgeContractAddress := os.Getenv("TOKEN_BRIDGE_CONTRACT")
 	if tokenBridgeContractAddress == "" {
-		return common.Address{}, fmt.Errorf("token_bridge_contract not set")
+		return common.Address{}, fmt.Errorf("TOKEN_BRIDGE_CONTRACT not set")
 	}
 	return common.HexToAddress(tokenBridgeContractAddress), nil
 }
