@@ -15,6 +15,7 @@ func (a ReporterSelectorsIndex) IndexesList() []collections.Index[[]byte, types.
 	return []collections.Index[[]byte, types.Selection]{a.Reporter}
 }
 
+// maps a reporter address to its selectors' addresses
 func NewSelectorsIndex(sb *collections.SchemaBuilder) ReporterSelectorsIndex {
 	return ReporterSelectorsIndex{
 		Reporter: indexes.NewMulti(

@@ -23,12 +23,12 @@ type (
 		storeService              store.KVStoreService
 		Params                    collections.Item[types.Params]
 		Tracker                   collections.Item[types.StakeTracker]
-		Reporters                 collections.Map[[]byte, types.OracleReporter]
-		SelectorTips              collections.Map[[]byte, types.BigUint]
-		Selectors                 *collections.IndexedMap[[]byte, types.Selection, ReporterSelectorsIndex]
-		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]
-		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]
-		Report                    collections.Map[collections.Pair[[]byte, uint64], types.DelegationsAmounts]
+		Reporters                 collections.Map[[]byte, types.OracleReporter]                               // key: reporter AccAddress
+		SelectorTips              collections.Map[[]byte, types.BigUint]                                      // key: selector AccAddress
+		Selectors                 *collections.IndexedMap[[]byte, types.Selection, ReporterSelectorsIndex]    // key: selector AccAddress
+		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                           // key: dispute hashId
+		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                           // key: dispute hashId
+		Report                    collections.Map[collections.Pair[[]byte, uint64], types.DelegationsAmounts] // key: reporter AccAddress, blockNumber
 
 		Schema collections.Schema
 		logger log.Logger
@@ -93,6 +93,7 @@ func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+// GetDelegatorTokensAtBlock returns the total amount of tokens a selector had when part of reporting to the nearest given block Number.
 func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error) {
 	del, err := k.Selectors.Get(ctx, delegator)
 	if err != nil {
@@ -108,6 +109,8 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 		return math.Int{}, err
 	}
 	delegatorTokens := math.ZeroInt()
+	// token origins {selector, validator, amount}
+	// loop through token origins and sum up the amount for the selector
 	for _, r := range rep.TokenOrigins {
 		if bytes.Equal(r.DelegatorAddress, delegator) {
 			delegatorTokens = delegatorTokens.Add(r.Amount)
@@ -116,6 +119,7 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 	return delegatorTokens, nil
 }
 
+// GetReporterTokensAtBlock returns the total amount of tokens a reporter when reporting to the nearest given block Number.
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](reporter).EndInclusive(blockNumber).Descending()
 	total := math.ZeroInt()
@@ -129,6 +133,8 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 	return total, nil
 }
 
+// tracks total bonded tokens and sets an expiration of 12 hours from last update
+// sets the total BONDED tokens at time of update
 func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	maxStake, err := k.Tracker.Get(ctx)
