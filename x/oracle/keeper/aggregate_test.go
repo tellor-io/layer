@@ -132,7 +132,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
 	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err = s.oracleKeeper.SetAggregatedReport(ctx)

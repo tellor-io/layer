@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// send a reporter to jail
+// jail a reporter for a given duration
 func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration uint64) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
@@ -36,10 +36,10 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 	return nil
 }
 
-// remove a reporter from jail
+// unjail a reporter
 func (k Keeper) UnjailReporter(ctx context.Context, reporterAddr sdk.AccAddress, reporter types.OracleReporter) error {
 	if !reporter.Jailed {
-		return types.ErrReporterNotJailed.Wrapf("cannot unjail already unjailed reporter, %v", reporter.Jailed)
+		return types.ErrReporterNotJailed.Wrapf("cannot unjail an already unjailed reporter, %v", reporter.Jailed)
 	}
 
 	sdkctx := sdk.UnwrapSDKContext(ctx)

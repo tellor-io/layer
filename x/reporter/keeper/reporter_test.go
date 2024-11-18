@@ -184,7 +184,7 @@ func TestReporterStake(t *testing.T) {
 					})
 				}
 			}
-			stake, err := k.ReporterStake(tc.ctx, tc.addr)
+			stake, err := k.ReporterStake(tc.ctx, tc.addr, []byte{})
 			if err != nil {
 				require.ErrorContains(t, err, tc.err)
 			}

@@ -42,7 +42,7 @@ type OracleKeeper interface {
 }
 
 type ReporterKeeper interface {
-	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, hashId []byte) error
+	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, queryId, hashId []byte) error
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration uint64) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
 	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error

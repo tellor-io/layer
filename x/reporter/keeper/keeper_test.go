@@ -62,7 +62,7 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 		Amount:           math.NewIntWithDecimal(1000, 6),
 	}
 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin1, tokenOrigin2}
-	require.NoError(t, k.Report.Set(ctx, collections.Join(delAddr.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: tokenOrigin1.Amount.Add(tokenOrigin2.Amount)}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(delAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: tokenOrigin1.Amount.Add(tokenOrigin2.Amount)}))
 
 	tokens, err := k.GetDelegatorTokensAtBlock(ctx, delAddr, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, math.ZeroInt(), tokens)
 
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{Total: math.OneInt()}))
 
 	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
@@ -104,4 +104,49 @@ func TestTrackStakeChange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, math.OneInt(), change.Amount)
 	require.Equal(t, expiration.Add(12*time.Hour), *change.Expiration)
+}
+
+func TestReportIndexedMap(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	keys := []collections.Pair[[]byte, collections.Pair[[]byte, uint64]]{
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterA"), uint64(1))),
+		collections.Join([]byte("queryid2"), collections.Join([]byte("reporterA"), uint64(1))),
+		collections.Join([]byte("queryid3"), collections.Join([]byte("reporterA"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterB"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterC"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterD"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterD"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterA"), uint64(6))),
+		collections.Join([]byte("queryid2"), collections.Join([]byte("reporterA"), uint64(6))),
+	}
+	for _, key := range keys {
+		require.NoError(t, k.Report.Set(ctx, key, types.DelegationsAmounts{}))
+	}
+
+	// first key of reporterA should be at block 6 and it should queryid2
+	startFrom := collections.Join([]byte("reporterA"), uint64(0))
+	endAt := collections.Join([]byte("reporterA"), uint64(7))
+	kc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	startBuffer := make([]byte, kc.Size(startFrom))
+	endBuffer := make([]byte, kc.Size(endAt))
+
+	_, err := kc.Encode(startBuffer, startFrom)
+	require.NoError(t, err)
+	_, err = kc.Encode(endBuffer, endAt)
+	require.NoError(t, err)
+
+	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
+	require.NoError(t, err)
+	require.True(t, iter.Valid())
+
+	key, err := iter.Key()
+	require.NoError(t, err)
+	require.Equal(t, []byte("queryid2"), key.K2())
+	require.Equal(t, []byte("reporterA"), key.K1().K1())
+	require.Equal(t, uint64(6), key.K1().K2())
+
+	// reporterA should have 5 keys
+	repAkeys, err := iter.Keys()
+	require.NoError(t, err)
+	require.Equal(t, 5, len(repAkeys))
 }

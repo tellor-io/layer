@@ -166,7 +166,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	slashPercentageFixed6Dec := math.LegacyNewDecFromInt(slashPercentageFixed6)
 	slashAmountFixed6Dec := reportPowerFixed6Dec.Mul(slashPercentageFixed6Dec).Quo(powerReductionDec)
 	slashAmountFixed6 := slashAmountFixed6Dec.TruncateInt()
-	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, hashId)
+	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, report.QueryId, hashId)
 	if err != nil {
 		return err
 	}

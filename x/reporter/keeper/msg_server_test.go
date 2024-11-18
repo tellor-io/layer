@@ -195,7 +195,7 @@ func TestSwitchReporter(t *testing.T) {
 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin}
 
 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: math.NewInt(1000 * 1e6)}
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), delegationAmounts))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight()))), delegationAmounts))
 
 	rk.On("MaxReportBufferWindow", ctx).Return(700_000, nil)
 	sk.On("UnbondingTime", ctx).Return(1814400*time.Second, nil)
@@ -268,7 +268,7 @@ func TestUnjailReporter(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, reporter.Jailed)
 	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
-	require.ErrorContains(t, err, "cannot unjail already unjailed reporter, false: reporter not jailed")
+	require.ErrorContains(t, err, "cannot unjail an already unjailed reporter, false: reporter not jailed")
 
 	reporter.Jailed = true
 	reporter.JailedUntil = ctx.BlockTime().Add(time.Hour)

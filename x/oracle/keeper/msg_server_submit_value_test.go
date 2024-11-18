@@ -48,7 +48,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 		Value:     value,
 	}
 	ctx := s.ctx.WithBlockHeight(18)
-	rk.On("ReporterStake", ctx, addr).Return(math.NewInt(1_000_000), errors.New("error")).Once()
+	rk.On("ReporterStake", ctx, addr, queryId).Return(math.NewInt(1_000_000), errors.New("error")).Once()
 	_, err = s.msgServer.SubmitValue(ctx, &submitreq)
 	require.Error(err)
 
@@ -56,12 +56,12 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	params, err := k.Params.Get(ctx)
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
-	rk.On("ReporterStake", s.ctx, addr).Return(minStakeAmt.Sub(math.NewInt(100)), nil).Once()
+	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Sub(math.NewInt(100)), nil).Once()
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.Error(err)
 
 	// Submit value transaction with value revealed, this checks if the value is correctly hashed
-	rk.On("ReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
 
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
@@ -101,8 +101,6 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 		Value:     value,
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-
-	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "invalid query data")
@@ -248,7 +246,7 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	params, err := k.Params.Get(ctx)
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
-	repk.On("ReporterStake", ctx, reporter).Return(minStakeAmt.Add(math.NewInt(1*1e6)), nil).Once()
+	repk.On("ReporterStake", ctx, reporter, utils.QueryIDFromData(currentQuery)).Return(minStakeAmt.Add(math.NewInt(1*1e6)), nil).Once()
 
 	res, err := s.msgServer.SubmitValue(ctx, &msgSubmitValue)
 	require.NoError(err)

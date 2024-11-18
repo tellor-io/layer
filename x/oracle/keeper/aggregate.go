@@ -33,7 +33,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	blockHeight := uint64(sdkCtx.BlockHeight())
 
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
-	reportersToPay := make([]*types.AggregateReporter, 0)
+	reportersToPay := make([]*types.Aggregate, 0)
 
 	defer idsIterator.Close()
 	for ; idsIterator.Valid(); idsIterator.Next() {
@@ -73,7 +73,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 
 			if !query.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, report.Reporters, query.Amount, types.ModuleName)
+				err = k.AllocateRewards(ctx, []*types.Aggregate{report}, query.Amount, types.ModuleName)
 				if err != nil {
 					return err
 				}
@@ -82,7 +82,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 			// Add reporters to the tbr payment list.
 			if reports[0].Cyclelist {
-				reportersToPay = append(reportersToPay, report.Reporters...)
+				reportersToPay = append(reportersToPay, report)
 			}
 			err = k.Query.Remove(ctx, key)
 			if err != nil {

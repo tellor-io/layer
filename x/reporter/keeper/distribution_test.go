@@ -46,11 +46,11 @@ func TestDivvyingTips(t *testing.T) {
 
 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: total}
 
-	err = k.Report.Set(ctx, collections.Join(addr.Bytes(), height), delegationAmounts)
+	err = k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(addr.Bytes(), height)), delegationAmounts)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(12)
-	err = k.DivvyingTips(ctx, addr, types.BigUint{Value: math.NewUint(10 * 1e6)}, 10)
+	err = k.DivvyingTips(ctx, addr, types.BigUint{Value: math.NewUint(10 * 1e6)}, []byte{}, 10)
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockHeight(13)

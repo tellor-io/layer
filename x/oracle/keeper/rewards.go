@@ -18,12 +18,13 @@ type ReportersReportCount struct {
 	Power   uint64
 	Reports uint64
 	Height  uint64
+	queryId []byte
 }
 
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
-func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.AggregateReporter, reward math.Int, fromPool string) error {
+func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate, reward math.Int, fromPool string) error {
 	if reward.IsZero() {
 		return nil
 	}
@@ -38,19 +39,22 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 
 	// First pass: collect data in map
 	reportersMap := make(map[string]ReportersReportCount)
-	for _, r := range reporters {
-		reporter, found := reportersMap[r.Reporter]
-		if found {
-			reporter.Reports++
-		} else {
-			reporter = ReportersReportCount{
-				Power:   r.Power,
-				Reports: 1,
-				Height:  r.BlockNumber,
+	for _, report := range reports {
+		for _, r := range report.Reporters {
+			reporter, found := reportersMap[r.Reporter]
+			if found {
+				reporter.Reports++
+			} else {
+				reporter = ReportersReportCount{
+					Power:   r.Power,
+					Reports: 1,
+					Height:  r.BlockNumber,
+					queryId: report.QueryId,
+				}
 			}
+			reportersMap[r.Reporter] = reporter
+			totalPower += r.Power
 		}
-		reportersMap[r.Reporter] = reporter
-		totalPower += r.Power
 	}
 
 	// Convert to sorted slice for deterministic iteration
@@ -88,7 +92,7 @@ func (k Keeper) AllocateRewards(ctx context.Context, reporters []*types.Aggregat
 			amount.Value = amount.Value.Add(math.NewUint(reward.Uint64()).MulUint64(1e6)).Sub(totaldist)
 		}
 
-		err = k.AllocateTip(ctx, reporterAddr.Bytes(), amount, reporter.data.Height)
+		err = k.AllocateTip(ctx, reporterAddr.Bytes(), reporter.data.queryId, amount, reporter.data.Height)
 		if err != nil {
 			return err
 		}
@@ -119,6 +123,6 @@ func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, rewar
 	return reportertypes.BigUint{Value: amount}
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount reportertypes.BigUint, height uint64) error {
-	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, height)
+func (k Keeper) AllocateTip(ctx context.Context, addr, queryId []byte, amount reportertypes.BigUint, height uint64) error {
+	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, queryId, height)
 }
