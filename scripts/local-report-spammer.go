@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -14,7 +15,7 @@ import (
 var COMMAND_PATH = "/Users/caleb/layer/layerd"
 var LAYER_PATH = "/Users/caleb/.layer"
 var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
-var VALIDATOR_ADDRESS = "tellorvaloper1q8rzwrj56ak0z6le84r9m79zn2jj3qdll0lpxz"
+var VALIDATOR_ADDRESS = "tellorvaloper1dct4uwgcfjxqaphjmfzjv2yz733n9fycxdz2m6"
 
 var NUM_OF_REPORTERS = 1
 
@@ -36,11 +37,13 @@ func main() {
 			return
 		}
 		if strings.EqualFold(querydata, prevQueryData) {
+			fmt.Println("cyclelist has not rotated yet. sleeping for 100ms")
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		// call spam function
-		go SpamReportsWithReportersMap(reportersMap, string(querydata))
+		fmt.Println("Calling spam reports")
+		go SpamReportsWithReportersMap(reportersMap, querydata)
 	}
 
 }
@@ -60,12 +63,14 @@ func GetCurrentQueryInCyclelist() (string, error) {
 
 	queryDataField := strings.Split(string(output), "query_meta")[0]
 	query_data := strings.TrimPrefix(queryDataField, "query_data: ")
-	fmt.Println("Query Data: ", query_data)
+	qdBytes := []byte(query_data)
+	qd := string(qdBytes[:len(qdBytes)-1])
+	fmt.Println("Query Data: ", qd)
 
-	return query_data, nil
+	return qd, nil
 }
 
-func SpamReportsWithReportersMap(reportersMap map[string]string, qd string) {
+func SpamReportsWithReportersMap(reportersMap map[string]ReporterInfo, qd string) {
 	maxGoroutines := 40
 	ticket := make(chan struct{}, maxGoroutines)
 
@@ -73,32 +78,39 @@ func SpamReportsWithReportersMap(reportersMap map[string]string, qd string) {
 
 	var wg sync.WaitGroup
 
-	for reporter_name, addr := range reportersMap {
+	for reporter_name, info := range reportersMap {
 		wg.Add(1)
 		ticket <- struct{}{} // would block if guard channel is already filled
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, reporter_name)
-		go func(addr, path string) {
+		go func(reporter_info *ReporterInfo, path string) {
 			defer wg.Done()
-			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", addr, qd, value, "--from", addr, "--chain-id", "layertest-2", "--fees", "15loya", "--keyring-backend", "test", "--keyring-dir", path, "--home", path, "--node", "http://54.209.172.1:26657", "--yes")
+			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", reporter_info.Address, qd, value, "--from", reporter_info.Address, "--chain-id", "layertest-2", "--fees", "15loya", "--keyring-backend", "test", "--keyring-dir", path, "--sequence", strconv.Itoa(reporter_info.SequenceNum), "--home", path, "--node", "http://54.209.172.1:26657", "--yes")
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println("ERROR submitting value: ", err)
 			}
+			reporter_info.SequenceNum++
 			fmt.Println(string(output))
 			<-ticket
-		}(addr, key_path)
+		}(&info, key_path)
 	}
 
 	wg.Wait()
 }
 
-func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, error) {
-	reporterMap := make(map[string]string, numOfReporters)
+type ReporterInfo struct {
+	Address     string
+	SequenceNum int
+}
+
+func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterInfo, error) {
+	reporterMap := make(map[string]ReporterInfo, numOfReporters)
 	for i := 1; i <= numOfReporters; i++ {
 		key_name := fmt.Sprintf("test_reporter%d", i)
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, key_name)
 
 		// Create account for reporter
+		fmt.Println("Create keys")
 		cmd := exec.Command(COMMAND_PATH, "keys", "add", key_name, "--keyring-backend", "test", "--home", key_path)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
@@ -108,6 +120,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 		fmt.Println(string(output))
 
 		// send tokens to reporter from faucet
+		fmt.Println("fund account from faucet")
 		key_address := GetAddressFromKeyName(key_name)
 		cmd = exec.Command(COMMAND_PATH, "tx", "bank", "send", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", key_address, "200000000loya", "--from", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", "--chain-id", "layertest-2", "--keyring-dir", "/Users/caleb/.layer", "--keyring-backend", "test", "--home", "/Users/caleb/.layer", "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
 		output, err = cmd.CombinedOutput()
@@ -122,6 +135,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 		// delegate to validator
 		//_ = GetSequenceNumberForAccount(key_address)
 
+		fmt.Println("delegate to validator")
 		cmd = exec.Command(COMMAND_PATH, "tx", "staking", "delegate", VALIDATOR_ADDRESS, "150000000loya", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--fees", "15loya", "--node", "http://54.209.172.1:26657", "--yes")
 		output, err = cmd.CombinedOutput()
 		if err != nil {
@@ -132,7 +146,8 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 		time.Sleep(2 * time.Second)
 
 		// create reporter
-		cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--home", key_path, "--fees", "15loya", "--sequence", "1", "--node", "http://54.209.172.1:26657", "--yes")
+		fmt.Println("create reporter ")
+		cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--sequence", "1", "--home", key_path, "--fees", "15loya", "--sequence", "1", "--node", "http://54.209.172.1:26657", "--yes")
 		output, err = cmd.CombinedOutput()
 		if err != nil {
 			fmt.Println(string(output))
@@ -142,7 +157,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]string, e
 		time.Sleep(2 * time.Second)
 
 		// add to map
-		reporterMap[key_name] = key_address
+		reporterMap[key_name] = ReporterInfo{Address: key_address, SequenceNum: 2}
 
 	}
 	return reporterMap, nil
@@ -155,7 +170,6 @@ func GetAddressFromKeyName(key_name string) string {
 		log.Fatalf("cmd.Run() failed: %v\n", err)
 	}
 
-	fmt.Println("here")
 	return string(output[:len(output)-1])
 }
 
