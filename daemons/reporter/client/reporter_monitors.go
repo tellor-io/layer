@@ -61,7 +61,7 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 
 func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var localWG sync.WaitGroup
+
 	for {
 		res, err := c.OracleQueryClient.TippedQueries(ctx, &oracletypes.QueryTippedQueriesRequest{
 			Pagination: &query.PageRequest{
@@ -77,28 +77,40 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 			time.Sleep(200 * time.Millisecond)
 			continue
 		}
+
 		status, err := c.cosmosCtx.Client.Status(ctx)
 		if err != nil {
 			c.logger.Info("Error getting status from client: ", err)
+			time.Sleep(200 * time.Millisecond)
+			continue
 		}
+
 		height := uint64(status.SyncInfo.LatestBlockHeight)
+
+		// Create a new WaitGroup for this batch of tips
+		var batchWG sync.WaitGroup
+
 		for i := 0; i < len(res.Queries); i++ {
 			if height > res.Queries[i].Expiration || commitedIds[res.Queries[i].Id] || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
 				continue
 			}
 
-			localWG.Add(1)
+			batchWG.Add(1)
 			go func(query *oracletypes.QueryMeta) {
-				defer localWG.Done()
+				defer batchWG.Done()
 				err := c.GenerateAndBroadcastSpotPriceReport(ctx, query.GetQueryData(), query)
 				if err != nil {
 					c.logger.Error("Error generating report for tipped query: ", err)
+				} else {
+					c.logger.Info("Broadcasted report for tipped query")
 				}
-				c.logger.Info("Broadcasted report for tipped query")
 			}(res.Queries[i])
 		}
 
-		wg.Wait()
+		// Wait for all reports in this batch to complete
+		batchWG.Wait()
 
+		// Add a small delay between batches to prevent overwhelming the system
+		time.Sleep(500 * time.Millisecond)
 	}
 }
