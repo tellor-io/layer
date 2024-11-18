@@ -27,3 +27,20 @@ func NewSelectorsIndex(sb *collections.SchemaBuilder) ReporterSelectorsIndex {
 		),
 	}
 }
+
+type ReporterBlockNumberIndexes struct {
+	BlockNumber *indexes.ReversePair[[]byte, collections.Pair[[]byte, uint64], types.DelegationsAmounts]
+}
+
+func (b ReporterBlockNumberIndexes) IndexesList() []collections.Index[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts] {
+	return []collections.Index[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts]{b.BlockNumber}
+}
+
+func newReportIndexes(sb *collections.SchemaBuilder) ReporterBlockNumberIndexes {
+	return ReporterBlockNumberIndexes{
+		BlockNumber: indexes.NewReversePair[types.DelegationsAmounts](
+			sb, collections.NewPrefix("reporter_blocknumber"), "info_by_reporter_blocknumber_index",
+			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)),
+		),
+	}
+}

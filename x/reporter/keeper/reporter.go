@@ -47,7 +47,7 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // ReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
 // at the time of reporting and returns the total amount plus stores
 // the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
-func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
+func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, err
@@ -137,7 +137,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 			return math.Int{}, iterError
 		}
 	}
-	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+	err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
 		return math.Int{}, err
 	}

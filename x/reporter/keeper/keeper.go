@@ -23,12 +23,12 @@ type (
 		storeService              store.KVStoreService
 		Params                    collections.Item[types.Params]
 		Tracker                   collections.Item[types.StakeTracker]
-		Reporters                 collections.Map[[]byte, types.OracleReporter]                               // key: reporter AccAddress
-		SelectorTips              collections.Map[[]byte, types.BigUint]                                      // key: selector AccAddress
-		Selectors                 *collections.IndexedMap[[]byte, types.Selection, ReporterSelectorsIndex]    // key: selector AccAddress
-		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                           // key: dispute hashId
-		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                           // key: dispute hashId
-		Report                    collections.Map[collections.Pair[[]byte, uint64], types.DelegationsAmounts] // key: reporter AccAddress, blockNumber
+		Reporters                 collections.Map[[]byte, types.OracleReporter]                                                                                             // key: reporter AccAddress
+		SelectorTips              collections.Map[[]byte, types.BigUint]                                                                                                    // key: selector AccAddress
+		Selectors                 *collections.IndexedMap[[]byte, types.Selection, ReporterSelectorsIndex]                                                                  // key: selector AccAddress
+		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
+		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
+		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
 
 		Schema collections.Schema
 		logger log.Logger
@@ -68,12 +68,15 @@ func NewKeeper(
 		SelectorTips:              collections.NewMap(sb, types.SelectorTipsPrefix, "delegator_tips", collections.BytesKey, codec.CollValue[types.BigUint](cdc)),
 		DisputedDelegationAmounts: collections.NewMap(sb, types.DisputedDelegationAmountsPrefix, "disputed_delegation_amounts", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
 		FeePaidFromStake:          collections.NewMap(sb, types.FeePaidFromStakePrefix, "fee_paid_from_stake", collections.BytesKey, codec.CollValue[types.DelegationsAmounts](cdc)),
-		Report:                    collections.NewMap(sb, types.ReporterPrefix, "report", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.DelegationsAmounts](cdc)),
-		authority:                 authority,
-		logger:                    logger,
-		stakingKeeper:             stakingKeeper,
-		bankKeeper:                bankKeeper,
-		registryKeeper:            registryKeeper,
+		Report: collections.NewIndexedMap(
+			sb, types.ReporterPrefix, "report",
+			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)), codec.CollValue[types.DelegationsAmounts](cdc), newReportIndexes(sb),
+		),
+		authority:      authority,
+		logger:         logger,
+		stakingKeeper:  stakingKeeper,
+		bankKeeper:     bankKeeper,
+		registryKeeper: registryKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -99,12 +102,7 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 	if err != nil {
 		return math.Int{}, err
 	}
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](del.Reporter).EndInclusive(blockNumber).Descending()
-	rep := types.DelegationsAmounts{}
-	err = k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (bool, error) {
-		rep = value
-		return true, nil
-	})
+	rep, err := k.GetDelegationsAmount(ctx, del.Reporter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -121,16 +119,49 @@ func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte,
 
 // GetReporterTokensAtBlock returns the total amount of tokens a reporter when reporting to the nearest given block Number.
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](reporter).EndInclusive(blockNumber).Descending()
-	total := math.ZeroInt()
-	err := k.Report.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (bool, error) {
-		total = value.Total
-		return true, nil
-	})
+	rep, err := k.GetDelegationsAmount(ctx, reporter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
-	return total, nil
+	if rep.Total.IsNil() {
+		return math.ZeroInt(), nil
+	}
+	return rep.Total, nil
+}
+
+func (k Keeper) GetDelegationsAmount(ctx context.Context, reporter []byte, blockNumber uint64) (delAmounts types.DelegationsAmounts, err error) {
+	start := collections.Join(reporter, uint64(0))
+	end := collections.Join(reporter, blockNumber+1)
+	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	startBuffer := make([]byte, pc.Size(start))
+	endBuffer := make([]byte, pc.Size(end))
+	_, err = pc.Encode(startBuffer, start)
+	if err != nil {
+		return delAmounts, err
+	}
+	_, err = pc.Encode(endBuffer, end)
+	if err != nil {
+		return delAmounts, err
+	}
+
+	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
+	if err != nil {
+		return delAmounts, err
+	}
+	if iter.Valid() {
+		key, err := iter.Key()
+		if err != nil {
+			return delAmounts, err
+		}
+
+		rep, err := k.Report.Get(ctx, collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2())))
+		if err != nil {
+			return delAmounts, err
+		}
+
+		return rep, nil
+	}
+	return delAmounts, nil
 }
 
 // tracks total bonded tokens and sets an expiration of 12 hours from last update

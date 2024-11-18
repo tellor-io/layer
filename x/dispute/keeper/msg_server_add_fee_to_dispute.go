@@ -70,7 +70,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Amount.Amount)
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
+		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.InitialEvidence.QueryId, dispute.HashId); err != nil {
 			return nil, err
 		}
 		// begin voting immediately

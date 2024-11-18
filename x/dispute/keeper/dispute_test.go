@@ -147,10 +147,10 @@ func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 	report := report()
 	dispute := s.dispute()
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, uint64(1), math.NewInt(10000), dispute.HashId).Return(nil)
+	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, uint64(1), math.NewInt(10000), dispute.InitialEvidence.QueryId, dispute.HashId).Return(nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0)).Return(nil)
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report).Return(nil)
-	s.NoError(s.disputeKeeper.SlashAndJailReporter(s.ctx, report, dispute.DisputeCategory, dispute.HashId))
+	s.NoError(s.disputeKeeper.SlashAndJailReporter(s.ctx, report, dispute.DisputeCategory, dispute.InitialEvidence.QueryId, dispute.HashId))
 }
 
 func (s *KeeperTestSuite) TestJailReporter() {

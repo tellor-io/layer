@@ -12,6 +12,8 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/colltest"
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 
@@ -62,7 +64,7 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 		Amount:           math.NewIntWithDecimal(1000, 6),
 	}
 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin1, tokenOrigin2}
-	require.NoError(t, k.Report.Set(ctx, collections.Join(delAddr.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: tokenOrigin1.Amount.Add(tokenOrigin2.Amount)}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(delAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: tokenOrigin1.Amount.Add(tokenOrigin2.Amount)}))
 
 	tokens, err := k.GetDelegatorTokensAtBlock(ctx, delAddr, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
@@ -76,7 +78,7 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, math.ZeroInt(), tokens)
 
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{Total: math.OneInt()}))
 
 	tokens, err = k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
@@ -104,4 +106,84 @@ func TestTrackStakeChange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, math.OneInt(), change.Amount)
 	require.Equal(t, expiration.Add(12*time.Hour), *change.Expiration)
+}
+
+type Range[K any] struct {
+	start *collections.RangeKey[K]
+	end   *collections.RangeKey[K]
+	order collections.Order
+}
+
+func (r *Range[K]) RangeValues() (start, end *collections.RangeKey[K], order collections.Order, err error) {
+	return r.start, r.end, r.order, nil
+}
+
+func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) collections.Ranger[collections.Triple[K1, K2, K3]] {
+	key := collections.TripleSuperPrefix[K1, K2, K3](k1, k2)
+	return &Range[collections.Triple[K1, K2, K3]]{
+		start: collections.RangeKeyExact(key),
+		end:   collections.RangeKeyPrefixEnd(key),
+	}
+}
+
+type ReporterBlockNumberIndexes struct {
+	BlockNumber *indexes.ReversePair[[]byte, collections.Pair[string, uint64], uint64]
+}
+
+func newReportIndexes(sb *collections.SchemaBuilder) ReporterBlockNumberIndexes {
+	return ReporterBlockNumberIndexes{
+		BlockNumber: indexes.NewReversePair[uint64](
+			sb, collections.NewPrefix("reporter_blocknumber"), "info_by_reporter_blocknumber_index",
+			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.StringKey, collections.Uint64Key)),
+			// indexes.WithReversePairUncheckedValue(), // denom to address indexes were stored as Key: Join(denom, address) Value: []byte{0}, this will migrate the value to []byte{} in a lazy way.
+		),
+	}
+}
+
+func (b ReporterBlockNumberIndexes) IndexesList() []collections.Index[collections.Pair[[]byte, collections.Pair[string, uint64]], uint64] {
+	return []collections.Index[collections.Pair[[]byte, collections.Pair[string, uint64]], uint64]{b.BlockNumber}
+}
+
+func TestTripleRange(t *testing.T) {
+	sk, ctx := colltest.MockStore()
+	schema := collections.NewSchemaBuilder(sk)
+	kc := collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.StringKey, collections.Uint64Key))
+
+	indexedMap := collections.NewIndexedMap(
+		schema,
+		collections.NewPrefix("reports"), "reports",
+		kc,
+		collections.Uint64Value,
+		newReportIndexes(schema),
+	)
+
+	keys := []collections.Pair[[]byte, collections.Pair[string, uint64]]{
+		collections.Join([]byte("queryid1"), collections.Join("reporterA", uint64(1))),
+		collections.Join([]byte("queryid2"), collections.Join("reporterA", uint64(1))),
+		collections.Join([]byte("queryid3"), collections.Join("reporterA", uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join("reporterB", uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join("reporterC", uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join("reporterD", uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join("reporterD", uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join("reporterA", uint64(6))),
+		collections.Join([]byte("queryid2"), collections.Join("reporterA", uint64(6))),
+	}
+
+	for _, k := range keys {
+		require.NoError(t, indexedMap.Set(ctx, k, uint64(1)))
+	}
+
+	kg := collections.PairKeyCodec(collections.StringKey, collections.Uint64Key)
+	startBuffer := make([]byte, kg.Size(collections.Join("reporterA", uint64(0))))
+	endBuffer := make([]byte, kg.Size(collections.Join("reporterA", uint64(7))))
+	_, err := kg.Encode(startBuffer, collections.Join("reporterA", uint64(0)))
+	require.NoError(t, err)
+	_, err = kg.Encode(endBuffer, collections.Join("reporterA", uint64(7)))
+	require.NoError(t, err)
+
+	iter, err := indexedMap.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
+	require.NoError(t, err)
+	gotKeys, err := iter.Keys()
+	require.NoError(t, err)
+	require.Equal(t, 5, len(gotKeys))
 }
