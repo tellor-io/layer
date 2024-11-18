@@ -171,14 +171,12 @@ func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) erro
 				return errors.New("no validators found in staking module to return tokens to")
 			}
 			val = vals[0]
-		} else {
-			if !val.IsBonded() {
-				vals, err := k.GetBondedValidators(ctx, 1)
-				if err != nil {
-					return err
-				}
-				val = vals[0]
+		} else if !val.IsBonded() {
+			vals, err := k.GetBondedValidators(ctx, 1)
+			if err != nil {
+				return err
 			}
+			val = vals[0]
 		}
 		// since fee paid is returned minus the voter/burned amount, calculate by accordingly
 		// convert args needed for calculations to legacy decimals
