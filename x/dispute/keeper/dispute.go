@@ -114,7 +114,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 
 	// if the paid fee is equal to the slash amount, then slash validator and jail
 	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.InitialEvidence.QueryId, dispute.HashId); err != nil {
+		if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return err
 		}
 		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
@@ -148,7 +148,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 }
 
 // Slash and jail reporter
-func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory, queryId, hashId []byte) error {
+func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroReport, category types.DisputeCategory, hashId []byte) error {
 	// flag aggregate report if necessary
 	err := k.oracleKeeper.FlagAggregateReport(ctx, report)
 	if err != nil {
@@ -166,7 +166,7 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	slashPercentageFixed6Dec := math.LegacyNewDecFromInt(slashPercentageFixed6)
 	slashAmountFixed6Dec := reportPowerFixed6Dec.Mul(slashPercentageFixed6Dec).Quo(powerReductionDec)
 	slashAmountFixed6 := slashAmountFixed6Dec.TruncateInt()
-	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, queryId, hashId)
+	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, report.QueryId, hashId)
 	if err != nil {
 		return err
 	}
