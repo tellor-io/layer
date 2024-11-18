@@ -12,8 +12,6 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/colltest"
-	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 
@@ -108,82 +106,47 @@ func TestTrackStakeChange(t *testing.T) {
 	require.Equal(t, expiration.Add(12*time.Hour), *change.Expiration)
 }
 
-type Range[K any] struct {
-	start *collections.RangeKey[K]
-	end   *collections.RangeKey[K]
-	order collections.Order
-}
-
-func (r *Range[K]) RangeValues() (start, end *collections.RangeKey[K], order collections.Order, err error) {
-	return r.start, r.end, r.order, nil
-}
-
-func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) collections.Ranger[collections.Triple[K1, K2, K3]] {
-	key := collections.TripleSuperPrefix[K1, K2, K3](k1, k2)
-	return &Range[collections.Triple[K1, K2, K3]]{
-		start: collections.RangeKeyExact(key),
-		end:   collections.RangeKeyPrefixEnd(key),
+func TestReportIndexedMap(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	keys := []collections.Pair[[]byte, collections.Pair[[]byte, uint64]]{
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterA"), uint64(1))),
+		collections.Join([]byte("queryid2"), collections.Join([]byte("reporterA"), uint64(1))),
+		collections.Join([]byte("queryid3"), collections.Join([]byte("reporterA"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterB"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterC"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterD"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterD"), uint64(1))),
+		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterA"), uint64(6))),
+		collections.Join([]byte("queryid2"), collections.Join([]byte("reporterA"), uint64(6))),
 	}
-}
-
-type ReporterBlockNumberIndexes struct {
-	BlockNumber *indexes.ReversePair[[]byte, collections.Pair[string, uint64], uint64]
-}
-
-func newReportIndexes(sb *collections.SchemaBuilder) ReporterBlockNumberIndexes {
-	return ReporterBlockNumberIndexes{
-		BlockNumber: indexes.NewReversePair[uint64](
-			sb, collections.NewPrefix("reporter_blocknumber"), "info_by_reporter_blocknumber_index",
-			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.StringKey, collections.Uint64Key)),
-			// indexes.WithReversePairUncheckedValue(), // denom to address indexes were stored as Key: Join(denom, address) Value: []byte{0}, this will migrate the value to []byte{} in a lazy way.
-		),
-	}
-}
-
-func (b ReporterBlockNumberIndexes) IndexesList() []collections.Index[collections.Pair[[]byte, collections.Pair[string, uint64]], uint64] {
-	return []collections.Index[collections.Pair[[]byte, collections.Pair[string, uint64]], uint64]{b.BlockNumber}
-}
-
-func TestTripleRange(t *testing.T) {
-	sk, ctx := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(sk)
-	kc := collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.StringKey, collections.Uint64Key))
-
-	indexedMap := collections.NewIndexedMap(
-		schema,
-		collections.NewPrefix("reports"), "reports",
-		kc,
-		collections.Uint64Value,
-		newReportIndexes(schema),
-	)
-
-	keys := []collections.Pair[[]byte, collections.Pair[string, uint64]]{
-		collections.Join([]byte("queryid1"), collections.Join("reporterA", uint64(1))),
-		collections.Join([]byte("queryid2"), collections.Join("reporterA", uint64(1))),
-		collections.Join([]byte("queryid3"), collections.Join("reporterA", uint64(1))),
-		collections.Join([]byte("queryid1"), collections.Join("reporterB", uint64(1))),
-		collections.Join([]byte("queryid1"), collections.Join("reporterC", uint64(1))),
-		collections.Join([]byte("queryid1"), collections.Join("reporterD", uint64(1))),
-		collections.Join([]byte("queryid1"), collections.Join("reporterD", uint64(1))),
-		collections.Join([]byte("queryid1"), collections.Join("reporterA", uint64(6))),
-		collections.Join([]byte("queryid2"), collections.Join("reporterA", uint64(6))),
+	for _, key := range keys {
+		require.NoError(t, k.Report.Set(ctx, key, types.DelegationsAmounts{}))
 	}
 
-	for _, k := range keys {
-		require.NoError(t, indexedMap.Set(ctx, k, uint64(1)))
-	}
+	// first key of reporterA should be at block 6 and it should queryid2
+	startFrom := collections.Join([]byte("reporterA"), uint64(0))
+	endAt := collections.Join([]byte("reporterA"), uint64(7))
+	kc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	startBuffer := make([]byte, kc.Size(startFrom))
+	endBuffer := make([]byte, kc.Size(endAt))
 
-	kg := collections.PairKeyCodec(collections.StringKey, collections.Uint64Key)
-	startBuffer := make([]byte, kg.Size(collections.Join("reporterA", uint64(0))))
-	endBuffer := make([]byte, kg.Size(collections.Join("reporterA", uint64(7))))
-	_, err := kg.Encode(startBuffer, collections.Join("reporterA", uint64(0)))
+	_, err := kc.Encode(startBuffer, startFrom)
 	require.NoError(t, err)
-	_, err = kg.Encode(endBuffer, collections.Join("reporterA", uint64(7)))
+	_, err = kc.Encode(endBuffer, endAt)
 	require.NoError(t, err)
 
-	iter, err := indexedMap.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
+	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
 	require.NoError(t, err)
-	gotKeys, err := iter.Keys()
+	require.True(t, iter.Valid())
+
+	key, err := iter.Key()
 	require.NoError(t, err)
-	require.Equal(t, 5, len(gotKeys))
+	require.Equal(t, []byte("queryid2"), key.K2())
+	require.Equal(t, []byte("reporterA"), key.K1().K1())
+	require.Equal(t, uint64(6), key.K1().K2())
+
+	// reporterA should have 5 keys
+	repAkeys, err := iter.Keys()
+	require.NoError(t, err)
+	require.Equal(t, 5, len(repAkeys))
 }
