@@ -107,14 +107,19 @@ func (s *KeeperTestSuite) TestAllocateRewards() {
 	ctx := s.ctx
 
 	// zero reward
-	reporters := []*types.AggregateReporter{}
+	reports := []*types.Aggregate{}
 	reward := math.ZeroInt()
-	require.NoError(k.AllocateRewards(ctx, reporters, reward, types.ModuleName))
+	require.NoError(k.AllocateRewards(ctx, reports, reward, types.ModuleName))
 
 	// 2 reporters, bad addresses
-	reporters = []*types.AggregateReporter{
-		{Reporter: "bad address", Power: 10, BlockNumber: 0},
-		{Reporter: "bad address", Power: 10, BlockNumber: 0},
+	reporters := []*types.Aggregate{
+		{
+			QueryId: []byte{},
+			Reporters: []*types.AggregateReporter{
+				{Reporter: "bad address", Power: 10, BlockNumber: 0},
+				{Reporter: "bad address", Power: 10, BlockNumber: 0},
+			},
+		},
 	}
 	reward = math.NewInt(100)
 	require.Error(k.AllocateRewards(ctx, reporters, reward, types.ModuleName))
@@ -122,9 +127,14 @@ func (s *KeeperTestSuite) TestAllocateRewards() {
 	// 2 reporters, good addresses
 	rep1 := sample.AccAddress()
 	rep2 := sample.AccAddress()
-	reporters = []*types.AggregateReporter{
-		{Reporter: rep1, Power: 10, BlockNumber: 0},
-		{Reporter: rep2, Power: 10, BlockNumber: 0},
+	reporters = []*types.Aggregate{
+		{
+			QueryId: []byte{},
+			Reporters: []*types.AggregateReporter{
+				{Reporter: rep1, Power: 10, BlockNumber: 0},
+				{Reporter: rep2, Power: 10, BlockNumber: 0},
+			},
+		},
 	}
 
 	reward = math.NewInt(100)
@@ -132,8 +142,8 @@ func (s *KeeperTestSuite) TestAllocateRewards() {
 	require.NoError(err)
 	rep2Addr, err := sdk.AccAddressFromBech32(rep2)
 	require.NoError(err)
-	rk.On("DivvyingTips", ctx, rep1Addr, reportertypes.BigUint{Value: math.NewUint(50000000)}, uint64(0)).Return(nil).Once()
-	rk.On("DivvyingTips", ctx, rep2Addr, reportertypes.BigUint{Value: math.NewUint(50000000)}, uint64(0)).Return(nil).Once()
+	rk.On("DivvyingTips", ctx, rep1Addr, reportertypes.BigUint{Value: math.NewUint(50000000)}, []byte{}, uint64(0)).Return(nil).Once()
+	rk.On("DivvyingTips", ctx, rep2Addr, reportertypes.BigUint{Value: math.NewUint(50000000)}, []byte{}, uint64(0)).Return(nil).Once()
 	bk.On("SendCoinsFromModuleToModule", ctx, "oracle", "tips_escrow_pool", sdk.NewCoins(sdk.NewCoin("loya", reward))).Return(nil)
 	require.NoError(k.AllocateRewards(ctx, reporters, reward, types.ModuleName))
 }
@@ -184,6 +194,6 @@ func (s *KeeperTestSuite) TestAllocateTips() {
 
 	addr := sample.AccAddressBytes()
 	amount := reportertypes.BigUint{Value: math.NewUint(100)}
-	rk.On("DivvyingTips", ctx, addr, amount, uint64(ctx.BlockHeight())).Return(nil).Once()
-	require.NoError(k.AllocateTip(ctx, addr, amount, uint64(ctx.BlockHeight())))
+	rk.On("DivvyingTips", ctx, addr, amount, []byte{}, uint64(ctx.BlockHeight())).Return(nil).Once()
+	require.NoError(k.AllocateTip(ctx, addr, []byte{}, amount, uint64(ctx.BlockHeight())))
 }

@@ -25,9 +25,9 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
-
+	queryId := utils.QueryIDFromData(msg.QueryData)
 	// get reporter
-	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr)
+	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, queryId)
 	if err != nil {
 		return nil, err
 	}
@@ -41,9 +41,6 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 
 	votingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
-	// decode query data hex string to bytes
-
-	queryId := utils.QueryIDFromData(msg.QueryData)
 
 	query, err := k.keeper.CurrentQuery(ctx, queryId)
 	if err != nil {
