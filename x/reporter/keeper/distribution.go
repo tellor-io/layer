@@ -27,7 +27,7 @@ import (
 // 5. Distributes the net reward among the selectors based on their shares.
 // 6. Adds the commission to the reporter's share if the reporter is also a selector.
 // 7. Updates the selectors' tips with the new calculated shares.
-func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward types.BigUint, height uint64) error {
+func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward types.BigUint, queryId []byte, height uint64) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	// Calculate net reward
 	netReward := reward.Value.Sub(commission)
 
-	delAddrs, err := k.Report.Get(ctx, collections.Join(reporterAddr.Bytes(), height))
+	delAddrs, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAddr.Bytes(), height)))
 	if err != nil {
 		return err
 	}

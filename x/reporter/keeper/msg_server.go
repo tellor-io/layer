@@ -10,7 +10,6 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -186,17 +185,12 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	}
 
 	// check if selector was part of a report before switching
-	var prevReportedPower math.Int
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](selector.Reporter).EndInclusive(uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight())).Descending()
-	err = k.Keeper.Report.Walk(goCtx, rng, func(_ collections.Pair[[]byte, uint64], value types.DelegationsAmounts) (stop bool, err error) {
-		prevReportedPower = value.Total
-		return true, nil
-	})
+	prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, selector.Reporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
 	if err != nil {
 		return nil, err
 	}
 
-	if !prevReportedPower.IsNil() {
+	if !prevReportedPower.IsZero() {
 		unbondingTime, err := k.stakingKeeper.UnbondingTime(goCtx)
 		if err != nil {
 			return nil, err
