@@ -24,6 +24,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		}
 		if bytes.Equal(querydata, prevQueryData) || commitedIds[querymeta.Id] {
 			time.Sleep(100 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
