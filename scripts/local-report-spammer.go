@@ -17,7 +17,7 @@ var LAYER_PATH = "/Users/caleb/.layer"
 var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
 var VALIDATOR_ADDRESS = "tellorvaloper1dct4uwgcfjxqaphjmfzjv2yz733n9fycxdz2m6"
 
-var NUM_OF_REPORTERS = 1
+var NUM_OF_REPORTERS = 50
 
 func main() {
 	reportersMap, err := CreateNewAccountsAndFundReporters(NUM_OF_REPORTERS)
@@ -37,13 +37,13 @@ func main() {
 			return
 		}
 		if strings.EqualFold(querydata, prevQueryData) {
-			fmt.Println("cyclelist has not rotated yet. sleeping for 100ms")
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		// call spam function
 		fmt.Println("Calling spam reports")
 		go SpamReportsWithReportersMap(reportersMap, querydata)
+		prevQueryData = querydata
 	}
 
 }
@@ -65,7 +65,6 @@ func GetCurrentQueryInCyclelist() (string, error) {
 	query_data := strings.TrimPrefix(queryDataField, "query_data: ")
 	qdBytes := []byte(query_data)
 	qd := string(qdBytes[:len(qdBytes)-1])
-	fmt.Println("Query Data: ", qd)
 
 	return qd, nil
 }
@@ -143,7 +142,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 			log.Fatalf("error delegating to validator with %s: %v\r", key_name, err)
 		}
 		fmt.Println(string(output))
-		time.Sleep(2 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		// create reporter
 		fmt.Println("create reporter ")
