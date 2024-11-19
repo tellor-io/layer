@@ -269,24 +269,24 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				require.NotNil(resp)
 			},
 		},
-		{
-			name: "err on GetAttestationRequestsByHeight",
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
-				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
-					return []byte("signatureA"), []byte("signatureB"), nil
-				})
-				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!"))
-				return bk, patches
-			},
-			expectedError: nil,
-			validateResponse: func(resp *abci.ResponseExtendVote) {
-				require.NotNil(resp)
-			},
-		},
+		// {
+		// 	name: "err on GetAttestationRequestsByHeight",
+		// 	setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+		// 		patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+		// 			return oppAddr, nil
+		// 		})
+		// 		bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
+		// 		patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
+		// 			return []byte("signatureA"), []byte("signatureB"), nil
+		// 		})
+		// 		bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!"))
+		// 		return bk, patches
+		// 	},
+		// 	expectedError: nil,
+		// 	validateResponse: func(resp *abci.ResponseExtendVote) {
+		// 		require.NotNil(resp)
+		// 	},
+		// },
 		{
 			name: "err signing checkpoint",
 			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {

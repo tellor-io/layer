@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
@@ -27,71 +28,86 @@ type selectorsInfo struct {
 	selectorInfo        []selectorShares
 }
 
+// FeefromReporterStake enables a reporter to pay a dispute fee from their stake power.
+// hashId is the dispute identifier, needed in the case where a reporter's fee is returned when a dispute is invalid.
 func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error {
 	reporterTotalTokens := math.LegacyZeroDec()
 	fee := math.LegacyNewDecFromInt(amt)
-	var iterError error
-	// Calculate each delegator's share (including the reporter as a self-delegator)
+
+	// Get all selectors for the reporter
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, reporterAddr)
 	if err != nil {
 		return err
 	}
-
-	selectorsMap := make([]selectorsInfo, 0)
-	var selectorShareslist []selectorShares
 	defer iter.Close()
+
+	selectorsList := make([]selectorsInfo, 0)
+	// calculate total tokens for the reporter by summing up the total tokens of all selectors
 	for ; iter.Valid(); iter.Next() {
 		selectorKey, err := iter.PrimaryKey()
 		if err != nil {
 			return err
 		}
-		selectorShareslist = make([]selectorShares, 0)
+		selectorAddr := sdk.AccAddress(selectorKey)
+		// Initialize variables for the current selector
+		selectorSharesList := make([]selectorShares, 0)
 		selectorTotalTokens := math.LegacyZeroDec()
-		err = k.stakingKeeper.IterateDelegatorDelegations(ctx, sdk.AccAddress(selectorKey), func(delegation stakingtypes.Delegation) bool {
+
+		// Iterate through delegations for the selector
+		err = k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) bool {
 			valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 			if err != nil {
-				iterError = err
 				return true
 			}
 			validator, err := k.stakingKeeper.GetValidator(ctx, valAddr)
 			if err != nil {
-				iterError = err
 				return true
 			}
 			if validator.IsBonded() {
 				delTokens := validator.TokensFromShares(delegation.Shares)
 				selectorTotalTokens = selectorTotalTokens.Add(delTokens)
-				selectorShareslist = append(selectorShareslist, selectorShares{valAddr: valAddr, validator: validator, shares: delegation.Shares})
+				selectorSharesList = append(selectorSharesList,
+					selectorShares{valAddr: valAddr, validator: validator, shares: delegation.Shares})
 			}
 			return false
 		})
 		if err != nil {
 			return err
 		}
-		if iterError != nil {
-			return iterError
-		}
-		reporterTotalTokens = reporterTotalTokens.Add(selectorTotalTokens)
-		selectorsMap = append(selectorsMap, selectorsInfo{delAddr: sdk.AccAddress(selectorKey), selectorTotalTokens: selectorTotalTokens, selectorInfo: selectorShareslist})
 
+		// Accumulate total tokens for the reporter
+		reporterTotalTokens = reporterTotalTokens.Add(selectorTotalTokens)
+		selectorsList = append(selectorsList, selectorsInfo{
+			delAddr:             selectorAddr,
+			selectorTotalTokens: selectorTotalTokens,
+			selectorInfo:        selectorSharesList,
+		})
 	}
 
+	// Check if reporter has enough stake to cover the fee
 	if fee.GT(reporterTotalTokens) {
 		return errors.New("insufficient stake to pay fee")
 	}
+
 	feeTracker := make([]*types.TokenOriginInfo, 0)
 	totalTrackedAmount := math.ZeroInt()
-	for _, selectors := range selectorsMap {
-		feeshareAmt := selectors.selectorTotalTokens.Quo(reporterTotalTokens).Mul(fee)
-		unbondAmt := feeshareAmt
+
+	// Process fee payment by unbonding shares from selectors' stake
+	// undelegate a proportional amount of tokens from each selector
+	for _, selectors := range selectorsList {
+		feeShareAmt := selectors.selectorTotalTokens.Quo(reporterTotalTokens).Mul(fee)
+		unbondAmt := feeShareAmt
+
 		for _, info := range selectors.selectorInfo {
+			// convert shares to token amount
 			stakeWithValidator := info.validator.TokensFromShares(info.shares)
+			// if selectors stake meets their share of the fee then unbond the amount and break
 			if stakeWithValidator.GTE(unbondAmt) {
 				sharesToUnbond, err := info.validator.SharesFromTokens(unbondAmt.TruncateInt())
 				if err != nil {
 					return err
 				}
-				// Unbond and move tokens from validator
+				// Unbond and move tokens out of validator
 				escrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, sharesToUnbond)
 				if err != nil {
 					return err
@@ -105,6 +121,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 				totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
 				break
 			} else {
+				// Unbond all shares if not enough stake with the current validator then move to the next validator
 				unbondAmt = unbondAmt.Sub(stakeWithValidator)
 				escrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, info.shares)
 				if err != nil {
@@ -125,33 +142,37 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 		}
 
 	}
-	has, err := k.FeePaidFromStake.Has(ctx, hashId)
+	// check if reporter has paid some fee before for the same dispute
+	hasPaid, err := k.FeePaidFromStake.Has(ctx, hashId)
 	if err != nil {
 		return err
 	}
 	prevTotal := math.ZeroInt()
-	if has {
-		preFeeTracker, err := k.FeePaidFromStake.Get(ctx, hashId)
+	if hasPaid {
+		prevFeeTracker, err := k.FeePaidFromStake.Get(ctx, hashId)
 		if err != nil {
 			return err
 		}
-
-		feeTracker = append(feeTracker, preFeeTracker.TokenOrigins...)
-		prevTotal = preFeeTracker.Total
+		feeTracker = append(feeTracker, prevFeeTracker.TokenOrigins...)
+		prevTotal = prevFeeTracker.Total
 	}
 
-	err = k.tokensToDispute(ctx, stakingtypes.BondedPoolName, totalTrackedAmount)
-	if err != nil {
+	// move the tokens from the bonded pool (in staking module) to the dispute module
+	if err := k.tokensToDispute(ctx, stakingtypes.BondedPoolName, totalTrackedAmount); err != nil {
 		return err
 	}
-	if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: feeTracker, Total: totalTrackedAmount.Add(prevTotal)}); err != nil {
+	if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{
+		TokenOrigins: feeTracker,
+		Total:        totalTrackedAmount.Add(prevTotal),
+	}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, hashId []byte) error {
-	report, err := k.Report.Get(ctx, collections.Join(reporterAddr.Bytes(), height))
+// EscrowReporterStake moves tokens from the reporter's stake (from staking module) to the dispute module
+func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, queryId, hashId []byte) error {
+	report, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAddr.Bytes(), height)))
 	if err != nil {
 		return err
 	}
@@ -159,6 +180,8 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	totalTokens := layertypes.PowerReduction.MulRaw(int64(power))
 	disputeTokens := make([]*types.TokenOriginInfo, 0)
 	leftover := math.NewUint(amt.Uint64() * 1e6)
+	// loop through the selectors' tokens (validator, amount) that were part of the report and remove tokens from relevant delegations
+	// amount should be proportional to the total tokens the reporter had at the time of the report
 	for i, del := range report.TokenOrigins {
 		truncDelAmount := math.NewUint(del.Amount.Uint64()).QuoUint64(layertypes.PowerReduction.Uint64()).MulUint64(layertypes.PowerReduction.Uint64())
 		// convert args needed for calculations to legacy decimals
@@ -169,7 +192,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		delegatorShareDec := truncDelAmountDec.Mul(amtDec).Mul(powerReductionDec).Quo(totalTokensDec)
 		delegatorShare := k.TruncateUint(delegatorShareDec)
 		leftover = leftover.Sub(delegatorShare)
-
+		// leftover amount is taken from the last selector in the iteration
 		if i == len(report.TokenOrigins)-1 {
 			delegatorShare = delegatorShare.Add(leftover)
 		}
@@ -213,19 +236,18 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		}
 	}
 
-	// after escrow you should keep a new snapshot of the amounts from each that were taken instead of relying on the original snapshot
-	// then you can delete it after the slashed tokens are returned
+	// store the disputed amounts information to be used after dispute resolution
 	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: amt})
 }
 
-// get dst validator for a redelegated delegator
+// get the destination validator for a redelegated delegator, used for chasing after tokens that were redelegated to a different validator
 func (k Keeper) getDstValidator(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.ValAddress, error) {
 	reds, err := k.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
 	for _, red := range reds {
-		if red.DelegatorAddress == delAddr.String() {
+		if strings.EqualFold(red.DelegatorAddress, delAddr.String()) {
 			valAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
 			if err != nil {
 				return nil, err
@@ -236,6 +258,7 @@ func (k Keeper) getDstValidator(ctx context.Context, delAddr sdk.AccAddress, val
 	return nil, errors.New("redelegation to destination validator not found")
 }
 
+// chases after unbonding delegations in order to get tokens that are part a new dispute
 func (k Keeper) deductUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, tokens math.Uint) (math.Uint, error) {
 	ubd, err := k.stakingKeeper.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if err != nil {
@@ -351,6 +374,9 @@ func (k Keeper) tokensToDispute(ctx context.Context, fromPool string, amount mat
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, fromPool, disputetypes.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amount)))
 }
 
+// undelegate a selector's tokens that are part of a dispute.
+// first attempt to get the tokens from known validator and if not found then chase after the tokens that were either redelegated to another validator
+// or are being unbonded
 func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.Uint) (math.Uint, error) {
 	remainingFromdel, err := k.deductFromdelegation(ctx, delAddr, valAddr, delTokens)
 	if err != nil {

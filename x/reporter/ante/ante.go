@@ -26,6 +26,7 @@ func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) Tra
 	}
 }
 
+// implement the AnteDecorator interface
 func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// loop through all the messages and check if the message type will change stake by more than 5%
 	var msgAmount math.Int
@@ -36,15 +37,22 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		case *stakingtypes.MsgDelegate:
 			msgAmount = msg.Amount.Amount
 		case *stakingtypes.MsgBeginRedelegate:
+			// redelegate shouldn't increase the total stake, however if its coming from
+			// a validator that is not in the active set, it might be considered as an increase
+			// in the active stake. Hence, we need to handle it appropriately.
 			msgAmount = msg.Amount.Amount
 		case *stakingtypes.MsgCancelUnbondingDelegation:
 			msgAmount = msg.Amount.Amount
 		case *stakingtypes.MsgUndelegate:
+			// negate the amount since undelegating is removing stake from the chain
+			// and to help with the comparison later on
 			msgAmount = msg.Amount.Amount.Neg()
 		default:
 			continue
 		}
-		state, err := t.reporterKeeper.Tracker.Get(ctx)
+		// get the total bonded tokens that was set in the last update
+		// to compare against the current amount of bonded tokens
+		lastupdated, err := t.reporterKeeper.Tracker.Get(ctx)
 		if err != nil {
 			// for when chain is first started
 			if errors.Is(err, collections.ErrNotFound) {
@@ -56,18 +64,18 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if err != nil {
 			return ctx, err
 		}
+		changeAmt := currentAmount.Add(msgAmount)
 		if msgAmount.IsNegative() {
-			removedFivePercent := state.Amount.Sub(state.Amount.QuoRaw(20))
-			lowerBound := currentAmount.Add(msgAmount)
-			if lowerBound.LT(removedFivePercent) {
-				return ctx, errors.New("amount decreases total stake by more than the allowed 5% in a twelve hour period")
+			// subtract 5 percent from last updated amount
+			allowedLowerBound := lastupdated.Amount.Sub(lastupdated.Amount.QuoRaw(20))
+			if changeAmt.LT(allowedLowerBound) {
+				return ctx, errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period")
 			}
 		} else {
-			// add 5 percent
-			addedFivePercent := state.Amount.Add(state.Amount.QuoRaw(20))
-			upperBound := currentAmount.Add(msgAmount)
-			if upperBound.GT(addedFivePercent) {
-				return ctx, errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period")
+			// add 5 percent to last updated amount
+			allowedUpperBound := lastupdated.Amount.Add(lastupdated.Amount.QuoRaw(20))
+			if changeAmt.GT(allowedUpperBound) {
+				return ctx, errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 			}
 		}
 
