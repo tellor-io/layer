@@ -14,6 +14,7 @@ const (
 	TRBBridgeQueryType = "TRBBridge"
 )
 
+// Generates a new QueryMeta for a TRBBridgeQueryType
 func (k Keeper) TokenBridgeDepositQuery(ctx context.Context, queryData []byte) (types.QueryMeta, error) {
 	// decode query data partial
 	nextId, err := k.QuerySequencer.Next(ctx)

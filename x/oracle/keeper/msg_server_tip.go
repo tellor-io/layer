@@ -16,6 +16,20 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Tip handles tipping a query; accepts query data and amount to tip.
+// 1. Checks if the bond denom is correct and if the amount is positive.
+// 2. Transfers the amount to the module account after burning 2% of the tip.
+// 3. Fetches the QueryMeta by queryId:
+//   - If QueryMeta is not found, initializes a new QueryMeta and sets the amount and the expiration time.
+//   - If QueryMeta is found the tip in increased by the new tip amount. Then the expiration time is checked
+//     to see if the query is expired. If the query is expired, the expiration is extended according to the registry spec otherwise do nothing.
+//
+// 4. Add the tip amount to the tipper's total and the total tips.
+// Note:
+//
+//	If a query has expired, and the prev.Amount is not zero, then that means the query has no reports. If it has entered this current block
+//	that means the query is expired and no submissions will be allowed until a tip extends the expiration. therefore no need to create a new query
+//	but update the expiration time
 func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -47,28 +61,29 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		query.Amount = math.ZeroInt()
 		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
 	}
-	prevAmt := query.Amount
+	// prevAmt := query.Amount
 	query.Amount = query.Amount.Add(tip.Amount)
 
 	// expired submission window
-	if query.Expiration < uint64(ctx.BlockHeight()) {
+	if query.Expiration <= uint64(ctx.BlockHeight()) {
 		// query expired, create new expiration time
 		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
+		// if reporting window is expired that means the query is not in cycle
 		query.CycleList = false
 		// when report is expired and aggregated the query struct is removed
 		// so when is this condition true?
 		// when a cycle list query hasn't been reported and the time is expired (time=expiration+Offset)
 		// and before it becomes in cycle a tip comes in then a new query is created to identify the tip
-		if prevAmt.IsZero() {
-			id, err := k.keeper.QuerySequencer.Next(ctx)
-			if err != nil {
-				return nil, err
-			}
-			query.Id = id
-			query.Amount = tip.Amount
-			query.HasRevealedReports = false
+		// if prevAmt.IsZero() {
+		// 	id, err := k.keeper.QuerySequencer.Next(ctx)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	query.Id = id
+		// 	query.Amount = tip.Amount
+		// 	query.HasRevealedReports = false
 
-		}
+		// }
 	}
 	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {
