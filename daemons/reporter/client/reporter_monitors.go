@@ -23,9 +23,9 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 			c.logger.Error("getting current query", "error", err)
 		}
 		mutex.RLock()
-		commited := commitedIds[querymeta.Id]
+		committed := commitedIds[querymeta.Id]
 		mutex.RUnlock()
-		if bytes.Equal(querydata, prevQueryData) || commited {
+		if bytes.Equal(querydata, prevQueryData) || committed {
 			time.Sleep(100 * time.Millisecond)
 			time.Sleep(100 * time.Millisecond)
 			continue
@@ -96,9 +96,9 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 
 		for i := 0; i < len(res.Queries); i++ {
 			mutex.RLock()
-			commited := commitedIds[res.Queries[i].Id]
+			committed := commitedIds[res.Queries[i].Id]
 			mutex.RUnlock()
-			if height > res.Queries[i].Expiration || commited || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
+			if height > res.Queries[i].Expiration || committed || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
 				continue
 			}
 
