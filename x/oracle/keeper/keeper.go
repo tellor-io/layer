@@ -24,25 +24,24 @@ import (
 
 type (
 	Keeper struct {
-		cdc            codec.BinaryCodec
-		storeService   store.KVStoreService
-		Params         collections.Item[types.Params]
-		accountKeeper  types.AccountKeeper
-		bankKeeper     types.BankKeeper
-		registryKeeper types.RegistryKeeper
-		reporterKeeper types.ReporterKeeper
-		Schema         collections.Schema                                                                          // key: reporter, queryid
-		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]        // key: queryId, tipper
-		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
-		// total tips given over time
-		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber, value: total tips                                  // key: queryId, timestamp
-		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
-		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, query.id
-		QuerySequencer     collections.Sequence
-		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId
-		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
-		Cyclelist          collections.Map[[]byte, []byte]
+		cdc                codec.BinaryCodec
+		storeService       store.KVStoreService
+		Params             collections.Item[types.Params]
+		accountKeeper      types.AccountKeeper
+		bankKeeper         types.BankKeeper
+		registryKeeper     types.RegistryKeeper
+		reporterKeeper     types.ReporterKeeper
+		Schema             collections.Schema
 		CyclelistSequencer collections.Sequence
+		// Tips               *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]                       // key: queryId, tipper
+		TipperTotal    collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
+		TotalTips      collections.Map[uint64, math.Int]                                                                          // key: blockNumber
+		Nonces         collections.Map[[]byte, uint64]                                                                            // key: queryId
+		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
+		QuerySequencer collections.Sequence
+		Query          *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
+		Aggregates     *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
+		Cyclelist      collections.Map[[]byte, []byte]                                                                   // key: queryId
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
@@ -76,16 +75,29 @@ func NewKeeper(
 
 		authority: authority,
 
-		Tips: collections.NewIndexedMap(sb,
-			types.TipsPrefix,
-			"tips",
-			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
-			sdk.IntValue,
-			types.NewTipsIndex(sb),
+		// Tips: collections.NewIndexedMap(sb,
+		// 	types.TipsPrefix,
+		// 	"tips",
+		// 	collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
+		// 	sdk.IntValue,
+		// 	types.NewTipsIndex(sb),
+		// ),
+		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
+		TotalTips: collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
+		// Nonces maps the queryId to the nonce that increments with each aggregate report
+		Nonces: collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
+		// Aggregates maps the queryId:timestamp to the aggregate report plus indexes the key by the aggregate report's height
+		// and the microReport's height (the microReport that becomes the median)
+		// the microReport's height is needed to be able to flag the aggregate report in the case of a dispute
+		Aggregates: collections.NewIndexedMap(sb,
+			types.AggregatesPrefix,
+			"aggregates",
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			codec.CollValue[types.Aggregate](cdc),
+			types.NewAggregatesIndex(sb),
 		),
-		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
-		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
-		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
+		// Reports maps the queryId:reporter:queryMeta.id to the microReport
+		// indexes the key by the reporter (for a getter that gets all microReports by a reporter) and the queryMeta.id to fetch all microReports for a specific query during aggregation
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",
@@ -93,7 +105,11 @@ func NewKeeper(
 			codec.CollValue[types.MicroReport](cdc),
 			types.NewReportsIndex(sb),
 		),
+		// QuerySequencer is an id generator for queryMeta that increments with each new query to distinguish between expired queries and new queries
 		QuerySequencer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
+		// Query maps the queryId:id to the queryMeta (holds information about the query and the tip, expiration time, tip amount, query spec reporting window etc.)
+		// indexes the key by the query's queryType (ie SpotPrice, etc.) for purposes of updating the query's reporting spec (ie reporting block window)
+		// also indexes by a boolean to distinguish between queries that have reports to be aggregated and not
 		Query: collections.NewIndexedMap(sb,
 			types.QueryTipPrefix,
 			"query",
@@ -101,15 +117,17 @@ func NewKeeper(
 			codec.CollValue[types.QueryMeta](cdc),
 			types.NewQueryIndex(sb),
 		),
-		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
+		// Cyclelist maps the queryId (hash of the query data) to the queryData for queries that are in the cycle list
+		Cyclelist: collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
+		// CyclelistSequencer is an id generator for cycle list queries that increments when called until the max of len(cycleListQueries) is reached
+		// then it resets.
 		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
-
-		TipperTotal: collections.NewIndexedMap(sb,
+		// TipperTotal maps the tipperAcc:blockNumber to the total tips the tipper has added up till that point. Used for calculating voting power during a dispute
+		TipperTotal: collections.NewMap(sb,
 			types.TipperTotalPrefix,
 			"tipper_total",
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			sdk.IntValue,
-			types.NewTippersIndex(sb),
 		),
 	}
 
@@ -132,7 +150,8 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// initialize query for a given query data
+// initialize query for a given query data.
+// set the id, queryType, and reporting window
 func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.QueryMeta, error) {
 	// initialize query tip first time
 

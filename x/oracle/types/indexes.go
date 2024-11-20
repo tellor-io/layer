@@ -3,28 +3,27 @@ package types
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/math"
 )
 
-type TipsIndex struct {
-	Tipper *indexes.Multi[[]byte, collections.Pair[[]byte, []byte], math.Int]
-}
+// type TipsIndex struct {
+// 	Tipper *indexes.Multi[[]byte, collections.Pair[[]byte, []byte], math.Int]
+// }
 
-func (a TipsIndex) IndexesList() []collections.Index[collections.Pair[[]byte, []byte], math.Int] {
-	return []collections.Index[collections.Pair[[]byte, []byte], math.Int]{a.Tipper}
-}
+// func (a TipsIndex) IndexesList() []collections.Index[collections.Pair[[]byte, []byte], math.Int] {
+// 	return []collections.Index[collections.Pair[[]byte, []byte], math.Int]{a.Tipper}
+// }
 
-func NewTipsIndex(sb *collections.SchemaBuilder) TipsIndex {
-	return TipsIndex{
-		Tipper: indexes.NewMulti(
-			sb, TipsIndexPrefix, "tips_by_tipper",
-			collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
-			func(k collections.Pair[[]byte, []byte], _ math.Int) ([]byte, error) {
-				return k.K2(), nil
-			},
-		),
-	}
-}
+// func NewTipsIndex(sb *collections.SchemaBuilder) TipsIndex {
+// 	return TipsIndex{
+// 		Tipper: indexes.NewMulti(
+// 			sb, TipsIndexPrefix, "tips_by_tipper",
+// 			collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
+// 			func(k collections.Pair[[]byte, []byte], _ math.Int) ([]byte, error) {
+// 				return k.K2(), nil
+// 			},
+// 		),
+// 	}
+// }
 
 type AggregatesIndex struct {
 	BlockHeight *indexes.Multi[uint64, collections.Pair[[]byte, uint64], Aggregate]
@@ -115,22 +114,22 @@ func NewQueryIndex(sb *collections.SchemaBuilder) QueryMetaIndex {
 	}
 }
 
-type TipperTotalIndex struct {
-	BlockNumber *indexes.Unique[uint64, collections.Pair[[]byte, uint64], math.Int]
-}
+// type TipperTotalIndex struct {
+// 	BlockNumber *indexes.Unique[uint64, collections.Pair[[]byte, uint64], math.Int]
+// }
 
-func (a TipperTotalIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], math.Int] {
-	return []collections.Index[collections.Pair[[]byte, uint64], math.Int]{a.BlockNumber}
-}
+// func (a TipperTotalIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], math.Int] {
+// 	return []collections.Index[collections.Pair[[]byte, uint64], math.Int]{a.BlockNumber}
+// }
 
-func NewTippersIndex(sb *collections.SchemaBuilder) TipperTotalIndex {
-	return TipperTotalIndex{
-		BlockNumber: indexes.NewUnique(
-			sb, TipsBlockIndexPrefix, "tips_by_block",
-			collections.Uint64Key, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-			func(k collections.Pair[[]byte, uint64], v math.Int) (uint64, error) {
-				return k.K2(), nil
-			},
-		),
-	}
-}
+// func NewTippersIndex(sb *collections.SchemaBuilder) TipperTotalIndex {
+// 	return TipperTotalIndex{
+// 		BlockNumber: indexes.NewUnique(
+// 			sb, TipsBlockIndexPrefix, "tips_by_block",
+// 			collections.Uint64Key, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+// 			func(k collections.Pair[[]byte, uint64], v math.Int) (uint64, error) {
+// 				return k.K2(), nil
+// 			},
+// 		),
+// 	}
+// }

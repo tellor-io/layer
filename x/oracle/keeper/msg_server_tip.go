@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
-	"fmt"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
@@ -83,18 +82,18 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
 		return nil, err
 	}
-	prevTip, err := k.keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return nil, fmt.Errorf("failed to get previous tip: %w", err)
-	}
+	// prevTip, err := k.keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
+	// if err != nil && !errors.Is(err, collections.ErrNotFound) {
+	// 	return nil, fmt.Errorf("failed to get previous tip: %w", err)
+	// }
 
-	if !prevTip.IsNil() {
-		tip = tip.AddAmount(prevTip)
-	}
-	err = k.keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
-	if err != nil {
-		return nil, err
-	}
+	// if !prevTip.IsNil() {
+	// 	tip = tip.AddAmount(prevTip)
+	// }
+	// err = k.keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"tip_added",

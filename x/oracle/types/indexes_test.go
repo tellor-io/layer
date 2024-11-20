@@ -10,22 +10,22 @@ import (
 	"cosmossdk.io/collections/colltest"
 )
 
-func TestIndexesList_Tips(t *testing.T) {
-	storeService, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(storeService)
+// func TestIndexesList_Tips(t *testing.T) {
+// 	storeService, _ := colltest.MockStore()
+// 	schema := collections.NewSchemaBuilder(storeService)
 
-	im := types.NewTipsIndex(schema)
-	index := im.IndexesList()
-	require.NotNil(t, index)
-}
+// 	im := types.NewTipsIndex(schema)
+// 	index := im.IndexesList()
+// 	require.NotNil(t, index)
+// }
 
-func TestNewTipsIndex(t *testing.T) {
-	storeService, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(storeService)
+// func TestNewTipsIndex(t *testing.T) {
+// 	storeService, _ := colltest.MockStore()
+// 	schema := collections.NewSchemaBuilder(storeService)
 
-	im := types.NewTipsIndex(schema)
-	require.NotNil(t, im.Tipper)
-}
+// 	im := types.NewTipsIndex(schema)
+// 	require.NotNil(t, im.Tipper)
+// }
 
 func TestIndexesList_Aggregates(t *testing.T) {
 	storeService, _ := colltest.MockStore()
@@ -78,19 +78,19 @@ func TestNewQueryIndex(t *testing.T) {
 	require.NotNil(t, im)
 }
 
-func TestIndexesList_Tippers(t *testing.T) {
-	storeService, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(storeService)
+// func TestIndexesList_Tippers(t *testing.T) {
+// 	storeService, _ := colltest.MockStore()
+// 	schema := collections.NewSchemaBuilder(storeService)
 
-	im := types.NewTippersIndex(schema)
-	index := im.IndexesList()
-	require.NotNil(t, index)
-}
+// 	im := types.NewTippersIndex(schema)
+// 	index := im.IndexesList()
+// 	require.NotNil(t, index)
+// }
 
-func TestNewTippersIndex(t *testing.T) {
-	storeService, _ := colltest.MockStore()
-	schema := collections.NewSchemaBuilder(storeService)
+// func TestNewTippersIndex(t *testing.T) {
+// 	storeService, _ := colltest.MockStore()
+// 	schema := collections.NewSchemaBuilder(storeService)
 
-	im := types.NewTippersIndex(schema)
-	require.NotNil(t, im)
-}
+// 	im := types.NewTippersIndex(schema)
+// 	require.NotNil(t, im)
+// }
