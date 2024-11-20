@@ -27,7 +27,6 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		mutex.RUnlock()
 		if bytes.Equal(querydata, prevQueryData) || committed {
 			time.Sleep(100 * time.Millisecond)
-			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 
