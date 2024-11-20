@@ -63,13 +63,15 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				continue
 			}
 
+			c.logger.Info("Message received on websocket: ", event)
+
 			qidAttribute, ok := event.GetAttribute("query_id")
 			if !ok {
 				for i := 0; i < len(event.Attributes); i++ {
 					c.logger.Info("Attribute: ", event.Attributes)
 				}
 				c.logger.Error("No attribute found for query_id: ", event.Attributes)
-				return
+				continue
 			}
 			query_id := qidAttribute.Value
 			qd := queryIdToQueryDataMap[query_id]
