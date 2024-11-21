@@ -13,7 +13,6 @@ import (
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -26,6 +25,39 @@ type WebsocketSubscribeRequest struct {
 	Method  string `json:"method"`
 	Id      int    `json:"id"`
 	Params  Params `json:"params"`
+}
+
+type Attribute struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+	Index bool   `json:"index"`
+}
+
+type Event struct {
+	Type       string      `json:"type"`
+	Attributes []Attribute `json:"attributes"`
+}
+
+type EventResponseData struct {
+	Height  string  `json:"height"`
+	Events  []Event `json:"events"`
+	Num_txs string  `json:"num_txs"`
+}
+
+type EventResponse struct {
+	Type  string            `json:"type"`
+	Value EventResponseData `json:"value"`
+}
+
+type QueryResult struct {
+	Query string        `json:"query"`
+	Data  EventResponse `json:"data"`
+}
+
+type WebsocketReponse struct {
+	Jsonrpc string      `json:"jsonrpc"`
+	Id      int         `json:"id"`
+	Result  QueryResult `json:"result"`
 }
 
 func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) {
@@ -50,37 +82,51 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				panic(err)
 			}
 			c.logger.Info("Websocket message: ", string(message))
-			var event sdk.Event
-			err = json.Unmarshal(message, &event)
+			var data WebsocketReponse
+			err = json.Unmarshal(message, &data)
 			if err != nil {
 				c.logger.Error("Unable to unmarshal read message: ", err)
 				c.logger.Info("Response data: ", message)
 				panic(err)
 			}
+			c.logger.Info("Data response: ", len(data.Result.Data.Value.Events))
 
 			if len(message) == 0 {
 				c.logger.Info("EMPTY MESSAGE RECEIVED")
 				continue
 			}
 
+			var event Event
+			for i := 0; i < len(data.Events); i++ {
+				c.logger.Info("Attribute read from events: ", data.Events[i].Type)
+				if data.Events[i].Type == "rotating-cyclelist-with-next-query" {
+					event = data.Events[i]
+				}
+			}
+
+			if event.Type == "" {
+				c.logger.Error("rotate cyclelist event not found")
+				continue
+			}
+
+			var queryId string
+			var querymetaId string
+			for i := 0; i < len(event.Attributes); i++ {
+				if event.Attributes[i].Key == "query_id" {
+					queryId = event.Attributes[i].Value
+				} else if event.Attributes[i].Key == "New QueryMeta Id" {
+					querymetaId = event.Attributes[i].Value
+				}
+			}
 			c.logger.Info("Message received on websocket: ", event)
 
-			qidAttribute, ok := event.GetAttribute("query_id")
-			if !ok {
-				for i := 0; i < len(event.Attributes); i++ {
-					c.logger.Info("Attribute: ", event.Attributes)
-				}
+			if queryId == "" || querymetaId == "" {
 				c.logger.Error("No attribute found for query_id: ", event.Attributes)
 				continue
 			}
-			query_id := qidAttribute.Value
-			qd := queryIdToQueryDataMap[query_id]
+			qd := queryIdToQueryDataMap[queryId]
 
-			idAttribute, ok := event.GetAttribute("New QueryMeta Id")
-			if !ok {
-				c.logger.Error("no next id found in rotatequeries event")
-			}
-			nextId, err := strconv.Atoi(idAttribute.Value)
+			nextId, err := strconv.Atoi(querymetaId)
 			if err != nil {
 				c.logger.Error("error converting id attribute to int: ", err)
 				return
@@ -98,7 +144,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		Jsonrpc: "2.0",
 		Method:  "subscribe",
 		Id:      0,
-		Params:  Params{Query: "tm.event=\"rotating-cyclelist-with-existing-nontipped-query\""},
+		Params:  Params{Query: "rotating-cyclelist-with-next-query.query_id EXISTS"},
 	}
 	req, err := json.Marshal(&subscribeReq)
 	if err != nil {
