@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
+	"strconv"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -84,6 +86,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		}
 		querymeta.CycleList = true
 		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
 	}
@@ -104,6 +107,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 			// extend time as if tbr is a tip that would extend the time (tipping)
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		}
+		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
 
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
@@ -129,6 +133,16 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 	// return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	return nil
+}
+
+func emitRotateQueriesEvent(sdkCtx sdk.Context, queryId, nextId string) {
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"rotating-cyclelist-with-next-query",
+			sdk.NewAttribute("query_id", queryId),
+			sdk.NewAttribute("New QueryMeta Id", nextId),
+		),
+	})
 }
 
 // removes query that are expired, no tip, and no revealed reports
