@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"strconv"
 
@@ -79,7 +80,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		}
 		querymeta.CycleList = true
 		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
-		emitRotateQueriesEvent(sdkCtx, string(queryId), strconv.Itoa(int(querymeta.Id)))
+		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
 	}
@@ -90,7 +91,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		if querymeta.Expiration <= uint64(blockHeight) && !querymeta.HasRevealedReports { // wrong, shouldn't use same query if expired
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		}
-		emitRotateQueriesEvent(sdkCtx, string(queryId), strconv.Itoa(int(querymeta.Id)))
+		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
 
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
@@ -99,7 +100,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	emitRotateQueriesEvent(sdkCtx, string(queryId), strconv.Itoa(int(nextId)))
+	emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(nextId)))
 	querymeta.Id = nextId
 	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 	querymeta.HasRevealedReports = false
