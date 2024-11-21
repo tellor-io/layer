@@ -222,13 +222,3 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 	}
 	return nil
 }
-
-// Converts a math.Uint to a legacy decimal
-func (k Keeper) LegacyDecFromMathUint(value math.Uint) math.LegacyDec {
-	return math.LegacyNewDecFromInt(math.NewIntFromUint64(value.Uint64()))
-}
-
-// Truncates a legacy decimal to a math.Uint
-func (k Keeper) TruncateUint(value math.LegacyDec) math.Uint {
-	return math.NewUint(value.TruncateInt().Uint64())
-}
