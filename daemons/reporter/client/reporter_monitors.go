@@ -143,13 +143,29 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		}
 	}(&localWG)
 
-	subscribeReq := WebsocketSubscribeRequest{
+	subscribeCyclelistReq := WebsocketSubscribeRequest{
 		Jsonrpc: "2.0",
 		Method:  "subscribe",
 		Id:      0,
 		Params:  Params{Query: "rotating-cyclelist-with-next-query.query_id EXISTS"},
 	}
-	req, err := json.Marshal(&subscribeReq)
+	subscribeTippedQueriesReq := WebsocketSubscribeRequest{
+		Jsonrpc: "2.0",
+		Method:  "subscribe",
+		Id:      0,
+		Params:  Params{Query: "tip_added.query_id EXISTS"},
+	}
+	req, err := json.Marshal(&subscribeCyclelistReq)
+	if err != nil {
+		c.logger.Error("Error marshalling request message: ", err)
+		panic(err)
+	}
+	err = client.WriteMessage(websocket.TextMessage, req)
+	if err != nil {
+		c.logger.Error("write:", err)
+		return
+	}
+	req, err = json.Marshal(&subscribeTippedQueriesReq)
 	if err != nil {
 		c.logger.Error("Error marshalling request message: ", err)
 		panic(err)
